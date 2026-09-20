@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Appuscholer · Psychology Edition</title>
+<style>
+  :root{
+    --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
+    --purple-600:#6d28d9; --purple-500:#7c3aed; --purple-100:#ede9fe;
+    --gold:#f59e0b;
+    --bg:#f5f3ff; --card:#ffffff; --ink:#1e1b2e; --muted:#6b7280;
+    --line:#e9e4f5; --soft:#faf8ff; --soft2:#fbf9ff; --chip:#f3f4f6; --chipline:#d1d5db;
+    --head-title:#4c1d95; --dashed:#c4b5fd; --accent-ink:#5b21b6;
+  }
+  @media(prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#14101d; --card:#1d1730; --ink:#ece9f5; --muted:#a9a2bd;
+      --line:#332a4d; --soft:#231c3a; --soft2:#201936; --chip:#2b2444; --chipline:#453a66;
+      --purple-100:#3a2d5e; --head-title:#d8ccff; --dashed:#6d5ba3; --accent-ink:#c4b5fd; --warn-bg:#3d2f0b; --warn-ink:#fde68a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14101d; --card:#1d1730; --ink:#ece9f5; --muted:#a9a2bd;
+    --line:#332a4d; --soft:#231c3a; --soft2:#201936; --chip:#2b2444; --chipline:#453a66;
+    --purple-100:#3a2d5e; --head-title:#d8ccff; --dashed:#6d5ba3; --accent-ink:#c4b5fd; --warn-bg:#3d2f0b; --warn-ink:#fde68a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:linear-gradient(120deg,var(--purple-900),var(--purple-700) 60%,var(--purple-600));color:#fff;padding:14px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 18px rgba(76,29,149,.25);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+  .logo{width:52px;height:52px;flex:0 0 52px}
+  .brand h1{margin:0;font-size:24px;letter-spacing:.5px;font-weight:800}
+  .brand h1 span{color:#e9d5ff}
+  .brand p{margin:2px 0 0;font-size:12px;color:#ddd6fe;letter-spacing:2px;text-transform:uppercase}
+  .spacer{flex:1}
+  .btn{border:none;cursor:pointer;border-radius:10px;font-weight:700;padding:10px 18px;font-size:14px;transition:.15s;font-family:inherit}
+  .btn-gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3b0764}
+  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(245,158,11,.4)}
+  .btn-purple{background:var(--purple-600);color:#fff}
+  .btn-purple:hover{background:var(--purple-700)}
+  .btn-ghost{background:var(--card);color:var(--accent-ink);border:2px solid var(--line)}
+  .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  main{max-width:1180px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:1fr 340px;gap:20px}
+  @media(max-width:900px){main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(76,29,149,.08);overflow:hidden}
+  .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--soft);flex-wrap:wrap}
+  .card-head h2{margin:0;font-size:16px;color:var(--head-title)}
+  .badge{font-size:11px;background:var(--purple-100);color:var(--accent-ink);padding:4px 10px;border-radius:20px;font-weight:700}
+  #editor{width:100%;min-height:480px;border:none;outline:none;resize:vertical;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--card);display:block}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
+  .stats{font-size:12px;color:var(--muted);margin-left:auto}
+  .panel{padding:18px}
+  .panel h3{margin:0 0 6px;font-size:14px;color:var(--head-title);text-transform:uppercase;letter-spacing:1px}
+  .panel p.desc{font-size:13px;color:var(--muted);margin:0 0 12px}
+  #aiOut{background:var(--soft);border:1.5px dashed var(--dashed);border-radius:12px;padding:14px;font-size:14px;line-height:1.7;min-height:120px;white-space:pre-wrap}
+  #chatLog{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .msg{padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.6;max-width:95%;white-space:pre-wrap}
+  .msg.user{background:var(--purple-600);color:#fff;align-self:flex-end}
+  .msg.ai{background:var(--card);border:1px solid var(--line);align-self:flex-start}
+  input[type=text],textarea,select{font-family:inherit;color:var(--ink);background:var(--card)}
+  input[type=text]{width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;font-size:14px;outline:none}
+  input[type=text]:focus{border-color:var(--purple-500)}
+  .row{display:flex;gap:8px;margin-top:8px}
+  dialog{border:none;border-radius:16px;padding:0;max-width:480px;width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.25);background:var(--card);color:var(--ink)}
+  dialog::backdrop{background:rgba(30,10,60,.5)}
+  .dlg-body{padding:24px}
+  .dlg-body h2{margin:0 0 8px;color:var(--head-title)}
+  .dlg-body ol{font-size:14px;line-height:1.9;color:var(--ink);padding-left:20px}
+  .dlg-body a{color:var(--purple-500);font-weight:700}
+  footer{text-align:center;color:#a78bfa;font-size:12px;padding:26px;letter-spacing:1px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--purple-900);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:50;max-width:92vw;text-align:center}
+  kbd{background:var(--chip);border:1px solid var(--chipline);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--ink)}
+  .fld{margin-bottom:8px}
+  .fld label{display:block;font-size:11px;font-weight:700;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:9px 10px;border:2px solid var(--line);border-radius:9px;font-size:13.5px;outline:none}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--purple-500)}
+  .cit-item{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.6;margin-bottom:8px}
+  .cit-item button.del{float:right;border:none;background:none;cursor:pointer;color:#dc2626;font-size:14px}
+  #provTabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px 0;max-width:1180px;margin:0 auto}
+  .ptab{flex:1 1 0;min-width:104px;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:13px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
+  .ptab .dot{width:9px;height:9px;border-radius:50%;background:var(--chipline);flex:none}
+  .ptab.has-key .dot{background:#16a34a}
+  .ptab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
+  .ptab.active .dot{background:var(--gold)}
+  .ptab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  @media(max-width:560px){
+    .ptab{min-width:0;font-size:11px;padding:8px 4px;gap:4px}
+    #editor{min-height:300px;font-size:16px}
+    .brand h1{font-size:20px}
+  }
+  .warn{background:var(--warn-bg,#fef3c7);color:var(--warn-ink,#78350f);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.6}
+  .docbar{display:flex;gap:8px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap}
+  .docbar select{flex:1;min-width:150px;padding:7px 9px;border:2px solid var(--line);border-radius:9px;font-size:13px}
+  .icon-btn{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:9px;padding:7px 10px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit}
+  dialog.dlg-wide{max-width:920px}
+  .stats-chip{display:inline-flex;align-items:center;gap:5px;background:var(--chip);border:1px solid var(--chipline);border-radius:20px;padding:4px 10px;font-size:12px;margin:3px 4px 3px 0}
+  .stats-chip.num{border-color:#16a34a}
+  .stats-chip.cat{border-color:#7c3aed}
+  table.stats-table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  table.stats-table th,table.stats-table td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+  table.stats-table th{background:var(--soft);color:var(--head-title)}
+  #statsSentence{background:var(--soft);border:1.5px dashed var(--dashed);border-radius:12px;padding:12px;font-size:14px;line-height:1.7;margin-top:8px;white-space:pre-wrap}
+  .stats-fld-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .stats-fld-row .fld{flex:1;min-width:180px}
+</style>
+</head>
+<body>
+
+<header>
+  <!-- Appuscholer logo: graduation cap over open book in purple/gold -->
+  <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="Appuscholer logo" role="img">
+    <circle cx="32" cy="32" r="30" fill="white" opacity="0.14"/>
+    <circle cx="32" cy="32" r="29" stroke="#fbbf24" stroke-width="2" fill="rgba(255,255,255,0.06)"/>
+    <path d="M12 40c6-3.5 13-5 20-5s14 1.5 20 5v-9c-6-3.5-13-5-20-5s-14 1.5-20 5v9z" fill="#fbbf24"/>
+    <path d="M12 31c6-3.5 13-5 20-5s14 1.5 20 5l-20 9-20-9z" fill="#ffffff"/>
+    <rect x="30.8" y="18" width="2.4" height="12" rx="1.2" fill="#fbbf24"/>
+    <circle cx="32" cy="33" r="2.6" fill="#fbbf24"/>
+    <path d="M20 44c4 2.4 8 3.6 12 3.6s8-1.2 12-3.6" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>
+  <div class="brand">
+    <h1>Appu<span>Scholer</span></h1>
+    <p>Psychology Edition</p>
+  </div>
+  <div class="spacer"></div>
+  <span class="badge" id="licenseBadge" style="display:none;background:#fbbf24;color:#3b0764"></span>
+  <button class="btn btn-ghost" onclick="toggleTheme()" id="themeBtn" title="Light / dark">🌙</button>
+  <button class="btn btn-ghost" onclick="openHelp()">❓ Help</button>
+  <button class="btn btn-gold" onclick="openSettings()">⚙ AI Provider / Key</button>
+</header>
+<nav id="provTabs" aria-label="AI providers"></nav>
+
+<main>
+  <section class="card">
+    <div class="card-head">
+      <h2>📝 Your Document</h2>
+      <span class="badge" id="saveBadge">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" onclick="downloadDoc()">⬇ Download</button>
+      <div class="docbar">
+        <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Doc</label>
+        <select id="docSel" onchange="docSwitch(this.value)" aria-label="Choose document"></select>
+        <button class="icon-btn" onclick="docNew()" title="New document">＋ New</button>
+        <button class="icon-btn" onclick="docRename()" title="Rename">✎</button>
+        <button class="icon-btn" onclick="docDelete()" title="Delete this document">🗑</button>
+      </div>
+    </div>
+    <textarea id="editor" placeholder="Start writing here… Select text and press Improve, or just write and let AI continue."></textarea>
+    <div class="toolbar">
+      <button class="btn btn-purple" onclick="continueWriting()">✨ Continue Writing <kbd>Tab</kbd></button>
+      <button class="btn btn-ghost" onclick="improveText()">💜 Improve</button>
+      <button class="btn btn-ghost" onclick="makeLonger()">➕ Longer</button>
+      <button class="btn btn-ghost" onclick="insertScaffold()">🧱 Report template</button>
+      <span class="stats" id="stats">0 words</span>
+    </div>
+  </section>
+
+  <aside style="display:flex;flex-direction:column;gap:20px">
+    <section class="card"><div class="panel">
+      <h3>✨ AI Suggestion</h3>
+      <p class="desc">Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.</p>
+      <div id="aiOut">Your AI suggestion will appear here…</div>
+      <div class="row">
+        <button class="btn btn-purple" style="flex:1" onclick="acceptAI()">Accept ✓</button>
+        <button class="btn btn-ghost" onclick="copyAI()">Copy</button>
+        <button class="btn btn-ghost" onclick="clearSug('Your AI suggestion will appear here…')">Dismiss</button>
+      </div>
+    </div></section>
+
+    <section class="card"><div class="panel">
+      <h3>🧠 Psychology Tools</h3>
+      <p class="desc">Select the text you want analyzed (or leave nothing selected to use the whole document).</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('paper')">📄 Summarize research paper</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('case')">🧠 Analyze case study</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('litrev')">📚 Literature review helper</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('explain')">💡 Explain concept simply</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('stats')">📊 Format results in APA</button></div>
+      <p class="desc" style="margin-top:10px">Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.</p>
+    </div></section>
+
+    <section class="card"><div class="panel">
+      <h3>📊 Statistics Lab</h3>
+      <p class="desc">Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('statsDlg').showModal()">Open Statistics Lab</button></div>
+    </div></section>
+
+    <section class="card"><div class="panel">
+      <h3>✍ My Writing Style</h3>
+      <p class="desc">Teach Appuscholer to write like YOU. Upload your files — Word, PDF or text.</p>
+      <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="styleOn" onchange="styleToggle()" style="width:17px;height:17px;accent-color:#6d28d9"> <b>Use my style in suggestions</b>
+      </label>
+      <div class="fld"><label for="styleProfile">My style profile</label>
+        <textarea id="styleProfile" rows="4" placeholder="e.g. Warm, reflective tone. Medium-length sentences…"></textarea>
+      </div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="styleAnalyze()">✨ Learn from my writing</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('styleFiles').click()">📂 Learn from my files (up to 100)</button></div>
+      <input type="file" id="styleFiles" multiple accept=".txt,.md,.text,.markdown,.docx,.pdf" style="display:none" onchange="styleAnalyzeFiles(this)">
+      <p class="desc" id="styleFileInfo" style="margin-top:6px"></p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="styleSave()">Save profile</button></div>
+    </div></section>
+
+    <section class="card"><div class="panel">
+      <h3>📚 Citation Manager</h3>
+      <p class="desc">Add a source, then insert citations as you write.</p>
+      <div class="fld"><label for="citStyle">Citation style</label>
+        <select id="citStyle" onchange="citRender()"><option value="apa">APA (7th)</option><option value="mla">MLA (9th)</option><option value="chicago">Chicago</option></select>
+      </div>
+      <div class="fld"><label for="citType">Source type</label>
+        <select id="citType" onchange="citRender()"><option>Journal article</option><option>Book</option><option>Website</option></select>
+      </div>
+      <div class="fld"><label for="citAuthor">Author(s) — separate with ;</label><input type="text" id="citAuthor" placeholder="Miller, George A.; Smith, Jane B."></div>
+      <div style="display:flex;gap:8px">
+        <div class="fld" style="flex:1"><label for="citYear">Year</label><input type="text" id="citYear" placeholder="1956"></div>
+        <div class="fld" style="flex:2"><label for="citTitle">Title</label><input type="text" id="citTitle" placeholder="Title of work"></div>
+      </div>
+      <div class="fld"><label for="citSource">Journal / Publisher / Website</label><input type="text" id="citSource" placeholder="e.g. Psychological Review"></div>
+      <div style="display:flex;gap:8px">
+        <div class="fld" style="flex:1"><label for="citVol">Volume</label><input type="text" id="citVol" placeholder="63"></div>
+        <div class="fld" style="flex:1"><label for="citIssue">Issue</label><input type="text" id="citIssue" placeholder="2"></div>
+        <div class="fld" style="flex:2"><label for="citPages">Pages</label><input type="text" id="citPages" placeholder="81–97"></div>
+      </div>
+      <div class="fld"><label for="citDOI">DOI</label><input type="text" id="citDOI" placeholder="10.1037/h0043158"></div>
+      <div class="fld"><label for="citURL">URL (only if there is no DOI)</label><input type="text" id="citURL" placeholder="https://…"></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citLookup()">🔎 Look up by title (Crossref)</button></div>
+      <div class="row">
+        <button class="btn btn-purple" style="flex:1" onclick="citInsert()">Insert citation</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="citAdd()">+ Library</button>
+      </div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citClearForm()">Clear form</button></div>
+      <h3 style="margin-top:14px">🗂 My library <span class="badge" id="citCount">0</span></h3>
+      <div id="citLib" style="margin-top:8px"><p class="desc">No sources yet.</p></div>
+      <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()">Insert reference list</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="psychLoadStarters()">📖 Load classic psychology sources</button></div>
+      <div class="row">
+        <button class="btn btn-ghost" style="flex:1" onclick="citExport()">⬆ Export library</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('citImportFile').click()">⬇ Import library</button>
+      </div>
+      <input type="file" id="citImportFile" accept=".json,application/json" style="display:none" onchange="citImport(this)">
+      <p class="desc" style="margin-top:10px">🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.</p>
+    </div></section>
+
+    <section class="card"><div class="panel">
+      <h3>💬 Ask Appuscholer</h3>
+      <p class="desc">Your purple study buddy — ask anything about your writing.</p>
+      <div id="chatLog"></div>
+      <input type="text" id="chatIn" placeholder="Ask… e.g. Give me 3 title ideas">
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="askAI()">Send ➤</button></div>
+    </div></section>
+  </aside>
+</main>
+
+<dialog id="settingsDlg"><div class="dlg-body">
+  <h2>🔑 Choose your AI provider</h2>
+  <p style="font-size:13px;color:var(--muted)">Pick one. Your key is saved in this browser and sent only to the provider you choose.</p>
+  <label for="provSel" style="font-size:13px;font-weight:700;color:var(--head-title)">AI Provider</label>
+  <select id="provSel" onchange="provHelp()" style="width:100%;padding:12px;margin:8px 0;border:2px solid var(--line);border-radius:10px;font-size:14px">
+    <option value="gemini">Google Gemini — free, easiest</option>
+    <option value="groq">Groq — free &amp; very fast</option>
+    <option value="deepseek">DeepSeek — paid, very cheap</option>
+    <option value="openrouter">OpenRouter — free models</option>
+    <option value="openai">ChatGPT (OpenAI) — paid</option>
+    <option value="claude">Claude (Anthropic) — paid</option>
+  </select>
+  <div id="provHelp" style="font-size:13px;background:var(--soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;line-height:1.7"></div>
+  <input type="text" id="keyIn" placeholder="Paste your API key here">
+  <div class="fld" style="margin-top:12px"><label for="keyMode">How should this key be stored?</label>
+    <select id="keyMode" onchange="keyModeNote()">
+      <option value="pass">🔒 Protect with a passphrase — safest (type it once per session)</option>
+      <option value="plain">Remember on this computer — easiest, no passphrase</option>
+      <option value="session">This tab only — forget when I close it (college computer)</option>
+    </select>
+  </div>
+  <p class="desc" id="keyModeHint" style="margin:6px 0 0"></p>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-purple" style="flex:1" onclick="saveKey()">Save Key</button>
+    <button class="btn btn-ghost" onclick="removeKey()">Remove key</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('settingsDlg').close()">Close</button>
+  </div>
+  <p style="font-size:12px;color:var(--muted)" id="activeProv"></p>
+  <p class="warn" style="margin-top:10px">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
+</div></dialog>
+
+<dialog id="welcomeDlg"><div class="dlg-body">
+  <h2>💜 Welcome to Appuscholer</h2>
+  <p style="font-size:14px;line-height:1.7;color:var(--ink)">A writing assistant for psychology students. Everything you write stays on this computer.</p>
+  <ol>
+    <li>Click <b>⚙ AI Provider / Key</b> at the top right.</li>
+    <li>Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.</li>
+    <li>Follow the link, create a key, paste it in, press <b>Save Key</b>.</li>
+    <li>Start writing. Press <kbd>Tab</kbd> to accept a suggestion.</li>
+  </ol>
+  <p class="warn">Appuscholer drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
+  <div class="row" style="margin-top:14px">
+    <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();openSettings()">Set up my key</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('welcomeDlg').close()">Later</button>
+  </div>
+</div></dialog>
+
+<dialog id="loginDlg"><div class="dlg-body">
+  <h2>🔑 Appuscholer Access</h2>
+  <p style="font-size:14px;line-height:1.7;color:var(--ink)">This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.</p>
+  <textarea id="loginInput" rows="3" placeholder="Paste your access code here" style="width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;font-size:13px;font-family:monospace;color:var(--ink);background:var(--card)"></textarea>
+  <p style="min-height:18px;font-size:12.5px;color:#dc2626;margin:8px 0 0" id="loginMsg"></p>
+  <div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" id="loginSubmit">Unlock</button></div>
+  <p class="desc" style="margin-top:10px">Don't have a code, or has yours expired? Ask whoever gave you Appuscholer for a new one.</p>
+</div></dialog>
+
+<dialog id="statsDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>📊 Statistics Lab</h2>
+  <p style="font-size:13px;color:var(--muted)">Paste data from Excel, SPSS, Google Sheets or a CSV file — first row = column names. Everything is computed on this computer; your data is never sent anywhere unless you tap "Explain in plain language" below, and even then only the computed numbers are sent, not your raw data.</p>
+
+  <div class="fld"><label for="statsPaste">Your data</label>
+    <textarea id="statsPaste" rows="5" placeholder="group,score&#10;A,12&#10;A,15&#10;B,9&#10;B,11"></textarea>
+  </div>
+  <div class="row">
+    <button class="btn btn-purple" style="flex:1" onclick="statsParse()">Parse data</button>
+    <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('statsFile').click()">📂 Upload .csv</button>
+    <input type="file" id="statsFile" accept=".csv,.tsv,.txt" style="display:none" onchange="statsUpload(this)">
+  </div>
+  <div id="statsCols" style="margin-top:10px"></div>
+
+  <div id="statsTestArea" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+    <div class="fld"><label for="statsTest">Test</label>
+      <select id="statsTest" onchange="statsFieldsRender()">
+        <optgroup label="Describe">
+          <option value="desc">Descriptive statistics</option>
+        </optgroup>
+        <optgroup label="Compare means — parametric">
+          <option value="ttest1">One-sample t-test</option>
+          <option value="ttestInd">Independent-samples t-test</option>
+          <option value="ttestPaired">Paired-samples t-test</option>
+          <option value="anova1">One-way ANOVA</option>
+          <option value="tukey">Tukey HSD post-hoc (after ANOVA)</option>
+        </optgroup>
+        <optgroup label="Compare — non-parametric">
+          <option value="mannwhitney">Mann-Whitney U</option>
+          <option value="wilcoxon">Wilcoxon signed-rank</option>
+        </optgroup>
+        <optgroup label="Relationships">
+          <option value="pearson">Pearson correlation</option>
+          <option value="regression">Simple linear regression</option>
+          <option value="chisq">Chi-square test of independence</option>
+        </optgroup>
+      </select>
+    </div>
+    <div id="statsFields"></div>
+    <div class="row"><button class="btn btn-purple" style="flex:1" onclick="statsRun()">Run test</button></div>
+  </div>
+
+  <div id="statsResults" style="margin-top:14px"></div>
+  <div id="statsChartBox" style="margin-top:10px"></div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('statsDlg').close()">Close</button>
+  </div>
+  <p class="warn" style="margin-top:10px">📐 These formulas cover the common cases correctly (Student's independent t, average-rank non-parametric tests, standard ANOVA/chi-square). For an unusual design, or before a dissertation defense, cross-check against SPSS or JASP.</p>
+</div></dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<footer>APPU SCHOLER · PSYCHOLOGY EDITION · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+/* ============ FIX 5: storage never throws ============ */
+var sessionKeys = {};
+const LS={
+  get(k){try{if(k in sessionKeys)return sessionKeys[k];return localStorage.getItem(k)}catch(e){return (k in sessionKeys)?sessionKeys[k]:null}},
+  set(k,v){try{localStorage.setItem(k,v);delete sessionKeys[k];return true}catch(e){sessionKeys[k]=String(v);return false}},
+  setSession(k,v){sessionKeys[k]=String(v);try{localStorage.removeItem(k)}catch(e){}return true},
+  rm(k){delete sessionKeys[k];try{localStorage.removeItem(k)}catch(e){}}
+};
+
+/* ============ FIX 16: PROVIDERS declared before anything reads it ============ */
+const PROVIDERS={
+ gemini:{name:'Google Gemini',short:'Gemini',steps:'Sign in with Google → <b>Get API Key</b> → <b>Create API Key</b> → copy (starts with AIza). <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Open →</a>',model:'gemini-3.8-flash',fallbacks:['gemini-3.6-flash','gemini-2.5-flash']},
+ groq:{name:'Groq',short:'Groq',steps:'Sign up free → <b>API Keys</b> → <b>Create API Key</b> → copy (starts with gsk_). <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Open →</a>',model:'openai/gpt-oss-120b'},
+ deepseek:{name:'DeepSeek',short:'DeepSeek',steps:'Sign up → <b>API Keys</b> → <b>Create</b> → copy (starts with sk-). <b>Paid</b>, but very cheap — add a small credit first. <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">Open →</a>',model:'deepseek-flash'},
+ openrouter:{name:'OpenRouter',short:'OpenRouter',steps:'Sign up → <b>Keys</b> → <b>Create Key</b> → copy (starts with sk-or-). Free models available. <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">Open →</a>',model:'meta-llama/llama-3.3-70b-instruct:free'},
+ openai:{name:'ChatGPT (OpenAI)',short:'ChatGPT',steps:'Sign up → <b>API keys</b> → <b>Create new secret key</b> → copy (starts with sk-). <b>Paid</b> — add billing credit first (from ~$5). <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Open →</a>',model:'gpt-4o-mini'},
+ claude:{name:'Claude (Anthropic)',short:'Claude',steps:'Sign up → <b>API keys</b> → <b>Create key</b> → copy (starts with sk-ant-). <b>Paid</b> — add billing credit first. <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open →</a>',model:'claude-haiku-4-5-20251001'}
+};
+const PROV_ORDER=['gemini','groq','deepseek','openrouter','openai','claude'];
+
+/* ============ Access control — individually signed codes, verified offline ============
+   Each code is issued by admin-code-generator.html (kept private, never distributed) and
+   signed with a private key that never leaves that tool. Only the matching PUBLIC key lives
+   here, so this file can verify a code's signature and expiry without any server, but cannot
+   be used to forge new codes. Set REVOKE_LIST_URL to a public Gist raw URL (see AUDIT.md /
+   ADMIN-GUIDE.md) to also cut off a specific person immediately, any time the app has internet;
+   leave it blank and only offline expiry-based access control applies. */
+const LICENSE_PUBLIC_KEY_JWK={"key_ops":["verify"],"ext":true,"kty":"EC","x":"dqG1F0P1r8byG7peCXrbuAR5SPJqq-W8vFyVL-P7x5s","y":"GxXzmCZZ9bO5fBtJ8KARYyOWIy4YS0gdRY73saW0nEQ","crv":"P-256"};
+const REVOKE_LIST_URL='';
+
+const editor=document.getElementById('editor'),aiOut=document.getElementById('aiOut'),
+      stats=document.getElementById('stats'),toast=document.getElementById('toast');
+
+/* ============ FIX 1: one escaper, used everywhere ============ */
+const escHTML=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastT=null;
+function showToast(m){toast.textContent=m;toast.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>toast.style.display='none',2600)}
+
+/* ============ Theme ============ */
+function applyTheme(){const t=LS.get('appu_theme');if(t)document.documentElement.setAttribute('data-theme',t);
+  const dark=t?t==='dark':window.matchMedia('(prefers-color-scheme:dark)').matches;
+  document.getElementById('themeBtn').textContent=dark?'☀':'🌙'}
+function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme')
+  ||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  const next=cur==='dark'?'light':'dark';LS.set('appu_theme',next);document.documentElement.setAttribute('data-theme',next);applyTheme()}
+applyTheme();
+
+/* ============ FIX: multi-document store ============ */
+function docsGet(){try{const a=JSON.parse(LS.get('appu_docs')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function docsSet(a){LS.set('appu_docs',JSON.stringify(a))}
+function docCurrentId(){return LS.get('appu_doc_current')||''}
+function docMigrate(){
+  let docs=docsGet();
+  if(!docs.length){
+    const legacy=LS.get('appuscholer_doc')||'';
+    docs=[{id:'d'+Date.now(),title:'My first document',body:legacy,updated:Date.now()}];
+    docsSet(docs);LS.set('appu_doc_current',docs[0].id);
+  }
+  if(!docs.some(d=>d.id===docCurrentId()))LS.set('appu_doc_current',docs[0].id);
+  return docsGet();
+}
+function docRenderList(){
+  const docs=docsGet(),cur=docCurrentId(),sel=document.getElementById('docSel');
+  sel.innerHTML=docs.map(d=>'<option value="'+escHTML(d.id)+'"'+(d.id===cur?' selected':'')+'>'+escHTML(d.title||'Untitled')+'</option>').join('');
+}
+function docSaveBody(body){
+  const docs=docsGet(),cur=docCurrentId(),i=docs.findIndex(d=>d.id===cur);
+  if(i<0)return false;
+  docs[i].body=body;docs[i].updated=Date.now();
+  const ok=LS.set('appu_docs',JSON.stringify(docs));
+  LS.set('appuscholer_doc',body); /* legacy mirror */
+  return ok;
+}
+function docSwitch(id){
+  docSaveBody(editor.value);
+  LS.set('appu_doc_current',id);
+  const d=docsGet().find(x=>x.id===id);
+  editor.value=d?d.body:'';
+  lastSaved=editor.value;upd();docRenderList();showToast('Opened: '+(d?d.title:'document'));
+}
+function docNew(){
+  docSaveBody(editor.value);
+  const title=prompt('Name for the new document:','Untitled '+(docsGet().length+1));
+  if(title===null)return;
+  const docs=docsGet(),d={id:'d'+Date.now(),title:title.trim()||'Untitled',body:'',updated:Date.now()};
+  docs.push(d);docsSet(docs);LS.set('appu_doc_current',d.id);
+  editor.value='';lastSaved='';upd();docRenderList();showToast('New document created ✓');
+}
+function docRename(){
+  const docs=docsGet(),cur=docCurrentId(),i=docs.findIndex(d=>d.id===cur);if(i<0)return;
+  const t=prompt('Rename this document:',docs[i].title);if(t===null)return;
+  docs[i].title=t.trim()||'Untitled';docsSet(docs);docRenderList();showToast('Renamed ✓');
+}
+function docDelete(){
+  const docs=docsGet();
+  if(docs.length<2){showToast('This is your only document — create another one first');return}
+  const cur=docCurrentId(),d=docs.find(x=>x.id===cur);
+  if(!confirm('Delete "'+(d?d.title:'this document')+'" permanently?\n\nA backup copy is kept until you close the browser.'))return;
+  sessionKeys['appu_trash']=JSON.stringify(d);
+  const rest=docs.filter(x=>x.id!==cur);docsSet(rest);LS.set('appu_doc_current',rest[0].id);
+  docSwitch(rest[0].id);showToast('Deleted — type restoreDeleted() in the console to undo');
+}
+function restoreDeleted(){
+  const raw=sessionKeys['appu_trash'];if(!raw){showToast('Nothing to restore');return}
+  const d=JSON.parse(raw);d.id='d'+Date.now();
+  const docs=docsGet();docs.push(d);docsSet(docs);delete sessionKeys['appu_trash'];
+  docRenderList();docSwitch(d.id);showToast('Restored ✓');
+}
+
+/* ============ FIX 5: debounced, honest auto-save ============ */
+let saveT=null,saveDead=false,lastSaved='';
+function upd(){
+  const v=editor.value;
+  stats.textContent=(v.trim()?v.trim().split(/\s+/).length:0)+' words';
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    const b=document.getElementById('saveBadge');
+    if(docSaveBody(v)){
+      lastSaved=v;
+      if(saveDead){saveDead=false;b.textContent='Auto-save on';b.style.background='';b.style.color=''}
+    }else if(!saveDead){
+      saveDead=true;b.textContent='⚠ AUTO-SAVE OFF — DOWNLOAD NOW';b.style.background='#fee2e2';b.style.color='#991b1b';
+      showToast('Auto-save stopped working — click ⬇ Download to keep your work');
+    }
+  },400);
+}
+editor.addEventListener('input',upd);
+window.addEventListener('beforeunload',e=>{
+  clearTimeout(saveT);docSaveBody(editor.value);
+  if(saveDead&&editor.value!==lastSaved){e.preventDefault();e.returnValue=''}
+});
+
+/* ============ FIX 6: insert without destroying the undo stack ============ */
+function insertIntoEditor(text,keepSelection){
+  editor.focus();
+  if(!keepSelection){
+    const end=editor.value.length;editor.setSelectionRange(end,end);
+    if(editor.value&&!editor.value.endsWith('\n'))text='\n'+text;
+  }
+  let ok=false;
+  try{ok=document.execCommand('insertText',false,text)}catch(e){ok=false}
+  if(!ok){
+    const s=editor.selectionStart,e2=editor.selectionEnd;
+    editor.value=editor.value.slice(0,s)+text+editor.value.slice(e2);
+    editor.setSelectionRange(s+text.length,s+text.length);
+  }
+  upd();
+}
+
+/* ============ Key encryption (AES-GCM + PBKDF2), works offline on file:// ============ */
+const _enc=new TextEncoder(),_dec=new TextDecoder();
+const _b64=b=>btoa(String.fromCharCode.apply(null,new Uint8Array(b)));
+const _unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+function cryptoOK(){return !!(window.crypto&&window.crypto.subtle)}
+async function _derive(pass,salt){
+  const base=await crypto.subtle.importKey('raw',_enc.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},
+    base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function lockKey(text,pass){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const k=await _derive(pass,salt);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,_enc.encode(text));
+  return _b64(salt)+'.'+_b64(iv)+'.'+_b64(ct);
+}
+async function unlockKeyBlob(blob,pass){
+  const bits=String(blob).split('.');
+  if(bits.length!==3)throw new Error('bad blob');
+  const k=await _derive(pass,_unb64(bits[0]));
+  return _dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:_unb64(bits[1])},k,_unb64(bits[2])));
+}
+function encBlob(p){return LS.get('appu_enc_'+p)||''}
+/* Unlocks an encrypted key into memory once per session. Never writes it back to disk. */
+async function ensureKey(){
+  const p=getProv();
+  if(getKey())return true;
+  const blob=encBlob(p);
+  if(!blob){openSettings();throw new Error('key')}
+  const pass=prompt('Passphrase to unlock your '+PROVIDERS[p].short+' key:');
+  if(pass===null||pass==='')throw new Error('key');
+  let plain;
+  try{plain=await unlockKeyBlob(blob,pass)}
+  catch(e){throw new Error('BADPASS: Wrong passphrase — nothing was unlocked. Try again.')}
+  LS.setSession('appu_key_'+p,plain);
+  showToast('Key unlocked for this session ✓');
+  return true;
+}
+function keyModeNote(){
+  const m=document.getElementById('keyMode').value,el=document.getElementById('keyModeHint');
+  el.textContent=m==='pass'?'You choose a passphrase now and type it once each time you open Appuscholer. Other files on your computer see only encrypted text.'
+    :m==='plain'?'No passphrase. Any other HTML file you open on this computer can read this key.'
+    :'Kept in memory only. Closing the tab erases it.';
+}
+
+/* ============ FIX 2 + 16: provider state ============ */
+function getProv(){const p=LS.get('appu_provider')||'gemini';return PROVIDERS[p]?p:'gemini'}
+function getKey(){
+  const p=getProv();
+  let k=LS.get('appu_key_'+p)||'';
+  if(!k&&p==='gemini')k=LS.get('gemini_api_key')||'';   /* legacy fallback, Gemini only */
+  return k.trim();
+}
+function provHasKey(p){
+  let k=LS.get('appu_key_'+p)||'';
+  if(!k&&p==='gemini')k=LS.get('gemini_api_key')||'';
+  return !!k.trim()||!!encBlob(p);
+}
+function updProvBadge(){document.getElementById('provBadge').textContent=PROVIDERS[getProv()].name}
+function renderProvTabs(){
+  const bar=document.getElementById('provTabs'),cur=getProv();
+  bar.innerHTML=PROV_ORDER.map(p=>'<button type="button" class="ptab'+(p===cur?' active':'')+(provHasKey(p)?' has-key':'')+
+    '" data-p="'+p+'" title="'+(provHasKey(p)?'Key saved — click to use':'No key yet — click to add')+'"><span class="dot"></span>'+
+    escHTML(PROVIDERS[p].short)+'</button>').join('');
+  bar.querySelectorAll('.ptab').forEach(b=>b.onclick=()=>switchProv(b.dataset.p));
+}
+function refreshProvUI(){renderProvTabs();updProvBadge()}
+function switchProv(p){
+  if(provHasKey(p)){LS.set('appu_provider',p);refreshProvUI();showToast(PROVIDERS[p].name+' active ✓')}
+  else{openSettings(p);showToast('Paste your '+PROVIDERS[p].short+' key to enable it')}
+}
+function openSettings(sel){
+  const p=sel||getProv();
+  document.getElementById('provSel').value=p;
+  const locked=!!encBlob(p);
+  document.getElementById('keyIn').value=locked?'':(LS.get('appu_key_'+p)||(p==='gemini'?LS.get('gemini_api_key'):'')||'');
+  document.getElementById('keyIn').placeholder=locked?'A passphrase-protected key is saved — paste a new one to replace it':'Paste your API key here';
+  const mode=document.getElementById('keyMode');
+  mode.value=locked?'pass':(('appu_key_'+p) in sessionKeys)?'session':'plain';
+  if(!cryptoOK())mode.querySelector('option[value="pass"]').disabled=true;
+  keyModeNote();provHelp();document.getElementById('settingsDlg').showModal();
+}
+function provHelp(){
+  const p=document.getElementById('provSel').value;
+  document.getElementById('provHelp').innerHTML='<b>'+escHTML(PROVIDERS[p].name)+':</b> '+PROVIDERS[p].steps;
+  document.getElementById('activeProv').textContent='Currently active: '+PROVIDERS[getProv()].name;
+}
+async function saveKey(){
+  const p=document.getElementById('provSel').value,k=document.getElementById('keyIn').value.trim();
+  if(!k){showToast('Paste your key first');return}
+  const mode=document.getElementById('keyMode').value;
+  /* a new key always clears whatever was stored before, in any mode */
+  LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);if(p==='gemini')LS.rm('gemini_api_key');
+  if(mode==='pass'){
+    if(!cryptoOK()){showToast('This browser cannot encrypt — choose another option');return}
+    const pass=prompt('Choose a passphrase for your keys.\n\nYou will type it once each time you open Appuscholer. Nobody can recover it for you.');
+    if(pass===null||pass.length<6){showToast('Passphrase needs at least 6 characters — nothing was saved');return}
+    const again=prompt('Type the passphrase once more to confirm:');
+    if(again!==pass){showToast('The two passphrases did not match — nothing was saved');return}
+    try{LS.set('appu_enc_'+p,await lockKey(k,pass))}
+    catch(e){showToast('Could not encrypt the key — nothing was saved');return}
+    LS.setSession('appu_key_'+p,k);          /* usable now, in memory only */
+  }else if(mode==='session'){
+    LS.setSession('appu_key_'+p,k);
+  }else{
+    LS.set('appu_key_'+p,k);
+    if(p==='gemini')LS.set('gemini_api_key',k);
+  }
+  LS.set('appu_provider',p);
+  document.getElementById('keyIn').value='';
+  document.getElementById('settingsDlg').close();refreshProvUI();
+  showToast(PROVIDERS[p].name+' connected ✓'+(mode==='pass'?' and encrypted 🔒':''));
+}
+function removeKey(){
+  const p=document.getElementById('provSel').value;
+  LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);if(p==='gemini')LS.rm('gemini_api_key');
+  document.getElementById('keyIn').value='';document.getElementById('keyIn').placeholder='Paste your API key here';
+  refreshProvUI();
+  showToast(PROVIDERS[p].short+' key removed ✓');
+}
+function openHelp(){document.getElementById('welcomeDlg').showModal()}
+
+/* ============ FIX 4: readable error messages ============ */
+function apiMsg(e){
+  const m=String(e&&e.message||'');
+  if(m==='key')return'Add your API key first — click ⚙ at the top right.';
+  if(/^BLOCKED:/.test(m))return m.slice(8).trim();
+  if(/^BADPASS:/.test(m))return m.slice(8).trim();
+  if(/\b401\b|\b403\b/.test(m))return'Your API key was rejected. Open ⚙ and paste it again.';
+  if(/\b404\b/.test(m))return'That AI model is no longer available. Try a different provider using the tabs at the top.';
+  if(/\b429\b/.test(m))return'Free limit reached for now. Wait a minute, or switch provider using the tabs at the top.';
+  if(/\b5\d\d\b/.test(m))return'The AI service is having problems. Try again in a few minutes.';
+  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'No internet connection, or this provider refused the request from a local file.';
+  return m||'Something went wrong. Try again.';
+}
+
+/* ============ FIX 3: suggestion state always in sync ============ */
+function setSug(t){window._sug=t;aiOut.textContent=t}
+function clearSug(msg){window._sug=null;aiOut.textContent=msg}
+function copyAI(){
+  const t=window._sug||'';if(!t){showToast('Nothing to copy yet');return}
+  navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy — select the text instead'));
+}
+function acceptAI(){
+  const s=window._sug;if(!s){showToast('No suggestion to accept yet');return}
+  insertIntoEditor(s,editor.selectionStart!==editor.selectionEnd);
+  clearSug('Your AI suggestion will appear here…');
+  showToast('Inserted ✓ — Ctrl+Z to undo');
+}
+
+/* ============ FIX 4 + 14 + 18: the AI call ============ */
+async function callAI(prompt,opts){
+  const o=opts||{},temp=(o.temp==null?0.8:o.temp),maxTok=o.max||2000;
+  await ensureKey();
+  const prov=getProv(),key=getKey();
+  if(!key){openSettings();throw new Error('key')}
+
+  if(prov==='gemini'){
+    const tries=[PROVIDERS.gemini.model].concat(PROVIDERS.gemini.fallbacks||[]);
+    let lastErr=null;
+    for(const model of tries){
+      let r;
+      try{
+        r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',
+          {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},
+           body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:temp,maxOutputTokens:maxTok}})});
+      }catch(netErr){throw netErr}
+      if(r.status===404||r.status===400){lastErr=new Error('HTTP '+r.status);continue}
+      if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,200))}
+      const j=await r.json();
+      const c=j.candidates&&j.candidates[0];
+      if(!c)throw new Error(j.promptFeedback&&j.promptFeedback.blockReason
+        ?'BLOCKED: the AI refused this text ('+j.promptFeedback.blockReason+'). Try rewording it.'
+        :'The AI returned no answer. Try again.');
+      const parts=(c.content&&c.content.parts)||[];
+      const text=parts.filter(p=>typeof p.text==='string'&&!p.thought).map(p=>p.text).join('');
+      if(!text)throw new Error(c.finishReason==='MAX_TOKENS'
+        ?'The answer was cut off. Select a smaller piece of text and try again.'
+        :'The AI returned an empty answer. Try again.');
+      return text;
+    }
+    throw lastErr||new Error('No working Gemini model found.');
+  }
+
+  if(prov==='claude'){
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:PROVIDERS.claude.model,max_tokens:maxTok,temperature:temp,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,200))}
+    const j=await r.json();
+    const text=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text||'').join('');
+    if(!text)throw new Error('The AI returned an empty answer. Try again.');
+    return text;
+  }
+
+  let url,model;
+  const headers={'Content-Type':'application/json','Authorization':'Bearer '+key};
+  if(prov==='groq'){url='https://api.groq.com/openai/v1/chat/completions';model=PROVIDERS.groq.model}
+  else if(prov==='deepseek'){url='https://api.deepseek.com/chat/completions';model=PROVIDERS.deepseek.model}
+  else if(prov==='openai'){url='https://api.openai.com/v1/chat/completions';model=PROVIDERS.openai.model}
+  else{url='https://openrouter.ai/api/v1/chat/completions';model=PROVIDERS.openrouter.model;
+       headers['HTTP-Referer']='https://appuscholer.local';headers['X-Title']='Appuscholer'}
+
+  const r=await fetch(url,{method:'POST',headers,
+    body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:temp,max_tokens:maxTok})});
+  if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,200))}
+  const j=await r.json();
+  const text=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+  if(!text)throw new Error('The AI returned an empty answer. Try again.');
+  return text;
+}
+
+/* ============ FIX 7: selection vs tail, kept separate ============ */
+function hasSelection(){return editor.selectionStart!==editor.selectionEnd}
+function selText(){const s=editor.selectionStart,e=editor.selectionEnd;return s!==e?editor.value.slice(s,e):editor.value}
+function tailText(){return editor.value.slice(-2000)}
+
+/* ============ Writing actions ============ */
+async function continueWriting(){
+  clearSug('💜 Thinking…');
+  try{setSug(await callAI('Continue this writing naturally, about 120 words. Do not repeat what is already there, just continue:'+stylePrompt()+'\n\n'+tailText(),{temp:0.8}));
+      showToast('Suggestion ready — press Tab in the editor to accept')}
+  catch(e){clearSug(apiMsg(e))}
+}
+/* FIX 17: Improve and Longer replace a selection instead of appending a duplicate */
+async function improveText(){
+  if(!hasSelection()){showToast('Select the text you want to improve first');return}
+  const t=selText();
+  clearSug('💜 Polishing…');
+  try{setSug(await callAI('Improve this text: fix grammar and polish it, keeping the meaning and the length similar. Reply with the improved text only.'+stylePrompt()+'\n\n'+t,{temp:0.3}));
+      showToast('Ready — press Tab to replace your selection')}
+  catch(e){clearSug(apiMsg(e))}
+}
+async function makeLonger(){
+  if(!hasSelection()){showToast('Select the text you want to expand first');return}
+  const t=selText();
+  clearSug('💜 Expanding…');
+  try{setSug(await callAI('Expand this text with richer detail and examples, about double the length. Reply with the expanded text only.'+stylePrompt()+'\n\n'+t,{temp:0.7}));
+      showToast('Ready — press Tab to replace your selection')}
+  catch(e){clearSug(apiMsg(e))}
+}
+async function askAI(){
+  const inp=document.getElementById('chatIn'),q=inp.value.trim();if(!q)return;
+  const log=document.getElementById('chatLog');
+  const mine=document.createElement('div');mine.className='msg user';mine.textContent=q;   /* FIX 1 */
+  log.appendChild(mine);inp.value='';
+  const bubble=document.createElement('div');bubble.className='msg ai';bubble.textContent='💜 thinking…';
+  log.appendChild(bubble);log.scrollTop=log.scrollHeight;
+  try{bubble.textContent=await callAI('You are Appuscholer, a friendly scholarly writing coach for psychology students. Answer briefly and helpfully:\n\n'+q,{temp:0.6})}
+  catch(e){bubble.textContent=apiMsg(e)}
+  log.scrollTop=log.scrollHeight;
+}
+document.getElementById('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();askAI()}});
+
+/* ============ FIX 15: Tab only when a suggestion is waiting ============ */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Tab'||e.shiftKey||document.activeElement!==editor)return;
+  if(!window._sug)return;              /* let Tab move focus normally */
+  e.preventDefault();acceptAI();
+});
+
+function downloadDoc(){
+  const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
+  const title=(cur&&cur.title)||'appuscholer-document';
+  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholer-document';
+  const body=escHTML(editor.value).replace(/\n/g,'<br>');
+  const html='<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8">'+
+    '<title>'+escHTML(title)+'</title><style>body{font-family:"Times New Roman",serif;font-size:12pt;line-height:2}</style>'+
+    '</head><body>'+body+'</body></html>';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿'+html],{type:'application/msword'}));
+  a.download=safe+'.doc';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  showToast('Downloaded ✓ — opens in Word');
+}
+
+const SCAFFOLDS={
+ 'Lab report (APA)':'Title\n\nAbstract\n[150–250 words: aim, method, key result, conclusion]\n\nKeywords: \n\nIntroduction\n[Background, previous findings, rationale. End with your hypotheses.]\n\nMethod\n\nParticipants\n[N, age M and SD, sampling, ethics approval, informed consent]\n\nMaterials\n[Measures, reliability, apparatus]\n\nProcedure\n[What participants actually did, in order, past tense]\n\nDesign\n[IV, DV, design type]\n\nResults\n[Descriptives first, then inferential statistics in APA format]\n\nDiscussion\n[Restate findings in words, link to the literature, limitations, future directions]\n\nReferences\n',
+ 'Essay':'Title\n\nIntroduction\n[Context, the question, your line of argument]\n\n[Argument 1 — claim, evidence, evaluation]\n\n[Argument 2 — claim, evidence, evaluation]\n\n[Counter-argument and your response]\n\nConclusion\n[What the evidence supports, and what remains open]\n\nReferences\n',
+ 'Literature review':'Title\n\nIntroduction\n[Scope, why this review is needed, review question]\n\nMethod of review\n[Databases searched, inclusion and exclusion criteria, date range]\n\nTheme 1\n[Findings that agree, findings that conflict, quality of evidence]\n\nTheme 2\n\nTheme 3\n\nSynthesis\n[What the field agrees on, where it does not, what is missing]\n\nConclusion\n\nReferences\n'
+};
+function insertScaffold(){
+  const names=Object.keys(SCAFFOLDS);
+  const pick=prompt('Which template?\n\n'+names.map((n,i)=>(i+1)+'. '+n).join('\n')+'\n\nType a number:','1');
+  if(pick===null)return;
+  const s=SCAFFOLDS[names[(parseInt(pick,10)||1)-1]];
+  if(!s){showToast('Pick a number from the list');return}
+  insertIntoEditor(s,false);showToast('Template inserted ✓ — Ctrl+Z to undo');
+}
+
+/* ============ FIX 13: same-origin PDF worker so file:// does not block it ============ */
+(function(){
+  if(typeof pdfjsLib==='undefined')return;
+  const w='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  fetch(w).then(r=>r.ok?r.text():Promise.reject())
+   .then(t=>{pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:'text/javascript'}))})
+   .catch(()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc=w}catch(e){}});
+})();
+
+/* ============ Writing style training ============ */
+function styleGet(){return LS.get('appu_style_profile')||''}
+function styleIsOn(){return LS.get('appu_style_on')==='1'}
+function styleInit(){document.getElementById('styleProfile').value=styleGet();document.getElementById('styleOn').checked=styleIsOn()}
+function styleToggle(){const on=document.getElementById('styleOn').checked;LS.set('appu_style_on',on?'1':'0');
+  showToast(on?'Style ON — suggestions will match your voice ✓':'Style OFF')}
+function styleSave(){LS.set('appu_style_profile',document.getElementById('styleProfile').value.trim());showToast('Style profile saved ✓')}
+function stylePrompt(){const s=styleGet();if(!styleIsOn()||!s)return'';
+  return'\n\nIMPORTANT — match the author\'s personal writing style described here:\n'+s+'\nWrite as if you ARE this author, keeping their voice, rhythm and vocabulary.'}
+async function styleAnalyze(){
+  const txt=editor.value.trim();
+  if(txt.split(/\s+/).filter(Boolean).length<80){showToast('Write at least ~80 words first, then I can learn your style');return}
+  showToast('💜 Studying your writing style…');
+  try{
+    const a=await callAI('Analyze the writing style of the text below. Reply with 4-6 short bullet points covering: tone, sentence length and rhythm, vocabulary level, and any distinctive habits. Be concrete and specific.\n\nText:\n'+txt.slice(0,4000),{temp:0.3});
+    document.getElementById('styleProfile').value=a.trim();styleSave();
+    document.getElementById('styleOn').checked=true;styleToggle();
+    showToast('Your style is learned ✓ — read the profile, edit if you like');
+  }catch(e){showToast(apiMsg(e))}
+}
+function readFileText(f){
+  const name=(f.name||'').toLowerCase();
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    if(name.endsWith('.pdf')){
+      r.onload=async()=>{try{
+        if(typeof pdfjsLib==='undefined')return rej(new Error('PDF reader needs internet once to load'));
+        const pdf=await pdfjsLib.getDocument({data:r.result}).promise;
+        let out='';const n=Math.min(pdf.numPages,80);
+        for(let p=1;p<=n;p++){const page=await pdf.getPage(p);const tc=await page.getTextContent();out+=tc.items.map(it=>it.str).join(' ')+'\n'}
+        res(out);
+      }catch(e){rej(e)}};
+      r.onerror=()=>rej(new Error('Could not read file'));r.readAsArrayBuffer(f);
+    }else if(name.endsWith('.docx')){
+      r.onload=async()=>{try{
+        if(typeof mammoth==='undefined')return rej(new Error('Word reader needs internet once to load'));
+        const out=await mammoth.extractRawText({arrayBuffer:r.result});res(out.value||'');
+      }catch(e){rej(e)}};
+      r.onerror=()=>rej(new Error('Could not read file'));r.readAsArrayBuffer(f);
+    }else if(name.endsWith('.doc')){
+      rej(new Error('Old .doc "'+f.name+'" — please Save As .docx in Word first'));
+    }else{r.onload=()=>res(String(r.result||''));r.onerror=()=>rej(new Error('Could not read file'));r.readAsText(f)}
+  });
+}
+function styleSampleCorpus(all,maxChars){
+  if(all.length<=maxChars)return all;
+  const SEG=8,segLen=Math.floor(maxChars/SEG),step=all.length/SEG;let out='';
+  for(let i=0;i<SEG;i++){out+=all.slice(Math.floor(i*step),Math.floor(i*step)+segLen)+'\n\n'}
+  return out;
+}
+/* FIX 13: size guard + per-file progress */
+async function styleAnalyzeFiles(input){
+  const files=Array.from(input.files||[]).slice(0,100);
+  if(!files.length)return;
+  const info=document.getElementById('styleFileInfo');
+  let texts=[],words=0,skipped=[];
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    info.textContent='Reading '+(i+1)+' of '+files.length+': '+f.name;
+    await new Promise(r=>setTimeout(r,0));          /* let the UI paint */
+    if(f.size>25*1024*1024){skipped.push(f.name+' (too big)');continue}
+    try{
+      const clean=String(await readFileText(f)).replace(/\s+/g,' ').trim();
+      if(clean){texts.push(clean);words+=clean.split(' ').length}
+    }catch(e){skipped.push(f.name)}
+  }
+  input.value='';
+  if(!texts.length||words<80){info.textContent='';
+    showToast('Could not read enough text. '+(skipped.length?'Skipped: '+skipped.slice(0,3).join(', '):''));return}
+  info.textContent=texts.length+' files read · '+words.toLocaleString('en-IN')+' words · analyzing style…';
+  showToast('💜 Studying '+words.toLocaleString('en-IN')+' words of your writing…');
+  try{
+    const sample=styleSampleCorpus(texts.join('\n\n'),15000);
+    const a=await callAI('You are studying the writing style of ONE author across many of their documents. Analyze the samples and reply with 5-7 short bullet points covering: tone and persona, sentence length and rhythm, vocabulary level and word choices, paragraph structure, and any distinctive habits or phrases. Be concrete so another writer could imitate this voice.\n\nSamples:\n'+sample,{temp:0.3});
+    document.getElementById('styleProfile').value=a.trim();styleSave();
+    document.getElementById('styleOn').checked=true;styleToggle();
+    info.textContent='✓ Style learned from '+texts.length+' files ('+words.toLocaleString('en-IN')+' words).'+
+      (skipped.length?' Skipped '+skipped.length+' unreadable.':'')+' Edit the profile above if you like.';
+    showToast('Your style is learned ✓');
+  }catch(e){info.textContent='';showToast(apiMsg(e))}
+}
+
+/* ============ FIX 8: real APA 7th, MLA 9th and Chicago ============ */
+function citGetLib(){try{const a=JSON.parse(LS.get('appu_citations')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function citSaveLib(l){LS.set('appu_citations',JSON.stringify(l));citRender()}
+function citLastName(a){a=(a||'').split(';')[0].trim();if(!a)return'Author';
+  if(a.includes(','))return a.split(',')[0].trim();
+  const p=a.split(/\s+/);return p[p.length-1]}
+function apaName(a){
+  a=a.trim();if(!a.includes(','))return a;
+  const parts=a.split(','),last=parts[0].trim(),first=(parts[1]||'').trim();
+  const inits=first.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ');
+  return last+(inits?', '+inits:'');
+}
+function apaAuthors(raw){
+  const l=(raw||'').split(';').map(s=>s.trim()).filter(Boolean).map(apaName);
+  if(!l.length)return'Author';
+  if(l.length===1)return l[0];
+  if(l.length<=20)return l.slice(0,-1).join(', ')+', & '+l[l.length-1];
+  return l.slice(0,19).join(', ')+', . . . '+l[l.length-1];
+}
+function dot(s){s=String(s==null?'':s).trim();return s?(/[.?!]$/.test(s)?s:s+'.'):''}
+function doiUrl(d){
+  if(d.doi)return'https://doi.org/'+String(d.doi).trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
+  return d.url?String(d.url).trim():'';
+}
+function citFmt(d){
+  const st=document.getElementById('citStyle').value;
+  const names=(d.author||'').split(';').map(s=>s.trim()).filter(Boolean);
+  const ln=citLastName(d.author),y=(d.year||'').trim()||'n.d.';
+  const link=doiUrl(d),isJ=(d.type==='Journal article');
+  let ref='',intext='';
+  if(st==='apa'){
+    const tail=isJ
+      ? dot([d.source,(d.volume?', '+d.volume:''),(d.issue?'('+d.issue+')':''),(d.pages?', '+d.pages:'')].join(''))
+      : dot(d.source);
+    ref=apaAuthors(d.author)+' ('+y+'). '+dot(d.title)+(tail?' '+tail:'')+(link?' '+link:'');
+    const who=names.length>=3?ln+' et al.':names.length===2?ln+' & '+citLastName(names[1]):ln;
+    intext='('+who+', '+y+')';
+  }else if(st==='mla'){
+    const tail=[d.source,(d.volume?', vol. '+d.volume:''),(d.issue?', no. '+d.issue:''),', '+y,(d.pages?', pp. '+d.pages:'')].join('');
+    ref=dot(d.author)+' "'+dot(d.title)+'" '+dot(tail)+(link?' '+link:'');
+    intext='('+ln+(d.pages?' '+String(d.pages).split(/[–-]/)[0].trim():'')+')';
+  }else{
+    const tail=[d.source,(d.volume?' '+d.volume:''),(d.issue?', no. '+d.issue:''),(d.pages?': '+d.pages:'')].join('');
+    ref=dot(d.author)+' '+y+'. "'+dot(d.title)+'" '+dot(tail)+(link?' '+link:'');
+    intext='('+ln+' '+y+')';
+  }
+  return{ref:ref.replace(/\s{2,}/g,' ').trim(),intext};
+}
+function citReadForm(){
+  const v=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
+  return{author:v('citAuthor'),year:v('citYear'),title:v('citTitle'),source:v('citSource'),
+         volume:v('citVol'),issue:v('citIssue'),pages:v('citPages'),doi:v('citDOI'),url:v('citURL'),
+         type:v('citType'),style:v('citStyle')};
+}
+function citClearForm(){
+  ['citAuthor','citYear','citTitle','citSource','citVol','citIssue','citPages','citDOI','citURL']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  showToast('Form cleared');
+}
+/* FIX 10: cursor at position 0 no longer jumps to the end */
+function citInsertAtCursor(txt){
+  const s=editor.selectionStart,e=editor.selectionEnd;
+  if(typeof s!=='number'){editor.value+=txt;upd();return}
+  editor.focus();editor.setSelectionRange(s,e);
+  insertIntoEditor(txt,true);
+}
+function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
+  citInsertAtCursor(' '+citFmt(d).intext);showToast('Citation inserted ✓')}
+function citAdd(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
+  const l=citGetLib();l.push(d);citSaveLib(l);showToast('Saved to library ✓')}
+function citDel(i){const l=citGetLib();l.splice(i,1);citSaveLib(l)}
+function citRender(){
+  const l=citGetLib(),box=document.getElementById('citLib');
+  document.getElementById('citCount').textContent=l.length;
+  if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';return}
+  box.innerHTML=l.map((d,i)=>{
+    const f=citFmt(d);
+    return'<div class="cit-item"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
+      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+escHTML(f.ref)+
+      '<div class="row" style="margin-top:6px">'+
+      '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.intext)+'</button>'+
+      '</div></div>';
+  }).join('');
+}
+function citUseLib(i){const d=citGetLib()[i];if(!d)return;citInsertAtCursor(' '+citFmt(d).intext);showToast('Citation inserted ✓')}
+/* FIX 8e: alphabetical reference list */
+function citInsertBib(){
+  const l=citGetLib();if(!l.length){showToast('Library is empty — add a source first');return}
+  const st=document.getElementById('citStyle').value;
+  const head=st==='mla'?'Works Cited':st==='chicago'?'Bibliography':'References';
+  const sorted=l.slice().sort((a,b)=>citLastName(a.author).localeCompare(citLastName(b.author),'en',{sensitivity:'base'}));
+  insertIntoEditor('\n\n'+head+'\n'+sorted.map(d=>citFmt(d).ref).join('\n'),false);
+  showToast('Reference list inserted, alphabetically ✓');
+}
+/* FIX 9: real metadata from Crossref instead of an invented citation */
+async function citLookup(){
+  const q=document.getElementById('citTitle').value.trim();
+  if(!q){showToast('Type the work title first');return}
+  showToast('🔎 Looking it up in Crossref…');
+  try{
+    const r=await fetch('https://api.crossref.org/works?rows=1&query.bibliographic='+encodeURIComponent(q));
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const it=((j.message&&j.message.items)||[])[0];
+    if(!it){showToast('Not found on Crossref — please fill it in by hand');return}
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v==null?'':String(v)};
+    set('citTitle',(it.title||[''])[0]);
+    set('citAuthor',(it.author||[]).map(a=>(a.family||'')+(a.given?', '+a.given:'')).join('; '));
+    const dp=((it.issued||{})['date-parts']||[[]])[0]||[];
+    set('citYear',dp[0]||'');
+    set('citSource',(it['container-title']||[''])[0]);
+    set('citVol',it.volume);set('citIssue',it.issue);set('citPages',it.page);set('citDOI',it.DOI);
+    set('citURL','');
+    document.getElementById('citType').value=(it.type==='book'||it.type==='monograph')?'Book':'Journal article';
+    citRender();
+    showToast('Found on Crossref ✓ — check the details, then + Library');
+  }catch(e){showToast('Crossref unreachable — please fill it in by hand')}
+}
+
+/* ============ Psychology starters and sharing ============ */
+const PSYCH_STARTERS=[
+ {author:'American Psychological Association',year:'2020',title:'Publication manual of the American Psychological Association',source:'American Psychological Association',volume:'',issue:'',pages:'',doi:'10.1037/0000165-000',url:'',type:'Book',style:'apa'},
+ {author:'Miller, George A.',year:'1956',title:'The magical number seven, plus or minus two: Some limits on our capacity for processing information',source:'Psychological Review',volume:'63',issue:'2',pages:'81–97',doi:'10.1037/h0043158',url:'',type:'Journal article',style:'apa'},
+ {author:'Bandura, Albert',year:'1977',title:'Social learning theory',source:'Prentice Hall',volume:'',issue:'',pages:'',doi:'',url:'',type:'Book',style:'apa'},
+ {author:'Festinger, Leon',year:'1957',title:'A theory of cognitive dissonance',source:'Stanford University Press',volume:'',issue:'',pages:'',doi:'',url:'',type:'Book',style:'apa'},
+ {author:'Maslow, Abraham H.',year:'1943',title:'A theory of human motivation',source:'Psychological Review',volume:'50',issue:'4',pages:'370–396',doi:'10.1037/h0054346',url:'',type:'Journal article',style:'apa'}
+];
+function psychLoadStarters(){
+  const l=citGetLib();let added=0;
+  PSYCH_STARTERS.forEach(s=>{if(!l.some(e=>e.title===s.title&&e.author===s.author)){l.push(Object.assign({},s));added++}});
+  citSaveLib(l);showToast(added?added+' classic psychology sources added ✓':'Starter library already loaded ✓');
+}
+function citExport(){
+  const l=citGetLib();if(!l.length){showToast('Library is empty — add a source first');return}
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(l,null,2)],{type:'application/json'}));
+  a.download='psychology-class-library.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  showToast('Library exported ✓ — share the file with your class');
+}
+function citImport(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  if(f.size>3*1024*1024){showToast('That file is too large to be a citation library');input.value='';return}
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const arr=JSON.parse(r.result);
+      if(!Array.isArray(arr))throw new Error('bad');
+      const l=citGetLib();let added=0;
+      arr.slice(0,2000).forEach(d=>{
+        if(d&&d.author&&d.title&&!l.some(e=>e.title===String(d.title)&&e.author===String(d.author))){
+          l.push({author:String(d.author),year:String(d.year||''),title:String(d.title),source:String(d.source||''),
+                  volume:String(d.volume||''),issue:String(d.issue||''),pages:String(d.pages||''),
+                  doi:String(d.doi||''),url:String(d.url||''),type:String(d.type||'Journal article'),style:String(d.style||'apa')});
+          added++;
+        }
+      });
+      citSaveLib(l);showToast(added+' sources merged into your library ✓');
+    }catch(e){showToast('Could not read that file — it must be a library JSON exported from Appuscholer')}
+    input.value='';
+  };
+  r.onerror=()=>{showToast('Could not read that file');input.value=''};
+  r.readAsText(f);
+}
+
+/* ============ FIX 7 + 18: psychology tools ============ */
+const PSYCH_PROMPTS={
+  paper:{temp:0.25,p:'You are a psychology research assistant. Summarize the research text below under exactly these headings: Aim, Method, Key findings, Limitations. Formal academic tone, concise, APA-style language. Use only what the text actually says — if something is missing, write "not reported".'},
+  case:{temp:0.3,p:'You are a psychology tutor helping a student study. Analyze the case description below: identify the presenting psychological issues, name the relevant psychological theories or concepts that apply, and suggest evidence-based points for academic discussion. IMPORTANT: give no medical diagnosis and no treatment advice — frame everything strictly as academic study analysis. Formal academic tone.'},
+  litrev:{temp:0.4,p:'You are a psychology academic writing coach. Using the text below as a starting point, advise how to build a short literature review paragraph: the themes to organize by, how the sources connect or contrast, and angles for critical evaluation. Formal academic tone, APA-style guidance. Do not invent references.'},
+  explain:{temp:0.5,p:'Explain the psychology concept in the text below simply and clearly, as if to a first-year psychology student, with one everyday example. Then add one exam-style key point to remember. Warm, clear tone.'},
+  stats:{temp:0.1,p:'You are an APA 7th edition formatting expert. Convert the statistical output below into correct APA 7th reporting sentences.\nRules: italicise statistical symbols using normal text (M, SD, t, F, r, p, N, d); no leading zero on p and r values (write p = .024, not 0.024); report p to three decimals, or as p < .001 when smaller; include degrees of freedom in parentheses; report exact test statistics to two decimals; include effect sizes and confidence intervals when the output contains them. Report ONLY what the output actually contains — never invent a number. If a required value is missing, say which one is missing.'}
+};
+async function psychTool(kind){
+  const cfg=PSYCH_PROMPTS[kind];if(!cfg)return;
+  const whole=!hasSelection();
+  const txt=selText().trim();
+  if(txt.length<40){showToast('Write or select some text first, then tap the tool');return}
+  if(kind==='case'&&!sessionKeys['appu_case_ack']){
+    if(!confirm('This text will be sent to your AI provider.\n\nRemove names, dates of birth, addresses and any other identifying details before you continue (APA Ethics 4.07).\n\nContinue?'))return;
+    sessionKeys['appu_case_ack']='1';
+  }
+  if(whole&&txt.length>12000)showToast('Long document — analyzing the first 12,000 characters. Select a section for a sharper answer.');
+  clearSug('💜 Thinking…');
+  try{
+    setSug(await callAI(cfg.p+stylePrompt()+'\n\nText:\n'+txt.slice(0,12000),{temp:cfg.temp,max:2500}));
+    showToast('Ready — press Tab in the editor to insert');
+  }catch(e){clearSug(apiMsg(e))}
+}
+
+/* ============ Statistics Lab — client-side test engine, no CDN dependency ============ */
+function gammaln(x){
+  var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  var y=x,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);
+  var ser=1.000000000190015;
+  for(var j=0;j<6;j++){y+=1;ser+=cof[j]/y}
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function _betacf(x,a,b){
+  var MAXIT=200,EPS=3e-9,FPMIN=1e-30;
+  var qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;
+  if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;var h=d;
+  for(var m=1;m<=MAXIT;m++){
+    var m2=2*m,aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d;var del=d*c;h*=del;
+    if(Math.abs(del-1)<EPS)break;
+  }
+  return h;
+}
+function betai(a,b,x){
+  if(x<=0)return 0;if(x>=1)return 1;
+  var bt=Math.exp(gammaln(a+b)-gammaln(a)-gammaln(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*_betacf(x,a,b)/a:1-bt*_betacf(1-x,b,a)/b;
+}
+function _gser(a,x){
+  var ITMAX=200,EPS=3e-9;if(x<=0)return 0;
+  var ap=a,sum=1/a,del=sum;
+  for(var n=1;n<=ITMAX;n++){ap+=1;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*EPS)break}
+  return sum*Math.exp(-x+a*Math.log(x)-gammaln(a));
+}
+function _gcf(a,x){
+  var ITMAX=200,EPS=3e-9,FPMIN=1e-30;
+  var b=x+1-a,c=1/FPMIN,d=1/b,h=d;
+  for(var i=1;i<=ITMAX;i++){
+    var an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=b+an/c;if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d;var del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;
+  }
+  return Math.exp(-x+a*Math.log(x)-gammaln(a))*h;
+}
+function gammaq(a,x){return x<a+1?1-_gser(a,x):_gcf(a,x)}
+function erf(x){
+  var sign=x<0?-1:1;x=Math.abs(x);
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var t=1/(1+p*x);
+  var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return sign*y;
+}
+function normalCDF(z){return 0.5*(1+erf(z/Math.sqrt(2)))}
+function pFromT(t,df){return betai(df/2,0.5,df/(df+t*t))}                          /* two-tailed */
+function pFromF(f,df1,df2){if(f<=0)return 1;var x=df1*f/(df1*f+df2);return 1-betai(df1/2,df2/2,x)} /* one-tailed */
+function pFromChi(chi2,df){return gammaq(df/2,chi2/2)}
+function pFromZ(z){return 2*(1-normalCDF(Math.abs(z)))}                            /* two-tailed */
+
+function smean(a){return a.reduce((s,v)=>s+v,0)/a.length}
+function svar(a){const m=smean(a);return a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1)}
+function ssd(a){return Math.sqrt(svar(a))}
+function smedian(a){const s=a.slice().sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2}
+function ranks(a){ /* average ranks, ties split evenly */
+  const idx=a.map((v,i)=>i).sort((i,j)=>a[i]-a[j]);
+  const r=new Array(a.length);let i=0;
+  while(i<idx.length){
+    let j=i;while(j+1<idx.length&&a[idx[j+1]]===a[idx[i]])j++;
+    const avg=(i+j)/2+1;
+    for(let k=i;k<=j;k++)r[idx[k]]=avg;
+    i=j+1;
+  }
+  return r;
+}
+
+/* ---- pasted-table / CSV parsing ---- */
+function statsSplitLine(l,delim){
+  const out=[];let cur='',inQ=false;
+  for(let i=0;i<l.length;i++){
+    const c=l[i];
+    if(c==='"'){if(inQ&&l[i+1]==='"'){cur+='"';i++}else inQ=!inQ}
+    else if(c===delim&&!inQ){out.push(cur);cur=''}
+    else cur+=c;
+  }
+  out.push(cur);return out.map(s=>s.trim());
+}
+function statsParseText(text){
+  const lines=text.split(/\r\n|\r|\n/).filter(l=>l.trim().length);
+  if(!lines.length)return null;
+  const delim=lines[0].includes('\t')?'\t':',';
+  const split=l=>statsSplitLine(l,delim);
+  const headers=split(lines[0]);
+  const rows=lines.slice(1).map(split).filter(r=>r.length===headers.length);
+  const cols=headers.map((h,i)=>{
+    const vals=rows.map(r=>r[i]).filter(v=>v!==undefined&&v!=='');
+    const numeric=vals.length>0&&vals.every(v=>/^-?\d+(\.\d+)?$/.test(v));
+    return{name:h||('Col'+(i+1)),index:i,type:numeric?'numeric':'categorical',n:vals.length};
+  });
+  return{headers,rows,cols};
+}
+function statsParse(){
+  const text=document.getElementById('statsPaste').value;
+  const data=statsParseText(text);
+  if(!data||!data.cols.length){showToast('Paste some data first — one header row, then your rows');return}
+  window._statsData=data;
+  const box=document.getElementById('statsCols');
+  box.innerHTML='<p class="desc" style="margin-bottom:4px">'+data.rows.length+' rows detected:</p>'+
+    data.cols.map(c=>'<span class="stats-chip '+(c.type==='numeric'?'num':'cat')+'"><b>'+escHTML(c.name)+'</b> · '+c.type+' · n='+c.n+'</span>').join('');
+  document.getElementById('statsTestArea').style.display='block';
+  statsFieldsRender();
+  showToast('Data parsed ✓');
+}
+function statsUpload(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{document.getElementById('statsPaste').value=String(r.result||'');statsParse();input.value=''};
+  r.onerror=()=>{showToast('Could not read that file');input.value=''};
+  r.readAsText(f);
+}
+
+const STAT_TESTS={
+  desc:{label:'Descriptive statistics',fields:[{id:'dv',label:'Variable',type:'numeric'}]},
+  ttest1:{label:'One-sample t-test',fields:[{id:'dv',label:'Variable',type:'numeric'}],extra:[{id:'mu',label:'Test value (μ)',placeholder:'0'}]},
+  ttestInd:{label:'Independent-samples t-test',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (exactly 2 groups)',type:'categorical'}]},
+  ttestPaired:{label:'Paired-samples t-test',fields:[{id:'v1',label:'Variable 1 (e.g. pre)',type:'numeric'},{id:'v2',label:'Variable 2 (e.g. post)',type:'numeric'}]},
+  anova1:{label:'One-way ANOVA',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
+  tukey:{label:'Tukey HSD post-hoc',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3-6 groups)',type:'categorical'}]},
+  regression:{label:'Simple linear regression',fields:[{id:'iv',label:'Predictor (X)',type:'numeric'},{id:'dv',label:'Outcome (Y)',type:'numeric'}]},
+  mannwhitney:{label:'Mann-Whitney U',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (exactly 2 groups)',type:'categorical'}]},
+  wilcoxon:{label:'Wilcoxon signed-rank',fields:[{id:'v1',label:'Variable 1 (e.g. pre)',type:'numeric'},{id:'v2',label:'Variable 2 (e.g. post)',type:'numeric'}]},
+  pearson:{label:'Pearson correlation',fields:[{id:'v1',label:'Variable 1',type:'numeric'},{id:'v2',label:'Variable 2',type:'numeric'}]},
+  chisq:{label:'Chi-square test of independence',fields:[{id:'v1',label:'Variable 1',type:'categorical'},{id:'v2',label:'Variable 2',type:'categorical'}]}
+};
+function statsColOptions(type){
+  const cols=(window._statsData&&window._statsData.cols||[]).filter(c=>c.type===type);
+  return cols.map(c=>'<option value="'+c.index+'">'+escHTML(c.name)+'</option>').join('');
+}
+function statsFieldsRender(){
+  const key=document.getElementById('statsTest').value,cfg=STAT_TESTS[key];
+  const box=document.getElementById('statsFields');
+  const used={};    /* when two fields share a type, default each to a different column */
+  let html='<div class="stats-fld-row">';
+  cfg.fields.forEach(f=>{
+    const cols=(window._statsData&&window._statsData.cols||[]).filter(c=>c.type===f.type);
+    used[f.type]=used[f.type]||0;
+    const pick=used[f.type]<cols.length?used[f.type]:0;
+    used[f.type]++;
+    const opts=cols.map((c,i)=>'<option value="'+c.index+'"'+(i===pick?' selected':'')+'>'+escHTML(c.name)+'</option>').join('');
+    html+='<div class="fld"><label>'+escHTML(f.label)+'</label><select id="sf_'+f.id+'">'+opts+'</select></div>';
+  });
+  (cfg.extra||[]).forEach(f=>{
+    html+='<div class="fld"><label>'+escHTML(f.label)+'</label><input type="text" id="sf_'+f.id+'" placeholder="'+escHTML(f.placeholder||'')+'"></div>';
+  });
+  html+='</div>';
+  box.innerHTML=html;
+}
+function statsColVals(idx,numeric){
+  const d=window._statsData;
+  return d.rows.map(r=>r[idx]).filter(v=>v!==undefined&&v!=='').map(v=>numeric?parseFloat(v):v);
+}
+function statsGroupBy(dvIdx,ivIdx){
+  const d=window._statsData,groups={};
+  d.rows.forEach(r=>{
+    const g=r[ivIdx],v=r[dvIdx];
+    if(g===undefined||g===''||v===undefined||v==='')return;
+    (groups[g]=groups[g]||[]).push(parseFloat(v));
+  });
+  return groups;
+}
+/* Studentized range critical values, α = .05, k = 2..6 groups (standard published table,
+   as in Howell or the NIST/SEMATECH e-Handbook). Linear interpolation between df rows.
+   Covers the common case for undergraduate/Master's coursework; for k > 6 or a different
+   α, verify in SPSS/JASP. */
+const TUKEY_Q05={
+  5:[3.64,4.60,5.22,5.67,6.03], 6:[3.46,4.34,4.90,5.30,5.63], 7:[3.34,4.16,4.68,5.06,5.36],
+  8:[3.26,4.04,4.53,4.89,5.17], 9:[3.20,3.95,4.41,4.76,5.02], 10:[3.15,3.88,4.33,4.65,4.91],
+  11:[3.11,3.82,4.26,4.57,4.82], 12:[3.08,3.77,4.20,4.51,4.75], 13:[3.06,3.73,4.15,4.45,4.69],
+  14:[3.03,3.70,4.11,4.41,4.64], 15:[3.01,3.67,4.08,4.37,4.59], 16:[3.00,3.65,4.05,4.33,4.56],
+  17:[2.98,3.63,4.02,4.30,4.52], 18:[2.97,3.61,4.00,4.28,4.49], 19:[2.96,3.59,3.98,4.25,4.47],
+  20:[2.95,3.58,3.96,4.23,4.45], 24:[2.92,3.53,3.90,4.17,4.37], 30:[2.89,3.49,3.85,4.10,4.30],
+  40:[2.86,3.44,3.79,4.04,4.23], 60:[2.83,3.40,3.74,3.98,4.16], 120:[2.80,3.36,3.68,3.92,4.10],
+  9999:[2.77,3.31,3.63,3.86,4.03]
+};
+function qCrit(k,df){
+  const keys=Object.keys(TUKEY_Q05).map(Number).sort((a,b)=>a-b);
+  const kIdx=Math.min(Math.max(k,2),6)-2;
+  if(df<=keys[0])return TUKEY_Q05[keys[0]][kIdx];
+  for(let i=0;i<keys.length-1;i++){
+    if(df>=keys[i]&&df<=keys[i+1]){
+      const d0=keys[i],d1=keys[i+1],v0=TUKEY_Q05[d0][kIdx],v1=TUKEY_Q05[d1][kIdx];
+      return v0+((df-d0)/(d1-d0))*(v1-v0);
+    }
+  }
+  return TUKEY_Q05[keys[keys.length-1]][kIdx];
+}
+/* ============ Charts — Chart.js from CDN, same graceful-degrade pattern as mammoth/pdf.js.
+   If the student's first launch has no internet, or the CDN is unreachable, charts are simply
+   skipped (a small note is shown) — every number in Statistics Lab is already computed and
+   shown without a chart, so nothing else about the results depends on this. ============ */
+let _statsChartInstance=null,_errorBarsRegistered=false;
+const _errorBarsPlugin={
+  id:'appuErrorBars',
+  afterDatasetsDraw(chart){
+    const eb=chart.config._appuErrorBars;
+    if(!eb)return;
+    const meta=chart.getDatasetMeta(0);if(!meta)return;
+    const ctx=chart.ctx,yScale=chart.scales.y;
+    meta.data.forEach((bar,i)=>{
+      const e=eb[i];if(!e)return;
+      const x=bar.x,yTop=yScale.getPixelForValue(e.plus),yBot=yScale.getPixelForValue(e.minus);
+      ctx.save();ctx.strokeStyle='#3b0764';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(x,yTop);ctx.lineTo(x,yBot);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-6,yTop);ctx.lineTo(x+6,yTop);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-6,yBot);ctx.lineTo(x+6,yBot);ctx.stroke();
+      ctx.restore();
+    });
+  }
+};
+function statsChartAvailable(){return typeof Chart!=='undefined'}
+function statsChartClear(){
+  if(_statsChartInstance){try{_statsChartInstance.destroy()}catch(e){}_statsChartInstance=null}
+  const box=document.getElementById('statsChartBox');if(box)box.innerHTML='';
+}
+function statsChartNoLib(){
+  const box=document.getElementById('statsChartBox');
+  if(box)box.innerHTML='<p class="desc">📈 Charts need an internet connection the first time this page loads.</p>';
+}
+function statsChartBarMeans(labels,values,errs,title,yLabel){
+  if(!statsChartAvailable())return statsChartNoLib();
+  if(!_errorBarsRegistered){try{Chart.register(_errorBarsPlugin)}catch(e){}_errorBarsRegistered=true}
+  const box=document.getElementById('statsChartBox');
+  box.innerHTML='<canvas id="statsChartCanvas" height="170"></canvas>';
+  const ctx=document.getElementById('statsChartCanvas').getContext('2d');
+  const cfg={type:'bar',data:{labels,datasets:[{label:yLabel||'Mean',data:values,backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5}]},
+    options:{plugins:{legend:{display:false},title:{display:!!title,text:title||''}},scales:{y:{beginAtZero:false}}}};
+  if(errs)cfg._appuErrorBars=errs;
+  _statsChartInstance=new Chart(ctx,cfg);
+}
+function statsChartScatter(points,fit,title,xLabel,yLabel){
+  if(!statsChartAvailable())return statsChartNoLib();
+  const box=document.getElementById('statsChartBox');
+  box.innerHTML='<canvas id="statsChartCanvas" height="170"></canvas>';
+  const ctx=document.getElementById('statsChartCanvas').getContext('2d');
+  const datasets=[{type:'scatter',label:'Data',data:points,backgroundColor:'#7c3aed'}];
+  if(fit)datasets.push({type:'line',label:'Fit line',data:fit,borderColor:'#f59e0b',borderWidth:2,pointRadius:0,fill:false});
+  _statsChartInstance=new Chart(ctx,{type:'scatter',data:{datasets},
+    options:{plugins:{title:{display:!!title,text:title||''}},
+      scales:{x:{type:'linear',title:{display:!!xLabel,text:xLabel||''}},y:{title:{display:!!yLabel,text:yLabel||''}}}}});
+}
+function statsChartHistogram(values,title){
+  if(!statsChartAvailable())return statsChartNoLib();
+  const box=document.getElementById('statsChartBox');
+  box.innerHTML='<canvas id="statsChartCanvas" height="170"></canvas>';
+  const ctx=document.getElementById('statsChartCanvas').getContext('2d');
+  const min=Math.min(...values),max=Math.max(...values);
+  const nb=Math.max(5,Math.min(10,Math.round(Math.sqrt(values.length))));
+  const width=(max-min)/nb||1;
+  const bins=new Array(nb).fill(0);
+  values.forEach(v=>{let idx=Math.floor((v-min)/width);if(idx>=nb)idx=nb-1;if(idx<0)idx=0;bins[idx]++});
+  const labels=bins.map((_,i)=>(min+i*width).toFixed(1)+'–'+(min+(i+1)*width).toFixed(1));
+  _statsChartInstance=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Count',data:bins,backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5}]},
+    options:{plugins:{legend:{display:false},title:{display:!!title,text:title||''}},scales:{y:{beginAtZero:true,ticks:{stepSize:Math.max(1,Math.ceil(Math.max(...bins)/8))}}}}});
+}
+function statsChartGrouped(rowLabels,colLabels,table,title){
+  if(!statsChartAvailable())return statsChartNoLib();
+  const box=document.getElementById('statsChartBox');
+  box.innerHTML='<canvas id="statsChartCanvas" height="170"></canvas>';
+  const ctx=document.getElementById('statsChartCanvas').getContext('2d');
+  const palette=['#7c3aed','#f59e0b','#16a34a','#dc2626','#0891b2','#db2777'];
+  const datasets=colLabels.map((c,ci)=>({label:String(c),data:rowLabels.map((_,ri)=>table[ri][ci]),backgroundColor:palette[ci%palette.length]}));
+  _statsChartInstance=new Chart(ctx,{type:'bar',data:{labels:rowLabels,datasets},
+    options:{plugins:{title:{display:!!title,text:title||''}},scales:{y:{beginAtZero:true}}}});
+}
+
+function noLead(s){return String(s).replace(/^(-?)0\./,'$1.')}
+function fmtP(p){return p<0.001?'p < .001':'p = '+noLead(p.toFixed(3))}
+function sig(p){return p<0.05}
+
+function statsResultsShow(html,apa){
+  document.getElementById('statsResults').innerHTML=
+    '<h3 style="margin-top:0">Results</h3>'+html+
+    '<div id="statsSentence">'+escHTML(apa)+'</div>'+
+    '<div class="row" style="margin-top:8px">'+
+    '<button class="btn btn-purple" style="flex:1" onclick="statsInsert()">Insert into document</button>'+
+    '<button class="btn btn-ghost" style="flex:1" onclick="statsCopy()">Copy</button>'+
+    '<button class="btn btn-ghost" style="flex:1" onclick="statsExplain()">💡 Explain in plain language</button>'+
+    '</div>';
+  window._statsAPA=apa;window._statsSummary=html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+}
+function statsCopy(){
+  const t=window._statsAPA||'';if(!t){showToast('Run a test first');return}
+  navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy — select the text instead'));
+}
+function statsInsert(){
+  const t=window._statsAPA||'';if(!t){showToast('Run a test first');return}
+  document.getElementById('statsDlg').close();
+  insertIntoEditor(t,false);showToast('Inserted ✓ — Ctrl+Z to undo');
+}
+async function statsExplain(){
+  if(!window._statsSummary){showToast('Run a test first');return}
+  const out=document.getElementById('statsSentence');
+  const prev=out.textContent;out.textContent='💜 Thinking…';
+  try{
+    const a=await callAI('You are a psychology statistics tutor. A student ran this analysis. In plain language (2-4 sentences, no jargon beyond what a first-year would know), explain what the result means and whether it was statistically significant. Do not invent numbers beyond what is given.\n\nResult summary:\n'+window._statsSummary+'\n\nAPA sentence: '+window._statsAPA,{temp:0.3,max:400});
+    out.textContent=prev+'\n\n💡 In plain language: '+a.trim();
+    window._statsAPA=out.textContent;
+  }catch(e){out.textContent=prev;showToast(apiMsg(e))}
+}
+
+function statsRun(){
+  if(!window._statsData){showToast('Parse your data first');return}
+  const key=document.getElementById('statsTest').value;
+  const gv=id=>{const el=document.getElementById('sf_'+id);return el?el.value:''};
+  const d=window._statsData;
+  statsChartClear();
+  try{
+    if(key==='desc'){
+      const idx=parseInt(gv('dv'),10),name=d.cols[idx].name,vals=statsColVals(idx,true);
+      if(vals.length<2){showToast('Need at least 2 values');return}
+      const m=smean(vals),s=ssd(vals),md=smedian(vals);
+      const html='<table class="stats-table"><tr><th>N</th><th>M</th><th>SD</th><th>Median</th><th>Min</th><th>Max</th></tr>'+
+        '<tr><td>'+vals.length+'</td><td>'+m.toFixed(2)+'</td><td>'+s.toFixed(2)+'</td><td>'+md.toFixed(2)+'</td><td>'+Math.min(...vals).toFixed(2)+'</td><td>'+Math.max(...vals).toFixed(2)+'</td></tr></table>';
+      statsResultsShow(html,name+': M = '+m.toFixed(2)+', SD = '+s.toFixed(2)+', N = '+vals.length+'.');
+      statsChartHistogram(vals,'Distribution of '+name);
+
+    }else if(key==='ttest1'){
+      const idx=parseInt(gv('dv'),10),name=d.cols[idx].name,vals=statsColVals(idx,true),mu=parseFloat(gv('mu'))||0;
+      if(vals.length<2){showToast('Need at least 2 values');return}
+      const m=smean(vals),s=ssd(vals),n=vals.length,df=n-1;
+      const t=(m-mu)/(s/Math.sqrt(n)),p=pFromT(t,df);
+      const html='<table class="stats-table"><tr><th>M</th><th>SD</th><th>N</th><th>Test value</th><th>t</th><th>df</th><th>p</th></tr>'+
+        '<tr><td>'+m.toFixed(2)+'</td><td>'+s.toFixed(2)+'</td><td>'+n+'</td><td>'+mu+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
+      const apa='A one-sample t-test showed that '+name+' (M = '+m.toFixed(2)+', SD = '+s.toFixed(2)+') was '+(sig(p)?'significantly '+(m>mu?'higher':'lower')+' than':'not significantly different from')+' the test value of '+mu+', t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+'.';
+      statsResultsShow(html,apa);
+      statsChartHistogram(vals,'Distribution of '+name+' (test value = '+mu+')');
+
+    }else if(key==='ttestInd'){
+      const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name,ivName=d.cols[ivI].name;
+      const groups=statsGroupBy(dvI,ivI),keys=Object.keys(groups);
+      if(keys.length!==2){showToast('This grouping variable needs exactly 2 groups — it has '+keys.length);return}
+      const g1=groups[keys[0]],g2=groups[keys[1]];
+      if(g1.length<2||g2.length<2){showToast('Each group needs at least 2 values');return}
+      const n1=g1.length,n2=g2.length,m1=smean(g1),m2=smean(g2),v1=svar(g1),v2=svar(g2);
+      const df=n1+n2-2,pooled=((n1-1)*v1+(n2-1)*v2)/df;
+      const t=(m1-m2)/Math.sqrt(pooled*(1/n1+1/n2)),p=pFromT(t,df);
+      const dcohen=(m1-m2)/Math.sqrt(pooled);
+      const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>M</th><th>SD</th></tr>'+
+        '<tr><td>'+escHTML(keys[0])+'</td><td>'+n1+'</td><td>'+m1.toFixed(2)+'</td><td>'+Math.sqrt(v1).toFixed(2)+'</td></tr>'+
+        '<tr><td>'+escHTML(keys[1])+'</td><td>'+n2+'</td><td>'+m2.toFixed(2)+'</td><td>'+Math.sqrt(v2).toFixed(2)+'</td></tr></table>'+
+        '<p class="desc">t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', d = '+dcohen.toFixed(2)+" (Student's t, equal variances assumed)</p>";
+      const apa='An independent-samples t-test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+escHTML(keys[0])+' (M = '+m1.toFixed(2)+', SD = '+Math.sqrt(v1).toFixed(2)+') and '+escHTML(keys[1])+' (M = '+m2.toFixed(2)+', SD = '+Math.sqrt(v2).toFixed(2)+'), t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', d = '+dcohen.toFixed(2)+'.';
+      statsResultsShow(html,apa);
+      statsChartBarMeans([keys[0],keys[1]],[m1,m2],
+        [{plus:m1+Math.sqrt(v1),minus:m1-Math.sqrt(v1)},{plus:m2+Math.sqrt(v2),minus:m2-Math.sqrt(v2)}],
+        dvName+' by '+ivName+' (mean ± 1 SD)',dvName);
+
+    }else if(key==='ttestPaired'){
+      const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      if(pairs.length<2){showToast('Need at least 2 complete pairs');return}
+      const diffs=pairs.map(p=>p[0]-p[1]),n=diffs.length,md=smean(diffs),sdv=ssd(diffs),df=n-1;
+      const t=md/(sdv/Math.sqrt(n)),p=pFromT(t,df),dz=md/sdv;
+      const html='<table class="stats-table"><tr><th>N pairs</th><th>Mean diff</th><th>SD diff</th><th>t</th><th>df</th><th>p</th></tr>'+
+        '<tr><td>'+n+'</td><td>'+md.toFixed(2)+'</td><td>'+sdv.toFixed(2)+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
+      const apa='A paired-samples t-test showed a '+(sig(p)?'significant':'non-significant')+' difference between '+n1name+' and '+n2name+' (M diff = '+md.toFixed(2)+', SD = '+sdv.toFixed(2)+'), t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', d = '+dz.toFixed(2)+'.';
+      statsResultsShow(html,apa);
+      {
+        const v1s=pairs.map(p=>p[0]),v2s=pairs.map(p=>p[1]),mv1=smean(v1s),mv2=smean(v2s);
+        statsChartBarMeans([n1name,n2name],[mv1,mv2],
+          [{plus:mv1+ssd(v1s),minus:mv1-ssd(v1s)},{plus:mv2+ssd(v2s),minus:mv2-ssd(v2s)}],
+          n1name+' vs '+n2name+' (mean ± 1 SD)','');
+      }
+
+    }else if(key==='anova1'){
+      const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name,ivName=d.cols[ivI].name;
+      const groups=statsGroupBy(dvI,ivI),keys=Object.keys(groups);
+      if(keys.length<3){showToast('One-way ANOVA needs 3 or more groups — use the t-test for 2');return}
+      const all=[].concat(...keys.map(k=>groups[k])),grand=smean(all),N=all.length,k=keys.length;
+      let ssb=0,ssw=0;
+      keys.forEach(key2=>{const g=groups[key2],m=smean(g);ssb+=g.length*(m-grand)*(m-grand);g.forEach(v=>ssw+=(v-m)*(v-m))});
+      const dfb=k-1,dfw=N-k,msb=ssb/dfb,msw=ssw/dfw,F=msb/msw,p=pFromF(F,dfb,dfw),eta2=ssb/(ssb+ssw);
+      const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>M</th><th>SD</th></tr>'+
+        keys.map(key2=>{const g=groups[key2];return'<tr><td>'+escHTML(key2)+'</td><td>'+g.length+'</td><td>'+smean(g).toFixed(2)+'</td><td>'+ssd(g).toFixed(2)+'</td></tr>'}).join('')+
+        '</table><p class="desc">F('+dfb+', '+dfw+') = '+F.toFixed(2)+', '+fmtP(p)+', η² = '+eta2.toFixed(3)+'</p>';
+      const apa='A one-way ANOVA showed a '+(sig(p)?'significant':'non-significant')+' effect of '+ivName+' on '+dvName+', F('+dfb+', '+dfw+') = '+F.toFixed(2)+', '+fmtP(p)+', η² = '+eta2.toFixed(3)+'.'+(sig(p)?' Post-hoc comparisons (e.g. Tukey HSD) are needed to locate which groups differ.':'');
+      statsResultsShow(html,apa);
+      statsChartBarMeans(keys,keys.map(k2=>smean(groups[k2])),
+        keys.map(k2=>{const g=groups[k2],m=smean(g),s=ssd(g);return{plus:m+s,minus:m-s}}),
+        dvName+' by '+ivName+' (mean ± 1 SD)',dvName);
+
+    }else if(key==='tukey'){
+      const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10);
+      const groups=statsGroupBy(dvI,ivI),gk=Object.keys(groups);
+      if(gk.length<3||gk.length>6){showToast('Tukey HSD here supports 3 to 6 groups — for more, verify in SPSS/JASP');return}
+      const all=[].concat(...gk.map(k2=>groups[k2])),N=all.length,kk=gk.length;
+      let ssw=0;gk.forEach(k2=>{const g=groups[k2],m=smean(g);g.forEach(v=>ssw+=(v-m)*(v-m))});
+      const dfw=N-kk,msw=ssw/dfw,qc=qCrit(kk,dfw);
+      let html='<table class="stats-table"><tr><th>Comparison</th><th>Mean diff</th><th>q</th><th>q crit (α=.05)</th><th>Sig?</th></tr>';
+      const apaBits=[];
+      for(let i=0;i<kk;i++)for(let j=i+1;j<kk;j++){
+        const gi=groups[gk[i]],gj=groups[gk[j]];
+        const diff=smean(gi)-smean(gj),se=Math.sqrt(msw/2*(1/gi.length+1/gj.length)),q=Math.abs(diff)/se,isSig=q>qc;
+        html+='<tr><td>'+escHTML(gk[i])+' vs '+escHTML(gk[j])+'</td><td>'+diff.toFixed(2)+'</td><td>'+q.toFixed(2)+'</td><td>'+qc.toFixed(2)+'</td><td>'+(isSig?'Yes':'No')+'</td></tr>';
+        apaBits.push(escHTML(gk[i])+' vs '+escHTML(gk[j])+' ('+(isSig?'p < .05':'ns')+')');
+      }
+      html+='</table><p class="desc">MSW = '+msw.toFixed(2)+', df = '+dfw+'. Critical value from the standard studentized range table (interpolated where the exact df isn\'t tabulated) — cross-check against a published table or SPSS/JASP before relying on this for a formal submission.</p>';
+      const apa='Tukey HSD post-hoc comparisons (q critical = '+qc.toFixed(2)+', α = .05) showed: '+apaBits.join('; ')+'.';
+      statsResultsShow(html,apa);
+      statsChartBarMeans(gk,gk.map(k2=>smean(groups[k2])),
+        gk.map(k2=>{const g=groups[k2],m=smean(g),s=ssd(g);return{plus:m+s,minus:m-s}}),
+        'Group means (mean ± 1 SD)','');
+
+    }else if(key==='regression'){
+      const i1=parseInt(gv('iv'),10),i2=parseInt(gv('dv'),10),xName=d.cols[i1].name,yName=d.cols[i2].name;
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      const n=pairs.length;
+      if(n<3){showToast('Need at least 3 complete pairs');return}
+      const xs=pairs.map(p=>p[0]),ys=pairs.map(p=>p[1]),mx=smean(xs),my=smean(ys);
+      let sxy=0,sxx=0,syy=0;
+      for(let i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx);syy+=(ys[i]-my)*(ys[i]-my)}
+      const b1=sxy/sxx,b0=my-b1*mx,r2=(sxy*sxy)/(sxx*syy),df=n-2;
+      const ssResid=syy-b1*sxy,mse=ssResid/df,seB1=Math.sqrt(mse/sxx);
+      const t=b1/seB1,p=pFromT(t,df),F=t*t,pF=pFromF(F,1,df);
+      const html='<table class="stats-table"><tr><th>N</th><th>b0 (intercept)</th><th>b1 (slope)</th><th>SE(b1)</th><th>t</th><th>df</th><th>p</th><th>R²</th></tr>'+
+        '<tr><td>'+n+'</td><td>'+b0.toFixed(3)+'</td><td>'+b1.toFixed(3)+'</td><td>'+seB1.toFixed(3)+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td><td>'+r2.toFixed(3)+'</td></tr></table>'+
+        '<p class="desc">ŷ = '+b0.toFixed(3)+' + '+b1.toFixed(3)+'·x &nbsp;|&nbsp; F(1, '+df+') = '+F.toFixed(2)+', '+fmtP(pF)+'</p>';
+      const apa='A simple linear regression showed that '+xName+' '+(sig(p)?'significantly predicted':'did not significantly predict')+' '+yName+', b = '+b1.toFixed(3)+', SE = '+seB1.toFixed(3)+', t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', R² = '+r2.toFixed(3)+', F(1, '+df+') = '+F.toFixed(2)+', '+fmtP(pF)+'.';
+      statsResultsShow(html,apa);
+      {
+        const xMin=Math.min(...xs),xMax=Math.max(...xs);
+        statsChartScatter(pairs.map(p=>({x:p[0],y:p[1]})),
+          [{x:xMin,y:b0+b1*xMin},{x:xMax,y:b0+b1*xMax}],
+          xName+' vs '+yName,xName,yName);
+      }
+
+    }else if(key==='mannwhitney'){
+      const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name;
+      const groups=statsGroupBy(dvI,ivI),keys=Object.keys(groups);
+      if(keys.length!==2){showToast('This grouping variable needs exactly 2 groups — it has '+keys.length);return}
+      const g1=groups[keys[0]],g2=groups[keys[1]],n1=g1.length,n2=g2.length;
+      const combined=g1.concat(g2),r=ranks(combined);
+      const R1=r.slice(0,n1).reduce((s,v)=>s+v,0);
+      const U1=R1-n1*(n1+1)/2,U2=n1*n2-U1,U=Math.min(U1,U2);
+      const meanU=n1*n2/2,sdU=Math.sqrt(n1*n2*(n1+n2+1)/12);
+      const z=(U-meanU)/sdU,p=pFromZ(z);
+      const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>Median</th></tr>'+
+        '<tr><td>'+escHTML(keys[0])+'</td><td>'+n1+'</td><td>'+smedian(g1).toFixed(2)+'</td></tr>'+
+        '<tr><td>'+escHTML(keys[1])+'</td><td>'+n2+'</td><td>'+smedian(g2).toFixed(2)+'</td></tr></table>'+
+        '<p class="desc">U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+' (normal approximation)</p>';
+      const apa='A Mann-Whitney U test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+escHTML(keys[0])+' (Mdn = '+smedian(g1).toFixed(2)+') and '+escHTML(keys[1])+' (Mdn = '+smedian(g2).toFixed(2)+'), U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+'.';
+      statsResultsShow(html,apa);
+      statsChartBarMeans([keys[0],keys[1]],[smedian(g1),smedian(g2)],null,dvName+' — medians by group',dvName);
+
+    }else if(key==='wilcoxon'){
+      const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      const diffs=pairs.map(p=>p[0]-p[1]).filter(x=>x!==0);
+      const n=diffs.length;
+      if(n<2){showToast('Need at least 2 non-zero paired differences');return}
+      const absd=diffs.map(Math.abs),r=ranks(absd);
+      let wPlus=0,wMinus=0;
+      diffs.forEach((x,i)=>{if(x>0)wPlus+=r[i];else wMinus+=r[i]});
+      const W=Math.min(wPlus,wMinus),meanW=n*(n+1)/4,sdW=Math.sqrt(n*(n+1)*(2*n+1)/24);
+      const z=(W-meanW)/sdW,p=pFromZ(z);
+      const html='<table class="stats-table"><tr><th>N (non-zero diffs)</th><th>W</th><th>z</th><th>p</th></tr>'+
+        '<tr><td>'+n+'</td><td>'+W.toFixed(1)+'</td><td>'+z.toFixed(2)+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
+      const apa='A Wilcoxon signed-rank test showed a '+(sig(p)?'significant':'non-significant')+' difference between '+n1name+' and '+n2name+', z = '+z.toFixed(2)+', '+fmtP(p)+' (normal approximation).';
+      statsResultsShow(html,apa);
+      {
+        const v1s=pairs.map(p=>p[0]),v2s=pairs.map(p=>p[1]);
+        statsChartBarMeans([n1name,n2name],[smedian(v1s),smedian(v2s)],null,n1name+' vs '+n2name+' — medians','');
+      }
+
+    }else if(key==='pearson'){
+      const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      const n=pairs.length;
+      if(n<3){showToast('Need at least 3 complete pairs');return}
+      const xs=pairs.map(p=>p[0]),ys=pairs.map(p=>p[1]),mx=smean(xs),my=smean(ys);
+      let sxy=0,sxx=0,syy=0;
+      for(let i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx);syy+=(ys[i]-my)*(ys[i]-my)}
+      const r=sxy/Math.sqrt(sxx*syy),df=n-2;
+      const t=r*Math.sqrt(df/(1-r*r)),p=pFromT(t,df);
+      const strength=Math.abs(r)<0.1?'negligible':Math.abs(r)<0.3?'weak':Math.abs(r)<0.5?'moderate':Math.abs(r)<0.7?'strong':'very strong';
+      const html='<table class="stats-table"><tr><th>N</th><th>r</th><th>df</th><th>p</th></tr>'+
+        '<tr><td>'+n+'</td><td>'+noLead(r.toFixed(2))+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
+      const apa='There was a '+strength+' '+(r>=0?'positive':'negative')+' correlation between '+n1name+' and '+n2name+', which '+(sig(p)?'was':'was not')+' statistically significant, r('+df+') = '+noLead(r.toFixed(2))+', '+fmtP(p)+'.';
+      statsResultsShow(html,apa);
+      {
+        const b1r=sxy/sxx,b0r=my-b1r*mx,xMin=Math.min(...xs),xMax=Math.max(...xs);
+        statsChartScatter(pairs.map(pp=>({x:pp[0],y:pp[1]})),
+          [{x:xMin,y:b0r+b1r*xMin},{x:xMax,y:b0r+b1r*xMax}],
+          n1name+' vs '+n2name,n1name,n2name);
+      }
+
+    }else if(key==='chisq'){
+      const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
+      const rows2=d.rows.filter(r=>r[i1]!==undefined&&r[i1]!==''&&r[i2]!==undefined&&r[i2]!=='');
+      const rowKeys=[...new Set(rows2.map(r=>r[i1]))],colKeys=[...new Set(rows2.map(r=>r[i2]))];
+      const table=rowKeys.map(()=>colKeys.map(()=>0));
+      rows2.forEach(r=>{table[rowKeys.indexOf(r[i1])][colKeys.indexOf(r[i2])]++});
+      const N=rows2.length;
+      const rowT=table.map(row=>row.reduce((s,v)=>s+v,0));
+      const colT=colKeys.map((_,j)=>table.reduce((s,row)=>s+row[j],0));
+      let chi2=0;
+      table.forEach((row,i)=>row.forEach((o,j)=>{const e=rowT[i]*colT[j]/N;if(e>0)chi2+=(o-e)*(o-e)/e}));
+      const df=(rowKeys.length-1)*(colKeys.length-1),p=pFromChi(chi2,df);
+      const v=Math.sqrt(chi2/(N*(Math.min(rowKeys.length,colKeys.length)-1)));
+      let html='<table class="stats-table"><tr><th></th>'+colKeys.map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>';
+      table.forEach((row,i)=>{html+='<tr><th>'+escHTML(rowKeys[i])+'</th>'+row.map(o=>'<td>'+o+'</td>').join('')+'</tr>'});
+      html+='</table><p class="desc">χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'</p>';
+      const apa='A chi-square test of independence showed '+(sig(p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'.';
+      statsResultsShow(html,apa);
+      statsChartGrouped(rowKeys,colKeys,table,n1name+' by '+n2name);
+    }
+  }catch(e){showToast('Could not run that test — check the columns you picked match what the test needs');}
+}
+
+/* ============ Access control ============ */
+function _b64u(buf){return btoa(String.fromCharCode.apply(null,new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function _ub64u(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const bin=atob(s);const out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out}
+async function licenseVerify(code){
+  try{
+    if(!cryptoOK())return{valid:false,reason:'nocrypto'};
+    const parts=String(code||'').trim().split('.');
+    if(parts.length!==2)return{valid:false,reason:'format'};
+    const[pB,sB]=parts;
+    const payload=JSON.parse(_dec.decode(_ub64u(pB)));
+    const pub=await crypto.subtle.importKey('jwk',LICENSE_PUBLIC_KEY_JWK,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+    const ok=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},pub,_ub64u(sB),_enc.encode(pB));
+    if(!ok)return{valid:false,reason:'signature'};
+    if(!payload.exp||new Date(payload.exp+'T23:59:59')<new Date())return{valid:false,reason:'expired',payload};
+    return{valid:true,payload,raw:code};
+  }catch(e){return{valid:false,reason:'format'}}
+}
+async function licenseCheckRevoked(id){
+  if(!REVOKE_LIST_URL)return false;
+  try{
+    const r=await fetch(REVOKE_LIST_URL,{cache:'no-store'});
+    if(!r.ok)return false;
+    const list=await r.json();
+    return Array.isArray(list)&&list.includes(id);
+  }catch(e){return false} /* offline or the list is unreachable — don't block access on that alone */
+}
+function licenseGet(){try{return JSON.parse(LS.get('appu_license')||'null')}catch(e){return null}}
+function licenseSave(payload,raw){LS.set('appu_license',JSON.stringify({payload,raw}))}
+function licenseShowStatus(payload){
+  const days=Math.ceil((new Date(payload.exp+'T23:59:59')-new Date())/86400000);
+  const el=document.getElementById('licenseBadge');
+  if(el){el.style.display='inline-block';el.textContent=(payload.n?payload.n+' · ':'')+days+'d left';el.title='Access code expires '+payload.exp}
+  if(days<=14&&days>=0)showToast('Your access expires in '+days+' day'+(days===1?'':'s')+' — ask for a renewal code soon');
+}
+function licensePromptLoop(reason){
+  return new Promise(resolve=>{
+    const dlg=document.getElementById('loginDlg'),msg=document.getElementById('loginMsg'),input=document.getElementById('loginInput'),btn=document.getElementById('loginSubmit');
+    msg.textContent=reason==='expired'?'Your access code has expired. Paste a new one to continue.'
+      :reason==='revoked'?'That access code is no longer valid. Paste a new one, or ask for a renewal code.'
+      :reason==='nocrypto'?'This browser cannot verify access codes. Please open Appuscholer in a recent version of Chrome.'
+      :reason?'That code was not recognized. Paste the whole code, including the dot in the middle.'
+      :'';
+    input.value='';
+    dlg.addEventListener('cancel',e=>e.preventDefault());
+    dlg.showModal();
+    btn.onclick=async()=>{
+      const code=input.value.trim();
+      if(!code){msg.textContent='Paste your access code first.';return}
+      btn.disabled=true;msg.style.color='var(--muted)';msg.textContent='Checking…';
+      const res=await licenseVerify(code);
+      if(!res.valid){
+        btn.disabled=false;msg.style.color='#dc2626';
+        msg.textContent=res.reason==='expired'?'That code has expired — ask for a new one.'
+          :res.reason==='nocrypto'?'This browser cannot verify access codes.'
+          :'That code was not recognized — check you copied the whole thing.';
+        return;
+      }
+      const revoked=await licenseCheckRevoked(res.payload.id);
+      btn.disabled=false;
+      if(revoked){msg.style.color='#dc2626';msg.textContent='This code is no longer valid. Ask for a new one.';return}
+      licenseSave(res.payload,code);
+      dlg.close();
+      licenseShowStatus(res.payload);
+      resolve(true);
+    };
+  });
+}
+async function licenseGate(){
+  const stored=licenseGet();
+  if(stored){
+    const result=await licenseVerify(stored.raw);
+    if(result.valid){
+      const revoked=await licenseCheckRevoked(result.payload.id);
+      if(!revoked){licenseShowStatus(result.payload);return true}
+      LS.rm('appu_license');
+      return licensePromptLoop('revoked');
+    }
+    LS.rm('appu_license');
+    return licensePromptLoop(result.reason);
+  }
+  return licensePromptLoop(null);
+}
+
+/* ============ Boot ============ */
+(async function boot(){
+  await licenseGate();
+  docMigrate();
+  (function(){
+    const d=docsGet().find(x=>x.id===docCurrentId());
+    editor.value=d?d.body:'';lastSaved=editor.value;
+  })();
+  docRenderList();
+  styleInit();
+  citRender();
+  refreshProvUI();
+  upd();
+  if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{document.getElementById('welcomeDlg').showModal()}catch(e){}}
+})();
+</script>
+</body>
+</html>
