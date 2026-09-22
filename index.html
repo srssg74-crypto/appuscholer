@@ -40,13 +40,26 @@
   .btn-purple:hover{background:var(--purple-700)}
   .btn-ghost{background:var(--card);color:var(--accent-ink);border:2px solid var(--line)}
   .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-  main{max-width:1180px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:1fr 340px;gap:20px}
+  main{max-width:1180px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
   @media(max-width:900px){main{grid-template-columns:1fr}}
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(76,29,149,.08);overflow:hidden}
   .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--soft);flex-wrap:wrap}
   .card-head h2{margin:0;font-size:16px;color:var(--head-title)}
   .badge{font-size:11px;background:var(--purple-100);color:var(--accent-ink);padding:4px 10px;border-radius:20px;font-weight:700}
-  #editor{width:100%;min-height:480px;border:none;outline:none;resize:vertical;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--card);display:block}
+  #editor{width:100%;min-height:480px;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
+  #editor:empty:before{content:attr(data-placeholder);color:var(--muted);pointer-events:none}
+  #editor ul,#editor ol{padding-left:30px;margin:10px 0}
+  #editor blockquote{border-left:4px solid var(--dashed);margin:10px 0;padding:2px 16px;color:var(--muted)}
+  #editor h1{font-size:1.6em;margin:.6em 0 .3em;color:var(--head-title)}
+  #editor h2{font-size:1.35em;margin:.6em 0 .3em;color:var(--head-title)}
+  #editor h3{font-size:1.15em;margin:.6em 0 .3em;color:var(--head-title)}
+  .fmtbar{display:flex;flex-wrap:wrap;gap:6px;padding:10px 20px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
+  .fmtbar select{padding:7px 8px;border:2px solid var(--line);border-radius:8px;font-size:13px;background:var(--card);color:var(--ink);font-family:inherit}
+  .fmt-btn{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;font-family:inherit;min-width:36px;line-height:1.4}
+  .fmt-btn:hover{background:var(--purple-100)}
+  .fmt-btn.on{background:var(--purple-600);color:#fff;border-color:var(--purple-700)}
+  .fmt-sep{width:1px;align-self:stretch;background:var(--line);margin:2px 4px}
+  .fmt-hint{font-size:12px;color:var(--muted);width:100%;margin-top:2px}
   .toolbar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
   .stats{font-size:12px;color:var(--muted);margin-left:auto}
   .panel{padding:18px}
@@ -144,12 +157,37 @@
         <button class="icon-btn" onclick="docDelete()" title="Delete this document">🗑</button>
       </div>
     </div>
-    <textarea id="editor" placeholder="Start writing here… Select text and press Improve, or just write and let AI continue."></textarea>
+    <div class="fmtbar" role="toolbar" aria-label="Text formatting">
+      <select id="blockSel" onchange="fmtBlock(this.value)" title="Paragraph style" aria-label="Paragraph style">
+        <option value="p">Paragraph</option>
+        <option value="h1">Heading 1</option>
+        <option value="h2">Heading 2</option>
+        <option value="h3">Heading 3</option>
+        <option value="blockquote">Quote</option>
+      </select>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="fmt('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button type="button" class="fmt-btn" onclick="fmt('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button type="button" class="fmt-btn" onclick="fmt('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Bullet list">☰•</button>
+      <button type="button" class="fmt-btn" onclick="fmt('insertOrderedList')" title="Numbered list">☰1</button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="fmt('justifyLeft')" title="Align left">⟸</button>
+      <button type="button" class="fmt-btn" onclick="fmt('justifyCenter')" title="Align center">☰</button>
+      <button type="button" class="fmt-btn" onclick="fmt('justifyRight')" title="Align right">⟹</button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="fmt('undo')" title="Undo (Ctrl+Z)">↶</button>
+      <button type="button" class="fmt-btn" onclick="fmt('redo')" title="Redo (Ctrl+Y)">↷</button>
+      <button type="button" class="fmt-btn" onclick="fmt('removeFormat')" title="Clear formatting">Tx</button>
+      <span class="fmt-hint">Select text, then click Bold / Italic / a list to format it — just like Word.</span>
+    </div>
+    <div id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Document editor" data-placeholder="Start writing here… Select text and press Improve, or just write and let AI continue."></div>
     <div class="toolbar">
-      <button class="btn btn-purple" onclick="continueWriting()">✨ Continue Writing <kbd>Tab</kbd></button>
-      <button class="btn btn-ghost" onclick="improveText()">💜 Improve</button>
-      <button class="btn btn-ghost" onclick="makeLonger()">➕ Longer</button>
-      <button class="btn btn-ghost" onclick="insertScaffold()">🧱 Report template</button>
+      <button class="btn btn-purple" onclick="continueWriting()" title="AI writes the next ~120 words for you">✨ Continue Writing <kbd>Tab</kbd></button>
+      <button class="btn btn-ghost" onclick="improveText()" title="Select some text first, then click to polish its grammar">💜 Improve selection</button>
+      <button class="btn btn-ghost" onclick="makeLonger()" title="Select some text first, then click to expand it">➕ Make longer</button>
+      <button class="btn btn-ghost" onclick="insertScaffold()" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Report template</button>
       <span class="stats" id="stats">0 words</span>
     </div>
   </section>
@@ -376,9 +414,9 @@ const LS={
 const PROVIDERS={
  gemini:{name:'Google Gemini',short:'Gemini',steps:'Sign in with Google → <b>Get API Key</b> → <b>Create API Key</b> → copy (starts with AIza). <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Open →</a>',model:'gemini-3.8-flash',fallbacks:['gemini-3.6-flash','gemini-2.5-flash']},
  groq:{name:'Groq',short:'Groq',steps:'Sign up free → <b>API Keys</b> → <b>Create API Key</b> → copy (starts with gsk_). <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Open →</a>',model:'openai/gpt-oss-120b'},
- deepseek:{name:'DeepSeek',short:'DeepSeek',steps:'Sign up → <b>API Keys</b> → <b>Create</b> → copy (starts with sk-). <b>Paid</b>, but very cheap — add a small credit first. <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">Open →</a>',model:'deepseek-flash'},
+ deepseek:{name:'DeepSeek',short:'DeepSeek',steps:'Sign up → <b>API Keys</b> → <b>Create</b> → copy (starts with sk-). <b>Paid</b>, but very cheap — add a small credit first. <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">Open →</a> <br><span style="color:#b45309">⚠ This provider does not reliably allow direct browser calls — it may fail even with a valid, funded key. Prefer Gemini, Groq, or OpenRouter.</span>',model:'deepseek-chat'},
  openrouter:{name:'OpenRouter',short:'OpenRouter',steps:'Sign up → <b>Keys</b> → <b>Create Key</b> → copy (starts with sk-or-). Free models available. <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">Open →</a>',model:'meta-llama/llama-3.3-70b-instruct:free'},
- openai:{name:'ChatGPT (OpenAI)',short:'ChatGPT',steps:'Sign up → <b>API keys</b> → <b>Create new secret key</b> → copy (starts with sk-). <b>Paid</b> — add billing credit first (from ~$5). <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Open →</a>',model:'gpt-4o-mini'},
+ openai:{name:'ChatGPT (OpenAI)',short:'ChatGPT',steps:'Sign up → <b>API keys</b> → <b>Create new secret key</b> → copy (starts with sk-). <b>Paid</b> — add billing credit first (from ~$5). <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Open →</a> <br><span style="color:#b45309">⚠ OpenAI\'s API blocks direct calls from a web page like this one (no browser access). This key will not work here — it needs a server in between. Use Gemini, Groq, or OpenRouter instead.</span>',model:'gpt-4o-mini'},
  claude:{name:'Claude (Anthropic)',short:'Claude',steps:'Sign up → <b>API keys</b> → <b>Create key</b> → copy (starts with sk-ant-). <b>Paid</b> — add billing credit first. <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open →</a>',model:'claude-haiku-4-5-20251001'}
 };
 const PROV_ORDER=['gemini','groq','deepseek','openrouter','openai','claude'];
@@ -424,6 +462,20 @@ function docMigrate(){
   if(!docs.some(d=>d.id===docCurrentId()))LS.set('appu_doc_current',docs[0].id);
   return docsGet();
 }
+/* ============ Rich-text editor helpers ============
+   Documents used to store plain text (from a <textarea>). The editor is now a
+   contenteditable div so formatting (bold, headings, lists…) can be kept.
+   bodyToHTML() tells old plain-text bodies apart from new HTML ones so existing
+   documents keep displaying correctly instead of being parsed as markup. */
+function looksLikeStoredHTML(s){return /<(p|div|br|b|i|u|strong|em|ul|ol|li|h1|h2|h3|blockquote)[ >]/i.test(s||'')}
+function bodyToHTML(body){
+  if(!body)return'';
+  if(looksLikeStoredHTML(body))return body;
+  return escHTML(body).replace(/\n/g,'<br>');
+}
+function getEditorHTML(){return editor.innerHTML}
+function setEditorHTML(body){editor.innerHTML=bodyToHTML(body)}
+function getEditorText(){return editor.innerText||editor.textContent||''}
 function docRenderList(){
   const docs=docsGet(),cur=docCurrentId(),sel=document.getElementById('docSel');
   sel.innerHTML=docs.map(d=>'<option value="'+escHTML(d.id)+'"'+(d.id===cur?' selected':'')+'>'+escHTML(d.title||'Untitled')+'</option>').join('');
@@ -437,19 +489,19 @@ function docSaveBody(body){
   return ok;
 }
 function docSwitch(id){
-  docSaveBody(editor.value);
+  docSaveBody(getEditorHTML());
   LS.set('appu_doc_current',id);
   const d=docsGet().find(x=>x.id===id);
-  editor.value=d?d.body:'';
-  lastSaved=editor.value;upd();docRenderList();showToast('Opened: '+(d?d.title:'document'));
+  setEditorHTML(d?d.body:'');
+  lastSaved=getEditorHTML();upd();docRenderList();showToast('Opened: '+(d?d.title:'document'));
 }
 function docNew(){
-  docSaveBody(editor.value);
+  docSaveBody(getEditorHTML());
   const title=prompt('Name for the new document:','Untitled '+(docsGet().length+1));
   if(title===null)return;
   const docs=docsGet(),d={id:'d'+Date.now(),title:title.trim()||'Untitled',body:'',updated:Date.now()};
   docs.push(d);docsSet(docs);LS.set('appu_doc_current',d.id);
-  editor.value='';lastSaved='';upd();docRenderList();showToast('New document created ✓');
+  editor.innerHTML='';lastSaved='';upd();docRenderList();showToast('New document created ✓');
 }
 function docRename(){
   const docs=docsGet(),cur=docCurrentId(),i=docs.findIndex(d=>d.id===cur);if(i<0)return;
@@ -475,13 +527,14 @@ function restoreDeleted(){
 /* ============ FIX 5: debounced, honest auto-save ============ */
 let saveT=null,saveDead=false,lastSaved='';
 function upd(){
-  const v=editor.value;
+  const v=getEditorText();
   stats.textContent=(v.trim()?v.trim().split(/\s+/).length:0)+' words';
   clearTimeout(saveT);
   saveT=setTimeout(()=>{
+    const html=getEditorHTML();
     const b=document.getElementById('saveBadge');
-    if(docSaveBody(v)){
-      lastSaved=v;
+    if(docSaveBody(html)){
+      lastSaved=html;
       if(saveDead){saveDead=false;b.textContent='Auto-save on';b.style.background='';b.style.color=''}
     }else if(!saveDead){
       saveDead=true;b.textContent='⚠ AUTO-SAVE OFF — DOWNLOAD NOW';b.style.background='#fee2e2';b.style.color='#991b1b';
@@ -489,26 +542,61 @@ function upd(){
     }
   },400);
 }
-editor.addEventListener('input',upd);
-window.addEventListener('beforeunload',e=>{
-  clearTimeout(saveT);docSaveBody(editor.value);
-  if(saveDead&&editor.value!==lastSaved){e.preventDefault();e.returnValue=''}
+editor.addEventListener('input',()=>{
+  if(editor.innerHTML==='<br>'||editor.innerHTML==='<div><br></div>')editor.innerHTML='';
+  upd();
 });
+window.addEventListener('beforeunload',e=>{
+  clearTimeout(saveT);docSaveBody(getEditorHTML());
+  if(saveDead&&getEditorHTML()!==lastSaved){e.preventDefault();e.returnValue=''}
+});
+
+/* ============ Selection tracking for a contenteditable editor ============
+   Once focus leaves the editor (e.g. the user clicks a sidebar button), the
+   browser's own selection object no longer points at anything useful inside
+   it, so we keep our own copy — updated live — and restore it on demand. */
+let savedRange=null;
+document.addEventListener('selectionchange',()=>{
+  const sel=window.getSelection();
+  if(sel&&sel.rangeCount&&editor.contains(sel.anchorNode))savedRange=sel.getRangeAt(0).cloneRange();
+});
+function placeCaretAtEnd(){
+  const r=document.createRange();r.selectNodeContents(editor);r.collapse(false);
+  const sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);savedRange=r.cloneRange();
+}
+function restoreEditorSelection(){
+  editor.focus();
+  const sel=window.getSelection();sel.removeAllRanges();
+  if(savedRange){try{sel.addRange(savedRange);return}catch(e){}}
+  placeCaretAtEnd();
+}
 
 /* ============ FIX 6: insert without destroying the undo stack ============ */
 function insertIntoEditor(text,keepSelection){
   editor.focus();
-  if(!keepSelection){
-    const end=editor.value.length;editor.setSelectionRange(end,end);
-    if(editor.value&&!editor.value.endsWith('\n'))text='\n'+text;
+  if(keepSelection&&savedRange){restoreEditorSelection()}
+  else{
+    placeCaretAtEnd();
+    if(editor.innerHTML)text='\n'+text;
   }
+  const html=escHTML(text).replace(/\n/g,'<br>');
   let ok=false;
-  try{ok=document.execCommand('insertText',false,text)}catch(e){ok=false}
+  try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
   if(!ok){
-    const s=editor.selectionStart,e2=editor.selectionEnd;
-    editor.value=editor.value.slice(0,s)+text+editor.value.slice(e2);
-    editor.setSelectionRange(s+text.length,s+text.length);
+    const sel=window.getSelection();
+    if(sel&&sel.rangeCount){
+      const range=sel.getRangeAt(0);range.deleteContents();
+      const frag=range.createContextualFragment(html);
+      range.insertNode(frag);
+      range.collapse(false);
+    }
   }
+  /* Move the caret to right after what was just inserted, and remember that
+     spot immediately — don't wait for the async selectionchange event, so a
+     second insert fired right after this one (no user interaction in between)
+     still lands in the right place instead of the pre-insert position. */
+  const sel2=window.getSelection();
+  if(sel2&&sel2.rangeCount&&editor.contains(sel2.anchorNode))savedRange=sel2.getRangeAt(0).cloneRange();
   upd();
 }
 
@@ -644,7 +732,7 @@ function apiMsg(e){
   if(/\b404\b/.test(m))return'That AI model is no longer available. Try a different provider using the tabs at the top.';
   if(/\b429\b/.test(m))return'Free limit reached for now. Wait a minute, or switch provider using the tabs at the top.';
   if(/\b5\d\d\b/.test(m))return'The AI service is having problems. Try again in a few minutes.';
-  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'No internet connection, or this provider refused the request from a local file.';
+  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'No internet connection, or this provider does not allow calls made directly from a web page (this is common for OpenAI and sometimes DeepSeek). Try Google Gemini, Groq, or OpenRouter — those are confirmed to work from the browser.';
   return m||'Something went wrong. Try again.';
 }
 
@@ -657,7 +745,7 @@ function copyAI(){
 }
 function acceptAI(){
   const s=window._sug;if(!s){showToast('No suggestion to accept yet');return}
-  insertIntoEditor(s,editor.selectionStart!==editor.selectionEnd);
+  insertIntoEditor(s,hasSelection());
   clearSug('Your AI suggestion will appear here…');
   showToast('Inserted ✓ — Ctrl+Z to undo');
 }
@@ -725,9 +813,13 @@ async function callAI(prompt,opts){
 }
 
 /* ============ FIX 7: selection vs tail, kept separate ============ */
-function hasSelection(){return editor.selectionStart!==editor.selectionEnd}
-function selText(){const s=editor.selectionStart,e=editor.selectionEnd;return s!==e?editor.value.slice(s,e):editor.value}
-function tailText(){return editor.value.slice(-2000)}
+function hasSelection(){return !!(savedRange&&!savedRange.collapsed)}
+function selText(){return hasSelection()?savedRange.toString():getEditorText()}
+function tailText(){return getEditorText().slice(-2000)}
+
+/* ============ Formatting toolbar ============ */
+function fmt(cmd){editor.focus();if(savedRange)restoreEditorSelection();try{document.execCommand(cmd,false,null)}catch(e){}upd()}
+function fmtBlock(tag){editor.focus();if(savedRange)restoreEditorSelection();try{document.execCommand('formatBlock',false,tag)}catch(e){}upd()}
 
 /* ============ Writing actions ============ */
 async function continueWriting(){
@@ -777,7 +869,7 @@ function downloadDoc(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
   const title=(cur&&cur.title)||'appuscholer-document';
   const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholer-document';
-  const body=escHTML(editor.value).replace(/\n/g,'<br>');
+  const body=getEditorHTML();
   const html='<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8">'+
     '<title>'+escHTML(title)+'</title><style>body{font-family:"Times New Roman",serif;font-size:12pt;line-height:2}</style>'+
     '</head><body>'+body+'</body></html>';
@@ -821,7 +913,7 @@ function styleSave(){LS.set('appu_style_profile',document.getElementById('styleP
 function stylePrompt(){const s=styleGet();if(!styleIsOn()||!s)return'';
   return'\n\nIMPORTANT — match the author\'s personal writing style described here:\n'+s+'\nWrite as if you ARE this author, keeping their voice, rhythm and vocabulary.'}
 async function styleAnalyze(){
-  const txt=editor.value.trim();
+  const txt=getEditorText().trim();
   if(txt.split(/\s+/).filter(Boolean).length<80){showToast('Write at least ~80 words first, then I can learn your style');return}
   showToast('💜 Studying your writing style…');
   try{
@@ -954,10 +1046,7 @@ function citClearForm(){
 }
 /* FIX 10: cursor at position 0 no longer jumps to the end */
 function citInsertAtCursor(txt){
-  const s=editor.selectionStart,e=editor.selectionEnd;
-  if(typeof s!=='number'){editor.value+=txt;upd();return}
-  editor.focus();editor.setSelectionRange(s,e);
-  insertIntoEditor(txt,true);
+  insertIntoEditor(txt,hasSelection()||!!savedRange);
 }
 function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
   citInsertAtCursor(' '+citFmt(d).intext);showToast('Citation inserted ✓')}
@@ -1691,7 +1780,7 @@ async function licenseGate(){
   docMigrate();
   (function(){
     const d=docsGet().find(x=>x.id===docCurrentId());
-    editor.value=d?d.body:'';lastSaved=editor.value;
+    setEditorHTML(d?d.body:'');lastSaved=getEditorHTML();
   })();
   docRenderList();
   styleInit();
