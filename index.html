@@ -40,13 +40,48 @@
   .btn-purple:hover{background:var(--purple-700)}
   .btn-ghost{background:var(--card);color:var(--accent-ink);border:2px solid var(--line)}
   .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-  main{max-width:1180px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
-  @media(max-width:900px){main{grid-template-columns:1fr}}
+  main{max-width:1360px;margin:22px auto;padding:0 18px 40px}
+  .split-row{display:flex;align-items:stretch;gap:0;margin-bottom:20px}
+  .doc-pane,.ai-pane{display:flex;flex-direction:column;min-width:0;height:min(76vh,760px)}
+  .doc-pane{flex:1 1 62%}
+  .ai-pane{flex:1 1 38%}
+  .splitter{flex:0 0 10px;cursor:col-resize;position:relative;margin:0 2px}
+  .splitter::after{content:'';position:absolute;top:0;bottom:0;left:3px;width:4px;border-radius:4px;background:var(--line)}
+  .splitter:hover::after,.splitter.dragging::after{background:var(--purple-500)}
+  @media(max-width:900px){
+    .split-row{flex-direction:column}
+    .doc-pane,.ai-pane{flex:none;height:auto}
+    #editor{height:50vh!important}
+    .splitter{display:none}
+  }
+  .tool-tabbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:12px;padding:9px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .tool-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
+  .tool-panel{display:none}
+  .tool-panel.active{display:block}
+  .slide-card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .slide-card h4{margin:0 0 8px;color:var(--head-title);font-size:15px}
+  .slide-card ul{margin:0;padding-left:20px;font-size:13.5px;line-height:1.7}
+  .slide-card .slide-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .slide-card img{max-width:200px;border-radius:6px;margin-top:6px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(76,29,149,.08);overflow:hidden}
   .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--soft);flex-wrap:wrap}
   .card-head h2{margin:0;font-size:16px;color:var(--head-title)}
   .badge{font-size:11px;background:var(--purple-100);color:var(--accent-ink);padding:4px 10px;border-radius:20px;font-weight:700}
-  #editor{width:100%;min-height:480px;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
+  #editor{width:100%;flex:1;min-height:0;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
+  #editor table{border-collapse:collapse;margin:12px 0;width:100%}
+  #editor table td,#editor table th{border:1px solid var(--chipline);padding:8px 10px;min-width:60px;vertical-align:top}
+  #editor .img-wrap{position:relative;display:inline-block;max-width:100%;margin:8px 0}
+  #editor .img-wrap img,#editor .img-wrap svg{max-width:100%;width:100%;height:auto;display:block;border-radius:6px}
+  #editor .img-wrap .img-handle{position:absolute;right:-6px;bottom:-6px;width:16px;height:16px;border-radius:50%;background:var(--purple-600);border:2px solid #fff;cursor:se-resize;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .card-head{flex:0 0 auto}
+  .fmtbar{flex:0 0 auto}
+  .toolbar{flex:0 0 auto}
+  #aiOut{flex:1;overflow-y:auto}
+  .ai-pane{overflow:hidden}
+  .ai-pane .panel{display:flex;flex-direction:column;flex:1;min-height:0;padding:18px}
+  .ai-pane .panel .row{flex:0 0 auto}
+  .ai-pane .panel .desc{flex:0 0 auto}
   #editor:empty:before{content:attr(data-placeholder);color:var(--muted);pointer-events:none}
   #editor ul,#editor ol{padding-left:30px;margin:10px 0}
   #editor blockquote{border-left:4px solid var(--dashed);margin:10px 0;padding:2px 16px;color:var(--muted)}
@@ -143,7 +178,8 @@
 <nav id="provTabs" aria-label="AI providers"></nav>
 
 <main>
-  <section class="card">
+  <div class="split-row" id="splitRow">
+  <section class="card doc-pane" id="docPane">
     <div class="card-head">
       <h2>📝 Your Document</h2>
       <span class="badge" id="saveBadge">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
@@ -180,7 +216,13 @@
       <button type="button" class="fmt-btn" onclick="fmt('undo')" title="Undo (Ctrl+Z)">↶</button>
       <button type="button" class="fmt-btn" onclick="fmt('redo')" title="Redo (Ctrl+Y)">↷</button>
       <button type="button" class="fmt-btn" onclick="fmt('removeFormat')" title="Clear formatting">Tx</button>
-      <span class="fmt-hint">Select text, then click Bold / Italic / a list to format it — just like Word.</span>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="document.getElementById('imgFileInput').click()" title="Insert a picture">🖼 Image</button>
+      <button type="button" class="fmt-btn" onclick="insertTable()" title="Insert a table">⊞ Table</button>
+      <button type="button" class="fmt-btn" onclick="tableAddRow()" title="Add a row to the table your cursor is in">+Row</button>
+      <button type="button" class="fmt-btn" onclick="tableAddCol()" title="Add a column to the table your cursor is in">+Col</button>
+      <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="insertImageFile(this)">
+      <span class="fmt-hint">Select text, then click Bold / Italic / a list to format it — just like Word. Use Image / Table to drop those into the document too.</span>
     </div>
     <div id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Document editor" data-placeholder="Start writing here… Select text and press Improve, or just write and let AI continue."></div>
     <div class="toolbar">
@@ -192,19 +234,30 @@
     </div>
   </section>
 
-  <aside style="display:flex;flex-direction:column;gap:20px">
-    <section class="card"><div class="panel">
-      <h3>✨ AI Suggestion</h3>
-      <p class="desc">Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.</p>
-      <div id="aiOut">Your AI suggestion will appear here…</div>
-      <div class="row">
-        <button class="btn btn-purple" style="flex:1" onclick="acceptAI()">Accept ✓</button>
-        <button class="btn btn-ghost" onclick="copyAI()">Copy</button>
-        <button class="btn btn-ghost" onclick="clearSug('Your AI suggestion will appear here…')">Dismiss</button>
-      </div>
-    </div></section>
+  <div class="splitter" id="splitter" title="Drag to resize"></div>
 
-    <section class="card"><div class="panel">
+  <section class="card ai-pane" id="aiPane"><div class="panel">
+    <h3>✨ AI Suggestion</h3>
+    <p class="desc">Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.</p>
+    <div id="aiOut">Your AI suggestion will appear here…</div>
+    <div class="row">
+      <button class="btn btn-purple" style="flex:1" onclick="acceptAI()">Accept ✓</button>
+      <button class="btn btn-ghost" onclick="copyAI()">Copy</button>
+      <button class="btn btn-ghost" onclick="clearSug('Your AI suggestion will appear here…')">Dismiss</button>
+    </div>
+  </div></section>
+  </div>
+
+  <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
+    <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')">🧠 Psychology Tools</button>
+    <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')">📊 Statistics &amp; Charts</button>
+    <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')">✍ My Writing Style</button>
+    <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')">📚 Citation Manager</button>
+    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')">💬 Ask Appupsychoscholar</button>
+    <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')">🖥 Make PPT</button>
+  </div>
+
+    <section class="card tool-panel active" data-panel="psych"><div class="panel">
       <h3>🧠 Psychology Tools</h3>
       <p class="desc">Select the text you want analyzed (or leave nothing selected to use the whole document).</p>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('paper')">📄 Summarize research paper</button></div>
@@ -215,13 +268,16 @@
       <p class="desc" style="margin-top:10px">Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.</p>
     </div></section>
 
-    <section class="card"><div class="panel">
+    <section class="card tool-panel" data-panel="stats"><div class="panel">
       <h3>📊 Statistics Lab</h3>
       <p class="desc">Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.</p>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('statsDlg').showModal()">Open Statistics Lab</button></div>
+      <h3 style="margin-top:16px">📈 Charts</h3>
+      <p class="desc">Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()">Open Chart Maker</button></div>
     </div></section>
 
-    <section class="card"><div class="panel">
+    <section class="card tool-panel" data-panel="style"><div class="panel">
       <h3>✍ My Writing Style</h3>
       <p class="desc">Teach Appupsychoscholar to write like YOU. Upload your files — Word, PDF or text.</p>
       <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:10px;cursor:pointer">
@@ -237,7 +293,7 @@
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="styleSave()">Save profile</button></div>
     </div></section>
 
-    <section class="card"><div class="panel">
+    <section class="card tool-panel" data-panel="cite"><div class="panel">
       <h3>📚 Citation Manager</h3>
       <p class="desc">Add a source, then insert citations as you write.</p>
       <div class="fld"><label for="citStyle">Citation style</label>
@@ -277,14 +333,23 @@
       <p class="desc" style="margin-top:10px">🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.</p>
     </div></section>
 
-    <section class="card"><div class="panel">
+    <section class="card tool-panel" data-panel="chat"><div class="panel">
       <h3>💬 Ask Appupsychoscholar</h3>
-      <p class="desc">Your purple study buddy — ask anything about your writing.</p>
+      <p class="desc">Your purple study buddy — ask anything about your writing. Each reply has an "Insert into document" button.</p>
       <div id="chatLog"></div>
       <input type="text" id="chatIn" placeholder="Ask… e.g. Give me 3 title ideas">
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="askAI()">Send ➤</button></div>
     </div></section>
-  </aside>
+
+    <section class="card tool-panel" data-panel="slides"><div class="panel">
+      <h3>🖥 Make a PPT from this document</h3>
+      <p class="desc">Uses your Heading 1 / Heading 2 styles as slide breaks — the text under each heading becomes bullet points, and any picture becomes its own slide. Add headings in the formatting bar above if you haven't yet.</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pptxBuildPreview()">Generate slide preview</button></div>
+      <div id="pptxPreview" style="margin-top:12px"></div>
+      <div class="row" id="pptxDownloadRow" style="margin-top:10px;display:none">
+        <button class="btn btn-gold" style="flex:1" onclick="pptxDownload()">⬇ Download as PowerPoint (.pptx)</button>
+      </div>
+    </div></section>
 </main>
 
 <dialog id="settingsDlg"><div class="dlg-body">
@@ -394,12 +459,63 @@
   <p class="warn" style="margin-top:10px">📐 These formulas cover the common cases correctly (Student's independent t, average-rank non-parametric tests, standard ANOVA/chi-square). For an unusual design, or before a dissertation defense, cross-check against SPSS or JASP.</p>
 </div></dialog>
 
+<dialog id="chartDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>📈 Chart Maker</h2>
+  <p style="font-size:13px;color:var(--muted)">Make a bar/line chart from your own numbers, or a Venn diagram — then insert it straight into your document as a picture.</p>
+  <div class="fld"><label for="chartType">Chart type</label>
+    <select id="chartType" onchange="chartTypeChange()">
+      <option value="bar">Bar chart</option>
+      <option value="line">Line chart</option>
+      <option value="venn2">Venn diagram — 2 sets</option>
+      <option value="venn3">Venn diagram — 3 sets</option>
+    </select>
+  </div>
+
+  <div id="chartDataArea">
+    <div class="fld"><label for="chartData">Data — one "label,value" pair per line</label>
+      <textarea id="chartData" rows="6" placeholder="Anxious,14&#10;Avoidant,9&#10;Secure,22&#10;Disorganized,5"></textarea>
+    </div>
+    <div class="fld"><label for="chartTitle">Chart title (optional)</label><input type="text" id="chartTitle" placeholder="Attachment style distribution"></div>
+    <div class="row"><button class="btn btn-purple" style="flex:1" onclick="chartGenerate()">Generate</button></div>
+  </div>
+
+  <div id="vennDataArea" style="display:none">
+    <div class="stats-fld-row">
+      <div class="fld"><label for="vennA">Set A label</label><input type="text" id="vennA" placeholder="Anxiety"></div>
+      <div class="fld"><label for="vennASize">A only</label><input type="text" id="vennASize" placeholder="18"></div>
+      <div class="fld"><label for="vennB">Set B label</label><input type="text" id="vennB" placeholder="Depression"></div>
+      <div class="fld"><label for="vennBSize">B only</label><input type="text" id="vennBSize" placeholder="12"></div>
+    </div>
+    <div class="stats-fld-row" id="vennCRow">
+      <div class="fld"><label for="vennC">Set C label (leave blank for a 2-set diagram)</label><input type="text" id="vennC" placeholder="Insomnia"></div>
+      <div class="fld"><label for="vennCSize">C only</label><input type="text" id="vennCSize" placeholder="10"></div>
+    </div>
+    <div class="stats-fld-row">
+      <div class="fld"><label for="vennAB">A ∩ B</label><input type="text" id="vennAB" placeholder="7"></div>
+      <div class="fld" id="vennACwrap"><label for="vennAC">A ∩ C</label><input type="text" id="vennAC" placeholder="4"></div>
+      <div class="fld" id="vennBCwrap"><label for="vennBC">B ∩ C</label><input type="text" id="vennBC" placeholder="3"></div>
+      <div class="fld" id="vennABCwrap"><label for="vennABC">A ∩ B ∩ C</label><input type="text" id="vennABC" placeholder="2"></div>
+    </div>
+    <div class="fld"><label for="vennTitle">Diagram title (optional)</label><input type="text" id="vennTitle" placeholder="Comorbidity overlap"></div>
+    <div class="row"><button class="btn btn-purple" style="flex:1" onclick="vennGenerate()">Generate</button></div>
+  </div>
+
+  <div id="chartPreviewBox" style="margin-top:14px"></div>
+  <div class="row" id="chartInsertRow" style="margin-top:10px;display:none">
+    <button class="btn btn-gold" style="flex:1" onclick="chartInsertToDoc()">Insert into document</button>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('chartDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <footer>APPUPSYCHOSCHOLAR · PSYCHOLOGY EDITION · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
 <script>
 /* ============ FIX 5: storage never throws ============ */
 var sessionKeys = {};
@@ -447,6 +563,39 @@ function toggleTheme(){const cur=document.documentElement.getAttribute('data-the
   ||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   const next=cur==='dark'?'light':'dark';LS.set('appu_theme',next);document.documentElement.setAttribute('data-theme',next);applyTheme()}
 applyTheme();
+
+/* ============ Tool tabs (Psychology / Statistics / Style / Citations / Chat) ============ */
+function showTool(name){
+  document.querySelectorAll('.tool-tab').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));
+  document.querySelectorAll('.tool-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===name));
+  LS.set('appu_tool_tab',name);
+}
+(function(){const t=LS.get('appu_tool_tab');if(t&&document.querySelector('.tool-tab[data-tool="'+t+'"]'))showTool(t)})();
+
+/* ============ Draggable split between the document and the AI panel ============ */
+(function(){
+  const row=document.getElementById('splitRow'),docPane=document.getElementById('docPane'),
+        split=document.getElementById('splitter');
+  if(!row||!docPane||!split)return;
+  const saved=parseFloat(LS.get('appu_split_pct'));
+  if(saved&&saved>=25&&saved<=80)docPane.style.flex='1 1 '+saved+'%';
+  let dragging=false;
+  split.addEventListener('pointerdown',e=>{
+    dragging=true;split.classList.add('dragging');split.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  split.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const rect=row.getBoundingClientRect();
+    let pct=((e.clientX-rect.left)/rect.width)*100;
+    pct=Math.max(28,Math.min(78,pct));
+    docPane.style.flex='1 1 '+pct+'%';
+    LS.set('appu_split_pct',String(pct));
+  });
+  function endDrag(){dragging=false;split.classList.remove('dragging')}
+  split.addEventListener('pointerup',endDrag);
+  split.addEventListener('pointercancel',endDrag);
+})();
 
 /* ============ FIX: multi-document store ============ */
 function docsGet(){try{const a=JSON.parse(LS.get('appu_docs')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
@@ -598,6 +747,283 @@ function insertIntoEditor(text,keepSelection){
   const sel2=window.getSelection();
   if(sel2&&sel2.rangeCount&&editor.contains(sel2.anchorNode))savedRange=sel2.getRangeAt(0).cloneRange();
   upd();
+}
+
+/* Insert already-trusted HTML (an image, a table, a chart) at the caret — unlike
+   insertIntoEditor(), this does NOT escape its input, so only ever call it with
+   markup this app generated itself, never with anything a user typed or an AI wrote. */
+function insertHTMLBlockIntoEditor(html){
+  editor.focus();
+  if(savedRange)restoreEditorSelection();else placeCaretAtEnd();
+  let ok=false;
+  try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
+  if(!ok){
+    const sel=window.getSelection();
+    if(sel&&sel.rangeCount){
+      const range=sel.getRangeAt(0);range.deleteContents();
+      const frag=range.createContextualFragment(html);
+      range.insertNode(frag);range.collapse(false);
+    }
+  }
+  const sel2=window.getSelection();
+  if(sel2&&sel2.rangeCount&&editor.contains(sel2.anchorNode))savedRange=sel2.getRangeAt(0).cloneRange();
+  upd();
+}
+
+/* ============ Images: insert, then resize by dragging the corner handle ============ */
+function insertImageFile(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  if(!/^image\//.test(f.type)){showToast('Please choose an image file');input.value='';return}
+  if(f.size>8*1024*1024){showToast('That image is quite large — try one under 8 MB');input.value='';return}
+  const r=new FileReader();
+  r.onload=()=>{
+    const html='<span class="img-wrap" contenteditable="false" style="width:360px"><img src="'+r.result+'"><span class="img-handle" title="Drag to resize"></span></span>&nbsp;';
+    insertHTMLBlockIntoEditor(html);
+    showToast('Image inserted — drag its corner handle to resize');
+  };
+  r.onerror=()=>showToast('Could not read that image file');
+  r.readAsDataURL(f);
+  input.value='';
+}
+(function(){
+  let dragEl=null,startX=0,startW=0;
+  editor.addEventListener('pointerdown',e=>{
+    if(!e.target.classList||!e.target.classList.contains('img-handle'))return;
+    const wrap=e.target.closest('.img-wrap');
+    if(!wrap)return;
+    dragEl=wrap;startX=e.clientX;startW=wrap.getBoundingClientRect().width;
+    e.preventDefault();
+  });
+  document.addEventListener('pointermove',e=>{
+    if(!dragEl)return;
+    const w=Math.max(60,Math.min(editor.clientWidth-10,startW+(e.clientX-startX)));
+    dragEl.style.width=w+'px';
+  });
+  document.addEventListener('pointerup',()=>{if(dragEl){dragEl=null;upd()}});
+})();
+
+/* ============ Tables ============ */
+function insertTable(){
+  const spec=prompt('Table size — rows x columns (e.g. 3x4):','3x3');
+  if(spec===null)return;
+  const m=spec.match(/(\d+)\s*[x×,]\s*(\d+)/i);
+  const rows=m?Math.max(1,Math.min(30,parseInt(m[1],10))):3;
+  const cols=m?Math.max(1,Math.min(12,parseInt(m[2],10))):3;
+  let html='<table>';
+  for(let r=0;r<rows;r++){
+    html+='<tr>';
+    for(let c=0;c<cols;c++)html+=(r===0?'<th>Header</th>':'<td>&nbsp;</td>');
+    html+='</tr>';
+  }
+  html+='</table><p>&nbsp;</p>';
+  insertHTMLBlockIntoEditor(html);
+  showToast('Table inserted ✓ — click into a cell, then use +Row / +Col to grow it');
+}
+function _nearestTable(){
+  const sel=window.getSelection();
+  let node=sel&&sel.anchorNode;
+  if(!node||!editor.contains(node)){
+    if(!savedRange)return null;
+    node=savedRange.startContainer;
+    if(!editor.contains(node))return null;
+  }
+  if(node.nodeType===3)node=node.parentNode;
+  return node&&node.closest?node.closest('table'):null;
+}
+function tableAddRow(){
+  const t=_nearestTable();if(!t){showToast('Click inside a table first');return}
+  const cols=(t.rows[0]?t.rows[0].cells.length:1);
+  const row=t.insertRow(-1);
+  for(let c=0;c<cols;c++){const cell=row.insertCell(-1);cell.innerHTML='&nbsp;'}
+  upd();
+}
+function tableAddCol(){
+  const t=_nearestTable();if(!t){showToast('Click inside a table first');return}
+  for(let r=0;r<t.rows.length;r++){
+    const cell=t.rows[r].insertCell(-1);
+    cell.innerHTML=r===0?'Header':'&nbsp;';
+    if(r===0)cell.outerHTML='<th>'+cell.innerHTML+'</th>';
+  }
+  upd();
+}
+
+/* ============ Chart Maker: general bar/line charts + Venn diagrams ============ */
+let _chartMakerInstance=null,_chartMakerPendingHTML=null;
+function chartTypeChange(){
+  const t=document.getElementById('chartType').value,isVenn=t==='venn2'||t==='venn3';
+  document.getElementById('chartDataArea').style.display=isVenn?'none':'block';
+  document.getElementById('vennDataArea').style.display=isVenn?'block':'none';
+  const showC=t==='venn3';
+  ['vennCRow','vennACwrap','vennBCwrap','vennABCwrap'].forEach(id=>{
+    document.getElementById(id).style.display=showC?'':'none';
+  });
+  document.getElementById('chartPreviewBox').innerHTML='';
+  document.getElementById('chartInsertRow').style.display='none';
+  _chartMakerPendingHTML=null;
+}
+function chartParseLines(){
+  return document.getElementById('chartData').value.split('\n').map(l=>l.trim()).filter(Boolean)
+    .map(l=>{const i=l.lastIndexOf(',');if(i<0)return null;
+      const label=l.slice(0,i).trim(),val=parseFloat(l.slice(i+1));
+      return isNaN(val)?null:{label,val};}).filter(Boolean);
+}
+function chartGenerate(){
+  const rows=chartParseLines();
+  if(rows.length<1){showToast('Add at least one "label,value" line first');return}
+  const type=document.getElementById('chartType').value;
+  const title=document.getElementById('chartTitle').value.trim();
+  const box=document.getElementById('chartPreviewBox');
+  if(typeof Chart==='undefined'){
+    box.innerHTML='<p class="desc">📈 Charts need an internet connection the first time this page loads.</p>';
+    return;
+  }
+  box.innerHTML='<canvas id="chartMakerCanvas" height="220"></canvas>';
+  const ctx=document.getElementById('chartMakerCanvas').getContext('2d');
+  if(_chartMakerInstance){try{_chartMakerInstance.destroy()}catch(e){}}
+  _chartMakerInstance=new Chart(ctx,{
+    type:type==='line'?'line':'bar',
+    data:{labels:rows.map(r=>r.label),datasets:[{label:title||'Value',data:rows.map(r=>r.val),
+      backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5,fill:type==='line'?false:true,tension:.25}]},
+    options:{plugins:{legend:{display:false},title:{display:!!title,text:title||''}},scales:{y:{beginAtZero:true}}}
+  });
+  setTimeout(()=>{
+    const canvas=document.getElementById('chartMakerCanvas');
+    _chartMakerPendingHTML='<img src="'+canvas.toDataURL('image/png')+'" style="max-width:520px;width:100%">&nbsp;';
+    document.getElementById('chartInsertRow').style.display='flex';
+  },60);
+}
+function _vennNum(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)||v<0?0:v}
+function vennGenerate(){
+  const is3=document.getElementById('vennC').value.trim()!=='';
+  const A=document.getElementById('vennA').value.trim()||'A',B=document.getElementById('vennB').value.trim()||'B';
+  const aOnly=_vennNum('vennASize'),bOnly=_vennNum('vennBSize'),ab=_vennNum('vennAB');
+  const title=document.getElementById('vennTitle').value.trim();
+  let svg;
+  if(!is3){
+    svg='<svg viewBox="0 0 420 260" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">'+
+      (title?'<text x="210" y="24" text-anchor="middle" font-size="16" fill="#3b0764" font-weight="bold">'+escHTML(title)+'</text>':'')+
+      '<circle cx="165" cy="140" r="95" fill="#a78bfa" fill-opacity="0.55" stroke="#5b21b6" stroke-width="2"/>'+
+      '<circle cx="255" cy="140" r="95" fill="#fbbf24" fill-opacity="0.55" stroke="#b45309" stroke-width="2"/>'+
+      '<text x="110" y="140" text-anchor="middle" font-size="20" fill="#1e1b2e">'+aOnly+'</text>'+
+      '<text x="310" y="140" text-anchor="middle" font-size="20" fill="#1e1b2e">'+bOnly+'</text>'+
+      '<text x="210" y="140" text-anchor="middle" font-size="20" fill="#1e1b2e">'+ab+'</text>'+
+      '<text x="90" y="70" text-anchor="middle" font-size="15" fill="#3b0764" font-weight="bold">'+escHTML(A)+'</text>'+
+      '<text x="330" y="70" text-anchor="middle" font-size="15" fill="#7c2d12" font-weight="bold">'+escHTML(B)+'</text>'+
+      '</svg>';
+  }else{
+    const C=document.getElementById('vennC').value.trim()||'C';
+    const cOnly=_vennNum('vennCSize'),ac=_vennNum('vennAC'),bc=_vennNum('vennBC'),abc=_vennNum('vennABC');
+    svg='<svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">'+
+      (title?'<text x="210" y="24" text-anchor="middle" font-size="16" fill="#3b0764" font-weight="bold">'+escHTML(title)+'</text>':'')+
+      '<circle cx="170" cy="150" r="95" fill="#a78bfa" fill-opacity="0.5" stroke="#5b21b6" stroke-width="2"/>'+
+      '<circle cx="250" cy="150" r="95" fill="#fbbf24" fill-opacity="0.5" stroke="#b45309" stroke-width="2"/>'+
+      '<circle cx="210" cy="220" r="95" fill="#34d399" fill-opacity="0.5" stroke="#065f46" stroke-width="2"/>'+
+      '<text x="130" y="120" text-anchor="middle" font-size="17" fill="#1e1b2e">'+aOnly+'</text>'+
+      '<text x="290" y="120" text-anchor="middle" font-size="17" fill="#1e1b2e">'+bOnly+'</text>'+
+      '<text x="210" y="270" text-anchor="middle" font-size="17" fill="#1e1b2e">'+cOnly+'</text>'+
+      '<text x="210" y="105" text-anchor="middle" font-size="17" fill="#1e1b2e">'+ab+'</text>'+
+      '<text x="155" y="200" text-anchor="middle" font-size="17" fill="#1e1b2e">'+ac+'</text>'+
+      '<text x="265" y="200" text-anchor="middle" font-size="17" fill="#1e1b2e">'+bc+'</text>'+
+      '<text x="210" y="175" text-anchor="middle" font-size="17" fill="#1e1b2e">'+abc+'</text>'+
+      '<text x="95" y="55" text-anchor="middle" font-size="14" fill="#3b0764" font-weight="bold">'+escHTML(A)+'</text>'+
+      '<text x="325" y="55" text-anchor="middle" font-size="14" fill="#7c2d12" font-weight="bold">'+escHTML(B)+'</text>'+
+      '<text x="210" y="310" text-anchor="middle" font-size="14" fill="#065f46" font-weight="bold">'+escHTML(C)+'</text>'+
+      '</svg>';
+  }
+  document.getElementById('chartPreviewBox').innerHTML='<div style="max-width:460px;margin:0 auto">'+svg+'</div>';
+  _chartMakerPendingHTML='<span class="img-wrap" contenteditable="false" style="width:420px">'+svg+'<span class="img-handle" title="Drag to resize"></span></span>&nbsp;';
+  document.getElementById('chartInsertRow').style.display='flex';
+}
+function chartInsertToDoc(){
+  if(!_chartMakerPendingHTML){showToast('Generate a chart first');return}
+  insertHTMLBlockIntoEditor(_chartMakerPendingHTML);
+  showToast('Inserted into your document ✓');
+  document.getElementById('chartDlg').close();
+}
+
+/* ============ Make a PPT from the document ============
+   Heading 1 / 2 / 3 mark slide breaks; paragraphs and list items under a
+   heading become bullets; a picture becomes a picture slide of its own.
+   With no headings at all, the whole document becomes one bullet slide so
+   there is still something to export, plus a nudge to add headings. */
+let _pptxSlideModel=null;
+function docToSlideModel(){
+  const nodes=Array.from(editor.children);
+  const slides=[];
+  let cur=null;
+  function pushCur(){if(cur&&(cur.title||cur.bullets.length||cur.images.length))slides.push(cur)}
+  function textOf(n){return (n.innerText||n.textContent||'').trim()}
+  nodes.forEach(n=>{
+    const tag=n.tagName;
+    if(tag==='H1'||tag==='H2'||tag==='H3'){
+      pushCur();cur={title:textOf(n),bullets:[],images:[]};
+      return;
+    }
+    if(!cur)cur={title:null,bullets:[],images:[]};
+    if(tag==='UL'||tag==='OL'){
+      Array.from(n.children).forEach(li=>{const t=textOf(li);if(t)cur.bullets.push(t)});
+    }else if(tag==='TABLE'){
+      const rows=Array.from(n.rows).map(r=>Array.from(r.cells).map(c=>textOf(c)).join(' | '));
+      if(rows.length)cur.bullets.push('Table: '+rows.join(' — '));
+    }else{
+      n.querySelectorAll&&n.querySelectorAll('img').forEach(img=>{if(img.src)cur.images.push(img.src)});
+      const t=textOf(n);
+      if(t&&n.querySelector&&!n.querySelector('img'))cur.bullets.push(t);
+    }
+  });
+  pushCur();
+  if(!slides.length){
+    const whole=getEditorText().trim();
+    if(whole){
+      const parts=whole.split(/\n+/).map(s=>s.trim()).filter(Boolean).slice(0,10);
+      slides.push({title:(docsGet().find(d=>d.id===docCurrentId())||{}).title||'Untitled',bullets:parts,images:[]});
+    }
+  }
+  return slides;
+}
+function pptxBuildPreview(){
+  const slides=docToSlideModel();
+  _pptxSlideModel=slides;
+  const box=document.getElementById('pptxPreview');
+  if(!slides.length){
+    box.innerHTML='<p class="desc">Write something in your document first, then come back here.</p>';
+    document.getElementById('pptxDownloadRow').style.display='none';
+    return;
+  }
+  const hasHeadings=slides.some(s=>s.title);
+  let html=hasHeadings?'':'<p class="warn">No Heading 1/2/3 found — treating the whole document as one slide. Add headings in the formatting bar for a proper slide-by-slide breakdown.</p>';
+  slides.forEach((s,i)=>{
+    html+='<div class="slide-card"><div class="slide-num">Slide '+(i+1)+'</div>'+
+      '<h4>'+escHTML(s.title||'(untitled slide)')+'</h4>';
+    if(s.bullets.length)html+='<ul>'+s.bullets.slice(0,8).map(b=>'<li>'+escHTML(b.slice(0,200))+'</li>').join('')+'</ul>';
+    s.images.forEach(src=>html+='<img src="'+src+'">');
+    html+='</div>';
+  });
+  box.innerHTML=html;
+  document.getElementById('pptxDownloadRow').style.display='flex';
+}
+function pptxDownload(){
+  if(typeof PptxGenJS==='undefined'){showToast('The slide-maker library needs an internet connection to load — try again once you\'re online');return}
+  const slides=_pptxSlideModel||docToSlideModel();
+  if(!slides.length){showToast('Generate the preview first');return}
+  const pptx=new PptxGenJS();
+  pptx.defineSlideMaster({title:'APPU',background:{color:'FFFFFF'}});
+  slides.forEach(s=>{
+    const slide=pptx.addSlide();
+    let y=0.4;
+    if(s.title){slide.addText(s.title,{x:0.5,y,w:9,h:1,fontSize:28,bold:true,color:'5B21B6',fontFace:'Georgia'});y+=1.1}
+    if(s.bullets.length){
+      slide.addText(s.bullets.slice(0,10).map(b=>({text:b.slice(0,300),options:{bullet:true,breakLine:true}})),
+        {x:0.5,y,w:9,h:5.5-y,fontSize:16,color:'1E1B2E',fontFace:'Georgia',valign:'top'});
+    }
+    s.images.slice(0,1).forEach(src=>{
+      try{slide.addImage({data:src,x:5.3,y:1.3,w:4,h:3})}catch(e){}
+    });
+  });
+  const title=(docsGet().find(d=>d.id===docCurrentId())||{}).title||'appupsychoscholar-slides';
+  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appupsychoscholar-slides';
+  pptx.writeFile({fileName:safe+'.pptx'});
+  showToast('Download starting ✓');
 }
 
 /* ============ Key encryption (AES-GCM + PBKDF2), works offline on file:// ============ */
@@ -845,6 +1271,12 @@ async function makeLonger(){
       showToast('Ready — press Tab to replace your selection')}
   catch(e){clearSug(apiMsg(e))}
 }
+function chatInsert(btn){
+  const bubble=btn.closest('.msg');
+  if(!bubble||!bubble.dataset.reply){showToast('Nothing to insert yet');return}
+  insertIntoEditor(bubble.dataset.reply,false);
+  showToast('Inserted into your document ✓ — Ctrl+Z to undo');
+}
 async function askAI(){
   const inp=document.getElementById('chatIn'),q=inp.value.trim();if(!q)return;
   const log=document.getElementById('chatLog');
@@ -852,7 +1284,16 @@ async function askAI(){
   log.appendChild(mine);inp.value='';
   const bubble=document.createElement('div');bubble.className='msg ai';bubble.textContent='💜 thinking…';
   log.appendChild(bubble);log.scrollTop=log.scrollHeight;
-  try{bubble.textContent=await callAI('You are Appupsychoscholar, a friendly scholarly writing coach for psychology students. Answer briefly and helpfully:\n\n'+q,{temp:0.6})}
+  try{
+    const reply=await callAI('You are Appupsychoscholar, a friendly scholarly writing coach for psychology students. Answer briefly and helpfully:\n\n'+q,{temp:0.6});
+    bubble.dataset.reply=reply;
+    bubble.textContent='';
+    const textEl=document.createElement('div');textEl.textContent=reply;bubble.appendChild(textEl);
+    const insertBtn=document.createElement('button');insertBtn.type='button';
+    insertBtn.className='btn btn-ghost';insertBtn.style.cssText='margin-top:6px;padding:4px 10px;font-size:11.5px';
+    insertBtn.textContent='+ Insert into document';insertBtn.onclick=()=>chatInsert(insertBtn);
+    bubble.appendChild(insertBtn);
+  }
   catch(e){bubble.textContent=apiMsg(e)}
   log.scrollTop=log.scrollHeight;
 }
