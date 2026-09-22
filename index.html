@@ -1157,7 +1157,7 @@ function apiMsg(e){
   if(/\b401\b|\b403\b/.test(m))return'Your API key was rejected. Open ⚙ and paste it again.';
   if(/\b404\b/.test(m))return'That AI model is no longer available. Try a different provider using the tabs at the top.';
   if(/\b429\b/.test(m))return'Free limit reached for now. Wait a minute, or switch provider using the tabs at the top.';
-  if(/\b5\d\d\b/.test(m))return'The AI service is having problems. Try again in a few minutes.';
+  if(/\b5\d\d\b/.test(m))return'The AI service is having problems (already retried a couple of times). Try again in a few minutes, or switch provider using the tabs at the top. Detail: '+m.replace(/^HTTP \d+:\s*/,'').slice(0,180);
   if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'No internet connection, or this provider does not allow calls made directly from a web page (this is common for OpenAI and sometimes DeepSeek). Try Google Gemini, Groq, or OpenRouter — those are confirmed to work from the browser.';
   return m||'Something went wrong. Try again.';
 }
@@ -1177,6 +1177,18 @@ function acceptAI(){
 }
 
 /* ============ FIX 4 + 14 + 18: the AI call ============ */
+/* Google/Groq/OpenRouter/etc. occasionally return a 5xx for a moment under load —
+   that's not the key's fault, so retry the SAME request a couple of times with a
+   short pause before giving up, instead of making the student click again by hand. */
+async function fetchRetry5xx(doFetch,tries){
+  let r;
+  for(let i=0;i<(tries||3);i++){
+    r=await doFetch();
+    if(r.status<500||r.status>599)return r;
+    if(i<(tries||3)-1)await new Promise(res=>setTimeout(res,700*(i+1)));
+  }
+  return r;
+}
 async function callAI(prompt,opts){
   const o=opts||{},temp=(o.temp==null?0.8:o.temp),maxTok=o.max||2000;
   await ensureKey();
@@ -1189,12 +1201,12 @@ async function callAI(prompt,opts){
     for(const model of tries){
       let r;
       try{
-        r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',
+        r=await fetchRetry5xx(()=>fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',
           {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},
-           body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:temp,maxOutputTokens:maxTok}})});
+           body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:temp,maxOutputTokens:maxTok}})}),3);
       }catch(netErr){throw netErr}
       if(r.status===404||r.status===400){lastErr=new Error('HTTP '+r.status);continue}
-      if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,200))}
+      if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,300))}
       const j=await r.json();
       const c=j.candidates&&j.candidates[0];
       if(!c)throw new Error(j.promptFeedback&&j.promptFeedback.blockReason
@@ -1211,10 +1223,10 @@ async function callAI(prompt,opts){
   }
 
   if(prov==='claude'){
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    const r=await fetchRetry5xx(()=>fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:PROVIDERS.claude.model,max_tokens:maxTok,temperature:temp,messages:[{role:'user',content:prompt}]})});
-    if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,200))}
+      body:JSON.stringify({model:PROVIDERS.claude.model,max_tokens:maxTok,temperature:temp,messages:[{role:'user',content:prompt}]})}),3);
+    if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,300))}
     const j=await r.json();
     const text=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text||'').join('');
     if(!text)throw new Error('The AI returned an empty answer. Try again.');
@@ -1229,9 +1241,9 @@ async function callAI(prompt,opts){
   else{url='https://openrouter.ai/api/v1/chat/completions';model=PROVIDERS.openrouter.model;
        headers['HTTP-Referer']='https://appupsychoscholar.local';headers['X-Title']='Appupsychoscholar'}
 
-  const r=await fetch(url,{method:'POST',headers,
-    body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:temp,max_tokens:maxTok})});
-  if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,200))}
+  const r=await fetchRetry5xx(()=>fetch(url,{method:'POST',headers,
+    body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:temp,max_tokens:maxTok})}),3);
+  if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.slice(0,300))}
   const j=await r.json();
   const text=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
   if(!text)throw new Error('The AI returned an empty answer. Try again.');
