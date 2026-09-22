@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Appuscholer · Psychology Edition</title>
+<title>Appupsychoscholar · Psychology Edition</title>
 <style>
   :root{
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
@@ -120,8 +120,8 @@
 <body>
 
 <header>
-  <!-- Appuscholer logo: graduation cap over open book in purple/gold -->
-  <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="Appuscholer logo" role="img">
+  <!-- Appupsychoscholar logo: graduation cap over open book in purple/gold -->
+  <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="Appupsychoscholar logo" role="img">
     <circle cx="32" cy="32" r="30" fill="white" opacity="0.14"/>
     <circle cx="32" cy="32" r="29" stroke="#fbbf24" stroke-width="2" fill="rgba(255,255,255,0.06)"/>
     <path d="M12 40c6-3.5 13-5 20-5s14 1.5 20 5v-9c-6-3.5-13-5-20-5s-14 1.5-20 5v9z" fill="#fbbf24"/>
@@ -131,7 +131,7 @@
     <path d="M20 44c4 2.4 8 3.6 12 3.6s8-1.2 12-3.6" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
   </svg>
   <div class="brand">
-    <h1>Appu<span>Scholer</span></h1>
+    <h1>Appu<span>PsychoScholar</span></h1>
     <p>Psychology Edition</p>
   </div>
   <div class="spacer"></div>
@@ -223,7 +223,7 @@
 
     <section class="card"><div class="panel">
       <h3>✍ My Writing Style</h3>
-      <p class="desc">Teach Appuscholer to write like YOU. Upload your files — Word, PDF or text.</p>
+      <p class="desc">Teach Appupsychoscholar to write like YOU. Upload your files — Word, PDF or text.</p>
       <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:10px;cursor:pointer">
         <input type="checkbox" id="styleOn" onchange="styleToggle()" style="width:17px;height:17px;accent-color:#6d28d9"> <b>Use my style in suggestions</b>
       </label>
@@ -278,7 +278,7 @@
     </div></section>
 
     <section class="card"><div class="panel">
-      <h3>💬 Ask Appuscholer</h3>
+      <h3>💬 Ask Appupsychoscholar</h3>
       <p class="desc">Your purple study buddy — ask anything about your writing.</p>
       <div id="chatLog"></div>
       <input type="text" id="chatIn" placeholder="Ask… e.g. Give me 3 title ideas">
@@ -319,7 +319,7 @@
 </div></dialog>
 
 <dialog id="welcomeDlg"><div class="dlg-body">
-  <h2>💜 Welcome to Appuscholer</h2>
+  <h2>💜 Welcome to Appupsychoscholar</h2>
   <p style="font-size:14px;line-height:1.7;color:var(--ink)">A writing assistant for psychology students. Everything you write stays on this computer.</p>
   <ol>
     <li>Click <b>⚙ AI Provider / Key</b> at the top right.</li>
@@ -327,7 +327,7 @@
     <li>Follow the link, create a key, paste it in, press <b>Save Key</b>.</li>
     <li>Start writing. Press <kbd>Tab</kbd> to accept a suggestion.</li>
   </ol>
-  <p class="warn">Appuscholer drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
+  <p class="warn">Appupsychoscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
   <div class="row" style="margin-top:14px">
     <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();openSettings()">Set up my key</button>
     <button class="btn btn-ghost" onclick="document.getElementById('welcomeDlg').close()">Later</button>
@@ -335,12 +335,12 @@
 </div></dialog>
 
 <dialog id="loginDlg"><div class="dlg-body">
-  <h2>🔑 Appuscholer Access</h2>
+  <h2>🔑 Appupsychoscholar Access</h2>
   <p style="font-size:14px;line-height:1.7;color:var(--ink)">This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.</p>
   <textarea id="loginInput" rows="3" placeholder="Paste your access code here" style="width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;font-size:13px;font-family:monospace;color:var(--ink);background:var(--card)"></textarea>
   <p style="min-height:18px;font-size:12.5px;color:#dc2626;margin:8px 0 0" id="loginMsg"></p>
   <div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" id="loginSubmit">Unlock</button></div>
-  <p class="desc" style="margin-top:10px">Don't have a code, or has yours expired? Ask whoever gave you Appuscholer for a new one.</p>
+  <p class="desc" style="margin-top:10px">Don't have a code, or has yours expired? Ask whoever gave you Appupsychoscholar for a new one.</p>
 </div></dialog>
 
 <dialog id="statsDlg" class="dlg-wide"><div class="dlg-body">
@@ -395,7 +395,7 @@
 </div></dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<footer>APPU SCHOLER · PSYCHOLOGY EDITION · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
+<footer>APPUPSYCHOSCHOLAR · PSYCHOLOGY EDITION · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -640,7 +640,7 @@ async function ensureKey(){
 }
 function keyModeNote(){
   const m=document.getElementById('keyMode').value,el=document.getElementById('keyModeHint');
-  el.textContent=m==='pass'?'You choose a passphrase now and type it once each time you open Appuscholer. Other files on your computer see only encrypted text.'
+  el.textContent=m==='pass'?'You choose a passphrase now and type it once each time you open Appupsychoscholar. Other files on your computer see only encrypted text.'
     :m==='plain'?'No passphrase. Any other HTML file you open on this computer can read this key.'
     :'Kept in memory only. Closing the tab erases it.';
 }
@@ -695,7 +695,7 @@ async function saveKey(){
   LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);if(p==='gemini')LS.rm('gemini_api_key');
   if(mode==='pass'){
     if(!cryptoOK()){showToast('This browser cannot encrypt — choose another option');return}
-    const pass=prompt('Choose a passphrase for your keys.\n\nYou will type it once each time you open Appuscholer. Nobody can recover it for you.');
+    const pass=prompt('Choose a passphrase for your keys.\n\nYou will type it once each time you open Appupsychoscholar. Nobody can recover it for you.');
     if(pass===null||pass.length<6){showToast('Passphrase needs at least 6 characters — nothing was saved');return}
     const again=prompt('Type the passphrase once more to confirm:');
     if(again!==pass){showToast('The two passphrases did not match — nothing was saved');return}
@@ -801,7 +801,7 @@ async function callAI(prompt,opts){
   else if(prov==='deepseek'){url='https://api.deepseek.com/chat/completions';model=PROVIDERS.deepseek.model}
   else if(prov==='openai'){url='https://api.openai.com/v1/chat/completions';model=PROVIDERS.openai.model}
   else{url='https://openrouter.ai/api/v1/chat/completions';model=PROVIDERS.openrouter.model;
-       headers['HTTP-Referer']='https://appuscholer.local';headers['X-Title']='Appuscholer'}
+       headers['HTTP-Referer']='https://appupsychoscholar.local';headers['X-Title']='Appupsychoscholar'}
 
   const r=await fetch(url,{method:'POST',headers,
     body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:temp,max_tokens:maxTok})});
@@ -852,7 +852,7 @@ async function askAI(){
   log.appendChild(mine);inp.value='';
   const bubble=document.createElement('div');bubble.className='msg ai';bubble.textContent='💜 thinking…';
   log.appendChild(bubble);log.scrollTop=log.scrollHeight;
-  try{bubble.textContent=await callAI('You are Appuscholer, a friendly scholarly writing coach for psychology students. Answer briefly and helpfully:\n\n'+q,{temp:0.6})}
+  try{bubble.textContent=await callAI('You are Appupsychoscholar, a friendly scholarly writing coach for psychology students. Answer briefly and helpfully:\n\n'+q,{temp:0.6})}
   catch(e){bubble.textContent=apiMsg(e)}
   log.scrollTop=log.scrollHeight;
 }
@@ -867,8 +867,8 @@ document.addEventListener('keydown',e=>{
 
 function downloadDoc(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
-  const title=(cur&&cur.title)||'appuscholer-document';
-  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholer-document';
+  const title=(cur&&cur.title)||'appupsychoscholar-document';
+  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appupsychoscholar-document';
   const body=getEditorHTML();
   const html='<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8">'+
     '<title>'+escHTML(title)+'</title><style>body{font-family:"Times New Roman",serif;font-size:12pt;line-height:2}</style>'+
@@ -1140,7 +1140,7 @@ function citImport(input){
         }
       });
       citSaveLib(l);showToast(added+' sources merged into your library ✓');
-    }catch(e){showToast('Could not read that file — it must be a library JSON exported from Appuscholer')}
+    }catch(e){showToast('Could not read that file — it must be a library JSON exported from Appupsychoscholar')}
     input.value='';
   };
   r.onerror=()=>{showToast('Could not read that file');input.value=''};
@@ -1730,7 +1730,7 @@ function licensePromptLoop(reason){
     const dlg=document.getElementById('loginDlg'),msg=document.getElementById('loginMsg'),input=document.getElementById('loginInput'),btn=document.getElementById('loginSubmit');
     msg.textContent=reason==='expired'?'Your access code has expired. Paste a new one to continue.'
       :reason==='revoked'?'That access code is no longer valid. Paste a new one, or ask for a renewal code.'
-      :reason==='nocrypto'?'This browser cannot verify access codes. Please open Appuscholer in a recent version of Chrome.'
+      :reason==='nocrypto'?'This browser cannot verify access codes. Please open Appupsychoscholar in a recent version of Chrome.'
       :reason?'That code was not recognized. Paste the whole code, including the dot in the middle.'
       :'';
     input.value='';
