@@ -95,6 +95,17 @@
   .fmt-btn.on{background:var(--purple-600);color:#fff;border-color:var(--purple-700)}
   .fmt-sep{width:1px;align-self:stretch;background:var(--line);margin:2px 4px}
   .fmt-hint{font-size:12px;color:var(--muted);width:100%;margin-top:2px}
+  .fmt-color-btn{position:relative;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;font-family:inherit;min-width:36px;line-height:1.4;display:inline-flex;align-items:center;justify-content:center}
+  .fmt-color-btn:hover{background:var(--purple-100)}
+  .fmt-color-btn input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
+  .find-replace-bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 20px;border-top:1px solid var(--line);background:var(--soft);align-items:center}
+  .find-replace-bar input[type=text]{padding:6px 10px;border:2px solid var(--line);border-radius:8px;font-size:13px;background:var(--card);color:var(--ink);font-family:inherit;min-width:140px}
+  .btn-sm{padding:6px 10px;font-size:13px;border-radius:8px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-family:inherit}
+  .btn-sm:hover{background:var(--purple-100)}
+  .find-status{font-size:12px;color:var(--muted)}
+  #editor .page-break{display:block;border:0;border-top:2px dashed var(--muted);margin:18px 0;page-break-after:always;position:relative}
+  #editor .page-break::after{content:"Page Break";position:absolute;top:-9px;left:12px;background:var(--card);padding:0 6px;font-size:11px;color:var(--muted)}
+  #editor mark.fr-hit{background:#ffe066;color:inherit;border-radius:2px}
   .toolbar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
   .stats{font-size:12px;color:var(--muted);margin-left:auto}
   .panel{padding:18px}
@@ -124,6 +135,18 @@
   .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--purple-500)}
   .cit-item{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.6;margin-bottom:8px}
   .cit-item button.del{float:right;border:none;background:none;cursor:pointer;color:#dc2626;font-size:14px}
+  .paper-card{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.55;margin-bottom:8px}
+  .paper-card h4{margin:0 0 4px;font-size:13.5px;color:var(--head-title)}
+  .paper-card .meta{color:var(--muted);font-size:11.5px;margin-bottom:5px}
+  .paper-card .abs{margin:5px 0;max-height:4.6em;overflow:hidden}
+  .paper-card .abs.open{max-height:none}
+  .paper-card .src-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--accent-ink);background:var(--purple-100);padding:1px 7px;border-radius:10px;margin-right:6px}
+  .paper-card .row{margin-top:6px;gap:6px}
+  .paper-card .btn{padding:5px 9px;font-size:11.5px}
+  .paper-check{display:flex;align-items:flex-start;gap:6px}
+  .paper-check input{margin-top:4px;width:15px;height:15px;accent-color:#6d28d9;flex:0 0 auto}
+  .connected-list{margin-top:8px;padding-left:2px}
+  .connected-list .paper-card{margin-bottom:6px}
   #provTabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px 0;max-width:1180px;margin:0 auto}
   .ptab{flex:1 1 0;min-width:104px;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:13px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
   .ptab .dot{width:9px;height:9px;border-radius:50%;background:var(--chipline);flex:none}
@@ -201,13 +224,47 @@
         <option value="h3">Heading 3</option>
         <option value="blockquote">Quote</option>
       </select>
+      <select id="fontSel" onchange="applyFontName(this.value)" title="Font family" aria-label="Font family">
+        <option value="">Font</option>
+        <option value="Arial, sans-serif">Arial</option>
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+        <option value="'Courier New', Courier, monospace">Courier New</option>
+        <option value="Verdana, sans-serif">Verdana</option>
+        <option value="Calibri, sans-serif">Calibri</option>
+        <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+      </select>
+      <select id="sizeSel" onchange="applyFontSize(this.value)" title="Font size" aria-label="Font size">
+        <option value="">Size</option>
+        <option value="10">10</option>
+        <option value="12">12</option>
+        <option value="14">14</option>
+        <option value="16">16</option>
+        <option value="18">18</option>
+        <option value="20">20</option>
+        <option value="24">24</option>
+        <option value="28">28</option>
+        <option value="32">32</option>
+      </select>
       <span class="fmt-sep"></span>
       <button type="button" class="fmt-btn" onclick="fmt('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
       <button type="button" class="fmt-btn" onclick="fmt('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
       <button type="button" class="fmt-btn" onclick="fmt('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+      <button type="button" class="fmt-btn" onclick="fmt('strikeThrough')" title="Strikethrough"><s>S</s></button>
+      <button type="button" class="fmt-btn" onclick="fmt('superscript')" title="Superscript">X²</button>
+      <button type="button" class="fmt-btn" onclick="fmt('subscript')" title="Subscript">X₂</button>
+      <span class="fmt-sep"></span>
+      <label class="fmt-color-btn" title="Text color">A
+        <input type="color" id="textColorInput" value="#1a1a1a" onchange="applyForeColor(this.value)">
+      </label>
+      <label class="fmt-color-btn" title="Highlight color">🖊
+        <input type="color" id="hiliteColorInput" value="#fff59d" onchange="applyHiliteColor(this.value)">
+      </label>
       <span class="fmt-sep"></span>
       <button type="button" class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Bullet list">☰•</button>
       <button type="button" class="fmt-btn" onclick="fmt('insertOrderedList')" title="Numbered list">☰1</button>
+      <button type="button" class="fmt-btn" onclick="fmt('outdent')" title="Decrease indent">⇤</button>
+      <button type="button" class="fmt-btn" onclick="fmt('indent')" title="Increase indent">⇥</button>
       <span class="fmt-sep"></span>
       <button type="button" class="fmt-btn" onclick="fmt('justifyLeft')" title="Align left">⟸</button>
       <button type="button" class="fmt-btn" onclick="fmt('justifyCenter')" title="Align center">☰</button>
@@ -221,8 +278,20 @@
       <button type="button" class="fmt-btn" onclick="insertTable()" title="Insert a table">⊞ Table</button>
       <button type="button" class="fmt-btn" onclick="tableAddRow()" title="Add a row to the table your cursor is in">+Row</button>
       <button type="button" class="fmt-btn" onclick="tableAddCol()" title="Add a column to the table your cursor is in">+Col</button>
+      <button type="button" class="fmt-btn" onclick="insertPageBreak()" title="Insert a page break">⤓ Page Break</button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="openFindReplace()" title="Find and replace (Ctrl+F)">🔍 Find</button>
       <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="insertImageFile(this)">
       <span class="fmt-hint">Select text, then click Bold / Italic / a list to format it — just like Word. Use Image / Table to drop those into the document too.</span>
+    </div>
+    <div id="findReplaceBar" class="find-replace-bar" style="display:none">
+      <input type="text" id="findInput" placeholder="Find" aria-label="Find">
+      <input type="text" id="replaceInput" placeholder="Replace with" aria-label="Replace with">
+      <button type="button" class="btn btn-sm" onclick="findNext()">Find Next</button>
+      <button type="button" class="btn btn-sm" onclick="replaceOne()">Replace</button>
+      <button type="button" class="btn btn-sm" onclick="replaceAll()">Replace All</button>
+      <span id="findStatus" class="find-status"></span>
+      <button type="button" class="icon-btn" onclick="closeFindReplace()" title="Close">✕</button>
     </div>
     <div id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Document editor" data-placeholder="Start writing here… Select text and press Improve, or just write and let AI continue."></div>
     <div class="toolbar">
@@ -253,6 +322,7 @@
     <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')">📊 Statistics &amp; Charts</button>
     <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')">✍ My Writing Style</button>
     <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')">📚 Citation Manager</button>
+    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')">🔬 Research</button>
     <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')">💬 Ask Appupsychoscholar</button>
     <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')">🖥 Make PPT</button>
   </div>
@@ -331,6 +401,32 @@
       </div>
       <input type="file" id="citImportFile" accept=".json,application/json" style="display:none" onchange="citImport(this)">
       <p class="desc" style="margin-top:10px">🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.</p>
+    </div></section>
+
+    <section class="card tool-panel" data-panel="research"><div class="panel">
+      <h3>🔬 Research</h3>
+      <p class="desc">Search real papers on Semantic Scholar, arXiv and PubMed — free, live, no install. Pick what's relevant, then draft a literature review or hunt for a research gap, both grounded only in the abstracts you actually found.</p>
+      <div class="fld"><label for="rsTopic">Search topic or question</label>
+        <input type="text" id="rsTopic" placeholder="e.g. social media use and adolescent anxiety"></div>
+      <div class="row" style="flex-wrap:wrap;gap:14px;font-size:12.5px;margin-bottom:4px">
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcSS" checked style="accent-color:#6d28d9">Semantic Scholar</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcArxiv" checked style="accent-color:#6d28d9">arXiv</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcPubmed" checked style="accent-color:#6d28d9">PubMed</label>
+      </div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="researchSearch()">🔎 Find relevant papers</button></div>
+      <p class="desc" id="rsStatus" style="margin-top:8px"></p>
+      <div id="rsResults" style="margin-top:8px"></div>
+
+      <div id="rsActions" style="display:none;margin-top:14px">
+        <h3>Use the papers you checked above</h3>
+        <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchLitReview()">📝 Draft literature review paragraph</button></div>
+        <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchGapFinder()">🕳 Find a research gap</button></div>
+        <p class="desc" style="margin-top:6px">Both are drafted strictly from the titles/authors/abstracts of the papers you checked — Appupsychoscholar will not invent sources. Always verify the actual papers before citing them.</p>
+      </div>
+
+      <h3 style="margin-top:16px">🔗 Connected papers</h3>
+      <p class="desc">Pick one paper above and see what it cites and what has cited it — a quick way to trace a research thread (Semantic Scholar only).</p>
+      <div id="rsConnected"></div>
     </div></section>
 
     <section class="card tool-panel" data-panel="chat"><div class="panel">
@@ -1258,6 +1354,119 @@ function tailText(){return getEditorText().slice(-2000)}
 /* ============ Formatting toolbar ============ */
 function fmt(cmd){editor.focus();if(savedRange)restoreEditorSelection();try{document.execCommand(cmd,false,null)}catch(e){}upd()}
 function fmtBlock(tag){editor.focus();if(savedRange)restoreEditorSelection();try{document.execCommand('formatBlock',false,tag)}catch(e){}upd()}
+function applyFontName(name){if(!name)return;editor.focus();if(savedRange)restoreEditorSelection();try{document.execCommand('fontName',false,name)}catch(e){}upd();document.getElementById('fontSel').value=''}
+function applyFontSize(px){
+  if(!px)return;
+  editor.focus();if(savedRange)restoreEditorSelection();
+  // execCommand('fontSize') only supports sizes 1-7, so we use it as a hook then rewrite to a real pixel size
+  try{document.execCommand('fontSize',false,'7')}catch(e){}
+  const spans=editor.querySelectorAll('font[size="7"]');
+  spans.forEach(f=>{const span=document.createElement('span');span.style.fontSize=px+'px';while(f.firstChild)span.appendChild(f.firstChild);f.replaceWith(span)});
+  upd();document.getElementById('sizeSel').value=''
+}
+function applyForeColor(color){editor.focus();if(savedRange)restoreEditorSelection();try{document.execCommand('foreColor',false,color)}catch(e){}upd()}
+function applyHiliteColor(color){editor.focus();if(savedRange)restoreEditorSelection();try{document.execCommand('hiliteColor',false,color)}catch(e){document.execCommand('backColor',false,color)}upd()}
+function insertPageBreak(){
+  editor.focus();if(savedRange)restoreEditorSelection();
+  const hr=document.createElement('hr');hr.className='page-break';hr.contentEditable='false';
+  try{
+    const sel=window.getSelection();
+    if(sel.rangeCount){const range=sel.getRangeAt(0);range.collapse(false);range.insertNode(hr);
+      range.setStartAfter(hr);range.setEndAfter(hr);sel.removeAllRanges();sel.addRange(range)}
+    else editor.appendChild(hr)
+  }catch(e){editor.appendChild(hr)}
+  upd()
+}
+
+/* ============ Find & Replace ============ */
+let frMatches=[],frIndex=-1,frTerm='';
+function openFindReplace(){
+  document.getElementById('findReplaceBar').style.display='flex';
+  document.getElementById('findInput').focus();
+}
+function closeFindReplace(){
+  document.getElementById('findReplaceBar').style.display='none';
+  clearFrHighlights();frMatches=[];frIndex=-1;frTerm='';
+  document.getElementById('findStatus').textContent='';
+}
+function clearFrHighlights(){
+  editor.querySelectorAll('mark.fr-hit').forEach(m=>{
+    const t=document.createTextNode(m.textContent);m.replaceWith(t)
+  });
+  editor.normalize();
+}
+function findAllMatches(term){
+  clearFrHighlights();frMatches=[];frIndex=-1;
+  if(!term)return;
+  const walker=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT,null);
+  const nodes=[];let n;while(n=walker.nextNode())nodes.push(n);
+  const needle=term.toLowerCase();
+  nodes.forEach(node=>{
+    const text=node.nodeValue;const lower=text.toLowerCase();
+    let idx=0,found=false,frag=document.createDocumentFragment(),last=0;
+    while(true){
+      const pos=lower.indexOf(needle,idx);
+      if(pos===-1)break;
+      found=true;
+      frag.appendChild(document.createTextNode(text.slice(last,pos)));
+      const mark=document.createElement('mark');mark.className='fr-hit';mark.textContent=text.slice(pos,pos+term.length);
+      frag.appendChild(mark);
+      last=pos+term.length;idx=last;
+    }
+    if(found){
+      frag.appendChild(document.createTextNode(text.slice(last)));
+      node.replaceWith(frag);
+    }
+  });
+  frMatches=Array.from(editor.querySelectorAll('mark.fr-hit'));
+}
+function highlightCurrent(){
+  frMatches.forEach(m=>m.style.background='');
+  if(frIndex>=0&&frIndex<frMatches.length){
+    frMatches[frIndex].style.background='#ff9800';
+    frMatches[frIndex].scrollIntoView({block:'center',behavior:'smooth'});
+  }
+}
+function findNext(){
+  const term=document.getElementById('findInput').value;
+  if(!term){document.getElementById('findStatus').textContent='Type something to find';return}
+  if(term!==frTerm||!frMatches.length){
+    findAllMatches(term);frTerm=term;
+    if(!frMatches.length){document.getElementById('findStatus').textContent='No matches';return}
+    frIndex=0;
+  }else{
+    frIndex=(frIndex+1)%frMatches.length;
+  }
+  highlightCurrent();
+  document.getElementById('findStatus').textContent=(frIndex+1)+' of '+frMatches.length;
+}
+function replaceOne(){
+  const term=document.getElementById('findInput').value;
+  const repl=document.getElementById('replaceInput').value;
+  if(!term)return;
+  if(!frMatches.length||frIndex<0)findNext();
+  if(frIndex>=0&&frIndex<frMatches.length){
+    frMatches[frIndex].replaceWith(document.createTextNode(repl));
+    editor.normalize();
+    findAllMatches(term);
+    if(frMatches.length){frIndex=Math.min(frIndex,frMatches.length-1);highlightCurrent();
+      document.getElementById('findStatus').textContent=(frIndex+1)+' of '+frMatches.length}
+    else document.getElementById('findStatus').textContent='No more matches';
+    upd();
+  }
+}
+function replaceAll(){
+  const term=document.getElementById('findInput').value;
+  const repl=document.getElementById('replaceInput').value;
+  if(!term)return;
+  findAllMatches(term);
+  const count=frMatches.length;
+  frMatches.forEach(m=>m.replaceWith(document.createTextNode(repl)));
+  editor.normalize();
+  frMatches=[];frIndex=-1;frTerm='';
+  document.getElementById('findStatus').textContent=count?('Replaced '+count):'No matches';
+  upd();
+}
 
 /* ============ Writing actions ============ */
 async function continueWriting(){
@@ -1317,6 +1526,18 @@ document.addEventListener('keydown',e=>{
   if(!window._sug)return;              /* let Tab move focus normally */
   e.preventDefault();acceptAI();
 });
+
+/* ============ Find & Replace: Ctrl+F opens it, Escape closes it ============ */
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'&&document.activeElement&&
+     (editor.contains(document.activeElement)||document.activeElement===editor)){
+    e.preventDefault();openFindReplace();
+  }else if(e.key==='Escape'&&document.getElementById('findReplaceBar').style.display!=='none'){
+    closeFindReplace();
+  }
+});
+document.getElementById('findInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();findNext()}});
+document.getElementById('replaceInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();replaceOne()}});
 
 function downloadDoc(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
@@ -1598,6 +1819,172 @@ function citImport(input){
   };
   r.onerror=()=>{showToast('Could not read that file');input.value=''};
   r.readAsText(f);
+}
+
+/* ============ Research: live paper search + connected papers + grounded lit review / gap finder ============ */
+let rsResults=[];
+function escAttr(s){return String(s==null?'':s).replace(/"/g,'&quot;')}
+function rsAuthorsStr(list){if(!list||!list.length)return'Unknown authors';
+  const names=list.map(a=>a.name||a).filter(Boolean);
+  return names.length>4?names.slice(0,4).join(', ')+', et al.':names.join(', ')}
+
+async function rsFetchSemanticScholar(q){
+  const url='https://api.semanticscholar.org/graph/v1/paper/search?limit=8&fields=title,abstract,authors,year,venue,externalIds,citationCount,url,paperId&query='+encodeURIComponent(q);
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  return(j.data||[]).map(p=>({
+    source:'Semantic Scholar',ssId:p.paperId,
+    title:p.title||'Untitled',
+    authors:rsAuthorsStr(p.authors),
+    year:p.year||'',venue:p.venue||'',
+    abstract:p.abstract||'',
+    citationCount:p.citationCount||0,
+    doi:(p.externalIds&&p.externalIds.DOI)||'',
+    url:p.url||(p.externalIds&&p.externalIds.DOI?'https://doi.org/'+p.externalIds.DOI:'')
+  }));
+}
+async function rsFetchArxiv(q){
+  const url='https://export.arxiv.org/api/query?search_query=all:'+encodeURIComponent(q)+'&start=0&max_results=6';
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const xml=new DOMParser().parseFromString(await r.text(),'text/xml');
+  return Array.from(xml.getElementsByTagName('entry')).map(e=>{
+    const g=tag=>{const el=e.getElementsByTagName(tag)[0];return el?el.textContent.trim():''};
+    const authors=Array.from(e.getElementsByTagName('author')).map(a=>{
+      const n=a.getElementsByTagName('name')[0];return n?n.textContent.trim():''}).filter(Boolean);
+    const id=g('id'),year=(g('published')||'').slice(0,4);
+    return{source:'arXiv',ssId:null,title:g('title').replace(/\s+/g,' '),
+      authors:authors.length>4?authors.slice(0,4).join(', ')+', et al.':authors.join(', ')||'Unknown authors',
+      year,venue:'arXiv preprint',abstract:g('summary').replace(/\s+/g,' '),
+      citationCount:0,doi:'',url:id};
+  });
+}
+async function rsFetchPubmed(q){
+  const s=await fetch('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=6&term='+encodeURIComponent(q));
+  if(!s.ok)throw new Error('HTTP '+s.status);
+  const sj=await s.json();
+  const ids=(sj.esearchresult&&sj.esearchresult.idlist)||[];
+  if(!ids.length)return[];
+  const d=await fetch('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id='+ids.join(','));
+  if(!d.ok)throw new Error('HTTP '+d.status);
+  const dj=await d.json();
+  return ids.map(id=>{
+    const it=dj.result&&dj.result[id];if(!it)return null;
+    const authors=(it.authors||[]).map(a=>a.name).filter(Boolean);
+    return{source:'PubMed',ssId:null,title:it.title||'Untitled',
+      authors:authors.length>4?authors.slice(0,4).join(', ')+', et al.':authors.join(', ')||'Unknown authors',
+      year:(it.pubdate||'').slice(0,4),venue:it.fulljournalname||it.source||'',
+      abstract:'',citationCount:0,doi:'',url:'https://pubmed.ncbi.nlm.nih.gov/'+id+'/'};
+  }).filter(Boolean);
+}
+async function researchSearch(){
+  const q=document.getElementById('rsTopic').value.trim();
+  if(!q){showToast('Type a topic or question first');return}
+  const useSS=document.getElementById('rsSrcSS').checked,
+        useArx=document.getElementById('rsSrcArxiv').checked,
+        usePm=document.getElementById('rsSrcPubmed').checked;
+  if(!useSS&&!useArx&&!usePm){showToast('Pick at least one source');return}
+  const status=document.getElementById('rsStatus');
+  status.textContent='🔎 Searching…';
+  document.getElementById('rsResults').innerHTML='';
+  document.getElementById('rsActions').style.display='none';
+  const jobs=[];
+  if(useSS)jobs.push(rsFetchSemanticScholar(q).catch(()=>({error:'Semantic Scholar'})));
+  if(useArx)jobs.push(rsFetchArxiv(q).catch(()=>({error:'arXiv'})));
+  if(usePm)jobs.push(rsFetchPubmed(q).catch(()=>({error:'PubMed'})));
+  const outcomes=await Promise.all(jobs);
+  let merged=[],failed=[];
+  outcomes.forEach(o=>{if(o&&o.error)failed.push(o.error);else if(Array.isArray(o))merged=merged.concat(o)});
+  const seen=new Set();
+  merged=merged.filter(p=>{const k=p.title.toLowerCase().replace(/\W+/g,'').slice(0,60);
+    if(seen.has(k))return false;seen.add(k);return true});
+  rsResults=merged;
+  rsRenderResults();
+  status.textContent=merged.length
+    ? merged.length+' paper'+(merged.length===1?'':'s')+' found'+(failed.length?' — could not reach '+failed.join(', '):'')
+    : 'No papers found'+(failed.length?' — could not reach '+failed.join(', '):', try a broader search');
+}
+function rsRenderResults(){
+  const box=document.getElementById('rsResults');
+  if(!rsResults.length){box.innerHTML='';return}
+  box.innerHTML=rsResults.map((p,i)=>
+    '<div class="paper-card">'+
+      '<div class="paper-check"><input type="checkbox" id="rsChk'+i+'" onchange="rsToggleActions()">'+
+      '<div style="flex:1"><h4>'+escHTML(p.title)+'</h4>'+
+      '<div class="meta"><span class="src-tag">'+escHTML(p.source)+'</span>'+escHTML(p.authors)+
+        (p.year?' · '+escHTML(p.year):'')+(p.venue?' · '+escHTML(p.venue):'')+
+        (p.citationCount?' · '+p.citationCount+' citations':'')+'</div>'+
+      (p.abstract?'<div class="abs" id="rsAbs'+i+'">'+escHTML(p.abstract)+'</div>'+
+        '<a href="#" onclick="event.preventDefault();document.getElementById(\'rsAbs'+i+'\').classList.toggle(\'open\')" style="font-size:11.5px">Show more / less</a>':'')+
+      '<div class="row">'+
+        '<button type="button" class="btn btn-ghost" onclick="rsAddToLibrary('+i+')">+ Citation library</button>'+
+        (p.url?'<button type="button" class="btn btn-ghost" onclick="window.open(\''+escAttr(p.url)+'\',\'_blank\')">Open source</button>':'')+
+        (p.ssId?'<button type="button" class="btn btn-ghost" onclick="rsConnected('+i+')">🔗 Connected papers</button>':'')+
+      '</div></div></div></div>'
+  ).join('');
+}
+function rsToggleActions(){
+  const any=rsResults.some((_,i)=>{const el=document.getElementById('rsChk'+i);return el&&el.checked});
+  document.getElementById('rsActions').style.display=any?'block':'none';
+}
+function rsAddToLibrary(i){
+  const p=rsResults[i];if(!p)return;
+  const d={author:(p.authors||'').replace(/, et al\.$/,''),year:p.year||'',title:p.title,
+    source:p.venue||'',volume:'',issue:'',pages:'',doi:p.doi||'',url:p.doi?'':(p.url||''),
+    type:p.source==='PubMed'||p.venue?'Journal article':'Website',style:'apa'};
+  const l=citGetLib();
+  if(l.some(e=>e.title===d.title&&e.author===d.author)){showToast('Already in your library');return}
+  l.push(d);citSaveLib(l);
+  showToast('Added to citation library ✓ — check author formatting before you submit');
+}
+async function rsConnected(i){
+  const p=rsResults[i];if(!p||!p.ssId)return;
+  const box=document.getElementById('rsConnected');
+  box.innerHTML='<p class="desc">🔎 Loading connected papers for “'+escHTML(p.title)+'”…</p>';
+  try{
+    const url='https://api.semanticscholar.org/graph/v1/paper/'+encodeURIComponent(p.ssId)+
+      '?fields=title,references.title,references.authors,references.year,citations.title,citations.authors,citations.year';
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const refs=(j.references||[]).filter(x=>x&&x.title).slice(0,8);
+    const cits=(j.citations||[]).filter(x=>x&&x.title).slice(0,8);
+    const list=(arr,label)=>'<h4 style="margin:10px 0 4px">'+label+' ('+arr.length+')</h4>'+
+      (arr.length?'<div class="connected-list">'+arr.map(x=>
+        '<div class="paper-card"><b style="font-size:12.5px">'+escHTML(x.title)+'</b>'+
+        '<div class="meta">'+escHTML(rsAuthorsStr(x.authors))+(x.year?' · '+x.year:'')+'</div></div>'
+      ).join('')+'</div>':'<p class="desc">None found.</p>');
+    box.innerHTML='<h3>🔗 Connected to: '+escHTML(p.title)+'</h3>'+
+      list(refs,'📖 This paper cites')+list(cits,'📥 Papers that cite this one');
+  }catch(e){box.innerHTML='<p class="desc">Could not load connected papers right now — try again in a moment.</p>'}
+}
+function rsCheckedPapers(){return rsResults.filter((_,i)=>{const el=document.getElementById('rsChk'+i);return el&&el.checked})}
+function rsCorpusText(papers){
+  return papers.map((p,i)=>'['+(i+1)+'] '+p.authors+' ('+(p.year||'n.d.')+'). '+p.title+'. '+(p.venue||p.source)+'.'+
+    (p.abstract?'\nAbstract: '+p.abstract:'\nAbstract: not available.')).join('\n\n');
+}
+async function researchLitReview(){
+  const papers=rsCheckedPapers();
+  if(papers.length<2){showToast('Check at least 2 papers above first');return}
+  clearSug('💜 Reading '+papers.length+' abstracts and drafting…');
+  try{
+    const prompt='You are a psychology academic writing assistant. Below are '+papers.length+
+      ' real papers (numbered), each with authors, year, title and abstract. Write a short literature review paragraph (150-220 words) that organizes them by theme, states how they agree or conflict, and cites them in-text as (Author, Year) using ONLY the authors/years given below. Do not invent any claim that is not supported by an abstract given below, and do not add sources beyond these. If an abstract is "not available", mention that paper only by title/authors without claiming specific findings.\n\n'+rsCorpusText(papers);
+    setSug(await callAI(prompt,{temp:0.35,max:1200}));
+    showToast('Ready — press Tab in the editor to insert');
+  }catch(e){clearSug(apiMsg(e))}
+}
+async function researchGapFinder(){
+  const papers=rsCheckedPapers();
+  if(papers.length<2){showToast('Check at least 2 papers above first');return}
+  clearSug('💜 Looking for what these papers leave unanswered…');
+  try{
+    const prompt='You are a psychology research advisor helping a student find a research gap. Below are '+papers.length+
+      ' real papers (numbered) with authors, year, title and abstract. Based ONLY on what these abstracts actually say, identify 2-4 specific gaps: a population not studied, a method not used, a moderator/mediator not tested, or a conflicting result not resolved. For each gap, name which numbered paper(s) it comes from and suggest one concrete research question. Do not claim a gap exists unless the abstracts actually support it — if the abstracts are too thin to tell, say so plainly instead of guessing.\n\n'+rsCorpusText(papers);
+    setSug(await callAI(prompt,{temp:0.35,max:1200}));
+    showToast('Ready — press Tab in the editor to insert');
+  }catch(e){clearSug(apiMsg(e))}
 }
 
 /* ============ FIX 7 + 18: psychology tools ============ */
