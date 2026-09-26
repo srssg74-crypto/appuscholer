@@ -1828,10 +1828,27 @@ function rsAuthorsStr(list){if(!list||!list.length)return'Unknown authors';
   const names=list.map(a=>a.name||a).filter(Boolean);
   return names.length>4?names.slice(0,4).join(', ')+', et al.':names.join(', ')}
 
+/* Some networks/browser extensions block specific API domains outright (not a CORS or rate-limit issue —
+   both Semantic Scholar and arXiv are documented CORS-friendly). If the direct call fails, retry once
+   through a public CORS relay before giving up, so a blocked domain doesn't just silently fail. */
+async function rsFetch(url){
+  try{
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r;
+  }catch(direct){
+    try{
+      const r2=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url));
+      if(!r2.ok)throw new Error('HTTP '+r2.status);
+      return r2;
+    }catch(viaProxy){
+      throw direct; /* report the original, more informative error */
+    }
+  }
+}
 async function rsFetchSemanticScholar(q){
   const url='https://api.semanticscholar.org/graph/v1/paper/search?limit=8&fields=title,abstract,authors,year,venue,externalIds,citationCount,url,paperId&query='+encodeURIComponent(q);
-  const r=await fetch(url);
-  if(!r.ok)throw new Error('HTTP '+r.status);
+  const r=await rsFetch(url);
   const j=await r.json();
   return(j.data||[]).map(p=>({
     source:'Semantic Scholar',ssId:p.paperId,
@@ -1846,8 +1863,7 @@ async function rsFetchSemanticScholar(q){
 }
 async function rsFetchArxiv(q){
   const url='https://export.arxiv.org/api/query?search_query=all:'+encodeURIComponent(q)+'&start=0&max_results=6';
-  const r=await fetch(url);
-  if(!r.ok)throw new Error('HTTP '+r.status);
+  const r=await rsFetch(url);
   const xml=new DOMParser().parseFromString(await r.text(),'text/xml');
   return Array.from(xml.getElementsByTagName('entry')).map(e=>{
     const g=tag=>{const el=e.getElementsByTagName(tag)[0];return el?el.textContent.trim():''};
