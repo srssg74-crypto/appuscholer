@@ -409,8 +409,7 @@
       <div class="fld"><label for="rsTopic">Search topic or question</label>
         <input type="text" id="rsTopic" placeholder="e.g. social media use and adolescent anxiety"></div>
       <div class="row" style="flex-wrap:wrap;gap:14px;font-size:12.5px;margin-bottom:4px">
-        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcSS" checked style="accent-color:#6d28d9">Semantic Scholar</label>
-        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcArxiv" checked style="accent-color:#6d28d9">arXiv</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcOA" checked style="accent-color:#6d28d9">OpenAlex (all fields, incl. arXiv/preprints)</label>
         <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcPubmed" checked style="accent-color:#6d28d9">PubMed</label>
       </div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="researchSearch()">🔎 Find relevant papers</button></div>
@@ -425,7 +424,7 @@
       </div>
 
       <h3 style="margin-top:16px">🔗 Connected papers</h3>
-      <p class="desc">Pick one paper above and see what it cites and what has cited it — a quick way to trace a research thread (Semantic Scholar only).</p>
+      <p class="desc">Pick one OpenAlex paper above and see what it cites and what has cited it — a quick way to trace a research thread.</p>
       <div id="rsConnected"></div>
     </div></section>
 
@@ -1824,69 +1823,43 @@ function citImport(input){
 /* ============ Research: live paper search + connected papers + grounded lit review / gap finder ============ */
 let rsResults=[];
 function escAttr(s){return String(s==null?'':s).replace(/"/g,'&quot;')}
-function rsAuthorsStr(list){if(!list||!list.length)return'Unknown authors';
-  const names=list.map(a=>a.name||a).filter(Boolean);
-  return names.length>4?names.slice(0,4).join(', ')+', et al.':names.join(', ')}
-
-/* Confirmed via a real browser console (not a guess): export.arxiv.org and api.semanticscholar.org
-   do not send an Access-Control-Allow-Origin header for this app's origin, so a direct fetch is
-   always blocked by the browser — no retry of the direct call will ever fix that. Chain a few public
-   CORS relays instead; any one of them succeeding is enough. Each relay's own failure is tracked so
-   the final error says exactly what was tried, instead of just re-reporting the original CORS block. */
-const RS_CORS_RELAYS=[
-  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-  u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
-  u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u)
-];
-async function rsFetch(url){
-  const attempts=[];
-  try{
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r;
-  }catch(direct){
-    attempts.push('direct: '+(direct&&direct.message||'blocked'));
-  }
-  for(const build of RS_CORS_RELAYS){
-    const relayUrl=build(url);
-    try{
-      const r=await fetch(relayUrl);
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      return r;
-    }catch(e){
-      attempts.push(new URL(relayUrl).hostname+': '+(e&&e.message||'blocked'));
-    }
-  }
-  throw new Error(attempts.join(' | '));
+/* Semantic Scholar and arXiv turned out to send no Access-Control-Allow-Origin header for this app's
+   origin (confirmed live, in a real browser console — a genuine, permanent block), and every public
+   CORS relay tried as a workaround (allorigins.win, corsproxy.io, codetabs.com) turned out to be down,
+   rate-limited, or now requires its own login. Rather than depend on any of that, OpenAlex replaces
+   both: one open, keyless, reuse-friendly API (built by the same team behind the Unpaywall browser
+   extension, so it's designed for exactly this kind of direct client-side use) that already indexes
+   arXiv and most of what Semantic Scholar covers. */
+function rsReconstructAbstract(inv){
+  if(!inv)return'';
+  let maxPos=-1;
+  Object.values(inv).forEach(positions=>positions.forEach(p=>{if(p>maxPos)maxPos=p}));
+  if(maxPos<0)return'';
+  const arr=new Array(maxPos+1).fill('');
+  Object.entries(inv).forEach(([word,positions])=>positions.forEach(p=>{arr[p]=word}));
+  return arr.join(' ').replace(/\s+/g,' ').trim();
 }
-async function rsFetchSemanticScholar(q){
-  const url='https://api.semanticscholar.org/graph/v1/paper/search?limit=8&fields=title,abstract,authors,year,venue,externalIds,citationCount,url,paperId&query='+encodeURIComponent(q);
-  const r=await rsFetch(url);
+async function rsFetchOpenAlex(q){
+  const url='https://api.openalex.org/works?search='+encodeURIComponent(q)+
+    '&per-page=8&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url';
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
   const j=await r.json();
-  return(j.data||[]).map(p=>({
-    source:'Semantic Scholar',ssId:p.paperId,
-    title:p.title||'Untitled',
-    authors:rsAuthorsStr(p.authors),
-    year:p.year||'',venue:p.venue||'',
-    abstract:p.abstract||'',
-    citationCount:p.citationCount||0,
-    doi:(p.externalIds&&p.externalIds.DOI)||'',
-    url:p.url||(p.externalIds&&p.externalIds.DOI?'https://doi.org/'+p.externalIds.DOI:'')
-  }));
-}
-async function rsFetchArxiv(q){
-  const url='https://export.arxiv.org/api/query?search_query=all:'+encodeURIComponent(q)+'&start=0&max_results=6';
-  const r=await rsFetch(url);
-  const xml=new DOMParser().parseFromString(await r.text(),'text/xml');
-  return Array.from(xml.getElementsByTagName('entry')).map(e=>{
-    const g=tag=>{const el=e.getElementsByTagName(tag)[0];return el?el.textContent.trim():''};
-    const authors=Array.from(e.getElementsByTagName('author')).map(a=>{
-      const n=a.getElementsByTagName('name')[0];return n?n.textContent.trim():''}).filter(Boolean);
-    const id=g('id'),year=(g('published')||'').slice(0,4);
-    return{source:'arXiv',ssId:null,title:g('title').replace(/\s+/g,' '),
-      authors:authors.length>4?authors.slice(0,4).join(', ')+', et al.':authors.join(', ')||'Unknown authors',
-      year,venue:'arXiv preprint',abstract:g('summary').replace(/\s+/g,' '),
-      citationCount:0,doi:'',url:id};
+  return(j.results||[]).map(w=>{
+    const authors=(w.authorships||[]).map(a=>a.author&&a.author.display_name).filter(Boolean);
+    const venue=(w.primary_location&&w.primary_location.source&&w.primary_location.source.display_name)||'';
+    const doi=(w.doi||'').replace(/^https?:\/\/doi\.org\//i,'');
+    return{
+      source:'OpenAlex',oaId:(w.id||'').split('/').pop(),
+      title:w.display_name||'Untitled',
+      authors:authors.length>4?authors.slice(0,4).join(', ')+', et al.':(authors.join(', ')||'Unknown authors'),
+      year:String(w.publication_year||''),venue,
+      abstract:rsReconstructAbstract(w.abstract_inverted_index),
+      citationCount:w.cited_by_count||0,doi,
+      url:w.doi||('https://openalex.org/'+(w.id||'').split('/').pop()),
+      referencedWorks:(w.referenced_works||[]).slice(0,8),
+      citedByApiUrl:w.cited_by_api_url||''
+    };
   });
 }
 async function rsFetchPubmed(q){
@@ -1910,17 +1883,15 @@ async function rsFetchPubmed(q){
 async function researchSearch(){
   const q=document.getElementById('rsTopic').value.trim();
   if(!q){showToast('Type a topic or question first');return}
-  const useSS=document.getElementById('rsSrcSS').checked,
-        useArx=document.getElementById('rsSrcArxiv').checked,
+  const useOA=document.getElementById('rsSrcOA').checked,
         usePm=document.getElementById('rsSrcPubmed').checked;
-  if(!useSS&&!useArx&&!usePm){showToast('Pick at least one source');return}
+  if(!useOA&&!usePm){showToast('Pick at least one source');return}
   const status=document.getElementById('rsStatus');
   status.textContent='🔎 Searching…';
   document.getElementById('rsResults').innerHTML='';
   document.getElementById('rsActions').style.display='none';
   const jobs=[];
-  if(useSS)jobs.push(rsFetchSemanticScholar(q).catch(e=>({error:'Semantic Scholar',detail:(e&&e.message)||'unknown error'})));
-  if(useArx)jobs.push(rsFetchArxiv(q).catch(e=>({error:'arXiv',detail:(e&&e.message)||'unknown error'})));
+  if(useOA)jobs.push(rsFetchOpenAlex(q).catch(e=>({error:'OpenAlex',detail:(e&&e.message)||'unknown error'})));
   if(usePm)jobs.push(rsFetchPubmed(q).catch(e=>({error:'PubMed',detail:(e&&e.message)||'unknown error'})));
   const outcomes=await Promise.all(jobs);
   let merged=[],failed=[];
@@ -1949,7 +1920,7 @@ function rsRenderResults(){
       '<div class="row">'+
         '<button type="button" class="btn btn-ghost" onclick="rsAddToLibrary('+i+')">+ Citation library</button>'+
         (p.url?'<button type="button" class="btn btn-ghost" onclick="window.open(\''+escAttr(p.url)+'\',\'_blank\')">Open source</button>':'')+
-        (p.ssId?'<button type="button" class="btn btn-ghost" onclick="rsConnected('+i+')">🔗 Connected papers</button>':'')+
+        (p.oaId?'<button type="button" class="btn btn-ghost" onclick="rsConnected('+i+')">🔗 Connected papers</button>':'')+
       '</div></div></div></div>'
   ).join('');
 }
@@ -1959,7 +1930,7 @@ function rsToggleActions(){
 }
 function rsAddToLibrary(i){
   const p=rsResults[i];if(!p)return;
-  const d={author:(p.authors||'').replace(/, et al\.$/,''),year:p.year||'',title:p.title,
+  const d={author:(p.authors||'').replace(/, et al\.$/,''),year:String(p.year||''),title:p.title,
     source:p.venue||'',volume:'',issue:'',pages:'',doi:p.doi||'',url:p.doi?'':(p.url||''),
     type:p.source==='PubMed'||p.venue?'Journal article':'Website',style:'apa'};
   const l=citGetLib();
@@ -1967,22 +1938,33 @@ function rsAddToLibrary(i){
   l.push(d);citSaveLib(l);
   showToast('Added to citation library ✓ — check author formatting before you submit');
 }
+function rsOaBrief(w){
+  const authors=(w.authorships||[]).map(a=>a.author&&a.author.display_name).filter(Boolean);
+  return{title:w.display_name||'Untitled',
+    authors:authors.length>4?authors.slice(0,4).join(', ')+', et al.':(authors.join(', ')||'Unknown authors'),
+    year:String(w.publication_year||'')};
+}
 async function rsConnected(i){
-  const p=rsResults[i];if(!p||!p.ssId)return;
+  const p=rsResults[i];if(!p||!p.oaId)return;
   const box=document.getElementById('rsConnected');
   box.innerHTML='<p class="desc">🔎 Loading connected papers for “'+escHTML(p.title)+'”…</p>';
   try{
-    const url='https://api.semanticscholar.org/graph/v1/paper/'+encodeURIComponent(p.ssId)+
-      '?fields=title,references.title,references.authors,references.year,citations.title,citations.authors,citations.year';
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json();
-    const refs=(j.references||[]).filter(x=>x&&x.title).slice(0,8);
-    const cits=(j.citations||[]).filter(x=>x&&x.title).slice(0,8);
+    const jobs=[];
+    if(p.referencedWorks&&p.referencedWorks.length){
+      const ids=p.referencedWorks.map(u=>u.split('/').pop()).join('|');
+      jobs.push(fetch('https://api.openalex.org/works?filter=openalex_id:'+ids+
+        '&per-page=8&select=display_name,authorships,publication_year')
+        .then(r=>r.ok?r.json():{results:[]}).then(j=>(j.results||[]).map(rsOaBrief)).catch(()=>[]));
+    }else jobs.push(Promise.resolve([]));
+    if(p.citedByApiUrl){
+      jobs.push(fetch(p.citedByApiUrl+'&per-page=8&select=display_name,authorships,publication_year')
+        .then(r=>r.ok?r.json():{results:[]}).then(j=>(j.results||[]).map(rsOaBrief)).catch(()=>[]));
+    }else jobs.push(Promise.resolve([]));
+    const[refs,cits]=await Promise.all(jobs);
     const list=(arr,label)=>'<h4 style="margin:10px 0 4px">'+label+' ('+arr.length+')</h4>'+
       (arr.length?'<div class="connected-list">'+arr.map(x=>
         '<div class="paper-card"><b style="font-size:12.5px">'+escHTML(x.title)+'</b>'+
-        '<div class="meta">'+escHTML(rsAuthorsStr(x.authors))+(x.year?' · '+x.year:'')+'</div></div>'
+        '<div class="meta">'+escHTML(x.authors)+(x.year?' · '+x.year:'')+'</div></div>'
       ).join('')+'</div>':'<p class="desc">None found.</p>');
     box.innerHTML='<h3>🔗 Connected to: '+escHTML(p.title)+'</h3>'+
       list(refs,'📖 This paper cites')+list(cits,'📥 Papers that cite this one');
