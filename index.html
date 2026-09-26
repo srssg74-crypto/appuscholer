@@ -1828,23 +1828,36 @@ function rsAuthorsStr(list){if(!list||!list.length)return'Unknown authors';
   const names=list.map(a=>a.name||a).filter(Boolean);
   return names.length>4?names.slice(0,4).join(', ')+', et al.':names.join(', ')}
 
-/* Some networks/browser extensions block specific API domains outright (not a CORS or rate-limit issue —
-   both Semantic Scholar and arXiv are documented CORS-friendly). If the direct call fails, retry once
-   through a public CORS relay before giving up, so a blocked domain doesn't just silently fail. */
+/* Confirmed via a real browser console (not a guess): export.arxiv.org and api.semanticscholar.org
+   do not send an Access-Control-Allow-Origin header for this app's origin, so a direct fetch is
+   always blocked by the browser — no retry of the direct call will ever fix that. Chain a few public
+   CORS relays instead; any one of them succeeding is enough. Each relay's own failure is tracked so
+   the final error says exactly what was tried, instead of just re-reporting the original CORS block. */
+const RS_CORS_RELAYS=[
+  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+  u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
+  u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u)
+];
 async function rsFetch(url){
+  const attempts=[];
   try{
     const r=await fetch(url);
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r;
   }catch(direct){
+    attempts.push('direct: '+(direct&&direct.message||'blocked'));
+  }
+  for(const build of RS_CORS_RELAYS){
+    const relayUrl=build(url);
     try{
-      const r2=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url));
-      if(!r2.ok)throw new Error('HTTP '+r2.status);
-      return r2;
-    }catch(viaProxy){
-      throw direct; /* report the original, more informative error */
+      const r=await fetch(relayUrl);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r;
+    }catch(e){
+      attempts.push(new URL(relayUrl).hostname+': '+(e&&e.message||'blocked'));
     }
   }
+  throw new Error(attempts.join(' | '));
 }
 async function rsFetchSemanticScholar(q){
   const url='https://api.semanticscholar.org/graph/v1/paper/search?limit=8&fields=title,abstract,authors,year,venue,externalIds,citationCount,url,paperId&query='+encodeURIComponent(q);
