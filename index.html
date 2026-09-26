@@ -1890,20 +1890,20 @@ async function researchSearch(){
   document.getElementById('rsResults').innerHTML='';
   document.getElementById('rsActions').style.display='none';
   const jobs=[];
-  if(useSS)jobs.push(rsFetchSemanticScholar(q).catch(()=>({error:'Semantic Scholar'})));
-  if(useArx)jobs.push(rsFetchArxiv(q).catch(()=>({error:'arXiv'})));
-  if(usePm)jobs.push(rsFetchPubmed(q).catch(()=>({error:'PubMed'})));
+  if(useSS)jobs.push(rsFetchSemanticScholar(q).catch(e=>({error:'Semantic Scholar',detail:(e&&e.message)||'unknown error'})));
+  if(useArx)jobs.push(rsFetchArxiv(q).catch(e=>({error:'arXiv',detail:(e&&e.message)||'unknown error'})));
+  if(usePm)jobs.push(rsFetchPubmed(q).catch(e=>({error:'PubMed',detail:(e&&e.message)||'unknown error'})));
   const outcomes=await Promise.all(jobs);
   let merged=[],failed=[];
-  outcomes.forEach(o=>{if(o&&o.error)failed.push(o.error);else if(Array.isArray(o))merged=merged.concat(o)});
+  outcomes.forEach(o=>{if(o&&o.error)failed.push(o.error+' ('+o.detail+')');else if(Array.isArray(o))merged=merged.concat(o)});
   const seen=new Set();
   merged=merged.filter(p=>{const k=p.title.toLowerCase().replace(/\W+/g,'').slice(0,60);
     if(seen.has(k))return false;seen.add(k);return true});
   rsResults=merged;
   rsRenderResults();
   status.textContent=merged.length
-    ? merged.length+' paper'+(merged.length===1?'':'s')+' found'+(failed.length?' — could not reach '+failed.join(', '):'')
-    : 'No papers found'+(failed.length?' — could not reach '+failed.join(', '):', try a broader search');
+    ? merged.length+' paper'+(merged.length===1?'':'s')+' found'+(failed.length?' — could not reach: '+failed.join('; '):'')
+    : 'No papers found'+(failed.length?' — could not reach: '+failed.join('; '):', try a broader search');
 }
 function rsRenderResults(){
   const box=document.getElementById('rsResults');
