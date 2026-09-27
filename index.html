@@ -27,11 +27,12 @@
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
-  header{background:linear-gradient(120deg,var(--purple-900),var(--purple-700) 60%,var(--purple-600));color:#fff;padding:14px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 18px rgba(76,29,149,.25);position:sticky;top:0;z-index:10;flex-wrap:wrap}
-  .logo{width:52px;height:52px;flex:0 0 52px}
-  .brand h1{margin:0;font-size:24px;letter-spacing:.5px;font-weight:800}
+  header{background:linear-gradient(120deg,var(--purple-900),var(--purple-700) 60%,var(--purple-600));color:#fff;padding:8px 18px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 18px rgba(76,29,149,.25);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+  header .btn{padding:7px 13px;font-size:13px}
+  .logo{width:36px;height:36px;flex:0 0 36px}
+  .brand h1{margin:0;font-size:17px;letter-spacing:.3px;font-weight:800;line-height:1.2}
   .brand h1 span{color:#e9d5ff}
-  .brand p{margin:2px 0 0;font-size:12px;color:#ddd6fe;letter-spacing:2px;text-transform:uppercase}
+  .brand p{margin:0;font-size:10px;color:#ddd6fe;letter-spacing:1px;text-transform:uppercase}
   .spacer{flex:1}
   .btn{border:none;cursor:pointer;border-radius:10px;font-weight:700;padding:10px 18px;font-size:14px;transition:.15s;font-family:inherit}
   .btn-gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3b0764}
@@ -54,8 +55,8 @@
     #editor{height:50vh!important}
     .splitter{display:none}
   }
-  .tool-tabbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-  .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:12px;padding:9px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .tool-tabbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .tool-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
   .tool-panel{display:none}
   .tool-panel.active{display:block}
@@ -69,6 +70,7 @@
   .card-head h2{margin:0;font-size:16px;color:var(--head-title)}
   .badge{font-size:11px;background:var(--purple-100);color:var(--accent-ink);padding:4px 10px;border-radius:20px;font-weight:700}
   #editor{width:100%;flex:1;min-height:0;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
+  #editor.drag-over{box-shadow:inset 0 0 0 3px var(--purple-600);background:var(--soft)}
   #editor table{border-collapse:collapse;margin:12px 0;width:100%}
   #editor table td,#editor table th{border:1px solid var(--chipline);padding:8px 10px;min-width:60px;vertical-align:top}
   #editor .img-wrap{position:relative;display:inline-block;max-width:100%;margin:8px 0}
@@ -88,7 +90,9 @@
   #editor h1{font-size:1.6em;margin:.6em 0 .3em;color:var(--head-title)}
   #editor h2{font-size:1.35em;margin:.6em 0 .3em;color:var(--head-title)}
   #editor h3{font-size:1.15em;margin:.6em 0 .3em;color:var(--head-title)}
-  .fmtbar{display:flex;flex-wrap:wrap;gap:6px;padding:10px 20px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
+  .fmtbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 14px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
+  .fmtbar button,.fmtbar select,.fmtbar label{font-size:12.5px}
+  .fmtbar button{padding:5px 8px}
   .fmtbar select{padding:7px 8px;border:2px solid var(--line);border-radius:8px;font-size:13px;background:var(--card);color:var(--ink);font-family:inherit}
   .fmt-btn{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;font-family:inherit;min-width:36px;line-height:1.4}
   .fmt-btn:hover{background:var(--purple-100)}
@@ -106,7 +110,14 @@
   #editor .page-break{display:block;border:0;border-top:2px dashed var(--muted);margin:18px 0;page-break-after:always;position:relative}
   #editor .page-break::after{content:"Page Break";position:absolute;top:-9px;left:12px;background:var(--card);padding:0 6px;font-size:11px;color:var(--muted)}
   #editor mark.fr-hit{background:#ffe066;color:inherit;border-radius:2px}
-  .toolbar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
+  .toolbar{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:5px;padding:7px 12px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
+  .toolbar .btn{padding:6px 9px;font-size:12px;white-space:nowrap;flex:0 0 auto}
+  .toolbar .stats{margin-left:auto;flex:0 0 auto;white-space:nowrap;padding-left:6px;font-size:12px}
+  .orig-badge{flex:0 0 auto;white-space:nowrap;font-size:11.5px;font-weight:700;padding:4px 7px;border-radius:8px;cursor:help;border:2px solid var(--line)}
+  .orig-badge.hi{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+  .orig-badge.mid{background:#fef3c7;color:#92400e;border-color:#fde68a}
+  .orig-badge.lo{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+  #editor.highlight-ai .ai-ins{background:rgba(245,158,11,.32);border-radius:2px;box-shadow:0 0 0 1px rgba(245,158,11,.32)}
   .stats{font-size:12px;color:var(--muted);margin-left:auto}
   .panel{padding:18px}
   .panel h3{margin:0 0 6px;font-size:14px;color:var(--head-title);text-transform:uppercase;letter-spacing:1px}
@@ -147,17 +158,20 @@
   .paper-check input{margin-top:4px;width:15px;height:15px;accent-color:#6d28d9;flex:0 0 auto}
   .connected-list{margin-top:8px;padding-left:2px}
   .connected-list .paper-card{margin-bottom:6px}
-  #provTabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px 0;max-width:1180px;margin:0 auto}
-  .ptab{flex:1 1 0;min-width:104px;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:13px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
+  #provTabs{padding:8px 18px 0;max-width:1180px;margin:0 auto;position:relative}
+  .prov-toggle{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:10px;border:2px solid var(--line);background:var(--card);font-size:12.5px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
+  .prov-toggle .dot{width:9px;height:9px;border-radius:50%;background:var(--chipline);flex:none}
+  .prov-toggle.has-key .dot{background:#16a34a}
+  .prov-menu{position:absolute;top:calc(100% + 4px);left:18px;z-index:20;display:flex;flex-direction:column;gap:4px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 10px 28px rgba(0,0,0,.18);min-width:220px}
+  .ptab{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:9px;border:2px solid var(--line);background:var(--card);font-size:12.5px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit;text-align:left}
   .ptab .dot{width:9px;height:9px;border-radius:50%;background:var(--chipline);flex:none}
   .ptab.has-key .dot{background:#16a34a}
   .ptab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
   .ptab.active .dot{background:var(--gold)}
-  .ptab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .ptab:focus-visible,.prov-toggle:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   @media(max-width:560px){
-    .ptab{min-width:0;font-size:11px;padding:8px 4px;gap:4px}
     #editor{min-height:300px;font-size:16px}
-    .brand h1{font-size:20px}
+    .brand h1{font-size:16px}
   }
   .warn{background:var(--warn-bg,#fef3c7);color:var(--warn-ink,#78350f);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.6}
   .docbar{display:flex;gap:8px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap}
@@ -215,6 +229,8 @@
         <button class="icon-btn" onclick="docNew()" title="New document">＋ New</button>
         <button class="icon-btn" onclick="docRename()" title="Rename">✎</button>
         <button class="icon-btn" onclick="docDelete()" title="Delete this document">🗑</button>
+        <button class="icon-btn" onclick="document.getElementById('docImportInput').click()" title="Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor">📂 Import</button>
+        <input type="file" id="docImportInput" accept=".docx,.pdf,.txt,.md,.html,.htm" style="display:none" onchange="docImportFiles(this.files);this.value=''">
       </div>
     </div>
     <div class="fmtbar" role="toolbar" aria-label="Text formatting">
@@ -298,9 +314,11 @@
     <div class="toolbar">
       <button class="btn btn-purple" onclick="continueWriting()" title="AI writes the next ~120 words for you">✨ Continue Writing <kbd>Tab</kbd></button>
       <button class="btn btn-ghost" onclick="improveText()" title="Select some text first, then click to polish its grammar">💜 Improve selection</button>
-      <button class="btn btn-ghost" onclick="makeLonger()" title="Select some text first, then click to expand it">➕ Make longer</button>
-      <button class="btn btn-ghost" onclick="insertScaffold()" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Report template</button>
+      <button class="btn btn-ghost" onclick="makeLonger()" title="Select some text first, then click to extend it">➕ Extend</button>
+      <button class="btn btn-ghost" onclick="insertScaffold()" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
+      <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" title="Mark every AI-inserted passage directly in the document">👁 AI text</button>
       <span class="stats" id="stats">0 words</span>
+      <span class="orig-badge" id="origBadge" style="display:none"></span>
     </div>
   </section>
 
@@ -319,13 +337,13 @@
   </div>
 
   <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
-    <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')">🧠 Psychology Tools</button>
-    <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')">📊 Statistics &amp; Charts</button>
-    <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')">✍ My Writing Style</button>
-    <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')">📚 Citation Manager</button>
-    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')">🔬 Research</button>
-    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')">💬 Ask Appupsychoscholar</button>
-    <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')">🖥 Make PPT</button>
+    <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
+    <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
+    <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
+    <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
+    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
+    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appupsychoscholar</button>
+    <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
   </div>
 
     <section class="card tool-panel active" data-panel="psych"><div class="panel">
@@ -392,6 +410,16 @@
         <button class="btn btn-ghost" style="flex:1" onclick="citAdd()">+ Library</button>
       </div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citClearForm()">Clear form</button></div>
+
+      <details style="margin-top:14px">
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">🔖 One-click capture from any page</summary>
+        <p class="desc" style="margin-top:8px">Like Zotero's browser button — drag this link to your bookmarks bar once. Then, on any journal article, PubMed or arXiv page, click it to send that page's citation straight into your library here.</p>
+        <p style="text-align:center;margin:10px 0">
+          <a id="citBookmarklet" href="#" class="btn btn-gold" style="display:inline-block;text-decoration:none" onclick="return false" draggable="true">🔖 Capture to Appupsychoscholar</a>
+        </p>
+        <p class="desc">Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.</p>
+      </details>
+
       <h3 style="margin-top:14px">🗂 My library <span class="badge" id="citCount">0</span></h3>
       <div id="citLib" style="margin-top:8px"><p class="desc">No sources yet.</p></div>
       <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()">Insert reference list</button></div>
@@ -406,27 +434,62 @@
 
     <section class="card tool-panel" data-panel="research"><div class="panel">
       <h3>🔬 Research</h3>
-      <p class="desc">Search real papers on Semantic Scholar, arXiv and PubMed — free, live, no install. Pick what's relevant, then draft a literature review or hunt for a research gap, both grounded only in the abstracts you actually found.</p>
+      <p class="desc">Search OpenAlex and PubMed live, free, no install — pick what's relevant, then draft a literature review or find a research gap, grounded only in the abstracts you found.</p>
       <div class="fld"><label for="rsTopic">Search topic or question</label>
         <input type="text" id="rsTopic" placeholder="e.g. social media use and adolescent anxiety"></div>
       <div class="row" style="flex-wrap:wrap;gap:14px;font-size:12.5px;margin-bottom:4px">
-        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcOA" checked style="accent-color:#6d28d9">OpenAlex (all fields, incl. arXiv/preprints)</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcOA" checked style="accent-color:#6d28d9">OpenAlex (incl. arXiv/preprints)</label>
         <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcPubmed" checked style="accent-color:#6d28d9">PubMed</label>
       </div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="researchSearch()">🔎 Find relevant papers</button></div>
       <p class="desc" id="rsStatus" style="margin-top:8px"></p>
+      <div id="rsSortRow" style="display:none;margin:4px 0 8px;font-size:12.5px;align-items:center;gap:8px" class="row">
+        <label for="rsSort" style="font-weight:700;color:var(--muted)">Sort by</label>
+        <select id="rsSort" onchange="rsApplySort()" style="padding:5px 8px;border-radius:8px;border:2px solid var(--line);font-size:12.5px">
+          <option value="relevance">Relevance (as returned)</option>
+          <option value="citations">Most cited</option>
+          <option value="year">Newest first</option>
+        </select>
+      </div>
       <div id="rsResults" style="margin-top:8px"></div>
 
-      <div id="rsActions" style="display:none;margin-top:14px">
-        <h3>Use the papers you checked above</h3>
+      <div id="rsActions" style="display:none;margin-top:12px">
         <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchLitReview()">📝 Draft literature review paragraph</button></div>
         <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchGapFinder()">🕳 Find a research gap</button></div>
-        <p class="desc" style="margin-top:6px">Both are drafted strictly from the titles/authors/abstracts of the papers you checked — Appupsychoscholar will not invent sources. Always verify the actual papers before citing them.</p>
+        <p class="desc" style="margin-top:6px">Drafted strictly from the papers you checked above — always verify the actual sources before citing them.</p>
       </div>
 
-      <h3 style="margin-top:16px">🔗 Connected papers</h3>
-      <p class="desc">Pick one OpenAlex paper above and see what it cites and what has cited it — a quick way to trace a research thread.</p>
-      <div id="rsConnected"></div>
+      <details style="margin-top:14px">
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">🌐 Not finding it? Search Google Scholar and others directly</summary>
+        <p class="desc" style="margin-top:8px">Google Scholar, JSTOR and most publisher sites don't allow apps like this one to fetch results automatically — they have to be searched in your browser. These open a new tab with your topic already typed in.</p>
+        <div class="row" style="flex-wrap:wrap;gap:8px">
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('scholar')" title="Opens scholar.google.com with your topic pre-filled">🎓 Google Scholar</button>
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('jstor')" title="Opens jstor.org with your topic pre-filled">📖 JSTOR</button>
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('sciencedirect')" title="Opens sciencedirect.com with your topic pre-filled">🧪 ScienceDirect</button>
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('base')" title="Opens BASE (Bielefeld Academic Search Engine) — a large free multidisciplinary index">🔎 BASE</button>
+        </div>
+      </details>
+
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">➕ Add a paper you found elsewhere</summary>
+        <p class="desc" style="margin-top:8px">Found something on Google Scholar or a journal site? Enter its details here to drop it straight into your Citation Manager library.</p>
+        <div class="fld"><label for="rsManTitle">Title</label><input type="text" id="rsManTitle" placeholder="Paper title"></div>
+        <div style="display:flex;gap:10px">
+          <div class="fld" style="flex:2"><label for="rsManAuthor">Authors</label><input type="text" id="rsManAuthor" placeholder="Last, F. M.; Last, F. M."></div>
+          <div class="fld" style="flex:1"><label for="rsManYear">Year</label><input type="text" id="rsManYear" placeholder="2026"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div class="fld" style="flex:1"><label for="rsManSource">Journal / source</label><input type="text" id="rsManSource" placeholder="Journal name"></div>
+          <div class="fld" style="flex:1"><label for="rsManDoi">DOI or URL</label><input type="text" id="rsManDoi" placeholder="10.xxxx/... or https://…"></div>
+        </div>
+        <div class="row"><button class="btn btn-purple" style="flex:1" onclick="rsAddManual()">Add to citation library</button></div>
+      </details>
+
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">🔗 Connected papers</summary>
+        <p class="desc" style="margin-top:8px">Pick one OpenAlex paper above and see what it cites and what has cited it — a quick way to trace a research thread.</p>
+        <div id="rsConnected"></div>
+      </details>
     </div></section>
 
     <section class="card tool-panel" data-panel="chat"><div class="panel">
@@ -764,6 +827,66 @@ function docNew(){
   docs.push(d);docsSet(docs);LS.set('appu_doc_current',d.id);
   editor.innerHTML='';lastSaved='';upd();docRenderList();showToast('New document created ✓');
 }
+/* ============ Import a previously-written file as a new document ============
+   .docx keeps its headings/bold/lists (via mammoth's HTML conversion, not just
+   plain text) so the student can keep using every editor/AI/citation feature on
+   it exactly as if they'd typed it here. .pdf/.txt/.md come in as plain paragraphs
+   (PDF text extraction doesn't carry real formatting). Drop a file onto the editor,
+   paste one (copy a file in your file manager, then Ctrl+V here), or use Import. */
+async function docImportOne(file){
+  const name=(file.name||'file').toLowerCase();
+  let html;
+  if(name.endsWith('.docx')){
+    if(typeof mammoth==='undefined')throw new Error('Word reader needs internet once to load — try again when online');
+    const buf=await file.arrayBuffer();
+    const result=await mammoth.convertToHtml({arrayBuffer:buf});
+    html=result.value||'<p></p>';
+  }else if(name.endsWith('.doc')){
+    throw new Error('"'+file.name+'" is an old .doc file — Save As .docx in Word first, then import that');
+  }else if(name.endsWith('.html')||name.endsWith('.htm')){
+    html=await file.text();
+  }else if(name.endsWith('.pdf')||name.endsWith('.txt')||name.endsWith('.md')){
+    const txt=await readFileText(file);
+    html=txt.split(/\n{2,}/).map(p=>'<p>'+escHTML(p).replace(/\n/g,'<br>')+'</p>').join('');
+  }else{
+    throw new Error('"'+file.name+'" — use .docx, .pdf, .txt, .md or .html');
+  }
+  docSaveBody(getEditorHTML());
+  const title=file.name.replace(/\.[^.]+$/,'').trim()||'Imported document';
+  const docs=docsGet(),d={id:'d'+Date.now()+Math.random().toString(36).slice(2,6),title,body:html,updated:Date.now()};
+  docs.push(d);docsSet(docs);LS.set('appu_doc_current',d.id);
+  setEditorHTML(d.body);lastSaved=getEditorHTML();upd();docRenderList();
+  return title;
+}
+async function docImportFiles(files){
+  const list=Array.from(files||[]);
+  if(!list.length)return;
+  if(list.length>1)showToast('Importing '+list.length+' files — each becomes its own document…');
+  for(const f of list){
+    try{
+      const title=await docImportOne(f);
+      showToast('Imported "'+title+'" ✓ — check formatting before you keep going');
+    }catch(e){showToast(e.message||('Could not import '+f.name))}
+  }
+}
+(function(){
+  ['dragenter','dragover'].forEach(evt=>editor.addEventListener(evt,e=>{
+    if(e.dataTransfer&&Array.from(e.dataTransfer.types||[]).includes('Files')){e.preventDefault();editor.classList.add('drag-over')}
+  }));
+  ['dragleave','drop'].forEach(evt=>editor.addEventListener(evt,e=>{editor.classList.remove('drag-over')}));
+  editor.addEventListener('drop',e=>{
+    if(!e.dataTransfer||!e.dataTransfer.files||!e.dataTransfer.files.length)return;
+    e.preventDefault();
+    docImportFiles(e.dataTransfer.files);
+  });
+  editor.addEventListener('paste',e=>{
+    const files=e.clipboardData&&e.clipboardData.files;
+    if(files&&files.length&&Array.from(files).some(f=>/\.(docx|doc|pdf|txt|md|html?)$/i.test(f.name||''))){
+      e.preventDefault();
+      docImportFiles(files);
+    }
+  });
+})();
 function docRename(){
   const docs=docsGet(),cur=docCurrentId(),i=docs.findIndex(d=>d.id===cur);if(i<0)return;
   const t=prompt('Rename this document:',docs[i].title);if(t===null)return;
@@ -790,6 +913,7 @@ let saveT=null,saveDead=false,lastSaved='';
 function upd(){
   const v=getEditorText();
   stats.textContent=(v.trim()?v.trim().split(/\s+/).length:0)+' words';
+  updOriginality();
   clearTimeout(saveT);
   saveT=setTimeout(()=>{
     const html=getEditorHTML();
@@ -807,6 +931,43 @@ editor.addEventListener('input',()=>{
   if(editor.innerHTML==='<br>'||editor.innerHTML==='<div><br></div>')editor.innerHTML='';
   upd();
 });
+
+/* ============ Originality tracker ============
+   Every AI-inserted passage (Continue Writing / Improve / Extend, and "insert into
+   document" from the chat assistant) is wrapped in <span class="ai-ins"> at the moment
+   it lands in the editor. This walks the current text and reports what share of it
+   sits inside one of those spans — an honest "how much of this is actually mine" meter,
+   not an AI-detector-evasion trick. Typing directly INSIDE an already-inserted AI span
+   still counts as AI text for this count, since editing a couple of words inside a
+   machine-written sentence doesn't make the sentence yours — type it fresh elsewhere
+   in the document instead if you want it to count as your own. */
+function computeOriginality(){
+  let total=0,ai=0;
+  const walker=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT,null);
+  let n;
+  while((n=walker.nextNode())){
+    const len=n.textContent.length;
+    if(!len)continue;
+    total+=len;
+    if(n.parentElement&&n.parentElement.closest('.ai-ins'))ai+=len;
+  }
+  return{total,ai,studentPct:total?Math.round(100*(total-ai)/total):100};
+}
+function updOriginality(){
+  const badge=document.getElementById('origBadge');
+  const{total,studentPct}=computeOriginality();
+  if(total<20){badge.style.display='none';return}
+  badge.style.display='inline-block';
+  badge.className='orig-badge '+(studentPct>=80?'hi':studentPct>=50?'mid':'lo');
+  badge.textContent=studentPct+'% yours';
+  badge.title='Estimated share of the current document typed by you, versus inserted from an AI suggestion or chat reply. Editing inside an AI-inserted passage still counts toward the AI side.';
+}
+function toggleAiHighlight(){
+  const on=editor.classList.toggle('highlight-ai');
+  document.getElementById('aiHighlightBtn').classList.toggle('btn-purple',on);
+  document.getElementById('aiHighlightBtn').classList.toggle('btn-ghost',!on);
+  showToast(on?'AI-inserted text highlighted in the document':'Highlight off');
+}
 window.addEventListener('beforeunload',e=>{
   clearTimeout(saveT);docSaveBody(getEditorHTML());
   if(saveDead&&getEditorHTML()!==lastSaved){e.preventDefault();e.returnValue=''}
@@ -833,14 +994,15 @@ function restoreEditorSelection(){
 }
 
 /* ============ FIX 6: insert without destroying the undo stack ============ */
-function insertIntoEditor(text,keepSelection){
+function insertIntoEditor(text,keepSelection,aiTag){
   editor.focus();
   if(keepSelection&&savedRange){restoreEditorSelection()}
   else{
     placeCaretAtEnd();
     if(editor.innerHTML)text='\n'+text;
   }
-  const html=escHTML(text).replace(/\n/g,'<br>');
+  let html=escHTML(text).replace(/\n/g,'<br>');
+  if(aiTag)html='<span class="ai-ins">'+html+'</span>';
   let ok=false;
   try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
   if(!ok){
@@ -1199,13 +1361,30 @@ function provHasKey(p){
 function updProvBadge(){document.getElementById('provBadge').textContent=PROVIDERS[getProv()].name}
 function renderProvTabs(){
   const bar=document.getElementById('provTabs'),cur=getProv();
-  bar.innerHTML=PROV_ORDER.map(p=>'<button type="button" class="ptab'+(p===cur?' active':'')+(provHasKey(p)?' has-key':'')+
-    '" data-p="'+p+'" title="'+(provHasKey(p)?'Key saved — click to use':'No key yet — click to add')+'"><span class="dot"></span>'+
-    escHTML(PROVIDERS[p].short)+'</button>').join('');
-  bar.querySelectorAll('.ptab').forEach(b=>b.onclick=()=>switchProv(b.dataset.p));
+  bar.innerHTML='<button type="button" class="prov-toggle'+(provHasKey(cur)?' has-key':'')+'" onclick="toggleProvMenu(event)" title="Switch AI provider"><span class="dot"></span>🔌 '+
+    escHTML(PROVIDERS[cur].short)+' <span aria-hidden="true">▾</span></button>';
 }
-function refreshProvUI(){renderProvTabs();updProvBadge()}
+function closeProvMenu(){
+  const m=document.getElementById('provMenu');if(m)m.remove();
+  document.removeEventListener('click',closeProvMenuOnOutsideClick);
+}
+function closeProvMenuOnOutsideClick(e){
+  const bar=document.getElementById('provTabs');
+  if(bar&&!bar.contains(e.target))closeProvMenu();
+}
+function toggleProvMenu(e){
+  if(e)e.stopPropagation();
+  if(document.getElementById('provMenu')){closeProvMenu();return}
+  const bar=document.getElementById('provTabs'),cur=getProv();
+  bar.insertAdjacentHTML('beforeend','<div class="prov-menu" id="provMenu">'+PROV_ORDER.map(p=>'<button type="button" class="ptab'+(p===cur?' active':'')+(provHasKey(p)?' has-key':'')+
+    '" data-p="'+p+'" title="'+(provHasKey(p)?'Key saved — click to use':'No key yet — click to add')+'"><span class="dot"></span>'+
+    escHTML(PROVIDERS[p].name)+'</button>').join('')+'</div>');
+  bar.querySelectorAll('.ptab').forEach(b=>b.onclick=()=>switchProv(b.dataset.p));
+  setTimeout(()=>document.addEventListener('click',closeProvMenuOnOutsideClick),0);
+}
+function refreshProvUI(){closeProvMenu();renderProvTabs();updProvBadge()}
 function switchProv(p){
+  closeProvMenu();
   if(provHasKey(p)){LS.set('appu_provider',p);refreshProvUI();showToast(PROVIDERS[p].name+' active ✓')}
   else{openSettings(p);showToast('Paste your '+PROVIDERS[p].short+' key to enable it')}
 }
@@ -1300,7 +1479,7 @@ function copyAI(){
 }
 function acceptAI(){
   const s=window._sug;if(!s){showToast('No suggestion to accept yet');return}
-  insertIntoEditor(s,hasSelection());
+  insertIntoEditor(s,hasSelection(),true);
   clearSug('Your AI suggestion will appear here…');
   showToast('Inserted ✓ — Ctrl+Z to undo');
 }
@@ -1528,7 +1707,7 @@ async function makeLonger(){
 function chatInsert(btn){
   const bubble=btn.closest('.msg');
   if(!bubble||!bubble.dataset.reply){showToast('Nothing to insert yet');return}
-  insertIntoEditor(bubble.dataset.reply,false);
+  insertIntoEditor(bubble.dataset.reply,false,true);
   showToast('Inserted into your document ✓ — Ctrl+Z to undo');
 }
 async function askAI(){
@@ -1955,7 +2134,7 @@ function citImport(input){
 }
 
 /* ============ Research: live paper search + connected papers + grounded lit review / gap finder ============ */
-let rsResults=[];
+let rsResults=[],rsResultsOriginal=[];
 function escAttr(s){return String(s==null?'':s).replace(/"/g,'&quot;')}
 /* Semantic Scholar and arXiv turned out to send no Access-Control-Allow-Origin header for this app's
    origin (confirmed live, in a real browser console — a genuine, permanent block), and every public
@@ -2033,11 +2212,22 @@ async function researchSearch(){
   const seen=new Set();
   merged=merged.filter(p=>{const k=p.title.toLowerCase().replace(/\W+/g,'').slice(0,60);
     if(seen.has(k))return false;seen.add(k);return true});
-  rsResults=merged;
-  rsRenderResults();
+  rsResultsOriginal=merged;
+  document.getElementById('rsSort').value='relevance';
+  document.getElementById('rsSortRow').style.display=merged.length?'flex':'none';
+  rsApplySort();
   status.textContent=merged.length
     ? merged.length+' paper'+(merged.length===1?'':'s')+' found'+(failed.length?' — could not reach: '+failed.join('; '):'')
     : 'No papers found'+(failed.length?' — could not reach: '+failed.join('; '):', try a broader search');
+}
+function rsApplySort(){
+  const mode=document.getElementById('rsSort').value;
+  let list=rsResultsOriginal.slice();
+  if(mode==='citations')list.sort((a,b)=>(b.citationCount||0)-(a.citationCount||0));
+  else if(mode==='year')list.sort((a,b)=>(parseInt(b.year,10)||0)-(parseInt(a.year,10)||0));
+  rsResults=list;
+  rsRenderResults();
+  document.getElementById('rsActions').style.display='none';
 }
 function rsRenderResults(){
   const box=document.getElementById('rsResults');
@@ -2061,6 +2251,35 @@ function rsRenderResults(){
 function rsToggleActions(){
   const any=rsResults.some((_,i)=>{const el=document.getElementById('rsChk'+i);return el&&el.checked});
   document.getElementById('rsActions').style.display=any?'block':'none';
+}
+function rsOpenExternal(site){
+  const q=encodeURIComponent(document.getElementById('rsTopic').value.trim());
+  if(!q){showToast('Type a search topic first');return}
+  const urls={
+    scholar:'https://scholar.google.com/scholar?q='+q,
+    jstor:'https://www.jstor.org/action/doBasicSearch?Query='+q,
+    sciencedirect:'https://www.sciencedirect.com/search?qs='+q,
+    base:'https://www.base-search.net/Search/Results?lookfor='+q
+  };
+  if(urls[site])window.open(urls[site],'_blank','noopener');
+}
+function rsAddManual(){
+  const title=document.getElementById('rsManTitle').value.trim();
+  if(!title){showToast('Enter a title first');return}
+  const d={
+    author:document.getElementById('rsManAuthor').value.trim(),
+    year:document.getElementById('rsManYear').value.trim(),
+    title:title,
+    source:document.getElementById('rsManSource').value.trim(),
+    volume:'',issue:'',pages:'',
+    doi:document.getElementById('rsManDoi').value.trim(),
+    url:'',type:'Journal article',style:'apa'
+  };
+  const l=citGetLib();
+  if(l.some(e=>e.title===d.title&&e.author===d.author)){showToast('Already in your library');return}
+  l.push(d);citSaveLib(l);
+  ['rsManTitle','rsManAuthor','rsManYear','rsManSource','rsManDoi'].forEach(id=>document.getElementById(id).value='');
+  showToast('Added to citation library ✓');
 }
 function rsAddToLibrary(i){
   const p=rsResults[i];if(!p)return;
@@ -2760,6 +2979,47 @@ async function licenseGate(){
 }
 
 /* ============ Boot ============ */
+/* ============ One-click citation capture (Zotero-lite) ============
+   A bookmarklet reads the citation_* meta tags most journals, PubMed and
+   arXiv already publish on their article pages (the same tags Zotero and
+   Mendeley key off), then opens THIS app with the captured details base64'd
+   into the URL hash — never sent to any server. citCheckCaptureHash() picks
+   that up on load and offers to file it straight into the citation library. */
+function citSetupBookmarklet(){
+  const appUrl=location.origin+location.pathname;
+  const parts=[
+    "(function(){",
+    "function m(n){var e=document.querySelector('meta[name=\"'+n+'\"]');return e?e.getAttribute('content'):''}",
+    "var as=Array.prototype.slice.call(document.querySelectorAll('meta[name=\"citation_author\"]')).map(function(e){return e.getAttribute('content')}).join('; ');",
+    "var d={title:m('citation_title')||document.title,author:as,year:(m('citation_publication_date')||m('citation_date')||m('citation_year')||'').slice(0,4),source:m('citation_journal_title')||m('citation_conference_title')||'',doi:m('citation_doi')||'',url:location.href};",
+    "if(!d.title){alert('No citation info found on this page \\u2014 this works best on a journal article, PubMed, or arXiv page.');return}",
+    "var p=btoa(unescape(encodeURIComponent(JSON.stringify(d))));",
+    "window.open('"+appUrl+"#capture='+encodeURIComponent(p),'_blank');",
+    "})();"
+  ];
+  const src=parts.join('');
+  const el=document.getElementById('citBookmarklet');
+  if(el)el.setAttribute('href','javascript:'+encodeURIComponent(src));
+}
+function citCheckCaptureHash(){
+  const h=location.hash;
+  if(!h.indexOf)return;
+  if(h.indexOf('#capture=')!==0)return;
+  const raw=h.slice('#capture='.length);
+  history.replaceState(null,'',location.pathname+location.search);
+  try{
+    const json=decodeURIComponent(escape(atob(decodeURIComponent(raw))));
+    const d=JSON.parse(json);
+    if(!d||!d.title)return;
+    if(!confirm('Add this to your citation library?\n\n"'+d.title+'"\n'+(d.author||'(no author found)')+(d.year?' ('+d.year+')':'')))return;
+    const rec={author:d.author||'',year:d.year||'',title:d.title,source:d.source||'',volume:'',issue:'',pages:'',doi:d.doi||'',url:d.doi?'':(d.url||''),type:'Journal article',style:'apa'};
+    const l=citGetLib();
+    if(l.some(e=>e.title===rec.title&&e.author===rec.author)){showToast('Already in your library');return}
+    l.push(rec);citSaveLib(l);
+    showToast('Captured "'+d.title+'" into your citation library ✓');
+  }catch(e){showToast('Could not read that captured citation')}
+}
+
 (async function boot(){
   await licenseGate();
   docMigrate();
@@ -2770,6 +3030,8 @@ async function licenseGate(){
   docRenderList();
   styleInit();
   citRender();
+  citSetupBookmarklet();
+  citCheckCaptureHash();
   refreshProvUI();
   upd();
   if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{document.getElementById('welcomeDlg').showModal()}catch(e){}}
