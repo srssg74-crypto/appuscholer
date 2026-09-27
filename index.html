@@ -208,6 +208,7 @@
       <span class="badge" id="saveBadge">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
       <div class="spacer"></div>
       <button class="btn btn-ghost" onclick="downloadDoc()">⬇ Download</button>
+      <button class="btn btn-ghost" onclick="downloadLatex()" title="Export as a .tex file to paste into Overleaf">⬇ LaTeX</button>
       <div class="docbar">
         <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Doc</label>
         <select id="docSel" onchange="docSwitch(this.value)" aria-label="Choose document"></select>
@@ -447,6 +448,17 @@
     </div></section>
 </main>
 
+<dialog id="rateLimitDlg"><div class="dlg-body">
+  <h2>⏳ Free AI limit reached</h2>
+  <p id="rateLimitMsg" style="font-size:14px;line-height:1.6"></p>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('rateLimitDlg').close();switchProv('groq')">Switch to Groq now</button>
+  </div>
+  <div class="row">
+    <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('rateLimitDlg').close()">Wait and try again in a minute</button>
+  </div>
+</div></dialog>
+
 <dialog id="settingsDlg"><div class="dlg-body">
   <h2>🔑 Choose your AI provider</h2>
   <p style="font-size:13px;color:var(--muted)">Pick one. Your key is saved in this browser and sent only to the provider you choose.</p>
@@ -469,6 +481,11 @@
     </select>
   </div>
   <p class="desc" id="keyModeHint" style="margin:6px 0 0"></p>
+  <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <label for="orcidIn">Your ORCID iD (optional — printed on exports and templates)</label>
+    <input type="text" id="orcidIn" placeholder="0000-0000-0000-0000" oninput="orcidSave(this.value)">
+    <p class="desc" style="margin:4px 0 0"><a href="https://orcid.org/register" target="_blank" rel="noopener">Don't have one? Get a free ORCID iD →</a></p>
+  </div>
   <div class="row" style="margin-top:12px">
     <button class="btn btn-purple" style="flex:1" onclick="saveKey()">Save Key</button>
     <button class="btn btn-ghost" onclick="removeKey()">Remove key</button>
@@ -1201,7 +1218,13 @@ function openSettings(sel){
   const mode=document.getElementById('keyMode');
   mode.value=locked?'pass':(('appu_key_'+p) in sessionKeys)?'session':'plain';
   if(!cryptoOK())mode.querySelector('option[value="pass"]').disabled=true;
-  keyModeNote();provHelp();document.getElementById('settingsDlg').showModal();
+  keyModeNote();provHelp();
+  document.getElementById('orcidIn').value=LS.get('appu_orcid')||'';
+  document.getElementById('settingsDlg').showModal();
+}
+function orcidSave(v){
+  v=String(v||'').trim();
+  LS.set('appu_orcid',v);
 }
 function provHelp(){
   const p=document.getElementById('provSel').value;
@@ -1244,6 +1267,17 @@ function removeKey(){
 function openHelp(){document.getElementById('welcomeDlg').showModal()}
 
 /* ============ FIX 4: readable error messages ============ */
+function showRateLimitAlert(){
+  const dlg=document.getElementById('rateLimitDlg');
+  if(!dlg||dlg.open)return; /* don't stack alerts if several requests fail around the same time */
+  const cur=getProv(),curName=PROVIDERS[cur]?PROVIDERS[cur].name:cur;
+  document.getElementById('rateLimitMsg').textContent=
+    cur==='groq'
+      ? 'You have hit the free request limit for '+curName+' for right now. Wait a minute and try again, or switch to a different provider using the tabs in ⚙ AI Provider / Key.'
+      : 'You have hit the free request limit for '+curName+' for right now. This is common with free API keys during active use — wait a minute, or switch to Groq, which usually allows more requests per minute.';
+  dlg.querySelector('button.btn-purple').style.display=cur==='groq'?'none':'';
+  dlg.showModal();
+}
 function apiMsg(e){
   const m=String(e&&e.message||'');
   if(m==='key')return'Add your API key first — click ⚙ at the top right.';
@@ -1251,7 +1285,7 @@ function apiMsg(e){
   if(/^BADPASS:/.test(m))return m.slice(8).trim();
   if(/\b401\b|\b403\b/.test(m))return'Your API key was rejected. Open ⚙ and paste it again.';
   if(/\b404\b/.test(m))return'That AI model is no longer available. Try a different provider using the tabs at the top.';
-  if(/\b429\b/.test(m))return'Free limit reached for now. Wait a minute, or switch provider using the tabs at the top.';
+  if(/\b429\b/.test(m)){showRateLimitAlert();return'Free limit reached for now. Wait a minute, or switch provider using the tabs at the top.'}
   if(/\b5\d\d\b/.test(m))return'The AI service is having problems (already retried a couple of times). Try again in a few minutes, or switch provider using the tabs at the top. Detail: '+m.replace(/^HTTP \d+:\s*/,'').slice(0,180);
   if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'No internet connection, or this provider does not allow calls made directly from a web page (this is common for OpenAI and sometimes DeepSeek). Try Google Gemini, Groq, or OpenRouter — those are confirmed to work from the browser.';
   return m||'Something went wrong. Try again.';
@@ -1551,6 +1585,106 @@ function downloadDoc(){
   a.download=safe+'.doc';a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   showToast('Downloaded ✓ — opens in Word');
+}
+
+/* ============ LaTeX export — hand the manuscript to Overleaf ============ */
+function _texEsc(s){
+  return String(s==null?'':s)
+    .replace(/\\/g,'\\textbackslash{}')
+    .replace(/([#$%&_{}])/g,'\\$1')
+    .replace(/~/g,'\\textasciitilde{}')
+    .replace(/\^/g,'\\textasciicircum{}');
+}
+function _texInline(node){
+  let out='';
+  node.childNodes.forEach(n=>{
+    if(n.nodeType===3){out+=_texEsc(n.textContent);return}
+    if(n.nodeType!==1)return;
+    const tag=n.tagName.toLowerCase();
+    const inner=()=>_texInline(n);
+    if(tag==='b'||tag==='strong')out+='\\textbf{'+inner()+'}';
+    else if(tag==='i'||tag==='em')out+='\\textit{'+inner()+'}';
+    else if(tag==='u')out+='\\underline{'+inner()+'}';
+    else if(tag==='s'||tag==='strike'||tag==='del')out+='\\sout{'+inner()+'}';
+    else if(tag==='sup')out+='\\textsuperscript{'+inner()+'}';
+    else if(tag==='sub')out+='\\textsubscript{'+inner()+'}';
+    else if(tag==='br')out+='\\\\ ';
+    else if(tag==='a')out+=inner()+'\\footnote{'+_texEsc(n.getAttribute('href')||'')+'}';
+    else out+=inner();
+  });
+  return out;
+}
+const _TEX_BLOCK_TAGS={h1:1,h2:1,h3:1,h4:1,hr:1,blockquote:1,ul:1,ol:1,table:1,div:1,section:1,p:1};
+function _texBlock(node,lines){
+  let buf=[];
+  const flush=()=>{
+    const t=buf.join('').trim();
+    if(t)lines.push(t);
+    buf=[];
+  };
+  node.childNodes.forEach(n=>{
+    if(n.nodeType===3){ // bare text directly inside the container
+      if(n.textContent.trim())buf.push(_texEsc(n.textContent));
+      return;
+    }
+    if(n.nodeType!==1)return;
+    const tag=n.tagName.toLowerCase();
+    if(!_TEX_BLOCK_TAGS[tag]){ // inline element (b, i, span, a, sup, ...) sitting directly in the container
+      const wrap2=document.createElement('span');wrap2.appendChild(n.cloneNode(true));
+      buf.push(_texInline(wrap2));
+      return;
+    }
+    flush();
+    const el=n;
+    if(tag==='p'){const t=_texInline(el);if(t.trim())lines.push(t)}
+    else if(tag==='h1')lines.push('\\section{'+_texInline(el)+'}');
+    else if(tag==='h2')lines.push('\\subsection{'+_texInline(el)+'}');
+    else if(tag==='h3'||tag==='h4')lines.push('\\subsubsection{'+_texInline(el)+'}');
+    else if(tag==='hr'){lines.push(el.classList.contains('page-break')?'\\newpage':'\\bigskip\\hrule\\bigskip')}
+    else if(tag==='blockquote'){lines.push('\\begin{quote}'+_texInline(el)+'\\end{quote}')}
+    else if(tag==='ul'||tag==='ol'){
+      const env=tag==='ul'?'itemize':'enumerate';
+      lines.push('\\begin{'+env+'}');
+      Array.from(el.children).forEach(li=>{if(li.tagName&&li.tagName.toLowerCase()==='li')lines.push('\\item '+_texInline(li))});
+      lines.push('\\end{'+env+'}');
+    }
+    else if(tag==='table'){
+      const rows=Array.from(el.querySelectorAll('tr')).map(tr=>Array.from(tr.children).map(td=>_texInline(td)).join(' & ')+' \\\\');
+      const ncols=el.querySelector('tr')?el.querySelector('tr').children.length:1;
+      lines.push('\\begin{tabular}{'+Array(ncols).fill('l').join('')+'}');
+      rows.forEach(r=>lines.push(r));
+      lines.push('\\end{tabular}');
+    }
+    else if(tag==='div'||tag==='section'){_texBlock(el,lines)}
+  });
+  flush();
+}
+function downloadLatex(){
+  const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
+  const title=(cur&&cur.title)||'Untitled';
+  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appupsychoscholar-document';
+  const wrap=document.createElement('div');wrap.innerHTML=getEditorHTML();
+  const lines=[];
+  _texBlock(wrap,lines);
+  const orcid=(LS.get('appu_orcid')||'').trim();
+  const authorLine=orcid?'Author \\\\ ORCID: '+_texEsc(orcid):'Author';
+  const tex='\\documentclass[12pt]{article}\n'+
+    '\\usepackage[a4paper,margin=1in]{geometry}\n'+
+    '\\usepackage[utf8]{inputenc}\n'+
+    '\\usepackage{ulem}\n'+
+    '\\usepackage{apacite} % switch to a journal-specific citation package if needed\n'+
+    '\\title{'+_texEsc(title)+'}\n'+
+    '\\author{'+authorLine+'}\n'+
+    '\\date{\\today}\n'+
+    '\\begin{document}\n'+
+    '\\maketitle\n\n'+
+    lines.join('\n\n')+'\n\n'+
+    '\\end{document}\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([tex],{type:'text/x-tex'}));
+  a.download=safe+'.tex';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  showToast('LaTeX exported ✓ — upload the .tex file to Overleaf, or compile locally');
 }
 
 const SCAFFOLDS={
