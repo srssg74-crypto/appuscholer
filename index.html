@@ -977,8 +977,7 @@ function docCurrentId(){return LS.get('appu_doc_current')||''}
 function docMigrate(){
   let docs=docsGet();
   if(!docs.length){
-    const legacy=LS.get('appuscholer_doc')||'';
-    docs=[{id:'d'+Date.now(),title:'My first document',body:legacy,updated:Date.now()}];
+    docs=[{id:'d'+Date.now(),title:'My first document',body:'',updated:Date.now()}];
     docsSet(docs);LS.set('appu_doc_current',docs[0].id);
   }
   if(!docs.some(d=>d.id===docCurrentId()))LS.set('appu_doc_current',docs[0].id);
@@ -1007,7 +1006,6 @@ function docSaveBody(body){
   if(i<0)return false;
   docs[i].body=body;docs[i].updated=Date.now();
   const ok=LS.set('appu_docs',JSON.stringify(docs));
-  LS.set('appuscholer_doc',body); /* legacy mirror */
   return ok;
 }
 function docSwitch(id){
@@ -1547,13 +1545,10 @@ function keyModeNote(){
 function getProv(){const p=LS.get('appu_provider')||'gemini';return PROVIDERS[p]?p:'gemini'}
 function getKey(){
   const p=getProv();
-  let k=LS.get('appu_key_'+p)||'';
-  if(!k&&p==='gemini')k=LS.get('gemini_api_key')||'';   /* legacy fallback, Gemini only */
-  return k.trim();
+  return (LS.get('appu_key_'+p)||'').trim();
 }
 function provHasKey(p){
-  let k=LS.get('appu_key_'+p)||'';
-  if(!k&&p==='gemini')k=LS.get('gemini_api_key')||'';
+  const k=LS.get('appu_key_'+p)||'';
   return !!k.trim()||!!encBlob(p);
 }
 function updProvBadge(){document.getElementById('provBadge').textContent=PROVIDERS[getProv()].name}
@@ -1590,7 +1585,7 @@ function openSettings(sel){
   const p=sel||getProv();
   document.getElementById('provSel').value=p;
   const locked=!!encBlob(p);
-  document.getElementById('keyIn').value=locked?'':(LS.get('appu_key_'+p)||(p==='gemini'?LS.get('gemini_api_key'):'')||'');
+  document.getElementById('keyIn').value=locked?'':(LS.get('appu_key_'+p)||'');
   document.getElementById('keyIn').placeholder=locked?'A passphrase-protected key is saved — paste a new one to replace it':'Paste your API key here';
   const mode=document.getElementById('keyMode');
   mode.value=locked?'pass':(('appu_key_'+p) in sessionKeys)?'session':'plain';
@@ -1614,7 +1609,7 @@ async function saveKey(){
   if(!k){showToast('Paste your key first');return}
   const mode=document.getElementById('keyMode').value;
   /* a new key always clears whatever was stored before, in any mode */
-  LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);if(p==='gemini')LS.rm('gemini_api_key');
+  LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);
   if(mode==='pass'){
     if(!cryptoOK()){showToast('This browser cannot encrypt — choose another option');return}
     const pass=prompt('Choose a passphrase for your keys.\n\nYou will type it once each time you open Appuscholar. Nobody can recover it for you.');
@@ -1628,7 +1623,6 @@ async function saveKey(){
     LS.setSession('appu_key_'+p,k);
   }else{
     LS.set('appu_key_'+p,k);
-    if(p==='gemini')LS.set('gemini_api_key',k);
   }
   LS.set('appu_provider',p);
   document.getElementById('keyIn').value='';
@@ -1637,7 +1631,7 @@ async function saveKey(){
 }
 function removeKey(){
   const p=document.getElementById('provSel').value;
-  LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);if(p==='gemini')LS.rm('gemini_api_key');
+  LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);
   document.getElementById('keyIn').value='';document.getElementById('keyIn').placeholder='Paste your API key here';
   refreshProvUI();
   showToast(PROVIDERS[p].short+' key removed ✓');
