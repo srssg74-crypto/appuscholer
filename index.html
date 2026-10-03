@@ -121,6 +121,7 @@
   .orig-badge.mid{background:#fef3c7;color:#92400e;border-color:#fde68a}
   .orig-badge.lo{background:#fee2e2;color:#991b1b;border-color:#fecaca}
   #editor.highlight-ai .ai-ins{background:rgba(245,158,11,.32);border-radius:2px;box-shadow:0 0 0 1px rgba(245,158,11,.32)}
+  .translated-quote{border-bottom:2px dotted #7c3aed;cursor:help}
   .stats{font-size:12px;color:var(--muted);margin-left:auto}
   .panel{padding:18px}
   .panel h3{margin:0 0 6px;font-size:14px;color:var(--head-title);text-transform:uppercase;letter-spacing:1px}
@@ -404,6 +405,9 @@
       <div class="fld"><label for="citType" data-i18n="cite_type_label">Source type</label>
         <select id="citType" onchange="citRender()"><option data-i18n="cite_type_journal">Journal article</option><option data-i18n="cite_type_book">Book</option><option data-i18n="cite_type_website">Website</option></select>
       </div>
+      <div class="fld"><label for="citSourceLang" data-i18n="cite_sourcelang_label">Source language</label>
+        <select id="citSourceLang"><option value="en" data-i18n="cite_sourcelang_en">English</option><option value="hi" data-i18n="cite_sourcelang_hi">Hindi</option></select>
+      </div>
       <div class="fld"><label for="citAuthor" data-i18n="cite_author_label">Author(s) — separate with ;</label><input type="text" id="citAuthor" placeholder="Miller, George A.; Smith, Jane B."></div>
       <div style="display:flex;gap:8px">
         <div class="fld" style="flex:1"><label for="citYear" data-i18n="cite_year_label">Year</label><input type="text" id="citYear" placeholder="1956"></div>
@@ -423,6 +427,12 @@
         <button class="btn btn-ghost" style="flex:1" onclick="citAdd()" data-i18n="cite_addlib_btn">+ Library</button>
       </div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citClearForm()" data-i18n="cite_clear_btn">Clear form</button></div>
+
+      <div class="fld" style="margin-top:10px"><label for="citQuoteText" data-i18n="cite_quote_label">Quote from this source (optional)</label>
+        <textarea id="citQuoteText" rows="2" placeholder="Paste the exact quoted text here…" data-i18n-placeholder="cite_quote_placeholder"></textarea>
+      </div>
+      <p class="desc" data-i18n="cite_quote_desc">A Hindi source is quoted as written. An English source is translated automatically when your content language is set to Hindi, and marked (अनुवादित) with the original kept on hover.</p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citInsertQuote()" data-i18n="cite_insertquote_btn">Insert quote</button></div>
 
       <details style="margin-top:14px">
         <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="cite_bookmarklet_summary">🔖 One-click capture from any page</summary>
@@ -603,6 +613,14 @@
       <option value="psychology" data-i18n="settings_pack_psychology">Psychology — adds the Psychology Tools tab</option>
     </select>
     <p class="desc" style="margin:4px 0 0" data-i18n="settings_pack_desc">The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.</p>
+  </div>
+  <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <label for="contentLangSel" data-i18n="settings_contentlang_label">AI content language</label>
+    <select id="contentLangSel" onchange="setContentLang(this.value)">
+      <option value="en" data-i18n="settings_contentlang_en">English</option>
+      <option value="hi" data-i18n="settings_contentlang_hi">Hindi (हिन्दी)</option>
+    </select>
+    <p class="desc" style="margin:4px 0 0" data-i18n="settings_contentlang_desc">This is the language the AI writes in — your paper, explanations, stats write-ups — separate from the interface language toggle above. Saved with the open project, or as your default when no project is open.</p>
   </div>
   <div class="row" style="margin-top:12px">
     <button class="btn btn-purple" style="flex:1" onclick="saveKey()" data-i18n="settings_savekey_btn">Save Key</button>
@@ -824,11 +842,16 @@ const I18N={
     cite_panel_desc:'Add a source, then insert citations as you write.',
     cite_style_label:'Citation style', cite_type_label:'Source type',
     cite_type_journal:'Journal article', cite_type_book:'Book', cite_type_website:'Website',
+    cite_sourcelang_label:'Source language', cite_sourcelang_en:'English', cite_sourcelang_hi:'Hindi',
     cite_author_label:'Author(s) — separate with ;', cite_year_label:'Year', cite_title_label:'Title',
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
     cite_pages_label:'Pages', cite_url_label:'URL (only if there is no DOI)',
     cite_lookup_btn:'🔎 Look up by title (Crossref)', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
-    cite_clear_btn:'Clear form', cite_bookmarklet_summary:'🔖 One-click capture from any page',
+    cite_clear_btn:'Clear form',
+    cite_quote_label:'Quote from this source (optional)', cite_quote_placeholder:'Paste the exact quoted text here…',
+    cite_quote_desc:'A Hindi source is quoted as written. An English source is translated automatically when your content language is set to Hindi, and marked (अनुवादित) with the original kept on hover.',
+    cite_insertquote_btn:'Insert quote',
+    cite_bookmarklet_summary:'🔖 One-click capture from any page',
     cite_bookmarklet_desc:"Like Zotero's browser button — drag this link to your bookmarks bar once. Then, on any journal article, PubMed or arXiv page, click it to send that page's citation straight into your library here.",
     cite_bookmarklet_btn:'🔖 Capture to Appuscholar',
     cite_bookmarklet_note:"Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.",
@@ -871,6 +894,8 @@ const I18N={
     settings_pack_label:'Specialty pack', settings_pack_general:'General research — core tools only',
     settings_pack_psychology:'Psychology — adds the Psychology Tools tab',
     settings_pack_desc:'The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.',
+    settings_contentlang_label:'AI content language', settings_contentlang_en:'English', settings_contentlang_hi:'Hindi (हिन्दी)',
+    settings_contentlang_desc:'This is the language the AI writes in — your paper, explanations, stats write-ups — separate from the interface language toggle above. Saved with the open project, or as your default when no project is open.',
     settings_savekey_btn:'Save Key', settings_removekey_btn:'Remove key',
     settings_warn:'⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.',
     welcome_h2:'💜 Welcome to Appuscholar',
@@ -946,11 +971,16 @@ const I18N={
     cite_panel_desc:'एक स्रोत जोड़ें, फिर लिखते समय उद्धरण डालें।',
     cite_style_label:'उद्धरण शैली', cite_type_label:'स्रोत प्रकार',
     cite_type_journal:'जर्नल लेख', cite_type_book:'पुस्तक', cite_type_website:'वेबसाइट',
+    cite_sourcelang_label:'स्रोत की भाषा', cite_sourcelang_en:'अंग्रेज़ी', cite_sourcelang_hi:'हिन्दी',
     cite_author_label:'लेखक — ; से अलग करें', cite_year_label:'वर्ष', cite_title_label:'शीर्षक',
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
     cite_pages_label:'पृष्ठ', cite_url_label:'URL (केवल यदि कोई DOI नहीं है)',
     cite_lookup_btn:'🔎 शीर्षक से खोजें (Crossref)', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
-    cite_clear_btn:'फॉर्म साफ़ करें', cite_bookmarklet_summary:'🔖 किसी भी पेज से एक-क्लिक कैप्चर',
+    cite_clear_btn:'फॉर्म साफ़ करें',
+    cite_quote_label:'इस स्रोत से उद्धरण (वैकल्पिक)', cite_quote_placeholder:'उद्धृत पाठ यहाँ पेस्ट करें…',
+    cite_quote_desc:'हिन्दी स्रोत जैसा लिखा गया है वैसा ही उद्धृत होता है। अंग्रेज़ी स्रोत का अनुवाद अपने आप हो जाता है जब आपकी सामग्री भाषा हिन्दी हो, और उसे (अनुवादित) चिह्नित किया जाता है, मूल पाठ होवर पर दिखता है।',
+    cite_insertquote_btn:'उद्धरण डालें',
+    cite_bookmarklet_summary:'🔖 किसी भी पेज से एक-क्लिक कैप्चर',
     cite_bookmarklet_desc:'Zotero के ब्राउज़र बटन की तरह — इस लिंक को एक बार अपने बुकमार्क बार पर खींचें। फिर किसी भी जर्नल लेख, PubMed या arXiv पेज पर इसे क्लिक करें ताकि उस पेज का उद्धरण सीधे यहाँ आपकी लाइब्रेरी में आ जाए।',
     cite_bookmarklet_btn:'🔖 Appuscholar में कैप्चर करें',
     cite_bookmarklet_note:'ऊपर दिए बटन को खींचें — क्लिक न करें — अपने बुकमार्क बार पर। यह केवल पेज पर पहले से मौजूद मानक उद्धरण टैग पढ़ता है (वही जो Zotero और Mendeley उपयोग करते हैं); यह उन पेजों को नहीं पढ़ सकता जो इन्हें प्रकाशित नहीं करते, जैसे अधिकतर समाचार साइटें।',
@@ -993,6 +1023,8 @@ const I18N={
     settings_pack_label:'विशेष पैक', settings_pack_general:'सामान्य शोध — केवल मुख्य उपकरण',
     settings_pack_psychology:'मनोविज्ञान — मनोविज्ञान उपकरण टैब जोड़ता है',
     settings_pack_desc:'मुख्य उपकरण (लेखन, सांख्यिकी, उद्धरण, शोध) किसी भी विषय के लिए काम करते हैं। एक विशेष पैक इसके ऊपर विषय-विशिष्ट उपकरण जोड़ता है। और पैक जल्द आएंगे।',
+    settings_contentlang_label:'AI सामग्री भाषा', settings_contentlang_en:'अंग्रेज़ी', settings_contentlang_hi:'हिन्दी',
+    settings_contentlang_desc:'यह वह भाषा है जिसमें AI लिखता है — आपका पेपर, स्पष्टीकरण, सांख्यिकी लेखन — ऊपर दिए इंटरफ़ेस भाषा टॉगल से अलग। यह खुले प्रोजेक्ट के साथ सहेजी जाती है, या जब कोई प्रोजेक्ट खुला न हो तो आपके डिफ़ॉल्ट के रूप में।',
     settings_savekey_btn:'कुंजी सहेजें', settings_removekey_btn:'कुंजी हटाएं',
     settings_warn:'⚠ चूंकि यह ऐप एक लोकल फ़ाइल के रूप में चलता है, आपके कंप्यूटर पर हर HTML फ़ाइल एक ही स्टोरेज क्षेत्र साझा करती है। <b>इस कंप्यूटर पर याद रखें</b> के साथ सहेजी गई कुंजी किसी भी अन्य HTML फ़ाइल द्वारा पढ़ी जा सकती है जिसे आप खोलते हैं। पासफ़्रेज़ विकल्प इसे एन्क्रिप्ट करता है ताकि वे फ़ाइलें केवल अस्पष्ट टेक्स्ट देखें।',
     welcome_h2:'💜 Appuscholar में आपका स्वागत है',
@@ -1027,6 +1059,37 @@ function toggleLang(){
   LS.set('appu_lang',getLang()==='hi'?'en':'hi');
   applyLang();
   showToast(getLang()==='hi'?'भाषा: हिन्दी':'Language: English');
+}
+
+/* ============ Content language (batch two): what language the AI WRITES academic
+   content in — the paper, stats write-ups, explanations, chat replies. Independent
+   of appu_lang above, which is only the interface chrome. A project remembers its
+   own choice; outside a project it falls back to a global default. Both default to
+   English. ============ */
+function getContentLang(){
+  const proj=getActiveProject();
+  if(proj&&proj.contentLang)return proj.contentLang;
+  const g=LS.get('appu_content_lang');
+  return(g==='hi')?'hi':'en';
+}
+function setContentLang(v){
+  v=(v==='hi')?'hi':'en';
+  const proj=getActiveProject();
+  if(proj){
+    const list=getProjects();
+    const p=list.find(x=>x.id===proj.id);
+    if(p){p.contentLang=v;p.updatedAt=Date.now();saveProjectsList(list)}
+  }else{
+    LS.set('appu_content_lang',v);
+  }
+  showToast(v==='hi'?'Content language: Hindi (हिन्दी)':'Content language: English');
+}
+/* Appended to every AI prompt in callAI() so every tool picks it up automatically —
+   continue/improve/extend, chat, style analysis, stats explanations, slide text —
+   with no need to touch each call site separately. */
+function contentLangInstruction(){
+  if(getContentLang()!=='hi')return'';
+  return'\n\nIMPORTANT: Write your entire reply in formal academic Hindi (Devanagari script). Keep standard statistical terms, citation style names (APA, MLA, Chicago), and proper nouns in their usual form even if that is English, but write all explanatory prose in Hindi.';
 }
 
 /* ============ FIX 16: PROVIDERS declared before anything reads it ============ */
@@ -1864,6 +1927,7 @@ function openSettings(sel){
   keyModeNote();provHelp();
   document.getElementById('orcidIn').value=LS.get('appu_orcid')||'';
   document.getElementById('packSel').value=getPack();
+  document.getElementById('contentLangSel').value=getContentLang();
   document.getElementById('settingsDlg').showModal();
 }
 function orcidSave(v){
@@ -1963,6 +2027,7 @@ async function fetchRetry5xx(doFetch,tries){
 }
 async function callAI(prompt,opts){
   const o=opts||{},temp=(o.temp==null?0.8:o.temp),maxTok=o.max||2000;
+  if(!o.noLang)prompt=prompt+contentLangInstruction();
   await ensureKey();
   const prov=getProv(),key=getKey();
   if(!key){openSettings();throw new Error('key')}
@@ -2487,11 +2552,12 @@ function citReadForm(){
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
   return{author:v('citAuthor'),year:v('citYear'),title:v('citTitle'),source:v('citSource'),
          volume:v('citVol'),issue:v('citIssue'),pages:v('citPages'),doi:v('citDOI'),url:v('citURL'),
-         type:v('citType'),style:v('citStyle')};
+         type:v('citType'),style:v('citStyle'),lang:v('citSourceLang')||'en'};
 }
 function citClearForm(){
-  ['citAuthor','citYear','citTitle','citSource','citVol','citIssue','citPages','citDOI','citURL']
+  ['citAuthor','citYear','citTitle','citSource','citVol','citIssue','citPages','citDOI','citURL','citQuoteText']
     .forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  const langSel=document.getElementById('citSourceLang');if(langSel)langSel.value='en';
   showToast('Form cleared');
 }
 /* FIX 10: cursor at position 0 no longer jumps to the end */
@@ -2525,6 +2591,33 @@ function citInsertBib(){
   const sorted=l.slice().sort((a,b)=>citLastName(a.author).localeCompare(citLastName(b.author),'en',{sensitivity:'base'}));
   insertIntoEditor('\n\n'+head+'\n'+sorted.map(d=>citFmt(d).ref).join('\n'),false);
   showToast('Reference list inserted, alphabetically ✓');
+}
+/* Source-language-aware quote insertion (bilingual batch two). A Hindi source is
+   quoted exactly as pasted. An English source is quoted as-is too, UNLESS the
+   project's content language is Hindi — then it's translated and flagged inline
+   (अनुवादित), with the original kept in a title attribute so a hover reveals it.
+   The bibliography entry itself (built by citFmt above) never translates or flags,
+   regardless of source language — that's a separate, deliberate rule. */
+async function citInsertQuote(){
+  const ta=document.getElementById('citQuoteText');
+  const txt=ta?ta.value.trim():'';
+  if(!txt){showToast('Paste the quote text first');return}
+  const srcLang=(document.getElementById('citSourceLang')||{}).value||'en';
+  if(srcLang==='en'&&getContentLang()==='hi'){
+    showToast('🔎 Translating quote…');
+    try{
+      const translated=await callAI('Translate the following English academic quotation into formal academic Hindi (Devanagari script). Reply with the Hindi translation only, nothing else, no quotation marks:\n\n'+txt,{temp:0.2,max:500,noLang:true});
+      const html='<span class="translated-quote" title="'+escAttr(txt)+'">“'+escHTML(translated.trim())+'” (अनुवादित)</span>';
+      insertHTMLBlockIntoEditor(html);
+      upd();
+      if(ta)ta.value='';
+      showToast('Quote translated and inserted, flagged ✓ — hover it to see the original');
+    }catch(e){showToast(apiMsg(e))}
+  }else{
+    citInsertAtCursor('“'+txt+'” ');
+    if(ta)ta.value='';
+    showToast('Quote inserted ✓');
+  }
 }
 /* FIX 9: real metadata from Crossref instead of an invented citation */
 async function citLookup(){
@@ -2585,7 +2678,8 @@ function citImport(input){
         if(d&&d.author&&d.title&&!l.some(e=>e.title===String(d.title)&&e.author===String(d.author))){
           l.push({author:String(d.author),year:String(d.year||''),title:String(d.title),source:String(d.source||''),
                   volume:String(d.volume||''),issue:String(d.issue||''),pages:String(d.pages||''),
-                  doi:String(d.doi||''),url:String(d.url||''),type:String(d.type||'Journal article'),style:String(d.style||'apa')});
+                  doi:String(d.doi||''),url:String(d.url||''),type:String(d.type||'Journal article'),style:String(d.style||'apa'),
+                  lang:String(d.lang||'en')});
           added++;
         }
       });
