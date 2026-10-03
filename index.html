@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Appupsychoscholar · Psychology Edition</title>
+<title>Appuscholar</title>
 <style>
   :root{
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
@@ -192,8 +192,8 @@
 <body>
 
 <header>
-  <!-- Appupsychoscholar logo: graduation cap over open book in purple/gold -->
-  <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="Appupsychoscholar logo" role="img">
+  <!-- Appuscholar logo: graduation cap over open book in purple/gold -->
+  <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="Appuscholar logo" role="img">
     <circle cx="32" cy="32" r="30" fill="white" opacity="0.14"/>
     <circle cx="32" cy="32" r="29" stroke="#fbbf24" stroke-width="2" fill="rgba(255,255,255,0.06)"/>
     <path d="M12 40c6-3.5 13-5 20-5s14 1.5 20 5v-9c-6-3.5-13-5-20-5s-14 1.5-20 5v9z" fill="#fbbf24"/>
@@ -203,8 +203,7 @@
     <path d="M20 44c4 2.4 8 3.6 12 3.6s8-1.2 12-3.6" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
   </svg>
   <div class="brand">
-    <h1>Appu<span>PsychoScholar</span></h1>
-    <p>Psychology Edition</p>
+    <h1>Appu<span>scholar</span></h1>
   </div>
   <div class="spacer"></div>
   <span class="badge" id="licenseBadge" style="display:none;background:#fbbf24;color:#3b0764"></span>
@@ -342,7 +341,7 @@
     <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
     <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
     <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
-    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appupsychoscholar</button>
+    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
     <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
   </div>
 
@@ -368,7 +367,7 @@
 
     <section class="card tool-panel" data-panel="style"><div class="panel">
       <h3>✍ My Writing Style</h3>
-      <p class="desc">Teach Appupsychoscholar to write like YOU. Upload your files — Word, PDF or text.</p>
+      <p class="desc">Teach Appuscholar to write like YOU. Upload your files — Word, PDF or text.</p>
       <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:10px;cursor:pointer">
         <input type="checkbox" id="styleOn" onchange="styleToggle()" style="width:17px;height:17px;accent-color:#6d28d9"> <b>Use my style in suggestions</b>
       </label>
@@ -415,7 +414,7 @@
         <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">🔖 One-click capture from any page</summary>
         <p class="desc" style="margin-top:8px">Like Zotero's browser button — drag this link to your bookmarks bar once. Then, on any journal article, PubMed or arXiv page, click it to send that page's citation straight into your library here.</p>
         <p style="text-align:center;margin:10px 0">
-          <a id="citBookmarklet" href="#" class="btn btn-gold" style="display:inline-block;text-decoration:none" onclick="return false" draggable="true">🔖 Capture to Appupsychoscholar</a>
+          <a id="citBookmarklet" href="#" class="btn btn-gold" style="display:inline-block;text-decoration:none" onclick="return false" draggable="true">🔖 Capture to Appuscholar</a>
         </p>
         <p class="desc">Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.</p>
       </details>
@@ -493,7 +492,7 @@
     </div></section>
 
     <section class="card tool-panel" data-panel="chat"><div class="panel">
-      <h3>💬 Ask Appupsychoscholar</h3>
+      <h3>💬 Ask Appuscholar</h3>
       <p class="desc">Your purple study buddy — ask anything about your writing. Each reply has an "Insert into document" button.</p>
       <div id="chatLog"></div>
       <input type="text" id="chatIn" placeholder="Ask… e.g. Give me 3 title ideas">
@@ -549,6 +548,14 @@
     <input type="text" id="orcidIn" placeholder="0000-0000-0000-0000" oninput="orcidSave(this.value)">
     <p class="desc" style="margin:4px 0 0"><a href="https://orcid.org/register" target="_blank" rel="noopener">Don't have one? Get a free ORCID iD →</a></p>
   </div>
+  <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <label for="packSel">Specialty pack</label>
+    <select id="packSel" onchange="setPack(this.value)">
+      <option value="general">General research — core tools only</option>
+      <option value="psychology">Psychology — adds the Psychology Tools tab</option>
+    </select>
+    <p class="desc" style="margin:4px 0 0">The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.</p>
+  </div>
   <div class="row" style="margin-top:12px">
     <button class="btn btn-purple" style="flex:1" onclick="saveKey()">Save Key</button>
     <button class="btn btn-ghost" onclick="removeKey()">Remove key</button>
@@ -559,15 +566,15 @@
 </div></dialog>
 
 <dialog id="welcomeDlg"><div class="dlg-body">
-  <h2>💜 Welcome to Appupsychoscholar</h2>
-  <p style="font-size:14px;line-height:1.7;color:var(--ink)">A writing assistant for psychology students. Everything you write stays on this computer.</p>
+  <h2>💜 Welcome to Appuscholar</h2>
+  <p style="font-size:14px;line-height:1.7;color:var(--ink)">A writing and research assistant, with a Psychology Tools pack built in. Everything you write stays on this computer.</p>
   <ol>
     <li>Click <b>⚙ AI Provider / Key</b> at the top right.</li>
     <li>Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.</li>
     <li>Follow the link, create a key, paste it in, press <b>Save Key</b>.</li>
     <li>Start writing. Press <kbd>Tab</kbd> to accept a suggestion.</li>
   </ol>
-  <p class="warn">Appupsychoscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
+  <p class="warn">Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
   <div class="row" style="margin-top:14px">
     <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();openSettings()">Set up my key</button>
     <button class="btn btn-ghost" onclick="document.getElementById('welcomeDlg').close()">Later</button>
@@ -575,12 +582,12 @@
 </div></dialog>
 
 <dialog id="loginDlg"><div class="dlg-body">
-  <h2>🔑 Appupsychoscholar Access</h2>
+  <h2>🔑 Appuscholar Access</h2>
   <p style="font-size:14px;line-height:1.7;color:var(--ink)">This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.</p>
   <textarea id="loginInput" rows="3" placeholder="Paste your access code here" style="width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;font-size:13px;font-family:monospace;color:var(--ink);background:var(--card)"></textarea>
   <p style="min-height:18px;font-size:12.5px;color:#dc2626;margin:8px 0 0" id="loginMsg"></p>
   <div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" id="loginSubmit">Unlock</button></div>
-  <p class="desc" style="margin-top:10px">Don't have a code, or has yours expired? Ask whoever gave you Appupsychoscholar for a new one.</p>
+  <p class="desc" style="margin-top:10px">Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one.</p>
 </div></dialog>
 
 <dialog id="statsDlg" class="dlg-wide"><div class="dlg-body">
@@ -685,7 +692,7 @@
 </div></dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<footer>APPUPSYCHOSCHOLAR · PSYCHOLOGY EDITION · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
+<footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -746,6 +753,38 @@ function showTool(name){
   LS.set('appu_tool_tab',name);
 }
 (function(){const t=LS.get('appu_tool_tab');if(t&&document.querySelector('.tool-tab[data-tool="'+t+'"]'))showTool(t)})();
+
+/* ============ Specialty packs — general core + optional field packs (psychology first) ============
+   Every tool tab belongs either to the core (always shown) or to exactly one pack (shown only when
+   that pack is active). Adding a future pack means adding one entry here plus the tools themselves —
+   no change to this logic. Default stays 'psychology' so existing users see no change. */
+const PACKS={
+  general:{label:'General research',tabs:[]},
+  psychology:{label:'Psychology',tabs:['psych']}
+};
+function getPack(){const p=LS.get('appu_pack');return PACKS[p]?p:'psychology'}
+function applyPack(){
+  const active=getPack();
+  const gated=new Set();
+  Object.keys(PACKS).forEach(k=>{if(k!=='general')PACKS[k].tabs.forEach(t=>gated.add(t))});
+  const shownByActivePack=new Set(PACKS[active]?PACKS[active].tabs:[]);
+  let hidActive=false;
+  document.querySelectorAll('.tool-tab').forEach(b=>{
+    const t=b.dataset.tool,show=!gated.has(t)||shownByActivePack.has(t);
+    b.style.display=show?'':'none';
+    if(!show&&b.classList.contains('active'))hidActive=true;
+  });
+  if(hidActive){
+    const firstVisible=[...document.querySelectorAll('.tool-tab')].find(b=>b.style.display!=='none');
+    if(firstVisible)showTool(firstVisible.dataset.tool);
+  }
+}
+function setPack(p){
+  LS.set('appu_pack',PACKS[p]?p:'psychology');
+  applyPack();
+  showToast('Pack set: '+PACKS[getPack()].label);
+}
+applyPack();
 
 /* ============ Draggable split between the document and the AI panel ============ */
 (function(){
@@ -1294,8 +1333,8 @@ function pptxDownload(){
       try{slide.addImage({data:src,x:5.3,y:1.3,w:4,h:3})}catch(e){}
     });
   });
-  const title=(docsGet().find(d=>d.id===docCurrentId())||{}).title||'appupsychoscholar-slides';
-  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appupsychoscholar-slides';
+  const title=(docsGet().find(d=>d.id===docCurrentId())||{}).title||'appuscholar-slides';
+  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-slides';
   pptx.writeFile({fileName:safe+'.pptx'});
   showToast('Download starting ✓');
 }
@@ -1340,7 +1379,7 @@ async function ensureKey(){
 }
 function keyModeNote(){
   const m=document.getElementById('keyMode').value,el=document.getElementById('keyModeHint');
-  el.textContent=m==='pass'?'You choose a passphrase now and type it once each time you open Appupsychoscholar. Other files on your computer see only encrypted text.'
+  el.textContent=m==='pass'?'You choose a passphrase now and type it once each time you open Appuscholar. Other files on your computer see only encrypted text.'
     :m==='plain'?'No passphrase. Any other HTML file you open on this computer can read this key.'
     :'Kept in memory only. Closing the tab erases it.';
 }
@@ -1399,6 +1438,7 @@ function openSettings(sel){
   if(!cryptoOK())mode.querySelector('option[value="pass"]').disabled=true;
   keyModeNote();provHelp();
   document.getElementById('orcidIn').value=LS.get('appu_orcid')||'';
+  document.getElementById('packSel').value=getPack();
   document.getElementById('settingsDlg').showModal();
 }
 function orcidSave(v){
@@ -1418,7 +1458,7 @@ async function saveKey(){
   LS.rm('appu_key_'+p);LS.rm('appu_enc_'+p);if(p==='gemini')LS.rm('gemini_api_key');
   if(mode==='pass'){
     if(!cryptoOK()){showToast('This browser cannot encrypt — choose another option');return}
-    const pass=prompt('Choose a passphrase for your keys.\n\nYou will type it once each time you open Appupsychoscholar. Nobody can recover it for you.');
+    const pass=prompt('Choose a passphrase for your keys.\n\nYou will type it once each time you open Appuscholar. Nobody can recover it for you.');
     if(pass===null||pass.length<6){showToast('Passphrase needs at least 6 characters — nothing was saved');return}
     const again=prompt('Type the passphrase once more to confirm:');
     if(again!==pass){showToast('The two passphrases did not match — nothing was saved');return}
@@ -1547,7 +1587,7 @@ async function callAI(prompt,opts){
   else if(prov==='deepseek'){url='https://api.deepseek.com/chat/completions';model=PROVIDERS.deepseek.model}
   else if(prov==='openai'){url='https://api.openai.com/v1/chat/completions';model=PROVIDERS.openai.model}
   else{url='https://openrouter.ai/api/v1/chat/completions';model=PROVIDERS.openrouter.model;
-       headers['HTTP-Referer']='https://appupsychoscholar.local';headers['X-Title']='Appupsychoscholar'}
+       headers['HTTP-Referer']='https://appuscholar.local';headers['X-Title']='Appuscholar'}
 
   const r=await fetchRetry5xx(()=>fetch(url,{method:'POST',headers,
     body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:temp,max_tokens:maxTok})}),3);
@@ -1718,7 +1758,7 @@ async function askAI(){
   const bubble=document.createElement('div');bubble.className='msg ai';bubble.textContent='💜 thinking…';
   log.appendChild(bubble);log.scrollTop=log.scrollHeight;
   try{
-    const reply=await callAI('You are Appupsychoscholar, a friendly scholarly writing coach for psychology students. Answer briefly and helpfully:\n\n'+q,{temp:0.6});
+    const reply=await callAI('You are Appuscholar, a friendly scholarly writing coach for psychology students. Answer briefly and helpfully:\n\n'+q,{temp:0.6});
     bubble.dataset.reply=reply;
     bubble.textContent='';
     const textEl=document.createElement('div');textEl.textContent=reply;bubble.appendChild(textEl);
@@ -1753,8 +1793,8 @@ document.getElementById('replaceInput').addEventListener('keydown',e=>{if(e.key=
 
 function downloadDoc(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
-  const title=(cur&&cur.title)||'appupsychoscholar-document';
-  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appupsychoscholar-document';
+  const title=(cur&&cur.title)||'appuscholar-document';
+  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-document';
   const body=getEditorHTML();
   const html='<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8">'+
     '<title>'+escHTML(title)+'</title><style>body{font-family:"Times New Roman",serif;font-size:12pt;line-height:2}</style>'+
@@ -1841,7 +1881,7 @@ function _texBlock(node,lines){
 function downloadLatex(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
   const title=(cur&&cur.title)||'Untitled';
-  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appupsychoscholar-document';
+  const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-document';
   const wrap=document.createElement('div');wrap.innerHTML=getEditorHTML();
   const lines=[];
   _texBlock(wrap,lines);
@@ -2126,7 +2166,7 @@ function citImport(input){
         }
       });
       citSaveLib(l);showToast(added+' sources merged into your library ✓');
-    }catch(e){showToast('Could not read that file — it must be a library JSON exported from Appupsychoscholar')}
+    }catch(e){showToast('Could not read that file — it must be a library JSON exported from Appuscholar')}
     input.value='';
   };
   r.onerror=()=>{showToast('Could not read that file');input.value=''};
@@ -2934,7 +2974,7 @@ function licensePromptLoop(reason){
     const dlg=document.getElementById('loginDlg'),msg=document.getElementById('loginMsg'),input=document.getElementById('loginInput'),btn=document.getElementById('loginSubmit');
     msg.textContent=reason==='expired'?'Your access code has expired. Paste a new one to continue.'
       :reason==='revoked'?'That access code is no longer valid. Paste a new one, or ask for a renewal code.'
-      :reason==='nocrypto'?'This browser cannot verify access codes. Please open Appupsychoscholar in a recent version of Chrome.'
+      :reason==='nocrypto'?'This browser cannot verify access codes. Please open Appuscholar in a recent version of Chrome.'
       :reason?'That code was not recognized. Paste the whole code, including the dot in the middle.'
       :'';
     input.value='';
