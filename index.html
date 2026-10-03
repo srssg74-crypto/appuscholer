@@ -59,6 +59,10 @@
     .splitter{display:none}
   }
   .tool-tabbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .stage-guide{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--muted);background:var(--soft);border:1.5px dashed var(--dashed);border-radius:10px;padding:8px 12px;margin:-2px 0 12px}
+  .stage-guide b{color:var(--head-title)}
+  .stage-guide .next-btn{margin-left:auto;background:none;border:2px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
+  .stage-guide .next-btn:hover{border-color:var(--purple-600,#6d28d9)}
   .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .tool-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
   .tool-panel{display:none}
@@ -222,10 +226,10 @@
 <nav id="provTabs" aria-label="AI providers"></nav>
 
 <div class="project-bar" id="projectBar">
-  <span id="projectBarLabel" data-i18n="project_bar_empty">No project yet — working in scratch space</span>
+  <span id="projectBarLabel" data-i18n="project_bar_empty">No research project yet — working in scratch space</span>
   <div class="spacer"></div>
-  <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as project</button>
-  <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()" data-i18n="projects_btn">📁 Projects</button>
+  <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as research project</button>
+  <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()" data-i18n="projects_btn">📁 Research Projects</button>
 </div>
 
 <main>
@@ -352,14 +356,16 @@
 
   <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
     <button type="button" class="tool-tab" data-tool="idea" onclick="showTool('idea')" data-i18n="tab_idea" data-i18n-title="tab_idea_title" title="Think through a research idea with an advisor before committing — what's realistic given your time, access and resources">💡 Idea &amp; Feasibility</button>
+    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
     <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
     <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" data-i18n="tab_stats" data-i18n-title="tab_stats_title" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
     <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" data-i18n="tab_style" data-i18n-title="tab_style_title" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
     <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" data-i18n="tab_cite" data-i18n-title="tab_cite_title" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
-    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
-    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" data-i18n="tab_chat" data-i18n-title="tab_chat_title" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
     <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" data-i18n="tab_slides" data-i18n-title="tab_slides_title" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
+    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" data-i18n="tab_chat" data-i18n-title="tab_chat_title" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
   </div>
+
+  <div class="stage-guide" id="stageGuide"></div>
 
     <section class="card tool-panel" data-panel="idea"><div class="panel">
       <h3 data-i18n="tab_idea">💡 Idea &amp; Feasibility</h3>
@@ -378,7 +384,7 @@
       </div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="ideaAssess()" data-i18n="idea_assess_btn">🔎 Assess feasibility</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ideaSaveAsProject()" data-i18n="idea_saveproject_btn">💾 Save this idea as a project</button></div>
-      <p class="desc" style="margin-top:10px" data-i18n="idea_panel_note">This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most.</p>
+      <p class="desc" style="margin-top:10px" data-i18n="idea_panel_note">This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most. Once the plan feels solid, head to the Research tab next to find a research gap and ground it in real literature.</p>
     </div></section>
 
     <section class="card tool-panel active" data-panel="psych"><div class="panel">
@@ -556,18 +562,18 @@
 </main>
 
 <dialog id="saveAsProjectDlg"><div class="dlg-body">
-  <h2 data-i18n="sap_h2">💾 Save as project</h2>
+  <h2 data-i18n="sap_h2">💾 Save as research project</h2>
   <p class="desc" style="margin:0 0 12px" data-i18n="sap_desc">Projects track which stage a piece of work is at, so the app can point you to the right tools. Nothing you've written moves or changes — this just labels it.</p>
   <div>
-    <label style="font-weight:600;margin-right:16px"><input type="radio" name="sapMode" value="new" checked onchange="sapModeChange()"> <span data-i18n="sap_mode_new">New project</span></label>
-    <label style="font-weight:600"><input type="radio" name="sapMode" value="existing" onchange="sapModeChange()"> <span data-i18n="sap_mode_existing">Add to an existing project</span></label>
+    <label style="font-weight:600;margin-right:16px"><input type="radio" name="sapMode" value="new" checked onchange="sapModeChange()"> <span data-i18n="sap_mode_new">New research project</span></label>
+    <label style="font-weight:600"><input type="radio" name="sapMode" value="existing" onchange="sapModeChange()"> <span data-i18n="sap_mode_existing">Add to an existing research project</span></label>
   </div>
   <div class="fld" id="sapNewFld">
-    <label for="sapName" data-i18n="sap_name_label">Project name</label>
+    <label for="sapName" data-i18n="sap_name_label">Research project name</label>
     <input type="text" id="sapName" data-i18n-placeholder="sap_name_placeholder" placeholder="e.g. Thesis on academic procrastination">
   </div>
   <div class="fld" id="sapExistingFld" style="display:none">
-    <label for="sapExisting" data-i18n="sap_existing_label">Choose project</label>
+    <label for="sapExisting" data-i18n="sap_existing_label">Choose research project</label>
     <select id="sapExisting"></select>
   </div>
   <div class="fld">
@@ -582,7 +588,7 @@
 </div></dialog>
 
 <dialog id="projectsDlg"><div class="dlg-body">
-  <h2 data-i18n="projects_dlg_h2">📁 Your projects</h2>
+  <h2 data-i18n="projects_dlg_h2">📁 Your research projects</h2>
   <div id="projectsList"></div>
   <div class="row" style="margin-top:12px">
     <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('projectsDlg').close()" data-i18n="close_btn">Close</button>
@@ -805,8 +811,8 @@ const LS={
 const I18N={
   en:{
     help_btn:'❓ Help', settings_btn:'⚙ AI Provider / Key', theme_btn_title:'Light / dark',
-    project_bar_empty:'No project yet — working in scratch space',
-    save_as_project_btn:'💾 Save as project', projects_btn:'📁 Projects',
+    project_bar_empty:'No research project yet — working in scratch space',
+    save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
     doc_pane_h2:'📝 Your Document', autosave_on:'Auto-save on',
     download_btn:'⬇ Download', latex_btn:'⬇ LaTeX', latex_btn_title:'Export as a .tex file to paste into Overleaf',
     doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
@@ -828,7 +834,7 @@ const I18N={
     idea_timeframe_label:'Timeframe', idea_timeframe_placeholder:'e.g. one semester, 3 months, by April',
     idea_constraints_label:'Anything else limiting this (optional)', idea_constraints_placeholder:'Budget, known ethics concerns, requirements your supervisor or department has set…',
     idea_assess_btn:'🔎 Assess feasibility', idea_saveproject_btn:'💾 Save this idea as a project',
-    idea_panel_note:"This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most.",
+    idea_panel_note:"This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most. Once the plan feels solid, head to the Research tab next to find a research gap and ground it in real literature.",
     tab_psych:'🧠 Psychology Tools', tab_psych_title:'Ready-made psychological tests, scales and scoring keys to drop into your questionnaire',
     tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
     tab_style:'✍ My Writing Style', tab_style_title:'Train the AI on samples of your own past writing so its suggestions sound like you',
@@ -836,23 +842,24 @@ const I18N={
     tab_research:'🔬 Research', tab_research_title:'Search academic databases for relevant papers, map how they cite each other, and draft a literature review',
     tab_chat:'💬 Ask Appuscholar', tab_chat_title:"Ask a free-form question and get an AI answer, separate from the document you're writing",
     tab_slides:'🖥 Make PPT', tab_slides_title:'Turn your document into a slide outline you can export as a PowerPoint',
-    sap_h2:'💾 Save as project',
-    sap_desc:"Projects track which stage a piece of work is at, so the app can point you to the right tools. Nothing you've written moves or changes — this just labels it.",
-    sap_mode_new:'New project', sap_mode_existing:'Add to an existing project',
-    sap_name_label:'Project name', sap_name_placeholder:'e.g. Thesis on academic procrastination',
-    sap_existing_label:'Choose project', sap_stage_label:'Stage',
+    sap_h2:'💾 Save as research project',
+    sap_desc:"Research projects track which stage a piece of work is at, so the app can point you to the right tools. Nothing you've written moves or changes — this just labels it.",
+    sap_mode_new:'New research project', sap_mode_existing:'Add to an existing research project',
+    sap_name_label:'Research project name', sap_name_placeholder:'e.g. Thesis on academic procrastination',
+    sap_existing_label:'Choose research project', sap_stage_label:'Stage',
     sap_stage_desc:"Guessed from the tool you had open — change it if that's wrong.",
     sap_save_btn:'Save', sap_cancel_btn:'Cancel',
-    projects_dlg_h2:'📁 Your projects', close_btn:'Close',
+    projects_dlg_h2:'📁 Your research projects', close_btn:'Close',
     stage_idea:'Idea & Feasibility', stage_lit:'Literature', stage_design:'Design & Ethics',
     stage_collect:'Collection & Analysis', stage_writing:'Writing', stage_review:'Review & Publish',
-    projects_empty:'No projects saved yet. Work normally, then use "Save as project" whenever you want to track a stage and come back to it later.',
+    stage_guide_fmt:'Stage {n} of {total}', stage_guide_next:'Next:', stage_guide_final:'Final stage — nothing after this in the sequence',
+    projects_empty:'No research projects saved yet. Work normally, then use "Save as research project" whenever you want to track a stage and come back to it later.',
     project_complete_badge:'Complete', project_open_btn:'Open', project_reopen_btn:'Reopen',
     project_complete_btn:'Mark complete', project_currently_open:'Currently open',
-    toast_no_existing_project:'No existing project to add to — try "New project" instead',
-    toast_moved_into:'Moved into ', toast_name_first:'Give the project a name first',
-    toast_saved_as:'Saved as project: ', toast_marked_complete:' marked complete', toast_reopened:' reopened',
-    sap_no_open_projects:'No open projects yet',
+    toast_no_existing_project:'No existing research project to add to — try "New research project" instead',
+    toast_moved_into:'Moved into ', toast_name_first:'Give the research project a name first',
+    toast_saved_as:'Saved as research project: ', toast_marked_complete:' marked complete', toast_reopened:' reopened',
+    sap_no_open_projects:'No open research projects yet',
     psych_panel_desc:'Select the text you want analyzed (or leave nothing selected to use the whole document).',
     psych_btn_summarize:'📄 Summarize research paper', psych_btn_case:'🧠 Analyze case study',
     psych_btn_litrev:'📚 Literature review helper', psych_btn_explain:'💡 Explain concept simply',
@@ -942,8 +949,8 @@ const I18N={
   },
   hi:{
     help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
-    project_bar_empty:'अभी कोई प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
-    save_as_project_btn:'💾 प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 प्रोजेक्ट्स',
+    project_bar_empty:'अभी कोई शोध प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
+    save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
     doc_pane_h2:'📝 आपका दस्तावेज़', autosave_on:'ऑटो-सेव चालू',
     download_btn:'⬇ डाउनलोड करें', latex_btn:'⬇ LaTeX', latex_btn_title:'Overleaf में पेस्ट करने के लिए .tex फ़ाइल के रूप में निर्यात करें',
     doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
@@ -965,7 +972,7 @@ const I18N={
     idea_timeframe_label:'समय सीमा', idea_timeframe_placeholder:'उदाहरण: एक सेमेस्टर, 3 महीने, अप्रैल तक',
     idea_constraints_label:'इसे सीमित करने वाली कोई और बात (वैकल्पिक)', idea_constraints_placeholder:'बजट, ज्ञात नैतिकता संबंधी चिंताएं, आपके गाइड या विभाग द्वारा तय की गई आवश्यकताएं…',
     idea_assess_btn:'🔎 व्यवहार्यता आंकें', idea_saveproject_btn:'💾 इस विचार को प्रोजेक्ट के रूप में सहेजें',
-    idea_panel_note:'यह आपके विचार पर एक ईमानदार बाहरी राय देता है, स्वीकृति नहीं — AI गलत हो सकता है, और एक वास्तविक गाइड का निर्णय अभी भी सबसे अधिक मायने रखता है।',
+    idea_panel_note:'यह आपके विचार पर एक ईमानदार बाहरी राय देता है, स्वीकृति नहीं — AI गलत हो सकता है, और एक वास्तविक गाइड का निर्णय अभी भी सबसे अधिक मायने रखता है। योजना पक्की लगने पर, आगे Research टैब में जाकर शोध अंतराल खोजें और इसे वास्तविक साहित्य में आधारित करें।',
     tab_psych:'🧠 मनोविज्ञान उपकरण', tab_psych_title:'अपनी प्रश्नावली में जोड़ने के लिए तैयार मनोवैज्ञानिक परीक्षण, स्केल और स्कोरिंग कुंजियाँ',
     tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
     tab_style:'✍ मेरी लेखन शैली', tab_style_title:'AI को अपने पुराने लेखन के नमूनों पर प्रशिक्षित करें ताकि सुझाव आपकी शैली में हों',
@@ -973,23 +980,24 @@ const I18N={
     tab_research:'🔬 शोध', tab_research_title:'प्रासंगिक शोध-पत्रों के लिए अकादमिक डेटाबेस खोजें, उनके परस्पर उद्धरण देखें, और साहित्य समीक्षा का मसौदा तैयार करें',
     tab_chat:'💬 Appuscholar से पूछें', tab_chat_title:'अपने लिखे जा रहे दस्तावेज़ से अलग, स्वतंत्र रूप से कोई प्रश्न पूछें और AI से उत्तर पाएं',
     tab_slides:'🖥 PPT बनाएं', tab_slides_title:'अपने दस्तावेज़ को स्लाइड रूपरेखा में बदलें जिसे PowerPoint के रूप में निर्यात किया जा सकता है',
-    sap_h2:'💾 प्रोजेक्ट के रूप में सहेजें',
-    sap_desc:'प्रोजेक्ट यह ट्रैक करते हैं कि काम किस चरण में है, ताकि ऐप आपको सही उपकरण दिखा सके। आपका लिखा हुआ कुछ भी बदलता नहीं — यह बस उसे लेबल करता है।',
-    sap_mode_new:'नया प्रोजेक्ट', sap_mode_existing:'किसी मौजूदा प्रोजेक्ट में जोड़ें',
-    sap_name_label:'प्रोजेक्ट का नाम', sap_name_placeholder:'उदाहरण: नींद और स्मृति पर थीसिस',
-    sap_existing_label:'प्रोजेक्ट चुनें', sap_stage_label:'चरण',
+    sap_h2:'💾 शोध प्रोजेक्ट के रूप में सहेजें',
+    sap_desc:'शोध प्रोजेक्ट यह ट्रैक करते हैं कि काम किस चरण में है, ताकि ऐप आपको सही उपकरण दिखा सके। आपका लिखा हुआ कुछ भी बदलता नहीं — यह बस उसे लेबल करता है।',
+    sap_mode_new:'नया शोध प्रोजेक्ट', sap_mode_existing:'किसी मौजूदा शोध प्रोजेक्ट में जोड़ें',
+    sap_name_label:'शोध प्रोजेक्ट का नाम', sap_name_placeholder:'उदाहरण: नींद और स्मृति पर थीसिस',
+    sap_existing_label:'शोध प्रोजेक्ट चुनें', sap_stage_label:'चरण',
     sap_stage_desc:'जो टूल खुला था उससे अनुमान लगाया गया है — गलत होने पर बदल दें।',
     sap_save_btn:'सहेजें', sap_cancel_btn:'रद्द करें',
-    projects_dlg_h2:'📁 आपके प्रोजेक्ट्स', close_btn:'बंद करें',
+    projects_dlg_h2:'📁 आपके शोध प्रोजेक्ट्स', close_btn:'बंद करें',
     stage_idea:'विचार और व्यवहार्यता', stage_lit:'साहित्य', stage_design:'डिज़ाइन और नैतिकता',
     stage_collect:'संग्रह और विश्लेषण', stage_writing:'लेखन', stage_review:'समीक्षा और प्रकाशन',
-    projects_empty:'अभी तक कोई प्रोजेक्ट सहेजा नहीं गया है। सामान्य रूप से काम करें, फिर जब किसी चरण को ट्रैक करना हो और बाद में वापस आना हो तो "प्रोजेक्ट के रूप में सहेजें" का उपयोग करें।',
+    stage_guide_fmt:'चरण {n}/{total}', stage_guide_next:'आगे:', stage_guide_final:'अंतिम चरण — क्रम में इसके बाद कुछ नहीं है',
+    projects_empty:'अभी तक कोई शोध प्रोजेक्ट सहेजा नहीं गया है। सामान्य रूप से काम करें, फिर जब किसी चरण को ट्रैक करना हो और बाद में वापस आना हो तो "शोध प्रोजेक्ट के रूप में सहेजें" का उपयोग करें।',
     project_complete_badge:'पूर्ण', project_open_btn:'खोलें', project_reopen_btn:'फिर से खोलें',
     project_complete_btn:'पूर्ण के रूप में चिह्नित करें', project_currently_open:'अभी खुला है',
-    toast_no_existing_project:'जोड़ने के लिए कोई मौजूदा प्रोजेक्ट नहीं — इसके बजाय "नया प्रोजेक्ट" आज़माएँ',
-    toast_moved_into:'इसमें ले जाया गया: ', toast_name_first:'पहले प्रोजेक्ट को नाम दें',
-    toast_saved_as:'प्रोजेक्ट के रूप में सहेजा गया: ', toast_marked_complete:' को पूर्ण के रूप में चिह्नित किया गया', toast_reopened:' फिर से खोला गया',
-    sap_no_open_projects:'अभी कोई खुला प्रोजेक्ट नहीं है',
+    toast_no_existing_project:'जोड़ने के लिए कोई मौजूदा शोध प्रोजेक्ट नहीं — इसके बजाय "नया शोध प्रोजेक्ट" आज़माएँ',
+    toast_moved_into:'इसमें ले जाया गया: ', toast_name_first:'पहले शोध प्रोजेक्ट को नाम दें',
+    toast_saved_as:'शोध प्रोजेक्ट के रूप में सहेजा गया: ', toast_marked_complete:' को पूर्ण के रूप में चिह्नित किया गया', toast_reopened:' फिर से खोला गया',
+    sap_no_open_projects:'अभी कोई खुला शोध प्रोजेक्ट नहीं है',
     psych_panel_desc:'जिस टेक्स्ट का विश्लेषण करना है उसे चुनें (या पूरे दस्तावेज़ का उपयोग करने के लिए कुछ भी न चुनें)।',
     psych_btn_summarize:'📄 शोध-पत्र का सारांश बनाएं', psych_btn_case:'🧠 केस स्टडी का विश्लेषण करें',
     psych_btn_litrev:'📚 साहित्य समीक्षा सहायक', psych_btn_explain:'💡 अवधारणा को सरलता से समझाएं',
@@ -1091,6 +1099,10 @@ function applyLang(){
   });
   const btn=document.getElementById('langBtn');if(btn)btn.textContent=lang==='hi'?'हि':'EN';
   if(typeof renderProjectBar==='function')renderProjectBar();
+  if(typeof renderStageGuide==='function'){
+    const activeTab=document.querySelector('.tool-tab.active');
+    try{renderStageGuide(activeTab?activeTab.dataset.tool:'psych')}catch(e){}
+  }
 }
 function toggleLang(){
   LS.set('appu_lang',getLang()==='hi'?'en':'hi');
@@ -1173,6 +1185,11 @@ function showTool(name){
   document.querySelectorAll('.tool-tab').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));
   document.querySelectorAll('.tool-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===name));
   LS.set('appu_tool_tab',name);
+  /* TOOL_TO_STAGE is a const defined further down the file (the Projects section); the very first
+     call to showTool() below fires before that section runs, so referencing it here would throw —
+     caught and silently skipped that one time. The Projects section re-renders the guide once it's
+     actually defined, so nothing is lost. */
+  try{renderStageGuide(name)}catch(e){}
 }
 (function(){const t=LS.get('appu_tool_tab');if(t&&document.querySelector('.tool-tab[data-tool="'+t+'"]'))showTool(t)})();
 
@@ -1216,6 +1233,34 @@ applyPack();
    real per-stage tool view builds on as more stage-specific tools ship. */
 const STAGES=['idea','lit','design','collect','writing','review'];
 const TOOL_TO_STAGE={idea:'idea',psych:'lit',research:'lit',stats:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
+/* The first tool a student should open for each stage, used by the stage-guide bar's "Next" link
+   below. A stage with no tool yet (design) is left out on purpose — nextStageTool() skips past it
+   to the next stage that actually has something to do, rather than sending a student to a dead end. */
+const STAGE_FIRST_TOOL={idea:'idea',lit:'research',collect:'stats',writing:'cite',review:'slides'};
+function nextStageTool(fromIndex){
+  for(let i=fromIndex+1;i<STAGES.length;i++){
+    const tl=STAGE_FIRST_TOOL[STAGES[i]];
+    if(tl)return{tool:tl,stage:STAGES[i]};
+  }
+  return null;
+}
+/* A small always-visible bar under the tool tabs showing where the open tool sits in the six-stage
+   roadmap, and a one-click way to jump to the next stage's tool — the "inbuilt guidance" that makes
+   the stage sequence visible even though the tab bar itself stays flat (see the plan list for why
+   full stage-gated navigation isn't built yet: two of six stages still have no tool at all). */
+function renderStageGuide(tool){
+  const el=document.getElementById('stageGuide');if(!el)return;
+  const stage=TOOL_TO_STAGE[tool];
+  if(!stage){el.style.display='none';el.innerHTML='';return}
+  const idx=STAGES.indexOf(stage);
+  const nxt=nextStageTool(idx);
+  let html='<span>'+t('stage_guide_fmt').replace('{n}',idx+1).replace('{total}',STAGES.length)+' · <b>'+escHTML(stageLabel(stage))+'</b></span>';
+  html+=nxt
+    ? '<button type="button" class="next-btn" onclick="showTool(\''+nxt.tool+'\')">'+escHTML(t('stage_guide_next'))+' '+escHTML(stageLabel(nxt.stage))+' →</button>'
+    : '<span class="next-btn" style="border:none;cursor:default">'+escHTML(t('stage_guide_final'))+'</span>';
+  el.style.display='flex';
+  el.innerHTML=html;
+}
 
 function getProjects(){try{return JSON.parse(LS.get('appu_projects')||'[]')}catch(e){return []}}
 function saveProjectsList(list){LS.set('appu_projects',JSON.stringify(list))}
@@ -1315,6 +1360,7 @@ function reopenProject(id){
   openProjectsDlg();renderProjectBar();
 }
 renderProjectBar();
+renderStageGuide(LS.get('appu_tool_tab')||'psych');
 
 /* ============ Draggable split between the document and the AI panel ============ */
 (function(){
