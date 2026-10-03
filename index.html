@@ -351,6 +351,7 @@
   </div>
 
   <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
+    <button type="button" class="tool-tab" data-tool="idea" onclick="showTool('idea')" data-i18n="tab_idea" data-i18n-title="tab_idea_title" title="Think through a research idea with an advisor before committing — what's realistic given your time, access and resources">💡 Idea &amp; Feasibility</button>
     <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
     <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" data-i18n="tab_stats" data-i18n-title="tab_stats_title" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
     <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" data-i18n="tab_style" data-i18n-title="tab_style_title" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
@@ -359,6 +360,26 @@
     <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" data-i18n="tab_chat" data-i18n-title="tab_chat_title" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
     <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" data-i18n="tab_slides" data-i18n-title="tab_slides_title" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
   </div>
+
+    <section class="card tool-panel" data-panel="idea"><div class="panel">
+      <h3 data-i18n="tab_idea">💡 Idea &amp; Feasibility</h3>
+      <p class="desc" data-i18n="idea_panel_desc">Before you commit to a topic, talk it through here. Describe what you want to study and what you actually have available — the advisor below judges whether it's realistic, not just whether it's interesting.</p>
+      <div class="fld"><label for="ideaTopic" data-i18n="idea_topic_label">Your working idea or research question</label>
+        <textarea id="ideaTopic" rows="3" placeholder="e.g. Does sleep quality predict exam performance in college students?" data-i18n-placeholder="idea_topic_placeholder" oninput="ideaSave()"></textarea>
+      </div>
+      <div class="fld"><label for="ideaResources" data-i18n="idea_resources_label">What you actually have access to</label>
+        <textarea id="ideaResources" rows="3" placeholder="Participants you can realistically recruit, facilities, equipment, software, a supervisor's lab…" data-i18n-placeholder="idea_resources_placeholder" oninput="ideaSave()"></textarea>
+      </div>
+      <div class="fld"><label for="ideaTimeframe" data-i18n="idea_timeframe_label">Timeframe</label>
+        <input type="text" id="ideaTimeframe" placeholder="e.g. one semester, 3 months, by April" data-i18n-placeholder="idea_timeframe_placeholder" oninput="ideaSave()">
+      </div>
+      <div class="fld"><label for="ideaConstraints" data-i18n="idea_constraints_label">Anything else limiting this (optional)</label>
+        <textarea id="ideaConstraints" rows="2" placeholder="Budget, known ethics concerns, requirements your supervisor or department has set…" data-i18n-placeholder="idea_constraints_placeholder" oninput="ideaSave()"></textarea>
+      </div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="ideaAssess()" data-i18n="idea_assess_btn">🔎 Assess feasibility</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ideaSaveAsProject()" data-i18n="idea_saveproject_btn">💾 Save this idea as a project</button></div>
+      <p class="desc" style="margin-top:10px" data-i18n="idea_panel_note">This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most.</p>
+    </div></section>
 
     <section class="card tool-panel active" data-panel="psych"><div class="panel">
       <h3 data-i18n="tab_psych">🧠 Psychology Tools</h3>
@@ -800,6 +821,14 @@ const I18N={
     ai_pane_desc:'Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.',
     ai_pane_placeholder:'Your AI suggestion will appear here…',
     accept_btn:'Accept ✓', copy_btn:'Copy', dismiss_btn:'Dismiss',
+    tab_idea:'💡 Idea &amp; Feasibility', tab_idea_title:"Think through a research idea with an advisor before committing — what's realistic given your time, access and resources",
+    idea_panel_desc:"Before you commit to a topic, talk it through here. Describe what you want to study and what you actually have available — the advisor below judges whether it's realistic, not just whether it's interesting.",
+    idea_topic_label:'Your working idea or research question', idea_topic_placeholder:'e.g. Does sleep quality predict exam performance in college students?',
+    idea_resources_label:'What you actually have access to', idea_resources_placeholder:"Participants you can realistically recruit, facilities, equipment, software, a supervisor's lab…",
+    idea_timeframe_label:'Timeframe', idea_timeframe_placeholder:'e.g. one semester, 3 months, by April',
+    idea_constraints_label:'Anything else limiting this (optional)', idea_constraints_placeholder:'Budget, known ethics concerns, requirements your supervisor or department has set…',
+    idea_assess_btn:'🔎 Assess feasibility', idea_saveproject_btn:'💾 Save this idea as a project',
+    idea_panel_note:"This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most.",
     tab_psych:'🧠 Psychology Tools', tab_psych_title:'Ready-made psychological tests, scales and scoring keys to drop into your questionnaire',
     tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
     tab_style:'✍ My Writing Style', tab_style_title:'Train the AI on samples of your own past writing so its suggestions sound like you',
@@ -929,6 +958,14 @@ const I18N={
     ai_pane_desc:'अपने दस्तावेज़ में टेक्स्ट चुनें, फिर कोई बटन दबाएँ। स्वीकार करने के लिए एडिटर में <kbd>Tab</kbd> दबाएँ। <kbd>Ctrl</kbd>+<kbd>Z</kbd> इसे पूर्ववत करता है।',
     ai_pane_placeholder:'आपका AI सुझाव यहाँ दिखाई देगा…',
     accept_btn:'स्वीकार करें ✓', copy_btn:'कॉपी करें', dismiss_btn:'हटाएं',
+    tab_idea:'💡 विचार और व्यवहार्यता', tab_idea_title:'प्रतिबद्ध होने से पहले एक सलाहकार के साथ अपने शोध विचार पर विचार करें — आपके समय, पहुंच और संसाधनों को देखते हुए क्या व्यावहारिक है',
+    idea_panel_desc:'किसी विषय के प्रति प्रतिबद्ध होने से पहले, इसे यहाँ विस्तार से सोचें। बताएं कि आप क्या अध्ययन करना चाहते हैं और आपके पास वास्तव में क्या उपलब्ध है — नीचे दिया सलाहकार यह आंकता है कि यह व्यावहारिक है या नहीं, केवल यह नहीं कि यह दिलचस्प है या नहीं।',
+    idea_topic_label:'आपका कार्यशील विचार या शोध प्रश्न', idea_topic_placeholder:'उदाहरण: क्या नींद की गुणवत्ता कॉलेज छात्रों में परीक्षा प्रदर्शन की भविष्यवाणी करती है?',
+    idea_resources_label:'आपके पास वास्तव में क्या उपलब्ध है', idea_resources_placeholder:'वे प्रतिभागी जिन्हें आप वास्तव में भर्ती कर सकते हैं, सुविधाएं, उपकरण, सॉफ़्टवेयर, किसी गाइड की लैब…',
+    idea_timeframe_label:'समय सीमा', idea_timeframe_placeholder:'उदाहरण: एक सेमेस्टर, 3 महीने, अप्रैल तक',
+    idea_constraints_label:'इसे सीमित करने वाली कोई और बात (वैकल्पिक)', idea_constraints_placeholder:'बजट, ज्ञात नैतिकता संबंधी चिंताएं, आपके गाइड या विभाग द्वारा तय की गई आवश्यकताएं…',
+    idea_assess_btn:'🔎 व्यवहार्यता आंकें', idea_saveproject_btn:'💾 इस विचार को प्रोजेक्ट के रूप में सहेजें',
+    idea_panel_note:'यह आपके विचार पर एक ईमानदार बाहरी राय देता है, स्वीकृति नहीं — AI गलत हो सकता है, और एक वास्तविक गाइड का निर्णय अभी भी सबसे अधिक मायने रखता है।',
     tab_psych:'🧠 मनोविज्ञान उपकरण', tab_psych_title:'अपनी प्रश्नावली में जोड़ने के लिए तैयार मनोवैज्ञानिक परीक्षण, स्केल और स्कोरिंग कुंजियाँ',
     tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
     tab_style:'✍ मेरी लेखन शैली', tab_style_title:'AI को अपने पुराने लेखन के नमूनों पर प्रशिक्षित करें ताकि सुझाव आपकी शैली में हों',
@@ -1178,7 +1215,7 @@ applyPack();
    document or tool data (that stays global); it's a stage/pack bookmark today, and the foundation the
    real per-stage tool view builds on as more stage-specific tools ship. */
 const STAGES=['idea','lit','design','collect','writing','review'];
-const TOOL_TO_STAGE={psych:'lit',research:'lit',stats:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
+const TOOL_TO_STAGE={idea:'idea',psych:'lit',research:'lit',stats:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
 
 function getProjects(){try{return JSON.parse(LS.get('appu_projects')||'[]')}catch(e){return []}}
 function saveProjectsList(list){LS.set('appu_projects',JSON.stringify(list))}
@@ -2908,6 +2945,44 @@ async function researchGapFinder(){
     showToast('Ready — press Tab in the editor to insert');
   }catch(e){clearSug(apiMsg(e))}
 }
+
+/* ============ Idea & Feasibility advisor — fills stage 1 of the project roadmap ============
+   Merges the idea-intake advisor and the feasibility scorecard from the plan list into one
+   build, as decided, rather than two separate tools. A student describes the idea and what
+   they actually have available; the AI judges feasibility area by area instead of just
+   answering "is this a good topic?" in the abstract. Output goes through the same shared
+   AI suggestion pane as every other tool — press Tab in the editor to insert it. */
+function ideaLoad(){
+  let d={};try{d=JSON.parse(LS.get('appu_idea_intake')||'{}')}catch(e){d={}}
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||''};
+  set('ideaTopic',d.topic);set('ideaResources',d.resources);set('ideaTimeframe',d.timeframe);set('ideaConstraints',d.constraints);
+}
+function ideaSave(){
+  const v=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
+  LS.set('appu_idea_intake',JSON.stringify({topic:v('ideaTopic'),resources:v('ideaResources'),timeframe:v('ideaTimeframe'),constraints:v('ideaConstraints')}));
+}
+async function ideaAssess(){
+  ideaSave();
+  const v=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
+  const topic=v('ideaTopic');
+  if(!topic){showToast('Describe your working idea first');return}
+  const resources=v('ideaResources')||'(not described)',timeframe=v('ideaTimeframe')||'(not given)',constraints=v('ideaConstraints')||'(none given)';
+  clearSug('💜 Thinking this through…');
+  try{
+    const prompt='You are an experienced research-methods advisor helping a student judge whether a project idea is realistic before they commit to it, not whether it sounds interesting. Assess it across five areas: (1) topic clarity and researchability, (2) access to participants or data, (3) time feasibility, (4) resource and equipment feasibility, (5) ethical complexity. For EACH area give a one-word risk rating (Low, Medium or High) and one concrete sentence of reasoning based specifically on what the student describes below — never a generic statement that could apply to any project. Then give one clear verdict: Proceed as planned, Proceed with these specific modifications (name them), or Reconsider this topic (say briefly why). If something below is too vague to judge fairly, say exactly what extra detail you would need instead of guessing.\n\nWorking idea: '+topic+'\nWhat they have access to: '+resources+'\nTimeframe: '+timeframe+'\nOther constraints: '+constraints;
+    setSug(await callAI(prompt,{temp:0.3,max:1200}));
+    showToast('Ready — press Tab in the editor to insert');
+  }catch(e){clearSug(apiMsg(e))}
+}
+function ideaSaveAsProject(){
+  ideaSave();
+  const topic=(document.getElementById('ideaTopic')||{}).value.trim();
+  openSaveAsProject();
+  const stageSel=document.getElementById('sapStage');if(stageSel)stageSel.value='idea';
+  const nameEl=document.getElementById('sapName');
+  if(topic&&nameEl&&!nameEl.value)nameEl.value=topic.slice(0,80);
+}
+ideaLoad();
 
 /* ============ FIX 7 + 18: psychology tools ============ */
 const PSYCH_PROMPTS={
