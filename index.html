@@ -218,7 +218,7 @@
   </div>
   <div class="spacer"></div>
   <span class="badge" id="licenseBadge" style="display:none;background:#fbbf24;color:#3b0764"></span>
-  <button class="btn btn-ghost" onclick="toggleLang()" id="langBtn" title="Interface language">EN</button>
+  <button class="btn btn-ghost" onclick="toggleLang()" id="langBtn" title="Interface language">हि</button>
   <button class="btn btn-ghost" onclick="toggleTheme()" id="themeBtn" data-i18n-title="theme_btn_title" title="Light / dark">🌙</button>
   <button class="btn btn-ghost" onclick="openHelp()" data-i18n="help_btn">❓ Help</button>
   <button class="btn btn-gold" onclick="openSettings()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
@@ -355,6 +355,7 @@
   </div>
 
   <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
+    <button type="button" class="tool-tab" onclick="openProjectsDlg()" data-i18n="tab_projects" data-i18n-title="tab_projects_title" title="Start a new research project or switch to one you've already saved">🗂 Research Projects</button>
     <button type="button" class="tool-tab" data-tool="idea" onclick="showTool('idea')" data-i18n="tab_idea" data-i18n-title="tab_idea_title" title="Think through a research idea with an advisor before committing — what's realistic given your time, access and resources">💡 Idea &amp; Feasibility</button>
     <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
     <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
@@ -827,6 +828,7 @@ const I18N={
     ai_pane_desc:'Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.',
     ai_pane_placeholder:'Your AI suggestion will appear here…',
     accept_btn:'Accept ✓', copy_btn:'Copy', dismiss_btn:'Dismiss',
+    tab_projects:'🗂 Research Projects', tab_projects_title:"Start a new research project or switch to one you've already saved",
     tab_idea:'💡 Idea &amp; Feasibility', tab_idea_title:"Think through a research idea with an advisor before committing — what's realistic given your time, access and resources",
     idea_panel_desc:"Before you commit to a topic, talk it through here. Describe what you want to study and what you actually have available — the advisor below judges whether it's realistic, not just whether it's interesting.",
     idea_topic_label:'Your working idea or research question', idea_topic_placeholder:'e.g. Does sleep quality predict exam performance in college students?',
@@ -965,6 +967,7 @@ const I18N={
     ai_pane_desc:'अपने दस्तावेज़ में टेक्स्ट चुनें, फिर कोई बटन दबाएँ। स्वीकार करने के लिए एडिटर में <kbd>Tab</kbd> दबाएँ। <kbd>Ctrl</kbd>+<kbd>Z</kbd> इसे पूर्ववत करता है।',
     ai_pane_placeholder:'आपका AI सुझाव यहाँ दिखाई देगा…',
     accept_btn:'स्वीकार करें ✓', copy_btn:'कॉपी करें', dismiss_btn:'हटाएं',
+    tab_projects:'🗂 शोध प्रोजेक्ट', tab_projects_title:'नया शोध प्रोजेक्ट शुरू करें या पहले से सहेजे गए किसी प्रोजेक्ट पर जाएं',
     tab_idea:'💡 विचार और व्यवहार्यता', tab_idea_title:'प्रतिबद्ध होने से पहले एक सलाहकार के साथ अपने शोध विचार पर विचार करें — आपके समय, पहुंच और संसाधनों को देखते हुए क्या व्यावहारिक है',
     idea_panel_desc:'किसी विषय के प्रति प्रतिबद्ध होने से पहले, इसे यहाँ विस्तार से सोचें। बताएं कि आप क्या अध्ययन करना चाहते हैं और आपके पास वास्तव में क्या उपलब्ध है — नीचे दिया सलाहकार यह आंकता है कि यह व्यावहारिक है या नहीं, केवल यह नहीं कि यह दिलचस्प है या नहीं।',
     idea_topic_label:'आपका कार्यशील विचार या शोध प्रश्न', idea_topic_placeholder:'उदाहरण: क्या नींद की गुणवत्ता कॉलेज छात्रों में परीक्षा प्रदर्शन की भविष्यवाणी करती है?',
@@ -1097,7 +1100,9 @@ function applyLang(){
     const v=t(el.getAttribute('data-i18n-placeholder'));
     if(el.hasAttribute('placeholder'))el.setAttribute('placeholder',v);else el.setAttribute('data-placeholder',v);
   });
-  const btn=document.getElementById('langBtn');if(btn)btn.textContent=lang==='hi'?'हि':'EN';
+  /* The button is a toggle, so it names the language a click switches TO, not the one
+     currently active — otherwise "हि" while already in Hindi reads as a label, not a control. */
+  const btn=document.getElementById('langBtn');if(btn)btn.textContent=lang==='hi'?'EN':'हि';
   if(typeof renderProjectBar==='function')renderProjectBar();
   if(typeof renderStageGuide==='function'){
     const activeTab=document.querySelector('.tool-tab.active');
