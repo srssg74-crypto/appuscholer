@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Appuscholar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
@@ -26,7 +29,7 @@
     --purple-100:#3a2d5e; --head-title:#d8ccff; --dashed:#6d5ba3; --accent-ink:#c4b5fd; --warn-bg:#3d2f0b; --warn-ink:#fde68a;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink)}
   header{background:linear-gradient(120deg,var(--purple-900),var(--purple-700) 60%,var(--purple-600));color:#fff;padding:8px 18px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 18px rgba(76,29,149,.25);position:sticky;top:0;z-index:10;flex-wrap:wrap}
   header .btn{padding:7px 13px;font-size:13px}
   .logo{width:36px;height:36px;flex:0 0 36px}
@@ -69,7 +72,7 @@
   .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--soft);flex-wrap:wrap}
   .card-head h2{margin:0;font-size:16px;color:var(--head-title)}
   .badge{font-size:11px;background:var(--purple-100);color:var(--accent-ink);padding:4px 10px;border-radius:20px;font-weight:700}
-  #editor{width:100%;flex:1;min-height:0;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
+  #editor{width:100%;flex:1;min-height:0;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman","Noto Sans Devanagari",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
   #editor.drag-over{box-shadow:inset 0 0 0 3px var(--purple-600);background:var(--soft)}
   #editor table{border-collapse:collapse;margin:12px 0;width:100%}
   #editor table td,#editor table th{border:1px solid var(--chipline);padding:8px 10px;min-width:60px;vertical-align:top}
@@ -210,35 +213,36 @@
   </div>
   <div class="spacer"></div>
   <span class="badge" id="licenseBadge" style="display:none;background:#fbbf24;color:#3b0764"></span>
-  <button class="btn btn-ghost" onclick="toggleTheme()" id="themeBtn" title="Light / dark">🌙</button>
-  <button class="btn btn-ghost" onclick="openHelp()">❓ Help</button>
-  <button class="btn btn-gold" onclick="openSettings()">⚙ AI Provider / Key</button>
+  <button class="btn btn-ghost" onclick="toggleLang()" id="langBtn" title="Interface language">EN</button>
+  <button class="btn btn-ghost" onclick="toggleTheme()" id="themeBtn" data-i18n-title="theme_btn_title" title="Light / dark">🌙</button>
+  <button class="btn btn-ghost" onclick="openHelp()" data-i18n="help_btn">❓ Help</button>
+  <button class="btn btn-gold" onclick="openSettings()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
 </header>
 <nav id="provTabs" aria-label="AI providers"></nav>
 
 <div class="project-bar" id="projectBar">
-  <span id="projectBarLabel">No project yet — working in scratch space</span>
+  <span id="projectBarLabel" data-i18n="project_bar_empty">No project yet — working in scratch space</span>
   <div class="spacer"></div>
-  <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()">💾 Save as project</button>
-  <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()">📁 Projects</button>
+  <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as project</button>
+  <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()" data-i18n="projects_btn">📁 Projects</button>
 </div>
 
 <main>
   <div class="split-row" id="splitRow">
   <section class="card doc-pane" id="docPane">
     <div class="card-head">
-      <h2>📝 Your Document</h2>
-      <span class="badge" id="saveBadge">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
+      <h2 data-i18n="doc_pane_h2">📝 Your Document</h2>
+      <span class="badge" id="saveBadge" data-i18n="autosave_on">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
       <div class="spacer"></div>
-      <button class="btn btn-ghost" onclick="downloadDoc()">⬇ Download</button>
-      <button class="btn btn-ghost" onclick="downloadLatex()" title="Export as a .tex file to paste into Overleaf">⬇ LaTeX</button>
+      <button class="btn btn-ghost" onclick="downloadDoc()" data-i18n="download_btn">⬇ Download</button>
+      <button class="btn btn-ghost" onclick="downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="Export as a .tex file to paste into Overleaf">⬇ LaTeX</button>
       <div class="docbar">
-        <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Doc</label>
+        <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase" data-i18n="doc_label">Doc</label>
         <select id="docSel" onchange="docSwitch(this.value)" aria-label="Choose document"></select>
-        <button class="icon-btn" onclick="docNew()" title="New document">＋ New</button>
+        <button class="icon-btn" onclick="docNew()" data-i18n="doc_new_btn" data-i18n-title="doc_new_title" title="New document">＋ New</button>
         <button class="icon-btn" onclick="docRename()" title="Rename">✎</button>
-        <button class="icon-btn" onclick="docDelete()" title="Delete this document">🗑</button>
-        <button class="icon-btn" onclick="document.getElementById('docImportInput').click()" title="Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor">📂 Import</button>
+        <button class="icon-btn" onclick="docDelete()" data-i18n-title="doc_delete_title" title="Delete this document">🗑</button>
+        <button class="icon-btn" onclick="document.getElementById('docImportInput').click()" data-i18n="doc_import_btn" data-i18n-title="doc_import_title" title="Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor">📂 Import</button>
         <input type="file" id="docImportInput" accept=".docx,.pdf,.txt,.md,.html,.htm" style="display:none" onchange="docImportFiles(this.files);this.value=''">
       </div>
     </div>
@@ -319,13 +323,13 @@
       <span id="findStatus" class="find-status"></span>
       <button type="button" class="icon-btn" onclick="closeFindReplace()" title="Close">✕</button>
     </div>
-    <div id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Document editor" data-placeholder="Start writing here… Select text and press Improve, or just write and let AI continue."></div>
+    <div id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Document editor" data-i18n-placeholder="editor_placeholder" data-placeholder="Start writing here… Select text and press Improve, or just write and let AI continue."></div>
     <div class="toolbar">
-      <button class="btn btn-purple" onclick="continueWriting()" title="AI writes the next ~120 words for you">✨ Continue Writing <kbd>Tab</kbd></button>
-      <button class="btn btn-ghost" onclick="improveText()" title="Select some text first, then click to polish its grammar">💜 Improve selection</button>
-      <button class="btn btn-ghost" onclick="makeLonger()" title="Select some text first, then click to extend it">➕ Extend</button>
-      <button class="btn btn-ghost" onclick="insertScaffold()" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
-      <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" title="Mark every AI-inserted passage directly in the document">👁 AI text</button>
+      <button class="btn btn-purple" onclick="continueWriting()" data-i18n="continue_btn" data-i18n-title="continue_btn_title" title="AI writes the next ~120 words for you">✨ Continue Writing <kbd>Tab</kbd></button>
+      <button class="btn btn-ghost" onclick="improveText()" data-i18n="improve_btn" data-i18n-title="improve_btn_title" title="Select some text first, then click to polish its grammar">💜 Improve selection</button>
+      <button class="btn btn-ghost" onclick="makeLonger()" data-i18n="extend_btn" data-i18n-title="extend_btn_title" title="Select some text first, then click to extend it">➕ Extend</button>
+      <button class="btn btn-ghost" onclick="insertScaffold()" data-i18n="template_btn" data-i18n-title="template_btn_title" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
+      <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 AI text</button>
       <span class="stats" id="stats">0 words</span>
       <span class="orig-badge" id="origBadge" style="display:none"></span>
     </div>
@@ -334,25 +338,25 @@
   <div class="splitter" id="splitter" title="Drag to resize"></div>
 
   <section class="card ai-pane" id="aiPane"><div class="panel">
-    <h3>✨ AI Suggestion</h3>
-    <p class="desc">Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.</p>
-    <div id="aiOut">Your AI suggestion will appear here…</div>
+    <h3 data-i18n="ai_pane_h3">✨ AI Suggestion</h3>
+    <p class="desc" data-i18n="ai_pane_desc">Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.</p>
+    <div id="aiOut" data-i18n="ai_pane_placeholder">Your AI suggestion will appear here…</div>
     <div class="row">
-      <button class="btn btn-purple" style="flex:1" onclick="acceptAI()">Accept ✓</button>
-      <button class="btn btn-ghost" onclick="copyAI()">Copy</button>
-      <button class="btn btn-ghost" onclick="clearSug('Your AI suggestion will appear here…')">Dismiss</button>
+      <button class="btn btn-purple" style="flex:1" onclick="acceptAI()" data-i18n="accept_btn">Accept ✓</button>
+      <button class="btn btn-ghost" onclick="copyAI()" data-i18n="copy_btn">Copy</button>
+      <button class="btn btn-ghost" onclick="clearSug(t('ai_pane_placeholder'))" data-i18n="dismiss_btn">Dismiss</button>
     </div>
   </div></section>
   </div>
 
   <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
-    <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
-    <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
-    <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
-    <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
-    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
-    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
-    <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
+    <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
+    <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" data-i18n="tab_stats" data-i18n-title="tab_stats_title" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
+    <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" data-i18n="tab_style" data-i18n-title="tab_style_title" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
+    <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" data-i18n="tab_cite" data-i18n-title="tab_cite_title" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
+    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
+    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" data-i18n="tab_chat" data-i18n-title="tab_chat_title" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
+    <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" data-i18n="tab_slides" data-i18n-title="tab_slides_title" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
   </div>
 
     <section class="card tool-panel active" data-panel="psych"><div class="panel">
@@ -521,36 +525,36 @@
 </main>
 
 <dialog id="saveAsProjectDlg"><div class="dlg-body">
-  <h2>💾 Save as project</h2>
-  <p class="desc" style="margin:0 0 12px">Projects track which stage a piece of work is at, so the app can point you to the right tools. Nothing you've written moves or changes — this just labels it.</p>
+  <h2 data-i18n="sap_h2">💾 Save as project</h2>
+  <p class="desc" style="margin:0 0 12px" data-i18n="sap_desc">Projects track which stage a piece of work is at, so the app can point you to the right tools. Nothing you've written moves or changes — this just labels it.</p>
   <div>
-    <label style="font-weight:600;margin-right:16px"><input type="radio" name="sapMode" value="new" checked onchange="sapModeChange()"> New project</label>
-    <label style="font-weight:600"><input type="radio" name="sapMode" value="existing" onchange="sapModeChange()"> Add to an existing project</label>
+    <label style="font-weight:600;margin-right:16px"><input type="radio" name="sapMode" value="new" checked onchange="sapModeChange()"> <span data-i18n="sap_mode_new">New project</span></label>
+    <label style="font-weight:600"><input type="radio" name="sapMode" value="existing" onchange="sapModeChange()"> <span data-i18n="sap_mode_existing">Add to an existing project</span></label>
   </div>
   <div class="fld" id="sapNewFld">
-    <label for="sapName">Project name</label>
-    <input type="text" id="sapName" placeholder="e.g. Thesis on academic procrastination">
+    <label for="sapName" data-i18n="sap_name_label">Project name</label>
+    <input type="text" id="sapName" data-i18n-placeholder="sap_name_placeholder" placeholder="e.g. Thesis on academic procrastination">
   </div>
   <div class="fld" id="sapExistingFld" style="display:none">
-    <label for="sapExisting">Choose project</label>
+    <label for="sapExisting" data-i18n="sap_existing_label">Choose project</label>
     <select id="sapExisting"></select>
   </div>
   <div class="fld">
-    <label for="sapStage">Stage</label>
+    <label for="sapStage" data-i18n="sap_stage_label">Stage</label>
     <select id="sapStage"></select>
-    <p class="desc" style="margin:4px 0 0">Guessed from the tool you had open — change it if that's wrong.</p>
+    <p class="desc" style="margin:4px 0 0" data-i18n="sap_stage_desc">Guessed from the tool you had open — change it if that's wrong.</p>
   </div>
   <div class="row">
-    <button class="btn btn-purple" style="flex:1" onclick="saveAsProject()">Save</button>
-    <button class="btn btn-ghost" onclick="document.getElementById('saveAsProjectDlg').close()">Cancel</button>
+    <button class="btn btn-purple" style="flex:1" onclick="saveAsProject()" data-i18n="sap_save_btn">Save</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('saveAsProjectDlg').close()" data-i18n="sap_cancel_btn">Cancel</button>
   </div>
 </div></dialog>
 
 <dialog id="projectsDlg"><div class="dlg-body">
-  <h2>📁 Your projects</h2>
+  <h2 data-i18n="projects_dlg_h2">📁 Your projects</h2>
   <div id="projectsList"></div>
   <div class="row" style="margin-top:12px">
-    <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('projectsDlg').close()">Close</button>
+    <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('projectsDlg').close()" data-i18n="close_btn">Close</button>
   </div>
 </div></dialog>
 
@@ -752,6 +756,121 @@ const LS={
   rm(k){delete sessionKeys[k];try{localStorage.removeItem(k)}catch(e){}}
 };
 
+/* ============ Bilingual UI (batch one) — English + Hindi interface strings ============
+   Covers the chrome every student sees on every screen: header, project bar, document toolbar,
+   AI suggestion pane, tool tab bar, and the Save-as-project / Projects dialogs. Each tool panel's
+   own interior (Psychology Tools, Statistics, Citation Manager, Research, Chat, Slides, and the
+   Settings dialog's provider setup) still runs in English — those get translated panel by panel
+   as a follow-up, using this exact same I18N/t()/applyLang() mechanism, not new infrastructure.
+   Academic-content language (what the AI itself writes) is a separate, later piece (batch two). */
+const I18N={
+  en:{
+    help_btn:'❓ Help', settings_btn:'⚙ AI Provider / Key', theme_btn_title:'Light / dark',
+    project_bar_empty:'No project yet — working in scratch space',
+    save_as_project_btn:'💾 Save as project', projects_btn:'📁 Projects',
+    doc_pane_h2:'📝 Your Document', autosave_on:'Auto-save on',
+    download_btn:'⬇ Download', latex_btn:'⬇ LaTeX', latex_btn_title:'Export as a .tex file to paste into Overleaf',
+    doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
+    doc_import_btn:'📂 Import', doc_import_title:'Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor',
+    editor_placeholder:'Start writing here… Select text and press Improve, or just write and let AI continue.',
+    continue_btn:'✨ Continue Writing <kbd>Tab</kbd>', continue_btn_title:'AI writes the next ~120 words for you',
+    improve_btn:'💜 Improve selection', improve_btn_title:'Select some text first, then click to polish its grammar',
+    extend_btn:'➕ Extend', extend_btn_title:'Select some text first, then click to extend it',
+    template_btn:'🧱 Template', template_btn_title:'Insert a ready-made outline (lab report, essay, literature review)',
+    aitext_btn:'👁 AI text', aitext_btn_title:'Mark every AI-inserted passage directly in the document',
+    ai_pane_h3:'✨ AI Suggestion',
+    ai_pane_desc:'Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.',
+    ai_pane_placeholder:'Your AI suggestion will appear here…',
+    accept_btn:'Accept ✓', copy_btn:'Copy', dismiss_btn:'Dismiss',
+    tab_psych:'🧠 Psychology Tools', tab_psych_title:'Ready-made psychological tests, scales and scoring keys to drop into your questionnaire',
+    tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
+    tab_style:'✍ My Writing Style', tab_style_title:'Train the AI on samples of your own past writing so its suggestions sound like you',
+    tab_cite:'📚 Citation Manager', tab_cite_title:'Build and format your reference list — APA, MLA or Chicago — and insert in-text citations',
+    tab_research:'🔬 Research', tab_research_title:'Search academic databases for relevant papers, map how they cite each other, and draft a literature review',
+    tab_chat:'💬 Ask Appuscholar', tab_chat_title:"Ask a free-form question and get an AI answer, separate from the document you're writing",
+    tab_slides:'🖥 Make PPT', tab_slides_title:'Turn your document into a slide outline you can export as a PowerPoint',
+    sap_h2:'💾 Save as project',
+    sap_desc:"Projects track which stage a piece of work is at, so the app can point you to the right tools. Nothing you've written moves or changes — this just labels it.",
+    sap_mode_new:'New project', sap_mode_existing:'Add to an existing project',
+    sap_name_label:'Project name', sap_name_placeholder:'e.g. Thesis on academic procrastination',
+    sap_existing_label:'Choose project', sap_stage_label:'Stage',
+    sap_stage_desc:"Guessed from the tool you had open — change it if that's wrong.",
+    sap_save_btn:'Save', sap_cancel_btn:'Cancel',
+    projects_dlg_h2:'📁 Your projects', close_btn:'Close',
+    stage_idea:'Idea & Feasibility', stage_lit:'Literature', stage_design:'Design & Ethics',
+    stage_collect:'Collection & Analysis', stage_writing:'Writing', stage_review:'Review & Publish',
+    projects_empty:'No projects saved yet. Work normally, then use "Save as project" whenever you want to track a stage and come back to it later.',
+    project_complete_badge:'Complete', project_open_btn:'Open', project_reopen_btn:'Reopen',
+    project_complete_btn:'Mark complete', project_currently_open:'Currently open',
+    toast_no_existing_project:'No existing project to add to — try "New project" instead',
+    toast_moved_into:'Moved into ', toast_name_first:'Give the project a name first',
+    toast_saved_as:'Saved as project: ', toast_marked_complete:' marked complete', toast_reopened:' reopened',
+    sap_no_open_projects:'No open projects yet'
+  },
+  hi:{
+    help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
+    project_bar_empty:'अभी कोई प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
+    save_as_project_btn:'💾 प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 प्रोजेक्ट्स',
+    doc_pane_h2:'📝 आपका दस्तावेज़', autosave_on:'ऑटो-सेव चालू',
+    download_btn:'⬇ डाउनलोड करें', latex_btn:'⬇ LaTeX', latex_btn_title:'Overleaf में पेस्ट करने के लिए .tex फ़ाइल के रूप में निर्यात करें',
+    doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
+    doc_import_btn:'📂 आयात करें', doc_import_title:'.docx, .pdf, .txt या .html फ़ाइल को नए दस्तावेज़ के रूप में आयात करें — या एडिटर पर खींच कर छोड़ें',
+    editor_placeholder:'यहाँ लिखना शुरू करें… टेक्स्ट चुनें और "सुधारें" दबाएँ, या बस लिखें और AI को आगे बढ़ाने दें।',
+    continue_btn:'✨ लिखना जारी रखें <kbd>Tab</kbd>', continue_btn_title:'AI अगले लगभग 120 शब्द आपके लिए लिखता है',
+    improve_btn:'💜 चयन सुधारें', improve_btn_title:'पहले कुछ टेक्स्ट चुनें, फिर व्याकरण सुधारने के लिए क्लिक करें',
+    extend_btn:'➕ विस्तार करें', extend_btn_title:'पहले कुछ टेक्स्ट चुनें, फिर उसे बढ़ाने के लिए क्लिक करें',
+    template_btn:'🧱 टेम्पलेट', template_btn_title:'एक तैयार रूपरेखा डालें (लैब रिपोर्ट, निबंध, साहित्य समीक्षा)',
+    aitext_btn:'👁 AI टेक्स्ट', aitext_btn_title:'दस्तावेज़ में हर AI-लिखित अंश को चिह्नित करें',
+    ai_pane_h3:'✨ AI सुझाव',
+    ai_pane_desc:'अपने दस्तावेज़ में टेक्स्ट चुनें, फिर कोई बटन दबाएँ। स्वीकार करने के लिए एडिटर में <kbd>Tab</kbd> दबाएँ। <kbd>Ctrl</kbd>+<kbd>Z</kbd> इसे पूर्ववत करता है।',
+    ai_pane_placeholder:'आपका AI सुझाव यहाँ दिखाई देगा…',
+    accept_btn:'स्वीकार करें ✓', copy_btn:'कॉपी करें', dismiss_btn:'हटाएं',
+    tab_psych:'🧠 मनोविज्ञान उपकरण', tab_psych_title:'अपनी प्रश्नावली में जोड़ने के लिए तैयार मनोवैज्ञानिक परीक्षण, स्केल और स्कोरिंग कुंजियाँ',
+    tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
+    tab_style:'✍ मेरी लेखन शैली', tab_style_title:'AI को अपने पुराने लेखन के नमूनों पर प्रशिक्षित करें ताकि सुझाव आपकी शैली में हों',
+    tab_cite:'📚 उद्धरण प्रबंधक', tab_cite_title:'अपनी संदर्भ सूची बनाएं और प्रारूपित करें — APA, MLA या Chicago — और इन-टेक्स्ट उद्धरण जोड़ें',
+    tab_research:'🔬 शोध', tab_research_title:'प्रासंगिक शोध-पत्रों के लिए अकादमिक डेटाबेस खोजें, उनके परस्पर उद्धरण देखें, और साहित्य समीक्षा का मसौदा तैयार करें',
+    tab_chat:'💬 Appuscholar से पूछें', tab_chat_title:'अपने लिखे जा रहे दस्तावेज़ से अलग, स्वतंत्र रूप से कोई प्रश्न पूछें और AI से उत्तर पाएं',
+    tab_slides:'🖥 PPT बनाएं', tab_slides_title:'अपने दस्तावेज़ को स्लाइड रूपरेखा में बदलें जिसे PowerPoint के रूप में निर्यात किया जा सकता है',
+    sap_h2:'💾 प्रोजेक्ट के रूप में सहेजें',
+    sap_desc:'प्रोजेक्ट यह ट्रैक करते हैं कि काम किस चरण में है, ताकि ऐप आपको सही उपकरण दिखा सके। आपका लिखा हुआ कुछ भी बदलता नहीं — यह बस उसे लेबल करता है।',
+    sap_mode_new:'नया प्रोजेक्ट', sap_mode_existing:'किसी मौजूदा प्रोजेक्ट में जोड़ें',
+    sap_name_label:'प्रोजेक्ट का नाम', sap_name_placeholder:'उदाहरण: नींद और स्मृति पर थीसिस',
+    sap_existing_label:'प्रोजेक्ट चुनें', sap_stage_label:'चरण',
+    sap_stage_desc:'जो टूल खुला था उससे अनुमान लगाया गया है — गलत होने पर बदल दें।',
+    sap_save_btn:'सहेजें', sap_cancel_btn:'रद्द करें',
+    projects_dlg_h2:'📁 आपके प्रोजेक्ट्स', close_btn:'बंद करें',
+    stage_idea:'विचार और व्यवहार्यता', stage_lit:'साहित्य', stage_design:'डिज़ाइन और नैतिकता',
+    stage_collect:'संग्रह और विश्लेषण', stage_writing:'लेखन', stage_review:'समीक्षा और प्रकाशन',
+    projects_empty:'अभी तक कोई प्रोजेक्ट सहेजा नहीं गया है। सामान्य रूप से काम करें, फिर जब किसी चरण को ट्रैक करना हो और बाद में वापस आना हो तो "प्रोजेक्ट के रूप में सहेजें" का उपयोग करें।',
+    project_complete_badge:'पूर्ण', project_open_btn:'खोलें', project_reopen_btn:'फिर से खोलें',
+    project_complete_btn:'पूर्ण के रूप में चिह्नित करें', project_currently_open:'अभी खुला है',
+    toast_no_existing_project:'जोड़ने के लिए कोई मौजूदा प्रोजेक्ट नहीं — इसके बजाय "नया प्रोजेक्ट" आज़माएँ',
+    toast_moved_into:'इसमें ले जाया गया: ', toast_name_first:'पहले प्रोजेक्ट को नाम दें',
+    toast_saved_as:'प्रोजेक्ट के रूप में सहेजा गया: ', toast_marked_complete:' को पूर्ण के रूप में चिह्नित किया गया', toast_reopened:' फिर से खोला गया',
+    sap_no_open_projects:'अभी कोई खुला प्रोजेक्ट नहीं है'
+  }
+};
+function getLang(){const l=LS.get('appu_lang');return(l==='hi')?'hi':'en'}
+function t(key){const d=I18N[getLang()]||I18N.en;return(key in d)?d[key]:(I18N.en[key]||key)}
+function applyLang(){
+  const lang=getLang();
+  document.documentElement.setAttribute('lang',lang);
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.getAttribute('data-i18n'))});
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{el.setAttribute('title',t(el.getAttribute('data-i18n-title')))});
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const v=t(el.getAttribute('data-i18n-placeholder'));
+    if(el.hasAttribute('placeholder'))el.setAttribute('placeholder',v);else el.setAttribute('data-placeholder',v);
+  });
+  const btn=document.getElementById('langBtn');if(btn)btn.textContent=lang==='hi'?'हि':'EN';
+  if(typeof renderProjectBar==='function')renderProjectBar();
+}
+function toggleLang(){
+  LS.set('appu_lang',getLang()==='hi'?'en':'hi');
+  applyLang();
+  showToast(getLang()==='hi'?'भाषा: हिन्दी':'Language: English');
+}
+
 /* ============ FIX 16: PROVIDERS declared before anything reads it ============ */
 const PROVIDERS={
  gemini:{name:'Google Gemini',short:'Gemini',steps:'Sign in with Google → <b>Get API Key</b> → <b>Create API Key</b> → copy (starts with AIza). <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Open →</a>',model:'gemini-3.8-flash',fallbacks:['gemini-3.6-flash','gemini-2.5-flash']},
@@ -789,6 +908,7 @@ function toggleTheme(){const cur=document.documentElement.getAttribute('data-the
   ||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   const next=cur==='dark'?'light':'dark';LS.set('appu_theme',next);document.documentElement.setAttribute('data-theme',next);applyTheme()}
 applyTheme();
+applyLang();
 
 /* ============ Tool tabs (Psychology / Statistics / Style / Citations / Chat) ============ */
 function showTool(name){
@@ -836,21 +956,14 @@ applyPack();
    project whenever they're ready, new or into one already running. A project doesn't yet own its own
    document or tool data (that stays global); it's a stage/pack bookmark today, and the foundation the
    real per-stage tool view builds on as more stage-specific tools ship. */
-const STAGES=[
-  {id:'idea',label:'Idea & Feasibility'},
-  {id:'lit',label:'Literature'},
-  {id:'design',label:'Design & Ethics'},
-  {id:'collect',label:'Collection & Analysis'},
-  {id:'writing',label:'Writing'},
-  {id:'review',label:'Review & Publish'}
-];
+const STAGES=['idea','lit','design','collect','writing','review'];
 const TOOL_TO_STAGE={psych:'lit',research:'lit',stats:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
 
 function getProjects(){try{return JSON.parse(LS.get('appu_projects')||'[]')}catch(e){return []}}
 function saveProjectsList(list){LS.set('appu_projects',JSON.stringify(list))}
 function getActiveProjectId(){return LS.get('appu_active_project')||null}
 function getActiveProject(){const id=getActiveProjectId();return getProjects().find(p=>p.id===id)||null}
-function stageLabel(id){const s=STAGES.find(x=>x.id===id);return s?s.label:id}
+function stageLabel(id){return t('stage_'+id)}
 
 function setActiveProject(id){
   LS.set('appu_active_project',id||'');
@@ -863,17 +976,17 @@ function renderProjectBar(){
   const label=document.getElementById('projectBarLabel');
   if(!label)return;
   const p=getActiveProject();
-  if(!p){label.textContent='No project yet — working in scratch space';return}
+  if(!p){label.textContent=t('project_bar_empty');return}
   label.innerHTML=escHTML(p.name)+' <span class="badge">'+escHTML(stageLabel(p.stage))+'</span>'
-    +(p.status==='complete'?' <span class="badge" style="background:#16a34a;color:#fff">Complete</span>':'');
+    +(p.status==='complete'?' <span class="badge" style="background:#16a34a;color:#fff">'+escHTML(t('project_complete_badge'))+'</span>':'');
 }
 
 function openSaveAsProject(){
   const existing=getProjects().filter(p=>p.status!=='complete');
   const sel=document.getElementById('sapExisting');
-  sel.innerHTML=existing.length?existing.map(p=>'<option value="'+p.id+'">'+escHTML(p.name)+'</option>').join(''):'<option value="">No open projects yet</option>';
+  sel.innerHTML=existing.length?existing.map(p=>'<option value="'+p.id+'">'+escHTML(p.name)+'</option>').join(''):'<option value="">'+escHTML(t('sap_no_open_projects'))+'</option>';
   const stageSel=document.getElementById('sapStage');
-  stageSel.innerHTML=STAGES.map(s=>'<option value="'+s.id+'">'+escHTML(s.label)+'</option>').join('');
+  stageSel.innerHTML=STAGES.map(id=>'<option value="'+id+'">'+escHTML(stageLabel(id))+'</option>').join('');
   stageSel.value=TOOL_TO_STAGE[LS.get('appu_tool_tab')]||'idea';
   document.querySelector('input[name="sapMode"][value="new"]').checked=true;
   sapModeChange();
@@ -891,20 +1004,20 @@ function saveAsProject(){
   const list=getProjects();
   if(mode==='existing'){
     const id=document.getElementById('sapExisting').value;
-    if(!id){showToast('No existing project to add to — try "New project" instead');return}
+    if(!id){showToast(t('toast_no_existing_project'));return}
     const p=list.find(x=>x.id===id);
     p.stage=stage;p.updatedAt=Date.now();
     saveProjectsList(list);
     setActiveProject(id);
-    showToast('Moved into '+p.name);
+    showToast(t('toast_moved_into')+p.name);
   }else{
     const name=(document.getElementById('sapName').value||'').trim();
-    if(!name){showToast('Give the project a name first');return}
+    if(!name){showToast(t('toast_name_first'));return}
     const id='proj_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     list.push({id,name,stage,pack:getPack(),status:'active',createdAt:Date.now(),updatedAt:Date.now()});
     saveProjectsList(list);
     setActiveProject(id);
-    showToast('Saved as project: '+name);
+    showToast(t('toast_saved_as')+name);
   }
   document.getElementById('saveAsProjectDlg').close();
 }
@@ -913,19 +1026,19 @@ function openProjectsDlg(){
   const list=getProjects().sort((a,b)=>(a.status==='complete'?1:0)-(b.status==='complete'?1:0)||b.updatedAt-a.updatedAt);
   const box=document.getElementById('projectsList');
   if(!list.length){
-    box.innerHTML='<p class="desc">No projects saved yet. Work normally, then use "Save as project" whenever you want to track a stage and come back to it later.</p>';
+    box.innerHTML='<p class="desc">'+escHTML(t('projects_empty'))+'</p>';
   }else{
     box.innerHTML=list.map(p=>{
       const active=p.id===getActiveProjectId();
       return '<div class="fld" style="border:2px solid '+(active?'var(--purple-500)':'var(--line)')+';border-radius:9px;padding:10px;margin-bottom:8px">'
         +'<div style="display:flex;align-items:center;gap:8px"><strong>'+escHTML(p.name)+'</strong>'
-        +(p.status==='complete'?'<span class="badge" style="background:#16a34a;color:#fff">Complete</span>':'<span class="badge">'+escHTML(stageLabel(p.stage))+'</span>')+'</div>'
+        +(p.status==='complete'?'<span class="badge" style="background:#16a34a;color:#fff">'+escHTML(t('project_complete_badge'))+'</span>':'<span class="badge">'+escHTML(stageLabel(p.stage))+'</span>')+'</div>'
         +'<div class="row" style="margin-top:8px">'
-        +(active?'<span class="desc" style="align-self:center">Currently open</span>'
-                :'<button type="button" class="btn btn-ghost btn-sm" onclick="setActiveProject(\''+p.id+'\');document.getElementById(\'projectsDlg\').close()">Open</button>')
+        +(active?'<span class="desc" style="align-self:center">'+escHTML(t('project_currently_open'))+'</span>'
+                :'<button type="button" class="btn btn-ghost btn-sm" onclick="setActiveProject(\''+p.id+'\');document.getElementById(\'projectsDlg\').close()">'+escHTML(t('project_open_btn'))+'</button>')
         +(p.status==='complete'
-            ?'<button type="button" class="btn btn-ghost btn-sm" onclick="reopenProject(\''+p.id+'\')">Reopen</button>'
-            :'<button type="button" class="btn btn-ghost btn-sm" onclick="completeProject(\''+p.id+'\')">Mark complete</button>')
+            ?'<button type="button" class="btn btn-ghost btn-sm" onclick="reopenProject(\''+p.id+'\')">'+escHTML(t('project_reopen_btn'))+'</button>'
+            :'<button type="button" class="btn btn-ghost btn-sm" onclick="completeProject(\''+p.id+'\')">'+escHTML(t('project_complete_btn'))+'</button>')
         +'</div></div>';
     }).join('');
   }
@@ -934,13 +1047,13 @@ function openProjectsDlg(){
 function completeProject(id){
   const list=getProjects();const p=list.find(x=>x.id===id);if(!p)return;
   p.status='complete';p.updatedAt=Date.now();saveProjectsList(list);
-  showToast(p.name+' marked complete');
+  showToast(p.name+t('toast_marked_complete'));
   openProjectsDlg();renderProjectBar();
 }
 function reopenProject(id){
   const list=getProjects();const p=list.find(x=>x.id===id);if(!p)return;
   p.status='active';p.updatedAt=Date.now();saveProjectsList(list);
-  showToast(p.name+' reopened');
+  showToast(p.name+t('toast_reopened'));
   openProjectsDlg();renderProjectBar();
 }
 renderProjectBar();
