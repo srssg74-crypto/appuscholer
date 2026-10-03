@@ -360,166 +360,166 @@
   </div>
 
     <section class="card tool-panel active" data-panel="psych"><div class="panel">
-      <h3>🧠 Psychology Tools</h3>
-      <p class="desc">Select the text you want analyzed (or leave nothing selected to use the whole document).</p>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('paper')">📄 Summarize research paper</button></div>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('case')">🧠 Analyze case study</button></div>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('litrev')">📚 Literature review helper</button></div>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('explain')">💡 Explain concept simply</button></div>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('stats')">📊 Format results in APA</button></div>
-      <p class="desc" style="margin-top:10px">Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.</p>
+      <h3 data-i18n="tab_psych">🧠 Psychology Tools</h3>
+      <p class="desc" data-i18n="psych_panel_desc">Select the text you want analyzed (or leave nothing selected to use the whole document).</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('paper')" data-i18n="psych_btn_summarize">📄 Summarize research paper</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('case')" data-i18n="psych_btn_case">🧠 Analyze case study</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('litrev')" data-i18n="psych_btn_litrev">📚 Literature review helper</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('explain')" data-i18n="psych_btn_explain">💡 Explain concept simply</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('stats')" data-i18n="psych_btn_apa">📊 Format results in APA</button></div>
+      <p class="desc" style="margin-top:10px" data-i18n="psych_panel_note">Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.</p>
     </div></section>
 
     <section class="card tool-panel" data-panel="stats"><div class="panel">
-      <h3>📊 Statistics Lab</h3>
-      <p class="desc">Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.</p>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('statsDlg').showModal()">Open Statistics Lab</button></div>
-      <h3 style="margin-top:16px">📈 Charts</h3>
-      <p class="desc">Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.</p>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()">Open Chart Maker</button></div>
+      <h3 data-i18n="stats_panel_h3">📊 Statistics Lab</h3>
+      <p class="desc" data-i18n="stats_panel_desc">Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('statsDlg').showModal()" data-i18n="stats_open_btn">Open Statistics Lab</button></div>
+      <h3 style="margin-top:16px" data-i18n="stats_charts_h3">📈 Charts</h3>
+      <p class="desc" data-i18n="stats_charts_desc">Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()" data-i18n="stats_chart_open_btn">Open Chart Maker</button></div>
     </div></section>
 
     <section class="card tool-panel" data-panel="style"><div class="panel">
-      <h3>✍ My Writing Style</h3>
-      <p class="desc">Teach Appuscholar to write like YOU. Upload your files — Word, PDF or text.</p>
+      <h3 data-i18n="tab_style">✍ My Writing Style</h3>
+      <p class="desc" data-i18n="style_panel_desc">Teach Appuscholar to write like YOU. Upload your files — Word, PDF or text.</p>
       <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:10px;cursor:pointer">
-        <input type="checkbox" id="styleOn" onchange="styleToggle()" style="width:17px;height:17px;accent-color:#6d28d9"> <b>Use my style in suggestions</b>
+        <input type="checkbox" id="styleOn" onchange="styleToggle()" style="width:17px;height:17px;accent-color:#6d28d9"> <b data-i18n="style_use_label">Use my style in suggestions</b>
       </label>
-      <div class="fld"><label for="styleProfile">My style profile</label>
-        <textarea id="styleProfile" rows="4" placeholder="e.g. Warm, reflective tone. Medium-length sentences…"></textarea>
+      <div class="fld"><label for="styleProfile" data-i18n="style_profile_label">My style profile</label>
+        <textarea id="styleProfile" rows="4" placeholder="e.g. Warm, reflective tone. Medium-length sentences…" data-i18n-placeholder="style_profile_placeholder"></textarea>
       </div>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="styleAnalyze()">✨ Learn from my writing</button></div>
-      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('styleFiles').click()">📂 Learn from my files (up to 100)</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="styleAnalyze()" data-i18n="style_learn_btn">✨ Learn from my writing</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('styleFiles').click()" data-i18n="style_learn_files_btn">📂 Learn from my files (up to 100)</button></div>
       <input type="file" id="styleFiles" multiple accept=".txt,.md,.text,.markdown,.docx,.pdf" style="display:none" onchange="styleAnalyzeFiles(this)">
       <p class="desc" id="styleFileInfo" style="margin-top:6px"></p>
-      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="styleSave()">Save profile</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="styleSave()" data-i18n="style_save_btn">Save profile</button></div>
     </div></section>
 
     <section class="card tool-panel" data-panel="cite"><div class="panel">
-      <h3>📚 Citation Manager</h3>
-      <p class="desc">Add a source, then insert citations as you write.</p>
-      <div class="fld"><label for="citStyle">Citation style</label>
+      <h3 data-i18n="tab_cite">📚 Citation Manager</h3>
+      <p class="desc" data-i18n="cite_panel_desc">Add a source, then insert citations as you write.</p>
+      <div class="fld"><label for="citStyle" data-i18n="cite_style_label">Citation style</label>
         <select id="citStyle" onchange="citRender()"><option value="apa">APA (7th)</option><option value="mla">MLA (9th)</option><option value="chicago">Chicago</option></select>
       </div>
-      <div class="fld"><label for="citType">Source type</label>
-        <select id="citType" onchange="citRender()"><option>Journal article</option><option>Book</option><option>Website</option></select>
+      <div class="fld"><label for="citType" data-i18n="cite_type_label">Source type</label>
+        <select id="citType" onchange="citRender()"><option data-i18n="cite_type_journal">Journal article</option><option data-i18n="cite_type_book">Book</option><option data-i18n="cite_type_website">Website</option></select>
       </div>
-      <div class="fld"><label for="citAuthor">Author(s) — separate with ;</label><input type="text" id="citAuthor" placeholder="Miller, George A.; Smith, Jane B."></div>
+      <div class="fld"><label for="citAuthor" data-i18n="cite_author_label">Author(s) — separate with ;</label><input type="text" id="citAuthor" placeholder="Miller, George A.; Smith, Jane B."></div>
       <div style="display:flex;gap:8px">
-        <div class="fld" style="flex:1"><label for="citYear">Year</label><input type="text" id="citYear" placeholder="1956"></div>
-        <div class="fld" style="flex:2"><label for="citTitle">Title</label><input type="text" id="citTitle" placeholder="Title of work"></div>
+        <div class="fld" style="flex:1"><label for="citYear" data-i18n="cite_year_label">Year</label><input type="text" id="citYear" placeholder="1956"></div>
+        <div class="fld" style="flex:2"><label for="citTitle" data-i18n="cite_title_label">Title</label><input type="text" id="citTitle" placeholder="Title of work"></div>
       </div>
-      <div class="fld"><label for="citSource">Journal / Publisher / Website</label><input type="text" id="citSource" placeholder="e.g. Psychological Review"></div>
+      <div class="fld"><label for="citSource" data-i18n="cite_source_label">Journal / Publisher / Website</label><input type="text" id="citSource" placeholder="e.g. Psychological Review"></div>
       <div style="display:flex;gap:8px">
-        <div class="fld" style="flex:1"><label for="citVol">Volume</label><input type="text" id="citVol" placeholder="63"></div>
-        <div class="fld" style="flex:1"><label for="citIssue">Issue</label><input type="text" id="citIssue" placeholder="2"></div>
-        <div class="fld" style="flex:2"><label for="citPages">Pages</label><input type="text" id="citPages" placeholder="81–97"></div>
+        <div class="fld" style="flex:1"><label for="citVol" data-i18n="cite_vol_label">Volume</label><input type="text" id="citVol" placeholder="63"></div>
+        <div class="fld" style="flex:1"><label for="citIssue" data-i18n="cite_issue_label">Issue</label><input type="text" id="citIssue" placeholder="2"></div>
+        <div class="fld" style="flex:2"><label for="citPages" data-i18n="cite_pages_label">Pages</label><input type="text" id="citPages" placeholder="81–97"></div>
       </div>
       <div class="fld"><label for="citDOI">DOI</label><input type="text" id="citDOI" placeholder="10.1037/h0043158"></div>
-      <div class="fld"><label for="citURL">URL (only if there is no DOI)</label><input type="text" id="citURL" placeholder="https://…"></div>
-      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citLookup()">🔎 Look up by title (Crossref)</button></div>
+      <div class="fld"><label for="citURL" data-i18n="cite_url_label">URL (only if there is no DOI)</label><input type="text" id="citURL" placeholder="https://…"></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citLookup()" data-i18n="cite_lookup_btn">🔎 Look up by title (Crossref)</button></div>
       <div class="row">
-        <button class="btn btn-purple" style="flex:1" onclick="citInsert()">Insert citation</button>
-        <button class="btn btn-ghost" style="flex:1" onclick="citAdd()">+ Library</button>
+        <button class="btn btn-purple" style="flex:1" onclick="citInsert()" data-i18n="cite_insert_btn">Insert citation</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="citAdd()" data-i18n="cite_addlib_btn">+ Library</button>
       </div>
-      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citClearForm()">Clear form</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citClearForm()" data-i18n="cite_clear_btn">Clear form</button></div>
 
       <details style="margin-top:14px">
-        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">🔖 One-click capture from any page</summary>
-        <p class="desc" style="margin-top:8px">Like Zotero's browser button — drag this link to your bookmarks bar once. Then, on any journal article, PubMed or arXiv page, click it to send that page's citation straight into your library here.</p>
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="cite_bookmarklet_summary">🔖 One-click capture from any page</summary>
+        <p class="desc" style="margin-top:8px" data-i18n="cite_bookmarklet_desc">Like Zotero's browser button — drag this link to your bookmarks bar once. Then, on any journal article, PubMed or arXiv page, click it to send that page's citation straight into your library here.</p>
         <p style="text-align:center;margin:10px 0">
-          <a id="citBookmarklet" href="#" class="btn btn-gold" style="display:inline-block;text-decoration:none" onclick="return false" draggable="true">🔖 Capture to Appuscholar</a>
+          <a id="citBookmarklet" href="#" class="btn btn-gold" style="display:inline-block;text-decoration:none" onclick="return false" draggable="true" data-i18n="cite_bookmarklet_btn">🔖 Capture to Appuscholar</a>
         </p>
-        <p class="desc">Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.</p>
+        <p class="desc" data-i18n="cite_bookmarklet_note">Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.</p>
       </details>
 
-      <h3 style="margin-top:14px">🗂 My library <span class="badge" id="citCount">0</span></h3>
-      <div id="citLib" style="margin-top:8px"><p class="desc">No sources yet.</p></div>
-      <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()">Insert reference list</button></div>
-      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="psychLoadStarters()">📖 Load classic psychology sources</button></div>
+      <h3 style="margin-top:14px"><span data-i18n="cite_library_h3">🗂 My library</span> <span class="badge" id="citCount">0</span></h3>
+      <div id="citLib" style="margin-top:8px"><p class="desc" data-i18n="cite_no_sources">No sources yet.</p></div>
+      <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()" data-i18n="cite_insertbib_btn">Insert reference list</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="psychLoadStarters()" data-i18n="cite_loadclassics_btn">📖 Load classic psychology sources</button></div>
       <div class="row">
-        <button class="btn btn-ghost" style="flex:1" onclick="citExport()">⬆ Export library</button>
-        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('citImportFile').click()">⬇ Import library</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="citExport()" data-i18n="cite_export_btn">⬆ Export library</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('citImportFile').click()" data-i18n="cite_import_btn">⬇ Import library</button>
       </div>
       <input type="file" id="citImportFile" accept=".json,application/json" style="display:none" onchange="citImport(this)">
-      <p class="desc" style="margin-top:10px">🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.</p>
+      <p class="desc" style="margin-top:10px" data-i18n="cite_sharing_note">🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.</p>
     </div></section>
 
     <section class="card tool-panel" data-panel="research"><div class="panel">
-      <h3>🔬 Research</h3>
-      <p class="desc">Search OpenAlex and PubMed live, free, no install — pick what's relevant, then draft a literature review or find a research gap, grounded only in the abstracts you found.</p>
-      <div class="fld"><label for="rsTopic">Search topic or question</label>
+      <h3 data-i18n="tab_research">🔬 Research</h3>
+      <p class="desc" data-i18n="research_panel_desc">Search OpenAlex and PubMed live, free, no install — pick what's relevant, then draft a literature review or find a research gap, grounded only in the abstracts you found.</p>
+      <div class="fld"><label for="rsTopic" data-i18n="research_topic_label">Search topic or question</label>
         <input type="text" id="rsTopic" placeholder="e.g. social media use and adolescent anxiety"></div>
       <div class="row" style="flex-wrap:wrap;gap:14px;font-size:12.5px;margin-bottom:4px">
-        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcOA" checked style="accent-color:#6d28d9">OpenAlex (incl. arXiv/preprints)</label>
-        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcPubmed" checked style="accent-color:#6d28d9">PubMed</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcOA" checked style="accent-color:#6d28d9"><span data-i18n="research_src_openalex">OpenAlex (incl. arXiv/preprints)</span></label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcPubmed" checked style="accent-color:#6d28d9"><span data-i18n="research_src_pubmed">PubMed</span></label>
       </div>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="researchSearch()">🔎 Find relevant papers</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="researchSearch()" data-i18n="research_find_btn">🔎 Find relevant papers</button></div>
       <p class="desc" id="rsStatus" style="margin-top:8px"></p>
       <div id="rsSortRow" style="display:none;margin:4px 0 8px;font-size:12.5px;align-items:center;gap:8px" class="row">
-        <label for="rsSort" style="font-weight:700;color:var(--muted)">Sort by</label>
+        <label for="rsSort" style="font-weight:700;color:var(--muted)" data-i18n="research_sort_label">Sort by</label>
         <select id="rsSort" onchange="rsApplySort()" style="padding:5px 8px;border-radius:8px;border:2px solid var(--line);font-size:12.5px">
-          <option value="relevance">Relevance (as returned)</option>
-          <option value="citations">Most cited</option>
-          <option value="year">Newest first</option>
+          <option value="relevance" data-i18n="research_sort_relevance">Relevance (as returned)</option>
+          <option value="citations" data-i18n="research_sort_citations">Most cited</option>
+          <option value="year" data-i18n="research_sort_year">Newest first</option>
         </select>
       </div>
       <div id="rsResults" style="margin-top:8px"></div>
 
       <div id="rsActions" style="display:none;margin-top:12px">
-        <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchLitReview()">📝 Draft literature review paragraph</button></div>
-        <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchGapFinder()">🕳 Find a research gap</button></div>
-        <p class="desc" style="margin-top:6px">Drafted strictly from the papers you checked above — always verify the actual sources before citing them.</p>
+        <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchLitReview()" data-i18n="research_litreview_btn">📝 Draft literature review paragraph</button></div>
+        <div class="row"><button class="btn btn-gold" style="flex:1" onclick="researchGapFinder()" data-i18n="research_gapfinder_btn">🕳 Find a research gap</button></div>
+        <p class="desc" style="margin-top:6px" data-i18n="research_grounded_note">Drafted strictly from the papers you checked above — always verify the actual sources before citing them.</p>
       </div>
 
       <details style="margin-top:14px">
-        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">🌐 Not finding it? Search Google Scholar and others directly</summary>
-        <p class="desc" style="margin-top:8px">Google Scholar, JSTOR and most publisher sites don't allow apps like this one to fetch results automatically — they have to be searched in your browser. These open a new tab with your topic already typed in.</p>
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="research_external_summary">🌐 Not finding it? Search Google Scholar and others directly</summary>
+        <p class="desc" style="margin-top:8px" data-i18n="research_external_desc">Google Scholar, JSTOR and most publisher sites don't allow apps like this one to fetch results automatically — they have to be searched in your browser. These open a new tab with your topic already typed in.</p>
         <div class="row" style="flex-wrap:wrap;gap:8px">
-          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('scholar')" title="Opens scholar.google.com with your topic pre-filled">🎓 Google Scholar</button>
-          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('jstor')" title="Opens jstor.org with your topic pre-filled">📖 JSTOR</button>
-          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('sciencedirect')" title="Opens sciencedirect.com with your topic pre-filled">🧪 ScienceDirect</button>
-          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('base')" title="Opens BASE (Bielefeld Academic Search Engine) — a large free multidisciplinary index">🔎 BASE</button>
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('scholar')" title="Opens scholar.google.com with your topic pre-filled" data-i18n="research_ext_scholar">🎓 Google Scholar</button>
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('jstor')" title="Opens jstor.org with your topic pre-filled" data-i18n="research_ext_jstor">📖 JSTOR</button>
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('sciencedirect')" title="Opens sciencedirect.com with your topic pre-filled" data-i18n="research_ext_sciencedirect">🧪 ScienceDirect</button>
+          <button type="button" class="btn btn-ghost" onclick="rsOpenExternal('base')" title="Opens BASE (Bielefeld Academic Search Engine) — a large free multidisciplinary index" data-i18n="research_ext_base">🔎 BASE</button>
         </div>
       </details>
 
       <details style="margin-top:10px">
-        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">➕ Add a paper you found elsewhere</summary>
-        <p class="desc" style="margin-top:8px">Found something on Google Scholar or a journal site? Enter its details here to drop it straight into your Citation Manager library.</p>
-        <div class="fld"><label for="rsManTitle">Title</label><input type="text" id="rsManTitle" placeholder="Paper title"></div>
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="research_manual_summary">➕ Add a paper you found elsewhere</summary>
+        <p class="desc" style="margin-top:8px" data-i18n="research_manual_desc">Found something on Google Scholar or a journal site? Enter its details here to drop it straight into your Citation Manager library.</p>
+        <div class="fld"><label for="rsManTitle" data-i18n="research_man_title_label">Title</label><input type="text" id="rsManTitle" placeholder="Paper title"></div>
         <div style="display:flex;gap:10px">
-          <div class="fld" style="flex:2"><label for="rsManAuthor">Authors</label><input type="text" id="rsManAuthor" placeholder="Last, F. M.; Last, F. M."></div>
-          <div class="fld" style="flex:1"><label for="rsManYear">Year</label><input type="text" id="rsManYear" placeholder="2026"></div>
+          <div class="fld" style="flex:2"><label for="rsManAuthor" data-i18n="research_man_author_label">Authors</label><input type="text" id="rsManAuthor" placeholder="Last, F. M.; Last, F. M."></div>
+          <div class="fld" style="flex:1"><label for="rsManYear" data-i18n="research_man_year_label">Year</label><input type="text" id="rsManYear" placeholder="2026"></div>
         </div>
         <div style="display:flex;gap:10px">
-          <div class="fld" style="flex:1"><label for="rsManSource">Journal / source</label><input type="text" id="rsManSource" placeholder="Journal name"></div>
-          <div class="fld" style="flex:1"><label for="rsManDoi">DOI or URL</label><input type="text" id="rsManDoi" placeholder="10.xxxx/... or https://…"></div>
+          <div class="fld" style="flex:1"><label for="rsManSource" data-i18n="research_man_source_label">Journal / source</label><input type="text" id="rsManSource" placeholder="Journal name"></div>
+          <div class="fld" style="flex:1"><label for="rsManDoi" data-i18n="research_man_doi_label">DOI or URL</label><input type="text" id="rsManDoi" placeholder="10.xxxx/... or https://…"></div>
         </div>
-        <div class="row"><button class="btn btn-purple" style="flex:1" onclick="rsAddManual()">Add to citation library</button></div>
+        <div class="row"><button class="btn btn-purple" style="flex:1" onclick="rsAddManual()" data-i18n="research_man_add_btn">Add to citation library</button></div>
       </details>
 
       <details style="margin-top:10px">
-        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">🔗 Connected papers</summary>
-        <p class="desc" style="margin-top:8px">Pick one OpenAlex paper above and see what it cites and what has cited it — a quick way to trace a research thread.</p>
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="research_connected_summary">🔗 Connected papers</summary>
+        <p class="desc" style="margin-top:8px" data-i18n="research_connected_desc">Pick one OpenAlex paper above and see what it cites and what has cited it — a quick way to trace a research thread.</p>
         <div id="rsConnected"></div>
       </details>
     </div></section>
 
     <section class="card tool-panel" data-panel="chat"><div class="panel">
-      <h3>💬 Ask Appuscholar</h3>
-      <p class="desc">Your purple study buddy — ask anything about your writing. Each reply has an "Insert into document" button.</p>
+      <h3 data-i18n="tab_chat">💬 Ask Appuscholar</h3>
+      <p class="desc" data-i18n="chat_panel_desc">Your purple study buddy — ask anything about your writing. Each reply has an "Insert into document" button.</p>
       <div id="chatLog"></div>
-      <input type="text" id="chatIn" placeholder="Ask… e.g. Give me 3 title ideas">
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="askAI()">Send ➤</button></div>
+      <input type="text" id="chatIn" placeholder="Ask… e.g. Give me 3 title ideas" data-i18n-placeholder="chat_input_placeholder">
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="askAI()" data-i18n="chat_send_btn">Send ➤</button></div>
     </div></section>
 
     <section class="card tool-panel" data-panel="slides"><div class="panel">
-      <h3>🖥 Make a PPT from this document</h3>
-      <p class="desc">Uses your Heading 1 / Heading 2 styles as slide breaks — the text under each heading becomes bullet points, and any picture becomes its own slide. Add headings in the formatting bar above if you haven't yet.</p>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pptxBuildPreview()">Generate slide preview</button></div>
+      <h3 data-i18n="slides_panel_h3">🖥 Make a PPT from this document</h3>
+      <p class="desc" data-i18n="slides_panel_desc">Uses your Heading 1 / Heading 2 styles as slide breaks — the text under each heading becomes bullet points, and any picture becomes its own slide. Add headings in the formatting bar above if you haven't yet.</p>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pptxBuildPreview()" data-i18n="slides_generate_btn">Generate slide preview</button></div>
       <div id="pptxPreview" style="margin-top:12px"></div>
       <div class="row" id="pptxDownloadRow" style="margin-top:10px;display:none">
-        <button class="btn btn-gold" style="flex:1" onclick="pptxDownload()">⬇ Download as PowerPoint (.pptx)</button>
+        <button class="btn btn-gold" style="flex:1" onclick="pptxDownload()" data-i18n="slides_download_btn">⬇ Download as PowerPoint (.pptx)</button>
       </div>
     </div></section>
 </main>
@@ -570,9 +570,9 @@
 </div></dialog>
 
 <dialog id="settingsDlg"><div class="dlg-body">
-  <h2>🔑 Choose your AI provider</h2>
-  <p style="font-size:13px;color:var(--muted)">Pick one. Your key is saved in this browser and sent only to the provider you choose.</p>
-  <label for="provSel" style="font-size:13px;font-weight:700;color:var(--head-title)">AI Provider</label>
+  <h2 data-i18n="settings_h2">🔑 Choose your AI provider</h2>
+  <p style="font-size:13px;color:var(--muted)" data-i18n="settings_intro">Pick one. Your key is saved in this browser and sent only to the provider you choose.</p>
+  <label for="provSel" style="font-size:13px;font-weight:700;color:var(--head-title)" data-i18n="settings_provider_label">AI Provider</label>
   <select id="provSel" onchange="provHelp()" style="width:100%;padding:12px;margin:8px 0;border:2px solid var(--line);border-radius:10px;font-size:14px">
     <option value="gemini">Google Gemini — free, easiest</option>
     <option value="groq">Groq — free &amp; very fast</option>
@@ -582,60 +582,60 @@
     <option value="claude">Claude (Anthropic) — paid</option>
   </select>
   <div id="provHelp" style="font-size:13px;background:var(--soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;line-height:1.7"></div>
-  <input type="text" id="keyIn" placeholder="Paste your API key here">
-  <div class="fld" style="margin-top:12px"><label for="keyMode">How should this key be stored?</label>
+  <input type="text" id="keyIn" placeholder="Paste your API key here" data-i18n-placeholder="settings_keyin_placeholder">
+  <div class="fld" style="margin-top:12px"><label for="keyMode" data-i18n="settings_keymode_label">How should this key be stored?</label>
     <select id="keyMode" onchange="keyModeNote()">
-      <option value="pass">🔒 Protect with a passphrase — safest (type it once per session)</option>
-      <option value="plain">Remember on this computer — easiest, no passphrase</option>
-      <option value="session">This tab only — forget when I close it (college computer)</option>
+      <option value="pass" data-i18n="settings_keymode_pass">🔒 Protect with a passphrase — safest (type it once per session)</option>
+      <option value="plain" data-i18n="settings_keymode_plain">Remember on this computer — easiest, no passphrase</option>
+      <option value="session" data-i18n="settings_keymode_session">This tab only — forget when I close it (college computer)</option>
     </select>
   </div>
   <p class="desc" id="keyModeHint" style="margin:6px 0 0"></p>
   <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
-    <label for="orcidIn">Your ORCID iD (optional — printed on exports and templates)</label>
+    <label for="orcidIn" data-i18n="settings_orcid_label">Your ORCID iD (optional — printed on exports and templates)</label>
     <input type="text" id="orcidIn" placeholder="0000-0000-0000-0000" oninput="orcidSave(this.value)">
-    <p class="desc" style="margin:4px 0 0"><a href="https://orcid.org/register" target="_blank" rel="noopener">Don't have one? Get a free ORCID iD →</a></p>
+    <p class="desc" style="margin:4px 0 0"><a href="https://orcid.org/register" target="_blank" rel="noopener" data-i18n="settings_orcid_link">Don't have one? Get a free ORCID iD →</a></p>
   </div>
   <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
-    <label for="packSel">Specialty pack</label>
+    <label for="packSel" data-i18n="settings_pack_label">Specialty pack</label>
     <select id="packSel" onchange="setPack(this.value)">
-      <option value="general">General research — core tools only</option>
-      <option value="psychology">Psychology — adds the Psychology Tools tab</option>
+      <option value="general" data-i18n="settings_pack_general">General research — core tools only</option>
+      <option value="psychology" data-i18n="settings_pack_psychology">Psychology — adds the Psychology Tools tab</option>
     </select>
-    <p class="desc" style="margin:4px 0 0">The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.</p>
+    <p class="desc" style="margin:4px 0 0" data-i18n="settings_pack_desc">The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.</p>
   </div>
   <div class="row" style="margin-top:12px">
-    <button class="btn btn-purple" style="flex:1" onclick="saveKey()">Save Key</button>
-    <button class="btn btn-ghost" onclick="removeKey()">Remove key</button>
-    <button class="btn btn-ghost" onclick="document.getElementById('settingsDlg').close()">Close</button>
+    <button class="btn btn-purple" style="flex:1" onclick="saveKey()" data-i18n="settings_savekey_btn">Save Key</button>
+    <button class="btn btn-ghost" onclick="removeKey()" data-i18n="settings_removekey_btn">Remove key</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('settingsDlg').close()" data-i18n="close_btn">Close</button>
   </div>
   <p style="font-size:12px;color:var(--muted)" id="activeProv"></p>
-  <p class="warn" style="margin-top:10px">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
+  <p class="warn" style="margin-top:10px" data-i18n="settings_warn">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
 </div></dialog>
 
 <dialog id="welcomeDlg"><div class="dlg-body">
-  <h2>💜 Welcome to Appuscholar</h2>
-  <p style="font-size:14px;line-height:1.7;color:var(--ink)">A writing and research assistant, with a Psychology Tools pack built in. Everything you write stays on this computer.</p>
+  <h2 data-i18n="welcome_h2">💜 Welcome to Appuscholar</h2>
+  <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="welcome_intro">A writing and research assistant, with a Psychology Tools pack built in. Everything you write stays on this computer.</p>
   <ol>
-    <li>Click <b>⚙ AI Provider / Key</b> at the top right.</li>
-    <li>Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.</li>
-    <li>Follow the link, create a key, paste it in, press <b>Save Key</b>.</li>
-    <li>Start writing. Press <kbd>Tab</kbd> to accept a suggestion.</li>
+    <li data-i18n="welcome_step1">Click <b>⚙ AI Provider / Key</b> at the top right.</li>
+    <li data-i18n="welcome_step2">Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.</li>
+    <li data-i18n="welcome_step3">Follow the link, create a key, paste it in, press <b>Save Key</b>.</li>
+    <li data-i18n="welcome_step4">Start writing. Press <kbd>Tab</kbd> to accept a suggestion.</li>
   </ol>
-  <p class="warn">Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
+  <p class="warn" data-i18n="welcome_warn">Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
   <div class="row" style="margin-top:14px">
-    <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();openSettings()">Set up my key</button>
-    <button class="btn btn-ghost" onclick="document.getElementById('welcomeDlg').close()">Later</button>
+    <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();openSettings()" data-i18n="welcome_setup_btn">Set up my key</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('welcomeDlg').close()" data-i18n="welcome_later_btn">Later</button>
   </div>
 </div></dialog>
 
 <dialog id="loginDlg"><div class="dlg-body">
-  <h2>🔑 Appuscholar Access</h2>
-  <p style="font-size:14px;line-height:1.7;color:var(--ink)">This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.</p>
-  <textarea id="loginInput" rows="3" placeholder="Paste your access code here" style="width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;font-size:13px;font-family:monospace;color:var(--ink);background:var(--card)"></textarea>
+  <h2 data-i18n="login_h2">🔑 Appuscholar Access</h2>
+  <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="login_intro">This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.</p>
+  <textarea id="loginInput" rows="3" placeholder="Paste your access code here" data-i18n-placeholder="login_placeholder" style="width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;font-size:13px;font-family:monospace;color:var(--ink);background:var(--card)"></textarea>
   <p style="min-height:18px;font-size:12.5px;color:#dc2626;margin:8px 0 0" id="loginMsg"></p>
-  <div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" id="loginSubmit">Unlock</button></div>
-  <p class="desc" style="margin-top:10px">Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one.</p>
+  <div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" id="loginSubmit" data-i18n="login_unlock_btn">Unlock</button></div>
+  <p class="desc" style="margin-top:10px" data-i18n="login_note">Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one.</p>
 </div></dialog>
 
 <dialog id="statsDlg" class="dlg-wide"><div class="dlg-body">
@@ -805,7 +805,86 @@ const I18N={
     toast_no_existing_project:'No existing project to add to — try "New project" instead',
     toast_moved_into:'Moved into ', toast_name_first:'Give the project a name first',
     toast_saved_as:'Saved as project: ', toast_marked_complete:' marked complete', toast_reopened:' reopened',
-    sap_no_open_projects:'No open projects yet'
+    sap_no_open_projects:'No open projects yet',
+    psych_panel_desc:'Select the text you want analyzed (or leave nothing selected to use the whole document).',
+    psych_btn_summarize:'📄 Summarize research paper', psych_btn_case:'🧠 Analyze case study',
+    psych_btn_litrev:'📚 Literature review helper', psych_btn_explain:'💡 Explain concept simply',
+    psych_btn_apa:'📊 Format results in APA',
+    psych_panel_note:'Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.',
+    stats_panel_h3:'📊 Statistics Lab',
+    stats_panel_desc:'Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.',
+    stats_open_btn:'Open Statistics Lab', stats_charts_h3:'📈 Charts',
+    stats_charts_desc:'Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.',
+    stats_chart_open_btn:'Open Chart Maker',
+    style_panel_desc:'Teach Appuscholar to write like YOU. Upload your files — Word, PDF or text.',
+    style_use_label:'Use my style in suggestions', style_profile_label:'My style profile',
+    style_profile_placeholder:'e.g. Warm, reflective tone. Medium-length sentences…',
+    style_learn_btn:'✨ Learn from my writing', style_learn_files_btn:'📂 Learn from my files (up to 100)',
+    style_save_btn:'Save profile',
+    cite_panel_desc:'Add a source, then insert citations as you write.',
+    cite_style_label:'Citation style', cite_type_label:'Source type',
+    cite_type_journal:'Journal article', cite_type_book:'Book', cite_type_website:'Website',
+    cite_author_label:'Author(s) — separate with ;', cite_year_label:'Year', cite_title_label:'Title',
+    cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
+    cite_pages_label:'Pages', cite_url_label:'URL (only if there is no DOI)',
+    cite_lookup_btn:'🔎 Look up by title (Crossref)', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
+    cite_clear_btn:'Clear form', cite_bookmarklet_summary:'🔖 One-click capture from any page',
+    cite_bookmarklet_desc:"Like Zotero's browser button — drag this link to your bookmarks bar once. Then, on any journal article, PubMed or arXiv page, click it to send that page's citation straight into your library here.",
+    cite_bookmarklet_btn:'🔖 Capture to Appuscholar',
+    cite_bookmarklet_note:"Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.",
+    cite_library_h3:'🗂 My library', cite_no_sources:'No sources yet.',
+    cite_insertbib_btn:'Insert reference list', cite_loadclassics_btn:'📖 Load classic psychology sources',
+    cite_export_btn:'⬆ Export library', cite_import_btn:'⬇ Import library',
+    cite_sharing_note:'🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.',
+    research_panel_desc:"Search OpenAlex and PubMed live, free, no install — pick what's relevant, then draft a literature review or find a research gap, grounded only in the abstracts you found.",
+    research_topic_label:'Search topic or question',
+    research_src_openalex:'OpenAlex (incl. arXiv/preprints)', research_src_pubmed:'PubMed',
+    research_find_btn:'🔎 Find relevant papers', research_sort_label:'Sort by',
+    research_sort_relevance:'Relevance (as returned)', research_sort_citations:'Most cited', research_sort_year:'Newest first',
+    research_litreview_btn:'📝 Draft literature review paragraph', research_gapfinder_btn:'🕳 Find a research gap',
+    research_grounded_note:'Drafted strictly from the papers you checked above — always verify the actual sources before citing them.',
+    research_external_summary:'🌐 Not finding it? Search Google Scholar and others directly',
+    research_external_desc:"Google Scholar, JSTOR and most publisher sites don't allow apps like this one to fetch results automatically — they have to be searched in your browser. These open a new tab with your topic already typed in.",
+    research_ext_scholar:'🎓 Google Scholar', research_ext_jstor:'📖 JSTOR',
+    research_ext_sciencedirect:'🧪 ScienceDirect', research_ext_base:'🔎 BASE',
+    research_manual_summary:'➕ Add a paper you found elsewhere',
+    research_manual_desc:'Found something on Google Scholar or a journal site? Enter its details here to drop it straight into your Citation Manager library.',
+    research_man_title_label:'Title', research_man_author_label:'Authors', research_man_year_label:'Year',
+    research_man_source_label:'Journal / source', research_man_doi_label:'DOI or URL',
+    research_man_add_btn:'Add to citation library',
+    research_connected_summary:'🔗 Connected papers',
+    research_connected_desc:'Pick one OpenAlex paper above and see what it cites and what has cited it — a quick way to trace a research thread.',
+    chat_panel_desc:'Your purple study buddy — ask anything about your writing. Each reply has an "Insert into document" button.',
+    chat_input_placeholder:'Ask… e.g. Give me 3 title ideas', chat_send_btn:'Send ➤',
+    slides_panel_h3:'🖥 Make a PPT from this document',
+    slides_panel_desc:"Uses your Heading 1 / Heading 2 styles as slide breaks — the text under each heading becomes bullet points, and any picture becomes its own slide. Add headings in the formatting bar above if you haven't yet.",
+    slides_generate_btn:'Generate slide preview', slides_download_btn:'⬇ Download as PowerPoint (.pptx)',
+    settings_h2:'🔑 Choose your AI provider',
+    settings_intro:'Pick one. Your key is saved in this browser and sent only to the provider you choose.',
+    settings_provider_label:'AI Provider', settings_keyin_placeholder:'Paste your API key here',
+    settings_keymode_label:'How should this key be stored?',
+    settings_keymode_pass:'🔒 Protect with a passphrase — safest (type it once per session)',
+    settings_keymode_plain:'Remember on this computer — easiest, no passphrase',
+    settings_keymode_session:'This tab only — forget when I close it (college computer)',
+    settings_orcid_label:'Your ORCID iD (optional — printed on exports and templates)',
+    settings_orcid_link:"Don't have one? Get a free ORCID iD →",
+    settings_pack_label:'Specialty pack', settings_pack_general:'General research — core tools only',
+    settings_pack_psychology:'Psychology — adds the Psychology Tools tab',
+    settings_pack_desc:'The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.',
+    settings_savekey_btn:'Save Key', settings_removekey_btn:'Remove key',
+    settings_warn:'⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.',
+    welcome_h2:'💜 Welcome to Appuscholar',
+    welcome_intro:'A writing and research assistant, with a Psychology Tools pack built in. Everything you write stays on this computer.',
+    welcome_step1:'Click <b>⚙ AI Provider / Key</b> at the top right.',
+    welcome_step2:'Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.',
+    welcome_step3:'Follow the link, create a key, paste it in, press <b>Save Key</b>.',
+    welcome_step4:'Start writing. Press <kbd>Tab</kbd> to accept a suggestion.',
+    welcome_warn:"Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.",
+    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later',
+    login_h2:'🔑 Appuscholar Access',
+    login_intro:"This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.",
+    login_placeholder:'Paste your access code here', login_unlock_btn:'Unlock',
+    login_note:"Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one."
   },
   hi:{
     help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
@@ -848,7 +927,86 @@ const I18N={
     toast_no_existing_project:'जोड़ने के लिए कोई मौजूदा प्रोजेक्ट नहीं — इसके बजाय "नया प्रोजेक्ट" आज़माएँ',
     toast_moved_into:'इसमें ले जाया गया: ', toast_name_first:'पहले प्रोजेक्ट को नाम दें',
     toast_saved_as:'प्रोजेक्ट के रूप में सहेजा गया: ', toast_marked_complete:' को पूर्ण के रूप में चिह्नित किया गया', toast_reopened:' फिर से खोला गया',
-    sap_no_open_projects:'अभी कोई खुला प्रोजेक्ट नहीं है'
+    sap_no_open_projects:'अभी कोई खुला प्रोजेक्ट नहीं है',
+    psych_panel_desc:'जिस टेक्स्ट का विश्लेषण करना है उसे चुनें (या पूरे दस्तावेज़ का उपयोग करने के लिए कुछ भी न चुनें)।',
+    psych_btn_summarize:'📄 शोध-पत्र का सारांश बनाएं', psych_btn_case:'🧠 केस स्टडी का विश्लेषण करें',
+    psych_btn_litrev:'📚 साहित्य समीक्षा सहायक', psych_btn_explain:'💡 अवधारणा को सरलता से समझाएं',
+    psych_btn_apa:'📊 परिणामों को APA में प्रारूपित करें',
+    psych_panel_note:'कच्चा SPSS / JASP / R आउटपुट पेस्ट करें और सही APA 7वें संस्करण की रिपोर्टिंग पाने के लिए <b>परिणामों को APA में प्रारूपित करें</b> का उपयोग करें।',
+    stats_panel_h3:'📊 सांख्यिकी लैब',
+    stats_panel_desc:'अपना डेटा पेस्ट करें, एक परीक्षण चुनें, वास्तविक परिणाम पाएं — t, F, χ², r, p, प्रभाव आकार — साथ ही APA-तैयार वाक्य। यह आपके ब्राउज़र में चलता है; कुछ भी अपलोड नहीं होता।',
+    stats_open_btn:'सांख्यिकी लैब खोलें', stats_charts_h3:'📈 चार्ट',
+    stats_charts_desc:'अपने ही आंकड़ों से बार/लाइन चार्ट बनाएं, या 2 या 3 वृत्तों वाला वेन डायग्राम — फिर उसे सीधे अपने दस्तावेज़ में डालें।',
+    stats_chart_open_btn:'चार्ट मेकर खोलें',
+    style_panel_desc:'Appuscholar को आपकी तरह लिखना सिखाएं। अपनी फ़ाइलें अपलोड करें — Word, PDF या टेक्स्ट।',
+    style_use_label:'सुझावों में मेरी शैली का उपयोग करें', style_profile_label:'मेरी लेखन शैली प्रोफ़ाइल',
+    style_profile_placeholder:'उदाहरण: गर्मजोशी भरा, चिंतनशील लहजा। मध्यम लंबाई के वाक्य…',
+    style_learn_btn:'✨ मेरे लेखन से सीखें', style_learn_files_btn:'📂 मेरी फ़ाइलों से सीखें (100 तक)',
+    style_save_btn:'प्रोफ़ाइल सहेजें',
+    cite_panel_desc:'एक स्रोत जोड़ें, फिर लिखते समय उद्धरण डालें।',
+    cite_style_label:'उद्धरण शैली', cite_type_label:'स्रोत प्रकार',
+    cite_type_journal:'जर्नल लेख', cite_type_book:'पुस्तक', cite_type_website:'वेबसाइट',
+    cite_author_label:'लेखक — ; से अलग करें', cite_year_label:'वर्ष', cite_title_label:'शीर्षक',
+    cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
+    cite_pages_label:'पृष्ठ', cite_url_label:'URL (केवल यदि कोई DOI नहीं है)',
+    cite_lookup_btn:'🔎 शीर्षक से खोजें (Crossref)', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
+    cite_clear_btn:'फॉर्म साफ़ करें', cite_bookmarklet_summary:'🔖 किसी भी पेज से एक-क्लिक कैप्चर',
+    cite_bookmarklet_desc:'Zotero के ब्राउज़र बटन की तरह — इस लिंक को एक बार अपने बुकमार्क बार पर खींचें। फिर किसी भी जर्नल लेख, PubMed या arXiv पेज पर इसे क्लिक करें ताकि उस पेज का उद्धरण सीधे यहाँ आपकी लाइब्रेरी में आ जाए।',
+    cite_bookmarklet_btn:'🔖 Appuscholar में कैप्चर करें',
+    cite_bookmarklet_note:'ऊपर दिए बटन को खींचें — क्लिक न करें — अपने बुकमार्क बार पर। यह केवल पेज पर पहले से मौजूद मानक उद्धरण टैग पढ़ता है (वही जो Zotero और Mendeley उपयोग करते हैं); यह उन पेजों को नहीं पढ़ सकता जो इन्हें प्रकाशित नहीं करते, जैसे अधिकतर समाचार साइटें।',
+    cite_library_h3:'🗂 मेरी लाइब्रेरी', cite_no_sources:'अभी तक कोई स्रोत नहीं।',
+    cite_insertbib_btn:'संदर्भ सूची डालें', cite_loadclassics_btn:'📖 क्लासिक मनोविज्ञान स्रोत लोड करें',
+    cite_export_btn:'⬆ लाइब्रेरी निर्यात करें', cite_import_btn:'⬇ लाइब्रेरी आयात करें',
+    cite_sharing_note:'🤝 <b>कक्षा में साझा करना:</b> अपनी लाइब्रेरी निर्यात करें और फ़ाइल सहपाठियों के साथ साझा करें — उनकी आयात करें ताकि एक साझा संग्रह बन सके। आपके दस्तावेज़ और लेखन शैली आपके ही डिवाइस पर रहते हैं।',
+    research_panel_desc:'OpenAlex और PubMed को लाइव, मुफ़्त, बिना इंस्टॉल खोजें — जो प्रासंगिक हो उसे चुनें, फिर केवल मिले सार (abstracts) के आधार पर साहित्य समीक्षा लिखें या शोध अंतराल खोजें।',
+    research_topic_label:'खोज विषय या प्रश्न',
+    research_src_openalex:'OpenAlex (arXiv/प्रीप्रिंट सहित)', research_src_pubmed:'PubMed',
+    research_find_btn:'🔎 प्रासंगिक शोध-पत्र खोजें', research_sort_label:'इसके अनुसार क्रमबद्ध करें',
+    research_sort_relevance:'प्रासंगिकता (जैसा मिला)', research_sort_citations:'सबसे अधिक उद्धृत', research_sort_year:'सबसे नया पहले',
+    research_litreview_btn:'📝 साहित्य समीक्षा अनुच्छेद का मसौदा बनाएं', research_gapfinder_btn:'🕳 शोध अंतराल खोजें',
+    research_grounded_note:'केवल ऊपर जांचे गए शोध-पत्रों से सख्ती से तैयार किया गया — उद्धृत करने से पहले हमेशा वास्तविक स्रोतों की जांच करें।',
+    research_external_summary:'🌐 नहीं मिल रहा? Google Scholar और अन्य में सीधे खोजें',
+    research_external_desc:'Google Scholar, JSTOR और अधिकतर प्रकाशक साइटें इस जैसे ऐप्स को स्वचालित रूप से परिणाम प्राप्त करने की अनुमति नहीं देतीं — इन्हें आपके ब्राउज़र में खोजना होगा। ये आपके विषय के साथ पहले से भरा हुआ एक नया टैब खोलते हैं।',
+    research_ext_scholar:'🎓 Google Scholar', research_ext_jstor:'📖 JSTOR',
+    research_ext_sciencedirect:'🧪 ScienceDirect', research_ext_base:'🔎 BASE',
+    research_manual_summary:'➕ कहीं और मिला कोई शोध-पत्र जोड़ें',
+    research_manual_desc:'Google Scholar या किसी जर्नल साइट पर कुछ मिला? इसका विवरण यहाँ डालें ताकि यह सीधे आपकी उद्धरण प्रबंधक लाइब्रेरी में चला जाए।',
+    research_man_title_label:'शीर्षक', research_man_author_label:'लेखक', research_man_year_label:'वर्ष',
+    research_man_source_label:'जर्नल / स्रोत', research_man_doi_label:'DOI या URL',
+    research_man_add_btn:'उद्धरण लाइब्रेरी में जोड़ें',
+    research_connected_summary:'🔗 जुड़े हुए शोध-पत्र',
+    research_connected_desc:'ऊपर से एक OpenAlex शोध-पत्र चुनें और देखें कि वह किसे उद्धृत करता है और उसे किसने उद्धृत किया है — शोध की कड़ी पता लगाने का एक त्वरित तरीका।',
+    chat_panel_desc:'आपका बैंगनी अध्ययन-साथी — अपने लेखन के बारे में कुछ भी पूछें। हर जवाब में "दस्तावेज़ में डालें" बटन होता है।',
+    chat_input_placeholder:'पूछें… उदाहरण: मुझे 3 शीर्षक सुझाव दें', chat_send_btn:'भेजें ➤',
+    slides_panel_h3:'🖥 इस दस्तावेज़ से PPT बनाएं',
+    slides_panel_desc:'आपकी Heading 1 / Heading 2 शैलियों को स्लाइड विभाजन के रूप में उपयोग करता है — हर हेडिंग के नीचे का टेक्स्ट बुलेट पॉइंट बन जाता है, और कोई भी चित्र अपनी स्वयं की स्लाइड बन जाता है। यदि अभी तक नहीं जोड़ी हैं, तो ऊपर फॉर्मेटिंग बार में हेडिंग जोड़ें।',
+    slides_generate_btn:'स्लाइड पूर्वावलोकन बनाएं', slides_download_btn:'⬇ PowerPoint (.pptx) के रूप में डाउनलोड करें',
+    settings_h2:'🔑 अपना AI प्रदाता चुनें',
+    settings_intro:'एक चुनें। आपकी कुंजी इस ब्राउज़र में सहेजी जाती है और केवल आपके चुने प्रदाता को भेजी जाती है।',
+    settings_provider_label:'AI प्रदाता', settings_keyin_placeholder:'अपनी API कुंजी यहाँ पेस्ट करें',
+    settings_keymode_label:'यह कुंजी कैसे सहेजी जाए?',
+    settings_keymode_pass:'🔒 पासफ़्रेज़ से सुरक्षित करें — सबसे सुरक्षित (हर सत्र में एक बार टाइप करें)',
+    settings_keymode_plain:'इस कंप्यूटर पर याद रखें — सबसे आसान, कोई पासफ़्रेज़ नहीं',
+    settings_keymode_session:'केवल इस टैब में — बंद करते ही भूल जाएं (कॉलेज कंप्यूटर)',
+    settings_orcid_label:'आपका ORCID iD (वैकल्पिक — निर्यात और टेम्पलेट्स पर छपता है)',
+    settings_orcid_link:'नहीं है? मुफ़्त ORCID iD पाएं →',
+    settings_pack_label:'विशेष पैक', settings_pack_general:'सामान्य शोध — केवल मुख्य उपकरण',
+    settings_pack_psychology:'मनोविज्ञान — मनोविज्ञान उपकरण टैब जोड़ता है',
+    settings_pack_desc:'मुख्य उपकरण (लेखन, सांख्यिकी, उद्धरण, शोध) किसी भी विषय के लिए काम करते हैं। एक विशेष पैक इसके ऊपर विषय-विशिष्ट उपकरण जोड़ता है। और पैक जल्द आएंगे।',
+    settings_savekey_btn:'कुंजी सहेजें', settings_removekey_btn:'कुंजी हटाएं',
+    settings_warn:'⚠ चूंकि यह ऐप एक लोकल फ़ाइल के रूप में चलता है, आपके कंप्यूटर पर हर HTML फ़ाइल एक ही स्टोरेज क्षेत्र साझा करती है। <b>इस कंप्यूटर पर याद रखें</b> के साथ सहेजी गई कुंजी किसी भी अन्य HTML फ़ाइल द्वारा पढ़ी जा सकती है जिसे आप खोलते हैं। पासफ़्रेज़ विकल्प इसे एन्क्रिप्ट करता है ताकि वे फ़ाइलें केवल अस्पष्ट टेक्स्ट देखें।',
+    welcome_h2:'💜 Appuscholar में आपका स्वागत है',
+    welcome_intro:'एक लेखन और शोध सहायक, जिसमें मनोविज्ञान उपकरण पैक पहले से शामिल है। आप जो भी लिखते हैं वह इसी कंप्यूटर पर रहता है।',
+    welcome_step1:'ऊपर दाईं ओर <b>⚙ AI प्रदाता / कुंजी</b> पर क्लिक करें।',
+    welcome_step2:'<b>Google Gemini</b> या <b>Groq</b> चुनें — दोनों में मुफ़्त स्तर है।',
+    welcome_step3:'लिंक पर जाएं, एक कुंजी बनाएं, उसे पेस्ट करें, <b>कुंजी सहेजें</b> दबाएं।',
+    welcome_step4:'लिखना शुरू करें। सुझाव स्वीकार करने के लिए <kbd>Tab</kbd> दबाएं।',
+    welcome_warn:'Appuscholar मसौदा तैयार करता है और जांचता है — यह आपकी सोच का काम नहीं करता। हर उद्धरण की जांच करें, और जमा करने से पहले अपनी संस्था की AI सहायता नीति देख लें।',
+    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में',
+    login_h2:'🔑 Appuscholar प्रवेश',
+    login_intro:'इस प्रति के लिए एक एक्सेस कोड चाहिए। आपको दिया गया कोड नीचे पेस्ट करें — यह इसी कंप्यूटर पर जांचा जाता है, कुछ भी अपलोड नहीं होता।',
+    login_placeholder:'अपना एक्सेस कोड यहाँ पेस्ट करें', login_unlock_btn:'अनलॉक करें',
+    login_note:'कोई कोड नहीं है, या आपका समाप्त हो गया है? Appuscholar देने वाले से नया कोड मांगें।'
   }
 };
 function getLang(){const l=LS.get('appu_lang');return(l==='hi')?'hi':'en'}
