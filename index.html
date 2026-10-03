@@ -159,6 +159,9 @@
   .connected-list{margin-top:8px;padding-left:2px}
   .connected-list .paper-card{margin-bottom:6px}
   #provTabs{padding:8px 18px 0;max-width:1180px;margin:0 auto;position:relative}
+  .project-bar{display:flex;align-items:center;gap:10px;padding:8px 18px;max-width:1180px;margin:0 auto;font-size:13.5px}
+  .project-bar .badge{font-size:10px;padding:3px 8px}
+  #saveAsProjectDlg .dlg-body>div:not(.fld):not(.row){margin-bottom:10px}
   .prov-toggle{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:10px;border:2px solid var(--line);background:var(--card);font-size:12.5px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
   .prov-toggle .dot{width:9px;height:9px;border-radius:50%;background:var(--chipline);flex:none}
   .prov-toggle.has-key .dot{background:#16a34a}
@@ -212,6 +215,13 @@
   <button class="btn btn-gold" onclick="openSettings()">⚙ AI Provider / Key</button>
 </header>
 <nav id="provTabs" aria-label="AI providers"></nav>
+
+<div class="project-bar" id="projectBar">
+  <span id="projectBarLabel">No project yet — working in scratch space</span>
+  <div class="spacer"></div>
+  <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()">💾 Save as project</button>
+  <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()">📁 Projects</button>
+</div>
 
 <main>
   <div class="split-row" id="splitRow">
@@ -510,6 +520,40 @@
     </div></section>
 </main>
 
+<dialog id="saveAsProjectDlg"><div class="dlg-body">
+  <h2>💾 Save as project</h2>
+  <p class="desc" style="margin:0 0 12px">Projects track which stage a piece of work is at, so the app can point you to the right tools. Nothing you've written moves or changes — this just labels it.</p>
+  <div>
+    <label style="font-weight:600;margin-right:16px"><input type="radio" name="sapMode" value="new" checked onchange="sapModeChange()"> New project</label>
+    <label style="font-weight:600"><input type="radio" name="sapMode" value="existing" onchange="sapModeChange()"> Add to an existing project</label>
+  </div>
+  <div class="fld" id="sapNewFld">
+    <label for="sapName">Project name</label>
+    <input type="text" id="sapName" placeholder="e.g. Thesis on academic procrastination">
+  </div>
+  <div class="fld" id="sapExistingFld" style="display:none">
+    <label for="sapExisting">Choose project</label>
+    <select id="sapExisting"></select>
+  </div>
+  <div class="fld">
+    <label for="sapStage">Stage</label>
+    <select id="sapStage"></select>
+    <p class="desc" style="margin:4px 0 0">Guessed from the tool you had open — change it if that's wrong.</p>
+  </div>
+  <div class="row">
+    <button class="btn btn-purple" style="flex:1" onclick="saveAsProject()">Save</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('saveAsProjectDlg').close()">Cancel</button>
+  </div>
+</div></dialog>
+
+<dialog id="projectsDlg"><div class="dlg-body">
+  <h2>📁 Your projects</h2>
+  <div id="projectsList"></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('projectsDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
 <dialog id="rateLimitDlg"><div class="dlg-body">
   <h2>⏳ Free AI limit reached</h2>
   <p id="rateLimitMsg" style="font-size:14px;line-height:1.6"></p>
@@ -785,6 +829,121 @@ function setPack(p){
   showToast('Pack set: '+PACKS[getPack()].label);
 }
 applyPack();
+
+/* ============ Projects — optional, built around how students actually work ============
+   A project is a lightweight label: name, stage, pack, status. A student can write for weeks with
+   no project at all — same scratch-space behavior as before this existed — and save that work as a
+   project whenever they're ready, new or into one already running. A project doesn't yet own its own
+   document or tool data (that stays global); it's a stage/pack bookmark today, and the foundation the
+   real per-stage tool view builds on as more stage-specific tools ship. */
+const STAGES=[
+  {id:'idea',label:'Idea & Feasibility'},
+  {id:'lit',label:'Literature'},
+  {id:'design',label:'Design & Ethics'},
+  {id:'collect',label:'Collection & Analysis'},
+  {id:'writing',label:'Writing'},
+  {id:'review',label:'Review & Publish'}
+];
+const TOOL_TO_STAGE={psych:'lit',research:'lit',stats:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
+
+function getProjects(){try{return JSON.parse(LS.get('appu_projects')||'[]')}catch(e){return []}}
+function saveProjectsList(list){LS.set('appu_projects',JSON.stringify(list))}
+function getActiveProjectId(){return LS.get('appu_active_project')||null}
+function getActiveProject(){const id=getActiveProjectId();return getProjects().find(p=>p.id===id)||null}
+function stageLabel(id){const s=STAGES.find(x=>x.id===id);return s?s.label:id}
+
+function setActiveProject(id){
+  LS.set('appu_active_project',id||'');
+  const p=getProjects().find(x=>x.id===id);
+  if(p&&PACKS[p.pack])setPack(p.pack);
+  renderProjectBar();
+}
+
+function renderProjectBar(){
+  const label=document.getElementById('projectBarLabel');
+  if(!label)return;
+  const p=getActiveProject();
+  if(!p){label.textContent='No project yet — working in scratch space';return}
+  label.innerHTML=escHTML(p.name)+' <span class="badge">'+escHTML(stageLabel(p.stage))+'</span>'
+    +(p.status==='complete'?' <span class="badge" style="background:#16a34a;color:#fff">Complete</span>':'');
+}
+
+function openSaveAsProject(){
+  const existing=getProjects().filter(p=>p.status!=='complete');
+  const sel=document.getElementById('sapExisting');
+  sel.innerHTML=existing.length?existing.map(p=>'<option value="'+p.id+'">'+escHTML(p.name)+'</option>').join(''):'<option value="">No open projects yet</option>';
+  const stageSel=document.getElementById('sapStage');
+  stageSel.innerHTML=STAGES.map(s=>'<option value="'+s.id+'">'+escHTML(s.label)+'</option>').join('');
+  stageSel.value=TOOL_TO_STAGE[LS.get('appu_tool_tab')]||'idea';
+  document.querySelector('input[name="sapMode"][value="new"]').checked=true;
+  sapModeChange();
+  document.getElementById('sapName').value='';
+  document.getElementById('saveAsProjectDlg').showModal();
+}
+function sapModeChange(){
+  const mode=document.querySelector('input[name="sapMode"]:checked').value;
+  document.getElementById('sapNewFld').style.display=mode==='new'?'':'none';
+  document.getElementById('sapExistingFld').style.display=mode==='existing'?'':'none';
+}
+function saveAsProject(){
+  const mode=document.querySelector('input[name="sapMode"]:checked').value;
+  const stage=document.getElementById('sapStage').value;
+  const list=getProjects();
+  if(mode==='existing'){
+    const id=document.getElementById('sapExisting').value;
+    if(!id){showToast('No existing project to add to — try "New project" instead');return}
+    const p=list.find(x=>x.id===id);
+    p.stage=stage;p.updatedAt=Date.now();
+    saveProjectsList(list);
+    setActiveProject(id);
+    showToast('Moved into '+p.name);
+  }else{
+    const name=(document.getElementById('sapName').value||'').trim();
+    if(!name){showToast('Give the project a name first');return}
+    const id='proj_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    list.push({id,name,stage,pack:getPack(),status:'active',createdAt:Date.now(),updatedAt:Date.now()});
+    saveProjectsList(list);
+    setActiveProject(id);
+    showToast('Saved as project: '+name);
+  }
+  document.getElementById('saveAsProjectDlg').close();
+}
+
+function openProjectsDlg(){
+  const list=getProjects().sort((a,b)=>(a.status==='complete'?1:0)-(b.status==='complete'?1:0)||b.updatedAt-a.updatedAt);
+  const box=document.getElementById('projectsList');
+  if(!list.length){
+    box.innerHTML='<p class="desc">No projects saved yet. Work normally, then use "Save as project" whenever you want to track a stage and come back to it later.</p>';
+  }else{
+    box.innerHTML=list.map(p=>{
+      const active=p.id===getActiveProjectId();
+      return '<div class="fld" style="border:2px solid '+(active?'var(--purple-500)':'var(--line)')+';border-radius:9px;padding:10px;margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;gap:8px"><strong>'+escHTML(p.name)+'</strong>'
+        +(p.status==='complete'?'<span class="badge" style="background:#16a34a;color:#fff">Complete</span>':'<span class="badge">'+escHTML(stageLabel(p.stage))+'</span>')+'</div>'
+        +'<div class="row" style="margin-top:8px">'
+        +(active?'<span class="desc" style="align-self:center">Currently open</span>'
+                :'<button type="button" class="btn btn-ghost btn-sm" onclick="setActiveProject(\''+p.id+'\');document.getElementById(\'projectsDlg\').close()">Open</button>')
+        +(p.status==='complete'
+            ?'<button type="button" class="btn btn-ghost btn-sm" onclick="reopenProject(\''+p.id+'\')">Reopen</button>'
+            :'<button type="button" class="btn btn-ghost btn-sm" onclick="completeProject(\''+p.id+'\')">Mark complete</button>')
+        +'</div></div>';
+    }).join('');
+  }
+  document.getElementById('projectsDlg').showModal();
+}
+function completeProject(id){
+  const list=getProjects();const p=list.find(x=>x.id===id);if(!p)return;
+  p.status='complete';p.updatedAt=Date.now();saveProjectsList(list);
+  showToast(p.name+' marked complete');
+  openProjectsDlg();renderProjectBar();
+}
+function reopenProject(id){
+  const list=getProjects();const p=list.find(x=>x.id===id);if(!p)return;
+  p.status='active';p.updatedAt=Date.now();saveProjectsList(list);
+  showToast(p.name+' reopened');
+  openProjectsDlg();renderProjectBar();
+}
+renderProjectBar();
 
 /* ============ Draggable split between the document and the AI panel ============ */
 (function(){
