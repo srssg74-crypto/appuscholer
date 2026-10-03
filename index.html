@@ -6,40 +6,41 @@
 <title>Appuscholar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
 <style>
   :root{
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
     --purple-600:#6d28d9; --purple-500:#7c3aed; --purple-100:#ede9fe;
-    --gold:#f59e0b;
-    --bg:#f5f3ff; --card:#ffffff; --ink:#1e1b2e; --muted:#6b7280;
-    --line:#e9e4f5; --soft:#faf8ff; --soft2:#fbf9ff; --chip:#f3f4f6; --chipline:#d1d5db;
-    --head-title:#4c1d95; --dashed:#c4b5fd; --accent-ink:#5b21b6;
-  }
-  @media(prefers-color-scheme:dark){
-    :root:not([data-theme="light"]){
-      --bg:#14101d; --card:#1d1730; --ink:#ece9f5; --muted:#a9a2bd;
-      --line:#332a4d; --soft:#231c3a; --soft2:#201936; --chip:#2b2444; --chipline:#453a66;
-      --purple-100:#3a2d5e; --head-title:#d8ccff; --dashed:#6d5ba3; --accent-ink:#c4b5fd; --warn-bg:#3d2f0b; --warn-ink:#fde68a;
-    }
+    --gold:#c9932e; --gold-bright:#f0ad3f;
+    --bg:#fbfaf9; --card:#ffffff; --ink:#2a2438; --muted:#787288;
+    --line:#ece8f2; --soft:#f8f6fc; --soft2:#faf9fd; --chip:#f4f3f6; --chipline:#ddd9e4;
+    --head-title:#4c1d95; --dashed:#cdbdf0; --accent-ink:#5b21b6;
+    --shadow-ink:17,12,34; --blob-a:rgba(124,58,237,.07); --blob-b:rgba(201,147,46,.08);
+    --font-display:"Fraunces","Georgia",serif;
   }
   :root[data-theme="dark"]{
-    --bg:#14101d; --card:#1d1730; --ink:#ece9f5; --muted:#a9a2bd;
-    --line:#332a4d; --soft:#231c3a; --soft2:#201936; --chip:#2b2444; --chipline:#453a66;
-    --purple-100:#3a2d5e; --head-title:#d8ccff; --dashed:#6d5ba3; --accent-ink:#c4b5fd; --warn-bg:#3d2f0b; --warn-ink:#fde68a;
+    --bg:#1a1628; --card:#241e38; --ink:#eae6f3; --muted:#b0a9c4;
+    --line:#38304f; --soft:#2a2340; --soft2:#271f3b; --chip:#332b4a; --chipline:#4a3f66;
+    --purple-100:#3a2d5e; --head-title:#d8ccff; --dashed:#7a68ab; --accent-ink:#c4b5fd; --warn-bg:#3d2f0b; --warn-ink:#fde68a;
+    --shadow-ink:0,0,0; --blob-a:rgba(124,58,237,.10); --blob-b:rgba(201,147,46,.06);
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink)}
-  header{background:linear-gradient(120deg,var(--purple-900),var(--purple-700) 60%,var(--purple-600));color:#fff;padding:8px 18px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 18px rgba(76,29,149,.25);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink);position:relative;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(900px 620px at 92% -8%, var(--blob-a), transparent 60%),
+      radial-gradient(820px 560px at -8% 108%, var(--blob-b), transparent 60%);
+  }
+  header{background:linear-gradient(120deg,var(--purple-900),var(--purple-700) 60%,var(--purple-600));color:#fff;padding:8px 18px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 22px rgba(var(--shadow-ink),.18);position:sticky;top:0;z-index:10;flex-wrap:wrap}
   header .btn{padding:7px 13px;font-size:13px}
   .logo{width:36px;height:36px;flex:0 0 36px}
-  .brand h1{margin:0;font-size:17px;letter-spacing:.3px;font-weight:800;line-height:1.2}
-  .brand h1 span{color:#e9d5ff}
+  .brand h1{margin:0;font-size:19px;letter-spacing:.2px;font-weight:600;line-height:1.2;font-family:var(--font-display)}
+  .brand h1 span{color:#e9d5ff;font-style:italic;font-weight:500}
   .brand p{margin:0;font-size:10px;color:#ddd6fe;letter-spacing:1px;text-transform:uppercase}
   .spacer{flex:1}
   .btn{border:none;cursor:pointer;border-radius:10px;font-weight:700;padding:10px 18px;font-size:14px;transition:.15s;font-family:inherit}
-  .btn-gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3b0764}
-  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(245,158,11,.4)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold-bright),var(--gold));color:#3b0764}
+  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(201,147,46,.35)}
   .btn-purple{background:var(--purple-600);color:#fff}
   .btn-purple:hover{background:var(--purple-700)}
   .btn-ghost{background:var(--card);color:var(--accent-ink);border:2px solid var(--line)}
@@ -68,13 +69,13 @@
   .tool-panel{display:none}
   .tool-panel.active{display:block}
   .slide-card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
-  .slide-card h4{margin:0 0 8px;color:var(--head-title);font-size:15px}
+  .slide-card h4{margin:0 0 8px;color:var(--head-title);font-size:16px;font-family:var(--font-display);font-weight:600}
   .slide-card ul{margin:0;padding-left:20px;font-size:13.5px;line-height:1.7}
   .slide-card .slide-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
   .slide-card img{max-width:200px;border-radius:6px;margin-top:6px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(76,29,149,.08);overflow:hidden}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 32px rgba(var(--shadow-ink),.06);overflow:hidden}
   .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--soft);flex-wrap:wrap}
-  .card-head h2{margin:0;font-size:16px;color:var(--head-title)}
+  .card-head h2{margin:0;font-size:17px;font-weight:600;color:var(--head-title);font-family:var(--font-display)}
   .badge{font-size:11px;background:var(--purple-100);color:var(--accent-ink);padding:4px 10px;border-radius:20px;font-weight:700}
   #editor{width:100%;flex:1;min-height:0;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman","Noto Sans Devanagari",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
   #editor.drag-over{box-shadow:inset 0 0 0 3px var(--purple-600);background:var(--soft)}
@@ -128,7 +129,7 @@
   .translated-quote{border-bottom:2px dotted #7c3aed;cursor:help}
   .stats{font-size:12px;color:var(--muted);margin-left:auto}
   .panel{padding:18px}
-  .panel h3{margin:0 0 6px;font-size:14px;color:var(--head-title);text-transform:uppercase;letter-spacing:1px}
+  .panel h3{margin:0 0 6px;font-size:16px;color:var(--head-title);font-family:var(--font-display);font-weight:600;letter-spacing:.2px}
   .panel p.desc{font-size:13px;color:var(--muted);margin:0 0 12px}
   #aiOut{background:var(--soft);border:1.5px dashed var(--dashed);border-radius:12px;padding:14px;font-size:14px;line-height:1.7;min-height:120px;white-space:pre-wrap}
   #chatLog{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
@@ -142,10 +143,10 @@
   dialog{border:none;border-radius:16px;padding:0;max-width:480px;width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.25);background:var(--card);color:var(--ink)}
   dialog::backdrop{background:rgba(30,10,60,.5)}
   .dlg-body{padding:24px}
-  .dlg-body h2{margin:0 0 8px;color:var(--head-title)}
+  .dlg-body h2{margin:0 0 8px;color:var(--head-title);font-family:var(--font-display);font-weight:600;font-size:21px}
   .dlg-body ol{font-size:14px;line-height:1.9;color:var(--ink);padding-left:20px}
   .dlg-body a{color:var(--purple-500);font-weight:700}
-  footer{text-align:center;color:#a78bfa;font-size:12px;padding:26px;letter-spacing:1px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:26px;letter-spacing:.4px}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--purple-900);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:50;max-width:92vw;text-align:center}
   kbd{background:var(--chip);border:1px solid var(--chipline);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--ink)}
   .fld{margin-bottom:8px}
@@ -1176,11 +1177,13 @@ let toastT=null;
 function showToast(m){toast.textContent=m;toast.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>toast.style.display='none',2600)}
 
 /* ============ Theme ============ */
-function applyTheme(){const t=LS.get('appu_theme');if(t)document.documentElement.setAttribute('data-theme',t);
-  const dark=t?t==='dark':window.matchMedia('(prefers-color-scheme:dark)').matches;
-  document.getElementById('themeBtn').textContent=dark?'☀':'🌙'}
-function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme')
-  ||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+/* Defaults to light regardless of the device/browser's own dark-mode setting — a student whose
+   system happens to be in dark mode should still open to the bright, readable default, and choose
+   dark deliberately via this button rather than inherit it unasked. */
+function applyTheme(){let t=LS.get('appu_theme');if(!t){t='light';LS.set('appu_theme',t)}
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').textContent=t==='dark'?'☀':'🌙'}
+function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme')||'light';
   const next=cur==='dark'?'light':'dark';LS.set('appu_theme',next);document.documentElement.setAttribute('data-theme',next);applyTheme()}
 applyTheme();
 applyLang();
