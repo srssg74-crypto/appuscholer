@@ -676,13 +676,54 @@
   </div>
 </div></dialog>
 
+<dialog id="helpDlg" class="dlg-wide"><div class="dlg-body">
+  <h2 data-i18n="help_h2">❓ Help &amp; Troubleshooting</h2>
+  <p style="font-size:13px;color:var(--muted)" data-i18n="help_intro">Most problems have a quick fix below. Check here first — it's faster than waiting on an email.</p>
+
+  <details open style="margin-top:12px">
+    <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_code">🔑 My access code won't work</summary>
+    <p style="font-size:13px;color:var(--ink);line-height:1.7;margin:8px 0 0" data-i18n="faq_a_code">Paste the whole code, including the dot in the middle, with no extra spaces or line breaks — copying from some apps adds a stray character at the start or end. Codes also expire; if the date has passed, you'll need a fresh one from whoever gave you Appuscholar.</p>
+  </details>
+  <details style="margin-top:10px">
+    <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_key">🔌 My AI key stopped working, or I lost it</summary>
+    <p style="font-size:13px;color:var(--ink);line-height:1.7;margin:8px 0 0" data-i18n="faq_a_key">Open <b>⚙ AI Provider / Key</b> at the top right, pick your provider again, and follow the link to generate a new one — it's free and takes under a minute. Your key lives only in this browser; nothing to recover from a server.</p>
+  </details>
+  <details style="margin-top:10px">
+    <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_lost">💾 My work disappeared after closing the tab or clearing my browser</summary>
+    <p style="font-size:13px;color:var(--ink);line-height:1.7;margin:8px 0 0" data-i18n="faq_a_lost">Everything is saved only in this browser, on this computer — never on a server. Clearing site data, switching browsers, or moving to a new computer wipes it with no way back. Use <b>⬇ Download</b> in the document toolbar regularly to keep a copy outside the browser.</p>
+  </details>
+  <details style="margin-top:10px">
+    <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_broken">🖥 The page looks broken, or won't load properly</summary>
+    <p style="font-size:13px;color:var(--ink);line-height:1.7;margin:8px 0 0" data-i18n="faq_a_broken">Try a hard refresh — Ctrl+Shift+R on Windows, Cmd+Shift+R on a Mac — or open it in Chrome or Edge if you're on something else. Both render this app best.</p>
+  </details>
+  <details style="margin-top:10px">
+    <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_hindi">हि Something stayed in English after switching to Hindi</summary>
+    <p style="font-size:13px;color:var(--ink);line-height:1.7;margin:8px 0 0" data-i18n="faq_a_hindi">A few things stay in English on purpose — statistical test names, citation style names (APA, MLA), and the external AI-provider sign-up pages — since those are the exact terms you'll meet everywhere else too. Anything other than that is a genuine bug worth reporting below.</p>
+  </details>
+
+  <div class="support-contact" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+    <p style="font-size:13px;color:var(--ink)" data-i18n="help_contact_intro">Still stuck? Tell us what happened and we'll help directly.</p>
+    <button class="btn btn-purple" onclick="openEmailSupport()" data-i18n="help_contact_btn">📧 Email us</button>
+  </div>
+  <p class="support-contact-fallback desc" style="margin-top:14px" data-i18n="help_contact_unset">A direct contact option isn't set up yet — for now, reach whoever gave you Appuscholar.</p>
+
+  <div class="row" style="margin-top:16px">
+    <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();document.getElementById('welcomeDlg').showModal()" data-i18n="help_tour_btn">↺ Show the welcome tour again</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('helpDlg').close()" data-i18n="help_close_btn">Close</button>
+  </div>
+</div></dialog>
+
 <dialog id="loginDlg"><div class="dlg-body">
   <h2 data-i18n="login_h2">🔑 Appuscholar Access</h2>
   <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="login_intro">This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.</p>
   <textarea id="loginInput" rows="3" placeholder="Paste your access code here" data-i18n-placeholder="login_placeholder" style="width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;font-size:13px;font-family:monospace;color:var(--ink);background:var(--card)"></textarea>
   <p style="min-height:18px;font-size:12.5px;color:#dc2626;margin:8px 0 0" id="loginMsg"></p>
   <div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" id="loginSubmit" data-i18n="login_unlock_btn">Unlock</button></div>
-  <p class="desc" style="margin-top:10px" data-i18n="login_note">Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one.</p>
+  <p class="desc support-contact-fallback" style="margin-top:10px" data-i18n="login_note">Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one.</p>
+  <div class="support-contact" style="margin-top:10px">
+    <p class="desc" data-i18n="login_request_intro">Don't have a code yet?</p>
+    <button class="btn btn-ghost" style="width:100%" onclick="openRequestCode()" data-i18n="login_request_btn">📧 Request an access code</button>
+  </div>
 </div></dialog>
 
 <dialog id="statsDlg" class="dlg-wide"><div class="dlg-body">
@@ -948,7 +989,22 @@ const I18N={
     login_h2:'🔑 Appuscholar Access',
     login_intro:"This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.",
     login_placeholder:'Paste your access code here', login_unlock_btn:'Unlock',
-    login_note:"Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one."
+    login_note:"Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one.",
+    login_request_intro:"Don't have a code yet?", login_request_btn:'📧 Request an access code',
+    help_h2:'❓ Help & Troubleshooting', help_intro:"Most problems have a quick fix below. Check here first — it's faster than waiting on an email.",
+    faq_q_code:"🔑 My access code won't work",
+    faq_a_code:"Paste the whole code, including the dot in the middle, with no extra spaces or line breaks — copying from some apps adds a stray character at the start or end. Codes also expire; if the date has passed, you'll need a fresh one from whoever gave you Appuscholar.",
+    faq_q_key:'🔌 My AI key stopped working, or I lost it',
+    faq_a_key:"Open <b>⚙ AI Provider / Key</b> at the top right, pick your provider again, and follow the link to generate a new one — it's free and takes under a minute. Your key lives only in this browser; nothing to recover from a server.",
+    faq_q_lost:'💾 My work disappeared after closing the tab or clearing my browser',
+    faq_a_lost:'Everything is saved only in this browser, on this computer — never on a server. Clearing site data, switching browsers, or moving to a new computer wipes it with no way back. Use <b>⬇ Download</b> in the document toolbar regularly to keep a copy outside the browser.',
+    faq_q_broken:"🖥 The page looks broken, or won't load properly",
+    faq_a_broken:"Try a hard refresh — Ctrl+Shift+R on Windows, Cmd+Shift+R on a Mac — or open it in Chrome or Edge if you're on something else. Both render this app best.",
+    faq_q_hindi:'हि Something stayed in English after switching to Hindi',
+    faq_a_hindi:"A few things stay in English on purpose — statistical test names, citation style names (APA, MLA), and the external AI-provider sign-up pages — since those are the exact terms you'll meet everywhere else too. Anything other than that is a genuine bug worth reporting below.",
+    help_contact_intro:"Still stuck? Tell us what happened and we'll help directly.", help_contact_btn:'📧 Email us',
+    help_contact_unset:"A direct contact option isn't set up yet — for now, reach whoever gave you Appuscholar.",
+    help_tour_btn:'↺ Show the welcome tour again', help_close_btn:'Close'
   },
   hi:{
     help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
@@ -1087,7 +1143,22 @@ const I18N={
     login_h2:'🔑 Appuscholar प्रवेश',
     login_intro:'इस प्रति के लिए एक एक्सेस कोड चाहिए। आपको दिया गया कोड नीचे पेस्ट करें — यह इसी कंप्यूटर पर जांचा जाता है, कुछ भी अपलोड नहीं होता।',
     login_placeholder:'अपना एक्सेस कोड यहाँ पेस्ट करें', login_unlock_btn:'अनलॉक करें',
-    login_note:'कोई कोड नहीं है, या आपका समाप्त हो गया है? Appuscholar देने वाले से नया कोड मांगें।'
+    login_note:'कोई कोड नहीं है, या आपका समाप्त हो गया है? Appuscholar देने वाले से नया कोड मांगें।',
+    login_request_intro:'अभी तक कोड नहीं है?', login_request_btn:'📧 एक्सेस कोड के लिए अनुरोध करें',
+    help_h2:'❓ सहायता और समस्या-समाधान', help_intro:'अधिकतर समस्याओं का त्वरित हल नीचे है। ईमेल का इंतज़ार करने से पहले यहाँ देखें।',
+    faq_q_code:'🔑 मेरा एक्सेस कोड काम नहीं कर रहा',
+    faq_a_code:'पूरा कोड पेस्ट करें, बीच वाले डॉट सहित, बिना किसी अतिरिक्त स्पेस या लाइन-ब्रेक के — कुछ ऐप्स से कॉपी करने पर शुरू या अंत में एक अतिरिक्त अक्षर जुड़ जाता है। कोड की समय-सीमा भी होती है; यदि तारीख निकल चुकी है, तो Appuscholar देने वाले से नया कोड लें।',
+    faq_q_key:'🔌 मेरी AI कुंजी काम करना बंद कर दी, या खो गई',
+    faq_a_key:'ऊपर दाईं ओर <b>⚙ AI प्रदाता / कुंजी</b> खोलें, अपना प्रदाता फिर चुनें, और लिंक से एक नई कुंजी बनाएं — यह मुफ़्त है और एक मिनट से भी कम समय लेता है। आपकी कुंजी केवल इसी ब्राउज़र में रहती है; किसी सर्वर से कुछ भी वापस नहीं मिलता।',
+    faq_q_lost:'💾 टैब बंद करने या ब्राउज़र साफ़ करने के बाद मेरा काम गायब हो गया',
+    faq_a_lost:'सब कुछ केवल इसी ब्राउज़र में, इसी कंप्यूटर पर सहेजा जाता है — किसी सर्वर पर कभी नहीं। साइट डेटा साफ़ करने, ब्राउज़र बदलने, या नए कंप्यूटर पर जाने से यह बिना वापसी के मिट जाता है। दस्तावेज़ टूलबार में <b>⬇ डाउनलोड</b> का नियमित उपयोग करके ब्राउज़र के बाहर एक प्रति रखें।',
+    faq_q_broken:'🖥 पेज खराब दिख रहा है, या सही से लोड नहीं हो रहा',
+    faq_a_broken:'एक हार्ड रिफ्रेश करें — Windows पर Ctrl+Shift+R, Mac पर Cmd+Shift+R — या इसे Chrome या Edge में खोलें यदि आप किसी और ब्राउज़र पर हैं। दोनों इस ऐप को सबसे अच्छी तरह दिखाते हैं।',
+    faq_q_hindi:'हि हिंदी में बदलने के बाद भी कुछ अंग्रेज़ी में रह गया',
+    faq_a_hindi:'कुछ चीज़ें जानबूझकर अंग्रेज़ी में रहती हैं — सांख्यिकी परीक्षणों के नाम, उद्धरण शैलियों के नाम (APA, MLA), और बाहरी AI-प्रदाता साइन-अप पेज — क्योंकि ये वही शब्द हैं जो आप हर जगह मिलेंगे। इसके अलावा कुछ भी अनुवादित न हो, तो वह एक असली बग है, नीचे बताइए।',
+    help_contact_intro:'फिर भी अटके हैं? हमें बताएं क्या हुआ, हम सीधे मदद करेंगे।', help_contact_btn:'📧 हमें ईमेल करें',
+    help_contact_unset:'सीधा संपर्क विकल्प अभी सेट नहीं है — फ़िलहाल, Appuscholar देने वाले से संपर्क करें।',
+    help_tour_btn:'↺ स्वागत मार्गदर्शन फिर दिखाएं', help_close_btn:'बंद करें'
   }
 };
 function getLang(){const l=LS.get('appu_lang');return(l==='hi')?'hi':'en'}
@@ -1168,6 +1239,32 @@ const PROV_ORDER=['gemini','groq','deepseek','openrouter','openai','claude'];
 const LICENSE_PUBLIC_KEY_JWK={"key_ops":["verify"],"ext":true,"kty":"EC","x":"dqG1F0P1r8byG7peCXrbuAR5SPJqq-W8vFyVL-P7x5s","y":"GxXzmCZZ9bO5fBtJ8KARYyOWIy4YS0gdRY73saW0nEQ","crv":"P-256"};
 const REVOKE_LIST_URL='';
 
+/* ============ Support contact — a dedicated address, never the owner's personal inbox ============
+   Set this to a free email made just for Appuscholar support (not Dr. Sharma's own) — the Help panel's
+   "Email us" button and the login screen's "Request an access code" button both use it. Left blank,
+   both buttons stay hidden rather than open a broken mailto: link. */
+const SUPPORT_EMAIL='appuscholar.help@gmail.com';
+function mailtoLink(subject,body){
+  return 'mailto:'+SUPPORT_EMAIL+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+function contactSupportBody(extra){
+  const ua=navigator.userAgent||'unknown browser';
+  return (extra||'')+'\n\n---\nPlease describe what you were doing and what went wrong above this line.\nBrowser: '+ua;
+}
+function openEmailSupport(){
+  if(!SUPPORT_EMAIL)return;
+  location.href=mailtoLink('Appuscholar — help needed',contactSupportBody(''));
+}
+function openRequestCode(){
+  if(!SUPPORT_EMAIL)return;
+  location.href=mailtoLink('Appuscholar — access code request','Name:\nInstitution / course:\n\n(Please fill in the above and send — a code will follow by email.)');
+}
+function initSupportUI(){
+  const show=!!SUPPORT_EMAIL;
+  document.querySelectorAll('.support-contact').forEach(el=>el.style.display=show?'':'none');
+  document.querySelectorAll('.support-contact-fallback').forEach(el=>el.style.display=show?'none':'');
+}
+
 const editor=document.getElementById('editor'),aiOut=document.getElementById('aiOut'),
       stats=document.getElementById('stats'),toast=document.getElementById('toast');
 
@@ -1187,6 +1284,7 @@ function toggleTheme(){const cur=document.documentElement.getAttribute('data-the
   const next=cur==='dark'?'light':'dark';LS.set('appu_theme',next);document.documentElement.setAttribute('data-theme',next);applyTheme()}
 applyTheme();
 applyLang();
+initSupportUI();
 
 /* ============ Tool tabs (Psychology / Statistics / Style / Citations / Chat) ============ */
 function showTool(name){
@@ -2062,7 +2160,7 @@ function removeKey(){
   refreshProvUI();
   showToast(PROVIDERS[p].short+' key removed ✓');
 }
-function openHelp(){document.getElementById('welcomeDlg').showModal()}
+function openHelp(){document.getElementById('helpDlg').showModal()}
 
 /* ============ FIX 4: readable error messages ============ */
 function showRateLimitAlert(){
