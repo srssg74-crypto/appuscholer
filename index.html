@@ -66,6 +66,13 @@
   .stage-guide .next-btn:hover{border-color:var(--purple-600,#6d28d9)}
   .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .tool-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
+  .tool-tab.stage-current:not(.active){border-color:var(--purple-600,#6d28d9);box-shadow:0 0 0 1px var(--purple-600,#6d28d9)}
+  .stageintro-row{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid var(--line)}
+  .stageintro-row:last-child{border-bottom:none}
+  .stageintro-num{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent-ink)}
+  .stageintro-row.is-current .stageintro-num{background:var(--purple-600,#6d28d9);color:#fff}
+  .stageintro-title{font-weight:700;color:var(--head-title);font-size:14px}
+  .stageintro-desc{font-size:12.5px;color:var(--muted);margin-top:1px}
   .tool-panel{display:none}
   .tool-panel.active{display:block}
   .slide-card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
@@ -368,7 +375,8 @@
   </div>
 
   <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
-    <button type="button" class="tool-tab" onclick="openProjectsDlg()" data-i18n="tab_projects" data-i18n-title="tab_projects_title" title="Start a new research project or switch to one you've already saved">🗂 Research Projects</button>
+    <button type="button" class="tool-tab" style="background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)" onclick="openNewProjectDirect()" data-i18n="tab_new_project" data-i18n-title="tab_new_project_title" title="Start a brand-new research project — names your project, then walks you through its six stages">✨ New Research Project</button>
+    <button type="button" class="tool-tab" onclick="openProjectsDlg()" data-i18n="tab_projects" data-i18n-title="tab_projects_title" title="Switch to a research project you've already saved">🗂 Research Projects</button>
     <button type="button" class="tool-tab" data-tool="idea" onclick="showTool('idea')" data-i18n="tab_idea" data-i18n-title="tab_idea_title" title="Think through a research idea with an advisor before committing — what's realistic given your time, access and resources">💡 Idea &amp; Feasibility</button>
     <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
     <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
@@ -619,6 +627,15 @@
   <div id="projectsList"></div>
   <div class="row" style="margin-top:12px">
     <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('projectsDlg').close()" data-i18n="close_btn">Close</button>
+  </div>
+</div></dialog>
+
+<dialog id="stageIntroDlg" class="dlg-wide"><div class="dlg-body">
+  <h2 id="stageIntroH2" data-i18n="stageintro_h2">Your project has six stages</h2>
+  <p class="desc" style="margin:0 0 14px" data-i18n="stageintro_desc">The app follows you through them in order. Every tool stays one click away the whole time — this is just the shape of the road ahead.</p>
+  <div id="stageIntroList"></div>
+  <div class="row" style="margin-top:14px">
+    <button type="button" class="btn btn-purple" style="flex:1" id="stageIntroStartBtn" onclick="stageIntroStart()">Start →</button>
   </div>
 </div></dialog>
 
@@ -904,7 +921,8 @@ const I18N={
     ai_pane_desc:'Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.',
     ai_pane_placeholder:'Your AI suggestion will appear here…',
     accept_btn:'Accept ✓', copy_btn:'Copy', dismiss_btn:'Dismiss',
-    tab_projects:'🗂 Research Projects', tab_projects_title:"Start a new research project or switch to one you've already saved",
+    tab_new_project:'✨ New Research Project', tab_new_project_title:'Start a brand-new research project — names your project, then walks you through its six stages',
+    tab_projects:'🗂 Research Projects', tab_projects_title:"Switch to a research project you've already saved",
     tab_idea:'💡 Idea &amp; Feasibility', tab_idea_title:"Think through a research idea with an advisor before committing — what's realistic given your time, access and resources",
     idea_panel_desc:"Before you commit to a topic, talk it through here. Describe what you want to study and what you actually have available — the advisor below judges whether it's realistic, not just whether it's interesting.",
     idea_topic_label:'Your working idea or research question', idea_topic_placeholder:'e.g. Does sleep quality predict exam performance in college students?',
@@ -937,6 +955,14 @@ const I18N={
     stage_idea:'Idea & Feasibility', stage_lit:'Literature', stage_design:'Design & Ethics',
     stage_collect:'Collection & Analysis', stage_writing:'Writing', stage_review:'Review & Publish',
     stage_guide_fmt:'Stage {n} of {total}', stage_guide_next:'Next:', stage_guide_final:'Final stage — nothing after this in the sequence',
+    stageintro_h2:'Your project has six stages', stageintro_desc:'The app follows you through them in order. Every tool stays one click away the whole time — this is just the shape of the road ahead.',
+    stageintro_desc_idea:'Shape your question and check what\'s realistically doable.',
+    stageintro_desc_lit:'Find and work through what\'s already been studied.',
+    stageintro_desc_design:'Plan your method and prepare consent/ethics paperwork.',
+    stageintro_desc_collect:'Gather data, run statistics, code open-ended answers.',
+    stageintro_desc_writing:'Draft the paper, cite your sources, refine the text.',
+    stageintro_desc_review:'Polish, format, and get ready to submit.',
+    stageintro_start_fmt:'Start with {stage} →', stageintro_gotit_btn:'Got it',
     projects_empty:'No research projects saved yet. Work normally, then use "Save as research project" whenever you want to track a stage and come back to it later.',
     project_complete_badge:'Complete', project_open_btn:'Open', project_reopen_btn:'Reopen',
     project_complete_btn:'Mark complete', project_currently_open:'Currently open',
@@ -1064,7 +1090,8 @@ const I18N={
     ai_pane_desc:'अपने दस्तावेज़ में टेक्स्ट चुनें, फिर कोई बटन दबाएँ। स्वीकार करने के लिए एडिटर में <kbd>Tab</kbd> दबाएँ। <kbd>Ctrl</kbd>+<kbd>Z</kbd> इसे पूर्ववत करता है।',
     ai_pane_placeholder:'आपका AI सुझाव यहाँ दिखाई देगा…',
     accept_btn:'स्वीकार करें ✓', copy_btn:'कॉपी करें', dismiss_btn:'हटाएं',
-    tab_projects:'🗂 शोध प्रोजेक्ट', tab_projects_title:'नया शोध प्रोजेक्ट शुरू करें या पहले से सहेजे गए किसी प्रोजेक्ट पर जाएं',
+    tab_new_project:'✨ नया शोध प्रोजेक्ट', tab_new_project_title:'एक बिल्कुल नया शोध प्रोजेक्ट शुरू करें — नाम दें, फिर इसके छह चरणों से गुज़रें',
+    tab_projects:'🗂 शोध प्रोजेक्ट', tab_projects_title:'पहले से सहेजे गए किसी प्रोजेक्ट पर जाएं',
     tab_idea:'💡 विचार और व्यवहार्यता', tab_idea_title:'प्रतिबद्ध होने से पहले एक सलाहकार के साथ अपने शोध विचार पर विचार करें — आपके समय, पहुंच और संसाधनों को देखते हुए क्या व्यावहारिक है',
     idea_panel_desc:'किसी विषय के प्रति प्रतिबद्ध होने से पहले, इसे यहाँ विस्तार से सोचें। बताएं कि आप क्या अध्ययन करना चाहते हैं और आपके पास वास्तव में क्या उपलब्ध है — नीचे दिया सलाहकार यह आंकता है कि यह व्यावहारिक है या नहीं, केवल यह नहीं कि यह दिलचस्प है या नहीं।',
     idea_topic_label:'आपका कार्यशील विचार या शोध प्रश्न', idea_topic_placeholder:'उदाहरण: क्या नींद की गुणवत्ता कॉलेज छात्रों में परीक्षा प्रदर्शन की भविष्यवाणी करती है?',
@@ -1097,6 +1124,14 @@ const I18N={
     stage_idea:'विचार और व्यवहार्यता', stage_lit:'साहित्य', stage_design:'डिज़ाइन और नैतिकता',
     stage_collect:'संग्रह और विश्लेषण', stage_writing:'लेखन', stage_review:'समीक्षा और प्रकाशन',
     stage_guide_fmt:'चरण {n}/{total}', stage_guide_next:'आगे:', stage_guide_final:'अंतिम चरण — क्रम में इसके बाद कुछ नहीं है',
+    stageintro_h2:'आपके प्रोजेक्ट में छह चरण हैं', stageintro_desc:'ऐप आपको इसी क्रम में हर चरण से गुज़ारता है। हर टूल हमेशा एक क्लिक दूर रहता है — यह सिर्फ आगे की राह की झलक है।',
+    stageintro_desc_idea:'अपना प्रश्न स्पष्ट करें और देखें कि असल में क्या संभव है।',
+    stageintro_desc_lit:'पहले से हुए शोध को खोजें और पढ़ें।',
+    stageintro_desc_design:'अपनी विधि तय करें और सहमति/नैतिकता के कागज़ात तैयार करें।',
+    stageintro_desc_collect:'डेटा इकट्ठा करें, सांख्यिकी चलाएं, खुले उत्तरों को कोड करें।',
+    stageintro_desc_writing:'पेपर लिखें, स्रोतों का हवाला दें, टेक्स्ट सुधारें।',
+    stageintro_desc_review:'निखारें, प्रारूपित करें, और जमा करने के लिए तैयार हों।',
+    stageintro_start_fmt:'{stage} से शुरू करें →', stageintro_gotit_btn:'समझ गया',
     projects_empty:'अभी तक कोई शोध प्रोजेक्ट सहेजा नहीं गया है। सामान्य रूप से काम करें, फिर जब किसी चरण को ट्रैक करना हो और बाद में वापस आना हो तो "शोध प्रोजेक्ट के रूप में सहेजें" का उपयोग करें।',
     project_complete_badge:'पूर्ण', project_open_btn:'खोलें', project_reopen_btn:'फिर से खोलें',
     project_complete_btn:'पूर्ण के रूप में चिह्नित करें', project_currently_open:'अभी खुला है',
@@ -1420,20 +1455,72 @@ function getActiveProjectId(){return LS.get('appu_active_project')||null}
 function getActiveProject(){const id=getActiveProjectId();return getProjects().find(p=>p.id===id)||null}
 function stageLabel(id){return t('stage_'+id)}
 
-function setActiveProject(id){
+function setActiveProject(id,opts){
   LS.set('appu_active_project',id||'');
   const p=getProjects().find(x=>x.id===id);
   if(p&&PACKS[p.pack])setPack(p.pack);
   renderProjectBar();
+  /* Guided-not-locked navigation: opening a project jumps the tool view straight to that
+     stage's first tool (if the stage has one yet — Design & Ethics doesn't). Nothing is
+     blocked afterward — every tab stays clickable — this just starts you in the right place
+     instead of wherever you happened to be. opts.skipJump is used by the new-project path,
+     which shows the stage-intro dialog first and lets ITS button do the jump instead. */
+  if(p&&p.status!=='complete'&&!(opts&&opts.skipJump)){
+    const firstTool=STAGE_FIRST_TOOL[p.stage];
+    if(firstTool)showTool(firstTool);
+  }
 }
 
 function renderProjectBar(){
   const label=document.getElementById('projectBarLabel');
-  if(!label)return;
+  if(label){
+    const p=getActiveProject();
+    if(!p){label.textContent=t('project_bar_empty')}
+    else{
+      label.innerHTML=escHTML(p.name)+' <span class="badge">'+escHTML(stageLabel(p.stage))+'</span>'
+        +(p.status==='complete'?' <span class="badge" style="background:#16a34a;color:#fff">'+escHTML(t('project_complete_badge'))+'</span>':'');
+    }
+  }
+  /* renderProjectBar() is called once, guarded, from the language/pack-setup code higher up the
+     file (before TOOL_TO_STAGE's own `const` has executed — a pre-existing forward-reference
+     this file already works around elsewhere, e.g. showTool()'s try/catch around
+     renderStageGuide()). renderStageHighlight() reads TOOL_TO_STAGE, so it needs the same guard. */
+  try{renderStageHighlight()}catch(e){}
+}
+/* Marks, on the tab bar itself, which tools belong to the active project's current stage —
+   a highlight, not a gate. Every tab stays clickable regardless; this is the "guided, not
+   locked" piece of project-based navigation. No active project (or a completed one, which has
+   no "current" stage left to point at) clears the highlight entirely. */
+function renderStageHighlight(){
   const p=getActiveProject();
-  if(!p){label.textContent=t('project_bar_empty');return}
-  label.innerHTML=escHTML(p.name)+' <span class="badge">'+escHTML(stageLabel(p.stage))+'</span>'
-    +(p.status==='complete'?' <span class="badge" style="background:#16a34a;color:#fff">'+escHTML(t('project_complete_badge'))+'</span>':'');
+  const stage=(p&&p.status!=='complete')?p.stage:null;
+  document.querySelectorAll('.tool-tab').forEach(b=>{
+    b.classList.toggle('stage-current',!!stage&&TOOL_TO_STAGE[b.dataset.tool]===stage);
+  });
+}
+/* One-time orientation for a brand-new research project: names all six stages so a student
+   sees the road ahead before diving in, then its own button (not setActiveProject) does the
+   jump into stage one. Only shown for a genuinely new project — adding work to an existing
+   one, or reopening one from the Projects dialog, jumps straight there with no interruption. */
+let stageIntroTargetTool=null;
+function stageIntroShow(stage){
+  const list=document.getElementById('stageIntroList');
+  list.innerHTML=STAGES.map((id,i)=>{
+    const cur=id===stage;
+    return '<div class="stageintro-row'+(cur?' is-current':'')+'">'
+      +'<span class="stageintro-num">'+(i+1)+'</span>'
+      +'<div><div class="stageintro-title">'+escHTML(stageLabel(id))+'</div>'
+      +'<div class="stageintro-desc">'+escHTML(t('stageintro_desc_'+id))+'</div></div>'
+    +'</div>';
+  }).join('');
+  stageIntroTargetTool=STAGE_FIRST_TOOL[stage]||null;
+  const btn=document.getElementById('stageIntroStartBtn');
+  btn.textContent=stageIntroTargetTool?t('stageintro_start_fmt').replace('{stage}',stageLabel(stage)):t('stageintro_gotit_btn');
+  document.getElementById('stageIntroDlg').showModal();
+}
+function stageIntroStart(){
+  document.getElementById('stageIntroDlg').close();
+  if(stageIntroTargetTool)showTool(stageIntroTargetTool);
 }
 
 function openSaveAsProject(){
@@ -1447,6 +1534,16 @@ function openSaveAsProject(){
   sapModeChange();
   document.getElementById('sapName').value='';
   document.getElementById('saveAsProjectDlg').showModal();
+}
+/* The directly-visible "New Research Project" tab's entry point — a dedicated, one-click
+   path to starting from scratch, instead of a radio button tucked inside the general-purpose
+   Save-as-research-project dialog. Reuses that same dialog (already defaults to "new" mode)
+   rather than building a second one, but defaults the stage to Idea & Feasibility — a brand
+   new project has no existing work to guess a stage from — and focuses the name field. */
+function openNewProjectDirect(){
+  openSaveAsProject();
+  document.getElementById('sapStage').value='idea';
+  document.getElementById('sapName').focus();
 }
 function sapModeChange(){
   const mode=document.querySelector('input[name="sapMode"]:checked').value;
@@ -1471,8 +1568,11 @@ function saveAsProject(){
     const id='proj_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     list.push({id,name,stage,pack:getPack(),status:'active',createdAt:Date.now(),updatedAt:Date.now()});
     saveProjectsList(list);
-    setActiveProject(id);
+    setActiveProject(id,{skipJump:true});
     showToast(t('toast_saved_as')+name);
+    document.getElementById('saveAsProjectDlg').close();
+    stageIntroShow(stage);
+    return;
   }
   document.getElementById('saveAsProjectDlg').close();
 }
