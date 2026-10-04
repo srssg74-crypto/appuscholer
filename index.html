@@ -6,7 +6,7 @@
 <title>Appuscholar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
 <style>
   :root{
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
@@ -15,21 +15,23 @@
     --bg:#fbfaf9; --card:#ffffff; --ink:#2a2438; --muted:#787288;
     --line:#ece8f2; --soft:#f8f6fc; --soft2:#faf9fd; --chip:#f4f3f6; --chipline:#ddd9e4;
     --head-title:#4c1d95; --dashed:#cdbdf0; --accent-ink:#5b21b6;
-    --shadow-ink:17,12,34; --blob-a:rgba(124,58,237,.07); --blob-b:rgba(201,147,46,.08);
-    --font-display:"Fraunces","Georgia",serif;
+    --shadow-ink:17,12,34; --blob-a:rgba(124,58,237,.17); --blob-b:rgba(201,147,46,.22); --dot:rgba(91,33,182,.09);
+    --font-display:"Fraunces","Noto Serif Devanagari","Georgia",serif;
   }
   :root[data-theme="dark"]{
     --bg:#1a1628; --card:#241e38; --ink:#eae6f3; --muted:#b0a9c4;
     --line:#38304f; --soft:#2a2340; --soft2:#271f3b; --chip:#332b4a; --chipline:#4a3f66;
     --purple-100:#3a2d5e; --head-title:#d8ccff; --dashed:#7a68ab; --accent-ink:#c4b5fd; --warn-bg:#3d2f0b; --warn-ink:#fde68a;
-    --shadow-ink:0,0,0; --blob-a:rgba(124,58,237,.10); --blob-b:rgba(201,147,46,.06);
+    --shadow-ink:0,0,0; --blob-a:rgba(124,58,237,.24); --blob-b:rgba(201,147,46,.14); --dot:rgba(216,204,255,.07);
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink);position:relative;min-height:100vh}
   body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
-      radial-gradient(900px 620px at 92% -8%, var(--blob-a), transparent 60%),
-      radial-gradient(820px 560px at -8% 108%, var(--blob-b), transparent 60%);
+      radial-gradient(1200px 820px at 100% 0%, var(--blob-a), transparent 72%),
+      radial-gradient(1100px 780px at 0% 100%, var(--blob-b), transparent 72%),
+      radial-gradient(var(--dot) 1.3px, transparent 1.3px);
+    background-size:auto,auto,24px 24px;
   }
   header{background:linear-gradient(120deg,var(--purple-900),var(--purple-700) 60%,var(--purple-600));color:#fff;padding:8px 18px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 22px rgba(var(--shadow-ink),.18);position:sticky;top:0;z-index:10;flex-wrap:wrap}
   header .btn{padding:7px 13px;font-size:13px}
@@ -120,8 +122,9 @@
   .slide-card ul{margin:0;padding-left:20px;font-size:13.5px;line-height:1.7}
   .slide-card .slide-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
   .slide-card img{max-width:200px;border-radius:6px;margin-top:6px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 32px rgba(var(--shadow-ink),.06);overflow:hidden}
-  .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--soft);flex-wrap:wrap}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 36px rgba(var(--shadow-ink),.09);overflow:hidden}
+  .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--soft);flex-wrap:wrap;position:relative}
+  .card-head::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple-600),var(--gold-bright) 70%,transparent)}
   .card-head h2{margin:0;font-size:17px;font-weight:600;color:var(--head-title);font-family:var(--font-display)}
   .badge{font-size:11px;background:var(--purple-100);color:var(--accent-ink);padding:4px 10px;border-radius:20px;font-weight:700}
   #editor{width:100%;flex:1;min-height:0;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman","Noto Sans Devanagari",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
