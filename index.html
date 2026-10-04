@@ -1657,7 +1657,17 @@ function sidebarCollapsedGroups(){
 function toggleStageGroup(stage){
   const grp=document.querySelector('.stage-group[data-stage="'+stage+'"]');
   if(!grp)return;
-  grp.classList.toggle('collapsed');
+  const sb=document.getElementById('toolSidebar');
+  if(sb&&sb.classList.contains('collapsed')){
+    // Icon-rail mode hides every stage's tools with a CSS override regardless of this
+    // group's own class, so a click here is a request to see this stage, not a dead
+    // toggle — expand the whole sidebar back out and make sure this group is open too.
+    sb.classList.remove('collapsed');
+    LS.set('appu_sidebar_collapsed','0');
+    grp.classList.remove('collapsed');
+  }else{
+    grp.classList.toggle('collapsed');
+  }
   const collapsed=STAGES.filter(s=>{
     const g=document.querySelector('.stage-group[data-stage="'+s+'"]');
     return g&&g.classList.contains('collapsed');
