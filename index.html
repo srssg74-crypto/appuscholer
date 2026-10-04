@@ -127,6 +127,16 @@
   .orig-badge.lo{background:#fee2e2;color:#991b1b;border-color:#fecaca}
   #editor.highlight-ai .ai-ins{background:rgba(245,158,11,.32);border-radius:2px;box-shadow:0 0 0 1px rgba(245,158,11,.32)}
   .translated-quote{border-bottom:2px dotted #7c3aed;cursor:help}
+  .qual-tag{border-radius:2px;padding:0 1px;cursor:help}
+  #editor.qual-hide .qual-tag{background:none!important;box-shadow:none!important}
+  .qual-code-row{display:flex;align-items:center;gap:6px;padding:5px 4px;border-radius:8px;font-size:13px}
+  .qual-code-row:hover{background:var(--soft)}
+  .qual-code-swatch{flex:0 0 auto;width:12px;height:12px;border-radius:50%;cursor:pointer}
+  .qual-code-name{flex:1;cursor:pointer;font-weight:600;color:var(--accent-ink)}
+  .qual-code-row button{flex:0 0 auto;background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 4px}
+  .qual-code-row button:hover{color:var(--head-title)}
+  .qual-passage{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13.5px}
+  .qual-passage .qual-passage-doc{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
   .stats{font-size:12px;color:var(--muted);margin-left:auto}
   .panel{padding:18px}
   .panel h3{margin:0 0 6px;font-size:16px;color:var(--head-title);font-family:var(--font-display);font-weight:600;letter-spacing:.2px}
@@ -170,6 +180,7 @@
   #provTabs{padding:8px 18px 0;max-width:1180px;margin:0 auto;position:relative}
   .project-bar{display:flex;align-items:center;gap:10px;padding:8px 18px;max-width:1180px;margin:0 auto;font-size:13.5px}
   .project-bar .badge{font-size:10px;padding:3px 8px}
+  .project-bar-status{color:var(--muted);font-size:12.5px;white-space:nowrap}
   #saveAsProjectDlg .dlg-body>div:not(.fld):not(.row){margin-bottom:10px}
   .prov-toggle{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:10px;border:2px solid var(--line);background:var(--card);font-size:12.5px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
   .prov-toggle .dot{width:9px;height:9px;border-radius:50%;background:var(--chipline);flex:none}
@@ -228,6 +239,7 @@
 
 <div class="project-bar" id="projectBar">
   <span id="projectBarLabel" data-i18n="project_bar_empty">No research project yet — working in scratch space</span>
+  <span class="project-bar-status" id="projectBarStatus"></span>
   <div class="spacer"></div>
   <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as research project</button>
   <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()" data-i18n="projects_btn">📁 Research Projects</button>
@@ -361,6 +373,7 @@
     <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
     <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
     <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" data-i18n="tab_stats" data-i18n-title="tab_stats_title" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
+    <button type="button" class="tool-tab" data-tool="qual" onclick="showTool('qual')" data-i18n="tab_qual" data-i18n-title="tab_qual_title" title="Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents">🏷 Qualitative Coding</button>
     <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" data-i18n="tab_style" data-i18n-title="tab_style_title" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
     <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" data-i18n="tab_cite" data-i18n-title="tab_cite_title" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
     <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" data-i18n="tab_slides" data-i18n-title="tab_slides_title" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
@@ -407,6 +420,18 @@
       <h3 style="margin-top:16px" data-i18n="stats_charts_h3">📈 Charts</h3>
       <p class="desc" data-i18n="stats_charts_desc">Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.</p>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()" data-i18n="stats_chart_open_btn">Open Chart Maker</button></div>
+    </div></section>
+
+    <section class="card tool-panel" data-panel="qual"><div class="panel">
+      <h3 data-i18n="tab_qual">🏷 Qualitative Coding</h3>
+      <p class="desc" data-i18n="qual_panel_desc">Select a passage in your document, then tap a code below to tag it. Build codes under other codes to group related ideas. Works across every document you have, not just the one that's open.</p>
+      <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="qualShowColors" checked onchange="qualToggleColors()" style="width:17px;height:17px;accent-color:#6d28d9"> <b data-i18n="qual_show_colors_label">Show code colors in the document</b>
+      </label>
+      <div id="qualTree"></div>
+      <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="qualAddCode(null)" data-i18n="qual_add_top_btn">+ New top-level code</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="qualExportMarkdown()" data-i18n="qual_export_btn">⬇ Export all coded passages (Markdown)</button></div>
+      <p class="desc" id="qualEmptyNote" style="margin-top:8px" data-i18n="qual_empty_note">No codes yet — add one above, then select text in your document and tap it to tag that passage.</p>
     </div></section>
 
     <section class="card tool-panel" data-panel="style"><div class="panel">
@@ -827,6 +852,15 @@
   </div>
 </div></dialog>
 
+<dialog id="qualPassagesDlg" class="dlg-wide"><div class="dlg-body">
+  <h2 id="qualPassagesH2" data-i18n="qual_passages_h2">🏷 Coded passages</h2>
+  <p style="font-size:13px;color:var(--muted)" data-i18n="qual_passages_desc">Every passage tagged with this code, across all your documents.</p>
+  <div id="qualPassagesList"></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('qualPassagesDlg').close()" data-i18n="close_btn">Close</button>
+  </div>
+</div></dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
 
@@ -881,6 +915,12 @@ const I18N={
     idea_panel_note:"This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most. Once the plan feels solid, head to the Research tab next to find a research gap and ground it in real literature.",
     tab_psych:'🧠 Psychology Tools', tab_psych_title:'Ready-made psychological tests, scales and scoring keys to drop into your questionnaire',
     tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
+    tab_qual:'🏷 Qualitative Coding', tab_qual_title:"Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents",
+    qual_panel_desc:'Select a passage in your document, then tap a code below to tag it. Build codes under other codes to group related ideas. Works across every document you have, not just the one that\'s open.',
+    qual_show_colors_label:'Show code colors in the document',
+    qual_add_top_btn:'+ New top-level code', qual_export_btn:'⬇ Export all coded passages (Markdown)',
+    qual_empty_note:'No codes yet — add one above, then select text in your document and tap it to tag that passage.',
+    qual_passages_h2:'🏷 Coded passages', qual_passages_desc:'Every passage tagged with this code, across all your documents.',
     tab_style:'✍ My Writing Style', tab_style_title:'Train the AI on samples of your own past writing so its suggestions sound like you',
     tab_cite:'📚 Citation Manager', tab_cite_title:'Build and format your reference list — APA, MLA or Chicago — and insert in-text citations',
     tab_research:'🔬 Research', tab_research_title:'Search academic databases for relevant papers, map how they cite each other, and draft a literature review',
@@ -1035,6 +1075,12 @@ const I18N={
     idea_panel_note:'यह आपके विचार पर एक ईमानदार बाहरी राय देता है, स्वीकृति नहीं — AI गलत हो सकता है, और एक वास्तविक गाइड का निर्णय अभी भी सबसे अधिक मायने रखता है। योजना पक्की लगने पर, आगे Research टैब में जाकर शोध अंतराल खोजें और इसे वास्तविक साहित्य में आधारित करें।',
     tab_psych:'🧠 मनोविज्ञान उपकरण', tab_psych_title:'अपनी प्रश्नावली में जोड़ने के लिए तैयार मनोवैज्ञानिक परीक्षण, स्केल और स्कोरिंग कुंजियाँ',
     tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
+    tab_qual:'🏷 गुणात्मक कोडिंग', tab_qual_title:'अपने टेक्स्ट के हिस्सों को अपने खुद के कोड से टैग करें (साक्षात्कार या खुले प्रश्नों के उत्तर), एक कोड ट्री बनाएं, और अपने सभी दस्तावेज़ों में किसी कोड के हर हिस्से को एक साथ देखें',
+    qual_panel_desc:'अपने दस्तावेज़ में एक हिस्सा चुनें, फिर उसे टैग करने के लिए नीचे किसी कोड पर टैप करें। जुड़े विचारों को समूहित करने के लिए कोड के नीचे उप-कोड बनाएं। यह सिर्फ खुले दस्तावेज़ में ही नहीं, आपके सभी दस्तावेज़ों में काम करता है।',
+    qual_show_colors_label:'दस्तावेज़ में कोड के रंग दिखाएं',
+    qual_add_top_btn:'+ नया मुख्य कोड', qual_export_btn:'⬇ सभी टैग किए गए हिस्से निर्यात करें (Markdown)',
+    qual_empty_note:'अभी कोई कोड नहीं है — ऊपर एक जोड़ें, फिर अपने दस्तावेज़ में टेक्स्ट चुनें और उसे टैग करने के लिए टैप करें।',
+    qual_passages_h2:'🏷 टैग किए गए हिस्से', qual_passages_desc:'इस कोड से टैग किया गया हर हिस्सा, आपके सभी दस्तावेज़ों में।',
     tab_style:'✍ मेरी लेखन शैली', tab_style_title:'AI को अपने पुराने लेखन के नमूनों पर प्रशिक्षित करें ताकि सुझाव आपकी शैली में हों',
     tab_cite:'📚 उद्धरण प्रबंधक', tab_cite_title:'अपनी संदर्भ सूची बनाएं और प्रारूपित करें — APA, MLA या Chicago — और इन-टेक्स्ट उद्धरण जोड़ें',
     tab_research:'🔬 शोध', tab_research_title:'प्रासंगिक शोध-पत्रों के लिए अकादमिक डेटाबेस खोजें, उनके परस्पर उद्धरण देखें, और साहित्य समीक्षा का मसौदा तैयार करें',
@@ -1338,7 +1384,7 @@ applyPack();
    document or tool data (that stays global); it's a stage/pack bookmark today, and the foundation the
    real per-stage tool view builds on as more stage-specific tools ship. */
 const STAGES=['idea','lit','design','collect','writing','review'];
-const TOOL_TO_STAGE={idea:'idea',psych:'lit',research:'lit',stats:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
+const TOOL_TO_STAGE={idea:'idea',psych:'lit',research:'lit',stats:'collect',qual:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
 /* The first tool a student should open for each stage, used by the stage-guide bar's "Next" link
    below. A stage with no tool yet (design) is left out on purpose — nextStageTool() skips past it
    to the next stage that actually has something to do, rather than sending a student to a dead end. */
@@ -1609,7 +1655,7 @@ async function docImportFiles(files){
 function docRename(){
   const docs=docsGet(),cur=docCurrentId(),i=docs.findIndex(d=>d.id===cur);if(i<0)return;
   const t=prompt('Rename this document:',docs[i].title);if(t===null)return;
-  docs[i].title=t.trim()||'Untitled';docsSet(docs);docRenderList();showToast('Renamed ✓');
+  docs[i].title=t.trim()||'Untitled';docsSet(docs);docRenderList();updProjectBarStatus();showToast('Renamed ✓');
 }
 function docDelete(){
   const docs=docsGet();
@@ -1629,9 +1675,17 @@ function restoreDeleted(){
 
 /* ============ FIX 5: debounced, honest auto-save ============ */
 let saveT=null,saveDead=false,lastSaved='';
+function updProjectBarStatus(){
+  const el=document.getElementById('projectBarStatus');if(!el)return;
+  const n=stats?stats.textContent:'';
+  const docs=docsGet(),cur=docCurrentId(),d=docs.find(x=>x.id===cur);
+  const title=d?d.title:'';
+  el.textContent=(title?title+' · ':'')+(n||'0 words');
+}
 function upd(){
   const v=getEditorText();
   stats.textContent=(v.trim()?v.trim().split(/\s+/).length:0)+' words';
+  updProjectBarStatus();
   updOriginality();
   clearTimeout(saveT);
   saveT=setTimeout(()=>{
@@ -2582,6 +2636,164 @@ function downloadLatex(){
   a.download=safe+'.tex';a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   showToast('LaTeX exported ✓ — upload the .tex file to Overleaf, or compile locally');
+}
+
+/* ============ Qualitative Coding — tag passages, build a code tree, pull them out by code ============
+   A code is {id, name, parentId, color}, stored flat in appu_qual_codes. A tagged passage is NOT
+   stored separately — it is a <span class="qual-tag" data-qcode="ID"> wrapped around the selected
+   text, living directly inside the document's own stored HTML (the same approach the <span class="ai-ins">
+   originality tracker above uses). That means tags travel with the document through rename/import/export
+   for free, and a cross-document search is just reading every document's stored body and querying it. */
+const QUAL_PALETTE=['#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
+function qualCodesGet(){try{const a=JSON.parse(LS.get('appu_qual_codes')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function qualCodesSet(a){LS.set('appu_qual_codes',JSON.stringify(a))}
+function qualNextColor(){return QUAL_PALETTE[qualCodesGet().length%QUAL_PALETTE.length]}
+function qualAddCode(parentId){
+  const name=(prompt(parentId?'Name for this sub-code:':'Name for this new code:')||'').trim();
+  if(!name)return;
+  const codes=qualCodesGet();
+  const id='q'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  codes.push({id,name,parentId:parentId||null,color:qualNextColor()});
+  qualCodesSet(codes);qualRenderTree();
+  showToast('Code added: '+name);
+}
+function qualRenameCode(id){
+  const codes=qualCodesGet(),c=codes.find(x=>x.id===id);if(!c)return;
+  const name=(prompt('Rename this code:',c.name)||'').trim();
+  if(!name)return;
+  c.name=name;qualCodesSet(codes);qualRenderTree();
+}
+function qualDescendantIds(id,codes){
+  const out=[id];
+  codes.filter(c=>c.parentId===id).forEach(c=>out.push(...qualDescendantIds(c.id,codes)));
+  return out;
+}
+function qualUnwrapSpansInHTML(html,ids){
+  const div=document.createElement('div');div.innerHTML=html||'';
+  ids.forEach(id=>{
+    div.querySelectorAll('.qual-tag[data-qcode="'+id+'"]').forEach(span=>{
+      const parent=span.parentNode;if(!parent)return;
+      while(span.firstChild)parent.insertBefore(span.firstChild,span);
+      parent.removeChild(span);
+    });
+  });
+  return div.innerHTML;
+}
+function qualUnwrapCodesEverywhere(ids){
+  /* The open document is edited live in #editor, not yet in docsGet() until the next autosave —
+     unwrap there first and resave, then sweep every OTHER stored document's body string. */
+  editor.innerHTML=qualUnwrapSpansInHTML(editor.innerHTML,ids);
+  docSaveBody(getEditorHTML());lastSaved=getEditorHTML();upd();
+  const cur=docCurrentId(),docs=docsGet();
+  let changed=false;
+  docs.forEach(d=>{
+    if(d.id===cur)return;
+    const html=qualUnwrapSpansInHTML(d.body||'',ids);
+    if(html!==d.body){d.body=html;changed=true}
+  });
+  if(changed)docsSet(docs);
+}
+function qualDeleteCode(id){
+  const codes=qualCodesGet(),c=codes.find(x=>x.id===id);if(!c)return;
+  const ids=qualDescendantIds(id,codes);
+  const extra=ids.length>1?' and its '+(ids.length-1)+' sub-code(s)':'';
+  if(!confirm('Delete "'+c.name+'"'+extra+'? The passage text itself stays in your document — only the tag is removed.'))return;
+  qualUnwrapCodesEverywhere(ids);
+  qualCodesSet(codes.filter(x=>!ids.includes(x.id)));
+  qualRenderTree();
+  showToast('Deleted ✓');
+}
+function qualTagSelection(codeId){
+  restoreEditorSelection();
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount||sel.isCollapsed||!editor.contains(sel.getRangeAt(0).commonAncestorContainer)){
+    showToast('Select some text in your document first, then tap a code to tag it');return;
+  }
+  const codes=qualCodesGet(),c=codes.find(x=>x.id===codeId);if(!c)return;
+  const range=sel.getRangeAt(0);
+  const span=document.createElement('span');
+  span.className='qual-tag';span.dataset.qcode=codeId;span.title=c.name;
+  span.style.background=c.color+'55';span.style.boxShadow='0 0 0 1px '+c.color+'88';
+  try{range.surroundContents(span)}
+  catch(e){showToast('Select a passage within a single paragraph (not across headings or list items)');return}
+  sel.removeAllRanges();
+  const r2=document.createRange();r2.selectNodeContents(span);r2.collapse(false);
+  sel.addRange(r2);savedRange=r2.cloneRange();
+  docSaveBody(getEditorHTML());lastSaved=getEditorHTML();upd();
+  showToast('Tagged as "'+c.name+'" ✓');
+}
+function qualToggleColors(){
+  const cb=document.getElementById('qualShowColors'),on=cb?cb.checked:true;
+  editor.classList.toggle('qual-hide',!on);
+  LS.set('appu_qual_showcolors',on?'1':'0');
+}
+function qualRenderTree(){
+  const el=document.getElementById('qualTree');if(!el)return;
+  const codes=qualCodesGet();
+  const note=document.getElementById('qualEmptyNote');
+  if(note)note.style.display=codes.length?'none':'';
+  function renderLevel(parentId,depth){
+    return codes.filter(c=>c.parentId===parentId).map(c=>{
+      const kids=renderLevel(c.id,depth+1);
+      return '<div class="qual-code-row" style="padding-left:'+(depth*18)+'px">'+
+        '<span class="qual-code-swatch" style="background:'+c.color+'" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+c.id+'\')"></span>'+
+        '<span class="qual-code-name" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+c.id+'\')">'+escHTML(c.name)+'</span>'+
+        '<button type="button" onclick="qualAddCode(\''+c.id+'\')" title="Add a sub-code">+</button>'+
+        '<button type="button" onclick="qualOpenPassages(\''+c.id+'\')" title="View tagged passages">👁</button>'+
+        '<button type="button" onclick="qualRenameCode(\''+c.id+'\')" title="Rename">✎</button>'+
+        '<button type="button" onclick="qualDeleteCode(\''+c.id+'\')" title="Delete">🗑</button>'+
+      '</div>'+kids;
+    }).join('');
+  }
+  el.innerHTML=renderLevel(null,0);
+}
+function qualFindPassages(codeId){
+  docSaveBody(getEditorHTML()); // make sure the open document's latest text is in docsGet() before scanning
+  const docs=docsGet(),out=[];
+  docs.forEach(d=>{
+    const div=document.createElement('div');div.innerHTML=d.body||'';
+    div.querySelectorAll('.qual-tag[data-qcode="'+codeId+'"]').forEach(span=>{
+      const txt=(span.textContent||'').trim();
+      if(txt)out.push({doc:d.title||'Untitled',text:txt});
+    });
+  });
+  return out;
+}
+function qualOpenPassages(codeId){
+  const codes=qualCodesGet(),c=codes.find(x=>x.id===codeId);if(!c)return;
+  const passages=qualFindPassages(codeId);
+  document.getElementById('qualPassagesH2').textContent='🏷 '+c.name;
+  const list=document.getElementById('qualPassagesList');
+  list.innerHTML=passages.length?passages.map(p=>
+    '<div class="qual-passage"><div class="qual-passage-doc">'+escHTML(p.doc)+'</div>“'+escHTML(p.text)+'”</div>'
+  ).join(''):'<p class="desc">No passages tagged with this code yet.</p>';
+  document.getElementById('qualPassagesDlg').showModal();
+}
+function qualBuildMarkdown(){
+  const codes=qualCodesGet(),lines=['# Coded passages',''];
+  function walk(parentId,depth){
+    codes.filter(c=>c.parentId===parentId).forEach(c=>{
+      lines.push('#'.repeat(Math.min(depth+2,6))+' '+c.name);
+      const passages=qualFindPassages(c.id);
+      if(!passages.length)lines.push('_No passages tagged yet._');
+      else passages.forEach(p=>lines.push('- **'+p.doc+':** "'+p.text.replace(/\s+/g,' ')+'"'));
+      lines.push('');
+      walk(c.id,depth+1);
+    });
+  }
+  walk(null,0);
+  return lines.join('\n');
+}
+function qualExportMarkdown(){
+  const codes=qualCodesGet();
+  if(!codes.length){showToast('Add at least one code first');return}
+  const md=qualBuildMarkdown();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));
+  a.download='appuscholar-coded-passages-'+(new Date().toISOString().slice(0,10))+'.md';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  showToast('Exported ✓');
 }
 
 const SCAFFOLDS={
@@ -3813,6 +4025,13 @@ function citCheckCaptureHash(){
     setEditorHTML(d?d.body:'');lastSaved=getEditorHTML();
   })();
   docRenderList();
+  qualRenderTree();
+  (function(){
+    const v=LS.get('appu_qual_showcolors'),show=v===null?true:v==='1';
+    const cb=document.getElementById('qualShowColors');
+    if(cb)cb.checked=show;
+    editor.classList.toggle('qual-hide',!show);
+  })();
   styleInit();
   citRender();
   citSetupBookmarklet();
