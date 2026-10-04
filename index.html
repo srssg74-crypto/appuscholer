@@ -241,7 +241,7 @@
       <span class="badge" id="saveBadge" data-i18n="autosave_on">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
       <div class="spacer"></div>
       <button class="btn btn-ghost" onclick="downloadDoc()" data-i18n="download_btn">⬇ Download</button>
-      <button class="btn btn-ghost" onclick="downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.">⬇ Special format (LaTeX)</button>
+      <button class="btn btn-ghost" onclick="downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.">⬇ Advanced format</button>
       <div class="docbar">
         <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase" data-i18n="doc_label">Doc</label>
         <select id="docSel" onchange="docSwitch(this.value)" aria-label="Choose document"></select>
@@ -857,7 +857,7 @@ const I18N={
     project_bar_empty:'No research project yet — working in scratch space',
     save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
     doc_pane_h2:'📝 Your Document', autosave_on:'Auto-save on',
-    download_btn:'⬇ Download', latex_btn:'⬇ Special format (LaTeX)', latex_btn_title:"A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.",
+    download_btn:'⬇ Download', latex_btn:'⬇ Advanced format', latex_btn_title:"A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.",
     doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
     doc_import_btn:'📂 Import', doc_import_title:'Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor',
     editor_placeholder:'Start writing here… Select text and press Improve, or just write and let AI continue.',
@@ -1011,7 +1011,7 @@ const I18N={
     project_bar_empty:'अभी कोई शोध प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
     save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
     doc_pane_h2:'📝 आपका दस्तावेज़', autosave_on:'ऑटो-सेव चालू',
-    download_btn:'⬇ डाउनलोड करें', latex_btn:'⬇ विशेष प्रारूप (LaTeX)', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
+    download_btn:'⬇ डाउनलोड करें', latex_btn:'⬇ उन्नत प्रारूप', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
     doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
     doc_import_btn:'📂 आयात करें', doc_import_title:'.docx, .pdf, .txt या .html फ़ाइल को नए दस्तावेज़ के रूप में आयात करें — या एडिटर पर खींच कर छोड़ें',
     editor_placeholder:'यहाँ लिखना शुरू करें… टेक्स्ट चुनें और "सुधारें" दबाएँ, या बस लिखें और AI को आगे बढ़ाने दें।',
