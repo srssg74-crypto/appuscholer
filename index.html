@@ -241,7 +241,7 @@
       <span class="badge" id="saveBadge" data-i18n="autosave_on">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
       <div class="spacer"></div>
       <button class="btn btn-ghost" onclick="downloadDoc()" data-i18n="download_btn">⬇ Download</button>
-      <button class="btn btn-ghost" onclick="downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="Export as a .tex file to paste into Overleaf">⬇ LaTeX</button>
+      <button class="btn btn-ghost" onclick="downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.">⬇ Special format (LaTeX)</button>
       <div class="docbar">
         <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase" data-i18n="doc_label">Doc</label>
         <select id="docSel" onchange="docSwitch(this.value)" aria-label="Choose document"></select>
@@ -631,7 +631,7 @@
   </div>
   <p class="desc" id="keyModeHint" style="margin:6px 0 0"></p>
   <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
-    <label for="orcidIn" data-i18n="settings_orcid_label">Your ORCID iD (optional — printed on exports and templates)</label>
+    <label for="orcidIn" data-i18n="settings_orcid_label">Your researcher ID number — ORCID iD (optional, printed on exports and templates)</label>
     <input type="text" id="orcidIn" placeholder="0000-0000-0000-0000" oninput="orcidSave(this.value)">
     <p class="desc" style="margin:4px 0 0"><a href="https://orcid.org/register" target="_blank" rel="noopener" data-i18n="settings_orcid_link">Don't have one? Get a free ORCID iD →</a></p>
   </div>
@@ -857,7 +857,7 @@ const I18N={
     project_bar_empty:'No research project yet — working in scratch space',
     save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
     doc_pane_h2:'📝 Your Document', autosave_on:'Auto-save on',
-    download_btn:'⬇ Download', latex_btn:'⬇ LaTeX', latex_btn_title:'Export as a .tex file to paste into Overleaf',
+    download_btn:'⬇ Download', latex_btn:'⬇ Special format (LaTeX)', latex_btn_title:"A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.",
     doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
     doc_import_btn:'📂 Import', doc_import_title:'Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor',
     editor_placeholder:'Start writing here… Select text and press Improve, or just write and let AI continue.',
@@ -969,7 +969,7 @@ const I18N={
     settings_keymode_pass:'🔒 Protect with a passphrase — safest (type it once per session)',
     settings_keymode_plain:'Remember on this computer — easiest, no passphrase',
     settings_keymode_session:'This tab only — forget when I close it (college computer)',
-    settings_orcid_label:'Your ORCID iD (optional — printed on exports and templates)',
+    settings_orcid_label:'Your researcher ID number — ORCID iD (optional, printed on exports and templates)',
     settings_orcid_link:"Don't have one? Get a free ORCID iD →",
     settings_pack_label:'Specialty pack', settings_pack_general:'General research — core tools only',
     settings_pack_psychology:'Psychology — adds the Psychology Tools tab',
@@ -1011,7 +1011,7 @@ const I18N={
     project_bar_empty:'अभी कोई शोध प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
     save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
     doc_pane_h2:'📝 आपका दस्तावेज़', autosave_on:'ऑटो-सेव चालू',
-    download_btn:'⬇ डाउनलोड करें', latex_btn:'⬇ LaTeX', latex_btn_title:'Overleaf में पेस्ट करने के लिए .tex फ़ाइल के रूप में निर्यात करें',
+    download_btn:'⬇ डाउनलोड करें', latex_btn:'⬇ विशेष प्रारूप (LaTeX)', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
     doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
     doc_import_btn:'📂 आयात करें', doc_import_title:'.docx, .pdf, .txt या .html फ़ाइल को नए दस्तावेज़ के रूप में आयात करें — या एडिटर पर खींच कर छोड़ें',
     editor_placeholder:'यहाँ लिखना शुरू करें… टेक्स्ट चुनें और "सुधारें" दबाएँ, या बस लिखें और AI को आगे बढ़ाने दें।',
@@ -1123,7 +1123,7 @@ const I18N={
     settings_keymode_pass:'🔒 पासफ़्रेज़ से सुरक्षित करें — सबसे सुरक्षित (हर सत्र में एक बार टाइप करें)',
     settings_keymode_plain:'इस कंप्यूटर पर याद रखें — सबसे आसान, कोई पासफ़्रेज़ नहीं',
     settings_keymode_session:'केवल इस टैब में — बंद करते ही भूल जाएं (कॉलेज कंप्यूटर)',
-    settings_orcid_label:'आपका ORCID iD (वैकल्पिक — निर्यात और टेम्पलेट्स पर छपता है)',
+    settings_orcid_label:'आपका शोधकर्ता पहचान नंबर — ORCID iD (वैकल्पिक, निर्यात और टेम्पलेट्स पर छपता है)',
     settings_orcid_link:'नहीं है? मुफ़्त ORCID iD पाएं →',
     settings_pack_label:'विशेष पैक', settings_pack_general:'सामान्य शोध — केवल मुख्य उपकरण',
     settings_pack_psychology:'मनोविज्ञान — मनोविज्ञान उपकरण टैब जोड़ता है',
