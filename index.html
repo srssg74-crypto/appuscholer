@@ -59,14 +59,54 @@
     #editor{height:50vh!important}
     .splitter{display:none}
   }
-  .tool-tabbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-  .stage-guide{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--muted);background:var(--soft);border:1.5px dashed var(--dashed);border-radius:10px;padding:8px 12px;margin:-2px 0 12px}
+  .stage-guide{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--muted);background:var(--soft);border:1.5px dashed var(--dashed);border-radius:10px;padding:8px 12px;margin:0 0 12px}
   .stage-guide b{color:var(--head-title)}
   .stage-guide .next-btn{margin-left:auto;background:none;border:2px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
   .stage-guide .next-btn:hover{border-color:var(--purple-600,#6d28d9)}
   .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .tool-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
   .tool-tab.stage-current:not(.active){border-color:var(--purple-600,#6d28d9);box-shadow:0 0 0 1px var(--purple-600,#6d28d9)}
+  /* ============ Stage-grouped collapsible nav ============
+     Replaces the old flat, wrapping .tool-tabbar row. Every .tool-tab button below keeps the exact
+     same class and data-tool attribute it always had, nested one level deeper — showTool(), applyPack()
+     and renderStageHighlight() all still just query '.tool-tab', so none of that logic changed, only
+     where the buttons sit in the DOM. Nothing starts collapsed: a first-time visitor sees every tool
+     under its stage header, same one-click reach as the old bar, just grouped and labelled instead of
+     wrapped across several rows. Collapsing a stage, or the whole sidebar down to its icon rail, is
+     something a student opts into, and that choice is remembered. */
+  .tool-shell{display:flex;align-items:flex-start;gap:16px;margin-bottom:12px}
+  .tool-sidebar{flex:0 0 250px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;position:sticky;top:68px;align-self:flex-start;max-height:calc(100vh - 88px);overflow-y:auto}
+  .tool-sidebar.collapsed{flex:0 0 50px;width:50px;padding:10px 6px;overflow:visible}
+  .tool-sidebar.collapsed .stage-header-label,.tool-sidebar.collapsed .stage-dot,.tool-sidebar.collapsed .chev,.tool-sidebar.collapsed .stage-tools{display:none!important}
+  .tool-sidebar.collapsed .stage-header{justify-content:center;padding:8px 2px}
+  .tool-sidebar.collapsed .sidebar-pin{justify-content:center;padding:8px 2px}
+  .tool-sidebar.collapsed .sidebar-pin .sidebar-label{display:inline-block;max-width:1.2em;overflow:hidden;white-space:nowrap}
+  .sidebar-toggle{width:100%;background:none;border:none;cursor:pointer;font-size:16px;padding:6px;border-radius:8px;color:var(--accent-ink);display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-family:inherit}
+  .sidebar-toggle:hover{background:var(--soft)}
+  .sidebar-pinned{display:flex;flex-direction:column;gap:4px;padding-bottom:8px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+  .sidebar-pin{width:100%;text-align:left;display:flex;align-items:center;gap:8px}
+  .sidebar-pin .sidebar-label{overflow:hidden;white-space:nowrap;text-overflow:clip}
+  .stage-group{margin-bottom:1px}
+  .stage-header{width:100%;display:flex;align-items:center;gap:7px;background:none;border:none;cursor:pointer;padding:8px 6px;border-radius:8px;font-weight:700;font-size:13px;color:var(--ink);font-family:inherit;text-align:left}
+  .stage-header:hover{background:var(--soft)}
+  .stage-header-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stage-dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex:0 0 auto}
+  .stage-group.stage-group-current .stage-dot{background:var(--purple-600,#6d28d9)}
+  .stage-group.stage-group-current .stage-header{color:var(--head-title)}
+  .stage-header .chev{font-size:10px;color:var(--muted);transition:transform .15s;flex:0 0 auto}
+  .stage-group.collapsed .chev{transform:rotate(-90deg)}
+  .stage-group.collapsed .stage-tools{display:none}
+  .stage-tools{display:flex;flex-direction:column;gap:2px;padding:2px 2px 8px 21px}
+  .stage-tools .tool-tab{border:none;background:none;text-align:left;width:100%;padding:6px 8px;border-radius:7px;font-size:12.5px}
+  .stage-tools .tool-tab:hover:not(.active){background:var(--soft)}
+  .stage-tools .tool-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff}
+  .stage-tools .tool-tab.stage-current:not(.active){box-shadow:inset 2px 0 0 var(--purple-600,#6d28d9)}
+  .tool-main{flex:1;min-width:0}
+  @media(max-width:900px){
+    .tool-shell{flex-direction:column}
+    .tool-sidebar{position:static;width:100%;flex-basis:auto;max-height:none}
+    .tool-sidebar.collapsed{width:100%}
+  }
   .stageintro-row{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid var(--line)}
   .stageintro-row:last-child{border-bottom:none}
   .stageintro-num{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent-ink)}
@@ -374,20 +414,62 @@
   </div></section>
   </div>
 
-  <div class="tool-tabbar" role="tablist" aria-label="Writing tools">
-    <button type="button" class="tool-tab" style="background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)" onclick="openNewProjectDirect()" data-i18n="tab_new_project" data-i18n-title="tab_new_project_title" title="Start a brand-new research project — names your project, then walks you through its six stages">✨ New Research Project</button>
-    <button type="button" class="tool-tab" onclick="openProjectsDlg()" data-i18n="tab_projects" data-i18n-title="tab_projects_title" title="Switch to a research project you've already saved">🗂 Research Projects</button>
-    <button type="button" class="tool-tab" data-tool="idea" onclick="showTool('idea')" data-i18n="tab_idea" data-i18n-title="tab_idea_title" title="Think through a research idea with an advisor before committing — what's realistic given your time, access and resources">💡 Idea &amp; Feasibility</button>
-    <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
-    <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
-    <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" data-i18n="tab_stats" data-i18n-title="tab_stats_title" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
-    <button type="button" class="tool-tab" data-tool="qual" onclick="showTool('qual')" data-i18n="tab_qual" data-i18n-title="tab_qual_title" title="Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents">🏷 Qualitative Coding</button>
-    <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" data-i18n="tab_style" data-i18n-title="tab_style_title" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
-    <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" data-i18n="tab_cite" data-i18n-title="tab_cite_title" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
-    <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" data-i18n="tab_slides" data-i18n-title="tab_slides_title" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
-    <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" data-i18n="tab_chat" data-i18n-title="tab_chat_title" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
-  </div>
+  <div class="tool-shell" id="toolShell">
+  <nav class="tool-sidebar" id="toolSidebar" role="tablist" aria-label="Writing tools">
+    <button type="button" class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Collapse the tool panel" aria-label="Collapse or expand the tool panel">☰</button>
+    <div class="sidebar-pinned">
+      <button type="button" class="tool-tab sidebar-pin" style="background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)" onclick="openNewProjectDirect()" data-i18n-title="tab_new_project_title" title="Start a brand-new research project — names your project, then walks you through its six stages"><span class="sidebar-label" data-i18n="tab_new_project">✨ New Research Project</span></button>
+      <button type="button" class="tool-tab sidebar-pin" onclick="openProjectsDlg()" data-i18n-title="tab_projects_title" title="Switch to a research project you've already saved"><span class="sidebar-label" data-i18n="tab_projects">🗂 Research Projects</span></button>
+    </div>
 
+    <div class="stage-group" data-stage="idea">
+      <button type="button" class="stage-header" onclick="toggleStageGroup('idea')">💡 <span class="stage-header-label" data-i18n="stage_idea">Idea &amp; Feasibility</span><span class="stage-dot" data-stagedot="idea"></span><span class="chev">▾</span></button>
+      <div class="stage-tools" data-stagetools="idea">
+        <button type="button" class="tool-tab" data-tool="idea" onclick="showTool('idea')" data-i18n="tab_idea" data-i18n-title="tab_idea_title" title="Think through a research idea with an advisor before committing — what's realistic given your time, access and resources">💡 Idea &amp; Feasibility</button>
+      </div>
+    </div>
+
+    <div class="stage-group" data-stage="lit">
+      <button type="button" class="stage-header" onclick="toggleStageGroup('lit')">📖 <span class="stage-header-label" data-i18n="stage_lit">Literature Review</span><span class="stage-dot" data-stagedot="lit"></span><span class="chev">▾</span></button>
+      <div class="stage-tools" data-stagetools="lit">
+        <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
+        <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
+      </div>
+    </div>
+
+    <div class="stage-group" data-stage="design">
+      <button type="button" class="stage-header" onclick="toggleStageGroup('design')">⚖ <span class="stage-header-label" data-i18n="stage_design">Design &amp; Ethics</span><span class="stage-dot" data-stagedot="design"></span><span class="chev">▾</span></button>
+      <div class="stage-tools" data-stagetools="design">
+        <button type="button" class="tool-tab" data-tool="design" onclick="showTool('design')" data-i18n="tab_design" data-i18n-title="tab_design_title" title="Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts">⚖ Design &amp; Ethics</button>
+      </div>
+    </div>
+
+    <div class="stage-group" data-stage="collect">
+      <button type="button" class="stage-header" onclick="toggleStageGroup('collect')">📊 <span class="stage-header-label" data-i18n="stage_collect">Collection &amp; Analysis</span><span class="stage-dot" data-stagedot="collect"></span><span class="chev">▾</span></button>
+      <div class="stage-tools" data-stagetools="collect">
+        <button type="button" class="tool-tab" data-tool="stats" onclick="showTool('stats')" data-i18n="tab_stats" data-i18n-title="tab_stats_title" title="Run statistical tests on your data and get results in plain language plus APA write-ups">📊 Statistics &amp; Charts</button>
+        <button type="button" class="tool-tab" data-tool="qual" onclick="showTool('qual')" data-i18n="tab_qual" data-i18n-title="tab_qual_title" title="Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents">🏷 Qualitative Coding</button>
+      </div>
+    </div>
+
+    <div class="stage-group" data-stage="writing">
+      <button type="button" class="stage-header" onclick="toggleStageGroup('writing')">✍ <span class="stage-header-label" data-i18n="stage_writing">Writing</span><span class="stage-dot" data-stagedot="writing"></span><span class="chev">▾</span></button>
+      <div class="stage-tools" data-stagetools="writing">
+        <button type="button" class="tool-tab" data-tool="style" onclick="showTool('style')" data-i18n="tab_style" data-i18n-title="tab_style_title" title="Train the AI on samples of your own past writing so its suggestions sound like you">✍ My Writing Style</button>
+        <button type="button" class="tool-tab" data-tool="cite" onclick="showTool('cite')" data-i18n="tab_cite" data-i18n-title="tab_cite_title" title="Build and format your reference list — APA, MLA or Chicago — and insert in-text citations">📚 Citation Manager</button>
+        <button type="button" class="tool-tab" data-tool="chat" onclick="showTool('chat')" data-i18n="tab_chat" data-i18n-title="tab_chat_title" title="Ask a free-form question and get an AI answer, separate from the document you're writing">💬 Ask Appuscholar</button>
+      </div>
+    </div>
+
+    <div class="stage-group" data-stage="review">
+      <button type="button" class="stage-header" onclick="toggleStageGroup('review')">🖥 <span class="stage-header-label" data-i18n="stage_review">Review &amp; Publish</span><span class="stage-dot" data-stagedot="review"></span><span class="chev">▾</span></button>
+      <div class="stage-tools" data-stagetools="review">
+        <button type="button" class="tool-tab" data-tool="slides" onclick="showTool('slides')" data-i18n="tab_slides" data-i18n-title="tab_slides_title" title="Turn your document into a slide outline you can export as a PowerPoint">🖥 Make PPT</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="tool-main">
   <div class="stage-guide" id="stageGuide"></div>
 
     <section class="card tool-panel" data-panel="idea"><div class="panel">
@@ -419,6 +501,18 @@
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('explain')" data-i18n="psych_btn_explain">💡 Explain concept simply</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('stats')" data-i18n="psych_btn_apa">📊 Format results in APA</button></div>
       <p class="desc" style="margin-top:10px" data-i18n="psych_panel_note">Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.</p>
+    </div></section>
+
+    <section class="card tool-panel" data-panel="design"><div class="panel">
+      <h3 data-i18n="tab_design">⚖ Design &amp; Ethics</h3>
+      <p class="desc" data-i18n="design_panel_desc">Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts. Everything below is a starting checklist, not a legal ruling — confirm the final requirement with your own institution's Ethics Committee.</p>
+      <div id="designDash" style="margin-bottom:14px"></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('regDlg').showModal();regRender()" data-i18n="design_btn_reg">🧭 Regulatory-pathway wizard</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('protoDlg').showModal();protoLoad()" data-i18n="design_btn_proto">📄 Protocol / synopsis builder</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('ecDlg').showModal();ecRender()" data-i18n="design_btn_ec">🛡 Ethics Committee package + consent form</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('ctriDlg').showModal();ctriRender()" data-i18n="design_btn_ctri">📝 CTRI registration readiness</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('piDlg').showModal();piRender()" data-i18n="design_btn_pi">🎓 PI eligibility &amp; training</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('budgetDlg').showModal();budgetRender()" data-i18n="design_btn_budget">💰 Trial budget estimator</button></div>
     </div></section>
 
     <section class="card tool-panel" data-panel="stats"><div class="panel">
@@ -594,6 +688,8 @@
         <button class="btn btn-gold" style="flex:1" onclick="pptxDownload()" data-i18n="slides_download_btn">⬇ Download as PowerPoint (.pptx)</button>
       </div>
     </div></section>
+  </div>
+  </div>
 </main>
 
 <dialog id="saveAsProjectDlg"><div class="dlg-body">
@@ -878,6 +974,107 @@
   </div>
 </div></dialog>
 
+<dialog id="regDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>🧭 Regulatory-pathway wizard</h2>
+  <p style="font-size:13px;color:var(--muted)">Answer four questions and get a starting list of which approvals usually apply in India. This is a checklist to walk in with, not a ruling — your institution's Ethics Committee has the final word.</p>
+  <div class="fld"><label for="regType">Type of study</label>
+    <select id="regType">
+      <option value="observational">Observational — no intervention, just measuring or surveying</option>
+      <option value="interventional">Interventional — a behavioral or psychological intervention, no drug or device</option>
+      <option value="drug">Interventional — involves an investigational drug</option>
+      <option value="device">Interventional — involves an investigational device (incl. a brain-wave or neuro device)</option>
+    </select>
+  </div>
+  <div class="fld"><label for="regPop">Participant population</label>
+    <select id="regPop">
+      <option value="adults">General adults, able to consent for themselves</option>
+      <option value="minors">Minors (under 18)</option>
+      <option value="vulnerable">Cognitively impaired, institutionalised, or otherwise vulnerable adults</option>
+      <option value="pregnant">Pregnant women</option>
+    </select>
+  </div>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:8px;cursor:pointer">
+    <input type="checkbox" id="regBio" style="width:17px;height:17px;accent-color:#6d28d9"> Collects blood, saliva, genetic or other biological samples
+  </label>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:10px;cursor:pointer">
+    <input type="checkbox" id="regMulti" style="width:17px;height:17px;accent-color:#6d28d9"> Runs at more than one site or institution
+  </label>
+  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="regCompute()">Check pathway</button></div>
+  <div id="regResult" style="margin-top:14px"></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('regDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
+<dialog id="protoDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>📄 Protocol / synopsis builder</h2>
+  <p style="font-size:13px;color:var(--muted)">Fill in each section in your own words. "Generate" assembles them into one structured document you can drop straight into your document editor, or hand to a funder or your EC.</p>
+  <div class="fld"><label for="protoBg">Background &amp; rationale</label><textarea id="protoBg" rows="3" placeholder="What's known already, the gap, why this study is needed now"></textarea></div>
+  <div class="fld"><label for="protoObj">Objectives &amp; hypotheses</label><textarea id="protoObj" rows="2" placeholder="Primary objective, secondary objectives, directional hypotheses"></textarea></div>
+  <div class="fld"><label for="protoDesign">Design</label><textarea id="protoDesign" rows="2" placeholder="Study type, groups/arms, randomisation if any, blinding if any"></textarea></div>
+  <div class="fld"><label for="protoPart">Participants — inclusion &amp; exclusion criteria</label><textarea id="protoPart" rows="2" placeholder="Who is eligible, who is excluded and why"></textarea></div>
+  <div class="fld"><label for="protoSample">Sample size &amp; justification</label><textarea id="protoSample" rows="2" placeholder="Target N and how you got there — use the Statistics Lab's calculators if you have an expected effect size"></textarea></div>
+  <div class="fld"><label for="protoProc">Procedures</label><textarea id="protoProc" rows="3" placeholder="What a participant actually does, in order, from recruitment to debrief"></textarea></div>
+  <div class="fld"><label for="protoRisk">Risks &amp; benefits</label><textarea id="protoRisk" rows="2" placeholder="What could go wrong, how you'll manage it, what participants or the field gain"></textarea></div>
+  <div class="fld"><label for="protoDmp">Data management plan</label><textarea id="protoDmp" rows="2" placeholder="Where data lives, who can see it, how it's anonymised, how long you keep it"></textarea></div>
+  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="protoSave()">Save</button><button class="btn btn-gold" style="flex:1" onclick="protoGenerate()">Generate protocol document</button></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('protoDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
+<dialog id="ecDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>🛡 Ethics Committee package + consent form</h2>
+  <p style="font-size:13px;color:var(--muted)">The documents an EC typically asks for, and a generator for the informed consent form itself. Check a box as each document is ready.</p>
+  <div id="ecChecklist"></div>
+  <h3 style="margin-top:16px;font-size:15px">Generate an informed consent form</h3>
+  <div class="fld"><label for="ecTitle">Study title</label><input id="ecTitle" type="text" placeholder="e.g. EEG correlates of sustained attention in college students"></div>
+  <div class="fld"><label for="ecPI">Principal investigator &amp; institution</label><input id="ecPI" type="text" placeholder="Name, department, institution"></div>
+  <div class="fld"><label for="ecWhat">What participation involves</label><textarea id="ecWhat" rows="2" placeholder="Tasks, duration, location"></textarea></div>
+  <div class="fld"><label for="ecRisks2">Risks &amp; discomforts</label><textarea id="ecRisks2" rows="2" placeholder="Be specific and honest, even if minor"></textarea></div>
+  <div class="fld"><label for="ecBenefits">Benefits</label><textarea id="ecBenefits" rows="2" placeholder="To the participant directly, and/or to the field"></textarea></div>
+  <div class="fld"><label for="ecContact">Contact for questions or complaints</label><input id="ecContact" type="text" placeholder="PI email/phone, and the EC's own contact"></div>
+  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="ecSave()">Save</button><button class="btn btn-gold" style="flex:1" onclick="ecGenerateConsent()">Generate consent form</button></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('ecDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
+<dialog id="ctriDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>📝 CTRI registration readiness</h2>
+  <p style="font-size:13px;color:var(--muted)">CTRI (Clinical Trials Registry – India) asks for a fixed set of fields. Tick off what's ready — this doesn't submit anything, it just gets you ready to fill CTRI's own form without hunting for a missing piece halfway through.</p>
+  <div id="ctriChecklist"></div>
+  <div class="row" style="margin-top:12px"><button class="btn btn-ghost" style="flex:1" onclick="ctriExport()">⬇ Export readiness report</button></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('ctriDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
+<dialog id="piDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>🎓 PI eligibility &amp; training readiness</h2>
+  <p style="font-size:13px;color:var(--muted)">What most ECs expect from a Principal Investigator before they'll approve a trial. Free GCP training: ICMR's own NOC/GCP course, or WHO's GCP course — search "WHO Global Health Learning GCP"; both are free and widely accepted.</p>
+  <div id="piChecklist"></div>
+  <div class="fld" style="margin-top:10px"><label for="piCv">Quick PI CV (for the EC submission)</label>
+    <textarea id="piCv" rows="4" placeholder="Name, qualification, current position, institution, relevant prior research/publications, GCP training certificate details"></textarea>
+  </div>
+  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="piSave()">Save</button><button class="btn btn-ghost" style="flex:1" onclick="piExportCv()">⬇ Export CV text</button></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('piDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
+<dialog id="budgetDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>💰 Trial budget estimator</h2>
+  <p style="font-size:13px;color:var(--muted)">A line-item estimate to share with a potential funder or your department. Numbers only — this doesn't move or hold any real money.</p>
+  <div id="budgetRows"></div>
+  <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="budgetAddRow()">+ Add line item</button></div>
+  <div id="budgetTotal" style="margin-top:10px;font-weight:700"></div>
+  <div class="row"><button class="btn btn-gold" style="flex:1" onclick="budgetExport()">⬇ Export budget</button></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('budgetDlg').close()">Close</button>
+  </div>
+</div></dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
 
@@ -932,6 +1129,7 @@ const I18N={
     idea_assess_btn:'🔎 Assess feasibility', idea_saveproject_btn:'💾 Save this idea as a project',
     idea_panel_note:"This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most. Once the plan feels solid, head to the Research tab next to find a research gap and ground it in real literature.",
     tab_psych:'🧠 Psychology Tools', tab_psych_title:'Ready-made psychological tests, scales and scoring keys to drop into your questionnaire',
+    tab_design:'⚖ Design &amp; Ethics', tab_design_title:'Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts',
     tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
     tab_qual:'🏷 Qualitative Coding', tab_qual_title:"Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents",
     qual_panel_desc:'Select a passage in your document, then tap a code below to tag it. Build codes under other codes to group related ideas. Works across every document you have, not just the one that\'s open.',
@@ -952,7 +1150,7 @@ const I18N={
     sap_stage_desc:"Guessed from the tool you had open — change it if that's wrong.",
     sap_save_btn:'Save', sap_cancel_btn:'Cancel',
     projects_dlg_h2:'📁 Your research projects', close_btn:'Close',
-    stage_idea:'Idea & Feasibility', stage_lit:'Literature', stage_design:'Design & Ethics',
+    stage_idea:'Idea & Feasibility', stage_lit:'Literature Review', stage_design:'Design & Ethics',
     stage_collect:'Collection & Analysis', stage_writing:'Writing', stage_review:'Review & Publish',
     stage_guide_fmt:'Stage {n} of {total}', stage_guide_next:'Next:', stage_guide_final:'Final stage — nothing after this in the sequence',
     stageintro_h2:'Your project has six stages', stageintro_desc:'The app follows you through them in order. Every tool stays one click away the whole time — this is just the shape of the road ahead.',
@@ -975,6 +1173,10 @@ const I18N={
     psych_btn_litrev:'📚 Literature review helper', psych_btn_explain:'💡 Explain concept simply',
     psych_btn_apa:'📊 Format results in APA',
     psych_panel_note:'Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.',
+    design_panel_desc:'Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts. Everything below is a starting checklist, not a legal ruling — confirm the final requirement with your own institution\'s Ethics Committee.',
+    design_btn_reg:'🧭 Regulatory-pathway wizard', design_btn_proto:'📄 Protocol / synopsis builder',
+    design_btn_ec:'🛡 Ethics Committee package + consent form', design_btn_ctri:'📝 CTRI registration readiness',
+    design_btn_pi:'🎓 PI eligibility &amp; training', design_btn_budget:'💰 Trial budget estimator',
     stats_panel_h3:'📊 Statistics Lab',
     stats_panel_desc:'Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.',
     stats_open_btn:'Open Statistics Lab', stats_charts_h3:'📈 Charts',
@@ -1101,6 +1303,7 @@ const I18N={
     idea_assess_btn:'🔎 व्यवहार्यता आंकें', idea_saveproject_btn:'💾 इस विचार को प्रोजेक्ट के रूप में सहेजें',
     idea_panel_note:'यह आपके विचार पर एक ईमानदार बाहरी राय देता है, स्वीकृति नहीं — AI गलत हो सकता है, और एक वास्तविक गाइड का निर्णय अभी भी सबसे अधिक मायने रखता है। योजना पक्की लगने पर, आगे Research टैब में जाकर शोध अंतराल खोजें और इसे वास्तविक साहित्य में आधारित करें।',
     tab_psych:'🧠 मनोविज्ञान उपकरण', tab_psych_title:'अपनी प्रश्नावली में जोड़ने के लिए तैयार मनोवैज्ञानिक परीक्षण, स्केल और स्कोरिंग कुंजियाँ',
+    tab_design:'⚖ डिज़ाइन और नैतिकता', tab_design_title:'डेटा संग्रह शुरू होने से पहले अपनी विधि की योजना बनाएं, सही नियामक मार्ग चुनें, और सहमति, नैतिकता समिति तथा पंजीकरण के कागज़ात तैयार करें',
     tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
     tab_qual:'🏷 गुणात्मक कोडिंग', tab_qual_title:'अपने टेक्स्ट के हिस्सों को अपने खुद के कोड से टैग करें (साक्षात्कार या खुले प्रश्नों के उत्तर), एक कोड ट्री बनाएं, और अपने सभी दस्तावेज़ों में किसी कोड के हर हिस्से को एक साथ देखें',
     qual_panel_desc:'अपने दस्तावेज़ में एक हिस्सा चुनें, फिर उसे टैग करने के लिए नीचे किसी कोड पर टैप करें। जुड़े विचारों को समूहित करने के लिए कोड के नीचे उप-कोड बनाएं। यह सिर्फ खुले दस्तावेज़ में ही नहीं, आपके सभी दस्तावेज़ों में काम करता है।',
@@ -1121,7 +1324,7 @@ const I18N={
     sap_stage_desc:'जो टूल खुला था उससे अनुमान लगाया गया है — गलत होने पर बदल दें।',
     sap_save_btn:'सहेजें', sap_cancel_btn:'रद्द करें',
     projects_dlg_h2:'📁 आपके शोध प्रोजेक्ट्स', close_btn:'बंद करें',
-    stage_idea:'विचार और व्यवहार्यता', stage_lit:'साहित्य', stage_design:'डिज़ाइन और नैतिकता',
+    stage_idea:'विचार और व्यवहार्यता', stage_lit:'साहित्य समीक्षा', stage_design:'डिज़ाइन और नैतिकता',
     stage_collect:'संग्रह और विश्लेषण', stage_writing:'लेखन', stage_review:'समीक्षा और प्रकाशन',
     stage_guide_fmt:'चरण {n}/{total}', stage_guide_next:'आगे:', stage_guide_final:'अंतिम चरण — क्रम में इसके बाद कुछ नहीं है',
     stageintro_h2:'आपके प्रोजेक्ट में छह चरण हैं', stageintro_desc:'ऐप आपको इसी क्रम में हर चरण से गुज़ारता है। हर टूल हमेशा एक क्लिक दूर रहता है — यह सिर्फ आगे की राह की झलक है।',
@@ -1144,6 +1347,10 @@ const I18N={
     psych_btn_litrev:'📚 साहित्य समीक्षा सहायक', psych_btn_explain:'💡 अवधारणा को सरलता से समझाएं',
     psych_btn_apa:'📊 परिणामों को APA में प्रारूपित करें',
     psych_panel_note:'कच्चा SPSS / JASP / R आउटपुट पेस्ट करें और सही APA 7वें संस्करण की रिपोर्टिंग पाने के लिए <b>परिणामों को APA में प्रारूपित करें</b> का उपयोग करें।',
+    design_panel_desc:'डेटा संग्रह शुरू होने से पहले अपनी विधि की योजना बनाएं, सही नियामक मार्ग चुनें, और सहमति, नैतिकता समिति तथा पंजीकरण के कागज़ात तैयार करें। नीचे दी गई हर चीज़ एक शुरुआती चेकलिस्ट है, कानूनी निर्णय नहीं — अंतिम आवश्यकता अपने संस्थान की नैतिकता समिति से ज़रूर पुष्टि करें।',
+    design_btn_reg:'🧭 नियामक मार्ग विज़ार्ड', design_btn_proto:'📄 प्रोटोकॉल / सारांश निर्माता',
+    design_btn_ec:'🛡 नैतिकता समिति पैकेज + सहमति फॉर्म', design_btn_ctri:'📝 CTRI पंजीकरण तैयारी',
+    design_btn_pi:'🎓 PI योग्यता और प्रशिक्षण', design_btn_budget:'💰 परीक्षण बजट अनुमान',
     stats_panel_h3:'📊 सांख्यिकी लैब',
     stats_panel_desc:'अपना डेटा पेस्ट करें, एक परीक्षण चुनें, वास्तविक परिणाम पाएं — t, F, χ², r, p, प्रभाव आकार — साथ ही APA-तैयार वाक्य। यह आपके ब्राउज़र में चलता है; कुछ भी अपलोड नहीं होता।',
     stats_open_btn:'सांख्यिकी लैब खोलें', stats_charts_h3:'📈 चार्ट',
@@ -1377,6 +1584,13 @@ function showTool(name){
      caught and silently skipped that one time. The Projects section re-renders the guide once it's
      actually defined, so nothing is lost. */
   try{renderStageGuide(name)}catch(e){}
+  /* If the tool being opened lives in a stage group the student had collapsed, expand that one
+     group so the newly-active tool is actually visible — reachable by a next-stage link, a project
+     jump, or restoring a saved tool, not only by a direct click on an already-open group. */
+  try{
+    const stage=TOOL_TO_STAGE[name];
+    if(stage){const grp=document.querySelector('.stage-group[data-stage="'+stage+'"]');if(grp)grp.classList.remove('collapsed')}
+  }catch(e){}
 }
 (function(){const t=LS.get('appu_tool_tab');if(t&&document.querySelector('.tool-tab[data-tool="'+t+'"]'))showTool(t)})();
 
@@ -1419,11 +1633,11 @@ applyPack();
    document or tool data (that stays global); it's a stage/pack bookmark today, and the foundation the
    real per-stage tool view builds on as more stage-specific tools ship. */
 const STAGES=['idea','lit','design','collect','writing','review'];
-const TOOL_TO_STAGE={idea:'idea',psych:'lit',research:'lit',stats:'collect',qual:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
+const TOOL_TO_STAGE={idea:'idea',psych:'lit',research:'lit',design:'design',stats:'collect',qual:'collect',style:'writing',cite:'writing',slides:'review',chat:'writing'};
 /* The first tool a student should open for each stage, used by the stage-guide bar's "Next" link
-   below. A stage with no tool yet (design) is left out on purpose — nextStageTool() skips past it
-   to the next stage that actually has something to do, rather than sending a student to a dead end. */
-const STAGE_FIRST_TOOL={idea:'idea',lit:'research',collect:'stats',writing:'cite',review:'slides'};
+   below. nextStageTool() still skips any stage left out of this map — that's what kept it safe
+   while Design & Ethics had nothing in it. Every stage has a tool now, so nothing is skipped. */
+const STAGE_FIRST_TOOL={idea:'idea',lit:'research',design:'design',collect:'stats',writing:'cite',review:'slides'};
 function nextStageTool(fromIndex){
   for(let i=fromIndex+1;i<STAGES.length;i++){
     const tl=STAGE_FIRST_TOOL[STAGES[i]];
@@ -1431,6 +1645,40 @@ function nextStageTool(fromIndex){
   }
   return null;
 }
+
+/* ============ Sidebar: whole-panel collapse, and per-stage group collapse ============
+   Both default to fully open — every .tool-tab stays exactly as reachable as it was on the old flat
+   tab bar, just grouped under its stage instead of wrapped across rows. Collapsing is something a
+   student does on purpose, and only that choice is remembered; a fresh profile (or this app's own
+   test suite) sees everything expanded, same as before this redesign. */
+function sidebarCollapsedGroups(){
+  try{const a=JSON.parse(LS.get('appu_stagegroups_collapsed')||'null');return Array.isArray(a)?a:null}catch(e){return null}
+}
+function toggleStageGroup(stage){
+  const grp=document.querySelector('.stage-group[data-stage="'+stage+'"]');
+  if(!grp)return;
+  grp.classList.toggle('collapsed');
+  const collapsed=STAGES.filter(s=>{
+    const g=document.querySelector('.stage-group[data-stage="'+s+'"]');
+    return g&&g.classList.contains('collapsed');
+  });
+  LS.set('appu_stagegroups_collapsed',JSON.stringify(collapsed));
+}
+function toggleSidebar(){
+  const sb=document.getElementById('toolSidebar');if(!sb)return;
+  sb.classList.toggle('collapsed');
+  LS.set('appu_sidebar_collapsed',sb.classList.contains('collapsed')?'1':'0');
+}
+function initSidebar(){
+  const sb=document.getElementById('toolSidebar');if(!sb)return;
+  sb.classList.toggle('collapsed',LS.get('appu_sidebar_collapsed')==='1');
+  const saved=sidebarCollapsedGroups();
+  STAGES.forEach(s=>{
+    const grp=document.querySelector('.stage-group[data-stage="'+s+'"]');
+    if(grp)grp.classList.toggle('collapsed',!!(saved&&saved.includes(s)));
+  });
+}
+initSidebar();
 /* A small always-visible bar under the tool tabs showing where the open tool sits in the six-stage
    roadmap, and a one-click way to jump to the next stage's tool — the "inbuilt guidance" that makes
    the stage sequence visible even though the tab bar itself stays flat (see the plan list for why
@@ -1461,9 +1709,9 @@ function setActiveProject(id,opts){
   if(p&&PACKS[p.pack])setPack(p.pack);
   renderProjectBar();
   /* Guided-not-locked navigation: opening a project jumps the tool view straight to that
-     stage's first tool (if the stage has one yet — Design & Ethics doesn't). Nothing is
-     blocked afterward — every tab stays clickable — this just starts you in the right place
-     instead of wherever you happened to be. opts.skipJump is used by the new-project path,
+     stage's first tool. Nothing is blocked afterward — every tab stays clickable — this just
+     starts you in the right place instead of wherever you happened to be. opts.skipJump is
+     used by the new-project path,
      which shows the stage-intro dialog first and lets ITS button do the jump instead. */
   if(p&&p.status!=='complete'&&!(opts&&opts.skipJump)){
     const firstTool=STAGE_FIRST_TOOL[p.stage];
@@ -1496,6 +1744,11 @@ function renderStageHighlight(){
   const stage=(p&&p.status!=='complete')?p.stage:null;
   document.querySelectorAll('.tool-tab').forEach(b=>{
     b.classList.toggle('stage-current',!!stage&&TOOL_TO_STAGE[b.dataset.tool]===stage);
+  });
+  /* Same highlight, one level up: a dot on the stage header itself, so the sidebar shows which
+     stage a project is sitting in even while that stage's own group is collapsed. */
+  document.querySelectorAll('.stage-group').forEach(g=>{
+    g.classList.toggle('stage-group-current',!!stage&&g.dataset.stage===stage);
   });
 }
 /* One-time orientation for a brand-new research project: names all six stages so a student
@@ -2737,6 +2990,282 @@ function downloadLatex(){
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   showToast('LaTeX exported ✓ — upload the .tex file to Overleaf, or compile locally');
 }
+
+/* ============ Design & Ethics — regulatory pathway, protocol, EC/consent, CTRI, PI readiness, budget ============
+   Every piece here is a deterministic checklist or fill-in template, not an AI call — no provider key
+   needed, nothing leaves the browser, same "runs on this computer" boundary as the Statistics Lab.
+   Each sub-tool keeps its own small JSON blob in localStorage under appu_design_<key>; the dashboard
+   at the top of the panel just reads each blob's `done` flag and links straight into the dialog that
+   owns it. Interior copy stays English-only for now, same as the Statistics Lab dialog — only the
+   panel's own entry points are translated (see the bilingual-UI comment near I18N above). */
+function designGet(key){try{return JSON.parse(LS.get('appu_design_'+key)||'null')||{}}catch(e){return{}}}
+function designSet(key,obj){LS.set('appu_design_'+key,JSON.stringify(obj))}
+const DESIGN_ITEMS=[
+  {key:'reg',label:'Regulatory-pathway wizard',open:()=>{document.getElementById('regDlg').showModal();regRender()}},
+  {key:'proto',label:'Protocol / synopsis',open:()=>{document.getElementById('protoDlg').showModal();protoLoad()}},
+  {key:'ec',label:'EC package + consent form',open:()=>{document.getElementById('ecDlg').showModal();ecRender()}},
+  {key:'ctri',label:'CTRI registration readiness',open:()=>{document.getElementById('ctriDlg').showModal();ctriRender()}},
+  {key:'pi',label:'PI eligibility & training',open:()=>{document.getElementById('piDlg').showModal();piRender()}},
+  {key:'budget',label:'Trial budget estimate',open:()=>{document.getElementById('budgetDlg').showModal();budgetRender()}}
+];
+function designOpen(key){const it=DESIGN_ITEMS.find(x=>x.key===key);if(it)it.open()}
+function designRenderDash(){
+  const el=document.getElementById('designDash');if(!el)return;
+  const done=DESIGN_ITEMS.filter(i=>designGet(i.key).done).length;
+  let html='<div class="desc" style="margin-bottom:6px"><b>'+done+' of '+DESIGN_ITEMS.length+'</b> ready</div>';
+  html+='<div style="display:flex;flex-direction:column;gap:2px">';
+  DESIGN_ITEMS.forEach(i=>{
+    const d=designGet(i.key).done;
+    html+='<button type="button" onclick="designOpen(\''+i.key+'\')" style="display:flex;align-items:center;gap:8px;background:none;border:none;padding:4px 2px;cursor:pointer;text-align:left;font-size:13.5px;color:var(--ink)">'
+      +'<span style="width:18px">'+(d?'✅':'⬜')+'</span><span>'+escHTML(i.label)+'</span></button>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+function regRender(){
+  const s=designGet('reg');
+  if(s.type)document.getElementById('regType').value=s.type;
+  if(s.pop)document.getElementById('regPop').value=s.pop;
+  document.getElementById('regBio').checked=!!s.bio;
+  document.getElementById('regMulti').checked=!!s.multi;
+  if(s.done)regCompute(); else document.getElementById('regResult').innerHTML='';
+}
+function regCompute(){
+  const type=document.getElementById('regType').value;
+  const pop=document.getElementById('regPop').value;
+  const bio=document.getElementById('regBio').checked;
+  const multi=document.getElementById('regMulti').checked;
+  const lines=['ICMR National Ethical Guidelines for Biomedical and Health Research Involving Human Participants (2017) — the baseline guideline for every study on this list.'];
+  let dcgi=false,ctriMandatory=true,ctriNote='';
+  if(type==='drug'){
+    lines.push('New Drugs and Clinical Trials Rules, 2019 (CDSCO) applies — this is an investigational drug trial.');
+    dcgi=true; ctriNote='Mandatory, and prospective — register before the first participant is enrolled.';
+  }else if(type==='device'){
+    lines.push("Medical Device Rules, 2017 (CDSCO) applies — this is an investigational device trial. A brain-wave or neuro device usually falls under this unless it's already a licensed, unmodified medical device used strictly within its approved purpose.");
+    dcgi=true; ctriNote="Mandatory for most device clinical investigations — confirm your device's risk classification with your EC.";
+  }else if(type==='interventional'){
+    ctriNote='Mandatory. A behavioral or psychological intervention compared against a control or another condition counts as a clinical trial under the WHO/ICMR definition, whatever your department calls it.';
+  }else{
+    ctriMandatory=false;
+    ctriNote='Not legally mandatory for a purely observational study, but registering anyway is increasingly expected — many journals now ask for it at submission.';
+  }
+  if(pop!=='adults'){
+    const popLabel={minors:'minors',vulnerable:'cognitively impaired or institutionalised adults',pregnant:'pregnant women'}[pop]||pop;
+    lines.push('Vulnerable population ('+popLabel+') — expect your EC to require extra safeguards: assent plus guardian consent, an independent advocate, or additional institutional sign-off on top of the standard package. Build in extra review time.');
+  }
+  if(bio)lines.push("Biological samples — add a separate biospecimen consent clause; for genetic material, check whether ICMR's biobanking guidance or a material-transfer agreement applies.");
+  if(multi)lines.push("Multi-site — each site normally needs its own EC approval, or a lead/central EC with the other sites' written concurrence. Confirm which model your sites use before you register.");
+  lines.push((dcgi?'DCGI approval: likely required. Apply through CDSCO\'s SUGAM portal once your protocol and EC approval are in hand.':'DCGI approval: not triggered by this design.'));
+  lines.push('CTRI registration: '+(ctriMandatory?'mandatory':'not mandatory')+'. '+ctriNote);
+  lines.push('Institutional Ethics Committee (IEC) approval is required before enrollment starts, regardless of the above.');
+  document.getElementById('regResult').innerHTML='<div class="desc" style="background:var(--soft);border-radius:10px;padding:10px 12px"><ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">'
+    +lines.map(l=>'<li>'+escHTML(l)+'</li>').join('')+'</ul></div>'
+    +"<p class=\"warn\" style=\"margin-top:8px\">📐 This is a starting checklist built from general ICMR/CDSCO guidance, not a ruling on your specific study. Confirm the final requirement with your own institution's Ethics Committee.</p>";
+  designSet('reg',{type,pop,bio,multi,done:true,savedAt:Date.now()});
+  designRenderDash();
+  showToast('Pathway checked ✓');
+}
+
+function protoLoad(){
+  const s=designGet('proto');
+  ['Bg','Obj','Design','Part','Sample','Proc','Risk','Dmp'].forEach(k=>{
+    const el=document.getElementById('proto'+k);if(el)el.value=s[k.toLowerCase()]||'';
+  });
+}
+function protoRead(){
+  const o={};
+  ['Bg','Obj','Design','Part','Sample','Proc','Risk','Dmp'].forEach(k=>{o[k.toLowerCase()]=document.getElementById('proto'+k).value.trim()});
+  return o;
+}
+function protoSave(){
+  const o=protoRead();
+  designSet('proto',Object.assign(o,{done:Object.values(o).some(v=>v)}));
+  designRenderDash();
+  showToast('Saved ✓');
+}
+function protoGenerate(){
+  const o=protoRead();
+  if(!Object.values(o).some(v=>v)){showToast('Fill in at least one section first');return}
+  const doc='# Research protocol / synopsis\n\n'
+    +'## Background & rationale\n'+(o.bg||'[not filled in]')+'\n\n'
+    +'## Objectives & hypotheses\n'+(o.obj||'[not filled in]')+'\n\n'
+    +'## Design\n'+(o.design||'[not filled in]')+'\n\n'
+    +'## Participants — inclusion & exclusion criteria\n'+(o.part||'[not filled in]')+'\n\n'
+    +'## Sample size & justification\n'+(o.sample||'[not filled in]')+'\n\n'
+    +'## Procedures\n'+(o.proc||'[not filled in]')+'\n\n'
+    +'## Risks & benefits\n'+(o.risk||'[not filled in]')+'\n\n'
+    +'## Data management plan\n'+(o.dmp||'[not filled in]')+'\n\n'
+    +'## References\n[add citations from the Citation Manager]\n';
+  protoSave();
+  insertIntoEditor(doc,false);
+  document.getElementById('protoDlg').close();
+  showToast('Protocol inserted into your document ✓');
+}
+
+const EC_DOCS=['Protocol / synopsis','Informed consent form','Participant information sheet','Principal investigator CV',"EC application form (your institution's own)",'Insurance / indemnity (if the study carries more than minimal risk)','Data management plan','Recruitment materials (posters, ads, scripts)'];
+function ecRender(){
+  const s=designGet('ec'),checks=s.checklist||{};
+  document.getElementById('ecChecklist').innerHTML=EC_DOCS.map((d,i)=>
+    '<label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:6px;cursor:pointer">'
+    +'<input type="checkbox" '+(checks[i]?'checked':'')+' onchange="ecToggle('+i+',this.checked)" style="width:17px;height:17px;accent-color:#6d28d9"> '+escHTML(d)+'</label>'
+  ).join('');
+  document.getElementById('ecTitle').value=s.title||'';
+  document.getElementById('ecPI').value=s.pi||'';
+  document.getElementById('ecWhat').value=s.what||'';
+  document.getElementById('ecRisks2').value=s.risks||'';
+  document.getElementById('ecBenefits').value=s.benefits||'';
+  document.getElementById('ecContact').value=s.contact||'';
+}
+function ecToggle(i,v){
+  const s=designGet('ec');s.checklist=s.checklist||{};s.checklist[i]=v;
+  s.done=Object.values(s.checklist).some(Boolean);
+  designSet('ec',s);designRenderDash();
+}
+function ecSave(){
+  const s=designGet('ec');
+  s.title=document.getElementById('ecTitle').value.trim();
+  s.pi=document.getElementById('ecPI').value.trim();
+  s.what=document.getElementById('ecWhat').value.trim();
+  s.risks=document.getElementById('ecRisks2').value.trim();
+  s.benefits=document.getElementById('ecBenefits').value.trim();
+  s.contact=document.getElementById('ecContact').value.trim();
+  s.done=s.done||!!(s.title||s.pi);
+  designSet('ec',s);designRenderDash();
+  showToast('Saved ✓');
+}
+function ecGenerateConsent(){
+  ecSave();
+  const s=designGet('ec');
+  if(!s.title||!s.pi){showToast('Fill in at least the study title and PI/institution first');return}
+  const doc='# Informed Consent Form\n\n'
+    +'**Study title:** '+s.title+'\n\n'
+    +'**Principal investigator:** '+s.pi+'\n\n'
+    +'## What this study involves\n'+(s.what||'[describe]')+'\n\n'
+    +'## Risks and discomforts\n'+(s.risks||'[describe]')+'\n\n'
+    +'## Benefits\n'+(s.benefits||'[describe]')+'\n\n'
+    +'## Voluntary participation\n'
+    +'Taking part in this study is entirely voluntary. You may refuse to participate, or withdraw at any point, without giving a reason and without any penalty or loss of benefit you would otherwise be entitled to.\n\n'
+    +'## Confidentiality\n'
+    +'Your responses will be kept confidential, stored securely, and reported only in a form that does not identify you personally, except where required by law.\n\n'
+    +'## Questions or complaints\n'+(s.contact||"[PI contact and your institution's EC contact]")+'\n\n'
+    +'## Consent\n'
+    +'I have read and understood the above, had the chance to ask questions, and agree to take part in this study.\n\n'
+    +'Participant signature: ______________________  Date: __________\n\n'
+    +'Researcher signature: ______________________  Date: __________\n';
+  insertIntoEditor(doc,false);
+  document.getElementById('ecDlg').close();
+  showToast('Consent form inserted into your document ✓');
+}
+
+const CTRI_FIELDS=['Public title and scientific title decided','Primary sponsor and (if any) secondary sponsor named','Ethics Committee approval obtained or applied for','Countries of recruitment listed','Health condition / problem studied, stated plainly','Intervention(s) and comparator(s) named','Inclusion and exclusion criteria finalised','Primary outcome and its time point defined','Secondary outcomes (if any) defined','Target sample size decided','Phase stated, if this is a drug trial','Recruitment status decided (not yet recruiting / recruiting / completed)','A publicly listable contact (name, phone, email) ready'];
+function ctriRender(){
+  const s=designGet('ctri'),checks=s.checklist||{};
+  document.getElementById('ctriChecklist').innerHTML=CTRI_FIELDS.map((f,i)=>
+    '<label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:6px;cursor:pointer">'
+    +'<input type="checkbox" '+(checks[i]?'checked':'')+' onchange="ctriToggle('+i+',this.checked)" style="width:17px;height:17px;accent-color:#6d28d9"> '+escHTML(f)+'</label>'
+  ).join('');
+}
+function ctriToggle(i,v){
+  const s=designGet('ctri');s.checklist=s.checklist||{};s.checklist[i]=v;
+  s.done=Object.values(s.checklist).some(Boolean);
+  designSet('ctri',s);designRenderDash();
+}
+function ctriExport(){
+  const s=designGet('ctri'),checks=s.checklist||{};
+  const n=CTRI_FIELDS.filter((f,i)=>checks[i]).length;
+  const md='# CTRI registration readiness\n\n'+n+' of '+CTRI_FIELDS.length+' fields ready\n\n'
+    +CTRI_FIELDS.map((f,i)=>'- ['+(checks[i]?'x':' ')+'] '+f).join('\n')+'\n\n'
+    +'This is a readiness check, not a CTRI submission — the actual registration happens on ctri.nic.in.\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));
+  a.download='ctri-readiness-'+(new Date().toISOString().slice(0,10))+'.md';
+  a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  showToast('Exported ✓');
+}
+
+const PI_ITEMS=['Current institutional affiliation confirmed','GCP (Good Clinical Practice) training completed — ICMR NOC/GCP or WHO GCP course','Curriculum vitae current and ready to attach','Any conflict of interest disclosed in writing','Prior research or supervised-research experience documented','Co-investigators and their roles identified'];
+function piRender(){
+  const s=designGet('pi'),checks=s.checklist||{};
+  document.getElementById('piChecklist').innerHTML=PI_ITEMS.map((it,i)=>
+    '<label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:6px;cursor:pointer">'
+    +'<input type="checkbox" '+(checks[i]?'checked':'')+' onchange="piToggle('+i+',this.checked)" style="width:17px;height:17px;accent-color:#6d28d9"> '+escHTML(it)+'</label>'
+  ).join('');
+  document.getElementById('piCv').value=s.cv||'';
+}
+function piToggle(i,v){
+  const s=designGet('pi');s.checklist=s.checklist||{};s.checklist[i]=v;
+  s.done=Object.values(s.checklist).some(Boolean);
+  designSet('pi',s);designRenderDash();
+}
+function piSave(){
+  const s=designGet('pi');
+  s.cv=document.getElementById('piCv').value.trim();
+  s.done=s.done||!!s.cv;
+  designSet('pi',s);designRenderDash();
+  showToast('Saved ✓');
+}
+function piExportCv(){
+  piSave();
+  const s=designGet('pi');
+  if(!s.cv){showToast('Fill in the CV field first');return}
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([s.cv],{type:'text/plain'}));
+  a.download='pi-cv-'+(new Date().toISOString().slice(0,10))+'.txt';
+  a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  showToast('Exported ✓');
+}
+
+const BUDGET_DEFAULTS=['Site costs','Participant compensation','Statistician time','Publication / open-access costs','Travel','Equipment','Contingency (10-15%)'];
+function budgetRows(){
+  const s=designGet('budget');
+  return (s.rows&&s.rows.length)?s.rows:BUDGET_DEFAULTS.map(l=>({label:l,amount:''}));
+}
+function budgetRender(){
+  const rows=budgetRows();
+  document.getElementById('budgetRows').innerHTML=rows.map((r,i)=>
+    '<div class="row" style="align-items:center">'
+    +'<input type="text" value="'+escHTML(r.label)+'" oninput="budgetEdit('+i+',\'label\',this.value)" style="flex:2">'
+    +'<input type="number" value="'+escHTML(String(r.amount))+'" oninput="budgetEdit('+i+',\'amount\',this.value)" placeholder="₹" style="flex:1">'
+    +'<button class="btn btn-ghost" onclick="budgetRemove('+i+')" title="Remove" style="flex:0 0 auto;padding:6px 10px">✕</button>'
+    +'</div>'
+  ).join('');
+  budgetTotal();
+}
+function budgetEdit(i,field,val){
+  const s=designGet('budget');s.rows=(s.rows&&s.rows.length)?s.rows:budgetRows();
+  s.rows[i][field]=val;
+  s.done=s.rows.some(r=>parseFloat(r.amount)>0);
+  designSet('budget',s);
+  budgetTotal();designRenderDash();
+}
+function budgetAddRow(){
+  const s=designGet('budget');s.rows=(s.rows&&s.rows.length)?s.rows:budgetRows();
+  s.rows.push({label:'',amount:''});
+  designSet('budget',s);budgetRender();
+}
+function budgetRemove(i){
+  const s=designGet('budget');s.rows=(s.rows&&s.rows.length)?s.rows:budgetRows();
+  s.rows.splice(i,1);
+  designSet('budget',s);budgetRender();designRenderDash();
+}
+function budgetTotal(){
+  const total=budgetRows().reduce((sum,r)=>sum+(parseFloat(r.amount)||0),0);
+  document.getElementById('budgetTotal').textContent='Total: ₹'+total.toLocaleString('en-IN');
+}
+function budgetExport(){
+  const rows=budgetRows();
+  const total=rows.reduce((sum,r)=>sum+(parseFloat(r.amount)||0),0);
+  const md='# Trial budget estimate\n\n| Item | Amount (₹) |\n|---|---|\n'
+    +rows.map(r=>'| '+(r.label||'—')+' | '+(parseFloat(r.amount)||0).toLocaleString('en-IN')+' |').join('\n')
+    +'\n| **Total** | **'+total.toLocaleString('en-IN')+'** |\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));
+  a.download='trial-budget-'+(new Date().toISOString().slice(0,10))+'.md';
+  a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  showToast('Exported ✓');
+}
+designRenderDash();
 
 /* ============ Qualitative Coding — tag passages, build a code tree, pull them out by code ============
    A code is {id, name, parentId, color}, stored flat in appu_qual_codes. A tagged passage is NOT
