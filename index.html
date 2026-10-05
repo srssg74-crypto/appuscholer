@@ -792,6 +792,15 @@
     </select>
     <p class="desc" style="margin:4px 0 0" data-i18n="settings_contentlang_desc">This is the language the AI writes in — your paper, explanations, stats write-ups — separate from the interface language toggle above. Saved with the open project, or as your default when no project is open.</p>
   </div>
+  <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="writingSampleToggle" onchange="setWritingSampleCapture(this.checked)">
+      <span data-i18n="writingsample_label">Help build my writing-style trainer (coming later)</span>
+    </label>
+    <p class="desc" style="margin:4px 0 0" data-i18n="writingsample_desc">Appuscholar privately saves a copy of your own writing from each document on this computer — whatever you typed yourself, skipping anything an AI suggestion inserted. Nothing is uploaded anywhere. The idea is a future tool that learns to write in your own voice from this. Turn off any time; your documents themselves are never affected either way.</p>
+    <p class="desc" id="writingSampleStatus" style="margin:6px 0 0;font-weight:600"></p>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="clearWritingSamples()" data-i18n="writingsample_clear_btn">Clear saved writing samples</button>
+  </div>
   <div class="row" style="margin-top:12px">
     <button class="btn btn-purple" style="flex:1" onclick="saveKey()" data-i18n="settings_savekey_btn">Save Key</button>
     <button class="btn btn-ghost" onclick="removeKey()" data-i18n="settings_removekey_btn">Remove key</button>
@@ -1247,6 +1256,13 @@ const I18N={
     settings_pack_desc:'The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.',
     settings_contentlang_label:'AI content language', settings_contentlang_en:'English', settings_contentlang_hi:'Hindi (हिन्दी)',
     settings_contentlang_desc:'This is the language the AI writes in — your paper, explanations, stats write-ups — separate from the interface language toggle above. Saved with the open project, or as your default when no project is open.',
+    writingsample_label:'Help build my writing-style trainer (coming later)',
+    writingsample_desc:"Appuscholar privately saves a copy of your own writing from each document on this computer — whatever you typed yourself, skipping anything an AI suggestion inserted. Nothing is uploaded anywhere. The idea is a future tool that learns to write in your own voice from this. Turn off any time; your documents themselves are never affected either way.",
+    writingsample_status_fmt:'{n} document(s) saved so far, {w} words of your own writing captured.',
+    writingsample_status_off:'Off — nothing is being saved for this right now.',
+    writingsample_clear_btn:'Clear saved writing samples',
+    writingsample_cleared:'Writing samples cleared',
+    writingsample_clear_confirm:'Delete the writing samples saved so far? This only clears the private copy used for the future style trainer — your actual documents are untouched.',
     settings_savekey_btn:'Save Key', settings_removekey_btn:'Remove key',
     settings_warn:'⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.',
     welcome_h2:'💜 Welcome to Appuscholar',
@@ -1421,6 +1437,13 @@ const I18N={
     settings_pack_desc:'मुख्य उपकरण (लेखन, सांख्यिकी, उद्धरण, शोध) किसी भी विषय के लिए काम करते हैं। एक विशेष पैक इसके ऊपर विषय-विशिष्ट उपकरण जोड़ता है। और पैक जल्द आएंगे।',
     settings_contentlang_label:'AI सामग्री भाषा', settings_contentlang_en:'अंग्रेज़ी', settings_contentlang_hi:'हिन्दी',
     settings_contentlang_desc:'यह वह भाषा है जिसमें AI लिखता है — आपका पेपर, स्पष्टीकरण, सांख्यिकी लेखन — ऊपर दिए इंटरफ़ेस भाषा टॉगल से अलग। यह खुले प्रोजेक्ट के साथ सहेजी जाती है, या जब कोई प्रोजेक्ट खुला न हो तो आपके डिफ़ॉल्ट के रूप में।',
+    writingsample_label:'मेरे लेखन-शैली प्रशिक्षक के निर्माण में मदद करें (बाद में आएगा)',
+    writingsample_desc:'Appuscholar हर दस्तावेज़ से आपके अपने लेखन की एक प्रति इसी कंप्यूटर पर निजी रूप से सहेजता है — जो कुछ आपने खुद टाइप किया, AI सुझाव से डाला गया हिस्सा छोड़कर। कहीं कुछ अपलोड नहीं होता। विचार यह है कि भविष्य में एक उपकरण इससे आपकी अपनी शैली में लिखना सीखे। कभी भी बंद करें; आपके दस्तावेज़ किसी भी स्थिति में प्रभावित नहीं होते।',
+    writingsample_status_fmt:'{n} दस्तावेज़ अब तक सहेजे गए, आपके अपने लेखन के {w} शब्द कैप्चर किए गए।',
+    writingsample_status_off:'बंद — अभी इसके लिए कुछ भी नहीं सहेजा जा रहा।',
+    writingsample_clear_btn:'सहेजे गए लेखन नमूने मिटाएं',
+    writingsample_cleared:'लेखन नमूने मिटा दिए गए',
+    writingsample_clear_confirm:'अब तक सहेजे गए लेखन नमूने हटाएं? इससे केवल भविष्य के शैली प्रशिक्षक के लिए उपयोग की जाने वाली निजी प्रति मिटती है — आपके वास्तविक दस्तावेज़ अप्रभावित रहते हैं।',
     settings_savekey_btn:'कुंजी सहेजें', settings_removekey_btn:'कुंजी हटाएं',
     settings_warn:'⚠ चूंकि यह ऐप एक लोकल फ़ाइल के रूप में चलता है, आपके कंप्यूटर पर हर HTML फ़ाइल एक ही स्टोरेज क्षेत्र साझा करती है। <b>इस कंप्यूटर पर याद रखें</b> के साथ सहेजी गई कुंजी किसी भी अन्य HTML फ़ाइल द्वारा पढ़ी जा सकती है जिसे आप खोलते हैं। पासफ़्रेज़ विकल्प इसे एन्क्रिप्ट करता है ताकि वे फ़ाइलें केवल अस्पष्ट टेक्स्ट देखें।',
     welcome_h2:'💜 Appuscholar में आपका स्वागत है',
@@ -1941,6 +1964,7 @@ function docSaveBody(body){
   if(i<0)return false;
   docs[i].body=body;docs[i].updated=Date.now();
   const ok=LS.set('appu_docs',JSON.stringify(docs));
+  if(ok&&typeof captureWritingSample==='function'){try{captureWritingSample(docs[i].id,docs[i].title,body)}catch(e){}}
   return ok;
 }
 function docSwitch(id){
@@ -2106,6 +2130,61 @@ function toggleAiHighlight(){
   document.getElementById('aiHighlightBtn').classList.toggle('btn-purple',on);
   document.getElementById('aiHighlightBtn').classList.toggle('btn-ghost',!on);
   showToast(on?'AI-inserted text highlighted in the document':'Highlight off');
+}
+
+/* ============ Writing-sample capture, for a future writing-style trainer ============
+   Recorded 2026-10-05 as item 29 on the plan list — groundwork only, no training feature
+   exists yet. Every time a document autosaves, this keeps a private, local-only copy of
+   whatever the student actually typed themselves (reusing the same .ai-ins boundary the
+   originality tracker above already draws), keyed one entry per document so the store
+   stays bounded instead of growing forever. Opt-out in Settings, default on since nothing
+   leaves the browser; a "Clear saved writing samples" button is right next to the toggle
+   for anyone who wants to wipe it without digging into browser settings. */
+const WRITING_SAMPLE_KEY='appu_writing_samples';
+const WRITING_SAMPLE_MIN_WORDS=30;
+function getWritingSampleCapture(){return LS.get('appu_writing_sample_capture')!=='0'}
+function setWritingSampleCapture(on){
+  LS.set('appu_writing_sample_capture',on?'1':'0');
+  renderWritingSampleStatus();
+  showToast(on?'Writing-style capture turned on':'Writing-style capture turned off');
+}
+function writingSamplesGet(){try{const o=JSON.parse(LS.get(WRITING_SAMPLE_KEY)||'{}');return(o&&typeof o==='object')?o:{}}catch(e){return{}}}
+function writingSamplesSet(o){LS.set(WRITING_SAMPLE_KEY,JSON.stringify(o))}
+function extractStudentText(html){
+  const div=document.createElement('div');
+  div.innerHTML=html||'';
+  div.querySelectorAll('.ai-ins').forEach(el=>el.remove());
+  const text=(div.textContent||'').replace(/\s+/g,' ').trim();
+  const words=text?text.split(' ').length:0;
+  return{text,words};
+}
+function captureWritingSample(docId,title,html){
+  if(!getWritingSampleCapture())return;
+  const{text,words}=extractStudentText(html);
+  if(words<WRITING_SAMPLE_MIN_WORDS)return;
+  const samples=writingSamplesGet();
+  samples[docId]={title:title||'Untitled',text,words,updated:Date.now()};
+  writingSamplesSet(samples);
+}
+function writingSampleStats(){
+  const samples=writingSamplesGet();
+  const ids=Object.keys(samples);
+  const words=ids.reduce((sum,id)=>sum+(samples[id].words||0),0);
+  return{count:ids.length,words};
+}
+function renderWritingSampleStatus(){
+  const el=document.getElementById('writingSampleStatus');if(!el)return;
+  const on=getWritingSampleCapture();
+  document.getElementById('writingSampleToggle').checked=on;
+  if(!on){el.textContent=t('writingsample_status_off');return}
+  const{count,words}=writingSampleStats();
+  el.textContent=t('writingsample_status_fmt').replace('{n}',count).replace('{w}',words);
+}
+function clearWritingSamples(){
+  if(!confirm(t('writingsample_clear_confirm')))return;
+  writingSamplesSet({});
+  renderWritingSampleStatus();
+  showToast(t('writingsample_cleared'));
 }
 window.addEventListener('beforeunload',e=>{
   clearTimeout(saveT);docSaveBody(getEditorHTML());
@@ -2537,6 +2616,7 @@ function openSettings(sel){
   document.getElementById('orcidIn').value=LS.get('appu_orcid')||'';
   document.getElementById('packSel').value=getPack();
   document.getElementById('contentLangSel').value=getContentLang();
+  renderWritingSampleStatus();
   document.getElementById('settingsDlg').showModal();
 }
 function orcidSave(v){
