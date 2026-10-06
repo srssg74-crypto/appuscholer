@@ -586,8 +586,8 @@
         <div class="fld" style="flex:2"><label for="citPages" data-i18n="cite_pages_label">Pages</label><input type="text" id="citPages" placeholder="81–97"></div>
       </div>
       <div class="fld"><label for="citDOI">DOI</label><input type="text" id="citDOI" placeholder="10.1037/h0043158"></div>
-      <div class="fld"><label for="citURL" data-i18n="cite_url_label">URL (only if there is no DOI)</label><input type="text" id="citURL" placeholder="https://…"></div>
-      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citLookup()" data-i18n="cite_lookup_btn">🔎 Look up by title (Crossref)</button></div>
+      <div class="fld"><label for="citURL" data-i18n="cite_url_label">Link, DOI or full reference: paste it here and the form fills itself</label><input type="text" id="citURL" placeholder="https://… or 10.xxxx/… or a full reference"></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citLookup()" data-i18n="cite_lookup_btn">🔎 Fill from DOI, link, PubMed ID or title</button></div>
       <div class="row">
         <button class="btn btn-purple" style="flex:1" onclick="citInsert()" data-i18n="cite_insert_btn">Insert citation</button>
         <button class="btn btn-ghost" style="flex:1" onclick="citAdd()" data-i18n="cite_addlib_btn">+ Library</button>
@@ -1215,8 +1215,9 @@ const I18N={
     cite_sourcelang_label:'Source language', cite_sourcelang_en:'English', cite_sourcelang_hi:'Hindi',
     cite_author_label:'Author(s) — separate with ;', cite_year_label:'Year', cite_title_label:'Title',
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
-    cite_pages_label:'Pages', cite_url_label:'URL (only if there is no DOI)',
-    cite_lookup_btn:'🔎 Look up by title (Crossref)', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
+    cite_pages_label:'Pages', cite_url_label:'Link, DOI or full reference: paste it here and the form fills itself',
+    cite_lookup_btn:'🔎 Fill from DOI, link, PubMed ID or title',
+    cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ Check the details, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
     cite_quote_label:'Quote from this source (optional)', cite_quote_placeholder:'Paste the exact quoted text here…',
     cite_quote_desc:'A Hindi source is quoted as written. An English source is translated automatically when your content language is set to Hindi, and marked (अनुवादित) with the original kept on hover.',
@@ -1408,8 +1409,9 @@ const I18N={
     cite_sourcelang_label:'स्रोत की भाषा', cite_sourcelang_en:'अंग्रेज़ी', cite_sourcelang_hi:'हिन्दी',
     cite_author_label:'लेखक — ; से अलग करें', cite_year_label:'वर्ष', cite_title_label:'शीर्षक',
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
-    cite_pages_label:'पृष्ठ', cite_url_label:'URL (केवल यदि कोई DOI नहीं है)',
-    cite_lookup_btn:'🔎 शीर्षक से खोजें (Crossref)', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
+    cite_pages_label:'पृष्ठ', cite_url_label:'लिंक, DOI या पूरा संदर्भ: यहाँ चिपकाएँ, फ़ॉर्म अपने आप भर जाएगा',
+    cite_lookup_btn:'🔎 DOI, लिंक, PubMed ID या शीर्षक से भरें',
+    cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ विवरण जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
     cite_quote_label:'इस स्रोत से उद्धरण (वैकल्पिक)', cite_quote_placeholder:'उद्धृत पाठ यहाँ पेस्ट करें…',
     cite_quote_desc:'हिन्दी स्रोत जैसा लिखा गया है वैसा ही उद्धृत होता है। अंग्रेज़ी स्रोत का अनुवाद अपने आप हो जाता है जब आपकी सामग्री भाषा हिन्दी हो, और उसे (अनुवादित) चिह्नित किया जाता है, मूल पाठ होवर पर दिखता है।',
@@ -3869,16 +3871,47 @@ async function citInsertQuote(){
   }
 }
 /* FIX 9: real metadata from Crossref instead of an invented citation */
+function citExtractDoi(txt){
+  const m=String(txt||'').match(/10\.\d{4,9}\/[^\s"<>]+/);
+  return m?m[0].replace(/[.,;:)\]]+$/,'').toLowerCase():'';
+}
+function citExtractPmid(txt){
+  txt=String(txt||'');
+  let m=txt.match(/PMID:?\s*(\d{4,9})/i)||txt.match(/pubmed\.ncbi\.nlm\.nih\.gov\/(\d{4,9})/i)||txt.match(/ncbi\.nlm\.nih\.gov\/pubmed\/(\d{4,9})/i);
+  if(m)return m[1];
+  return /^\s*\d{6,9}\s*$/.test(txt)?txt.trim():'';
+}
+async function citPmidToDoi(pmid){
+  const r=await fetch('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id='+encodeURIComponent(pmid));
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  const rec=j.result&&j.result[pmid];
+  const ids=(rec&&rec.articleids)||[];
+  const d=ids.find(x=>x.idtype==='doi');
+  return d?String(d.value).toLowerCase():'';
+}
+/* FIX 9: real metadata from Crossref instead of an invented citation.
+   Accepts a DOI, a doi.org or PubMed link, a PubMed ID, a pasted full reference, or just a title. */
 async function citLookup(){
-  const q=document.getElementById('citTitle').value.trim();
-  if(!q){showToast('Type the work title first');return}
-  showToast('🔎 Looking it up in Crossref…');
+  const val=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
+  const raw=[val('citDOI'),val('citURL'),val('citTitle')];
+  let doi='',pmid='',query='';
+  for(const x of raw){if(!doi){doi=citExtractDoi(x)}if(!pmid){pmid=citExtractPmid(x)}}
+  if(!doi&&!pmid)query=raw.find(x=>x&&!/^https?:\/\/\S+$/.test(x))||'';
+  if(!doi&&!pmid&&!query){showToast(t('cite_lookup_empty'));return}
+  showToast(t('cite_lookup_busy'));
   try{
-    const r=await fetch('https://api.crossref.org/works?rows=1&query.bibliographic='+encodeURIComponent(q));
+    if(!doi&&pmid){
+      try{doi=await citPmidToDoi(pmid)}catch(e){doi=''}
+      if(!doi){showToast(t('cite_lookup_nopmid'));return}
+    }
+    const url=doi?'https://api.crossref.org/works/'+encodeURIComponent(doi):'https://api.crossref.org/works?rows=1&query.bibliographic='+encodeURIComponent(query.slice(0,300));
+    const r=await fetch(url);
+    if(r.status===404){showToast(t('cite_lookup_nf'));return}
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
-    const it=((j.message&&j.message.items)||[])[0];
-    if(!it){showToast('Not found on Crossref — please fill it in by hand');return}
+    const it=doi?j.message:((j.message&&j.message.items)||[])[0];
+    if(!it){showToast(t('cite_lookup_nf'));return}
     const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v==null?'':String(v)};
     set('citTitle',(it.title||[''])[0]);
     set('citAuthor',(it.author||[]).map(a=>(a.family||'')+(a.given?', '+a.given:'')).join('; '));
@@ -3889,9 +3922,17 @@ async function citLookup(){
     set('citURL','');
     document.getElementById('citType').value=(it.type==='book'||it.type==='monograph')?'Book':'Journal article';
     citRender();
-    showToast('Found on Crossref ✓ — check the details, then + Library');
-  }catch(e){showToast('Crossref unreachable — please fill it in by hand')}
+    showToast(t('cite_lookup_ok'));
+  }catch(e){showToast(t('cite_lookup_fail'))}
 }
+/* Pasting a DOI, link, PubMed ID or full reference into the form fills it without a button press. */
+function citAutoLookupOnPaste(ev){
+  const txt=((ev.clipboardData||window.clipboardData)||{getData:()=>''}).getData('text');
+  if(!citExtractDoi(txt)&&!citExtractPmid(txt))return;
+  const el=ev.target;
+  setTimeout(()=>{ if(String(el.value||'').trim())citLookup() },60);
+}
+['citURL','citDOI','citTitle'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('paste',citAutoLookupOnPaste)});
 
 /* ============ Psychology starters and sharing ============ */
 const PSYCH_STARTERS=[
