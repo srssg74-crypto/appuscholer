@@ -221,6 +221,13 @@
   .paper-card .abs{margin:5px 0;max-height:4.6em;overflow:hidden}
   .paper-card .abs.open{max-height:none}
   .paper-card .src-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--accent-ink);background:var(--purple-100);padding:1px 7px;border-radius:10px;margin-right:6px}
+  .paper-card .oa-badge{display:inline-block;font-size:10.5px;font-weight:700;color:var(--ink);padding:1px 7px;border-radius:10px;margin-right:6px;border:1px solid;cursor:help}
+  .paper-card .oa-gold{background:rgba(240,173,63,.22);border-color:#c9932e}
+  .paper-card .oa-green{background:rgba(34,160,90,.18);border-color:#22a05a}
+  .paper-card .oa-hybrid{background:rgba(59,130,246,.18);border-color:#3b82f6}
+  .paper-card .oa-bronze{background:rgba(194,110,60,.2);border-color:#c26e3c}
+  .paper-card .retr-badge{display:inline-block;font-size:10.5px;font-weight:700;color:var(--ink);background:rgba(220,38,38,.16);border:1px solid #dc2626;padding:1px 7px;border-radius:10px;margin-right:6px;cursor:help}
+  .retr-warn{background:rgba(220,38,38,.12);border:1px solid #dc2626;color:var(--ink);border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.5;margin-top:5px}
   .paper-card .row{margin-top:6px;gap:6px}
   .paper-card .btn{padding:5px 9px;font-size:11.5px}
   .paper-check{display:flex;align-items:flex-start;gap:6px}
@@ -604,6 +611,8 @@
 
       <h3 style="margin-top:14px"><span data-i18n="cite_library_h3">🗂 My library</span> <span class="badge" id="citCount">0</span></h3>
       <p class="desc" id="citUsageSummary" style="margin-top:6px;font-weight:600"></p>
+      <p class="desc" id="citRetractSummary" style="margin-top:2px"></p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citRetractionRefresh(true)" data-i18n="cite_retract_btn">🛡 Check for retractions</button></div>
       <div id="citLib" style="margin-top:8px"><p class="desc" data-i18n="cite_no_sources">No sources yet.</p></div>
       <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()" data-i18n="cite_insertbib_btn">Insert reference list</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="psychLoadStarters()" data-i18n="cite_loadclassics_btn">📖 Load classic psychology sources</button></div>
@@ -1217,6 +1226,16 @@ const I18N={
     cite_bookmarklet_btn:'🔖 Capture to Appuscholar',
     cite_bookmarklet_note:"Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.",
     cite_library_h3:'🗂 My library', cite_no_sources:'No sources yet.',
+    retr_badge:'Retracted', retr_tip:"OpenAlex marks this paper as retracted. Check the publisher's notice before you cite it.",
+    retr_lib_warn:"OpenAlex marks this source as retracted. Check the publisher's notice before you cite it.",
+    retr_summary_fmt:'Checked {c} sources with a DOI for retractions: {r} flagged. {n} without a DOI could not be checked. No flag does not prove a paper is sound.',
+    cite_retract_btn:'🛡 Check for retractions', retr_done:'Retraction check done', retr_failed:'Could not run the retraction check right now. Try again in a moment.',
+    retr_nodoi:'None of your sources has a DOI, so there is nothing to check.', retr_added_warn:'Added, but this paper is marked as retracted. Check before citing it.',
+    oa_badge_fmt:'Free · {type}', oa_free_btn:'Free full text',
+    oa_tip_gold:"Gold: the whole journal is free to read, so this paper is free on the publisher's own site.",
+    oa_tip_green:"Green: a free copy of the author's own version sits in an online repository.",
+    oa_tip_hybrid:'Hybrid: this paper is free to read in a journal that otherwise charges for access.',
+    oa_tip_bronze:"Bronze: free on the publisher's site right now, but with no open licence, so the publisher could remove it.",
     cite_usage_summary_fmt:'{c} of {n} sources are cited in your documents. {u} not cited yet.',
     cite_used_in:'Cited in:', cite_not_used:'Not cited in any of your documents yet',
     cite_insertbib_btn:'Insert reference list', cite_loadclassics_btn:'📖 Load classic psychology sources',
@@ -1400,6 +1419,16 @@ const I18N={
     cite_bookmarklet_btn:'🔖 Appuscholar में कैप्चर करें',
     cite_bookmarklet_note:'ऊपर दिए बटन को खींचें — क्लिक न करें — अपने बुकमार्क बार पर। यह केवल पेज पर पहले से मौजूद मानक उद्धरण टैग पढ़ता है (वही जो Zotero और Mendeley उपयोग करते हैं); यह उन पेजों को नहीं पढ़ सकता जो इन्हें प्रकाशित नहीं करते, जैसे अधिकतर समाचार साइटें।',
     cite_library_h3:'🗂 मेरी लाइब्रेरी', cite_no_sources:'अभी तक कोई स्रोत नहीं।',
+    retr_badge:'वापस लिया गया', retr_tip:'OpenAlex इस शोध-पत्र को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
+    retr_lib_warn:'OpenAlex इस स्रोत को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
+    retr_summary_fmt:'DOI वाले {c} स्रोतों की वापसी (retraction) जांच की गई: {r} चिह्नित। DOI के बिना {n} स्रोतों की जांच नहीं हो सकी। कोई चिह्न न होना यह साबित नहीं करता कि शोध-पत्र भरोसेमंद है।',
+    cite_retract_btn:'🛡 वापसी (retraction) जांचें', retr_done:'वापसी की जांच पूरी हुई', retr_failed:'अभी वापसी की जांच नहीं हो सकी। थोड़ी देर बाद फिर कोशिश करें।',
+    retr_nodoi:'आपके किसी स्रोत में DOI नहीं है, इसलिए जांचने को कुछ नहीं है।', retr_added_warn:'जोड़ा गया, लेकिन यह शोध-पत्र वापस लिया गया (retracted) चिह्नित है। उद्धृत करने से पहले जांच लें।',
+    oa_badge_fmt:'निःशुल्क · {type}', oa_free_btn:'निःशुल्क पूरा पाठ',
+    oa_tip_gold:'Gold: पूरी पत्रिका निःशुल्क पढ़ी जा सकती है, इसलिए यह शोध-पत्र प्रकाशक की अपनी साइट पर निःशुल्क है।',
+    oa_tip_green:'Green: लेखक के अपने संस्करण की एक निःशुल्क प्रति किसी ऑनलाइन रिपॉज़िटरी में रखी है।',
+    oa_tip_hybrid:'Hybrid: यह शोध-पत्र ऐसी पत्रिका में निःशुल्क पढ़ा जा सकता है जो अन्यथा पहुँच के लिए शुल्क लेती है।',
+    oa_tip_bronze:'Bronze: प्रकाशक की साइट पर अभी निःशुल्क है, पर कोई खुला लाइसेंस नहीं है, इसलिए प्रकाशक इसे हटा सकता है।',
     cite_usage_summary_fmt:'आपके दस्तावेज़ों में {n} में से {c} स्रोत उद्धृत हैं। {u} अभी तक उद्धृत नहीं।',
     cite_used_in:'इनमें उद्धृत:', cite_not_used:'आपके किसी भी दस्तावेज़ में अभी तक उद्धृत नहीं',
     cite_insertbib_btn:'संदर्भ सूची डालें', cite_loadclassics_btn:'📖 क्लासिक मनोविज्ञान स्रोत लोड करें',
@@ -1618,7 +1647,7 @@ function showTool(name){
   try{renderStageGuide(name)}catch(e){}
   /* Re-scan the documents for citations each time the Citation Manager opens, so the
      "cited in" lines never lag behind what was just written. */
-  if(name==='cite'){try{citRender()}catch(e){}}
+  if(name==='cite'){try{citRender()}catch(e){}try{citRetractionRefresh(false)}catch(e){}}
   /* If the tool being opened lives in a stage group the student had collapsed, expand that one
      group so the newly-active tool is actually visible — reachable by a next-stage link, a project
      jump, or restoring a saved tool, not only by a direct click on an already-open group. */
@@ -3723,11 +3752,64 @@ function citUsage(entry,docs){
   docs.forEach(d=>{const n=(d.text.match(re)||[]).length;if(n)out.push({id:d.id,title:d.title,n})});
   return out;
 }
+/* Retraction check. OpenAlex flags retracted papers (is_retracted), and the app already calls it.
+   The library's DOIs go out in batches of 40 in one filter query; answers are cached for a week per
+   DOI so reopening the tab costs nothing. This is a warning signal, not a verdict: the flag comes
+   from retraction databases that disagree with each other and miss cases, so "no flag" is never
+   shown as "safe". Sources without a DOI cannot be checked and the summary says how many. */
+const RETRACT_KEY='appu_retraction_cache',RETRACT_TTL=7*24*3600*1000;
+let retrBusy=false;
+function retrNormDoi(d){return String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'').toLowerCase()}
+function retrValidDoi(d){return /^10\.\d{4,}\/\S+$/.test(d)&&!/[|,]/.test(d)}
+function retrCacheGet(){try{const o=JSON.parse(LS.get(RETRACT_KEY)||'{}');return(o&&typeof o==='object')?o:{}}catch(e){return{}}}
+function retrCacheSet(doi,flag){
+  const d=retrNormDoi(doi);if(!retrValidDoi(d))return;
+  const c=retrCacheGet();c[d]={r:!!flag,t:Date.now()};LS.set(RETRACT_KEY,JSON.stringify(c));
+}
+async function retrFetchBatch(dois){
+  const url='https://api.openalex.org/works?filter=doi:'+dois.map(d=>encodeURIComponent('https://doi.org/'+d)).join('|')+
+    '&per-page=50&select=doi,is_retracted';
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  const out={};
+  (j.results||[]).forEach(w=>{const d=retrNormDoi(w.doi);if(d)out[d]=(w.is_retracted===true)});
+  return out;
+}
+async function citRetractionRefresh(force){
+  if(retrBusy)return;
+  const dois=Array.from(new Set(citGetLib().map(d=>retrNormDoi(d.doi)).filter(retrValidDoi)));
+  if(!dois.length){if(force)showToast(t('retr_nodoi'));return}
+  const cache=retrCacheGet(),now=Date.now();
+  const stale=dois.filter(d=>force||!cache[d]||now-cache[d].t>RETRACT_TTL);
+  if(!stale.length)return;
+  retrBusy=true;
+  try{
+    for(let i=0;i<stale.length;i+=40){
+      const chunk=stale.slice(i,i+40);
+      const res=await retrFetchBatch(chunk);
+      chunk.forEach(d=>{cache[d]={r:!!res[d],t:now}});
+      LS.set(RETRACT_KEY,JSON.stringify(cache));
+    }
+    citRender();
+    if(force)showToast(t('retr_done'));
+  }catch(e){if(force)showToast(t('retr_failed'))}
+  finally{retrBusy=false}
+}
 function citRender(){
   const l=citGetLib(),box=document.getElementById('citLib');
   document.getElementById('citCount').textContent=l.length;
   const sumEl=document.getElementById('citUsageSummary');
-  if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';if(sumEl)sumEl.textContent='';return}
+  const retrEl=document.getElementById('citRetractSummary');
+  if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';if(sumEl)sumEl.textContent='';if(retrEl)retrEl.textContent='';return}
+  const retrCache=retrCacheGet();
+  const retrStatus=l.map(d=>{const k=retrNormDoi(d.doi);return retrValidDoi(k)?(retrCache[k]||null):null});
+  if(retrEl){
+    const withDoi=l.filter(d=>retrValidDoi(retrNormDoi(d.doi))).length;
+    const checked=retrStatus.filter(Boolean).length,flagged=retrStatus.filter(s=>s&&s.r).length;
+    retrEl.textContent=checked?t('retr_summary_fmt').replace('{c}',checked).replace('{r}',flagged).replace('{n}',l.length-withDoi):'';
+    retrEl.style.fontWeight=flagged?'700':'';
+  }
   let docsPlain=[];try{docsPlain=citPlainDocs()}catch(e){docsPlain=[]}
   const usage=l.map(d=>{try{return citUsage(d,docsPlain)}catch(e){return[]}});
   if(sumEl){
@@ -3741,8 +3823,9 @@ function citRender(){
       ? '<div class="desc" style="margin-top:4px">'+escHTML(t('cite_used_in'))+' '+u.map(x=>
           '<a href="#" onclick="event.preventDefault();docSwitch(\''+escAttr(x.id)+'\')">'+escHTML(x.title)+'</a>'+(x.n>1?' ('+x.n+'×)':'')).join(', ')+'</div>'
       : '<div class="desc" style="margin-top:4px;opacity:.75">'+escHTML(t('cite_not_used'))+'</div>';
+    const retrLine=(retrStatus[i]&&retrStatus[i].r)?'<div class="retr-warn">⚠ '+escHTML(t('retr_lib_warn'))+'</div>':'';
     return'<div class="cit-item"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
-      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+escHTML(f.ref)+usedLine+
+      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+escHTML(f.ref)+usedLine+retrLine+
       '<div class="row" style="margin-top:6px">'+
       '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.intext)+'</button>'+
       '</div></div>';
@@ -3876,9 +3959,20 @@ function rsReconstructAbstract(inv){
   Object.entries(inv).forEach(([word,positions])=>positions.forEach(p=>{arr[p]=word}));
   return arr.join(' ').replace(/\s+/g,' ').trim();
 }
+/* Open-access status comes back inside the same OpenAlex request (its open_access field is
+   built from Unpaywall's data), so there is no second lookup per paper and no extra rate limit.
+   Same four-way scheme Unpaywall uses: gold, green, hybrid, bronze. OpenAlex also reports
+   "diamond" (gold with no author fee), shown as gold since it is a subset of it. A closed paper,
+   or one OpenAlex has no status for, gets no badge at all. */
+function rsOaStatus(oa){
+  if(!oa||!oa.is_oa)return'';
+  const s=String(oa.oa_status||'').toLowerCase();
+  if(s==='diamond')return'gold';
+  return(s==='gold'||s==='green'||s==='hybrid'||s==='bronze')?s:'';
+}
 async function rsFetchOpenAlex(q){
   const url='https://api.openalex.org/works?search='+encodeURIComponent(q)+
-    '&per-page=8&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url';
+    '&per-page=8&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url,open_access,is_retracted';
   const r=await fetch(url);
   if(!r.ok)throw new Error('HTTP '+r.status);
   const j=await r.json();
@@ -3895,7 +3989,10 @@ async function rsFetchOpenAlex(q){
       citationCount:w.cited_by_count||0,doi,
       url:w.doi||('https://openalex.org/'+(w.id||'').split('/').pop()),
       referencedWorks:(w.referenced_works||[]).slice(0,8),
-      citedByApiUrl:w.cited_by_api_url||''
+      citedByApiUrl:w.cited_by_api_url||'',
+      retracted:w.is_retracted===true,
+      oaStatus:rsOaStatus(w.open_access),
+      oaUrl:(w.open_access&&w.open_access.is_oa&&/^https?:\/\//i.test(w.open_access.oa_url||''))?w.open_access.oa_url:''
     };
   });
 }
@@ -3960,7 +4057,10 @@ function rsRenderResults(){
     '<div class="paper-card">'+
       '<div class="paper-check"><input type="checkbox" id="rsChk'+i+'" onchange="rsToggleActions()">'+
       '<div style="flex:1"><h4>'+escHTML(p.title)+'</h4>'+
-      '<div class="meta"><span class="src-tag">'+escHTML(p.source)+'</span>'+escHTML(p.authors)+
+      '<div class="meta"><span class="src-tag">'+escHTML(p.source)+'</span>'+
+        (p.retracted?'<span class="retr-badge" title="'+escAttr(t('retr_tip'))+'">⚠ '+escHTML(t('retr_badge'))+'</span>':'')+
+        (p.oaStatus?'<span class="oa-badge oa-'+p.oaStatus+'" title="'+escAttr(t('oa_tip_'+p.oaStatus))+'">'+escHTML(t('oa_badge_fmt').replace('{type}',p.oaStatus))+'</span>':'')+
+        escHTML(p.authors)+
         (p.year?' · '+escHTML(p.year):'')+(p.venue?' · '+escHTML(p.venue):'')+
         (p.citationCount?' · '+p.citationCount+' citations':'')+'</div>'+
       (p.abstract?'<div class="abs" id="rsAbs'+i+'">'+escHTML(p.abstract)+'</div>'+
@@ -3968,9 +4068,14 @@ function rsRenderResults(){
       '<div class="row">'+
         '<button type="button" class="btn btn-ghost" onclick="rsAddToLibrary('+i+')">+ Citation library</button>'+
         (p.url?'<button type="button" class="btn btn-ghost" onclick="window.open(\''+escAttr(p.url)+'\',\'_blank\')">Open source</button>':'')+
+        (p.oaUrl?'<button type="button" class="btn btn-ghost" onclick="rsOpenOa('+i+')">📄 '+escHTML(t('oa_free_btn'))+'</button>':'')+
         (p.oaId?'<button type="button" class="btn btn-ghost" onclick="rsConnected('+i+')">🔗 Connected papers</button>':'')+
       '</div></div></div></div>'
   ).join('');
+}
+function rsOpenOa(i){
+  const p=rsResults[i];
+  if(p&&p.oaUrl)window.open(p.oaUrl,'_blank','noopener');
 }
 function rsToggleActions(){
   const any=rsResults.some((_,i)=>{const el=document.getElementById('rsChk'+i);return el&&el.checked});
@@ -4012,8 +4117,11 @@ function rsAddToLibrary(i){
     type:p.source==='PubMed'||p.venue?'Journal article':'Website',style:'apa'};
   const l=citGetLib();
   if(l.some(e=>e.title===d.title&&e.author===d.author)){showToast('Already in your library');return}
+  /* The search already told us this paper's retraction status, so seed the library check with it
+     instead of making the student wait for a second lookup. */
+  if(d.doi&&p.source==='OpenAlex')retrCacheSet(d.doi,!!p.retracted);
   l.push(d);citSaveLib(l);
-  showToast('Added to citation library ✓ — check author formatting before you submit');
+  showToast(p.retracted?t('retr_added_warn'):'Added to citation library ✓ — check author formatting before you submit');
 }
 function rsOaBrief(w){
   const authors=(w.authorships||[]).map(a=>a.author&&a.author.display_name).filter(Boolean);
@@ -4050,7 +4158,8 @@ async function rsConnected(i){
 function rsCheckedPapers(){return rsResults.filter((_,i)=>{const el=document.getElementById('rsChk'+i);return el&&el.checked})}
 function rsCorpusText(papers){
   return papers.map((p,i)=>'['+(i+1)+'] '+p.authors+' ('+(p.year||'n.d.')+'). '+p.title+'. '+(p.venue||p.source)+'.'+
-    (p.abstract?'\nAbstract: '+p.abstract:'\nAbstract: not available.')).join('\n\n');
+    (p.abstract?'\nAbstract: '+p.abstract:'\nAbstract: not available.')+
+    (p.retracted?'\nWARNING: this paper is marked as retracted. Do not present its findings as reliable; mention the retraction if you refer to it.':'')).join('\n\n');
 }
 async function researchLitReview(){
   const papers=rsCheckedPapers();
