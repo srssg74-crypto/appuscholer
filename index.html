@@ -97,6 +97,29 @@
   .stage-group.stage-group-current .stage-header{color:var(--head-title)}
   .stage-header .chev{font-size:10px;color:var(--muted);transition:transform .15s;flex:0 0 auto}
   .stage-group.collapsed .chev{transform:rotate(-90deg)}
+  /* ---- Workspace dock: on wide screens the tool panel sits beside the document, not below it ---- */
+  .dock-tabs{display:none}
+  @media(min-width:1100px){
+    main{display:grid;grid-template-columns:auto minmax(0,1fr) var(--dockw,440px);grid-template-rows:auto minmax(0,1fr);column-gap:14px;max-width:none;height:var(--dockh,auto);margin:10px auto 0;padding:0 18px 12px;box-sizing:border-box}
+    main .split-row,main .tool-shell{display:contents}
+    main .doc-pane{grid-column:2;grid-row:1/3;height:auto;min-height:0}
+    main .splitter{display:block;grid-column:3;grid-row:1/3;justify-self:start;margin:0 0 0 -12px;width:10px;flex:none;z-index:2}
+    main .tool-sidebar{grid-column:1;grid-row:1/3;position:static;max-height:none;height:100%;width:236px;flex:none;box-sizing:border-box}
+    main .tool-sidebar.collapsed{width:50px}
+    main .doc-pane .card-head .btn{padding:6px 10px;font-size:12px}
+    main .doc-pane .card-head{gap:6px}
+    main .doc-pane #provBadge{display:none}
+    main .doc-pane .toolbar .btn{padding:6px 9px;font-size:12px}
+    main .doc-pane .toolbar{gap:6px;flex-wrap:wrap}
+    main .dock-tabs{display:flex;grid-column:3;grid-row:1;gap:6px;align-items:flex-end;margin-bottom:8px}
+    main .tool-main{grid-column:3;grid-row:2;overflow-y:auto;min-height:0;min-width:0}
+    main .ai-pane{grid-column:3;grid-row:2;height:auto;min-height:0;display:none}
+    main.dock-ai .ai-pane{display:flex}
+    main.dock-ai .tool-main{display:none}
+  }
+  .dock-tab{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dock-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
+  .dock-tab .dock-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold,#f2b134);margin-left:6px;vertical-align:middle}
   .stage-group.collapsed .stage-tools{display:none}
   .stage-tools{display:flex;flex-direction:column;gap:2px;padding:2px 2px 8px 21px}
   .stage-tools .tool-tab{border:none;background:none;text-align:left;width:100%;padding:6px 8px;border-radius:7px;font-size:12.5px}
@@ -149,6 +172,9 @@
   #editor h2{font-size:1.35em;margin:.6em 0 .3em;color:var(--head-title)}
   #editor h3{font-size:1.15em;margin:.6em 0 .3em;color:var(--head-title)}
   .fmtbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 14px;border-top:1px solid var(--line);background:var(--soft2);align-items:center}
+  .fmt-more{display:none;flex-basis:100%;flex-wrap:wrap;gap:4px;align-items:center;padding-top:4px;border-top:1px dashed var(--line);margin-top:2px}
+  .fmtbar.more-open .fmt-more{display:flex}
+  .fmt-more-btn{margin-left:auto}
   .fmtbar button,.fmtbar select,.fmtbar label{font-size:12.5px}
   .fmtbar button{padding:5px 8px}
   .fmtbar select{padding:7px 8px;border:2px solid var(--line);border-radius:8px;font-size:13px;background:var(--card);color:var(--ink);font-family:inherit}
@@ -321,7 +347,7 @@
         <input type="file" id="docImportInput" accept=".docx,.pdf,.txt,.md,.html,.htm" style="display:none" onchange="docImportFiles(this.files);this.value=''">
       </div>
     </div>
-    <div class="fmtbar" role="toolbar" aria-label="Text formatting">
+    <div class="fmtbar" id="fmtBar" role="toolbar" aria-label="Text formatting">
       <select id="blockSel" onchange="fmtBlock(this.value)" title="Paragraph style" aria-label="Paragraph style">
         <option value="p">Paragraph</option>
         <option value="h1">Heading 1</option>
@@ -329,7 +355,24 @@
         <option value="h3">Heading 3</option>
         <option value="blockquote">Quote</option>
       </select>
-      <select id="fontSel" onchange="applyFontName(this.value)" title="Font family" aria-label="Font family">
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="fmt('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button type="button" class="fmt-btn" onclick="fmt('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button type="button" class="fmt-btn" onclick="fmt('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Bullet list">☰•</button>
+      <button type="button" class="fmt-btn" onclick="fmt('insertOrderedList')" title="Numbered list">☰1</button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="fmt('undo')" title="Undo (Ctrl+Z)">↶</button>
+      <button type="button" class="fmt-btn" onclick="fmt('redo')" title="Redo (Ctrl+Y)">↷</button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="document.getElementById('imgFileInput').click()" title="Insert a picture">🖼 Image</button>
+      <button type="button" class="fmt-btn" onclick="insertTable()" title="Insert a table">⊞ Table</button>
+      <span class="fmt-sep"></span>
+      <button type="button" class="fmt-btn" onclick="openFindReplace()" title="Find and replace (Ctrl+F)">🔍 Find</button>
+      <button type="button" class="fmt-btn fmt-more-btn" id="fmtMoreBtn" onclick="toggleFmtMore()" aria-expanded="false" title="More formatting: font, size, colour, alignment, table rows and columns">More ▾</button>
+      <span class="fmt-more" id="fmtMore">
+        <select id="fontSel" onchange="applyFontName(this.value)" title="Font family" aria-label="Font family">
         <option value="">Font</option>
         <option value="Arial, sans-serif">Arial</option>
         <option value="Georgia, serif">Georgia</option>
@@ -339,7 +382,7 @@
         <option value="Calibri, sans-serif">Calibri</option>
         <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
       </select>
-      <select id="sizeSel" onchange="applyFontSize(this.value)" title="Font size" aria-label="Font size">
+        <select id="sizeSel" onchange="applyFontSize(this.value)" title="Font size" aria-label="Font size">
         <option value="">Size</option>
         <option value="10">10</option>
         <option value="12">12</option>
@@ -351,43 +394,32 @@
         <option value="28">28</option>
         <option value="32">32</option>
       </select>
-      <span class="fmt-sep"></span>
-      <button type="button" class="fmt-btn" onclick="fmt('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
-      <button type="button" class="fmt-btn" onclick="fmt('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
-      <button type="button" class="fmt-btn" onclick="fmt('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
-      <button type="button" class="fmt-btn" onclick="fmt('strikeThrough')" title="Strikethrough"><s>S</s></button>
-      <button type="button" class="fmt-btn" onclick="fmt('superscript')" title="Superscript">X²</button>
-      <button type="button" class="fmt-btn" onclick="fmt('subscript')" title="Subscript">X₂</button>
-      <span class="fmt-sep"></span>
-      <label class="fmt-color-btn" title="Text color">A
+        <span class="fmt-sep"></span>
+        <button type="button" class="fmt-btn" onclick="fmt('strikeThrough')" title="Strikethrough"><s>S</s></button>
+        <button type="button" class="fmt-btn" onclick="fmt('superscript')" title="Superscript">X²</button>
+        <button type="button" class="fmt-btn" onclick="fmt('subscript')" title="Subscript">X₂</button>
+        <span class="fmt-sep"></span>
+        <label class="fmt-color-btn" title="Text color">A
         <input type="color" id="textColorInput" value="#1a1a1a" onchange="applyForeColor(this.value)">
       </label>
-      <label class="fmt-color-btn" title="Highlight color">🖊
+        <label class="fmt-color-btn" title="Highlight color">🖊
         <input type="color" id="hiliteColorInput" value="#fff59d" onchange="applyHiliteColor(this.value)">
       </label>
-      <span class="fmt-sep"></span>
-      <button type="button" class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Bullet list">☰•</button>
-      <button type="button" class="fmt-btn" onclick="fmt('insertOrderedList')" title="Numbered list">☰1</button>
-      <button type="button" class="fmt-btn" onclick="fmt('outdent')" title="Decrease indent">⇤</button>
-      <button type="button" class="fmt-btn" onclick="fmt('indent')" title="Increase indent">⇥</button>
-      <span class="fmt-sep"></span>
-      <button type="button" class="fmt-btn" onclick="fmt('justifyLeft')" title="Align left">⟸</button>
-      <button type="button" class="fmt-btn" onclick="fmt('justifyCenter')" title="Align center">☰</button>
-      <button type="button" class="fmt-btn" onclick="fmt('justifyRight')" title="Align right">⟹</button>
-      <span class="fmt-sep"></span>
-      <button type="button" class="fmt-btn" onclick="fmt('undo')" title="Undo (Ctrl+Z)">↶</button>
-      <button type="button" class="fmt-btn" onclick="fmt('redo')" title="Redo (Ctrl+Y)">↷</button>
-      <button type="button" class="fmt-btn" onclick="fmt('removeFormat')" title="Clear formatting">Tx</button>
-      <span class="fmt-sep"></span>
-      <button type="button" class="fmt-btn" onclick="document.getElementById('imgFileInput').click()" title="Insert a picture">🖼 Image</button>
-      <button type="button" class="fmt-btn" onclick="insertTable()" title="Insert a table">⊞ Table</button>
-      <button type="button" class="fmt-btn" onclick="tableAddRow()" title="Add a row to the table your cursor is in">+Row</button>
-      <button type="button" class="fmt-btn" onclick="tableAddCol()" title="Add a column to the table your cursor is in">+Col</button>
-      <button type="button" class="fmt-btn" onclick="insertPageBreak()" title="Insert a page break">⤓ Page Break</button>
-      <span class="fmt-sep"></span>
-      <button type="button" class="fmt-btn" onclick="openFindReplace()" title="Find and replace (Ctrl+F)">🔍 Find</button>
+        <span class="fmt-sep"></span>
+        <button type="button" class="fmt-btn" onclick="fmt('outdent')" title="Decrease indent">⇤</button>
+        <button type="button" class="fmt-btn" onclick="fmt('indent')" title="Increase indent">⇥</button>
+        <button type="button" class="fmt-btn" onclick="fmt('removeFormat')" title="Clear formatting">Tx</button>
+        <span class="fmt-sep"></span>
+        <button type="button" class="fmt-btn" onclick="fmt('justifyLeft')" title="Align left">⟸</button>
+        <button type="button" class="fmt-btn" onclick="fmt('justifyCenter')" title="Align center">☰</button>
+        <button type="button" class="fmt-btn" onclick="fmt('justifyRight')" title="Align right">⟹</button>
+        <span class="fmt-sep"></span>
+        <button type="button" class="fmt-btn" onclick="tableAddRow()" title="Add a row to the table your cursor is in">+Row</button>
+        <button type="button" class="fmt-btn" onclick="tableAddCol()" title="Add a column to the table your cursor is in">+Col</button>
+        <button type="button" class="fmt-btn" onclick="insertPageBreak()" title="Insert a page break">⤓ Page Break</button>
+        <span class="fmt-hint">Select text, then click Bold / Italic / a list to format it — just like Word. Use Image / Table to drop those into the document too.</span>
+      </span>
       <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="insertImageFile(this)">
-      <span class="fmt-hint">Select text, then click Bold / Italic / a list to format it — just like Word. Use Image / Table to drop those into the document too.</span>
     </div>
     <div id="findReplaceBar" class="find-replace-bar" style="display:none">
       <input type="text" id="findInput" placeholder="Find" aria-label="Find">
@@ -422,6 +454,11 @@
       <button class="btn btn-ghost" onclick="clearSug(t('ai_pane_placeholder'))" data-i18n="dismiss_btn">Dismiss</button>
     </div>
   </div></section>
+  </div>
+
+  <div class="dock-tabs" id="dockTabs" role="tablist" aria-label="Side panel">
+    <button type="button" class="dock-tab active" id="dockTabTools" role="tab" onclick="dockShow('tools')">Tools</button>
+    <button type="button" class="dock-tab" id="dockTabAi" role="tab" onclick="dockShow('ai')"><span data-i18n="dock_ai_tab">✨ AI suggestion</span><span class="dock-dot" id="dockDot" style="display:none"></span></button>
   </div>
 
   <div class="tool-shell" id="toolShell">
@@ -1217,6 +1254,8 @@ const I18N={
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
     cite_pages_label:'Pages', cite_url_label:'Link, DOI or full reference: paste it here and the form fills itself',
     cite_lookup_btn:'🔎 Fill from DOI, link, PubMed ID or title',
+    dock_ai_tab:'✨ AI suggestion', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
     cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
     cite_quote_label:'Quote from this source (optional)', cite_quote_placeholder:'Paste the exact quoted text here…',
@@ -1411,6 +1450,8 @@ const I18N={
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
     cite_pages_label:'पृष्ठ', cite_url_label:'लिंक, DOI या पूरा संदर्भ: यहाँ चिपकाएँ, फ़ॉर्म अपने आप भर जाएगा',
     cite_lookup_btn:'🔎 DOI, लिंक, PubMed ID या शीर्षक से भरें',
+    dock_ai_tab:'✨ एआई सुझाव', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
     cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
     cite_quote_label:'इस स्रोत से उद्धरण (वैकल्पिक)', cite_quote_placeholder:'उद्धृत पाठ यहाँ पेस्ट करें…',
@@ -1515,6 +1556,7 @@ function getLang(){const l=LS.get('appu_lang');return(l==='hi')?'hi':'en'}
 function t(key){const d=I18N[getLang()]||I18N.en;return(key in d)?d[key]:(I18N.en[key]||key)}
 function applyLang(){
   const lang=getLang();
+  window.setTimeout(()=>{try{dockSyncLabel();fmtMoreLabel()}catch(e){}},0);
   document.documentElement.setAttribute('lang',lang);
   document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.getAttribute('data-i18n'))});
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{el.setAttribute('title',t(el.getAttribute('data-i18n-title')))});
@@ -1650,6 +1692,7 @@ function showTool(name){
   /* Re-scan the documents for citations each time the Citation Manager opens, so the
      "cited in" lines never lag behind what was just written. */
   if(name==='cite'){try{citRender()}catch(e){}try{citRetractionRefresh(false)}catch(e){}}
+  try{dockSyncLabel();dockShow('tools')}catch(e){}
   /* If the tool being opened lives in a stage group the student had collapsed, expand that one
      group so the newly-active tool is actually visible — reachable by a next-stage link, a project
      jump, or restoring a saved tool, not only by a direct click on an already-open group. */
@@ -1943,6 +1986,49 @@ function reopenProject(id){
 renderProjectBar();
 renderStageGuide(LS.get('appu_tool_tab')||'psych');
 
+/* ============ Workspace dock ============ */
+const DOCK_MQ=window.matchMedia('(min-width:1100px)');
+function dockOn(){return DOCK_MQ.matches}
+function dockSyncLabel(){
+  const b=document.getElementById('dockTabTools');if(!b)return;
+  const act=document.querySelector('.tool-sidebar .tool-tab.active[data-tool]');
+  b.textContent=act?act.textContent.trim():t('dock_tools_tab');
+}
+function dockShow(which){
+  const m=document.querySelector('main');if(!m)return;
+  const ai=which==='ai'&&dockOn();
+  m.classList.toggle('dock-ai',ai);
+  const a=document.getElementById('dockTabAi'),tl=document.getElementById('dockTabTools'),dot=document.getElementById('dockDot');
+  if(a)a.classList.toggle('active',ai);if(tl)tl.classList.toggle('active',!ai);
+  if(dot&&ai)dot.style.display='none';
+}
+function dockLayout(){
+  const m=document.querySelector('main');if(!m)return;
+  if(dockOn()){
+    const top=m.getBoundingClientRect().top+window.scrollY;
+    m.style.setProperty('--dockh',Math.max(520,window.innerHeight-top-12)+'px');
+    const w=parseFloat(LS.get('appu_dock_w'));
+    if(w&&w>=320&&w<=760)m.style.setProperty('--dockw',w+'px');
+  }else{
+    m.style.removeProperty('--dockh');m.classList.remove('dock-ai');
+  }
+}
+window.addEventListener('resize',()=>{try{dockLayout()}catch(e){}});
+try{DOCK_MQ.addEventListener('change',()=>{dockLayout();dockSyncLabel()})}catch(e){}
+setTimeout(()=>{try{dockLayout();dockSyncLabel()}catch(e){}},0);
+window.addEventListener('load',()=>{try{dockLayout();dockSyncLabel()}catch(e){}});
+function fmtMoreLabel(){
+  const bar=document.getElementById('fmtBar'),btn=document.getElementById('fmtMoreBtn');if(!bar||!btn)return;
+  btn.textContent=t('fmt_more_btn').replace('{a}',bar.classList.contains('more-open')?'▴':'▾');
+}
+function toggleFmtMore(){
+  const bar=document.getElementById('fmtBar'),btn=document.getElementById('fmtMoreBtn');if(!bar||!btn)return;
+  const open=bar.classList.toggle('more-open');
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  fmtMoreLabel();
+  LS.set('appu_fmt_more',open?'1':'0');
+}
+(function(){try{if(LS.get('appu_fmt_more')==='1')toggleFmtMore()}catch(e){}})();
 /* ============ Draggable split between the document and the AI panel ============ */
 (function(){
   const row=document.getElementById('splitRow'),docPane=document.getElementById('docPane'),
@@ -1957,6 +2043,11 @@ renderStageGuide(LS.get('appu_tool_tab')||'psych');
   });
   split.addEventListener('pointermove',e=>{
     if(!dragging)return;
+    if(dockOn()){
+      const m=document.querySelector('main'),r=m.getBoundingClientRect();
+      const w=Math.max(320,Math.min(760,r.right-18-e.clientX));
+      m.style.setProperty('--dockw',w+'px');LS.set('appu_dock_w',String(Math.round(w)));return;
+    }
     const rect=row.getBoundingClientRect();
     let pct=((e.clientX-rect.left)/rect.width)*100;
     pct=Math.max(28,Math.min(78,pct));
@@ -2728,8 +2819,8 @@ function apiMsg(e){
 }
 
 /* ============ FIX 3: suggestion state always in sync ============ */
-function setSug(t){window._sug=t;aiOut.textContent=t}
-function clearSug(msg){window._sug=null;aiOut.textContent=msg}
+function setSug(t){window._sug=t;aiOut.textContent=t;try{dockShow('ai')}catch(e){}}
+function clearSug(msg){window._sug=null;aiOut.textContent=msg;try{dockShow('tools')}catch(e){}}
 function copyAI(){
   const t=window._sug||'';if(!t){showToast('Nothing to copy yet');return}
   navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy — select the text instead'));
@@ -4107,6 +4198,7 @@ function rsRenderResults(){
       (p.abstract?'<div class="abs" id="rsAbs'+i+'">'+escHTML(p.abstract)+'</div>'+
         '<a href="#" onclick="event.preventDefault();document.getElementById(\'rsAbs'+i+'\').classList.toggle(\'open\')" style="font-size:11.5px">Show more / less</a>':'')+
       '<div class="row">'+
+        '<button type="button" class="btn btn-purple" onclick="rsInsertCitation('+i+')">'+escHTML(t('rs_insert_cite'))+'</button>'+
         '<button type="button" class="btn btn-ghost" onclick="rsAddToLibrary('+i+')">+ Citation library</button>'+
         (p.url?'<button type="button" class="btn btn-ghost" onclick="window.open(\''+escAttr(p.url)+'\',\'_blank\')">Open source</button>':'')+
         (p.oaUrl?'<button type="button" class="btn btn-ghost" onclick="rsOpenOa('+i+')">📄 '+escHTML(t('oa_free_btn'))+'</button>':'')+
@@ -4151,18 +4243,44 @@ function rsAddManual(){
   ['rsManTitle','rsManAuthor','rsManYear','rsManSource','rsManDoi'].forEach(id=>document.getElementById(id).value='');
   showToast('Added to citation library ✓');
 }
-function rsAddToLibrary(i){
-  const p=rsResults[i];if(!p)return;
-  const d={author:(p.authors||'').replace(/, et al\.$/,''),year:String(p.year||''),title:p.title,
+/* Search results store authors as one display string ("Michael Kuria, D. Ndetei, et al."). The citation
+   formatter wants "Last, First; Last, First", so convert each name before it goes into the library. */
+function rsAuthorsToCit(str){
+  const names=String(str||'').replace(/,?\s*et al\.?$/i,'').split(/,\s*/).map(x=>x.trim()).filter(Boolean);
+  if(!names.length||names[0]==='Unknown authors')return'';
+  return names.map(n=>{
+    const parts=n.split(/\s+/);
+    if(parts.length===1)return n;
+    if(parts.length===2&&/^[A-Z]{1,4}$/.test(parts[1]))return parts[0]+', '+parts[1];
+    return parts[parts.length-1]+', '+parts.slice(0,-1).join(' ');
+  }).join('; ');
+}
+function rsEntryFromResult(p){
+  const sel=document.getElementById('citStyle');
+  return{author:rsAuthorsToCit(p.authors),year:String(p.year||''),title:p.title,
     source:p.venue||'',volume:'',issue:'',pages:'',doi:p.doi||'',url:p.doi?'':(p.url||''),
-    type:p.source==='PubMed'||p.venue?'Journal article':'Website',style:'apa'};
+    type:p.source==='PubMed'||p.venue?'Journal article':'Website',style:(sel&&sel.value)||'apa'};
+}
+function rsAddToLibrary(i,quiet){
+  const p=rsResults[i];if(!p)return null;
+  const d=rsEntryFromResult(p);
   const l=citGetLib();
-  if(l.some(e=>e.title===d.title&&e.author===d.author)){showToast('Already in your library');return}
+  const dup=l.find(e=>e.title===d.title);
+  if(dup){if(!quiet)showToast('Already in your library');return dup}
   /* The search already told us this paper's retraction status, so seed the library check with it
      instead of making the student wait for a second lookup. */
   if(d.doi&&p.source==='OpenAlex')retrCacheSet(d.doi,!!p.retracted);
   l.push(d);citSaveLib(l);
-  showToast(p.retracted?t('retr_added_warn'):'Added to citation library ✓ — check author formatting before you submit');
+  if(!quiet)showToast(p.retracted?t('retr_added_warn'):'Added to citation library ✓ — check author formatting before you submit');
+  return d;
+}
+/* One step from a search result to a citation in the text: save the paper if it is new, then put the
+   in-text citation at the cursor. */
+function rsInsertCitation(i){
+  const p=rsResults[i];if(!p)return;
+  const d=rsAddToLibrary(i,true);if(!d)return;
+  citInsertAtCursor(' '+citFmt(d).intext);
+  showToast(p.retracted?t('retr_added_warn'):t('rs_inserted'));
 }
 function rsOaBrief(w){
   const authors=(w.authorships||[]).map(a=>a.author&&a.author.display_name).filter(Boolean);
