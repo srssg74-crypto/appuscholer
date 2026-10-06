@@ -64,7 +64,11 @@
   .stage-guide{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--muted);background:var(--soft);border:1.5px dashed var(--dashed);border-radius:10px;padding:8px 12px;margin:0 0 12px}
   .stage-guide b{color:var(--head-title)}
   .stage-guide .next-btn{margin-left:auto;background:none;border:2px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
-  .stage-guide .next-btn:hover{border-color:var(--purple-600,#6d28d9)}
+  .stage-guide .next-btn:hover,.stage-guide .back-btn:hover{border-color:var(--purple-600,#6d28d9)}
+  .stage-guide .back-btn{margin-left:auto;background:none;border:2px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
+  .stage-guide .back-btn+.next-btn{margin-left:0}
+  .cit-item.cit-active{outline:2px solid var(--purple-600,#6d28d9);background:#f3ebff}
+  #citCaretChip{font-size:12px;padding:5px 10px;border-color:var(--purple-600,#6d28d9);color:var(--accent-ink)}
   .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .tool-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
   .tool-tab.stage-current:not(.active){border-color:var(--purple-600,#6d28d9);box-shadow:0 0 0 1px var(--purple-600,#6d28d9)}
@@ -437,6 +441,7 @@
       <button class="btn btn-ghost" onclick="makeLonger()" data-i18n="extend_btn" data-i18n-title="extend_btn_title" title="Select some text first, then click to extend it">➕ Extend</button>
       <button class="btn btn-ghost" onclick="insertScaffold()" data-i18n="template_btn" data-i18n-title="template_btn_title" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
       <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 AI text</button>
+      <button type="button" class="btn btn-ghost" id="citCaretChip" style="display:none" onclick="citJumpToCaret()"></button>
       <span class="stats" id="stats">0 words</span>
       <span class="orig-badge" id="origBadge" style="display:none"></span>
     </div>
@@ -1211,7 +1216,7 @@ const I18N={
     projects_dlg_h2:'📁 Your research projects', close_btn:'Close',
     stage_idea:'Idea & Feasibility', stage_lit:'Literature Review', stage_design:'Design & Ethics',
     stage_collect:'Collection & Analysis', stage_writing:'Writing', stage_review:'Review & Publish',
-    stage_guide_fmt:'Stage {n} of {total}', stage_guide_next:'Next:', stage_guide_final:'Final stage — nothing after this in the sequence',
+    stage_guide_fmt:'Stage {n} of {total}', stage_guide_next:'Next:', stage_guide_back:'Back:', cit_caret_chip:'📚 {c} — show in Citation Manager', stage_guide_final:'Final stage — nothing after this in the sequence',
     stageintro_h2:'Your project has six stages', stageintro_desc:'The app follows you through them in order. Every tool stays one click away the whole time — this is just the shape of the road ahead.',
     stageintro_desc_idea:'Shape your question and check what\'s realistically doable.',
     stageintro_desc_lit:'Find and work through what\'s already been studied.',
@@ -1407,7 +1412,7 @@ const I18N={
     projects_dlg_h2:'📁 आपके शोध प्रोजेक्ट्स', close_btn:'बंद करें',
     stage_idea:'विचार और व्यवहार्यता', stage_lit:'साहित्य समीक्षा', stage_design:'डिज़ाइन और नैतिकता',
     stage_collect:'संग्रह और विश्लेषण', stage_writing:'लेखन', stage_review:'समीक्षा और प्रकाशन',
-    stage_guide_fmt:'चरण {n}/{total}', stage_guide_next:'आगे:', stage_guide_final:'अंतिम चरण — क्रम में इसके बाद कुछ नहीं है',
+    stage_guide_fmt:'चरण {n}/{total}', stage_guide_next:'आगे:', stage_guide_back:'पीछे:', cit_caret_chip:'📚 {c} — सन्दर्भ प्रबंधक में देखें', stage_guide_final:'अंतिम चरण — क्रम में इसके बाद कुछ नहीं है',
     stageintro_h2:'आपके प्रोजेक्ट में छह चरण हैं', stageintro_desc:'ऐप आपको इसी क्रम में हर चरण से गुज़ारता है। हर टूल हमेशा एक क्लिक दूर रहता है — यह सिर्फ आगे की राह की झलक है।',
     stageintro_desc_idea:'अपना प्रश्न स्पष्ट करें और देखें कि असल में क्या संभव है।',
     stageintro_desc_lit:'पहले से हुए शोध को खोजें और पढ़ें।',
@@ -1755,6 +1760,14 @@ function nextStageTool(fromIndex){
   return null;
 }
 
+function prevStageTool(fromIndex){
+  for(let i=fromIndex-1;i>=0;i--){
+    const tl=STAGE_FIRST_TOOL[STAGES[i]];
+    if(tl)return{tool:tl,stage:STAGES[i]};
+  }
+  return null;
+}
+
 /* ============ Sidebar: whole-panel collapse, and per-stage group collapse ============
    Both default to fully open — every .tool-tab stays exactly as reachable as it was on the old flat
    tab bar, just grouped under its stage instead of wrapped across rows. Collapsing is something a
@@ -1807,8 +1820,9 @@ function renderStageGuide(tool){
   const stage=TOOL_TO_STAGE[tool];
   if(!stage){el.style.display='none';el.innerHTML='';return}
   const idx=STAGES.indexOf(stage);
-  const nxt=nextStageTool(idx);
+  const nxt=nextStageTool(idx),prv=prevStageTool(idx);
   let html='<span>'+t('stage_guide_fmt').replace('{n}',idx+1).replace('{total}',STAGES.length)+' · <b>'+escHTML(stageLabel(stage))+'</b></span>';
+  if(prv)html+='<button type="button" class="back-btn" onclick="showTool(\''+prv.tool+'\')">← '+escHTML(t('stage_guide_back'))+' '+escHTML(stageLabel(prv.stage))+'</button>';
   html+=nxt
     ? '<button type="button" class="next-btn" onclick="showTool(\''+nxt.tool+'\')">'+escHTML(t('stage_guide_next'))+' '+escHTML(stageLabel(nxt.stage))+' →</button>'
     : '<span class="next-btn" style="border:none;cursor:default">'+escHTML(t('stage_guide_final'))+'</span>';
@@ -3822,7 +3836,7 @@ function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Ad
   citInsertAtCursor(' '+citFmt(d).intext);showToast('Citation inserted ✓')}
 function citAdd(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
   const l=citGetLib();l.push(d);citSaveLib(l);showToast('Saved to library ✓')}
-function citDel(i){const l=citGetLib();l.splice(i,1);citSaveLib(l)}
+function citDel(i){citActiveIdx=-1;const l=citGetLib();l.splice(i,1);citSaveLib(l)}
 /* Backlinks, scaled down to one student: for each library source, which of their own documents
    cite it. No graph database — a plain-text scan of the documents already in localStorage, matching
    the author's surname followed within ~40 characters by the year, which covers (Smith, 2020),
@@ -3836,11 +3850,14 @@ function citPlainDocs(){
     return{id:d.id,title:d.title||'Untitled',text:(div.textContent||'').replace(/\s+/g,' ')};
   });
 }
-function citUsage(entry,docs){
+function citRegex(entry){
   const ln=citLastName(entry.author),y=String(entry.year||'').trim();
-  if(!ln||ln==='Author'||!/^\d{4}$/.test(y))return[];
+  if(!ln||ln==='Author'||!/^\d{4}$/.test(y))return null;
   const esc=ln.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const re=new RegExp('(?<![\\p{L}])'+esc+'(?![\\p{L}])[^;()]{0,40}?[\\s(,]+'+y+'[a-z]?(?!\\d)','gu');
+  return new RegExp('(?<![\\p{L}])'+esc+'(?![\\p{L}])[^;()]{0,40}?[\\s(,]+'+y+'[a-z]?(?!\\d)','gu');
+}
+function citUsage(entry,docs){
+  const re=citRegex(entry);if(!re)return[];
   const out=[];
   docs.forEach(d=>{const n=(d.text.match(re)||[]).length;if(n)out.push({id:d.id,title:d.title,n})});
   return out;
@@ -3889,6 +3906,60 @@ async function citRetractionRefresh(force){
   }catch(e){if(force)showToast(t('retr_failed'))}
   finally{retrBusy=false}
 }
+/* Document to library link. When the cursor or a selection touches an in-text citation that matches a
+   library source (same surname-then-year rule as the "Cited in" line), a chip appears in the document
+   toolbar. One click opens the Citation Manager with that source highlighted. If the Citation Manager
+   is already on screen, the source lights up by itself as the cursor moves. */
+let citActiveIdx=-1,citCaretIdx=-1,citCaretTimer=null;
+function citCaretEntry(){
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount||!editor.contains(sel.anchorNode))return null;
+  const r=sel.getRangeAt(0);
+  let el=r.startContainer.nodeType===1?r.startContainer:r.startContainer.parentElement;
+  while(el&&el!==editor&&!/^(P|DIV|LI|H[1-6]|BLOCKQUOTE|TD|TH|PRE)$/.test(el.tagName))el=el.parentElement;
+  if(!el||!editor.contains(el)&&el!==editor)return -1;
+  const a=document.createRange();a.selectNodeContents(el);a.setEnd(r.startContainer,r.startOffset);
+  const b=document.createRange();b.selectNodeContents(el);b.setEnd(r.endContainer,r.endOffset);
+  const s=a.toString().length,e=b.toString().length,text=el.textContent||'';
+  const lib=citGetLib();
+  for(let i=0;i<lib.length;i++){
+    const re=citRegex(lib[i]);if(!re)continue;
+    let m;
+    while((m=re.exec(text))){
+      if(m.index-1<=e&&m.index+m[0].length+1>=s)return i;
+      if(m[0].length===0)re.lastIndex++;
+    }
+  }
+  return -1;
+}
+function citPanelVisible(){const b=document.getElementById('citLib');return !!(b&&b.getClientRects().length)}
+function citMarkActive(i,jump){
+  citActiveIdx=i;
+  document.querySelectorAll('#citLib .cit-item.cit-active').forEach(x=>x.classList.remove('cit-active'));
+  const el=i>=0?document.getElementById('citItem'+i):null;
+  if(el){el.classList.add('cit-active');try{el.scrollIntoView({block:jump?'center':'nearest',behavior:'smooth'})}catch(e){}}
+}
+function citCaretUpdate(){
+  const idx=citCaretEntry();
+  if(idx===null)return;
+  const chip=document.getElementById('citCaretChip');if(!chip)return;
+  citCaretIdx=idx;
+  if(idx<0){chip.style.display='none';if(citActiveIdx>=0)citMarkActive(-1);return}
+  const d=citGetLib()[idx];
+  chip.textContent=t('cit_caret_chip').replace('{c}',citLastName(d.author)+', '+(d.year||'n.d.'));
+  chip.style.display='';
+  if(citPanelVisible())citMarkActive(idx,false);
+}
+function citCaretSchedule(){clearTimeout(citCaretTimer);citCaretTimer=setTimeout(()=>{try{citCaretUpdate()}catch(e){}},120)}
+function citJumpToCaret(){
+  const i=citCaretIdx;if(i<0)return;
+  citActiveIdx=i;
+  showTool('cite');
+  setTimeout(()=>citMarkActive(i,true),60);
+}
+document.addEventListener('selectionchange',citCaretSchedule);
+editor.addEventListener('keyup',citCaretSchedule);
+editor.addEventListener('click',citCaretSchedule);
 function citRender(){
   const l=citGetLib(),box=document.getElementById('citLib');
   document.getElementById('citCount').textContent=l.length;
@@ -3917,7 +3988,7 @@ function citRender(){
           '<a href="#" onclick="event.preventDefault();docSwitch(\''+escAttr(x.id)+'\')">'+escHTML(x.title)+'</a>'+(x.n>1?' ('+x.n+'×)':'')).join(', ')+'</div>'
       : '<div class="desc" style="margin-top:4px;opacity:.75">'+escHTML(t('cite_not_used'))+'</div>';
     const retrLine=(retrStatus[i]&&retrStatus[i].r)?'<div class="retr-warn">⚠ '+escHTML(t('retr_lib_warn'))+'</div>':'';
-    return'<div class="cit-item"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
+    return'<div class="cit-item'+(i===citActiveIdx?' cit-active':'')+'" id="citItem'+i+'"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
       '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+escHTML(f.ref)+usedLine+retrLine+
       '<div class="row" style="margin-top:6px">'+
       '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.intext)+'</button>'+
