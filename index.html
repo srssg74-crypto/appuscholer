@@ -339,6 +339,7 @@
   <div class="spacer"></div>
   <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as research project</button>
   <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()" data-i18n="projects_btn">📁 Research Projects</button>
+  <button type="button" class="btn btn-ghost btn-sm" id="backupBarBtn" onclick="backupExport()" data-i18n="backup_btn" data-i18n-title="backup_btn_title" title="Save a copy of all your work to your computer">⬇ Backup</button>
 </div>
 
 <main>
@@ -470,7 +471,8 @@
   </div></section>
   </div>
 
-  <div id="selBubble" role="toolbar" aria-label="Selected text"><button type="button" onclick="selFind()" data-i18n="sel_find">🔎 Find papers</button><button type="button" onclick="selCite()" data-i18n="sel_cite">📚 Cite</button><button type="button" onclick="selImprove()" data-i18n="sel_improve">💜 Improve</button></div>
+  <div id="backupNudge" style="display:none;position:fixed;left:16px;bottom:16px;z-index:70;max-width:360px;background:#2b1553;color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px rgba(30,10,70,.4);font-size:13px;line-height:1.5"><div id="backupNudgeText"></div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" onclick="backupExport()" id="backupNudgeYes" style="border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;background:#fbbf24;color:#3b0764;font-family:inherit"></button><button type="button" onclick="backupSnooze()" id="backupNudgeNo" style="border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 12px;cursor:pointer;background:none;color:#fff;font-family:inherit"></button></div></div>
+<div id="selBubble" role="toolbar" aria-label="Selected text"><button type="button" onclick="selFind()" data-i18n="sel_find">🔎 Find papers</button><button type="button" onclick="selCite()" data-i18n="sel_cite">📚 Cite</button><button type="button" onclick="selImprove()" data-i18n="sel_improve">💜 Improve</button></div>
   <div class="dock-tabs" id="dockTabs" role="tablist" aria-label="Side panel">
     <button type="button" class="dock-tab active" id="dockTabTools" role="tab" onclick="dockShow('tools')">Tools</button>
     <button type="button" class="dock-tab" id="dockTabAi" role="tab" onclick="dockShow('ai')"><span data-i18n="dock_ai_tab">✨ AI suggestion</span><span class="dock-dot" id="dockDot" style="display:none"></span></button>
@@ -863,6 +865,16 @@
     <p class="desc" style="margin:4px 0 0" data-i18n="writingsample_desc">Appuscholar privately saves a copy of your own writing from each document on this computer — whatever you typed yourself, skipping anything an AI suggestion inserted. Nothing is uploaded anywhere. The idea is a future tool that learns to write in your own voice from this. Turn off any time; your documents themselves are never affected either way.</p>
     <p class="desc" id="writingSampleStatus" style="margin:6px 0 0;font-weight:600"></p>
     <button class="btn btn-ghost" style="margin-top:6px" onclick="clearWritingSamples()" data-i18n="writingsample_clear_btn">Clear saved writing samples</button>
+  </div>
+  <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <b style="font-size:13px;color:var(--head-title)" data-i18n="backup_h">Back up your work</b>
+    <p class="desc" style="margin:4px 0 0" data-i18n="backup_desc">Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.</p>
+    <p class="desc" id="backupStatus" style="margin:6px 0 0;font-weight:600"></p>
+    <div class="row" style="margin-top:6px;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="backupExport()" data-i18n="backup_btn_full">⬇ Download backup</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('backupFile').click()" data-i18n="restore_btn">⬆ Restore from backup</button>
+      <input type="file" id="backupFile" accept=".json,application/json" style="display:none" onchange="backupRestoreFile(this)">
+    </div>
   </div>
   <div class="row" style="margin-top:12px">
     <button class="btn btn-purple" style="flex:1" onclick="saveKey()" data-i18n="settings_savekey_btn">Save Key</button>
@@ -1276,7 +1288,7 @@ const I18N={
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
     cite_pages_label:'Pages', cite_url_label:'Link, DOI or full reference: paste it here and the form fills itself',
     cite_lookup_btn:'🔎 Fill from DOI, link, PubMed ID or title',
-    dock_ai_tab:'✨ AI suggestion', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    dock_ai_tab:'✨ AI suggestion', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
     rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
     cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
@@ -1472,7 +1484,7 @@ const I18N={
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
     cite_pages_label:'पृष्ठ', cite_url_label:'लिंक, DOI या पूरा संदर्भ: यहाँ चिपकाएँ, फ़ॉर्म अपने आप भर जाएगा',
     cite_lookup_btn:'🔎 DOI, लिंक, PubMed ID या शीर्षक से भरें',
-    dock_ai_tab:'✨ एआई सुझाव', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    dock_ai_tab:'✨ एआई सुझाव', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
     rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
     cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
@@ -2342,6 +2354,86 @@ function renderWritingSampleStatus(){
   const{count,words}=writingSampleStats();
   el.textContent=t('writingsample_status_fmt').replace('{n}',count).replace('{w}',words);
 }
+/* ===== Local backup and restore =====
+   Everything this app saves lives in the browser's localStorage, which a student can wipe by clearing
+   site data. The backup is one JSON file holding every appu_ key except secrets (AI keys, their
+   encrypted copies, the access code). Restore replaces those keys and reloads the page. */
+const BACKUP_SECRET=/^(appu_key_|appu_enc_|appu_license$|appu_admin)/;
+const BACKUP_SKIP={appu_last_backup:1,appu_backup_snooze:1};
+function backupOk(k){return typeof k==='string'&&k.indexOf('appu_')===0&&!BACKUP_SECRET.test(k)&&!BACKUP_SKIP[k]}
+function backupCollect(){
+  const o={};
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(backupOk(k))o[k]=localStorage.getItem(k)}}catch(e){}
+  return o;
+}
+function backupDocsInfo(data){
+  let n=0,w=0;
+  try{
+    const docs=JSON.parse((data&&data.appu_docs)||'[]');
+    if(Array.isArray(docs)){n=docs.length;docs.forEach(d=>{const div=document.createElement('div');div.innerHTML=bodyToHTML(d.body||'');const tx=(div.textContent||'').trim();if(tx)w+=tx.split(/\s+/).length})}
+  }catch(e){}
+  return{n,w};
+}
+function backupStamp(ms){return new Date(ms).toISOString().slice(0,10)}
+function backupExport(){
+  if(POPOUT)return;
+  const data=backupCollect();
+  const bundle={app:'appuscholar',v:1,exported:new Date().toISOString(),data};
+  const blob=new Blob([JSON.stringify(bundle)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='appuscholar-backup-'+backupStamp(Date.now())+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  LS.set('appu_last_backup',String(Date.now()));
+  backupHideNudge();backupStatusRender();
+  showToast(t('backup_done'));
+}
+function backupRestoreFile(input){
+  const f=input&&input.files&&input.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let b=null;
+    try{b=JSON.parse(String(rd.result))}catch(e){}
+    if(!b||b.app!=='appuscholar'||!b.data||typeof b.data!=='object'){showToast(t('restore_bad'));input.value='';return}
+    const keys=Object.keys(b.data).filter(backupOk);
+    if(!keys.length){showToast(t('restore_bad'));input.value='';return}
+    const clean={};keys.forEach(k=>{if(typeof b.data[k]==='string')clean[k]=b.data[k]});
+    const info=backupDocsInfo(clean);
+    const msg=t('restore_confirm').replace('{n}',info.n).replace('{d}',(b.exported||'').slice(0,10)||'?');
+    if(!confirm(msg)){input.value='';return}
+    try{
+      const old=backupCollect();Object.keys(old).forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+      Object.keys(clean).forEach(k=>{try{localStorage.setItem(k,clean[k])}catch(e){}});
+    }catch(e){}
+    showToast(t('restore_done'));
+    setTimeout(()=>location.reload(),700);
+  };
+  rd.readAsText(f);
+}
+function backupLast(){const v=parseInt(LS.get('appu_last_backup')||'0',10);return v>0?v:0}
+function backupStatusRender(){
+  const el=document.getElementById('backupStatus');if(!el)return;
+  const l=backupLast();
+  el.textContent=l?t('backup_last').replace('{d}',backupStamp(l)):t('backup_never');
+}
+function backupHideNudge(){const n=document.getElementById('backupNudge');if(n)n.style.display='none'}
+function backupSnooze(){LS.set('appu_backup_snooze',String(Date.now()));backupHideNudge()}
+function backupNudgeCheck(){
+  if(POPOUT)return;
+  const n=document.getElementById('backupNudge');if(!n)return;
+  const sn=parseInt(LS.get('appu_backup_snooze')||'0',10);
+  if(sn&&Date.now()-sn<3*86400000)return;
+  const info=backupDocsInfo(backupCollect());
+  if(info.w<150)return;
+  const last=backupLast(),days=Math.floor((Date.now()-last)/86400000);
+  let txt='';
+  if(!last)txt=t('backup_nudge_new').replace('{w}',info.w);
+  else if(days>=7)txt=t('backup_nudge_old').replace('{n}',days);
+  else return;
+  document.getElementById('backupNudgeText').textContent=txt;
+  document.getElementById('backupNudgeYes').textContent=t('backup_now');
+  document.getElementById('backupNudgeNo').textContent=t('backup_later');
+  n.style.display='block';
+}
+setTimeout(()=>{try{backupNudgeCheck()}catch(e){}},4000);
 function clearWritingSamples(){
   if(!confirm(t('writingsample_clear_confirm')))return;
   writingSamplesSet({});
@@ -2779,6 +2871,7 @@ function openSettings(sel){
   document.getElementById('packSel').value=getPack();
   document.getElementById('contentLangSel').value=getContentLang();
   renderWritingSampleStatus();
+  try{backupStatusRender()}catch(e){}
   document.getElementById('settingsDlg').showModal();
 }
 function orcidSave(v){
