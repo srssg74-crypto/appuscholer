@@ -67,6 +67,15 @@
   .stage-guide .next-btn:hover,.stage-guide .back-btn:hover{border-color:var(--purple-600,#6d28d9)}
   .stage-guide .back-btn{margin-left:auto;background:none;border:2px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
   .stage-guide .back-btn+.next-btn{margin-left:0}
+  .dock-tabs .pop-btn{margin-left:auto;align-self:center;border:2px solid var(--line);background:none;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit}
+  .dock-tabs .pop-btn:hover{border-color:var(--purple-600,#6d28d9)}
+  #selBubble{position:fixed;z-index:60;display:none;gap:4px;background:#2b1553;border-radius:10px;padding:5px;box-shadow:0 6px 20px rgba(30,10,70,.35)}
+  #selBubble button{border:none;background:none;color:#fff;font-size:12.5px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  #selBubble button:hover{background:rgba(255,255,255,.18)}
+  body.popout header,body.popout #provTabs,body.popout .project-bar,body.popout #docPane,body.popout #splitter,body.popout #aiPane,body.popout #dockTabs,body.popout .tool-sidebar,body.popout .stage-guide,body.popout #rsActions,body.popout #selBubble,body.popout footer{display:none !important}
+  body.popout main{display:block !important;height:auto !important;padding:10px}
+  body.popout .split-row,body.popout .tool-shell{display:block !important}
+  body.popout .tool-main{width:auto !important;max-width:none !important}
   .cit-item.cit-active{outline:2px solid var(--purple-600,#6d28d9);background:#f3ebff}
   #citCaretChip{font-size:12px;padding:5px 10px;border-color:var(--purple-600,#6d28d9);color:var(--accent-ink)}
   .tool-tab{border:2px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
@@ -461,9 +470,11 @@
   </div></section>
   </div>
 
+  <div id="selBubble" role="toolbar" aria-label="Selected text"><button type="button" onclick="selFind()" data-i18n="sel_find">🔎 Find papers</button><button type="button" onclick="selCite()" data-i18n="sel_cite">📚 Cite</button><button type="button" onclick="selImprove()" data-i18n="sel_improve">💜 Improve</button></div>
   <div class="dock-tabs" id="dockTabs" role="tablist" aria-label="Side panel">
     <button type="button" class="dock-tab active" id="dockTabTools" role="tab" onclick="dockShow('tools')">Tools</button>
     <button type="button" class="dock-tab" id="dockTabAi" role="tab" onclick="dockShow('ai')"><span data-i18n="dock_ai_tab">✨ AI suggestion</span><span class="dock-dot" id="dockDot" style="display:none"></span></button>
+    <button type="button" class="pop-btn" id="popBtn" onclick="popOutTool()" data-i18n="pop_btn" data-i18n-title="pop_btn_title" title="Open this tool in its own window, for a second screen">⧉ Pop out</button>
   </div>
 
   <div class="tool-shell" id="toolShell">
@@ -1149,11 +1160,17 @@
 <script>
 /* ============ FIX 5: storage never throws ============ */
 var sessionKeys = {};
+/* Pop-out window: the same page opened as a second browser window showing one tool. It shares this
+   site's saved data with the writing window, so it may only WRITE the two keys that belong to the
+   tools it shows. Everything else, above all the open document, stays read-only here, so the
+   pop-out can never overwrite what is being written in the main window. */
+const POPOUT=(/[#&]popout=([a-z]+)/.exec(location.hash)||[])[1]||null;
+const POPOUT_WRITABLE=['appu_citations','appu_retraction_cache'];
 const LS={
   get(k){try{if(k in sessionKeys)return sessionKeys[k];return localStorage.getItem(k)}catch(e){return (k in sessionKeys)?sessionKeys[k]:null}},
-  set(k,v){try{localStorage.setItem(k,v);delete sessionKeys[k];return true}catch(e){sessionKeys[k]=String(v);return false}},
-  setSession(k,v){sessionKeys[k]=String(v);try{localStorage.removeItem(k)}catch(e){}return true},
-  rm(k){delete sessionKeys[k];try{localStorage.removeItem(k)}catch(e){}}
+  set(k,v){if(POPOUT&&POPOUT_WRITABLE.indexOf(k)<0)return true;try{localStorage.setItem(k,v);delete sessionKeys[k];return true}catch(e){sessionKeys[k]=String(v);return false}},
+  setSession(k,v){if(POPOUT)return true;sessionKeys[k]=String(v);try{localStorage.removeItem(k)}catch(e){}return true},
+  rm(k){if(POPOUT&&POPOUT_WRITABLE.indexOf(k)<0)return;delete sessionKeys[k];try{localStorage.removeItem(k)}catch(e){}}
 };
 
 /* ============ Bilingual UI (batch one) — English + Hindi interface strings ============
@@ -1259,7 +1276,7 @@ const I18N={
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
     cite_pages_label:'Pages', cite_url_label:'Link, DOI or full reference: paste it here and the form fills itself',
     cite_lookup_btn:'🔎 Fill from DOI, link, PubMed ID or title',
-    dock_ai_tab:'✨ AI suggestion', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    dock_ai_tab:'✨ AI suggestion', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
     rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
     cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
@@ -1455,7 +1472,7 @@ const I18N={
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
     cite_pages_label:'पृष्ठ', cite_url_label:'लिंक, DOI या पूरा संदर्भ: यहाँ चिपकाएँ, फ़ॉर्म अपने आप भर जाएगा',
     cite_lookup_btn:'🔎 DOI, लिंक, PubMed ID या शीर्षक से भरें',
-    dock_ai_tab:'✨ एआई सुझाव', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    dock_ai_tab:'✨ एआई सुझाव', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
     rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
     cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
@@ -3830,6 +3847,10 @@ function citClearForm(){
 }
 /* FIX 10: cursor at position 0 no longer jumps to the end */
 function citInsertAtCursor(txt){
+  if(POPOUT){
+    try{popChan&&popChan.postMessage({type:'insert',text:txt});showToast(t('pop_sent'))}catch(e){showToast(t('pop_nowin'))}
+    return;
+  }
   insertIntoEditor(txt,hasSelection()||!!savedRange);
 }
 function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
@@ -3906,6 +3927,74 @@ async function citRetractionRefresh(force){
   }catch(e){if(force)showToast(t('retr_failed'))}
   finally{retrBusy=false}
 }
+/* ===== Pop-out window and selection bubble ===== */
+let popChan=null;
+try{popChan=new BroadcastChannel('appu_sync')}catch(e){popChan=null}
+if(popChan&&!POPOUT){
+  popChan.onmessage=ev=>{
+    const m=ev.data||{};
+    if(m.type==='insert'&&typeof m.text==='string'){
+      insertIntoEditor(m.text,hasSelection()||!!savedRange);
+      showToast('Citation inserted ✓');
+    }
+  };
+}
+window.addEventListener('storage',ev=>{
+  if(ev.key==='appu_citations'||ev.key==='appu_retraction_cache'){try{citRender()}catch(e){}}
+});
+function popOutTool(){
+  const act=document.querySelector('.tool-panel.active');
+  const tool=act?act.dataset.panel:'';
+  if(tool!=='cite'&&tool!=='research'){showToast(t('pop_unsupported'));return}
+  const w=window.open(location.href.split('#')[0]+'#popout='+tool,'appu_pop_'+tool,'popup=yes,width=540,height=820');
+  if(!w){showToast(t('pop_blocked'));return}
+  try{w.focus()}catch(e){}
+}
+const selBubble=document.getElementById('selBubble');
+let selTimer=null;
+function selHide(){if(selBubble)selBubble.style.display='none'}
+function selText2(){return(hasSelection()?savedRange.toString():'').replace(/\s+/g,' ').trim()}
+function selUpdate(){
+  if(POPOUT||!selBubble)return;
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount||sel.isCollapsed||!editor.contains(sel.anchorNode)||!editor.contains(sel.focusNode)){selHide();return}
+  const txt=sel.toString().replace(/\s+/g,' ').trim();
+  if(txt.length<8||txt.length>800){selHide();return}
+  const r=sel.getRangeAt(0).getBoundingClientRect();
+  if(!r||(!r.width&&!r.height)){selHide();return}
+  selBubble.style.display='flex';
+  const w=selBubble.offsetWidth,h=selBubble.offsetHeight;
+  let x=r.left+r.width/2-w/2,y=r.top-h-8;
+  if(y<4)y=r.bottom+8;
+  x=Math.max(6,Math.min(x,innerWidth-w-6));
+  selBubble.style.left=x+'px';selBubble.style.top=y+'px';
+}
+function selSchedule(){clearTimeout(selTimer);selTimer=setTimeout(()=>{try{selUpdate()}catch(e){}},150)}
+document.addEventListener('selectionchange',selSchedule);
+editor.addEventListener('mouseup',selSchedule);
+editor.addEventListener('keyup',selSchedule);
+editor.addEventListener('input',selHide);
+editor.addEventListener('scroll',selHide);
+window.addEventListener('scroll',selHide,true);
+selBubble&&selBubble.addEventListener('mousedown',e=>e.preventDefault());
+function selFind(){
+  const q=selText2().slice(0,200);selHide();
+  if(!q)return;
+  showTool('research');
+  const box=document.getElementById('rsTopic');if(box)box.value=q;
+  try{researchSearch()}catch(e){}
+}
+function selCite(){
+  selHide();
+  const sel=window.getSelection();
+  if(sel&&sel.rangeCount&&editor.contains(sel.anchorNode)){
+    const r=sel.getRangeAt(0).cloneRange();r.collapse(false);
+    sel.removeAllRanges();sel.addRange(r);
+  }
+  showTool('cite');
+  showToast(t('sel_cite_toast'));
+}
+function selImprove(){selHide();improveText()}
 /* Document to library link. When the cursor or a selection touches an in-text citation that matches a
    library source (same surname-then-year rule as the "Cited in" line), a chip appears in the document
    toolbar. One click opens the Citation Manager with that source highlighted. If the Citation Manager
@@ -5142,8 +5231,13 @@ function citCheckCaptureHash(){
   citCheckCaptureHash();
   refreshProvUI();
   upd();
-  if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{document.getElementById('welcomeDlg').showModal()}catch(e){}}
+  if(!POPOUT&&!LS.get('appu_seen')){LS.set('appu_seen','1');try{document.getElementById('welcomeDlg').showModal()}catch(e){}}
 })();
+if(POPOUT){
+  document.body.classList.add('popout');
+  try{showTool(POPOUT)}catch(e){}
+  document.title='Appuscholar · '+(POPOUT==='cite'?'Citations':'Research');
+}
 </script>
 </body>
 </html>
