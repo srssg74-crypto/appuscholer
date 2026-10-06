@@ -566,6 +566,7 @@
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('litrev')" data-i18n="psych_btn_litrev">📚 Literature review helper</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('explain')" data-i18n="psych_btn_explain">💡 Explain concept simply</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('stats')" data-i18n="psych_btn_apa">📊 Format results in APA</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="devilTool()" data-i18n="devil_btn" data-i18n-title="devil_btn_title" title="Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.">😈 Challenge my argument</button></div>
       <p class="desc" style="margin-top:10px" data-i18n="psych_panel_note">Paste raw SPSS / JASP / R output and use <b>Format results in APA</b> to get correct APA 7th reporting.</p>
     </div></section>
 
@@ -997,6 +998,8 @@
       </select>
     </div>
     <div id="statsFields"></div>
+    <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:8px 0;cursor:pointer"><input type="checkbox" id="statsGenFirst" onchange="genFirstToggle()"> Practice mode: commit to my design before the test runs</label>
+    <div id="statsGate" style="display:none;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0"></div>
     <div class="row"><button class="btn btn-purple" style="flex:1" onclick="statsRun()">Run test</button></div>
   </div>
 
@@ -1295,7 +1298,7 @@ const I18N={
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
     cite_pages_label:'Pages', cite_url_label:'Link, DOI or full reference: paste it here and the form fills itself',
     cite_lookup_btn:'🔎 Fill from DOI, link, PubMed ID or title',
-    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', devil_btn:'😈 Challenge my argument', devil_btn_title:'Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.', devil_need:'Select or write a passage of at least a few sentences first.', devil_thinking:'😈 Reading your argument…', devil_label:'A critical reviewer might say this. Answer each point in your own words. Nothing here is meant to be pasted in.', devil_ready:'Challenges ready in the AI pane', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
     rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
     cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
@@ -1491,7 +1494,7 @@ const I18N={
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
     cite_pages_label:'पृष्ठ', cite_url_label:'लिंक, DOI या पूरा संदर्भ: यहाँ चिपकाएँ, फ़ॉर्म अपने आप भर जाएगा',
     cite_lookup_btn:'🔎 DOI, लिंक, PubMed ID या शीर्षक से भरें',
-    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', devil_btn:'😈 मेरे तर्क को चुनौती दें', devil_btn_title:'आपके अंश के विरुद्ध वैसे ही तर्क देता है जैसे कोई आलोचक समीक्षक देगा। उत्तर में कुछ भी चिपकाने के लिए नहीं है।', devil_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', devil_thinking:'😈 आपका तर्क पढ़ रहा है…', devil_label:'कोई आलोचक समीक्षक यह कह सकता है। हर बिंदु का उत्तर अपने शब्दों में दें। यहाँ कुछ भी चिपकाने के लिए नहीं है।', devil_ready:'चुनौतियाँ एआई पैनल में तैयार हैं', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
     rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
     cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
@@ -2562,6 +2565,7 @@ function backupNudgeCheck(){
 }
 setTimeout(()=>{try{backupNudgeCheck()}catch(e){}},4000);
 try{draftFirstRender()}catch(e){}
+try{const c=document.getElementById('statsGenFirst');if(c)c.checked=genFirstOn()}catch(e){}
 function clearWritingSamples(){
   if(!confirm(t('writingsample_clear_confirm')))return;
   writingSamplesSet({});
@@ -4790,6 +4794,21 @@ async function psychTool(kind){
   }catch(e){clearSug(apiMsg(e))}
 }
 
+/* Devil's advocate: argues against the student's passage. Output goes to the AI pane as feedback,
+   with no suggestion stored, so nothing in it can be accepted into the document. */
+async function devilTool(){
+  const txt=selText().trim();
+  if(txt.split(/\s+/).filter(Boolean).length<25){showToast(t('devil_need'));return}
+  const prompt='You are a sharp, fair peer reviewer. Argue against the passage below. Do not rewrite it and do not offer replacement sentences. Reply with at most 4 numbered points. Each point names a weakness a critical reviewer would raise: an alternative explanation, a threat to validity, an unsupported step or a missing counter-argument. Quote a few of the student\'s own words in each point and end each with one question the student must answer to defend the claim. No praise and no summary.\n\nPASSAGE:\n'+txt.slice(0,6000);
+  window._sug=null;aiOut.textContent=t('devil_thinking');try{dockShow('ai')}catch(e){}
+  try{
+    const r=await callAI(prompt,{temp:0.5,max:1500});
+    window._sug=null;aiOut.textContent=t('devil_label')+'\n\n'+r;
+    try{dockShow('ai')}catch(e){}
+    showToast(t('devil_ready'));
+  }catch(e){clearSug(apiMsg(e))}
+}
+
 /* ============ Statistics Lab — client-side test engine, no CDN dependency ============ */
 function gammaln(x){
   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
@@ -4929,6 +4948,7 @@ function statsColOptions(type){
   return cols.map(c=>'<option value="'+c.index+'">'+escHTML(c.name)+'</option>').join('');
 }
 function statsFieldsRender(){
+  try{genGateHide()}catch(e){}
   const key=document.getElementById('statsTest').value,cfg=STAT_TESTS[key];
   const box=document.getElementById('statsFields');
   const used={};    /* when two fields share a type, default each to a different column */
@@ -5100,7 +5120,56 @@ async function statsExplain(){
   }catch(e){out.textContent=prev;showToast(apiMsg(e))}
 }
 
+/* ===== Practice mode: generate before reveal =====
+   Opt-in. Before a test runs the student states the design in plain words, then sees whether the test
+   they picked fits it, with the reason. Rules are fixed and deterministic, no AI. The student always keeps
+   control and can run their own choice after seeing the reveal. */
+const GEN_DESIGNS={
+  desc:{label:'I only want to describe one variable',ok:['desc'],alt:[],why:'Descriptive statistics summarise a variable with N, M, SD and the range. No inference is involved.'},
+  one:{label:'One group against a known value',ok:['ttest1'],alt:[],why:'A one-sample t-test compares one group mean with a fixed value.'},
+  ind:{label:'Two separate groups of different people',ok:['ttestInd'],alt:['mannwhitney'],why:'Different people in each group means independent samples. The independent t-test fits when scores are roughly normal. Mann-Whitney U is the fallback for skewed scores, ordinal scores or very small groups.'},
+  paired:{label:'The same people measured twice (or matched pairs)',ok:['ttestPaired'],alt:['wilcoxon'],why:'The same people twice means paired scores, so each person is their own control. The paired t-test fits roughly normal differences. Wilcoxon signed-rank is the fallback for skewed differences or ordinal scores.'},
+  three:{label:'Three or more separate groups',ok:['anova1'],alt:['tukey'],why:'Three or more independent groups call for one-way ANOVA. Tukey HSD is not a first test: it comes after a significant ANOVA to show which pairs differ.'},
+  corr:{label:'How two numeric variables move together',ok:['pearson'],alt:[],why:'Two numeric variables and a question about association call for Pearson correlation. Correlation does not show cause.'},
+  pred:{label:'Predict one numeric variable from another',ok:['regression'],alt:['pearson'],why:'Prediction of one numeric score from another calls for simple linear regression.'},
+  cat:{label:'Whether two categorical variables are related',ok:['chisq'],alt:[],why:'Two categorical variables (counts in categories) call for the chi-square test of independence.'}
+};
+function genFirstOn(){return LS.get('appu_gen_first')==='1'}
+function genFirstToggle(){
+  const c=document.getElementById('statsGenFirst');LS.set('appu_gen_first',c&&c.checked?'1':'0');
+  window._genOk=null;genGateHide();
+}
+function genGateHide(){const g=document.getElementById('statsGate');if(g){g.style.display='none';g.innerHTML=''}}
+function genGateShow(){
+  const g=document.getElementById('statsGate');if(!g)return;
+  g.style.display='block';
+  g.innerHTML='<label for="genDesign" style="font-weight:700;font-size:13px">Before it runs: what is your design?</label>'+
+    '<select id="genDesign" style="width:100%;margin:6px 0"><option value="">Choose…</option>'+
+    Object.keys(GEN_DESIGNS).map(k=>'<option value="'+k+'">'+escHTML(GEN_DESIGNS[k].label)+'</option>').join('')+'</select>'+
+    '<div class="row"><button class="btn btn-purple" style="flex:1" onclick="genReveal()">Check my choice</button></div><div id="genReveal"></div>';
+}
+function genReveal(){
+  const dk=document.getElementById('genDesign').value,box=document.getElementById('genReveal');
+  if(!dk){showToast('Pick the design first');return}
+  const D=GEN_DESIGNS[dk],key=document.getElementById('statsTest').value;
+  const name=(document.querySelector('#statsTest option[value="'+key+'"]')||{}).textContent||key;
+  const first=D.ok[0],firstName=(document.querySelector('#statsTest option[value="'+first+'"]')||{}).textContent||first;
+  let head,cls;
+  if(D.ok.includes(key)){head='Your choice, '+name+', fits this design.';cls='good'}
+  else if(D.alt.includes(key)){head=name+' is a valid choice for this design, usually as the fallback when the usual assumptions fail.';cls='good'}
+  else{head='The usual test for this design is '+firstName+', not '+name+'.';cls='warn'}
+  box.innerHTML='<p style="margin:8px 0;font-weight:700">'+escHTML(head)+'</p><p class="desc">'+escHTML(D.why)+'</p>'+
+    '<div class="row">'+(cls==='warn'?'<button class="btn btn-ghost" style="flex:1" onclick="genSwitch(\''+first+'\')">Switch to '+escHTML(firstName)+'</button>':'')+
+    '<button class="btn btn-purple" style="flex:1" onclick="genRunMine()">Run '+escHTML(name)+'</button></div>';
+}
+function genSwitch(k){document.getElementById('statsTest').value=k;statsFieldsRender();genGateHide();genGateShow();showToast('Switched. Choose your columns, then check again.')}
+function genRunMine(){window._genOk=true;genGateHide();try{statsRunNow()}finally{window._genOk=null}}
 function statsRun(){
+  if(!window._statsData){showToast('Parse your data first');return}
+  if(genFirstOn()&&!window._genOk){genGateShow();return}
+  statsRunNow();
+}
+function statsRunNow(){
   if(!window._statsData){showToast('Parse your data first');return}
   const key=document.getElementById('statsTest').value;
   const gv=id=>{const el=document.getElementById('sf_'+id);return el?el.value:''};
