@@ -603,6 +603,7 @@
       </details>
 
       <h3 style="margin-top:14px"><span data-i18n="cite_library_h3">🗂 My library</span> <span class="badge" id="citCount">0</span></h3>
+      <p class="desc" id="citUsageSummary" style="margin-top:6px;font-weight:600"></p>
       <div id="citLib" style="margin-top:8px"><p class="desc" data-i18n="cite_no_sources">No sources yet.</p></div>
       <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()" data-i18n="cite_insertbib_btn">Insert reference list</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="psychLoadStarters()" data-i18n="cite_loadclassics_btn">📖 Load classic psychology sources</button></div>
@@ -1216,6 +1217,8 @@ const I18N={
     cite_bookmarklet_btn:'🔖 Capture to Appuscholar',
     cite_bookmarklet_note:"Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.",
     cite_library_h3:'🗂 My library', cite_no_sources:'No sources yet.',
+    cite_usage_summary_fmt:'{c} of {n} sources are cited in your documents. {u} not cited yet.',
+    cite_used_in:'Cited in:', cite_not_used:'Not cited in any of your documents yet',
     cite_insertbib_btn:'Insert reference list', cite_loadclassics_btn:'📖 Load classic psychology sources',
     cite_export_btn:'⬆ Export library', cite_import_btn:'⬇ Import library',
     cite_sharing_note:'🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.',
@@ -1397,6 +1400,8 @@ const I18N={
     cite_bookmarklet_btn:'🔖 Appuscholar में कैप्चर करें',
     cite_bookmarklet_note:'ऊपर दिए बटन को खींचें — क्लिक न करें — अपने बुकमार्क बार पर। यह केवल पेज पर पहले से मौजूद मानक उद्धरण टैग पढ़ता है (वही जो Zotero और Mendeley उपयोग करते हैं); यह उन पेजों को नहीं पढ़ सकता जो इन्हें प्रकाशित नहीं करते, जैसे अधिकतर समाचार साइटें।',
     cite_library_h3:'🗂 मेरी लाइब्रेरी', cite_no_sources:'अभी तक कोई स्रोत नहीं।',
+    cite_usage_summary_fmt:'आपके दस्तावेज़ों में {n} में से {c} स्रोत उद्धृत हैं। {u} अभी तक उद्धृत नहीं।',
+    cite_used_in:'इनमें उद्धृत:', cite_not_used:'आपके किसी भी दस्तावेज़ में अभी तक उद्धृत नहीं',
     cite_insertbib_btn:'संदर्भ सूची डालें', cite_loadclassics_btn:'📖 क्लासिक मनोविज्ञान स्रोत लोड करें',
     cite_export_btn:'⬆ लाइब्रेरी निर्यात करें', cite_import_btn:'⬇ लाइब्रेरी आयात करें',
     cite_sharing_note:'🤝 <b>कक्षा में साझा करना:</b> अपनी लाइब्रेरी निर्यात करें और फ़ाइल सहपाठियों के साथ साझा करें — उनकी आयात करें ताकि एक साझा संग्रह बन सके। आपके दस्तावेज़ और लेखन शैली आपके ही डिवाइस पर रहते हैं।',
@@ -1490,6 +1495,7 @@ function applyLang(){
      currently active — otherwise "हि" while already in Hindi reads as a label, not a control. */
   const btn=document.getElementById('langBtn');if(btn)btn.textContent=lang==='hi'?'EN':'हि';
   if(typeof renderProjectBar==='function')renderProjectBar();
+  if(typeof citRender==='function'){try{citRender()}catch(e){}}
   if(typeof renderStageGuide==='function'){
     const activeTab=document.querySelector('.tool-tab.active');
     try{renderStageGuide(activeTab?activeTab.dataset.tool:'psych')}catch(e){}
@@ -1610,6 +1616,9 @@ function showTool(name){
      caught and silently skipped that one time. The Projects section re-renders the guide once it's
      actually defined, so nothing is lost. */
   try{renderStageGuide(name)}catch(e){}
+  /* Re-scan the documents for citations each time the Citation Manager opens, so the
+     "cited in" lines never lag behind what was just written. */
+  if(name==='cite'){try{citRender()}catch(e){}}
   /* If the tool being opened lives in a stage group the student had collapsed, expand that one
      group so the newly-active tool is actually visible — reachable by a next-stage link, a project
      jump, or restoring a saved tool, not only by a direct click on an already-open group. */
@@ -3692,14 +3701,48 @@ function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Ad
 function citAdd(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
   const l=citGetLib();l.push(d);citSaveLib(l);showToast('Saved to library ✓')}
 function citDel(i){const l=citGetLib();l.splice(i,1);citSaveLib(l)}
+/* Backlinks, scaled down to one student: for each library source, which of their own documents
+   cite it. No graph database — a plain-text scan of the documents already in localStorage, matching
+   the author's surname followed within ~40 characters by the year, which covers (Smith, 2020),
+   (Smith & Lee, 2020), (Smith et al., 2020) and Smith (2020) alike. The open document is read from
+   the live editor, not its last autosave, so a citation typed a second ago already counts. */
+function citPlainDocs(){
+  const cur=docCurrentId();
+  return docsGet().map(d=>{
+    const html=(d.id===cur&&typeof editor!=='undefined'&&editor)?getEditorHTML():(d.body||'');
+    const div=document.createElement('div');div.innerHTML=bodyToHTML(html);
+    return{id:d.id,title:d.title||'Untitled',text:(div.textContent||'').replace(/\s+/g,' ')};
+  });
+}
+function citUsage(entry,docs){
+  const ln=citLastName(entry.author),y=String(entry.year||'').trim();
+  if(!ln||ln==='Author'||!/^\d{4}$/.test(y))return[];
+  const esc=ln.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const re=new RegExp('(?<![\\p{L}])'+esc+'(?![\\p{L}])[^;()]{0,40}?[\\s(,]+'+y+'[a-z]?(?!\\d)','gu');
+  const out=[];
+  docs.forEach(d=>{const n=(d.text.match(re)||[]).length;if(n)out.push({id:d.id,title:d.title,n})});
+  return out;
+}
 function citRender(){
   const l=citGetLib(),box=document.getElementById('citLib');
   document.getElementById('citCount').textContent=l.length;
-  if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';return}
+  const sumEl=document.getElementById('citUsageSummary');
+  if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';if(sumEl)sumEl.textContent='';return}
+  let docsPlain=[];try{docsPlain=citPlainDocs()}catch(e){docsPlain=[]}
+  const usage=l.map(d=>{try{return citUsage(d,docsPlain)}catch(e){return[]}});
+  if(sumEl){
+    const cited=usage.filter(u=>u.length).length;
+    sumEl.textContent=t('cite_usage_summary_fmt').replace('{c}',cited).replace('{n}',l.length).replace('{u}',l.length-cited);
+  }
   box.innerHTML=l.map((d,i)=>{
     const f=citFmt(d);
+    const u=usage[i];
+    const usedLine=u.length
+      ? '<div class="desc" style="margin-top:4px">'+escHTML(t('cite_used_in'))+' '+u.map(x=>
+          '<a href="#" onclick="event.preventDefault();docSwitch(\''+escAttr(x.id)+'\')">'+escHTML(x.title)+'</a>'+(x.n>1?' ('+x.n+'×)':'')).join(', ')+'</div>'
+      : '<div class="desc" style="margin-top:4px;opacity:.75">'+escHTML(t('cite_not_used'))+'</div>';
     return'<div class="cit-item"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
-      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+escHTML(f.ref)+
+      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+escHTML(f.ref)+usedLine+
       '<div class="row" style="margin-top:6px">'+
       '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.intext)+'</button>'+
       '</div></div>';
