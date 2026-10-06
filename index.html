@@ -451,6 +451,7 @@
       <button class="btn btn-ghost" onclick="makeLonger()" data-i18n="extend_btn" data-i18n-title="extend_btn_title" title="Select some text first, then click to extend it">➕ Extend</button>
       <button class="btn btn-ghost" onclick="insertScaffold()" data-i18n="template_btn" data-i18n-title="template_btn_title" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
       <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 AI text</button>
+      <button class="btn btn-ghost" id="vivaBtn" onclick="vivaOpen()" data-i18n="viva_btn" data-i18n-title="viva_btn_title" title="Practise answering an examiner's question about your writing, with no AI help in the answer box">🎓 Viva question</button>
       <button class="btn btn-ghost" id="draftFirstBtn" onclick="toggleDraftFirst()" data-i18n="df_btn" data-i18n-title="df_btn_title" title="Write first. The AI then asks questions about your writing instead of writing for you.">✍ Draft first</button>
       <button type="button" class="btn btn-ghost" id="citCaretChip" style="display:none" onclick="citJumpToCaret()"></button>
       <span class="stats" id="stats">0 words</span>
@@ -822,6 +823,26 @@
   <div id="provBody"></div>
   <div class="row" style="margin-top:12px"><button class="btn btn-ghost" onclick="document.getElementById('writingDlg').close()" data-i18n="close_btn">Close</button></div>
 </div></dialog>
+<dialog id="returnDlg"><div class="dlg-body">
+  <h2 data-i18n="ret_h">👋 Welcome back</h2>
+  <div id="retRecap"></div>
+  <p class="desc" style="margin-top:12px" data-i18n="ret_q_intro">Answer in your own words. Nobody grades these, and the app does not read them. They are saved on this computer so you can see how your thinking moved.</p>
+  <div class="fld"><label for="retQ1" data-i18n="ret_q1">In your own words, what is the main question your study is answering right now?</label><textarea id="retQ1" rows="2"></textarea></div>
+  <div class="fld"><label for="retQ2" data-i18n="ret_q2">What is the next concrete thing you will do on this project?</label><textarea id="retQ2" rows="2"></textarea></div>
+  <div class="fld"><label for="retQ3" data-i18n="ret_q3">What is the weakest part of your work right now, and why?</label><textarea id="retQ3" rows="2"></textarea></div>
+  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="retSave()" data-i18n="ret_save">Save my answers</button><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('returnDlg').close()" data-i18n="ret_skip">Skip</button></div>
+</div></dialog>
+<dialog id="vivaDlg"><div class="dlg-body">
+  <h2 data-i18n="viva_h">🎓 Viva question</h2>
+  <p class="desc" data-i18n="viva_desc">The AI asks one question an examiner might ask about the passage you selected (or the end of your document). Answer from your own head. There is no AI help in the answer box, because the point is to rehearse the real moment.</p>
+  <div class="fld"><label for="vivaAud" data-i18n="viva_aud">Who is asking?</label><select id="vivaAud"><option value="viva" data-i18n="viva_aud_viva">An examiner at my viva or defence</option><option value="conf" data-i18n="viva_aud_conf">A panel or audience at a conference</option></select></div>
+  <div class="row"><button class="btn btn-purple" style="flex:1" id="vivaGetBtn" onclick="vivaAsk()" data-i18n="viva_get">Get a question</button></div>
+  <div id="vivaQ" style="margin:12px 0;font-weight:700"></div>
+  <textarea id="vivaA" rows="6" style="width:100%;display:none" data-i18n-placeholder="viva_ph" placeholder="Type your answer, as if you were speaking."></textarea>
+  <div class="row" id="vivaActs" style="display:none"><button class="btn btn-purple" style="flex:1" onclick="vivaSave()" data-i18n="viva_save">Save my answer</button></div>
+  <p class="desc" id="vivaCount" style="margin-top:8px"></p>
+  <div class="row"><button class="btn btn-ghost" onclick="document.getElementById('vivaDlg').close()" data-i18n="close_btn">Close</button></div>
+</div></dialog>
 <dialog id="settingsDlg"><div class="dlg-body">
   <h2 data-i18n="settings_h2">🔑 Choose your AI provider</h2>
   <p style="font-size:13px;color:var(--muted)" data-i18n="settings_intro">Pick one. Your key is saved in this browser and sent only to the provider you choose.</p>
@@ -873,6 +894,9 @@
     <p class="desc" style="margin:4px 0 0" data-i18n="writingsample_desc">Appuscholar privately saves a copy of your own writing from each document on this computer — whatever you typed yourself, skipping anything an AI suggestion inserted. Nothing is uploaded anywhere. The idea is a future tool that learns to write in your own voice from this. Turn off any time; your documents themselves are never affected either way.</p>
     <p class="desc" id="writingSampleStatus" style="margin:6px 0 0;font-weight:600"></p>
     <button class="btn btn-ghost" style="margin-top:6px" onclick="clearWritingSamples()" data-i18n="writingsample_clear_btn">Clear saved writing samples</button>
+  </div>
+  <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="recapOn" onchange="LS.set('appu_recap_off',this.checked?'0':'1')"> <span data-i18n="recap_toggle">Show a recap and three questions when I return after five days or more</span></label>
   </div>
   <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
     <b style="font-size:13px;color:var(--head-title)" data-i18n="backup_h">Back up your work</b>
@@ -1298,7 +1322,7 @@ const I18N={
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
     cite_pages_label:'Pages', cite_url_label:'Link, DOI or full reference: paste it here and the form fills itself',
     cite_lookup_btn:'🔎 Fill from DOI, link, PubMed ID or title',
-    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', devil_btn:'😈 Challenge my argument', devil_btn_title:'Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.', devil_need:'Select or write a passage of at least a few sentences first.', devil_thinking:'😈 Reading your argument…', devil_label:'A critical reviewer might say this. Answer each point in your own words. Nothing here is meant to be pasted in.', devil_ready:'Challenges ready in the AI pane', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', devil_btn:'😈 Challenge my argument', ret_h:'👋 Welcome back', ret_q_intro:'Answer in your own words. Nobody grades these, and the app does not read them. They are saved on this computer so you can see how your thinking moved.', ret_q1:'In your own words, what is the main question your study is answering right now?', ret_q2:'What is the next concrete thing you will do on this project?', ret_q3:'What is the weakest part of your work right now, and why?', ret_save:'Save my answers', ret_skip:'Skip', ret_saved:'Saved on this computer ✓', ret_away:'You have been away {n} days.', ret_project:'Project: {p}, stage: {s}.', ret_doc:'Open document: {d}, {w} words.', ret_did:'Before you left you had recorded:', ret_docs:'{n} new document(s)', ret_cits:'{n} source(s) added', ret_stats:'{n} test(s) run', ret_quals:'{n} passage(s) coded', ret_ai:'{n} AI passage(s) inserted', ret_nolog:'No activity was recorded since your last visit.', ret_last:'Last time ({d}) you wrote:', recap_toggle:'Show a recap and three questions when I return after five days or more', viva_btn:'🎓 Viva question', viva_btn_title:"Practise answering an examiner's question about your writing, with no AI help in the answer box", viva_h:'🎓 Viva question', viva_desc:'The AI asks one question an examiner might ask about the passage you selected (or the end of your document). Answer from your own head. There is no AI help in the answer box, because the point is to rehearse the real moment.', viva_aud:'Who is asking?', viva_aud_viva:'An examiner at my viva or defence', viva_aud_conf:'A panel or audience at a conference', viva_get:'Get a question', viva_another:'Another question', viva_thinking:'🎓 Reading your passage…', viva_ph:'Type your answer, as if you were speaking.', viva_save:'Save my answer', viva_need:'Select or write a passage of at least a few sentences first.', viva_empty:'Write your answer first.', viva_saved:'Answer saved on this computer ✓', viva_count:'Answers saved so far: {n}.', devil_btn_title:'Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.', devil_need:'Select or write a passage of at least a few sentences first.', devil_thinking:'😈 Reading your argument…', devil_label:'A critical reviewer might say this. Answer each point in your own words. Nothing here is meant to be pasted in.', devil_ready:'Challenges ready in the AI pane', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
     rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
     cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
@@ -1494,7 +1518,7 @@ const I18N={
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
     cite_pages_label:'पृष्ठ', cite_url_label:'लिंक, DOI या पूरा संदर्भ: यहाँ चिपकाएँ, फ़ॉर्म अपने आप भर जाएगा',
     cite_lookup_btn:'🔎 DOI, लिंक, PubMed ID या शीर्षक से भरें',
-    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', devil_btn:'😈 मेरे तर्क को चुनौती दें', devil_btn_title:'आपके अंश के विरुद्ध वैसे ही तर्क देता है जैसे कोई आलोचक समीक्षक देगा। उत्तर में कुछ भी चिपकाने के लिए नहीं है।', devil_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', devil_thinking:'😈 आपका तर्क पढ़ रहा है…', devil_label:'कोई आलोचक समीक्षक यह कह सकता है। हर बिंदु का उत्तर अपने शब्दों में दें। यहाँ कुछ भी चिपकाने के लिए नहीं है।', devil_ready:'चुनौतियाँ एआई पैनल में तैयार हैं', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', devil_btn:'😈 मेरे तर्क को चुनौती दें', ret_h:'👋 वापसी पर स्वागत', ret_q_intro:'अपने शब्दों में उत्तर दें। इन्हें कोई अंक नहीं देता और ऐप इन्हें पढ़ता नहीं। ये इसी कंप्यूटर में सहेजे जाते हैं ताकि आप देख सकें कि आपकी सोच कैसे बदली।', ret_q1:'अपने शब्दों में, आपका अध्ययन अभी किस मुख्य प्रश्न का उत्तर खोज रहा है?', ret_q2:'इस प्रोजेक्ट पर आप अगला ठोस काम क्या करेंगे?', ret_q3:'अभी आपके काम का सबसे कमज़ोर हिस्सा कौन सा है, और क्यों?', ret_save:'मेरे उत्तर सहेजें', ret_skip:'छोड़ें', ret_saved:'इसी कंप्यूटर में सहेजा गया ✓', ret_away:'आप {n} दिन से दूर थे।', ret_project:'प्रोजेक्ट: {p}, चरण: {s}।', ret_doc:'खुला दस्तावेज़: {d}, {w} शब्द।', ret_did:'जाने से पहले दर्ज था:', ret_docs:'{n} नए दस्तावेज़', ret_cits:'{n} स्रोत जोड़े गए', ret_stats:'{n} परीक्षण चलाए गए', ret_quals:'{n} अंश कोड किए गए', ret_ai:'{n} एआई अंश जोड़े गए', ret_nolog:'पिछली बार के बाद कोई गतिविधि दर्ज नहीं हुई।', ret_last:'पिछली बार ({d}) आपने लिखा था:', recap_toggle:'पाँच दिन या अधिक बाद लौटने पर सार और तीन प्रश्न दिखाएँ', viva_btn:'🎓 वाइवा प्रश्न', viva_btn_title:'अपने लेखन पर परीक्षक के प्रश्न का उत्तर देने का अभ्यास करें, उत्तर बॉक्स में एआई की मदद नहीं', viva_h:'🎓 वाइवा प्रश्न', viva_desc:'एआई आपके चुने अंश (या दस्तावेज़ के अंत) पर परीक्षक जैसा एक प्रश्न पूछता है। उत्तर अपने दम पर दें। उत्तर बॉक्स में एआई की मदद नहीं है, क्योंकि उद्देश्य असली क्षण का अभ्यास है।', viva_aud:'प्रश्न कौन पूछ रहा है?', viva_aud_viva:'वाइवा या बचाव में परीक्षक', viva_aud_conf:'सम्मेलन में पैनल या श्रोता', viva_get:'प्रश्न पाएँ', viva_another:'दूसरा प्रश्न', viva_thinking:'🎓 आपका अंश पढ़ रहा है…', viva_ph:'अपना उत्तर लिखें, जैसे बोल रहे हों।', viva_save:'मेरा उत्तर सहेजें', viva_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', viva_empty:'पहले अपना उत्तर लिखें।', viva_saved:'उत्तर इसी कंप्यूटर में सहेजा गया ✓', viva_count:'अब तक सहेजे उत्तर: {n}।', devil_btn_title:'आपके अंश के विरुद्ध वैसे ही तर्क देता है जैसे कोई आलोचक समीक्षक देगा। उत्तर में कुछ भी चिपकाने के लिए नहीं है।', devil_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', devil_thinking:'😈 आपका तर्क पढ़ रहा है…', devil_label:'कोई आलोचक समीक्षक यह कह सकता है। हर बिंदु का उत्तर अपने शब्दों में दें। यहाँ कुछ भी चिपकाने के लिए नहीं है।', devil_ready:'चुनौतियाँ एआई पैनल में तैयार हैं', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
     rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
     cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
@@ -2164,7 +2188,7 @@ function docNew(){
   if(title===null)return;
   const docs=docsGet(),d={id:'d'+Date.now(),title:title.trim()||'Untitled',body:'',updated:Date.now()};
   docs.push(d);docsSet(docs);LS.set('appu_doc_current',d.id);
-  editor.innerHTML='';lastSaved='';upd();docRenderList();showToast('New document created ✓');
+  editor.innerHTML='';lastSaved='';upd();docRenderList();actLog('doc');showToast('New document created ✓');
 }
 /* ============ Import a previously-written file as a new document ============
    .docx keeps its headings/bold/lists (via mammoth's HTML conversion, not just
@@ -2268,6 +2292,7 @@ function upd(){
     if(docSaveBody(html)){
       lastSaved=html;
       try{provRecord()}catch(e){}
+      try{touchActive()}catch(e){}
       if(saveDead){saveDead=false;b.textContent='Auto-save on';b.style.background='';b.style.color=''}
     }else if(!saveDead){
       saveDead=true;b.textContent='⚠ AUTO-SAVE OFF — DOWNLOAD NOW';b.style.background='#fee2e2';b.style.color='#991b1b';
@@ -2419,6 +2444,114 @@ function provShow(){
   }
   box.innerHTML=html;
   document.getElementById('writingDlg').showModal();
+}
+/* ===== Return after a gap, and the viva question =====
+   A capped activity log feeds a plain recap built by counting, with no AI. The three questions are the
+   student's own and are only stored, never graded or read by the app. Viva: the AI asks one question
+   and the answer box has no AI action in it. */
+function actLog(k){
+  if(POPOUT)return;
+  try{
+    let a=[];try{a=JSON.parse(LS.get('appu_activity')||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
+    a.push({t:Date.now(),k:k});
+    if(a.length>300)a=a.slice(-300);
+    LS.set('appu_activity',JSON.stringify(a));
+  }catch(e){}
+}
+/* read once at script load, before any autosave can overwrite it */
+const LAST_ACTIVE_AT_LOAD=parseInt(LS.get('appu_last_active')||'0',10)||0;
+let _actTouch=0;
+function touchActive(){
+  if(POPOUT||Date.now()-_actTouch<60000)return;
+  _actTouch=Date.now();LS.set('appu_last_active',String(_actTouch));
+}
+function recapGapDays(){const n=parseInt(LS.get('appu_gap_days')||'5',10);return n>0?n:5}
+function retStats(since){
+  let a=[];try{a=JSON.parse(LS.get('appu_activity')||'[]')}catch(e){}
+  const c={cit:0,ai:0,stat:0,qual:0,doc:0};
+  a.forEach(x=>{if(x.t>=since&&c[x.k]!==undefined)c[x.k]++});
+  return c;
+}
+function retRender(days,since){
+  const p=getActiveProject(),box=document.getElementById('retRecap');
+  const cur=docsGet().find(d=>d.id===docCurrentId());
+  const wc=(typeof editor!=='undefined'&&editor)?((editor.innerText||'').match(/\S+/g)||[]).length:0;
+  const c=retStats(since),parts=[];
+  parts.push('<p style="font-weight:700;margin:6px 0">'+escHTML(t('ret_away').replace('{n}',days))+'</p>');
+  const lines=[];
+  if(p)lines.push(t('ret_project').replace('{p}',p.name||'').replace('{s}',stageLabel(p.stage)));
+  lines.push(t('ret_doc').replace('{d}',cur?cur.title:'').replace('{w}',wc));
+  const bits=[];
+  if(c.doc)bits.push(t('ret_docs').replace('{n}',c.doc));
+  if(c.cit)bits.push(t('ret_cits').replace('{n}',c.cit));
+  if(c.stat)bits.push(t('ret_stats').replace('{n}',c.stat));
+  if(c.qual)bits.push(t('ret_quals').replace('{n}',c.qual));
+  if(c.ai)bits.push(t('ret_ai').replace('{n}',c.ai));
+  lines.push(bits.length?t('ret_did')+' '+bits.join(', ')+'.':t('ret_nolog'));
+  parts.push(lines.map(l=>'<p class="desc" style="margin:3px 0">'+escHTML(l)+'</p>').join(''));
+  let last=null;try{const a=JSON.parse(LS.get('appu_reflections')||'[]');last=a[a.length-1]||null}catch(e){}
+  if(last&&last.a1)parts.push('<p class="desc" style="margin:8px 0;border-left:3px solid var(--line);padding-left:8px">'+escHTML(t('ret_last').replace('{d}',new Date(last.t).toLocaleDateString()))+'<br><i>'+escHTML(last.a1)+'</i></p>');
+  box.innerHTML=parts.join('');
+  ['retQ1','retQ2','retQ3'].forEach(id=>{document.getElementById(id).value=''});
+}
+function retSave(){
+  const v=id=>document.getElementById(id).value.trim();
+  const a1=v('retQ1'),a2=v('retQ2'),a3=v('retQ3');
+  if(a1||a2||a3){
+    let a=[];try{a=JSON.parse(LS.get('appu_reflections')||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
+    a.push({t:Date.now(),a1:a1,a2:a2,a3:a3});if(a.length>30)a=a.slice(-30);
+    LS.set('appu_reflections',JSON.stringify(a));showToast(t('ret_saved'));
+  }
+  document.getElementById('returnDlg').close();
+}
+function recapCheck(){
+  if(POPOUT||LS.get('appu_recap_off')==='1')return;
+  const last=LAST_ACTIVE_AT_LOAD;
+  _actTouch=Date.now();LS.set('appu_last_active',String(_actTouch));
+  if(!last)return;
+  const days=Math.floor((Date.now()-last)/86400000);
+  if(days<recapGapDays())return;
+  if(document.querySelector('dialog[open]'))return;
+  retRender(days,last);
+  document.getElementById('returnDlg').showModal();
+}
+setTimeout(()=>{try{recapCheck()}catch(e){}},2500);
+
+function vivaOpen(){
+  document.getElementById('vivaQ').textContent='';
+  const a=document.getElementById('vivaA');a.value='';a.style.display='none';
+  document.getElementById('vivaActs').style.display='none';
+  let n=0;try{n=JSON.parse(LS.get('appu_viva')||'[]').length}catch(e){}
+  document.getElementById('vivaCount').textContent=n?t('viva_count').replace('{n}',n):'';
+  document.getElementById('vivaDlg').showModal();
+}
+async function vivaAsk(){
+  const txt=selText().trim();
+  if(txt.split(/\s+/).filter(Boolean).length<25){showToast(t('viva_need'));return}
+  const aud=document.getElementById('vivaAud').value;
+  const who=aud==='conf'?'a member of the panel at a conference session where the student has just presented this work':'an external examiner at the student\'s viva or thesis defence';
+  const prompt='You are '+who+'. Read the passage and ask exactly ONE realistic, probing question about it. The question must test whether the student understands and can defend their own choices: a method decision, a claim, an assumption or a limitation. Do not give hints, an answer, a model answer or any preamble. Output only the question.\n\nPASSAGE:\n'+txt.slice(0,6000);
+  const q=document.getElementById('vivaQ'),btn=document.getElementById('vivaGetBtn');
+  q.textContent=t('viva_thinking');btn.disabled=true;
+  try{
+    const r=(await callAI(prompt,{temp:0.6,max:300})||'').trim();
+    q.textContent=r;
+    const a=document.getElementById('vivaA');a.value='';a.style.display='block';
+    document.getElementById('vivaActs').style.display='flex';
+    document.getElementById('vivaGetBtn').textContent=t('viva_another');
+  }catch(e){q.textContent=apiMsg(e)}
+  btn.disabled=false;
+}
+function vivaSave(){
+  const q=document.getElementById('vivaQ').textContent.trim(),a=document.getElementById('vivaA').value.trim();
+  if(!a){showToast(t('viva_empty'));return}
+  let l=[];try{l=JSON.parse(LS.get('appu_viva')||'[]');if(!Array.isArray(l))l=[]}catch(e){l=[]}
+  l.push({t:Date.now(),aud:document.getElementById('vivaAud').value,q:q,a:a});if(l.length>60)l=l.slice(-60);
+  LS.set('appu_viva',JSON.stringify(l));
+  document.getElementById('vivaA').value='';document.getElementById('vivaA').style.display='none';
+  document.getElementById('vivaActs').style.display='none';document.getElementById('vivaQ').textContent='';
+  document.getElementById('vivaCount').textContent=t('viva_count').replace('{n}',l.length);
+  showToast(t('viva_saved'));
 }
 function updOriginality(){
   const badge=document.getElementById('origBadge');
@@ -2606,7 +2739,7 @@ function insertIntoEditor(text,keepSelection,aiTag){
     if(editor.innerHTML)text='\n'+text;
   }
   let html=escHTML(text).replace(/\n/g,'<br>');
-  if(aiTag)html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';
+  if(aiTag){html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';actLog('ai')}
   let ok=false;
   try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
   if(!ok){
@@ -3004,6 +3137,7 @@ function openSettings(sel){
   document.getElementById('contentLangSel').value=getContentLang();
   renderWritingSampleStatus();
   try{backupStatusRender()}catch(e){}
+  try{document.getElementById('recapOn').checked=LS.get('appu_recap_off')!=='1'}catch(e){}
   document.getElementById('settingsDlg').showModal();
 }
 function orcidSave(v){
@@ -3831,7 +3965,7 @@ function qualTagSelection(codeId){
   sel.removeAllRanges();
   const r2=document.createRange();r2.selectNodeContents(span);r2.collapse(false);
   sel.addRange(r2);savedRange=r2.cloneRange();
-  docSaveBody(getEditorHTML());lastSaved=getEditorHTML();upd();
+  docSaveBody(getEditorHTML());lastSaved=getEditorHTML();upd();actLog('qual');
   showToast('Tagged as "'+c.name+'" ✓');
 }
 function qualToggleColors(){
@@ -4084,7 +4218,7 @@ function citInsertAtCursor(txt){
 function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
   citInsertAtCursor(' '+citFmt(d).intext);showToast('Citation inserted ✓')}
 function citAdd(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
-  const l=citGetLib();l.push(d);citSaveLib(l);showToast('Saved to library ✓')}
+  const l=citGetLib();l.push(d);citSaveLib(l);actLog('cit');showToast('Saved to library ✓')}
 function citDel(i){citActiveIdx=-1;const l=citGetLib();l.splice(i,1);citSaveLib(l)}
 /* Backlinks, scaled down to one student: for each library source, which of their own documents
    cite it. No graph database — a plain-text scan of the documents already in localStorage, matching
@@ -5171,6 +5305,7 @@ function statsRun(){
 }
 function statsRunNow(){
   if(!window._statsData){showToast('Parse your data first');return}
+  actLog('stat');
   const key=document.getElementById('statsTest').value;
   const gv=id=>{const el=document.getElementById('sf_'+id);return el?el.value:''};
   const d=window._statsData;
