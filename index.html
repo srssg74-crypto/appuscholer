@@ -451,9 +451,10 @@
       <button class="btn btn-ghost" onclick="makeLonger()" data-i18n="extend_btn" data-i18n-title="extend_btn_title" title="Select some text first, then click to extend it">➕ Extend</button>
       <button class="btn btn-ghost" onclick="insertScaffold()" data-i18n="template_btn" data-i18n-title="template_btn_title" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
       <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 AI text</button>
+      <button class="btn btn-ghost" id="draftFirstBtn" onclick="toggleDraftFirst()" data-i18n="df_btn" data-i18n-title="df_btn_title" title="Write first. The AI then asks questions about your writing instead of writing for you.">✍ Draft first</button>
       <button type="button" class="btn btn-ghost" id="citCaretChip" style="display:none" onclick="citJumpToCaret()"></button>
       <span class="stats" id="stats">0 words</span>
-      <span class="orig-badge" id="origBadge" style="display:none"></span>
+      <span class="orig-badge" id="origBadge" style="display:none;cursor:pointer" onclick="provShow()" role="button" tabindex="0"></span>
     </div>
   </section>
 
@@ -814,6 +815,12 @@
   </div>
 </div></dialog>
 
+<dialog id="writingDlg"><div class="dlg-body" style="max-width:560px">
+  <h2 data-i18n="prov_h">📊 My writing</h2>
+  <p class="desc" data-i18n="prov_desc">Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.</p>
+  <div id="provBody"></div>
+  <div class="row" style="margin-top:12px"><button class="btn btn-ghost" onclick="document.getElementById('writingDlg').close()" data-i18n="close_btn">Close</button></div>
+</div></dialog>
 <dialog id="settingsDlg"><div class="dlg-body">
   <h2 data-i18n="settings_h2">🔑 Choose your AI provider</h2>
   <p style="font-size:13px;color:var(--muted)" data-i18n="settings_intro">Pick one. Your key is saved in this browser and sent only to the provider you choose.</p>
@@ -1288,7 +1295,7 @@ const I18N={
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
     cite_pages_label:'Pages', cite_url_label:'Link, DOI or full reference: paste it here and the form fills itself',
     cite_lookup_btn:'🔎 Fill from DOI, link, PubMed ID or title',
-    dock_ai_tab:'✨ AI suggestion', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
     rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
     cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
@@ -1484,7 +1491,7 @@ const I18N={
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
     cite_pages_label:'पृष्ठ', cite_url_label:'लिंक, DOI या पूरा संदर्भ: यहाँ चिपकाएँ, फ़ॉर्म अपने आप भर जाएगा',
     cite_lookup_btn:'🔎 DOI, लिंक, PubMed ID या शीर्षक से भरें',
-    dock_ai_tab:'✨ एआई सुझाव', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
     rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
     cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
@@ -2257,6 +2264,7 @@ function upd(){
     const b=document.getElementById('saveBadge');
     if(docSaveBody(html)){
       lastSaved=html;
+      try{provRecord()}catch(e){}
       if(saveDead){saveDead=false;b.textContent='Auto-save on';b.style.background='';b.style.color=''}
     }else if(!saveDead){
       saveDead=true;b.textContent='⚠ AUTO-SAVE OFF — DOWNLOAD NOW';b.style.background='#fee2e2';b.style.color='#991b1b';
@@ -2289,6 +2297,125 @@ function computeOriginality(){
     if(n.parentElement&&n.parentElement.closest('.ai-ins'))ai+=len;
   }
   return{total,ai,studentPct:total?Math.round(100*(total-ai)/total):100};
+}
+/* ===== Draft-first mode =====
+   When on, the three AI writing buttons stop producing text for the student. They return a few
+   questions about the student's own passage, nothing that can be pasted in, and window._sug stays
+   empty so Tab and Accept insert nothing. Opt-in and off by default: forced generation helps a
+   learner and gets in an expert's way. */
+function draftFirstOn(){return LS.get('appu_draft_first')==='1'}
+function draftFirstRender(){
+  const b=document.getElementById('draftFirstBtn');if(!b)return;
+  const on=draftFirstOn();
+  b.classList.toggle('btn-purple',on);b.classList.toggle('btn-ghost',!on);
+}
+function toggleDraftFirst(){
+  LS.set('appu_draft_first',draftFirstOn()?'0':'1');
+  draftFirstRender();
+  showToast(draftFirstOn()?t('df_on'):t('df_off'));
+}
+async function draftFeedback(kind){
+  let passage='';
+  if(kind==='tail'){
+    passage=tailText();
+    if(passage.trim().split(/\s+/).length<25){showToast(t('df_need_text'));return}
+  }else{
+    if(!hasSelection()){showToast(t('df_need_sel'));return}
+    passage=selText();
+  }
+  const focus=kind==='improve'?'Look at clarity and grammar. Where something is wrong, name the problem in a few words and let the student fix it.'
+    :kind==='expand'?'Ask what a reader would still want to know here: what is missing, undefined or unsupported.'
+    :'Ask what the claim is, what supports it, what a sceptical reader would say, and what a key term means.';
+  const prompt='You are a thesis supervisor reading a student\'s draft. The student must stay the author. Do NOT write, rewrite, improve or extend any text for them, and do not give example sentences they could paste in. Reply with at most 4 short numbered questions or observations. Each one quotes a few words from the student\'s text and asks something that makes them think. No opening praise and no summary. '+focus+'\n\nSTUDENT DRAFT:\n'+passage;
+  window._sug=null;aiOut.textContent=t('df_thinking');try{dockShow('ai')}catch(e){}
+  try{
+    const r=await callAI(prompt,{temp:0.4});
+    window._sug=null;aiOut.textContent=t('df_label')+'\n\n'+r;
+    try{dockShow('ai')}catch(e){}
+    showToast(t('df_ready'));
+  }catch(e){clearSug(apiMsg(e))}
+}
+/* ===== My writing: where the words came from =====
+   Counts, per document and in total, words inside .ai-ins spans versus everywhere else. Each AI
+   insert also records a hash of the text as inserted, so a passage can be reported as left as
+   inserted or edited. A snapshot of the library totals is stored at most every 10 minutes so the
+   dialog can show a weekly picture. This measures text origin only. */
+function provHash(s){
+  s=String(s||'').replace(/\s+/g,'');let h=5381;
+  for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;
+  return (h>>>0).toString(36);
+}
+function provCountDoc(html){
+  const div=document.createElement('div');div.innerHTML=bodyToHTML(html);
+  let typed=0,ai=0;
+  const w=document.createTreeWalker(div,NodeFilter.SHOW_TEXT,null);let n;
+  while((n=w.nextNode())){
+    const c=(n.textContent.match(/\S+/g)||[]).length;if(!c)continue;
+    if(n.parentElement&&n.parentElement.closest('.ai-ins'))ai+=c;else typed+=c;
+  }
+  let kept=0,edited=0,unknown=0;
+  div.querySelectorAll('.ai-ins').forEach(el=>{
+    const h=el.getAttribute('data-h');
+    if(!h){unknown++;return}
+    if(provHash(el.textContent)===h)kept++;else edited++;
+  });
+  return{typed,ai,passages:kept+edited+unknown,kept,edited,unknown};
+}
+function provScan(){
+  const cur=docCurrentId(),rows=[];let T=0,A=0;
+  docsGet().forEach(d=>{
+    const html=(d.id===cur&&typeof editor!=='undefined'&&editor)?getEditorHTML():(d.body||'');
+    const c=provCountDoc(html);
+    if(!c.typed&&!c.ai)return;
+    rows.push(Object.assign({title:d.title||'Untitled'},c));T+=c.typed;A+=c.ai;
+  });
+  return{rows,typed:T,ai:A};
+}
+function provHistory(){try{const o=JSON.parse(LS.get('appu_prov_history')||'{}');return(o&&typeof o==='object')?o:{}}catch(e){return{}}}
+let provLastRec=0;
+function provRecord(){
+  if(POPOUT||Date.now()-provLastRec<600000)return;
+  provLastRec=Date.now();
+  try{
+    const sc=provScan();if(!sc.typed&&!sc.ai)return;
+    const h=provHistory(),day=new Date().toISOString().slice(0,10);
+    h[day]={t:sc.typed,a:sc.ai};
+    const keys=Object.keys(h).sort();
+    while(keys.length>120)delete h[keys.shift()];
+    LS.set('appu_prov_history',JSON.stringify(h));
+  }catch(e){}
+}
+function provWeekStart(day){
+  const d=new Date(day+'T00:00:00Z'),wd=(d.getUTCDay()+6)%7;
+  d.setUTCDate(d.getUTCDate()-wd);return d.toISOString().slice(0,10);
+}
+function provShow(){
+  const sc=provScan(),box=document.getElementById('provBody');
+  if(!box)return;
+  if(!sc.typed&&!sc.ai){box.innerHTML='<p class="desc">'+escHTML(t('prov_none'))+'</p>';document.getElementById('writingDlg').showModal();return}
+  const tot=sc.typed+sc.ai,tp=Math.round(100*sc.typed/tot);
+  let html='<p style="font-weight:700;margin:8px 0">'+escHTML(t('prov_total').replace('{w}',tot).replace('{t}',tp).replace('{a}',100-tp))+'</p>';
+  html+=sc.rows.map(r=>{
+    const n=r.typed+r.ai,p=Math.round(100*r.typed/n);
+    const line=r.passages?t('prov_doc_fmt').replace('{n}',n).replace('{t}',p).replace('{p}',r.passages).replace('{k}',r.kept).replace('{e}',r.edited).replace('{u}',r.unknown?t('prov_unknown').replace('{u}',r.unknown):''):t('prov_doc_plain').replace('{n}',n).replace('{t}',p);
+    return'<div class="cit-item"><b>'+escHTML(r.title)+'</b><br>'+escHTML(line)+'</div>';
+  }).join('');
+  // weekly picture
+  const h=provHistory(),today=new Date().toISOString().slice(0,10);
+  h[today]={t:sc.typed,a:sc.ai};
+  const weeks={};
+  Object.keys(h).sort().forEach(d=>{weeks[provWeekStart(d)]=h[d]});
+  const wk=Object.keys(weeks).sort().slice(-8);
+  html+='<p style="font-weight:700;margin:14px 0 6px">'+escHTML(t('prov_trend'))+'</p>';
+  if(wk.length<2){html+='<p class="desc">'+escHTML(t('prov_trend_none'))+'</p>'}
+  else{
+    html+='<div style="display:flex;gap:6px;align-items:flex-end;height:90px">'+wk.map(k=>{
+      const v=weeks[k],pp=(v.t+v.a)?Math.round(100*v.t/(v.t+v.a)):0;
+      return'<div title="'+escAttr(t('prov_week').replace('{d}',k)+': '+pp+'%')+'" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font-size:11px;color:var(--muted)"><span>'+pp+'%</span><div style="width:100%;height:'+Math.max(2,pp*0.65)+'px;background:#8b5cf6;border-radius:4px 4px 0 0"></div></div>';
+    }).join('')+'</div>';
+  }
+  box.innerHTML=html;
+  document.getElementById('writingDlg').showModal();
 }
 function updOriginality(){
   const badge=document.getElementById('origBadge');
@@ -2434,6 +2561,7 @@ function backupNudgeCheck(){
   n.style.display='block';
 }
 setTimeout(()=>{try{backupNudgeCheck()}catch(e){}},4000);
+try{draftFirstRender()}catch(e){}
 function clearWritingSamples(){
   if(!confirm(t('writingsample_clear_confirm')))return;
   writingSamplesSet({});
@@ -2474,7 +2602,7 @@ function insertIntoEditor(text,keepSelection,aiTag){
     if(editor.innerHTML)text='\n'+text;
   }
   let html=escHTML(text).replace(/\n/g,'<br>');
-  if(aiTag)html='<span class="ai-ins">'+html+'</span>';
+  if(aiTag)html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';
   let ok=false;
   try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
   if(!ok){
@@ -3155,6 +3283,7 @@ function replaceAll(){
 
 /* ============ Writing actions ============ */
 async function continueWriting(){
+  if(draftFirstOn()){return draftFeedback('tail')}
   clearSug('💜 Thinking…');
   try{setSug(await callAI('Continue this writing naturally, about 120 words. Do not repeat what is already there, just continue:'+stylePrompt()+'\n\n'+tailText(),{temp:0.8}));
       showToast('Suggestion ready — press Tab in the editor to accept')}
@@ -3162,6 +3291,7 @@ async function continueWriting(){
 }
 /* FIX 17: Improve and Longer replace a selection instead of appending a duplicate */
 async function improveText(){
+  if(draftFirstOn()){return draftFeedback('improve')}
   if(!hasSelection()){showToast('Select the text you want to improve first');return}
   const t=selText();
   clearSug('💜 Polishing…');
@@ -3170,6 +3300,7 @@ async function improveText(){
   catch(e){clearSug(apiMsg(e))}
 }
 async function makeLonger(){
+  if(draftFirstOn()){return draftFeedback('expand')}
   if(!hasSelection()){showToast('Select the text you want to expand first');return}
   const t=selText();
   clearSug('💜 Expanding…');
