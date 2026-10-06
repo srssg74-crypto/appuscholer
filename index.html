@@ -2361,7 +2361,7 @@ async function draftFeedback(kind){
     window._sug=null;aiOut.textContent=t('df_label')+'\n\n'+r;
     try{dockShow('ai')}catch(e){}
     showToast(t('df_ready'));
-  }catch(e){clearSug(apiMsg(e))}
+  }catch(e){showAIError(e)}
 }
 /* ===== My writing: where the words came from =====
    Counts, per document and in total, words inside .ai-ins spans versus everywhere else. Each AI
@@ -3210,6 +3210,8 @@ function apiMsg(e){
 
 /* ============ FIX 3: suggestion state always in sync ============ */
 function setSug(t){window._sug=t;aiOut.textContent=t;try{dockShow('ai')}catch(e){}}
+/* Shows an AI error where the student is looking: the AI pane stays open and a toast repeats it. */
+function showAIError(e){const m=apiMsg(e);window._sug=null;aiOut.textContent=m;try{dockShow('ai')}catch(x){}try{showToast(m)}catch(x){}}
 function clearSug(msg){window._sug=null;aiOut.textContent=msg;try{dockShow('tools')}catch(e){}}
 function copyAI(){
   const t=window._sug||'';if(!t){showToast('Nothing to copy yet');return}
@@ -4940,7 +4942,7 @@ async function devilTool(){
     window._sug=null;aiOut.textContent=t('devil_label')+'\n\n'+r;
     try{dockShow('ai')}catch(e){}
     showToast(t('devil_ready'));
-  }catch(e){clearSug(apiMsg(e))}
+  }catch(e){showAIError(e)}
 }
 
 /* ============ Statistics Lab — client-side test engine, no CDN dependency ============ */
