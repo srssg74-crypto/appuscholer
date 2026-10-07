@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Appuscholar</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#4c1d95">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
@@ -1062,6 +1066,7 @@
   <h2 data-i18n="help_h2">❓ Help &amp; Troubleshooting</h2>
   <p style="font-size:13px;color:var(--muted)" data-i18n="help_intro">Most problems have a quick fix below. Check here first — it's faster than waiting on an email.</p>
 
+  <div class="row" id="installRow" style="margin-top:10px;display:none"><button class="btn btn-ghost" style="flex:1" onclick="installApp()">📲 Install Appuscholar on this device</button></div>
   <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
     <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('helpDlg').close();guideOpen()">📖 Open the Guide</button>
     <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();repOpen()">🛠 Report a problem</button>
@@ -1406,6 +1411,7 @@
 </div></dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite" popover="manual"></div>
+<div id="offlineBar" role="status" style="display:none;position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:50;max-width:92vw;background:#3b0764;color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.3)">You are offline. Writing, citations, statistics and your shelf still work. AI, paper search and new downloads need a connection.</div>
 <footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -6058,6 +6064,11 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
 </ul>
 <p>Extracted text can jumble tables and two-column layouts. Check the original for exact numbers. The shelf has its own backup: press <b>Back up the shelf</b> now and then, because clearing your browser data erases it and the normal Backup does not include it.</p>`},
+{id:'offline',g:'Help',t:'Using Appuscholar offline and installing it',k:'offline install phone home screen app connection internet service worker cache',h:`
+<p>After your first visit with a connection, Appuscholar keeps a copy of itself and its libraries on your device. Next time it opens with no connection. While offline, writing, citations, statistics, charts, the scale library, the Reading shelf and your saved projects all work. AI buttons, paper search and anything that needs a new download do not. A bar at the bottom tells you when you are offline.</p>
+<p>When you are online, the app always asks the website for the latest version first. The saved copy is used only when that fails. A new version therefore reaches you at the next load.</p>
+<p><strong>To install it.</strong> In Chrome or Edge on a computer or an Android phone, press <b>Install Appuscholar on this device</b> in Help, or use the browser menu. On an iPhone, open the Share menu in Safari and choose Add to Home Screen. Your work stays in the browser it was made in, so the installed copy and the browser tab may not show the same projects. Use Backup to move work between them.</p>
+<p>If something looks stuck on an old version, add <i>?nosw=1</i> to the end of the address and press Enter. That clears the saved copy. The next normal visit saves a fresh one.</p>`},
 {id:'psych',g:'Tools',t:'Psychology Tools',k:'psychology tools summarize case study literature explain apa challenge devil argument',h:`
 <p>Select a passage of at least a few sentences, or select nothing to use the whole document, then press one button. The answer appears in the AI suggestion pane. Press Tab in the editor to insert it.</p>
 <ul>
@@ -6626,6 +6637,30 @@ function shRestore(input){
     SH.status='Restored '+n+' papers.';await shRefresh();
   };
   rd.readAsText(f);
+}
+
+/* ============ Offline use and install (item 51) ============
+   sw.js keeps the app and its libraries. ?nosw=1 switches the service worker off and clears its copies. */
+(function(){
+  const bar=document.getElementById('offlineBar');
+  function sync(){if(bar)bar.style.display=navigator.onLine?'none':'block'}
+  window.addEventListener('online',sync);window.addEventListener('offline',sync);sync();
+  if(!('serviceWorker' in navigator)||!/^https?:$/.test(location.protocol))return;
+  try{if(localStorage.getItem('appu_nosw')==='1')return}catch(e){}  /* internal switch used by the test pages */
+  if(/[?&]nosw=1/.test(location.search)){
+    const wipe=()=>window.caches?caches.keys().then(ks=>Promise.all(ks.filter(k=>k.indexOf('appu-')===0).map(k=>caches.delete(k)))):0;
+    navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))).then(wipe).then(()=>{try{showToast('Offline copy switched off and cleared')}catch(e){}setTimeout(wipe,1500)}).catch(()=>{});
+    return;
+  }
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+})();
+let _installEv=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_installEv=e;const r=document.getElementById('installRow');if(r)r.style.display='flex'});
+window.addEventListener('appinstalled',()=>{_installEv=null;const r=document.getElementById('installRow');if(r)r.style.display='none'});
+async function installApp(){
+  if(!_installEv){showToast('Use your browser menu: Install app, or Add to Home Screen');return}
+  _installEv.prompt();try{await _installEv.userChoice}catch(e){}
+  _installEv=null;const r=document.getElementById('installRow');if(r)r.style.display='none';
 }
 
 const STAT_TESTS={
