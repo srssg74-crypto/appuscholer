@@ -1030,11 +1030,16 @@
         <optgroup label="Compare — non-parametric">
           <option value="mannwhitney">Mann-Whitney U</option>
           <option value="wilcoxon">Wilcoxon signed-rank</option>
+          <option value="kruskal">Kruskal-Wallis (3+ groups, with Dunn post-hoc)</option>
         </optgroup>
         <optgroup label="Relationships">
           <option value="pearson">Pearson correlation</option>
+          <option value="spearman">Spearman correlation (ranks)</option>
           <option value="regression">Simple linear regression</option>
           <option value="chisq">Chi-square test of independence</option>
+        </optgroup>
+        <optgroup label="Scales and reliability">
+          <option value="alpha">Cronbach's alpha and McDonald's omega</option>
         </optgroup>
       </select>
     </div>
@@ -5400,7 +5405,7 @@ function normalCDF(z){return 0.5*(1+erf(z/Math.sqrt(2)))}
 function pFromT(t,df){return betai(df/2,0.5,df/(df+t*t))}                          /* two-tailed */
 function pFromF(f,df1,df2){if(f<=0)return 1;var x=df1*f/(df1*f+df2);return 1-betai(df1/2,df2/2,x)} /* one-tailed */
 function pFromChi(chi2,df){return gammaq(df/2,chi2/2)}
-function pFromZ(z){return 2*(1-normalCDF(Math.abs(z)))}                            /* two-tailed */
+function pFromZ(z){z=Math.abs(z);return z===0?1:gammaq(0.5,z*z/2)}                            /* two-tailed */
 
 function smean(a){return a.reduce((s,v)=>s+v,0)/a.length}
 function svar(a){const m=smean(a);return a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1)}
@@ -5416,6 +5421,90 @@ function ranks(a){ /* average ranks, ties split evenly */
     i=j+1;
   }
   return r;
+}
+
+/* ---- tests added 2026-10-07: Kruskal-Wallis, Spearman, Cronbach's alpha and McDonald's omega, Welch t ---- */
+function stkTCrit(df,alpha){let lo=0,hi=1000;for(let i=0;i<200;i++){const m=(lo+hi)/2;if(pFromT(m,df)>alpha)lo=m;else hi=m}return(lo+hi)/2}
+function stkFQuant(q,d1,d2){let lo=0,hi=1e6;for(let i=0;i<300;i++){const m=(lo+hi)/2;if(1-pFromF(m,d1,d2)<q)lo=m;else hi=m}return(lo+hi)/2}
+function stkTieTerm(all){const a=all.slice().sort((x,y)=>x-y);let T=0,i=0;while(i<a.length){let j=i;while(j+1<a.length&&a[j+1]===a[i])j++;const t=j-i+1;T+=t*t*t-t;i=j+1}return T}
+function stkHolm(ps){const m=ps.length,idx=ps.map((_,i)=>i).sort((a,b)=>ps[a]-ps[b]),out=new Array(m);let run=0;idx.forEach((i,r)=>{run=Math.max(run,Math.min(1,(m-r)*ps[i]));out[i]=run});return out}
+function stkKruskal(groups){
+  const all=[].concat(...groups),N=all.length,k=groups.length,r=ranks(all);
+  let pos=0,sm=0;const mr=[];
+  groups.forEach(g=>{let R=0;for(let i=0;i<g.length;i++)R+=r[pos+i];pos+=g.length;mr.push(R/g.length);sm+=R*R/g.length});
+  let H=12/(N*(N+1))*sm-3*(N+1);const T=stkTieTerm(all),C=1-T/(N*N*N-N);
+  if(C>0)H/=C;
+  return{H:H,df:k-1,p:pFromChi(H,k-1),N:N,k:k,meanRanks:mr,eps2:H/(N-1),T:T};
+}
+function stkDunn(groups,kw){
+  const N=kw.N,vt=N*(N+1)/12-kw.T/(12*(N-1)),pairs=[],ps=[];
+  for(let i=0;i<groups.length;i++)for(let j=i+1;j<groups.length;j++){
+    const z=(kw.meanRanks[i]-kw.meanRanks[j])/Math.sqrt(vt*(1/groups[i].length+1/groups[j].length));
+    const p=pFromZ(z);pairs.push({i:i,j:j,z:z,p:p});ps.push(p);
+  }
+  const adj=stkHolm(ps);pairs.forEach((q,x)=>{q.padj=adj[x]});return pairs;
+}
+function stkSpearman(xs,ys){
+  const rx=ranks(xs),ry=ranks(ys),n=xs.length,mx=smean(rx),my=smean(ry);
+  let sxy=0,sxx=0,syy=0;
+  for(let i=0;i<n;i++){sxy+=(rx[i]-mx)*(ry[i]-my);sxx+=(rx[i]-mx)*(rx[i]-mx);syy+=(ry[i]-my)*(ry[i]-my)}
+  const r=sxy/Math.sqrt(sxx*syy),df=n-2;
+  const p=Math.abs(r)>=1?0:pFromT(r*Math.sqrt(df/(1-r*r)),df);
+  const z=Math.atanh(Math.max(-0.999999,Math.min(0.999999,r))),se=Math.sqrt((1+r*r/2)/(n-3));
+  return{rho:r,n:n,df:df,p:p,lo:Math.tanh(z-1.959964*se),hi:Math.tanh(z+1.959964*se)};
+}
+function stkCorrMat(X){
+  const n=X.length,k=X[0].length,cols=[];
+  for(let j=0;j<k;j++)cols.push(X.map(r=>r[j]));
+  const m=cols.map(smean),sd=cols.map(c=>Math.sqrt(c.reduce((s,v)=>s+(v-smean(c))*(v-smean(c)),0)/(n-1)));
+  if(sd.some(v=>!(v>0)))return null;
+  const R=[];
+  for(let a=0;a<k;a++){R.push([]);for(let b=0;b<k;b++){
+    if(a===b){R[a].push(1);continue}
+    let s=0;for(let i=0;i<n;i++)s+=(cols[a][i]-m[a])*(cols[b][i]-m[b]);
+    R[a].push(s/((n-1)*sd[a]*sd[b]));
+  }}
+  return R;
+}
+function stkOmega(R){
+  const k=R.length;
+  let h=R.map((row,i)=>Math.max.apply(null,row.filter((_,j)=>j!==i).map(Math.abs)));
+  let v=new Array(k).fill(1/Math.sqrt(k)),l=new Array(k).fill(0);
+  for(let it=0;it<500;it++){
+    const A=R.map((row,i)=>row.map((x,j)=>i===j?h[i]:x));
+    let ev=0;
+    for(let q=0;q<300;q++){
+      const w=A.map((row,i)=>row.reduce((sm,a,j)=>sm+a*v[j],0)+k*v[i]);
+      const nr=Math.sqrt(w.reduce((sm,a)=>sm+a*a,0));if(!(nr>0))return null;
+      const nv=w.map(a=>a/nr);let d=0;for(let i=0;i<k;i++)d=Math.max(d,Math.abs(nv[i]-v[i]));
+      v=nv;ev=nr-k;if(d<1e-12)break;
+    }
+    if(!(ev>0))return null;
+    const sg=v.reduce((sm,a)=>sm+a,0)<0?-1:1;
+    l=v.map(a=>sg*a*Math.sqrt(ev));
+    const nh=l.map(a=>Math.min(a*a,0.995));let dd=0;for(let i=0;i<k;i++)dd=Math.max(dd,Math.abs(nh[i]-h[i]));
+    h=nh;if(dd<1e-9)break;
+  }
+  const sl=l.reduce((sm,a)=>sm+a,0),uni=h.reduce((sm,a)=>sm+(1-a),0);
+  return{omega:sl*sl/(sl*sl+uni),loadings:l};
+}
+function stkAlpha(X){
+  const n=X.length,k=X[0].length;let sv=0;
+  for(let j=0;j<k;j++)sv+=svar(X.map(r=>r[j]));
+  const vt=svar(X.map(r=>r.reduce((a,b)=>a+b,0)));
+  return{alpha:k/(k-1)*(1-sv/vt),n:n,k:k};
+}
+function stkRng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function stkOmegaBoot(X,B){
+  const n=X.length,rnd=stkRng(12345),out=[];
+  for(let b=0;b<B;b++){
+    const S=[];for(let i=0;i<n;i++)S.push(X[Math.floor(rnd()*n)]);
+    const R=stkCorrMat(S);if(!R)continue;
+    const o=stkOmega(R);if(o&&isFinite(o.omega))out.push(o.omega);
+  }
+  out.sort((a,b)=>a-b);
+  if(out.length<50)return null;
+  return[out[Math.floor(0.025*(out.length-1))],out[Math.ceil(0.975*(out.length-1))]];
 }
 
 /* ---- pasted-table / CSV parsing ---- */
@@ -5474,7 +5563,10 @@ const STAT_TESTS={
   mannwhitney:{label:'Mann-Whitney U',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (exactly 2 groups)',type:'categorical'}]},
   wilcoxon:{label:'Wilcoxon signed-rank',fields:[{id:'v1',label:'Variable 1 (e.g. pre)',type:'numeric'},{id:'v2',label:'Variable 2 (e.g. post)',type:'numeric'}]},
   pearson:{label:'Pearson correlation',fields:[{id:'v1',label:'Variable 1',type:'numeric'},{id:'v2',label:'Variable 2',type:'numeric'}]},
-  chisq:{label:'Chi-square test of independence',fields:[{id:'v1',label:'Variable 1',type:'categorical'},{id:'v2',label:'Variable 2',type:'categorical'}]}
+  chisq:{label:'Chi-square test of independence',fields:[{id:'v1',label:'Variable 1',type:'categorical'},{id:'v2',label:'Variable 2',type:'categorical'}]},
+  kruskal:{label:'Kruskal-Wallis',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
+  spearman:{label:'Spearman correlation',fields:[{id:'v1',label:'Variable 1',type:'numeric'},{id:'v2',label:'Variable 2',type:'numeric'}]},
+  alpha:{label:"Cronbach's alpha and McDonald's omega",fields:[{id:'items',label:'Items of ONE scale (tick each item)',type:'numeric',multi:true}],extra:[{id:'rev',label:'Reverse-score these items (names, comma separated)',placeholder:'e.g. Q3, Q7'},{id:'rrange',label:'Lowest and highest answer (needed to reverse)',placeholder:'e.g. 1-5'}]}
 };
 function statsColOptions(type){
   const cols=(window._statsData&&window._statsData.cols||[]).filter(c=>c.type===type);
@@ -5488,6 +5580,11 @@ function statsFieldsRender(){
   let html='<div class="stats-fld-row">';
   cfg.fields.forEach(f=>{
     const cols=(window._statsData&&window._statsData.cols||[]).filter(c=>c.type===f.type);
+    if(f.multi){
+      html+='<div class="fld" style="flex-basis:100%"><label>'+escHTML(f.label)+'</label><div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px">'+
+        cols.map(c=>'<label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" class="sfm_'+f.id+'" value="'+c.index+'" checked> '+escHTML(c.name)+'</label>').join('')+'</div></div>';
+      return;
+    }
     used[f.type]=used[f.type]||0;
     const pick=used[f.type]<cols.length?used[f.type]:0;
     used[f.type]++;
@@ -5662,9 +5759,10 @@ const GEN_DESIGNS={
   one:{label:'One group against a known value',ok:['ttest1'],alt:[],why:'A one-sample t-test compares one group mean with a fixed value.'},
   ind:{label:'Two separate groups of different people',ok:['ttestInd'],alt:['mannwhitney'],why:'Different people in each group means independent samples. The independent t-test fits when scores are roughly normal. Mann-Whitney U is the fallback for skewed scores, ordinal scores or very small groups.'},
   paired:{label:'The same people measured twice (or matched pairs)',ok:['ttestPaired'],alt:['wilcoxon'],why:'The same people twice means paired scores, so each person is their own control. The paired t-test fits roughly normal differences. Wilcoxon signed-rank is the fallback for skewed differences or ordinal scores.'},
-  three:{label:'Three or more separate groups',ok:['anova1'],alt:['tukey'],why:'Three or more independent groups call for one-way ANOVA. Tukey HSD is not a first test: it comes after a significant ANOVA to show which pairs differ.'},
-  corr:{label:'How two numeric variables move together',ok:['pearson'],alt:[],why:'Two numeric variables and a question about association call for Pearson correlation. Correlation does not show cause.'},
+  three:{label:'Three or more separate groups',ok:['anova1'],alt:['tukey','kruskal'],why:'Three or more independent groups call for one-way ANOVA. Tukey HSD is not a first test: it comes after a significant ANOVA to show which pairs differ.'},
+  corr:{label:'How two numeric variables move together',ok:['pearson'],alt:['spearman'],why:'Two numeric variables and a question about association call for Pearson correlation. Correlation does not show cause.'},
   pred:{label:'Predict one numeric variable from another',ok:['regression'],alt:['pearson'],why:'Prediction of one numeric score from another calls for simple linear regression.'},
+  rel:{label:'How well the items of a scale hang together (reliability)',ok:['alpha'],alt:[],why:"Reliability of a multi-item scale calls for Cronbach's alpha, ideally with McDonald's omega beside it. Report the value with its interval, not against a pass mark."},
   cat:{label:'Whether two categorical variables are related',ok:['chisq'],alt:[],why:'Two categorical variables (counts in categories) call for the chi-square test of independence.'}
 };
 function genFirstOn(){return LS.get('appu_gen_first')==='1'}
@@ -5737,14 +5835,17 @@ function statsRunNow(){
       const g1=groups[keys[0]],g2=groups[keys[1]];
       if(g1.length<2||g2.length<2){showToast('Each group needs at least 2 values');return}
       const n1=g1.length,n2=g2.length,m1=smean(g1),m2=smean(g2),v1=svar(g1),v2=svar(g2);
-      const df=n1+n2-2,pooled=((n1-1)*v1+(n2-1)*v2)/df;
-      const t=(m1-m2)/Math.sqrt(pooled*(1/n1+1/n2)),p=pFromT(t,df);
-      const dcohen=(m1-m2)/Math.sqrt(pooled);
+      const se2=v1/n1+v2/n2,df=se2*se2/((v1/n1)*(v1/n1)/(n1-1)+(v2/n2)*(v2/n2)/(n2-1));
+      const t=(m1-m2)/Math.sqrt(se2),p=pFromT(t,df),dfS=n1+n2-2,pooled=((n1-1)*v1+(n2-1)*v2)/dfS;
+      const tS=(m1-m2)/Math.sqrt(pooled*(1/n1+1/n2)),pS=pFromT(tS,dfS);
+      const dcohen=(m1-m2)/Math.sqrt(pooled),gH=dcohen*(1-3/(4*(n1+n2)-9));
+      const tc=stkTCrit(df,0.05),ciLo=(m1-m2)-tc*Math.sqrt(se2),ciHi=(m1-m2)+tc*Math.sqrt(se2);
       const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>M</th><th>SD</th></tr>'+
         '<tr><td>'+escHTML(keys[0])+'</td><td>'+n1+'</td><td>'+m1.toFixed(2)+'</td><td>'+Math.sqrt(v1).toFixed(2)+'</td></tr>'+
         '<tr><td>'+escHTML(keys[1])+'</td><td>'+n2+'</td><td>'+m2.toFixed(2)+'</td><td>'+Math.sqrt(v2).toFixed(2)+'</td></tr></table>'+
-        '<p class="desc">t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', d = '+dcohen.toFixed(2)+" (Student's t, equal variances assumed)</p>";
-      const apa='An independent-samples t-test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+escHTML(keys[0])+' (M = '+m1.toFixed(2)+', SD = '+Math.sqrt(v1).toFixed(2)+') and '+escHTML(keys[1])+' (M = '+m2.toFixed(2)+', SD = '+Math.sqrt(v2).toFixed(2)+'), t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', d = '+dcohen.toFixed(2)+'.';
+        '<p class="desc">Welch t('+df.toFixed(1)+') = '+t.toFixed(2)+', '+fmtP(p)+', Hedges\' g = '+gH.toFixed(2)+', mean difference '+(m1-m2).toFixed(2)+', 95% CI ['+ciLo.toFixed(2)+', '+ciHi.toFixed(2)+']. '+
+        'Welch is the default because it stays accurate when the two groups have different spreads and loses almost nothing when they do not. For comparison, Student\'s t('+dfS+') = '+tS.toFixed(2)+', '+fmtP(pS)+'.</p>';
+      const apa='An independent-samples Welch t-test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+keys[0]+' (M = '+m1.toFixed(2)+', SD = '+Math.sqrt(v1).toFixed(2)+') and '+keys[1]+' (M = '+m2.toFixed(2)+', SD = '+Math.sqrt(v2).toFixed(2)+'), t('+df.toFixed(2)+') = '+t.toFixed(2)+', '+fmtP(p)+', g = '+gH.toFixed(2)+', 95% CI of the difference ['+ciLo.toFixed(2)+', '+ciHi.toFixed(2)+'].';
       statsResultsShow(html,apa);
       statsChartBarMeans([keys[0],keys[1]],[m1,m2],
         [{plus:m1+Math.sqrt(v1),minus:m1-Math.sqrt(v1)},{plus:m2+Math.sqrt(v2),minus:m2-Math.sqrt(v2)}],
@@ -5837,13 +5938,13 @@ function statsRunNow(){
       const combined=g1.concat(g2),r=ranks(combined);
       const R1=r.slice(0,n1).reduce((s,v)=>s+v,0);
       const U1=R1-n1*(n1+1)/2,U2=n1*n2-U1,U=Math.min(U1,U2);
-      const meanU=n1*n2/2,sdU=Math.sqrt(n1*n2*(n1+n2+1)/12);
-      const z=(U-meanU)/sdU,p=pFromZ(z);
+      const NN=n1+n2,meanU=n1*n2/2,sdU=Math.sqrt(n1*n2/12*((NN+1)-stkTieTerm(combined)/(NN*(NN-1))));
+      const z=(U-meanU)/sdU,p=pFromZ(z),rrb=(U1-U2)/(n1*n2);
       const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>Median</th></tr>'+
         '<tr><td>'+escHTML(keys[0])+'</td><td>'+n1+'</td><td>'+smedian(g1).toFixed(2)+'</td></tr>'+
         '<tr><td>'+escHTML(keys[1])+'</td><td>'+n2+'</td><td>'+smedian(g2).toFixed(2)+'</td></tr></table>'+
-        '<p class="desc">U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+' (normal approximation)</p>';
-      const apa='A Mann-Whitney U test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+escHTML(keys[0])+' (Mdn = '+smedian(g1).toFixed(2)+') and '+escHTML(keys[1])+' (Mdn = '+smedian(g2).toFixed(2)+'), U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+'.';
+        '<p class="desc">U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+', rank-biserial r = '+noLead(rrb.toFixed(2))+' (positive: '+escHTML(keys[0])+' tends to score higher). Normal approximation with a correction for tied scores.</p>';
+      const apa='A Mann-Whitney U test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+keys[0]+' (Mdn = '+smedian(g1).toFixed(2)+') and '+keys[1]+' (Mdn = '+smedian(g2).toFixed(2)+'), U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+'.';
       statsResultsShow(html,apa);
       statsChartBarMeans([keys[0],keys[1]],[smedian(g1),smedian(g2)],null,dvName+' — medians by group',dvName);
 
@@ -5908,6 +6009,98 @@ function statsRunNow(){
       const apa='A chi-square test of independence showed '+(sig(p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'.';
       statsResultsShow(html,apa);
       statsChartGrouped(rowKeys,colKeys,table,n1name+' by '+n2name);
+
+    }else if(key==='kruskal'){
+      const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name,ivName=d.cols[ivI].name;
+      const groups=statsGroupBy(dvI,ivI),keys=Object.keys(groups);
+      if(keys.length<3){showToast('Kruskal-Wallis needs 3 or more groups. For 2 groups use Mann-Whitney U');return}
+      if(keys.some(k2=>groups[k2].length<2)){showToast('Each group needs at least 2 values');return}
+      const gs=keys.map(k2=>groups[k2]),kw=stkKruskal(gs);
+      if(!isFinite(kw.H)){showToast('All values are identical, so there is nothing to rank');return}
+      const fe=x=>noLead(x.toFixed(2));
+      let html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>Mdn</th><th>Mean rank</th></tr>'+
+        keys.map((k2,i)=>'<tr><td>'+escHTML(k2)+'</td><td>'+gs[i].length+'</td><td>'+smedian(gs[i]).toFixed(2)+'</td><td>'+kw.meanRanks[i].toFixed(1)+'</td></tr>').join('')+'</table>'+
+        '<p class="desc">H('+kw.df+') = '+kw.H.toFixed(2)+', '+fmtP(kw.p)+', epsilon-squared = '+fe(kw.eps2)+' (corrected for tied scores).'+
+        (gs.some(g=>g.length<5)?' A group has fewer than 5 values, so the p-value is rough. Treat it with care.':'')+'</p>';
+      let apa='A Kruskal-Wallis test showed '+(sig(kw.p)?'a significant':'no significant')+' difference in '+dvName+' across the '+ivName+' groups, H('+kw.df+') = '+kw.H.toFixed(2)+', '+fmtP(kw.p)+', ε² = '+fe(kw.eps2)+'.';
+      if(sig(kw.p)){
+        const dn=stkDunn(gs,kw);
+        html+='<table class="stats-table"><tr><th>Dunn comparison</th><th>z</th><th>p (Holm-adjusted)</th></tr>'+
+          dn.map(q=>'<tr><td>'+escHTML(keys[q.i])+' vs '+escHTML(keys[q.j])+'</td><td>'+q.z.toFixed(2)+'</td><td>'+(q.padj<0.001?'&lt; .001':noLead(q.padj.toFixed(3)))+'</td></tr>').join('')+'</table>';
+        const sg=dn.filter(q=>q.padj<0.05).map(q=>keys[q.i]+' and '+keys[q.j]);
+        apa+=' Dunn post-hoc tests with Holm adjustment '+(sg.length?'found significant differences between '+sg.join('; ')+'.':'found no significant pair after adjustment.');
+      }
+      statsResultsShow(html,apa);
+      statsChartBarMeans(keys,gs.map(g=>smedian(g)),null,dvName+' by '+ivName+' (medians)',dvName);
+
+    }else if(key==='spearman'){
+      const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p2=>p2[0]!==undefined&&p2[0]!==''&&p2[1]!==undefined&&p2[1]!=='').map(p2=>[parseFloat(p2[0]),parseFloat(p2[1])]).filter(p2=>isFinite(p2[0])&&isFinite(p2[1]));
+      if(pairs.length<5){showToast('Need at least 5 complete pairs');return}
+      const sp=stkSpearman(pairs.map(p2=>p2[0]),pairs.map(p2=>p2[1])),r=sp.rho;
+      if(!isFinite(r)){showToast('One of the variables has the same value in every row, so there is nothing to correlate');return}
+      const strength=Math.abs(r)<0.1?'negligible':Math.abs(r)<0.3?'weak':Math.abs(r)<0.5?'moderate':Math.abs(r)<0.7?'strong':'very strong';
+      const fr=x=>noLead(x.toFixed(2));
+      const html='<table class="stats-table"><tr><th>N</th><th>rₛ</th><th>95% CI</th><th>df</th><th>p</th></tr>'+
+        '<tr><td>'+sp.n+'</td><td>'+fr(r)+'</td><td>['+fr(sp.lo)+', '+fr(sp.hi)+']</td><td>'+sp.df+'</td><td>'+noLead(sp.p.toFixed(3))+'</td></tr></table>'+
+        '<p class="desc">Spearman works on ranks, so it fits ordinal scores and relationships that rise or fall steadily without being a straight line.'+(sp.n<10?' With fewer than 10 pairs the p-value is approximate.':'')+'</p>';
+      const apa='There was a '+strength+' '+(r>=0?'positive':'negative')+' monotonic association between '+n1name+' and '+n2name+', which '+(sig(sp.p)?'was':'was not')+' statistically significant, rₛ('+sp.df+') = '+fr(r)+', '+fmtP(sp.p)+', 95% CI ['+fr(sp.lo)+', '+fr(sp.hi)+'].';
+      statsResultsShow(html,apa);
+      statsChartScatter(pairs.map(p2=>({x:p2[0],y:p2[1]})),null,n1name+' and '+n2name,n1name,n2name);
+
+    }else if(key==='alpha'){
+      const idxs=Array.from(document.querySelectorAll('.sfm_items:checked')).map(c=>parseInt(c.value,10));
+      if(idxs.length<3){showToast('Tick at least 3 items that belong to one scale');return}
+      const names=idxs.map(i=>d.cols[i].name);
+      let revIdx=[];
+      const revTxt=(gv('rev')||'').trim();
+      let lo=null,hi=null;
+      if(revTxt){
+        const want=revTxt.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+        const miss=want.filter(w2=>!names.some(nm=>nm.toLowerCase()===w2));
+        if(miss.length){showToast('Not found among the ticked items: '+miss.join(', '));return}
+        revIdx=names.map((nm,j)=>want.indexOf(nm.toLowerCase())>=0?j:-1).filter(j=>j>=0);
+        const m=(gv('rrange')||'').match(/^\s*(\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)\s*$/);
+        if(!m){showToast('To reverse items, give the lowest and highest answer, for example 1-5');return}
+        lo=parseFloat(m[1]);hi=parseFloat(m[2]);
+        if(!(hi>lo)){showToast('The highest answer must be larger than the lowest');return}
+      }
+      const X=[];
+      d.rows.forEach(r=>{
+        const row=idxs.map(i=>parseFloat(r[i]));
+        if(row.every(v=>isFinite(v))){revIdx.forEach(j=>{row[j]=lo+hi-row[j]});X.push(row)}
+      });
+      const dropped=d.rows.length-X.length,k=idxs.length;
+      if(X.length<5){showToast('Need at least 5 people who answered every ticked item');return}
+      const R=stkCorrMat(X);
+      if(!R){showToast('One item has the same answer from everyone, so it cannot be analysed. Untick it');return}
+      const n=X.length,al=stkAlpha(X),fq=x=>noLead(x.toFixed(2));
+      const aci=al.alpha<1?[1-(1-al.alpha)*stkFQuant(0.975,n-1,(n-1)*(k-1)),1-(1-al.alpha)*stkFQuant(0.025,n-1,(n-1)*(k-1))]:[1,1];
+      const om=stkOmega(R),oci=om?stkOmegaBoot(X,n*k>40000?200:400):null;
+      let sumR=0,cnt=0;for(let a=0;a<k;a++)for(let b=a+1;b<k;b++){sumR+=R[a][b];cnt++}
+      const rows=names.map((nm,j)=>{
+        const col=X.map(r=>r[j]),rest=X.map(r=>r.reduce((x,y)=>x+y,0)-r[j]);
+        const mx=smean(col),mr=smean(rest);let sxy=0,sxx=0,syy=0;
+        for(let i=0;i<n;i++){sxy+=(col[i]-mx)*(rest[i]-mr);sxx+=(col[i]-mx)*(col[i]-mx);syy+=(rest[i]-mr)*(rest[i]-mr)}
+        const rit=sxy/Math.sqrt(sxx*syy);
+        const ad=k>2?stkAlpha(X.map(r=>r.filter((_,q)=>q!==j))).alpha:NaN;
+        return{name:nm,m:mx,sd:Math.sqrt(sxx/(n-1)),rit:rit,ad:ad,rev:revIdx.indexOf(j)>=0,load:om?om.loadings[j]:NaN};
+      });
+      const notes=[];
+      rows.filter(r2=>r2.rit<0).forEach(r2=>notes.push(r2.name+' correlates negatively with the rest of the scale. If it is worded in the opposite direction, reverse-score it above and run again.'));
+      rows.filter(r2=>r2.rit>=0&&r2.rit<0.2).forEach(r2=>notes.push(r2.name+' correlates only weakly with the rest ('+fq(r2.rit)+'). Check its wording.'));
+      if(al.alpha>0.95)notes.push('An alpha above .95 can mean some items repeat each other.');
+      if(n<30)notes.push('With fewer than 30 people the intervals are wide and the values are unstable.');
+      if(!om)notes.push('Omega could not be computed for these items.');
+      if(dropped>0)notes.push(dropped+' row(s) with a missing answer were left out.');
+      let html='<table class="stats-table"><tr><th>People</th><th>Items</th><th>Cronbach\'s α</th><th>95% CI</th><th>McDonald\'s ω</th><th>95% CI</th><th>Mean inter-item r</th></tr>'+
+        '<tr><td>'+n+'</td><td>'+k+'</td><td>'+fq(al.alpha)+'</td><td>['+fq(aci[0])+', '+fq(aci[1])+']</td><td>'+(om?fq(om.omega):'–')+'</td><td>'+(oci?'['+fq(oci[0])+', '+fq(oci[1])+']':'–')+'</td><td>'+fq(sumR/cnt)+'</td></tr></table>'+
+        '<table class="stats-table"><tr><th>Item</th><th>M</th><th>SD</th><th>Corrected item-total r</th><th>α if item deleted</th><th>Loading</th></tr>'+
+        rows.map(r2=>'<tr><td>'+escHTML(r2.name)+(r2.rev?' (reversed)':'')+'</td><td>'+r2.m.toFixed(2)+'</td><td>'+r2.sd.toFixed(2)+'</td><td>'+fq(r2.rit)+'</td><td>'+(isFinite(r2.ad)?fq(r2.ad):'–')+'</td><td>'+(isFinite(r2.load)?fq(r2.load):'–')+'</td></tr>').join('')+'</table>'+
+        '<p class="desc">There is no single pass mark for either value. What counts as acceptable depends on the purpose, so report the value with its interval. Omega assumes the items measure one thing. If the scale has subscales, run each subscale separately. Omega here comes from a one-factor model; its interval is a bootstrap of 400 resamples.</p>'+
+        (notes.length?'<ul style="font-size:13px;margin:6px 0 6px 18px">'+notes.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'');
+      const apa='Internal consistency was α = '+fq(al.alpha)+', 95% CI ['+fq(aci[0])+', '+fq(aci[1])+']'+(om?', and McDonald\'s ω = '+fq(om.omega)+(oci?', 95% CI ['+fq(oci[0])+', '+fq(oci[1])+']':''):'')+' (k = '+k+' items, N = '+n+').';
+      statsResultsShow(html,apa);
     }
   }catch(e){showToast('Could not run that test — check the columns you picked match what the test needs');}
 }
