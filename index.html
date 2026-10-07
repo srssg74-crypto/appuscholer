@@ -1026,7 +1026,8 @@
           <option value="ttest1">One-sample t-test</option>
           <option value="ttestInd">Independent-samples t-test</option>
           <option value="ttestPaired">Paired-samples t-test</option>
-          <option value="anova1">One-way ANOVA</option>
+          <option value="welchAnova">One-way ANOVA, Welch (recommended)</option>
+          <option value="anova1">One-way ANOVA, classic (equal spreads)</option>
           <option value="tukey">Tukey HSD post-hoc (after ANOVA)</option>
         </optgroup>
         <optgroup label="Compare — non-parametric">
@@ -1038,7 +1039,8 @@
           <option value="pearson">Pearson correlation</option>
           <option value="spearman">Spearman correlation (ranks)</option>
           <option value="regression">Simple linear regression</option>
-          <option value="chisq">Chi-square test of independence</option>
+          <option value="chisq">Chi-square test of independence (Fisher's exact for small 2x2 tables)</option>
+          <option value="gof">Chi-square goodness-of-fit</option>
         </optgroup>
         <optgroup label="Scales and reliability">
           <option value="alpha">Cronbach's alpha and McDonald's omega</option>
@@ -5509,6 +5511,64 @@ function stkOmegaBoot(X,B){
   return[out[Math.floor(0.025*(out.length-1))],out[Math.ceil(0.975*(out.length-1))]];
 }
 
+/* ---- batch two helpers (2026-10-07): studentized range, Welch ANOVA, Games-Howell, Fisher exact, exact binomial ---- */
+const STK_GL=(function(n){const x=[],w=[];for(let i=0;i<n;i++){let z=Math.cos(Math.PI*(i+0.75)/(n+0.5)),pp=0;for(let it=0;it<100;it++){let p1=1,p2=0;for(let j=1;j<=n;j++){const p3=p2;p2=p1;p1=((2*j-1)*z*p2-(j-1)*p3)/j}pp=n*(z*p1-p2)/(z*z-1);const dz=p1/pp;z-=dz;if(Math.abs(dz)<1e-15)break}x.push(z);w.push(2/((1-z*z)*pp*pp))}return{x:x,w:w}})(12);
+function stkGL(f,a,b,segs){let tot=0;const h=(b-a)/segs;for(let s2=0;s2<segs;s2++){const lo=a+s2*h,mid=lo+h/2,half=h/2;for(let i=0;i<STK_GL.x.length;i++)tot+=STK_GL.w[i]*half*f(mid+half*STK_GL.x[i])}return tot}
+function stkPhi(z){const t=0.5*gammaq(0.5,z*z/2);return z>=0?1-t:t}
+function stkPtukey(q,k,v){
+  if(!(q>0))return 0;
+  const sd=Math.sqrt(0.5/v),lo=Math.max(0,1-9*sd),hi=1+11*sd+(v<5?4:0);
+  const lc=0.5*v*Math.log(v)-gammaln(v/2)-(v/2-1)*Math.log(2);
+  const W=w=>stkGL(z=>{const d=stkPhi(z)-stkPhi(z-w);return k*Math.exp(-z*z/2)/2.5066282746310002*Math.pow(Math.max(d,0),k-1)},-8,8+w,Math.max(4,Math.ceil((16+w)/2.5)));
+  const r=stkGL(s2=>{if(s2<=0)return 0;return Math.exp(lc+(v-1)*Math.log(s2)-v*s2*s2/2)*W(q*s2)},lo,hi,14);
+  return Math.min(1,Math.max(0,r));
+}
+function stkQtukey(pr,k,v){
+  let a=0.5,b=4,fa=stkPtukey(a,k,v)-pr,fb=stkPtukey(b,k,v)-pr;
+  while(fb<0&&b<400){a=b;fa=fb;b*=2;fb=stkPtukey(b,k,v)-pr}
+  let side=0;
+  for(let i=0;i<60;i++){
+    const c=(a*fb-b*fa)/(fb-fa),fc=stkPtukey(c,k,v)-pr;
+    if(Math.abs(fc)<1e-12||Math.abs(b-a)<1e-10)return c;
+    if(fc*fb>0){b=c;fb=fc;if(side===-1)fa/=2;side=-1}else{a=c;fa=fc;if(side===1)fb/=2;side=1}
+  }
+  return(a+b)/2;
+}
+function stkWelchAnova(groups){
+  const k=groups.length,n=groups.map(g=>g.length),m=groups.map(smean),v=groups.map(svar);
+  if(v.some(x=>!(x>0)))return null;
+  const w=n.map((ni,i)=>ni/v[i]),W=w.reduce((a,b)=>a+b,0),mw=w.reduce((a,wi,i)=>a+wi*m[i],0)/W;
+  const A=w.reduce((a,wi,i)=>a+wi*(m[i]-mw)*(m[i]-mw),0)/(k-1);
+  const L=w.reduce((a,wi,i)=>a+Math.pow(1-wi/W,2)/(n[i]-1),0);
+  const B=1+2*(k-2)/(k*k-1)*L,F=A/B,df1=k-1,df2=(k*k-1)/(3*L);
+  const all=[].concat(...groups),N=all.length,gm=smean(all);let ssb=0,ssw=0;
+  groups.forEach((g,i)=>{ssb+=n[i]*(m[i]-gm)*(m[i]-gm);g.forEach(x=>ssw+=(x-m[i])*(x-m[i]))});
+  const msw=ssw/(N-k),om2=Math.max(0,(ssb-(k-1)*msw)/(ssb+ssw+msw));
+  return{F:F,df1:df1,df2:df2,p:pFromF(F,df1,df2),omega2:om2,N:N,k:k};
+}
+function stkGamesHowell(groups){
+  const k=groups.length,out=[];
+  for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){
+    const a=groups[i],b=groups[j],va=svar(a)/a.length,vb=svar(b)/b.length,se=Math.sqrt(va+vb);
+    const df=Math.pow(va+vb,2)/(va*va/(a.length-1)+vb*vb/(b.length-1)),diff=smean(a)-smean(b),q=Math.abs(diff)/se*Math.SQRT2;
+    const p=1-stkPtukey(q,k,df),qc=stkQtukey(0.95,k,df)/Math.SQRT2*se;
+    out.push({i:i,j:j,diff:diff,se:se,df:df,q:q,p:Math.max(0,p),lo:diff-qc,hi:diff+qc});
+  }
+  return out;
+}
+function stkLogChoose(n,r){return gammaln(n+1)-gammaln(r+1)-gammaln(n-r+1)}
+function stkFisher2x2(a,b,c,d){
+  const r1=a+b,r2=c+d,c1=a+c,N=r1+r2,lo=Math.max(0,c1-r2),hi=Math.min(r1,c1);
+  const lp=x=>stkLogChoose(r1,x)+stkLogChoose(r2,c1-x)-stkLogChoose(N,c1),obs=lp(a);let p=0;
+  for(let x=lo;x<=hi;x++){const l=lp(x);if(l<=obs+1e-7)p+=Math.exp(l)}
+  return{p:Math.min(1,p),or:(b*c)===0?(a*d===0?NaN:Infinity):(a*d)/(b*c)};
+}
+function stkBinomTwo(x,n,pi){
+  const lp=i=>stkLogChoose(n,i)+i*Math.log(pi)+(n-i)*Math.log(1-pi),obs=lp(x);let p=0;
+  for(let i=0;i<=n;i++){const l=lp(i);if(l<=obs+1e-7)p+=Math.exp(l)}
+  return Math.min(1,p);
+}
+
 /* ---- pasted-table / CSV parsing ---- */
 function statsSplitLine(l,delim){
   const out=[];let cur='',inQ=false;
@@ -5559,13 +5619,15 @@ const STAT_TESTS={
   ttest1:{label:'One-sample t-test',fields:[{id:'dv',label:'Variable',type:'numeric'}],extra:[{id:'mu',label:'Test value (μ)',placeholder:'0'}]},
   ttestInd:{label:'Independent-samples t-test',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (exactly 2 groups)',type:'categorical'}]},
   ttestPaired:{label:'Paired-samples t-test',fields:[{id:'v1',label:'Variable 1 (e.g. pre)',type:'numeric'},{id:'v2',label:'Variable 2 (e.g. post)',type:'numeric'}]},
-  anova1:{label:'One-way ANOVA',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
+  anova1:{label:'One-way ANOVA, classic (equal spreads)',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
   tukey:{label:'Tukey HSD post-hoc',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3-6 groups)',type:'categorical'}]},
   regression:{label:'Simple linear regression',fields:[{id:'iv',label:'Predictor (X)',type:'numeric'},{id:'dv',label:'Outcome (Y)',type:'numeric'}]},
   mannwhitney:{label:'Mann-Whitney U',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (exactly 2 groups)',type:'categorical'}]},
   wilcoxon:{label:'Wilcoxon signed-rank',fields:[{id:'v1',label:'Variable 1 (e.g. pre)',type:'numeric'},{id:'v2',label:'Variable 2 (e.g. post)',type:'numeric'}]},
   pearson:{label:'Pearson correlation',fields:[{id:'v1',label:'Variable 1',type:'numeric'},{id:'v2',label:'Variable 2',type:'numeric'}]},
   chisq:{label:'Chi-square test of independence',fields:[{id:'v1',label:'Variable 1',type:'categorical'},{id:'v2',label:'Variable 2',type:'categorical'}]},
+  welchAnova:{label:"One-way ANOVA, Welch (recommended)",fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
+  gof:{label:'Chi-square goodness-of-fit',fields:[{id:'v1',label:'Categorical variable',type:'categorical'}],extra:[{id:'exp',label:'Expected shares (optional)',placeholder:'e.g. A:50, B:30, C:20. Empty means equal shares'}]},
   kruskal:{label:'Kruskal-Wallis',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
   spearman:{label:'Spearman correlation',fields:[{id:'v1',label:'Variable 1',type:'numeric'},{id:'v2',label:'Variable 2',type:'numeric'}]},
   alpha:{label:"Cronbach's alpha and McDonald's omega",fields:[{id:'items',label:'Items of ONE scale (tick each item)',type:'numeric',multi:true}],extra:[{id:'rev',label:'Reverse-score these items (names, comma separated)',placeholder:'e.g. Q3, Q7'},{id:'rrange',label:'Lowest and highest answer (needed to reverse)',placeholder:'e.g. 1-5'}]}
@@ -5798,8 +5860,8 @@ const TG_RES={
   regression:{name:'Simple linear regression',keys:['regression'],why:'One numeric predictor and a numeric outcome.',alt:[['pearson','Pearson, if you only need the strength of the relationship']]},
   multreg:{name:'Multiple regression',keys:[],why:'Two or more predictors of a numeric outcome. Plan on 10 to 20 cases per predictor.',alt:[]},
   logistic:{name:'Logistic regression',keys:[],why:'A yes/no outcome predicted from other variables.',alt:[]},
-  gof:{name:'Chi-square goodness-of-fit',keys:[],why:'One categorical variable against counts you expected. If any expected count is below 5, an exact test is the better choice.',alt:[]},
-  chisq:{name:'Chi-square test of independence',keys:['chisq'],why:'Two categorical variables, different people.',alt:[],note:'If any expected count is below 5, Fisher\'s exact test is the right test. The app does not run it yet, so check the expected counts in the box below.'},
+  gof:{name:'Chi-square goodness-of-fit',keys:['gof'],why:'One categorical variable against counts you expected. With two categories and a small sample the app switches to an exact binomial test.',alt:[]},
+  chisq:{name:'Chi-square test of independence',keys:['chisq'],why:'Two categorical variables, different people.',alt:[],note:'On a 2 by 2 table where any expected count is below 5, the app reports Fisher\'s exact test instead. For a larger table with many small counts it warns you: merge sparse categories or ask a statistician about the Fisher-Freeman-Halton test.'},
   mcnemar:{name:'McNemar test',keys:[],why:'Same people, a yes/no answer at two times.',alt:[]},
   cochran:{name:"Cochran's Q",keys:[],why:'Same people, a yes/no answer at three or more times.',alt:[]},
   ttest1:{name:'One-sample t-test',keys:['ttest1'],why:'One group compared with a fixed value.',alt:[]},
@@ -5808,7 +5870,7 @@ const TG_RES={
   mannwhitney:{name:'Mann-Whitney U',keys:['mannwhitney'],why:'Different people in two groups, with ratings or ranks. It shows whether one group tends to score higher.',alt:[]},
   ttestPaired:{name:'Paired-samples t-test',keys:['ttestPaired'],why:'The same people twice, or matched pairs. Each person is their own control.',alt:[['wilcoxon','Wilcoxon signed-rank, if the differences are skewed or have extreme values']]},
   wilcoxon:{name:'Wilcoxon signed-rank',keys:['wilcoxon'],why:'The same people twice with ratings or ranks.',alt:[]},
-  anova1:{name:'One-way ANOVA',keys:['anova1'],why:'Three or more separate groups and a numeric score.',alt:[['kruskal','Kruskal-Wallis, if the groups are small and the scores skewed or have extreme values'],['tukey','Tukey HSD, after a significant ANOVA, to see which pairs differ']],note:'The app runs the classic ANOVA, which assumes similar spread in every group. Welch\'s ANOVA with Games-Howell is the better default when group sizes differ, and it is on the build list.'},
+  anova1:{name:"Welch's one-way ANOVA with Games-Howell follow-up",keys:['welchAnova'],why:'Three or more separate groups and a numeric score. Welch\'s version does not need equal spread, and Games-Howell shows which pairs differ without the same assumption.',alt:[['kruskal','Kruskal-Wallis, if the groups are small and the scores skewed or have extreme values'],['anova1','One-way ANOVA, classic version, if you must match a course or journal that expects it']]},
   kruskal:{name:'Kruskal-Wallis with Dunn follow-up',keys:['kruskal'],why:'Three or more separate groups with ratings or ranks.',alt:[]},
   rmanova:{name:'Repeated-measures ANOVA',keys:[],why:'The same people measured three or more times. Apply the Greenhouse-Geisser correction.',alt:[]},
   friedman:{name:'Friedman test',keys:[],why:'The same people three or more times with ratings or ranks.',alt:[]},
@@ -5883,7 +5945,7 @@ function tgCheck(){
     d.rows.forEach(r=>{const x=r[i1],y=r[i2];if(x===undefined||x===''||y===undefined||y==='')return;const k=x+'\u0001'+y;cnt[k]=(cnt[k]||0)+1;r1[x]=(r1[x]||0)+1;r2[y]=(r2[y]||0)+1;N++});
     let minE=Infinity,low=0,cells=0;
     Object.keys(r1).forEach(x=>Object.keys(r2).forEach(y=>{const e=r1[x]*r2[y]/N;cells++;if(e<minE)minE=e;if(e<5)low++}));
-    h+='<p style="margin:6px 0">Table of '+Object.keys(r1).length+' by '+Object.keys(r2).length+', N = '+N+'. Smallest expected count: '+(isFinite(minE)?minE.toFixed(2):'–')+'. '+low+' of '+cells+' cells are below 5. '+(low>0?'Chi-square is not trustworthy here. Fisher\'s exact test (2 by 2) or merging sparse categories is the usual answer. The app does not run Fisher yet.':'Chi-square is fine on this count.')+'</p>';
+    h+='<p style="margin:6px 0">Table of '+Object.keys(r1).length+' by '+Object.keys(r2).length+', N = '+N+'. Smallest expected count: '+(isFinite(minE)?minE.toFixed(2):'–')+'. '+low+' of '+cells+' cells are below 5. '+(low>0?'Chi-square is not trustworthy here. Fisher\'s exact test (2 by 2) or merging sparse categories is the usual answer. On a 2 by 2 table the app switches to Fisher\'s exact test by itself.':'Chi-square is fine on this count.')+'</p>';
   }
   out.innerHTML=h||'Pick a score column, or two category columns, then tap Check.';
 }
@@ -5897,10 +5959,11 @@ const GEN_DESIGNS={
   one:{label:'One group against a known value',ok:['ttest1'],alt:[],why:'A one-sample t-test compares one group mean with a fixed value.'},
   ind:{label:'Two separate groups of different people',ok:['ttestInd'],alt:['mannwhitney'],why:'Different people in each group means independent samples. The independent t-test (Welch\'s version, which does not need equal spread) fits numeric scores. Mann-Whitney U is the fallback for ordinal scores, or for very small groups with skewed scores or extreme values.'},
   paired:{label:'The same people measured twice (or matched pairs)',ok:['ttestPaired'],alt:['wilcoxon'],why:'The same people twice means paired scores, so each person is their own control. The paired t-test fits roughly normal differences. Wilcoxon signed-rank is the fallback for skewed differences or ordinal scores.'},
-  three:{label:'Three or more separate groups',ok:['anova1'],alt:['tukey','kruskal'],why:'Three or more independent groups call for one-way ANOVA. Tukey HSD is not a first test: it comes after a significant ANOVA to show which pairs differ.'},
+  three:{label:'Three or more separate groups',ok:['welchAnova','anova1'],alt:['tukey','kruskal'],why:'Three or more independent groups call for one-way ANOVA. Tukey HSD is not a first test: it comes after a significant ANOVA to show which pairs differ.'},
   corr:{label:'How two numeric variables move together',ok:['pearson'],alt:['spearman'],why:'Two numeric variables and a question about association call for Pearson correlation. Correlation does not show cause.'},
   pred:{label:'Predict one numeric variable from another',ok:['regression'],alt:['pearson'],why:'Prediction of one numeric score from another calls for simple linear regression.'},
   rel:{label:'How well the items of a scale hang together (reliability)',ok:['alpha'],alt:[],why:"Reliability of a multi-item scale calls for Cronbach's alpha, ideally with McDonald's omega beside it. Report the value with its interval, not against a pass mark."},
+  gof:{label:'One categorical variable against expected counts',ok:['gof'],alt:[],why:'One categorical variable compared with the counts you expected, equal or set by theory, calls for the chi-square goodness-of-fit test.'},
   cat:{label:'Whether two categorical variables are related',ok:['chisq'],alt:[],why:'Two categorical variables (counts in categories) call for the chi-square test of independence.'}
 };
 function genFirstOn(){return LS.get('appu_gen_first')==='1'}
@@ -6026,20 +6089,20 @@ function statsRunNow(){
     }else if(key==='tukey'){
       const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10);
       const groups=statsGroupBy(dvI,ivI),gk=Object.keys(groups);
-      if(gk.length<3||gk.length>6){showToast('Tukey HSD here supports 3 to 6 groups — for more, verify in SPSS/JASP');return}
+      if(gk.length<3){showToast('Tukey HSD needs 3 or more groups');return}
       const all=[].concat(...gk.map(k2=>groups[k2])),N=all.length,kk=gk.length;
       let ssw=0;gk.forEach(k2=>{const g=groups[k2],m=smean(g);g.forEach(v=>ssw+=(v-m)*(v-m))});
-      const dfw=N-kk,msw=ssw/dfw,qc=qCrit(kk,dfw);
-      let html='<table class="stats-table"><tr><th>Comparison</th><th>Mean diff</th><th>q</th><th>q crit (α=.05)</th><th>Sig?</th></tr>';
+      const dfw=N-kk,msw=ssw/dfw,qc=stkQtukey(0.95,kk,dfw);
+      let html='<table class="stats-table"><tr><th>Comparison</th><th>Mean diff</th><th>q</th><th>p (adjusted)</th><th>Sig?</th></tr>';
       const apaBits=[];
       for(let i=0;i<kk;i++)for(let j=i+1;j<kk;j++){
         const gi=groups[gk[i]],gj=groups[gk[j]];
-        const diff=smean(gi)-smean(gj),se=Math.sqrt(msw/2*(1/gi.length+1/gj.length)),q=Math.abs(diff)/se,isSig=q>qc;
-        html+='<tr><td>'+escHTML(gk[i])+' vs '+escHTML(gk[j])+'</td><td>'+diff.toFixed(2)+'</td><td>'+q.toFixed(2)+'</td><td>'+qc.toFixed(2)+'</td><td>'+(isSig?'Yes':'No')+'</td></tr>';
-        apaBits.push(escHTML(gk[i])+' vs '+escHTML(gk[j])+' ('+(isSig?'p < .05':'ns')+')');
+        const diff=smean(gi)-smean(gj),se=Math.sqrt(msw/2*(1/gi.length+1/gj.length)),q=Math.abs(diff)/se,pq=Math.max(0,1-stkPtukey(q,kk,dfw)),isSig=pq<0.05;
+        html+='<tr><td>'+escHTML(gk[i])+' vs '+escHTML(gk[j])+'</td><td>'+diff.toFixed(2)+'</td><td>'+q.toFixed(2)+'</td><td>'+noLead(pq<0.001?'< .001':pq.toFixed(3))+'</td><td>'+(isSig?'Yes':'No')+'</td></tr>';
+        apaBits.push(gk[i]+' vs '+gk[j]+' ('+fmtP(pq)+')');
       }
-      html+='</table><p class="desc">MSW = '+msw.toFixed(2)+', df = '+dfw+'. Critical value from the standard studentized range table (interpolated where the exact df isn\'t tabulated) — cross-check against a published table or SPSS/JASP before relying on this for a formal submission.</p>';
-      const apa='Tukey HSD post-hoc comparisons (q critical = '+qc.toFixed(2)+', α = .05) showed: '+apaBits.join('; ')+'.';
+      html+='</table><p class="desc">MSW = '+msw.toFixed(2)+', df = '+dfw+'. Exact studentized-range probabilities. Tukey HSD assumes similar spread in every group; with unequal spreads use Welch ANOVA, which comes with Games-Howell.</p>';
+      const apa='Tukey HSD post-hoc comparisons (q critical = '+qc.toFixed(2)+', α = .05) gave: '+apaBits.join('; ')+'.';
       statsResultsShow(html,apa);
       statsChartBarMeans(gk,gk.map(k2=>smean(groups[k2])),
         gk.map(k2=>{const g=groups[k2],m=smean(g),s=ssd(g);return{plus:m+s,minus:m-s}}),
@@ -6144,9 +6207,69 @@ function statsRunNow(){
       let html='<table class="stats-table"><tr><th></th>'+colKeys.map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>';
       table.forEach((row,i)=>{html+='<tr><th>'+escHTML(rowKeys[i])+'</th>'+row.map(o=>'<td>'+o+'</td>').join('')+'</tr>'});
       html+='</table><p class="desc">χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'</p>';
-      const apa='A chi-square test of independence showed '+(sig(p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'.';
+      let apa='A chi-square test of independence showed '+(sig(p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'.';
+      let minE=Infinity,lowC=0;
+      table.forEach((row,i)=>row.forEach((o,j)=>{const e=rowT[i]*colT[j]/N;if(e<minE)minE=e;if(e<5)lowC++}));
+      const nCells=rowKeys.length*colKeys.length;
+      if(rowKeys.length===2&&colKeys.length===2&&minE<5){
+        const fx=stkFisher2x2(table[0][0],table[0][1],table[1][0],table[1][1]);
+        const orT=isFinite(fx.or)?fx.or.toFixed(2):'undefined (an empty cell)';
+        html+='<p class="desc"><b>The smallest expected count is '+minE.toFixed(2)+', below 5, so chi-square is unreliable here. Fisher\'s exact test (two-sided): '+fmtP(fx.p)+', odds ratio = '+orT+'.</b> Report the Fisher result.</p>';
+        apa='A Fisher\'s exact test showed '+(sig(fx.p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', '+fmtP(fx.p)+', odds ratio = '+orT+' (N = '+N+').';
+      }else if(lowC/nCells>0.2){
+        html+='<p class="desc">'+lowC+' of '+nCells+' cells have an expected count below 5, more than the 20% limit, so the chi-square p-value is not trustworthy. Merge sparse categories if that makes sense for your question, or ask a statistician about the Fisher-Freeman-Halton exact test.</p>';
+      }
       statsResultsShow(html,apa);
       statsChartGrouped(rowKeys,colKeys,table,n1name+' by '+n2name);
+
+    }else if(key==='welchAnova'){
+      const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name,ivName=d.cols[ivI].name;
+      const groups=statsGroupBy(dvI,ivI),keys=Object.keys(groups);
+      if(keys.length<3){showToast('This test needs 3 or more groups. For 2 groups use the independent t-test (Welch)');return}
+      if(keys.some(k2=>groups[k2].length<2)){showToast('Each group needs at least 2 values');return}
+      const gs=keys.map(k2=>groups[k2]),wa=stkWelchAnova(gs);
+      if(!wa){showToast('One group has no spread at all (every value is the same), so Welch ANOVA cannot be computed');return}
+      const fe=x=>noLead(x.toFixed(2));
+      let html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>M</th><th>SD</th></tr>'+
+        keys.map((k2,i)=>'<tr><td>'+escHTML(k2)+'</td><td>'+gs[i].length+'</td><td>'+smean(gs[i]).toFixed(2)+'</td><td>'+ssd(gs[i]).toFixed(2)+'</td></tr>').join('')+'</table>'+
+        '<p class="desc">Welch F('+wa.df1+', '+wa.df2.toFixed(2)+') = '+wa.F.toFixed(2)+', '+fmtP(wa.p)+', ω² = '+fe(wa.omega2)+' (conventional labels: .01 small, .06 medium, .14 large; they say nothing about importance).</p>';
+      let apa='A Welch one-way ANOVA showed '+(sig(wa.p)?'a significant':'no significant')+' effect of '+ivName+' on '+dvName+', F('+wa.df1+', '+wa.df2.toFixed(2)+') = '+wa.F.toFixed(2)+', '+fmtP(wa.p)+', ω² = '+fe(wa.omega2)+'.';
+      if(sig(wa.p)){
+        const gh=stkGamesHowell(gs);
+        html+='<table class="stats-table"><tr><th>Games-Howell comparison</th><th>Mean difference</th><th>95% CI</th><th>df</th><th>p (adjusted)</th></tr>'+
+          gh.map(q=>'<tr><td>'+escHTML(keys[q.i])+' vs '+escHTML(keys[q.j])+'</td><td>'+q.diff.toFixed(2)+'</td><td>['+q.lo.toFixed(2)+', '+q.hi.toFixed(2)+']</td><td>'+q.df.toFixed(1)+'</td><td>'+(q.p<0.001?'&lt; .001':noLead(q.p.toFixed(3)))+'</td></tr>').join('')+'</table>';
+        apa+=' Games-Howell comparisons: '+gh.map(q=>keys[q.i]+' vs '+keys[q.j]+' (M diff = '+q.diff.toFixed(2)+', 95% CI ['+q.lo.toFixed(2)+', '+q.hi.toFixed(2)+'], '+fmtP(q.p)+')').join('; ')+'.';
+      }else html+='<p class="desc">The overall test is not significant, so no pairwise comparisons are shown.</p>';
+      statsResultsShow(html,apa);
+      statsChartBarMeans(keys,gs.map(smean),gs.map(g=>{const m=smean(g),sd=ssd(g);return{plus:m+sd,minus:m-sd}}),dvName+' by '+ivName+' (mean ± 1 SD)',dvName);
+
+    }else if(key==='gof'){
+      const i1=parseInt(gv('v1'),10),name=d.cols[i1].name;
+      const vals=d.rows.map(r=>r[i1]).filter(v=>v!==undefined&&v!==''),cats=[...new Set(vals)],k=cats.length,N=vals.length;
+      if(k<2){showToast('The variable needs at least 2 categories');return}
+      const obs=cats.map(c=>vals.filter(v=>v===c).length);
+      let share=cats.map(()=>1/k);const txt=(gv('exp')||'').trim();
+      if(txt){
+        const map={};let bad=false;
+        txt.split(',').forEach(part=>{const m=part.trim().match(/^(.+?)\s*[:=]\s*(\d+(?:\.\d+)?)$/);if(!m)bad=true;else map[m[1].trim().toLowerCase()]=parseFloat(m[2])});
+        if(bad||!cats.every(c=>map[c.toLowerCase()]>0)||Object.keys(map).length!==k){showToast('List every category once, like A:50, B:30, C:20. Categories found: '+cats.join(', '));return}
+        const tot=cats.reduce((a,c)=>a+map[c.toLowerCase()],0);share=cats.map(c=>map[c.toLowerCase()]/tot);
+      }
+      const exp=share.map(x=>x*N);let chi2=0;obs.forEach((o,i)=>{chi2+=(o-exp[i])*(o-exp[i])/exp[i]});
+      const df=k-1,p=pFromChi(chi2,df),w=Math.sqrt(chi2/N),minE=Math.min.apply(null,exp);
+      let html='<table class="stats-table"><tr><th>Category</th><th>Observed</th><th>Expected</th><th>Standardised residual</th></tr>'+
+        cats.map((c,i)=>'<tr><td>'+escHTML(c)+'</td><td>'+obs[i]+'</td><td>'+exp[i].toFixed(2)+'</td><td>'+((obs[i]-exp[i])/Math.sqrt(exp[i])).toFixed(2)+'</td></tr>').join('')+'</table>'+
+        '<p class="desc">χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+', Cohen\'s w = '+noLead(w.toFixed(2))+'. A residual beyond ±2 marks a category that departs from what you expected.</p>';
+      let apa='A chi-square goodness-of-fit test showed that the distribution of '+name+' '+(sig(p)?'differed significantly from':'did not differ significantly from')+' the expected distribution, χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+', w = '+noLead(w.toFixed(2))+'.';
+      if(minE<5){
+        if(k===2){
+          const px=stkBinomTwo(obs[0],N,share[0]);
+          html+='<p class="desc"><b>An expected count is below 5, so the exact binomial test is reported: '+fmtP(px)+'.</b></p>';
+          apa='An exact binomial test showed that the proportion of '+cats[0]+' in '+name+' ('+obs[0]+' of '+N+') '+(sig(px)?'differed significantly from':'did not differ significantly from')+' the expected '+noLead(share[0].toFixed(2))+', '+fmtP(px)+'.';
+        }else html+='<p class="desc">An expected count is below 5 ('+minE.toFixed(2)+'), so the chi-square p-value is not reliable. Merge sparse categories if that makes sense, or ask a statistician about an exact multinomial test.</p>';
+      }
+      statsResultsShow(html,apa);
+      statsChartBarMeans(cats,obs,null,name+': observed counts',"Count");
 
     }else if(key==='kruskal'){
       const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name,ivName=d.cols[ivI].name;
