@@ -945,6 +945,17 @@
   <p class="warn" style="margin-top:10px" data-i18n="settings_warn">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
 </div></dialog>
 
+<dialog id="pdSendDlg"><div class="dlg-body">
+  <h2>Personal details in this text</h2>
+  <p id="pdSendList" style="font-size:14px"></p>
+  <p style="font-size:13px;color:var(--muted)">This text goes straight to your AI provider. The check finds email addresses, phone numbers and ID numbers. It cannot find a name written inside a sentence, so read the text once yourself.</p>
+  <div class="row" style="margin-top:12px;flex-wrap:wrap">
+    <button class="btn btn-purple" style="flex:1" id="pdSendMask">Mask them and send</button>
+    <button class="btn btn-ghost" id="pdSendAsIs">Send as it is</button>
+    <button class="btn btn-ghost" id="pdSendNo">Cancel</button>
+  </div>
+</div></dialog>
+
 <dialog id="termsDlg"><div class="dlg-body">
   <h2 data-i18n="terms_h">Before you start</h2>
   <div style="max-height:56vh;overflow:auto;padding-right:6px;font-size:13.5px;line-height:1.6">
@@ -1046,6 +1057,7 @@
   </div>
   <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="tgToggle()" id="tgBtn">🧭 Which test fits my data?</button></div>
   <div id="tgPanel" style="display:none;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px"></div>
+  <div id="pdBox" style="display:none;margin-top:10px"></div>
   <div id="statsCols" style="margin-top:10px"></div>
 
   <div id="statsTestArea" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
@@ -3768,6 +3780,7 @@ async function fetchRetry5xx(doFetch,tries){
 function aiRetriable(e){const m=String(e&&e.message||'');return !/^BLOCKED:|^BADPASS:/.test(m)&&m!=='key'&&/\b429\b|\b5\d\d\b|\b401\b|\b403\b|\b404\b|Failed to fetch|NetworkError|Load failed/i.test(m)}
 function aiFallbackOn(){return LS.get('appu_ai_fallback')!=='0'}
 async function callAI(prompt,opts){
+  if(!(opts&&opts.noScan)){const pp=await pdPreSend(prompt);if(pp===null)throw new Error('Cancelled. Nothing was sent to the AI provider.');prompt=pp}
   try{return await callAIOnce(prompt,opts)}
   catch(e){
     if(window._aiOv||!aiFallbackOn()||!aiRetriable(e))throw e;
@@ -5743,6 +5756,7 @@ function statsParse(){
   const data=statsParseText(text);
   if(!data||!data.cols.length){showToast('Paste some data first — one header row, then your rows');return}
   window._statsData=data;
+  try{pdRender(data)}catch(e){}
   const box=document.getElementById('statsCols');
   box.innerHTML='<p class="desc" style="margin-bottom:4px">'+data.rows.length+' rows detected:</p>'+
     data.cols.map(c=>'<span class="stats-chip '+(c.type==='numeric'?'num':'cat')+'"><b>'+escHTML(c.name)+'</b> · '+c.type+' · n='+c.n+'</span>').join('');
@@ -5756,6 +5770,157 @@ function statsUpload(input){
   r.onload=()=>{document.getElementById('statsPaste').value=String(r.result||'');statsParse();input.value=''};
   r.onerror=()=>{showToast('Could not read that file');input.value=''};
   r.readAsText(f);
+}
+
+/* ============ Personal-data scan (items 47 and 56) ============
+   Deterministic. Looks at column headings and at the shape of the values. It cannot see names
+   written inside open answers, and the interface says so. */
+const PD_HDR=[
+  ['name',/\b(full name|first name|last name|surname|student name|participant name|respondent name|candidate name|name|naam)\b|नाम/i],
+  ['phone',/\b(phone|mobile|contact|cell|whatsapp|telephone|tel)\b/i],
+  ['email',/e ?mail/i],
+  ['roll',/\b(roll|enrol|enrolment|enrollment|registration|reg no|admission|usn|prn|student id|matric)\b/i],
+  ['dob',/\b(dob|d o b|date of birth|birth date|birthday)\b/i],
+  ['address',/\b(address|village|street|pin code|pincode|postcode|zip)\b/i],
+  ['govid',/\b(aadhaar|aadhar|pan|passport|voter)\b/i]
+];
+const PD_LABEL={name:'looks like names',phone:'looks like phone numbers',email:'looks like email addresses',roll:'looks like roll or enrolment numbers',dob:'looks like dates of birth',address:'looks like an address or place',govid:'looks like a government ID number'};
+const PD_DEFAULT={name:'code',roll:'code',phone:'remove',email:'remove',dob:'remove',address:'remove',govid:'remove'};
+function pdTestVal(kind,v){
+  if(kind==='email')return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(v);
+  if(kind==='phone'){const d=v.replace(/[\s\-()]/g,'');return /^(\+?91)?[6-9]\d{9}$/.test(d)}
+  if(kind==='govid'){const d=v.replace(/[\s\-]/g,'');return /^\d{12}$/.test(d)||/^[A-Z]{5}\d{4}[A-Z]$/.test(d)}
+  if(kind==='dob')return /^(\d{1,2}[\/\-.]\d{1,2}[\/\-.](19[4-9]\d|20[01]\d)|(19[4-9]\d|20[01]\d)[\/\-.]\d{1,2}[\/\-.]\d{1,2})$/.test(v);
+  if(kind==='name')return /^[A-Za-z][A-Za-z.'’ ]*[A-Za-z.]\s+[A-Za-z][A-Za-z.'’ ]*$/.test(v);
+  return false;
+}
+function pdScan(data){
+  const out=[],freeText=[];
+  data.headers.forEach((h,i)=>{
+    const vals=data.rows.map(r=>(r[i]||'').trim()).filter(v=>v!=='');
+    if(!vals.length)return;
+    const uniq=new Set(vals).size/vals.length,hn=String(h).toLowerCase().replace(/[_\-.]+/g,' ');
+    let kind=null,why='';
+    for(const k of ['email','phone','govid','dob']){
+      if(vals.filter(v=>pdTestVal(k,v)).length/vals.length>=0.6){kind=k;why='values';break}
+    }
+    if(!kind){
+      for(const hk of PD_HDR){
+        if(hk[1].test(hn)){
+          if(hk[0]==='name'&&/\b(group|scale|test|condition|class|school|college|item|variable|file|sheet|course|city|state|country|institution|department|subject|task|study)\b/.test(hn))continue;
+          if((hk[0]==='name'||hk[0]==='roll')&&vals.length>=4&&uniq<0.5)continue;
+          kind=hk[0];why='heading';break;
+        }
+      }
+    }
+    if(!kind&&vals.length>=3&&uniq>=0.8&&vals.filter(v=>pdTestVal('name',v)).length/vals.length>=0.7){kind='name';why='values'}
+    if(kind)out.push({index:i,name:h||('Col'+(i+1)),kind,why});
+    else if(!/^-?\d+(\.\d+)?$/.test(vals[0])){
+      const mean=vals.reduce((a,v)=>a+v.length,0)/vals.length;
+      if(mean>40||vals.some(v=>v.length>120))freeText.push(h||('Col'+(i+1)));
+    }
+  });
+  return{found:out,freeText};
+}
+function pdCsvCell(v){v=String(v==null?'':v);return /[",\r\n\t]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function pdCsv(headers,rows){return[headers].concat(rows).map(r=>r.map(pdCsvCell).join(',')).join('\n')}
+/* choices: {colIndex:'keep'|'remove'|'code'}. Pure function, no page access. */
+function pdTransform(data,choices){
+  const codeCols=[],dropCols=[];
+  data.headers.forEach((h,i)=>{const c=choices[i];if(c==='code')codeCols.push(i);else if(c==='remove')dropCols.push(i)});
+  const gone=new Set(codeCols.concat(dropCols));
+  const keepIdx=data.headers.map((h,i)=>i).filter(i=>!gone.has(i));
+  let headers=keepIdx.map(i=>data.headers[i]),rows;
+  const key={headers:[],rows:[]};
+  if(codeCols.length){
+    const first=codeCols[0],map=new Map(),pad=Math.max(3,String(data.rows.length).length);
+    let n=0;const codes=[];
+    data.rows.forEach((r,ri)=>{
+      const v=(r[first]||'').trim();let code;
+      if(v!==''&&map.has(v))code=map.get(v);
+      else{n++;code='P'+String(n).padStart(pad,'0');if(v!=='')map.set(v,code);key.rows.push([code].concat(codeCols.map(c=>r[c]||'')))}
+      codes.push(code);
+    });
+    key.headers=['ParticipantCode'].concat(codeCols.map(c=>data.headers[c]||('Col'+(c+1))));
+    const at=Math.max(0,keepIdx.filter(i=>i<first).length);
+    headers=headers.slice(0,at).concat(['ParticipantCode'],headers.slice(at));
+    rows=data.rows.map((r,ri)=>{const base=keepIdx.map(i=>r[i]);return base.slice(0,at).concat([codes[ri]],base.slice(at))});
+  }else rows=data.rows.map(r=>keepIdx.map(i=>r[i]));
+  return{headers,rows,key,removed:dropCols.length,coded:codeCols.length,csv:pdCsv(headers,rows),keyCsv:key.rows.length?pdCsv(key.headers,key.rows):''};
+}
+function pdRender(data){
+  const box=document.getElementById('pdBox');if(!box)return;
+  const sc=pdScan(data);window._pdScan=sc;
+  const note='<p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">This check reads column headings and the shape of the values. It cannot see a name typed inside an open answer'+(sc.freeText.length?' (columns with long text: '+sc.freeText.map(escHTML).join(', ')+')':'')+'. Read those yourself before they go anywhere.</p>';
+  if(!sc.found.length){
+    box.style.display='block';
+    box.innerHTML=(window._pdMsg?'<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px">'+window._pdMsg+'</div>':'<div style="font-size:13.5px">No column looks like names, phone numbers, emails, roll numbers or birth dates.</div>')+note;
+    window._pdMsg=null;return;
+  }
+  window._pdMsg=null;
+  box.style.display='block';
+  box.innerHTML='<div style="border:1px solid #d97706;background:rgba(217,119,6,.08);border-radius:10px;padding:12px">'+
+    '<b>Possible personal details found</b>'+
+    '<p style="font-size:13.5px;margin:6px 0 8px">Choose what to do with each column. Removing is safest. A code keeps rows linked to one person without showing who, and you get a key file that maps each code back.</p>'+
+    sc.found.map(f=>'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0;font-size:13.5px"><span style="flex:1;min-width:180px"><b>'+escHTML(f.name)+'</b> '+PD_LABEL[f.kind]+'</span>'+
+      '<select id="pdSel_'+f.index+'" style="min-width:150px"><option value="remove"'+(PD_DEFAULT[f.kind]==='remove'?' selected':'')+'>Remove column</option><option value="code"'+(PD_DEFAULT[f.kind]==='code'?' selected':'')+'>Replace with a code</option><option value="keep">Keep as it is</option></select></div>').join('')+
+    '<div class="row" style="margin-top:10px"><button class="btn btn-purple" style="flex:1" onclick="pdApply()">Apply</button></div>'+
+    '<p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">A code is pseudonymisation, not anonymisation. While the key file exists, the data still counts as personal data. Keep the key file away from the data, for example on a different drive, and share only the coded data. If you lose the key file, nobody can recover the names.</p>'+
+    '</div>'+note;
+}
+function pdDownload(name,text){
+  const b=new Blob(['﻿'+text],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+function pdApply(){
+  const data=window._statsData,sc=window._pdScan;if(!data||!sc)return;
+  const choices={};sc.found.forEach(f=>{const el=document.getElementById('pdSel_'+f.index);choices[f.index]=el?el.value:'keep'});
+  const r=pdTransform(data,choices);
+  if(!r.removed&&!r.coded){window._pdMsg='Nothing changed. You chose to keep every flagged column.';statsParse();return}
+  document.getElementById('statsPaste').value=r.csv;
+  let msg='Done. '+(r.removed?r.removed+' column'+(r.removed>1?'s':'')+' removed. ':'')+(r.coded?r.coded+' column'+(r.coded>1?'s':'')+' replaced with ParticipantCode. ':'');
+  if(r.keyCsv){pdDownload('appuscholar_key_keep_separate.csv',r.keyCsv);msg+='The key file was downloaded. Store it apart from the data.'}
+  window._pdMsg=msg;
+  statsParse();
+}
+/* Check text before it goes to an AI provider. Emails, phone numbers, ID numbers only. */
+const PD_SEND=[
+  ['email address',/([^\s@<>"']+@[^\s@<>"']+\.[A-Za-z]{2,})/g,'[email]',null],
+  ['phone number',/(^|\D)((?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5})(?!\d)/g,'[phone]',1],
+  ['ID number',/(^|\D)(\d{4}\s\d{4}\s\d{4}|\d{12}|[A-Z]{5}\d{4}[A-Z])(?![A-Za-z0-9])/g,'[id number]',1]
+];
+function pdScanText(text){
+  const counts={};let total=0;const seen=[];
+  PD_SEND.forEach(k=>{const m=String(text).match(k[1]);if(m&&m.length){counts[k[0]]=m.length;total+=m.length;seen.push(k[0]+m.join('|'))}});
+  return{counts,total,sig:seen.join('||')};
+}
+function pdMask(text){
+  let o=String(text);
+  PD_SEND.forEach(k=>{o=o.replace(k[1],(m,a,b)=>k[3]?a+k[2]:k[2])});
+  return o;
+}
+function pdAsk(sc){
+  return new Promise(res=>{
+    const d=document.getElementById('pdSendDlg');let done=false;
+    const fin=v=>{if(done)return;done=true;try{if(d.open)d.close()}catch(e){}res(v)};
+    document.getElementById('pdSendList').textContent='Found: '+Object.keys(sc.counts).map(k=>sc.counts[k]+' '+k+(sc.counts[k]>1?'s':'')).join(', ')+'.';
+    document.getElementById('pdSendMask').onclick=()=>fin('mask');
+    document.getElementById('pdSendAsIs').onclick=()=>fin('send');
+    document.getElementById('pdSendNo').onclick=()=>fin('cancel');
+    d.onclose=()=>fin('cancel');
+    d.showModal();
+  });
+}
+async function pdPreSend(prompt){
+  const sc=pdScanText(prompt);
+  if(!sc.total)return prompt;
+  window._pdOk=window._pdOk||{};
+  if(window._pdOk[sc.sig])return prompt;
+  const a=await pdAsk(sc);
+  if(a==='cancel')return null;
+  if(a==='send'){window._pdOk[sc.sig]=1;return prompt}
+  return pdMask(prompt);
 }
 
 const STAT_TESTS={
@@ -6273,7 +6438,7 @@ function tgDemoHTML(r){
 function tgBackToMine(){
   const sv=window._tgSaved;if(!sv)return;
   document.getElementById('statsPaste').value=sv.paste;
-  if(sv.paste.trim()){statsParse()}else{window._statsData=null;document.getElementById('statsCols').innerHTML='';document.getElementById('statsTestArea').style.display='none'}
+  if(sv.paste.trim()){statsParse()}else{window._statsData=null;document.getElementById('statsCols').innerHTML='';try{document.getElementById('pdBox').style.display='none'}catch(e){}document.getElementById('statsTestArea').style.display='none'}
   document.getElementById('statsResults').innerHTML='';
   window._tgSaved=null;const o=document.getElementById('tgDemoOut');if(o)o.innerHTML='';
   showToast('Your own data is back.');
