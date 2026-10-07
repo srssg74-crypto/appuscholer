@@ -600,6 +600,7 @@
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()" data-i18n="stats_chart_open_btn">Open Chart Maker</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="vzOpen()" data-i18n="vz_open_btn">📈 Open Chart Studio (box plot, bars with error bars, histogram, Q-Q)</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ncOpen()" data-i18n="nc_btn">🔢 Check the numbers in my document</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="slOpen()">📋 Scale library</button></div>
     </div></section>
 
     <section class="card tool-panel" data-panel="qual"><div class="panel">
@@ -943,6 +944,23 @@
   <p class="desc" id="aiTestOut" style="margin:6px 0 0;font-weight:600;word-break:break-word"></p>
   <p style="font-size:12px;color:var(--muted)" id="activeProv"></p>
   <p class="warn" style="margin-top:10px" data-i18n="settings_warn">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
+</div></dialog>
+
+<dialog id="scaleDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>📋 Scale library</h2>
+  <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Published scales with the owner's own wording. The text is fixed and never rewritten by the AI, because a reworded item is no longer the validated item. Each scale shows its licence record. Check that the terms fit your use before you put a scale in a study.</p>
+  <div id="slList"></div>
+  <div id="slView" style="margin-top:10px"></div>
+  <div class="row" style="margin-top:10px"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('scaleDlg').close()">Close</button></div>
+</div></dialog>
+
+<dialog id="slScoreDlg" class="dlg-wide"><div class="dlg-body">
+  <h2 id="slScoreH">Score a scale</h2>
+  <p style="font-size:13.5px" id="slScoreIntro"></p>
+  <div id="slScoreMap"></div>
+  <div class="fld"><label for="slCoding">How are your answers coded in the data?</label><select id="slCoding"></select></div>
+  <div id="slScoreOut" style="font-size:13.5px;margin-top:8px" aria-live="polite"></div>
+  <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-purple" style="flex:1" onclick="slScoreRun()">Compute scores and add them to my data</button><button class="btn btn-ghost" onclick="document.getElementById('slScoreDlg').close()">Close</button></div>
 </div></dialog>
 
 <dialog id="guideDlg" class="dlg-wide"><div class="dlg-body">
@@ -6049,6 +6067,15 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p><b>Personal-data scan.</b> When you parse, the lab flags columns that look like names, phone numbers, emails, roll numbers or birth dates, and offers to remove them or replace them with codes. See <i>Handling participant data</i>.</p>
 <p><b>Worked example.</b> Two groups, ten scores each. Choose the independent-samples t-test. The lab reports a Welch t, the degrees of freedom, p, Hedges' g, and a sentence you can paste into your results.</p>
 <p>Anything the lab cannot compute, such as a two-way ANOVA or multiple regression, needs another program for now.</p>`},
+{id:'scales',g:'Tools',t:'Scale library',k:'scale library questionnaire rosenberg swls self-esteem life satisfaction score reverse licence attribution codebook',h:`
+<p>Open <b>Scale library</b> in the Statistics panel. Each scale shows the owner's wording, the response options, how to score it, and a licence record: what the owner allows, whether commercial use is allowed, the credit line to print, and when it was checked. The text is fixed. The AI never rewrites it, because a reworded item is no longer the validated item.</p>
+<ul>
+<li><b>Copy the questionnaire text</b> copies the stem, the options and the items with the credit line.</li>
+<li><b>Download the item list</b> gives a variable name, label and reverse-scoring flag for each item, ready for a codebook.</li>
+<li><b>Score this scale in my data</b> matches items to your columns, reverse-scores the right items, adds a total column (and a band column where the owner publishes bands), and reports your sample's mean, SD and Cronbach's alpha.</li>
+</ul>
+<p>Today the library holds the Rosenberg Self-Esteem Scale and the Satisfaction With Life Scale. More scales arrive once the owner's original file is checked. Anything you add yourself still needs the owner's permission.</p>
+<p><b>Worked example.</b> Paste ten columns named RSES_01 to RSES_10 with answers coded 0 to 3. Press Parse data, open the Scale library, pick the Rosenberg scale and press Score this scale in my data. A column named RSES_total appears.</p>`},
 {id:'numcheck',g:'Tools',t:'Check the numbers in my document',k:'numbers check p value recompute apa statistics reporting errors',h:`
 <p>Press <b>Check the numbers in my document</b> in the Statistics panel. It finds results written in the usual APA order, such as <i>t(21) = 2.15, p = .043</i>, recomputes p from the statistic and degrees of freedom, and marks each one as matching, close, or wrong.</p>
 <p>It catches typos, rounding slips, and a p that was written as significant when the numbers say otherwise. It cannot tell you whether you picked the right test.</p>`},
@@ -6244,6 +6271,129 @@ function repCopy(quiet){
   try{navigator.clipboard.writeText(t).then(done,()=>showToast('Could not copy. Select the text by hand.'))}catch(e){showToast('Could not copy. Select the text by hand.')}
 }
 function repClear(){LS.rm('appu_usage');_errLog.length=0;repRender();showToast('Counts cleared')}
+
+/* ============ Scale library (items 41 and 50, first version) ============
+   Item text is copied from the owner's published form and is never edited by the AI.
+   A scale enters this list only when two independent copies agree word for word and the owner's
+   permission statement was read. Others wait for the owner's own file. */
+const SCALES=[
+{id:'RSES',name:'Rosenberg Self-Esteem Scale',short:'RSES',construct:'Global self-esteem',
+ stem:'Below is a list of statements dealing with your general feelings about yourself. Please indicate how strongly you agree or disagree with each statement.',
+ items:['On the whole, I am satisfied with myself.','At times, I think I am no good at all.','I feel that I have a number of good qualities.','I am able to do things as well as most other people.','I feel I do not have much to be proud of.','I certainly feel useless at times.','I feel that I\'m a person of worth, at least on an equal plane with others.','I wish I could have more respect for myself.','All in all, I am inclined to feel that I am a failure.','I take a positive attitude toward myself.'],
+ labels:['Strongly agree','Agree','Disagree','Strongly disagree'],
+ codings:[{label:'Strongly agree = 3 down to Strongly disagree = 0 (Rosenberg original)',min:0,max:3,dir:'agree-high'},{label:'Strongly agree = 4 down to Strongly disagree = 1',min:1,max:4,dir:'agree-high'}],
+ reverse:[2,5,6,8,9],bands:null,
+ scoring:'Add the ten items after reverse-scoring items 2, 5, 6, 8 and 9. Higher totals mean higher self-esteem. The owner gives no official cut-off scores.',
+ licence:{status:'Public domain',commercial:true,attribution:'Rosenberg, M. (1965). Society and the adolescent self-image. Princeton University Press.',source:'https://socy.umd.edu/about-us/using-rosenberg-self-esteem-scale',checked:'2026-10-07',
+  note:'The University of Maryland states: the scale is in the public domain, may be used without charge and without notifying the Sociology Department, including translations and adaptations, with traditional scholarly attribution.',
+  verified:'Item text agreed word for word between two independent web copies. Compare once with the printed scale you cite.'},
+ screening:false,hindi:null},
+{id:'SWLS',name:'Satisfaction With Life Scale',short:'SWLS',construct:'Global life satisfaction',
+ stem:'Below are five statements that you may agree or disagree with. Using the 1 to 7 scale below, indicate your agreement with each item. Please be open and honest in your responding.',
+ items:['In most ways my life is close to my ideal.','The conditions of my life are excellent.','I am satisfied with my life.','So far I have gotten the important things I want in life.','If I could live my life over, I would change almost nothing.'],
+ labels:['Strongly disagree','Disagree','Slightly disagree','Neither agree nor disagree','Slightly agree','Agree','Strongly agree'],
+ codings:[{label:'Strongly disagree = 1 up to Strongly agree = 7',min:1,max:7,dir:'agree-high'}],
+ reverse:[],
+ bands:[{max:9,label:'Extremely dissatisfied'},{max:14,label:'Dissatisfied'},{max:19,label:'Slightly below average'},{max:24,label:'Average'},{max:29,label:'High satisfaction'},{max:35,label:'Very high satisfaction'}],
+ scoring:'Add the five items. The total runs from 5 to 35. The bands come from the scale\'s own scoring guide and describe a score. They do not diagnose anything.',
+ licence:{status:'Free to use with credit',commercial:false,attribution:'Diener, E., Emmons, R. A., Larsen, R. J., & Griffin, S. (1985). The Satisfaction With Life Scale. Journal of Personality Assessment, 49(1), 71-75.',source:'https://ggsc.berkeley.edu/images/uploads/Satisfaction_With_Life_Scale.pdf',checked:'2026-10-07',
+  note:'Free to use without permission or charge for non-commercial purposes, with credit to the authors. Do not use it in anything that is sold.',
+  verified:'Item text agreed word for word between two independent web copies (Berkeley GGSC and the TBI Model Systems page). Compare once with the owner\'s page.'},
+ screening:false,hindi:null}
+];
+const SL_PENDING='PHQ-9, GAD-7, PHQ-2, GAD-2, AUDIT, DASS-21, MSPSS, UCLA Loneliness v3, General Self-Efficacy, Mini-IPIP and Grit-S are cleared in the research notes but wait for the owner\'s original file, so the wording is copied exactly. Screening scales (PHQ-9, GAD-7, AUDIT) also need the on-screen help path for self-harm answers before they go in.';
+function slById(id){return SCALES.find(x=>x.id===id)}
+function slOpen(){
+  document.getElementById('slView').innerHTML='';
+  document.getElementById('slList').innerHTML=SCALES.map(x=>'<button class="btn btn-ghost" style="margin:3px 6px 3px 0" onclick="slPick(\''+x.id+'\')"><b>'+x.short+'</b> · '+x.construct+'</button>').join('')+'<p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">Not yet in the library: '+SL_PENDING+'</p>';
+  const d=document.getElementById('scaleDlg');if(!d.open)d.showModal();
+}
+function slVarNames(x){const w=Math.max(2,String(x.items.length).length);return x.items.map((_,i)=>x.id+'_'+String(i+1).padStart(w,'0'))}
+function slText(x,withCredit){
+  const L=[x.name+' ('+x.short+')','',x.stem,'','Response options: '+x.labels.join(' | '),''];
+  x.items.forEach((t,i)=>L.push((i+1)+'. '+t));
+  if(withCredit!==false)L.push('','Source: '+x.licence.attribution);
+  return L.join('\n');
+}
+function slPick(id){
+  const x=slById(id);if(!x)return;const e=escHTML,lc=x.licence;
+  document.getElementById('slView').innerHTML=
+   '<div style="border:1px solid var(--line);border-radius:10px;padding:12px">'+
+   '<h3 style="margin:0 0 6px">'+e(x.name)+' ('+x.short+')</h3>'+
+   '<p style="font-size:13.5px;margin:0 0 6px">'+e(x.stem)+'</p>'+
+   '<p style="font-size:13px;color:var(--muted);margin:0 0 6px">Response options: '+x.labels.map(e).join(' | ')+'</p>'+
+   '<ol style="font-size:13.5px;line-height:1.6;margin:0 0 8px 18px">'+x.items.map((t,i)=>'<li>'+e(t)+(x.reverse.indexOf(i+1)>=0?' <span style="color:var(--muted);font-size:12px">(reverse-scored)</span>':'')+'</li>').join('')+'</ol>'+
+   '<p style="font-size:13px"><b>Scoring.</b> '+e(x.scoring)+'</p>'+
+   '<div style="font-size:12.5px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0"><b>Licence record.</b> '+e(lc.status)+'. Commercial use: '+(lc.commercial?'allowed':'not allowed')+'. Checked '+e(lc.checked)+'.<br>'+e(lc.note)+'<br>Credit line to print with the scale: '+e(lc.attribution)+'<br>Source: <a href="'+e(lc.source)+'" target="_blank" rel="noopener">'+e(lc.source)+'</a><br><i>'+e(lc.verified)+'</i></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="slCopy(\''+x.id+'\')">Copy the questionnaire text</button><button class="btn btn-ghost" onclick="slCodebook(\''+x.id+'\')">Download the item list (CSV)</button><button class="btn btn-ghost" onclick="slScoreOpen(\''+x.id+'\')">Score this scale in my data</button></div>'+
+   '</div>';
+}
+function slCopy(id){
+  const x=slById(id);if(!x)return;
+  try{navigator.clipboard.writeText(slText(x)).then(()=>showToast('Copied with its credit line'),()=>showToast('Could not copy. Select the text by hand.'))}catch(e){showToast('Could not copy. Select the text by hand.')}
+}
+function slCodebook(id){
+  const x=slById(id);if(!x)return;const names=slVarNames(x);
+  const rows=x.items.map((t,i)=>[names[i],t,x.reverse.indexOf(i+1)>=0?'yes':'no',x.codings[0].min+' to '+x.codings[0].max,x.short]);
+  pdDownload(x.id+'_items.csv',pdCsv(['variable','label','reverse_scored','response_codes','scale'],rows));
+}
+/* pure scorer: mat is rows of item answers (numbers or null); coding {min,max}. */
+function slScore(x,mat,coding){
+  const flip=v=>coding.min+coding.max-v,out=[];let bad=0,miss=0;
+  mat.forEach(r=>{
+    let tot=0,ok=true;
+    r.forEach((v,j)=>{
+      if(v==null||v===''||isNaN(v)){ok=false;miss++;return}
+      if(v<coding.min||v>coding.max||Math.round(v)!==v){ok=false;bad++;return}
+      tot+=x.reverse.indexOf(j+1)>=0?flip(v):v;
+    });
+    out.push(ok?tot:null);
+  });
+  return{totals:out,bad:bad,miss:miss};
+}
+function slBand(x,t){if(t==null||!x.bands)return '';for(const b of x.bands)if(t<=b.max)return b.label;return x.bands[x.bands.length-1].label}
+function slScoreOpen(id){
+  const x=slById(id),data=window._statsData;
+  if(!x)return;
+  if(!data){showToast('Parse your data in the Statistics Lab first');return}
+  window._slCur=x;
+  document.getElementById('slScoreH').textContent='Score the '+x.short;
+  document.getElementById('slScoreIntro').textContent='Match each item to its column. Items that need reverse-scoring are handled for you. Give the data as the raw answers, not already reversed.';
+  const names=slVarNames(x),headers=data.headers,pre=x.id.toLowerCase();
+  document.getElementById('slScoreMap').innerHTML=x.items.map((t,i)=>{
+    let guess=headers.findIndex(h=>h.toLowerCase().replace(/[^a-z0-9]/g,'')===names[i].toLowerCase().replace(/[^a-z0-9]/g,''));
+    if(guess<0)guess=headers.findIndex(h=>{const z=h.toLowerCase().replace(/[^a-z0-9]/g,'');return z.indexOf(pre)===0&&parseInt(z.replace(/\D/g,''),10)===i+1});
+    return '<div style="display:flex;gap:8px;align-items:center;margin:4px 0;font-size:13px"><span style="flex:1">'+(i+1)+'. '+escHTML(t)+(x.reverse.indexOf(i+1)>=0?' <i style="color:var(--muted)">(reverse)</i>':'')+'</span><select id="slm_'+i+'" style="min-width:140px"><option value="-1">Choose a column</option>'+headers.map((h,k)=>'<option value="'+k+'"'+(k===guess?' selected':'')+'>'+escHTML(h||('Col'+(k+1)))+'</option>').join('')+'</select></div>';
+  }).join('');
+  document.getElementById('slCoding').innerHTML=x.codings.map((c,i)=>'<option value="'+i+'">'+escHTML(c.label)+'</option>').join('');
+  document.getElementById('slScoreOut').textContent='';
+  const d=document.getElementById('slScoreDlg');if(!d.open)d.showModal();
+}
+function slScoreRun(){
+  const x=window._slCur,data=window._statsData,out=document.getElementById('slScoreOut');
+  if(!x||!data)return;
+  const idx=x.items.map((_,i)=>parseInt(document.getElementById('slm_'+i).value,10));
+  if(idx.some(v=>v<0)){out.textContent='Choose a column for every item.';return}
+  if(new Set(idx).size!==idx.length){out.textContent='Each item needs its own column.';return}
+  const coding=x.codings[parseInt(document.getElementById('slCoding').value,10)||0];
+  const mat=data.rows.map(r=>idx.map(k=>{const v=String(r[k]==null?'':r[k]).trim();return v===''?null:Number(v)}));
+  const r=slScore(x,mat,coding),valid=r.totals.filter(v=>v!=null);
+  if(!valid.length){out.textContent='No row could be scored. '+(r.bad?r.bad+' answers fall outside '+coding.min+' to '+coding.max+'. Check the coding choice above. ':'')+(r.miss?r.miss+' answers are missing.':'');return}
+  const col=x.id+'_total',band=x.id+'_band';
+  const cols=data.headers.slice();
+  const nameFree=n=>{let m=n,i=2;while(cols.indexOf(m)>=0)m=n+'_'+(i++);return m};
+  const cT=nameFree(col),cB=x.bands?nameFree(band):null;
+  const newHeaders=data.headers.concat([cT],cB?[cB]:[]);
+  const newRows=data.rows.map((row,i)=>row.concat([r.totals[i]==null?'':String(r.totals[i])],cB?[slBand(x,r.totals[i])]:[]));
+  /* alpha on the reverse-scored items, rows with every item valid */
+  const flip=v=>coding.min+coding.max-v;
+  const A=mat.filter((m,i)=>r.totals[i]!=null).map(m=>m.map((v,j)=>x.reverse.indexOf(j+1)>=0?flip(v):v));
+  let al=null;if(A.length>=3&&x.items.length>=2){try{al=stkAlpha(A)}catch(e){}}
+  const mean=valid.reduce((a,b)=>a+b,0)/valid.length,sd=valid.length>1?Math.sqrt(valid.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(valid.length-1)):0;
+  document.getElementById('statsPaste').value=pdCsv(newHeaders,newRows);
+  window._pdMsg=null;statsParse();
+  out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'');
+}
 
 const STAT_TESTS={
   desc:{label:'Descriptive statistics',fields:[{id:'dv',label:'Variable',type:'numeric'}]},
