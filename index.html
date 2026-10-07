@@ -1012,6 +1012,8 @@
     <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('statsFile').click()">📂 Upload .csv</button>
     <input type="file" id="statsFile" accept=".csv,.tsv,.txt" style="display:none" onchange="statsUpload(this)">
   </div>
+  <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="tgToggle()" id="tgBtn">🧭 Which test fits my data?</button></div>
+  <div id="tgPanel" style="display:none;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px"></div>
   <div id="statsCols" style="margin-top:10px"></div>
 
   <div id="statsTestArea" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
@@ -1055,7 +1057,7 @@
   <div class="row" style="margin-top:12px">
     <button class="btn btn-ghost" onclick="document.getElementById('statsDlg').close()">Close</button>
   </div>
-  <p class="warn" style="margin-top:10px">📐 These formulas cover the common cases correctly (Student's independent t, average-rank non-parametric tests, standard ANOVA/chi-square). For an unusual design, or before a dissertation defense, cross-check against SPSS or JASP.</p>
+  <p class="warn" style="margin-top:10px">📐 These formulas cover the common cases correctly (Welch's independent t, average-rank non-parametric tests, standard ANOVA/chi-square). For an unusual design, or before a dissertation defense, cross-check against SPSS or JASP.</p>
 </div></dialog>
 
 <dialog id="vzDlg" class="dlg-wide"><div class="dlg-body">
@@ -5750,6 +5752,142 @@ async function statsExplain(){
   }catch(e){out.textContent=prev;showToast(apiMsg(e))}
 }
 
+/* ---- "Which test fits my data?" guide (2026-10-07). Fixed rules, no AI. Decisions follow the research notes of 6 Oct 2026. ---- */
+const TG_Q={
+  goal:{q:'What do you want to find out?',o:[['compare','Compare scores between groups, conditions or times'],['relate','See how two variables move together'],['predict','Predict one variable from others'],['reliab','Check whether the items of a scale hang together'],['counts','Compare counts in categories (yes/no, groups, types)']]},
+  cmpOut:{q:'What kind of score are you comparing?',o:[['scale','A number such as a total or mean score (for example a 0 to 40 anxiety total)'],['ordinal','A single rating item or ranks (for example one question answered 1 to 5)']]},
+  cmpDes:{q:'How many groups or conditions?',o:[['one','One group, compared with a known value'],['two','Two groups or two conditions'],['three','Three or more groups or conditions'],['factors','Two things varied at once (two factors, for example gender and treatment)']]},
+  smp:{q:'Are they different people in each group, or the same people measured more than once (or matched pairs)?',o:[['ind','Different people in each group'],['rel','The same people repeatedly, or matched pairs']]},
+  relOut:{q:'What kind of scores are the two variables?',o:[['scale','Both are numbers (totals, means, ages)'],['ordinal','At least one is a single rating item or a ranking']]},
+  prdOut:{q:'What are you predicting?',o:[['scale','A number (a total or mean score)'],['binary','A yes/no outcome']]},
+  prdN:{q:'How many predictors?',o:[['one','One'],['many','Two or more']]},
+  cntDes:{q:'What is your design?',o:[['gof','One variable, against counts you expected'],['ind','Two categorical variables, different people'],['rel2','Same people twice, a yes/no answer each time'],['rel3','Same people three or more times, a yes/no answer each time']]}
+};
+function tgNext(a){
+  const g=a.goal;
+  if(!g)return{ask:'goal'};
+  if(g==='reliab')return{res:tgRes('alpha',a)};
+  if(g==='relate'){if(!a.relOut)return{ask:'relOut'};return{res:tgRes(a.relOut==='scale'?'pearson':'spearman',a)}}
+  if(g==='predict'){
+    if(!a.prdOut)return{ask:'prdOut'};
+    if(a.prdOut==='binary')return{res:tgRes('logistic',a)};
+    if(!a.prdN)return{ask:'prdN'};
+    return{res:tgRes(a.prdN==='one'?'regression':'multreg',a)};
+  }
+  if(g==='counts'){
+    if(!a.cntDes)return{ask:'cntDes'};
+    return{res:tgRes({gof:'gof',ind:'chisq',rel2:'mcnemar',rel3:'cochran'}[a.cntDes],a)};
+  }
+  if(!a.cmpOut)return{ask:'cmpOut'};
+  if(!a.cmpDes)return{ask:'cmpDes'};
+  const o=a.cmpOut,d=a.cmpDes;
+  if(d==='one')return{res:tgRes(o==='scale'?'ttest1':'wilcox1',a)};
+  if(d==='factors')return{res:tgRes('twoway',a)};
+  if(!a.smp)return{ask:'smp'};
+  if(d==='two'){
+    if(a.smp==='ind')return{res:tgRes(o==='scale'?'ttestInd':'mannwhitney',a)};
+    return{res:tgRes(o==='scale'?'ttestPaired':'wilcoxon',a)};
+  }
+  if(a.smp==='ind')return{res:tgRes(o==='scale'?'anova1':'kruskal',a)};
+  return{res:tgRes(o==='scale'?'rmanova':'friedman',a)};
+}
+const TG_RES={
+  alpha:{name:"McDonald's omega with Cronbach's alpha",keys:['alpha'],why:'Reliability of a multi-item scale. Report the value with its interval and do not hold it against a fixed pass mark.',alt:[]},
+  pearson:{name:'Pearson correlation',keys:['pearson'],why:'Two numeric scores and a question about how they move together. Correlation does not show cause.',alt:[['spearman','Spearman, if the plot is curved but still rising or falling, or if a few extreme values drive the result']]},
+  spearman:{name:'Spearman correlation',keys:['spearman'],why:'A rating item or ranks are involved, so a rank-based correlation fits.',alt:[]},
+  regression:{name:'Simple linear regression',keys:['regression'],why:'One numeric predictor and a numeric outcome.',alt:[['pearson','Pearson, if you only need the strength of the relationship']]},
+  multreg:{name:'Multiple regression',keys:[],why:'Two or more predictors of a numeric outcome. Plan on 10 to 20 cases per predictor.',alt:[]},
+  logistic:{name:'Logistic regression',keys:[],why:'A yes/no outcome predicted from other variables.',alt:[]},
+  gof:{name:'Chi-square goodness-of-fit',keys:[],why:'One categorical variable against counts you expected. If any expected count is below 5, an exact test is the better choice.',alt:[]},
+  chisq:{name:'Chi-square test of independence',keys:['chisq'],why:'Two categorical variables, different people.',alt:[],note:'If any expected count is below 5, Fisher\'s exact test is the right test. The app does not run it yet, so check the expected counts in the box below.'},
+  mcnemar:{name:'McNemar test',keys:[],why:'Same people, a yes/no answer at two times.',alt:[]},
+  cochran:{name:"Cochran's Q",keys:[],why:'Same people, a yes/no answer at three or more times.',alt:[]},
+  ttest1:{name:'One-sample t-test',keys:['ttest1'],why:'One group compared with a fixed value.',alt:[]},
+  wilcox1:{name:'One-sample Wilcoxon signed-rank',keys:[],why:'One group of ratings or ranks compared with a fixed value.',alt:[]},
+  ttestInd:{name:"Welch's independent-samples t-test",keys:['ttestInd'],why:'Different people in two groups. Welch\'s version does not need equal spread in the two groups and loses almost nothing when the spread is equal, so there is no need to test for equal variances first.',alt:[['mannwhitney','Mann-Whitney U, if the groups are small and the scores skewed or have extreme values']]},
+  mannwhitney:{name:'Mann-Whitney U',keys:['mannwhitney'],why:'Different people in two groups, with ratings or ranks. It shows whether one group tends to score higher.',alt:[]},
+  ttestPaired:{name:'Paired-samples t-test',keys:['ttestPaired'],why:'The same people twice, or matched pairs. Each person is their own control.',alt:[['wilcoxon','Wilcoxon signed-rank, if the differences are skewed or have extreme values']]},
+  wilcoxon:{name:'Wilcoxon signed-rank',keys:['wilcoxon'],why:'The same people twice with ratings or ranks.',alt:[]},
+  anova1:{name:'One-way ANOVA',keys:['anova1'],why:'Three or more separate groups and a numeric score.',alt:[['kruskal','Kruskal-Wallis, if the groups are small and the scores skewed or have extreme values'],['tukey','Tukey HSD, after a significant ANOVA, to see which pairs differ']],note:'The app runs the classic ANOVA, which assumes similar spread in every group. Welch\'s ANOVA with Games-Howell is the better default when group sizes differ, and it is on the build list.'},
+  kruskal:{name:'Kruskal-Wallis with Dunn follow-up',keys:['kruskal'],why:'Three or more separate groups with ratings or ranks.',alt:[]},
+  rmanova:{name:'Repeated-measures ANOVA',keys:[],why:'The same people measured three or more times. Apply the Greenhouse-Geisser correction.',alt:[]},
+  friedman:{name:'Friedman test',keys:[],why:'The same people three or more times with ratings or ranks.',alt:[]},
+  twoway:{name:'Two-way ANOVA or a mixed design',keys:[],why:'Two factors at once. Which version applies depends on whether either factor is repeated on the same people.',alt:[]}
+};
+function tgRes(k,a){const r=TG_RES[k];return Object.assign({id:k,built:r.keys.length>0},r)}
+function tgState(){return window._tg||(window._tg={})}
+function tgToggle(){
+  const p=document.getElementById('tgPanel');
+  if(p.style.display==='none'){window._tg={};p.style.display='block';tgRender()}else p.style.display='none';
+}
+function tgAnswer(q,v){const a=tgState();a[q]=v;tgRender()}
+function tgBack(){
+  const a=tgState(),order=['goal','cmpOut','relOut','prdOut','prdN','cntDes','cmpDes','smp'];
+  for(let i=order.length-1;i>=0;i--)if(a[order[i]]!==undefined){delete a[order[i]];break}
+  if(!a.goal){delete a.cmpOut;delete a.relOut;delete a.prdOut;delete a.prdN;delete a.cntDes;delete a.cmpDes;delete a.smp}
+  tgRender();
+}
+function tgRender(){
+  const a=tgState(),n=tgNext(a),p=document.getElementById('tgPanel');
+  let h='<div style="font-weight:700;font-size:14px;margin-bottom:6px">🧭 Which test fits my data?</div>';
+  const back=Object.keys(a).length?'<button class="btn btn-ghost" style="margin-top:8px" onclick="tgBack()">← Back</button> <button class="btn btn-ghost" style="margin-top:8px" onclick="window._tg={};tgRender()">Start again</button>':'';
+  if(n.ask){
+    const Q=TG_Q[n.ask];
+    h+='<div style="font-size:13px;margin-bottom:6px">'+escHTML(Q.q)+'</div>'+Q.o.map(o=>'<button class="btn btn-ghost" style="display:block;width:100%;text-align:left;margin:4px 0" onclick="tgAnswer(\''+n.ask+'\',\''+o[0]+'\')">'+escHTML(o[1])+'</button>').join('')+back;
+  }else{
+    const r=n.res;
+    h+='<div style="background:rgba(109,40,217,.08);border-radius:8px;padding:10px"><div style="font-size:12px;color:var(--muted)">Best fit</div><div style="font-weight:700;font-size:15px">'+escHTML(r.name)+'</div><div style="font-size:13px;margin-top:4px">'+escHTML(r.why)+'</div></div>';
+    if(r.note)h+='<div style="font-size:13px;margin-top:8px">'+escHTML(r.note)+'</div>';
+    if(r.alt&&r.alt.length)h+='<div style="font-size:13px;margin-top:8px"><b>Other options</b><ul style="margin:4px 0 0 18px">'+r.alt.map(x=>'<li>'+escHTML(TG_RES[x[0]]?TG_RES[x[0]].name:(STAT_TESTS[x[0]]?STAT_TESTS[x[0]].label:x[0]))+', '+escHTML(x[1].replace(/^[^,]*, /,''))+'</li>').join('')+'</ul></div>';
+    if(r.built)h+='<div class="row" style="margin-top:10px"><button class="btn btn-purple" style="flex:1" onclick="tgUse(\''+r.keys[0]+'\')">Use this test</button></div>';
+    else h+='<div style="font-size:13px;margin-top:10px;padding:8px;border:1px dashed var(--line);border-radius:8px">The app does not run this test yet. This is a case for a human or a statistician to confirm, and the app will hand it over once the full workflow is built. Until then, run it in jamovi or JASP (both free) and bring the numbers back here to write up.</div>';
+    h+=tgCheckHTML()+back;
+  }
+  p.innerHTML=h;
+}
+function tgUse(key){
+  if(!window._statsData){showToast('Paste and parse your data first, then tap Use this test');return}
+  const sel=document.getElementById('statsTest');sel.value=key;statsFieldsRender();
+  document.getElementById('statsTestArea').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function tgCheckHTML(){
+  const d=window._statsData;
+  if(!d)return '<div style="font-size:12px;color:var(--muted);margin-top:10px">Parse your data first and this box will check group sizes, skew, outliers and expected counts.</div>';
+  const num=d.cols.filter(c=>c.type==='numeric'),cat=d.cols.filter(c=>c.type==='categorical');
+  const opt=(cs,none)=>(none?'<option value="">'+none+'</option>':'')+cs.map(c=>'<option value="'+c.index+'">'+escHTML(c.name)+'</option>').join('');
+  return '<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px"><div style="font-weight:700;font-size:13px">Check my numbers</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin:2px 0 6px">Group sizes, skew and outliers for a score, and expected counts for two categories. Shown as information. Nothing here blocks a test.</div>'+
+    '<div class="row"><select id="tgNum" style="flex:1">'+opt(num,'Score column…')+'</select><select id="tgGrp" style="flex:1">'+opt(cat,'Group column (optional)…')+'</select></div>'+
+    '<div class="row" style="margin-top:6px"><select id="tgC1" style="flex:1">'+opt(cat,'Category column 1…')+'</select><select id="tgC2" style="flex:1">'+opt(cat,'Category column 2…')+'</select></div>'+
+    '<div class="row" style="margin-top:6px"><button class="btn btn-ghost" style="flex:1" onclick="tgCheck()">Check</button></div><div id="tgCheckOut" style="margin-top:8px;font-size:13px"></div></div>';
+}
+function tgSkew(a){const n=a.length;if(n<3)return NaN;const m=smean(a),s=ssd(a);if(!(s>0))return 0;let c=0;a.forEach(v=>{c+=Math.pow((v-m)/s,3)});return n/((n-1)*(n-2))*c}
+function tgQuant(sorted,q){const pos=(sorted.length-1)*q,lo=Math.floor(pos),hi=Math.ceil(pos);return sorted[lo]+(sorted[hi]-sorted[lo])*(pos-lo)}
+function tgOutliers(a){if(a.length<4)return 0;const s=a.slice().sort((x,y)=>x-y),q1=tgQuant(s,.25),q3=tgQuant(s,.75),i=q3-q1;return a.filter(v=>v<q1-1.5*i||v>q3+1.5*i).length}
+function tgCheck(){
+  const out=document.getElementById('tgCheckOut'),d=window._statsData;let h='';
+  const ni=document.getElementById('tgNum').value,gi=document.getElementById('tgGrp').value;
+  if(ni!==''){
+    const groups=gi!==''?statsGroupBy(parseInt(ni,10),parseInt(gi,10)):{All:statsColVals(parseInt(ni,10),true).filter(v=>isFinite(v))};
+    const keys=Object.keys(groups);let rank=false;
+    h+='<table class="stats-table"><tr><th>Group</th><th>n</th><th>Skew</th><th>Outliers</th></tr>'+keys.map(k=>{
+      const g=groups[k],sk=tgSkew(g),ol=tgOutliers(g);
+      if(g.length<20&&(Math.abs(sk)>1||ol>0))rank=true;
+      return '<tr><td>'+escHTML(k)+'</td><td>'+g.length+'</td><td>'+(isFinite(sk)?sk.toFixed(2):'–')+'</td><td>'+ol+'</td></tr>'}).join('')+'</table>';
+    h+='<p style="margin:6px 0">'+(rank?'Some groups have fewer than 20 people and either strong skew (beyond ±1) or extreme values. A rank-based test is the safer choice here.':'Nothing here points away from a test on means.')+' This is a rule of thumb with no formal source behind it, and you can still choose differently. Do not rely on a normality test to decide: with small groups it has little power, and with large groups it flags differences too small to matter.</p>';
+    if(keys.some(k=>groups[k].length<5))h+='<p style="margin:6px 0">A group with fewer than 5 people gives very unstable results.</p>';
+  }
+  const c1=document.getElementById('tgC1').value,c2=document.getElementById('tgC2').value;
+  if(c1!==''&&c2!==''&&c1!==c2){
+    const i1=parseInt(c1,10),i2=parseInt(c2,10),cnt={},r1={},r2={};let N=0;
+    d.rows.forEach(r=>{const x=r[i1],y=r[i2];if(x===undefined||x===''||y===undefined||y==='')return;const k=x+'\u0001'+y;cnt[k]=(cnt[k]||0)+1;r1[x]=(r1[x]||0)+1;r2[y]=(r2[y]||0)+1;N++});
+    let minE=Infinity,low=0,cells=0;
+    Object.keys(r1).forEach(x=>Object.keys(r2).forEach(y=>{const e=r1[x]*r2[y]/N;cells++;if(e<minE)minE=e;if(e<5)low++}));
+    h+='<p style="margin:6px 0">Table of '+Object.keys(r1).length+' by '+Object.keys(r2).length+', N = '+N+'. Smallest expected count: '+(isFinite(minE)?minE.toFixed(2):'–')+'. '+low+' of '+cells+' cells are below 5. '+(low>0?'Chi-square is not trustworthy here. Fisher\'s exact test (2 by 2) or merging sparse categories is the usual answer. The app does not run Fisher yet.':'Chi-square is fine on this count.')+'</p>';
+  }
+  out.innerHTML=h||'Pick a score column, or two category columns, then tap Check.';
+}
+
 /* ===== Practice mode: generate before reveal =====
    Opt-in. Before a test runs the student states the design in plain words, then sees whether the test
    they picked fits it, with the reason. Rules are fixed and deterministic, no AI. The student always keeps
@@ -5757,7 +5895,7 @@ async function statsExplain(){
 const GEN_DESIGNS={
   desc:{label:'I only want to describe one variable',ok:['desc'],alt:[],why:'Descriptive statistics summarise a variable with N, M, SD and the range. No inference is involved.'},
   one:{label:'One group against a known value',ok:['ttest1'],alt:[],why:'A one-sample t-test compares one group mean with a fixed value.'},
-  ind:{label:'Two separate groups of different people',ok:['ttestInd'],alt:['mannwhitney'],why:'Different people in each group means independent samples. The independent t-test fits when scores are roughly normal. Mann-Whitney U is the fallback for skewed scores, ordinal scores or very small groups.'},
+  ind:{label:'Two separate groups of different people',ok:['ttestInd'],alt:['mannwhitney'],why:'Different people in each group means independent samples. The independent t-test (Welch\'s version, which does not need equal spread) fits numeric scores. Mann-Whitney U is the fallback for ordinal scores, or for very small groups with skewed scores or extreme values.'},
   paired:{label:'The same people measured twice (or matched pairs)',ok:['ttestPaired'],alt:['wilcoxon'],why:'The same people twice means paired scores, so each person is their own control. The paired t-test fits roughly normal differences. Wilcoxon signed-rank is the fallback for skewed differences or ordinal scores.'},
   three:{label:'Three or more separate groups',ok:['anova1'],alt:['tukey','kruskal'],why:'Three or more independent groups call for one-way ANOVA. Tukey HSD is not a first test: it comes after a significant ANOVA to show which pairs differ.'},
   corr:{label:'How two numeric variables move together',ok:['pearson'],alt:['spearman'],why:'Two numeric variables and a question about association call for Pearson correlation. Correlation does not show cause.'},
