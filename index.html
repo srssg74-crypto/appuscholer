@@ -243,10 +243,14 @@
   dialog{border:none;border-radius:16px;padding:0;max-width:480px;width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.25);background:var(--card);color:var(--ink)}
   dialog::backdrop{background:rgba(30,10,60,.5)}
   .dlg-body{padding:24px}
+  .dlg-x{display:block;position:sticky;top:6px;z-index:20;margin:6px 8px -42px auto;width:36px;height:36px;border:0;border-radius:50%;background:var(--card);color:var(--ink);font-size:18px;line-height:36px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.25);padding:0}
+  .dlg-x:hover{background:var(--line)}
+  .dlg-x:focus-visible{outline:3px solid var(--gold)}
   .dlg-body h2{margin:0 0 8px;color:var(--head-title);font-family:var(--font-display);font-weight:600;font-size:21px}
   .dlg-body ol{font-size:14px;line-height:1.9;color:var(--ink);padding-left:20px}
   .dlg-body a{color:var(--purple-500);font-weight:700}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:26px;letter-spacing:.4px}
+  .toast[popover]{inset:auto auto 24px 50%;margin:0;border:0;overflow:visible}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--purple-900);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:50;max-width:92vw;text-align:center}
   kbd{background:var(--chip);border:1px solid var(--chipline);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--ink)}
   .fld{margin-bottom:8px}
@@ -862,7 +866,7 @@
   <h2 data-i18n="settings_h2">🔑 Choose your AI provider</h2>
   <p style="font-size:13px;color:var(--muted)" data-i18n="settings_intro">Pick one. Your key is saved in this browser and sent only to the provider you choose.</p>
   <label for="provSel" style="font-size:13px;font-weight:700;color:var(--head-title)" data-i18n="settings_provider_label">AI Provider</label>
-  <select id="provSel" onchange="provHelp()" style="width:100%;padding:12px;margin:8px 0;border:2px solid var(--line);border-radius:10px;font-size:14px">
+  <select id="provSel" onchange="provChange()" style="width:100%;padding:12px;margin:8px 0;border:2px solid var(--line);border-radius:10px;font-size:14px">
     <option value="gemini">Google Gemini — free, easiest</option>
     <option value="groq">Groq — free &amp; very fast</option>
     <option value="deepseek">DeepSeek — paid, very cheap</option>
@@ -909,6 +913,10 @@
     <p class="desc" style="margin:4px 0 0" data-i18n="writingsample_desc">Appuscholar privately saves a copy of your own writing from each document on this computer — whatever you typed yourself, skipping anything an AI suggestion inserted. Nothing is uploaded anywhere. The idea is a future tool that learns to write in your own voice from this. Turn off any time; your documents themselves are never affected either way.</p>
     <p class="desc" id="writingSampleStatus" style="margin:6px 0 0;font-weight:600"></p>
     <button class="btn btn-ghost" style="margin-top:6px" onclick="clearWritingSamples()" data-i18n="writingsample_clear_btn">Clear saved writing samples</button>
+  </div>
+  <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="aiFallbackOn" onchange="LS.set('appu_ai_fallback',this.checked?'1':'0')"> <span>If my AI is busy or fails, try my other saved keys automatically</span></label>
+    <p class="desc" style="margin:4px 0 0">The text of that one request then goes to the other provider you saved a key for, and a message tells you which one answered. Switch this off if you want every request to stay with one provider.</p>
   </div>
   <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
     <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="recapOn" onchange="LS.set('appu_recap_off',this.checked?'0':'1')"> <span data-i18n="recap_toggle">Show a recap and three questions when I return after five days or more</span></label>
@@ -1272,7 +1280,7 @@
   </div>
 </div></dialog>
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" popover="manual"></div>
 <footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -1811,7 +1819,7 @@ const editor=document.getElementById('editor'),aiOut=document.getElementById('ai
 /* ============ FIX 1: one escaper, used everywhere ============ */
 const escHTML=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let toastT=null;
-function showToast(m){toast.textContent=m;toast.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>toast.style.display='none',2600)}
+function showToast(m){toast.textContent=m;toast.style.display='block';try{if(toast.hidePopover&&toast.matches(':popover-open'))toast.hidePopover();if(toast.showPopover)toast.showPopover()}catch(e){}clearTimeout(toastT);toastT=setTimeout(()=>{toast.style.display='none';try{if(toast.hidePopover&&toast.matches(':popover-open'))toast.hidePopover()}catch(e){}},m.length>70?5200:3200)}
 
 /* ============ Theme ============ */
 /* Defaults to light regardless of the device/browser's own dark-mode setting — a student whose
@@ -3476,9 +3484,22 @@ function keyModeNote(){
     :'Kept in memory only. Closing the tab erases it.';
 }
 
+
+/* Every window gets a close button that stays visible while scrolling (added 2026-10-07). Esc still works. */
+(function(){
+  function add(){
+    document.querySelectorAll('dialog').forEach(d=>{
+      if(d.id==='loginDlg'||d.id==='impDlg'||d.querySelector(':scope > .dlg-x'))return;
+      const b=document.createElement('button');b.type='button';b.className='dlg-x';b.textContent='✕';b.setAttribute('aria-label','Close');b.title='Close';
+      b.onclick=()=>d.close();d.insertBefore(b,d.firstChild);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add();
+})();
 /* ============ FIX 2 + 16: provider state ============ */
-function getProv(){const p=LS.get('appu_provider')||'gemini';return PROVIDERS[p]?p:'gemini'}
+function getProv(){if(window._aiOv)return window._aiOv.prov;const p=LS.get('appu_provider')||'gemini';return PROVIDERS[p]?p:'gemini'}
 function getKey(){
+  if(window._aiOv)return window._aiOv.key;
   const p=getProv();
   return (LS.get('appu_key_'+p)||'').trim();
 }
@@ -3490,7 +3511,7 @@ function updProvBadge(){document.getElementById('provBadge').textContent=PROVIDE
 function renderProvTabs(){
   const bar=document.getElementById('provTabs'),cur=getProv();
   bar.innerHTML='<button type="button" class="prov-toggle'+(provHasKey(cur)?' has-key':'')+'" onclick="toggleProvMenu(event)" title="Switch AI provider"><span class="dot"></span>🔌 '+
-    escHTML(PROVIDERS[cur].short)+' <span aria-hidden="true">▾</span></button>';
+    escHTML(PROVIDERS[cur].short)+(provHasKey(cur)?' <span style="font-weight:600;color:#15803d">✓ ready</span>':' <span style="font-weight:600;color:#b45309">no key</span>')+' <span aria-hidden="true">▾</span></button>';
 }
 function closeProvMenu(){
   const m=document.getElementById('provMenu');if(m)m.remove();
@@ -3513,7 +3534,7 @@ function toggleProvMenu(e){
 function refreshProvUI(){closeProvMenu();renderProvTabs();updProvBadge()}
 function switchProv(p){
   closeProvMenu();
-  if(provHasKey(p)){LS.set('appu_provider',p);refreshProvUI();showToast(PROVIDERS[p].name+' active ✓')}
+  if(provHasKey(p)){LS.set('appu_provider',p);refreshProvUI();showToast('Now using '+PROVIDERS[p].name+' ✓ Your next AI request goes to '+PROVIDERS[p].short+'.')}
   else{openSettings(p);showToast('Paste your '+PROVIDERS[p].short+' key to enable it')}
 }
 function openSettings(sel){
@@ -3532,16 +3553,25 @@ function openSettings(sel){
   renderWritingSampleStatus();
   try{backupStatusRender()}catch(e){}
   try{document.getElementById('recapOn').checked=LS.get('appu_recap_off')!=='1'}catch(e){}
+  try{document.getElementById('aiFallbackOn').checked=aiFallbackOn()}catch(e){}
   document.getElementById('settingsDlg').showModal();
 }
 function orcidSave(v){
   v=String(v||'').trim();
   LS.set('appu_orcid',v);
 }
+function provChange(){
+  const p=document.getElementById('provSel').value,locked=!!encBlob(p),ki=document.getElementById('keyIn');
+  ki.value=locked?'':(LS.get('appu_key_'+p)||'');
+  ki.placeholder=locked?'A passphrase-protected key is saved — paste a new one to replace it':'Paste your API key here';
+  const out=document.getElementById('aiTestOut');if(out){out.textContent='';out.style.color=''}
+  provHelp();
+}
 function provHelp(){
   const p=document.getElementById('provSel').value;
   document.getElementById('provHelp').innerHTML='<b>'+escHTML(PROVIDERS[p].name)+':</b> '+PROVIDERS[p].steps;
-  document.getElementById('activeProv').textContent='Currently active: '+PROVIDERS[getProv()].name;
+  const act=PROVIDERS[getProv()].name,has=provHasKey(p);
+  document.getElementById('activeProv').textContent='Selected here: '+PROVIDERS[p].name+(has?' (a key is saved)':' (no key saved yet)')+'. Active now: '+act+(p===getProv()?'.':'. Saving a key for the selected provider makes it the active one.');
 }
 async function saveKey(){
   const p=document.getElementById('provSel').value,k=document.getElementById('keyIn').value.trim();
@@ -3608,14 +3638,25 @@ function setSug(t){window._sug=t;aiOut.textContent=t;try{dockShow('ai')}catch(e)
 /* Settings button: one tiny call whose exact result is printed inside the Settings window itself. */
 async function aiTest(){
   const out=document.getElementById('aiTestOut'),btn=document.getElementById('aiTestBtn');
-  out.textContent=t('aitest_running');btn.disabled=true;
-  try{
-    const r=await callAI('Reply with the single word OK.',{noLang:true,max:20,temp:0});
-    out.textContent=t('aitest_ok').replace('{p}',getProv())+' '+t('aitest_reply')+' '+String(r).trim().slice(0,80);
-  }catch(e){
-    out.textContent=t('aitest_fail').replace('{p}',getProv())+' '+apiMsg(e)+(e&&e.message?' ['+String(e.message).slice(0,200)+']':'');
+  const p=document.getElementById('provSel').value,typed=document.getElementById('keyIn').value.trim();
+  const saved=(LS.get('appu_key_'+p)||'').trim()||(('appu_key_'+p) in sessionKeys?(sessionKeys['appu_key_'+p]||''):'');
+  const key=typed||saved,name=PROVIDERS[p].name;
+  out.style.color='';
+  if(!key){
+    out.style.color='#b45309';
+    out.textContent=encBlob(p)?name+': your key is locked with a passphrase. Paste it again here to test it, or close this window and use any AI button once to unlock it.':name+': no key yet. Paste your key in the box above, then test again.';
+    return;
   }
-  btn.disabled=false;
+  out.textContent=t('aitest_running');btn.disabled=true;
+  window._aiOv={prov:p,key:key};
+  try{
+    const r=await callAIOnce('Reply with the single word OK.',{noLang:true,max:20,temp:0});
+    out.style.color='#15803d';
+    out.textContent='✓ '+t('aitest_ok').replace('{p}',name)+' '+t('aitest_reply')+' '+String(r).trim().slice(0,80)+(typed&&typed!==saved?' This key is not saved yet. Press Save Key to keep it and switch to '+PROVIDERS[p].short+'.':(p!==(LS.get('appu_provider')||'gemini')?' '+PROVIDERS[p].short+' is not your active provider yet. Press Save Key to switch to it.':''));
+  }catch(e){
+    out.style.color='#b91c1c';
+    out.textContent='✗ '+t('aitest_fail').replace('{p}',name)+' '+apiMsg(e)+(e&&e.message?' ['+String(e.message).slice(0,200)+']':'');
+  }finally{window._aiOv=null;btn.disabled=false}
 }
 function showAIError(e){const m=apiMsg(e);window._sug=null;aiOut.textContent=m;try{dockShow('ai')}catch(x){}try{showToast(m)}catch(x){}}
 function clearSug(msg){window._sug=null;aiOut.textContent=msg;try{dockShow('tools')}catch(e){}}
@@ -3643,7 +3684,29 @@ async function fetchRetry5xx(doFetch,tries){
   }
   return r;
 }
+function aiRetriable(e){const m=String(e&&e.message||'');return !/^BLOCKED:|^BADPASS:/.test(m)&&m!=='key'&&/\b429\b|\b5\d\d\b|\b401\b|\b403\b|\b404\b|Failed to fetch|NetworkError|Load failed/i.test(m)}
+function aiFallbackOn(){return LS.get('appu_ai_fallback')!=='0'}
 async function callAI(prompt,opts){
+  try{return await callAIOnce(prompt,opts)}
+  catch(e){
+    if(window._aiOv||!aiFallbackOn()||!aiRetriable(e))throw e;
+    const cur=getProv();
+    for(const p2 of PROV_ORDER){
+      if(p2===cur)continue;
+      const k2=((LS.get('appu_key_'+p2)||'').trim())||(('appu_key_'+p2) in sessionKeys?(sessionKeys['appu_key_'+p2]||''):'');
+      if(!k2)continue;
+      window._aiOv={prov:p2,key:k2};
+      try{
+        const r=await callAIOnce(prompt,opts);
+        window._aiOv=null;
+        try{showToast(PROVIDERS[cur].short+' did not answer, so this request used '+PROVIDERS[p2].short+' instead.')}catch(x){}
+        return r;
+      }catch(e2){}finally{window._aiOv=null}
+    }
+    throw e;
+  }
+}
+async function callAIOnce(prompt,opts){
   const o=opts||{},temp=(o.temp==null?0.8:o.temp),maxTok=o.max||2000;
   if(!o.noLang)prompt=prompt+contentLangInstruction();
   await ensureKey();
@@ -5876,6 +5939,98 @@ const TG_RES={
   friedman:{name:'Friedman test',keys:[],why:'The same people three or more times with ratings or ranks.',alt:[]},
   twoway:{name:'Two-way ANOVA or a mixed design',keys:[],why:'Two factors at once. Which version applies depends on whether either factor is repeated on the same people.',alt:[]}
 };
+/* ---- guide: reasons, assumptions and a small demo (2026-10-07) ---- */
+const TG_IMP={
+  goal:{compare:`You want to know whether scores differ between groups, conditions or times.`,relate:`You want to know whether two variables rise and fall together.`,predict:`You want to predict one variable from others.`,reliab:`You want to know whether the items of a scale measure the same thing.`,counts:`You are working with counts in categories, not with scores.`},
+  cmpOut:{scale:`A numeric total or mean can be averaged, so tests on means are possible.`,ordinal:`A single rating item has an order but unequal steps (the gap from 1 to 2 may not equal the gap from 4 to 5), so rank-based tests are the safer match.`},
+  cmpDes:{one:`With one group the only comparison available is against a known value.`,two:`Two groups means one comparison.`,three:`Three or more groups are compared all at once first, and only then pair by pair. Running many t-tests instead would inflate the chance of a false positive.`,factors:`Two things varied at once means each factor, and how they combine, has to be examined together.`},
+  smp:{ind:`Different people in each group means each score is independent of the others.`,rel:`The same people measured again means each person's scores belong together as pairs. Ignoring that throws information away.`},
+  relOut:{scale:`Both variables are numbers, so the strength of a straight-line link can be measured.`,ordinal:`A rating item or ranking is involved, so a rank-based link (Spearman) fits.`},
+  prdOut:{scale:`A numeric outcome can be predicted with a line.`,binary:`A yes/no outcome needs a model for probabilities, not a straight line.`},
+  prdN:{one:`One predictor means a simple line.`,many:`Several predictors have to be estimated together.`},
+  cntDes:{gof:`One variable against expected counts asks whether the pattern departs from what you expected.`,ind:`Two categorical variables ask whether the categories go together more than chance would produce.`,rel2:`The same people answering yes or no twice need a test that respects the pairing.`,rel3:`The same people answering yes or no three or more times need a test that respects the repeated measures.`}
+};
+const TG_EXTRA={
+  ttest1:{assume:`The scores are independent and not wildly skewed. With very small samples, extreme values distort the mean.`,watch:`Many tied or ordinal scores, or a handful of extreme values in a small group.`},
+  ttestInd:{assume:`Each person appears in one group only and the scores are independent. Welch's version does not need equal spread, and it copes with groups of different sizes.`,watch:`Groups under about 20 with strong skew or extreme values (use Mann-Whitney), or the same people in both groups (use the paired test).`},
+  mannwhitney:{assume:`Each person appears in one group only. The test compares ranks, so it does not care about the exact size of the gaps between scores.`,watch:`The same people in both groups, or many ties in a tiny sample.`},
+  ttestPaired:{assume:`Each person has two scores that belong together, and the differences between them are not wildly skewed.`,watch:`Strongly skewed or ordinal differences (use Wilcoxon), or people with only one of the two scores.`},
+  wilcoxon:{assume:`Each person has two scores that belong together. The test works on the ranks of the differences.`,watch:`Most people having exactly the same score at both times, which leaves few differences to rank.`},
+  anova1:{assume:`Each person appears in one group only and the scores are independent. Welch's version tolerates different spreads.`,watch:`Tiny groups with skew or extreme values (use Kruskal-Wallis), or the same people in every group (repeated-measures design).`},
+  kruskal:{assume:`Each person appears in one group only. The test works on ranks.`,watch:`The same people in every group.`},
+  pearson:{assume:`Both variables are numbers and the link looks like a straight line on a scatterplot. A few extreme points can create or hide a correlation.`,watch:`A curved pattern or clear outliers (look at the plot, and consider Spearman).`},
+  spearman:{assume:`The link rises or falls steadily, though not necessarily in a straight line. Ties are handled.`,watch:`A pattern that rises and then falls, which no rank correlation can describe.`},
+  regression:{assume:`The link is roughly a straight line, the scatter around the line is similar all along it, and each person appears once.`,watch:`A curved pattern, a fan-shaped scatter, or one point pulling the whole line.`},
+  chisq:{assume:`Each person is counted once, and the expected count in each cell is about 5 or more.`,watch:`Small counts (the app then switches to Fisher's exact test for a 2 by 2 table) or the same people counted twice.`},
+  gof:{assume:`Each person is counted once and the expected count for each category is about 5 or more.`,watch:`Small expected counts (two categories get an exact binomial test) or expected shares chosen after seeing the data.`},
+  alpha:{assume:`All the items point the same way (reverse-score the negatively worded ones first) and measure one thing. Run each subscale separately.`,watch:`Fewer than about 30 people, or items that measure different things.`}
+};
+const TG_DEMO={
+  ttest1:{title:`Test scores against a known value`,note:`Twelve students' scores on a screening test. The published average is 50.`,test:`ttest1`,csv:`score\n52\n48\n55\n51\n49\n53\n50\n47\n54\n52\n51\n49`,sel:{dv:`score`},extra:{mu:`50`},read:`The group mean sits close to 50 and the test finds no clear difference. A non-significant result means the data give no evidence of a difference. It does not prove the two are equal.`},
+  ttestInd:{title:`Two separate groups`,note:`Hours of sleep for 12 students on a new bedtime routine (A) and 12 on their usual routine (B).`,test:`ttestInd`,csv:`group,hours\n`+[7.5,8,7,8.5,7.8,8.2,7.4,8.1,7.9,8.4,7.2,8.0].map(v=>`A,`+v).join(`\n`)+`\n`+[6.5,7,6.2,7.1,6.8,6.0,7.3,6.6,6.9,6.4,7.0,6.7].map(v=>`B,`+v).join(`\n`),sel:{dv:`hours`,iv:`group`},read:`Look at the two means first, then at t, df and p. The CI of the difference shows how large the gap plausibly is. g is the size of the gap in standard-deviation units, which is what you report beside the p-value.`},
+  mannwhitney:{title:`Two groups, a single rating item`,note:`A 1 to 5 rating of "I feel supported" from ten students in group A and ten in group B.`,test:`mannwhitney`,csv:`group,rating\n`+[4,5,4,3,5,4,5,4,3,5].map(v=>`A,`+v).join(`\n`)+`\n`+[2,3,3,2,4,3,2,3,1,3].map(v=>`B,`+v).join(`\n`),sel:{dv:`rating`,iv:`group`},read:`The test says one group tends to score higher, not that the medians differ by a set amount. The rank-biserial r is the effect size: the nearer to 1, the more completely one group outranks the other.`},
+  ttestPaired:{title:`The same people twice`,note:`Anxiety totals for 12 people before and after a four-week course.`,test:`ttestPaired`,csv:`before,after\n28,24\n31,27\n25,24\n35,30\n30,25\n27,26\n33,28\n29,25\n26,22\n32,29\n34,30\n28,24`,sel:{v1:`before`,v2:`after`},read:`Everyone's score fell, and the test works on those within-person drops. That is why it can detect a change that a comparison of two separate groups with the same numbers might miss.`},
+  wilcoxon:{title:`The same people twice, ratings`,note:`A 1 to 7 stress rating from 12 people before and after a course.`,test:`wilcoxon`,csv:`before,after\n5,3\n6,4\n4,4\n5,3\n6,4\n5,3\n4,2\n6,4\n5,3\n4,3\n6,4\n5,4`,sel:{v1:`before`,v2:`after`},read:`Only people whose rating changed are ranked. The one person who stayed at 4 drops out, which is normal.`},
+  anova1:{title:`Three separate groups`,note:`Scores for 8 people in each of three arms: cognitive therapy, mindfulness and a waiting list.`,test:`welchAnova`,csv:`arm,score\n`+[12,14,11,13,15,12,14,13].map(v=>`CBT,`+v).join(`\n`)+`\n`+[16,18,17,15,19,17,18,16].map(v=>`Mindful,`+v).join(`\n`)+`\n`+[22,25,21,27,23,24,26,20].map(v=>`Waitlist,`+v).join(`\n`),sel:{dv:`score`,iv:`arm`},read:`The overall test says only that the groups are not all alike. The Games-Howell table then shows which pairs differ, with a confidence interval for each gap. Notice the waiting list is more spread out, which is why the Welch version is the safer choice.`},
+  kruskal:{title:`Three groups, a single rating item`,note:`A 1 to 5 rating from seven people in each of three groups.`,test:`kruskal`,csv:`group,rating\n`+[2,3,2,3,4,2,3].map(v=>`A,`+v).join(`\n`)+`\n`+[4,5,4,5,4,3,5].map(v=>`B,`+v).join(`\n`)+`\n`+[1,1,2,2,1,2,3].map(v=>`C,`+v).join(`\n`),sel:{dv:`rating`,iv:`group`},read:`H is the overall test on ranks. The Dunn table with Holm adjustment shows which pairs differ. Epsilon-squared is the effect size.`},
+  pearson:{title:`Two numbers that move together`,note:`Weekly study hours and exam marks for 14 students.`,test:`pearson`,csv:`hours,marks\n2,45\n3,50\n4,52\n5,58\n6,60\n7,66\n8,70\n1,40\n9,74\n10,80\n3,48\n6,63\n5,55\n8,72`,sel:{v1:`hours`,v2:`marks`},read:`r is the strength and direction, from -1 to 1. Look at the scatterplot beside it: the dots should follow a rough straight line. A strong r says the two move together. It does not say that studying causes the marks.`},
+  spearman:{title:`A rank-based link`,note:`Thirteen students ranked on effort and on result.`,test:`spearman`,csv:`effort,result\n1,2\n2,1\n3,4\n4,3\n5,6\n6,6\n7,8\n8,7\n9,10\n10,9\n11,9\n12,13\n13,12`,sel:{v1:`effort`,v2:`result`},read:`Spearman's rho uses ranks, so it is not thrown by a few extreme values. The interval around it shows how precisely it was estimated.`},
+  regression:{title:`Predict one number from another`,note:`The same 14 students: predict exam marks from weekly study hours.`,test:`regression`,csv:`hours,marks\n2,45\n3,50\n4,52\n5,58\n6,60\n7,66\n8,70\n1,40\n9,74\n10,80\n3,48\n6,63\n5,55\n8,72`,sel:{iv:`hours`,dv:`marks`},read:`The slope says how many marks each extra hour is worth on average. R-squared says how much of the spread in marks the line accounts for.`},
+  chisq:{title:`Two categories against each other`,note:`Thirty students who used the counselling service and thirty who did not, and whether each passed.`,test:`chisq`,csv:`counselling,passed\n`+Array(18).fill(`yes,yes`).concat(Array(12).fill(`yes,no`),Array(15).fill(`no,yes`),Array(15).fill(`no,no`)).join(`\n`),sel:{v1:`counselling`,v2:`passed`},read:`Pass rates of 60% and 50% look different, but with 30 people per group the test cannot tell that gap from chance. A non-significant result here means the evidence is too thin, not that counselling does nothing.`},
+  gof:{title:`One category against what you expected`,note:`Sixty students picked their favourite study method. If there were no preference, each method would get 20.`,test:`gof`,csv:`method\n`+Array(18).fill(`Notes`).concat(Array(30).fill(`Flashcards`),Array(12).fill(`Rereading`)).join(`\n`),sel:{v1:`method`},read:`Compare the observed and expected columns. A standardised residual beyond plus or minus 2 marks the category that departs from equal shares, here flashcards.`},
+  alpha:{title:`Do the items of a scale hang together?`,note:`Fifteen people answered a six-item scale. Item q6 is worded in the opposite direction, so it is reversed here (1 to 5). Run it again without reversing and watch the alpha fall.`,test:`alpha`,csv:`q1,q2,q3,q4,q5,q6\n2,3,2,1,2,4\n3,3,4,4,5,3\n3,5,3,2,2,3\n3,3,3,4,4,3\n2,1,2,1,2,4\n5,3,4,2,3,3\n3,3,2,3,2,4\n3,3,3,2,3,3\n5,4,3,5,4,3\n3,3,3,3,3,3\n2,3,3,3,3,4\n4,4,5,3,3,4\n4,4,2,5,4,3\n4,3,3,4,4,3\n4,3,4,4,3,2`,sel:{},tick:[`q1`,`q2`,`q3`,`q4`,`q5`,`q6`],rev:`q6`,rrange:`1-5`,read:`Alpha and omega are reported with their intervals, not against a pass mark. The item table shows which item pulls the scale down (a low corrected item-total r).`}
+};
+function tgWhyHTML(a,r){
+  const order=['goal','cmpOut','relOut','prdOut','prdN','cntDes','cmpDes','smp'],items=[];
+  order.forEach(q=>{if(a[q]!==undefined&&TG_Q[q]){const o=TG_Q[q].o.find(x=>x[0]===a[q]);if(o&&TG_IMP[q]&&TG_IMP[q][a[q]])items.push('<li><b>'+escHTML(o[1])+'.</b> '+escHTML(TG_IMP[q][a[q]])+'</li>')}});
+  const ex=TG_EXTRA[r.id];
+  return '<div style="margin-top:10px;font-size:13px"><b>Why this fits</b><ul style="margin:4px 0 0 18px">'+items.join('')+'</ul><div style="margin-top:6px">'+escHTML(r.why)+'</div>'+
+    (ex?'<div style="margin-top:6px"><b>What it assumes.</b> '+escHTML(ex.assume)+'</div><div style="margin-top:4px"><b>When it stops fitting.</b> '+escHTML(ex.watch)+'</div>':'')+'</div>';
+}
+function tgDemoHTML(r){
+  const dm=TG_DEMO[r.id];if(!dm||!r.built)return '';
+  const lines=dm.csv.split('\n'),head=lines[0].split(','),n=lines.length-1;
+  return '<div style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px"><div style="font-weight:700;font-size:13px">Try a small demo: '+escHTML(dm.title)+'</div>'+
+    '<div style="font-size:13px;margin:4px 0">'+escHTML(dm.note)+' <i>The numbers are invented for practice.</i> ('+n+' rows, columns: '+escHTML(head.join(', '))+')</div>'+
+    '<div style="font-size:13px;margin:6px 0 2px"><b>Predict first.</b> Before you run it, what do you expect?</div>'+
+    '<label style="display:block;font-size:13px;cursor:pointer"><input type="radio" name="tgPred" value="yes"> A clear result (statistically significant)</label>'+
+    '<label style="display:block;font-size:13px;cursor:pointer"><input type="radio" name="tgPred" value="no"> No clear result</label>'+
+    '<div class="row" style="margin-top:8px"><button class="btn btn-purple" style="flex:1" onclick="tgDemo(\''+r.id+'\')">Run the demo in the Stats Lab</button></div>'+
+    '<div id="tgDemoOut" style="margin-top:8px;font-size:13px"></div></div>';
+}
+function tgBackToMine(){
+  const sv=window._tgSaved;if(!sv)return;
+  document.getElementById('statsPaste').value=sv.paste;
+  if(sv.paste.trim()){statsParse()}else{window._statsData=null;document.getElementById('statsCols').innerHTML='';document.getElementById('statsTestArea').style.display='none'}
+  document.getElementById('statsResults').innerHTML='';
+  window._tgSaved=null;const o=document.getElementById('tgDemoOut');if(o)o.innerHTML='';
+  showToast('Your own data is back.');
+}
+function tgDemo(id){
+  const dm=TG_DEMO[id];if(!dm)return;
+  const pr=document.querySelector('input[name="tgPred"]:checked');
+  if(!pr){showToast('Make your prediction first, then run the demo');return}
+  if(!window._tgSaved)window._tgSaved={paste:document.getElementById('statsPaste').value};
+  document.getElementById('statsPaste').value=dm.csv;statsParse();
+  const sel=document.getElementById('statsTest');sel.value=dm.test;statsFieldsRender();
+  const cols=window._statsData.cols,idx=nm=>{const c=cols.find(c2=>c2.name===nm);return c?String(c.index):''};
+  Object.keys(dm.sel||{}).forEach(k=>{const el=document.getElementById('sf_'+k);if(el)el.value=idx(dm.sel[k])});
+  Object.keys(dm.extra||{}).forEach(k=>{const el=document.getElementById('sf_'+k);if(el)el.value=dm.extra[k]});
+  if(dm.tick)document.querySelectorAll('.sfm_items').forEach(c=>{c.checked=dm.tick.some(nm=>idx(nm)===c.value)});
+  if(dm.rev){document.getElementById('sf_rev').value=dm.rev;document.getElementById('sf_rrange').value=dm.rrange}
+  const oldLog=window.actLog;window.actLog=function(){};
+  try{statsRunNow()}finally{window.actLog=oldLog}
+  const sent=(document.getElementById('statsSentence')||{}).innerText||'';
+  const m=sent.match(/p\s*(<|=)\s*\.?(\d+)/);
+  let isSig=false;if(m)isSig=m[1]==='<'||parseFloat('0.'+m[2])<0.05;
+  if(dm.test==='alpha')isSig=true;
+  const guess=pr.value==='yes';
+  const out=document.getElementById('tgDemoOut');
+  out.innerHTML='<div style="background:rgba(109,40,217,.08);border-radius:8px;padding:8px"><b>You predicted '+(guess?'a clear result':'no clear result')+'. '+(dm.test==='alpha'?'Here is what the scale did.':(guess===isSig?'The test agrees.':'The test says '+(isSig?'there was a clear result.':'there was no clear result.')))+'</b><div style="margin-top:4px">'+escHTML(sent)+'</div><div style="margin-top:6px"><b>How to read it.</b> '+escHTML(dm.read)+'</div></div>'+
+    '<div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="tgBackToMine()">Back to my own data</button></div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-top:4px">The full results, with the table and chart, are further down in the Stats Lab.</div>';
+  try{document.getElementById('statsResults').scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){}
+}
 function tgRes(k,a){const r=TG_RES[k];return Object.assign({id:k,built:r.keys.length>0},r)}
 function tgState(){return window._tg||(window._tg={})}
 function tgToggle(){
@@ -5903,7 +6058,7 @@ function tgRender(){
     if(r.alt&&r.alt.length)h+='<div style="font-size:13px;margin-top:8px"><b>Other options</b><ul style="margin:4px 0 0 18px">'+r.alt.map(x=>'<li>'+escHTML(TG_RES[x[0]]?TG_RES[x[0]].name:(STAT_TESTS[x[0]]?STAT_TESTS[x[0]].label:x[0]))+', '+escHTML(x[1].replace(/^[^,]*, /,''))+'</li>').join('')+'</ul></div>';
     if(r.built)h+='<div class="row" style="margin-top:10px"><button class="btn btn-purple" style="flex:1" onclick="tgUse(\''+r.keys[0]+'\')">Use this test</button></div>';
     else h+='<div style="font-size:13px;margin-top:10px;padding:8px;border:1px dashed var(--line);border-radius:8px">The app does not run this test yet. This is a case for a human or a statistician to confirm, and the app will hand it over once the full workflow is built. Until then, run it in jamovi or JASP (both free) and bring the numbers back here to write up.</div>';
-    h+=tgCheckHTML()+back;
+    h+=tgWhyHTML(a,r)+tgDemoHTML(r)+tgCheckHTML()+back;
   }
   p.innerHTML=h;
 }
