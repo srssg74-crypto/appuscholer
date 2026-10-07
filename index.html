@@ -6091,12 +6091,13 @@ function statsRunNow(){
       rows.filter(r2=>r2.rit>=0&&r2.rit<0.2).forEach(r2=>notes.push(r2.name+' correlates only weakly with the rest ('+fq(r2.rit)+'). Check its wording.'));
       if(al.alpha>0.95)notes.push('An alpha above .95 can mean some items repeat each other.');
       if(n<30)notes.push('With fewer than 30 people the intervals are wide and the values are unstable.');
+      rows.filter(r2=>isFinite(r2.load)&&Math.abs(r2.load)>=0.99).forEach(r2=>notes.push(r2.name+' has a loading at the ceiling of 1.00. The item is almost a copy of the scale, or the sample is too small for a stable estimate. Treat omega as approximate.'));
       if(!om)notes.push('Omega could not be computed for these items.');
       if(dropped>0)notes.push(dropped+' row(s) with a missing answer were left out.');
       let html='<table class="stats-table"><tr><th>People</th><th>Items</th><th>Cronbach\'s α</th><th>95% CI</th><th>McDonald\'s ω</th><th>95% CI</th><th>Mean inter-item r</th></tr>'+
         '<tr><td>'+n+'</td><td>'+k+'</td><td>'+fq(al.alpha)+'</td><td>['+fq(aci[0])+', '+fq(aci[1])+']</td><td>'+(om?fq(om.omega):'–')+'</td><td>'+(oci?'['+fq(oci[0])+', '+fq(oci[1])+']':'–')+'</td><td>'+fq(sumR/cnt)+'</td></tr></table>'+
         '<table class="stats-table"><tr><th>Item</th><th>M</th><th>SD</th><th>Corrected item-total r</th><th>α if item deleted</th><th>Loading</th></tr>'+
-        rows.map(r2=>'<tr><td>'+escHTML(r2.name)+(r2.rev?' (reversed)':'')+'</td><td>'+r2.m.toFixed(2)+'</td><td>'+r2.sd.toFixed(2)+'</td><td>'+fq(r2.rit)+'</td><td>'+(isFinite(r2.ad)?fq(r2.ad):'–')+'</td><td>'+(isFinite(r2.load)?fq(r2.load):'–')+'</td></tr>').join('')+'</table>'+
+        rows.map(r2=>'<tr><td>'+escHTML(r2.name)+(r2.rev?' (reversed)':'')+'</td><td>'+r2.m.toFixed(2)+'</td><td>'+r2.sd.toFixed(2)+'</td><td>'+fq(r2.rit)+'</td><td>'+(isFinite(r2.ad)?fq(r2.ad):'–')+'</td><td>'+(isFinite(r2.load)?fq(Math.sign(r2.load)*Math.min(1,Math.abs(r2.load))):'–')+'</td></tr>').join('')+'</table>'+
         '<p class="desc">There is no single pass mark for either value. What counts as acceptable depends on the purpose, so report the value with its interval. Omega assumes the items measure one thing. If the scale has subscales, run each subscale separately. Omega here comes from a one-factor model; its interval is a bootstrap of 400 resamples.</p>'+
         (notes.length?'<ul style="font-size:13px;margin:6px 0 6px 18px">'+notes.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'');
       const apa='Internal consistency was α = '+fq(al.alpha)+', 95% CI ['+fq(aci[0])+', '+fq(aci[1])+']'+(om?', and McDonald\'s ω = '+fq(om.omega)+(oci?', 95% CI ['+fq(oci[0])+', '+fq(oci[1])+']':''):'')+' (k = '+k+' items, N = '+n+').';
