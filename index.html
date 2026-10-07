@@ -703,6 +703,7 @@
         <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcOA" checked style="accent-color:#6d28d9"><span data-i18n="research_src_openalex">OpenAlex (incl. arXiv/preprints)</span></label>
         <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="rsSrcPubmed" checked style="accent-color:#6d28d9"><span data-i18n="research_src_pubmed">PubMed</span></label>
       </div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="shOpen()">📚 Reading shelf (your own PDFs)</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="researchSearch()" data-i18n="research_find_btn">🔎 Find relevant papers</button></div>
       <p class="desc" id="rsStatus" style="margin-top:8px"></p>
       <div id="rsSortRow" style="display:none;margin:4px 0 8px;font-size:12.5px;align-items:center;gap:8px" class="row">
@@ -944,6 +945,14 @@
   <p class="desc" id="aiTestOut" style="margin:6px 0 0;font-weight:600;word-break:break-word"></p>
   <p style="font-size:12px;color:var(--muted)" id="activeProv"></p>
   <p class="warn" style="margin-top:10px" data-i18n="settings_warn">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
+</div></dialog>
+
+<dialog id="shelfDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>📚 Reading shelf</h2>
+  <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Add PDFs you have the right to read. Appuscholar reads each one in your browser and keeps only the extracted text, on this computer. The PDF file itself is not stored and nothing is uploaded. Scanned PDFs without a text layer cannot be read.</p>
+  <div class="row" style="gap:6px;flex-wrap:wrap" id="shTabs"></div>
+  <div id="shBody" style="margin-top:10px;max-height:64vh;overflow:auto;padding-right:4px"></div>
+  <div class="row" style="margin-top:10px"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('shelfDlg').close()">Close</button></div>
 </div></dialog>
 
 <dialog id="scaleDlg" class="dlg-wide"><div class="dlg-body">
@@ -6038,6 +6047,17 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>Type a topic and press <b>Find relevant papers</b>. Results come live from OpenAlex and PubMed. Sort by relevance, by most cited, or by newest. Tick the ones that matter.</p>
 <p>From your ticked papers you can draft a literature review or look for a research gap. The AI works only from the abstracts it was given, so it cannot cite a paper you did not tick. Open each paper and read it before you cite it in your own work.</p>
 <p>Your search words go to OpenAlex and PubMed. No document text does.</p>`},
+{id:'shelf',g:'Tools',t:'Reading shelf',k:'reading shelf pdf papers highlight notes search matrix synthesis passages summary backup indexeddb',h:`
+<p>Open <b>Reading shelf</b> in the Research panel. Press <b>Add PDFs</b> to put papers you have the right to read on the shelf. Appuscholar reads each PDF in your browser and keeps only the extracted text, on this computer. The PDF file itself is not stored and nothing is uploaded. A scanned PDF with no text layer cannot be read, and the shelf says so.</p>
+<ul>
+<li><b>Papers</b> lists what you have added. Rename a paper, read it page by page, or remove it. Removing asks you to press twice.</li>
+<li><b>Search</b> looks for words across every page and shows the page number and the words in context.</li>
+<li><b>Find passages for a sentence</b> takes a sentence from your draft and lists the pages that share its key words. It is word matching. A page on the list does not show that the paper supports your claim. Read it.</li>
+<li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Download it as CSV.</li>
+<li>In the reader, select a passage and press <b>Save selected passage as a highlight</b>. It keeps the page number and your note.</li>
+<li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
+</ul>
+<p>Extracted text can jumble tables and two-column layouts. Check the original for exact numbers. The shelf has its own backup: press <b>Back up the shelf</b> now and then, because clearing your browser data erases it and the normal Backup does not include it.</p>`},
 {id:'psych',g:'Tools',t:'Psychology Tools',k:'psychology tools summarize case study literature explain apa challenge devil argument',h:`
 <p>Select a passage of at least a few sentences, or select nothing to use the whole document, then press one button. The answer appears in the AI suggestion pane. Press Tab in the editor to insert it.</p>
 <ul>
@@ -6125,7 +6145,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 </ul>`},
 {id:'faq',g:'Help',t:'Questions people ask',k:'faq problem error key stopped lost work backup hindi english slow quota rate limit',h:`
 <p><strong>The AI says my key failed.</strong> Open <b>⚙ AI Provider / Key</b>, press Test, and read the message under the button. Free keys run out of quota. If you saved a second key for another provider, Appuscholar tries it automatically.</p>
-<p><strong>My work vanished.</strong> Everything lives in this browser. Clearing site data, switching browsers or moving to another computer removes it. Use <b>Backup</b> every week and keep the file somewhere safe.</p>
+<p><strong>My work vanished.</strong> Everything lives in this browser. Clearing site data, switching browsers or moving to another computer removes it. Use <b>Backup</b> every week and keep the file somewhere safe. Papers on the Reading shelf have their own backup button inside the shelf.</p>
 <p><strong>Which test do I use?</strong> Open the Statistics Lab and press <b>Which test fits my data?</b></p>
 <p><strong>The p-value looks different from SPSS.</strong> Check whether SPSS ran a Student or a Welch t-test and whether it reports a one- or two-tailed p. Appuscholar reports two-tailed p and uses Welch by default.</p>
 <p><strong>Something stayed in English after I chose Hindi.</strong> Test names and citation styles stay in English on purpose. The guide and the statistics text are still English only.</p>
@@ -6393,6 +6413,219 @@ function slScoreRun(){
   document.getElementById('statsPaste').value=pdCsv(newHeaders,newRows);
   window._pdMsg=null;statsParse();
   out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'');
+}
+
+/* ============ Reading shelf (item 55, first version) ============
+   Extracted text, highlights and notes live in IndexedDB on this computer. The PDF file is not kept.
+   Everything except the optional summary is deterministic and works offline once the PDF reader has loaded. */
+const SH={db:null,tab:'papers',papers:[],cur:null,page:1,status:''};
+function shOpenDB(){
+  return new Promise((res,rej)=>{
+    if(SH.db)return res(SH.db);
+    let r;try{r=indexedDB.open('appu_shelf',1)}catch(e){return rej(e)}
+    r.onupgradeneeded=()=>{r.result.createObjectStore('papers',{keyPath:'id'})};
+    r.onsuccess=()=>{SH.db=r.result;res(SH.db)};r.onerror=()=>rej(r.error);
+  });
+}
+async function shAll(){const db=await shOpenDB();return new Promise((res,rej)=>{const q=db.transaction('papers').objectStore('papers').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)})}
+async function shPut(p){const db=await shOpenDB();return new Promise((res,rej)=>{const tx=db.transaction('papers','readwrite');tx.objectStore('papers').put(p);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+async function shDel(id){const db=await shOpenDB();return new Promise((res,rej)=>{const tx=db.transaction('papers','readwrite');tx.objectStore('papers').delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+const SH_STOP=new Set('the and for are but not you all can had her was one our out has have been from that with this they will would there their what about which when your were than then them these those into more some such only also very over just like other most many much each because while where who how does did its may might could should being both between during before after again further once here why any own same too off per via'.split(' '));
+function shTerms(q){return String(q||'').toLowerCase().replace(/[^a-z0-9\u00c0-\u024f\s'-]/g,' ').split(/\s+/).map(w=>w.replace(/^['-]+|['-]+$/g,'')).filter(w=>w.length>2&&!SH_STOP.has(w)).map(appuStem)}
+function shCount(text,term){let n=0,i=0;const t=text.toLowerCase();while((i=t.indexOf(term,i))>=0){n++;i+=term.length}return n}
+function shSnippet(text,terms,len){
+  const low=text.toLowerCase();let at=-1;
+  for(const t of terms){const i=low.indexOf(t);if(i>=0&&(at<0||i<at))at=i}
+  if(at<0)at=0;
+  const a=Math.max(0,at-Math.floor(len/2)),b=Math.min(text.length,a+len);
+  let sn=text.slice(a,b).replace(/\s+/g,' ');
+  let h=escHTML(sn);
+  terms.forEach(t=>{if(t.length>2)h=h.replace(new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[a-z]*)','ig'),'<mark>$1</mark>')});
+  return(a>0?'… ':'')+h+(b<text.length?' …':'');
+}
+/* ranking over the whole shelf. mode 'and' needs every term on the page. */
+function shRank(papers,query,mode,limit){
+  const terms=Array.from(new Set(shTerms(query)));if(!terms.length)return[];
+  const pages=[];papers.forEach(p=>p.pages.forEach((tx,i)=>pages.push({p:p,page:i+1,text:tx,low:tx.toLowerCase()})));
+  const N=pages.length||1,df={};
+  terms.forEach(t=>{df[t]=pages.reduce((a,x)=>a+(x.low.indexOf(t)>=0?1:0),0)});
+  const out=[];
+  pages.forEach(x=>{
+    let sc=0,hit=0;
+    terms.forEach(t=>{const c=shCount(x.low,t);if(c){hit++;sc+=Math.log(1+N/(1+df[t]))*(1+Math.log(c))}});
+    if(!hit)return;
+    if(mode==='and'&&hit<terms.length)return;
+    out.push({p:x.p,page:x.page,text:x.text,score:sc,hit:hit,terms:terms});
+  });
+  out.sort((a,b)=>b.score-a.score);
+  return out.slice(0,limit||20);
+}
+function shBestSentence(text,terms){
+  const sents=(text.replace(/\s+/g,' ').match(/[^.!?]+[.!?]+/g)||[text]).map(x=>x.trim()).filter(x=>x.length>20);
+  let best='',bs=-1;
+  sents.forEach(se=>{const l=se.toLowerCase();let sc=0;terms.forEach(t=>{if(l.indexOf(t)>=0)sc++});if(sc>bs){bs=sc;best=se}});
+  return best||text.slice(0,240);
+}
+async function shExtractPdf(file){
+  if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader needs the internet once to load. Try again when you are online.');
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  const n=Math.min(pdf.numPages,200),pages=[];
+  for(let k=1;k<=n;k++){
+    const pg=await pdf.getPage(k),tc=await pg.getTextContent();let t='';
+    tc.items.forEach(it=>{t+=it.str+(it.hasEOL?'\n':' ')});
+    pages.push(t.replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').trim());
+  }
+  return{pages:pages,total:pdf.numPages};
+}
+function shGuessTitle(pages,fallback){
+  const first=(pages[0]||'').split('\n').map(x=>x.trim()).filter(x=>x.length>8&&x.length<180);
+  return first[0]||fallback;
+}
+async function shAddFiles(input){
+  const files=Array.from(input.files||[]);input.value='';
+  if(!files.length)return;
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  const have=await shAll();const msgs=[];
+  for(const f of files){
+    SH.status='Reading '+f.name+'…';shRender();
+    if(!/\.pdf$/i.test(f.name)){msgs.push(f.name+': not a PDF');continue}
+    if(have.some(p=>p.file===f.name&&p.size===f.size)){msgs.push(f.name+': already on the shelf');continue}
+    try{
+      const r=await shExtractPdf(f),chars=r.pages.reduce((a,x)=>a+x.length,0);
+      if(chars<200){msgs.push(f.name+': no readable text (it looks scanned). Not added.');continue}
+      const rec={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:shGuessTitle(r.pages,f.name.replace(/\.pdf$/i,'')),file:f.name,size:f.size,added:new Date().toISOString(),pages:r.pages,total:r.total,notes:[],cells:{}};
+      await shPut(rec);have.push(rec);
+      msgs.push(f.name+': added, '+r.pages.length+' pages'+(r.total>r.pages.length?' (first '+r.pages.length+' of '+r.total+')':''));
+    }catch(e){msgs.push(f.name+': '+(e&&e.message?e.message:'could not be read'))}
+  }
+  SH.status=msgs.join(' | ');
+  await shRefresh();
+}
+async function shRefresh(){SH.papers=await shAll();SH.papers.sort((a,b)=>a.added<b.added?-1:1);shRender()}
+async function shOpen(){
+  const d=document.getElementById('shelfDlg');if(!d.open)d.showModal();
+  SH.tab='papers';SH.cur=null;SH.status='';
+  try{await shRefresh()}catch(e){document.getElementById('shBody').textContent='This browser would not open its local store, so the shelf cannot work here. Private windows often block it.'}
+}
+function shTab(t){SH.tab=t;SH.cur=null;shRender()}
+function shRender(){
+  const tabs=[['papers','Papers'],['search','Search'],['find','Find passages for a sentence'],['matrix','Matrix']];
+  document.getElementById('shTabs').innerHTML=tabs.map(x=>'<button class="btn '+(SH.tab===x[0]&&!SH.cur?'btn-purple':'btn-ghost')+'" onclick="shTab(\''+x[0]+'\')">'+x[1]+'</button>').join('');
+  const b=document.getElementById('shBody');
+  if(SH.cur){shReaderRender(b);return}
+  ({papers:shPapersRender,search:shSearchRender,find:shFindRender,matrix:shMatrixRender})[SH.tab](b);
+}
+function shStatusHTML(){return SH.status?'<p style="font-size:13px;margin:6px 0" role="status">'+escHTML(SH.status)+'</p>':''}
+async function shUsage(){try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();return Math.round((e.usage||0)/1048576)+' MB used of about '+Math.round((e.quota||0)/1048576)+' MB'}}catch(e){}return''}
+function shPapersRender(b){
+  const L=SH.papers.map(p=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><input type="text" value="'+escHTML(p.title)+'" style="width:100%;font-weight:700" onchange="shRename(\''+p.id+'\',this.value)" aria-label="Title"><div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+escHTML(p.file)+' · '+p.pages.length+' pages · '+p.notes.length+' highlights</div><div class="row" style="gap:6px"><button class="btn btn-purple" onclick="shRead(\''+p.id+'\',1)">Read</button><button class="btn btn-ghost" id="shDel_'+p.id+'" onclick="shAskDel(\''+p.id+'\')">Remove from shelf</button></div></div>').join('');
+  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'shFile\').click()">➕ Add PDFs</button><input type="file" id="shFile" accept=".pdf,application/pdf" multiple style="display:none" onchange="shAddFiles(this)"><button class="btn btn-ghost" onclick="shBackup()">Back up the shelf</button><button class="btn btn-ghost" onclick="document.getElementById(\'shRest\').click()">Restore a shelf backup</button><input type="file" id="shRest" accept=".json" style="display:none" onchange="shRestore(this)"></div>'+shStatusHTML()+(SH.papers.length?L:'<p style="font-size:13.5px">The shelf is empty. Add a PDF to start.</p>')+'<p style="font-size:12.5px;color:var(--muted)" id="shUse"></p><p style="font-size:12.5px;color:var(--muted)">The shelf is kept apart from the normal backup. Press <b>Back up the shelf</b> now and then. Clearing your browser data erases the shelf.</p>';
+  shUsage().then(u=>{const e=document.getElementById('shUse');if(e&&u)e.textContent='Browser storage: '+u+'.'});
+}
+async function shRename(id,v){const p=SH.papers.find(x=>x.id===id);if(!p)return;p.title=String(v).trim()||p.file;await shPut(p)}
+async function shAskDel(id){
+  const btn=document.getElementById('shDel_'+id);
+  if(btn&&btn.getAttribute('data-sure')!=='1'){btn.setAttribute('data-sure','1');btn.textContent='Press again to remove it and its highlights';return}
+  await shDel(id);await shRefresh();
+}
+function shSearchRender(b){
+  b.innerHTML='<div class="row" style="gap:8px"><input type="text" id="shQ" style="flex:1" placeholder="Words to look for, for example: sleep memory adolescents" onkeydown="if(event.key===\'Enter\')shSearchRun()"><button class="btn btn-purple" onclick="shSearchRun()">Search</button></div><div id="shRes" style="margin-top:8px"></div>'+(SH.papers.length?'':'<p style="font-size:13.5px">The shelf is empty.</p>');
+}
+function shResHTML(r,extra){
+  return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><div style="font-weight:700;font-size:13.5px">'+escHTML(r.p.title)+' <span style="font-weight:400;color:var(--muted)">· page '+r.page+'</span></div><div style="font-size:13px;line-height:1.55;margin:4px 0">'+(extra||shSnippet(r.text,r.terms,220))+'</div><button class="btn btn-ghost" onclick="shRead(\''+r.p.id+'\','+r.page+')">Open this page</button></div>';
+}
+function shSearchRun(){
+  const q=document.getElementById('shQ').value,box=document.getElementById('shRes');
+  let r=shRank(SH.papers,q,'and',20),note='';
+  if(!r.length&&shTerms(q).length>1){r=shRank(SH.papers,q,'or',20);note=r.length?'<p style="font-size:12.5px;color:var(--muted)">No page has every word, so these pages have some of them.</p>':''}
+  box.innerHTML=r.length?note+r.map(x=>shResHTML(x)).join(''):'<p style="font-size:13.5px">'+(shTerms(q).length?'No page on the shelf matches.':'Type a word or two.')+'</p>';
+}
+function shFindRender(b){
+  let pre='';try{pre=selText2()}catch(e){}
+  b.innerHTML='<p style="font-size:13.5px;margin:0 0 6px">Paste or write a sentence from your draft. Appuscholar lists the pages on your shelf that share its key words. This is word matching. A page that appears here does not show that the paper supports your sentence. Read it.</p><textarea id="shSent" rows="3" style="width:100%">'+escHTML(pre)+'</textarea><div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" onclick="shFindRun()">Find pages</button></div><div id="shRes" style="margin-top:8px"></div>'+(SH.papers.length?'':'<p style="font-size:13.5px">The shelf is empty.</p>');
+}
+function shFindRun(){
+  const q=document.getElementById('shSent').value,box=document.getElementById('shRes');
+  const r=shRank(SH.papers,q,'or',5).filter(x=>x.hit>=Math.min(2,x.terms.length));
+  box.innerHTML=r.length?r.map(x=>shResHTML(x,'<i>Closest sentence:</i> '+shSnippet(shBestSentence(x.text,x.terms),x.terms,320))).join(''):'<p style="font-size:13.5px">'+(shTerms(q).length?'No page shares enough words with that sentence.':'Write a sentence first.')+'</p>';
+}
+function shRead(id,page){SH.cur=SH.papers.find(p=>p.id===id)||null;SH.page=Math.max(1,page||1);shRender()}
+function shMarked(p,page){
+  const text=p.pages[page-1]||'';const ranges=[];
+  p.notes.filter(n=>n.page===page&&n.quote).forEach(n=>{const i=text.indexOf(n.quote);if(i>=0)ranges.push([i,i+n.quote.length])});
+  ranges.sort((a,b)=>a[0]-b[0]);
+  let out='',pos=0;
+  ranges.forEach(r=>{if(r[0]<pos)return;out+=escHTML(text.slice(pos,r[0]))+'<mark>'+escHTML(text.slice(r[0],r[1]))+'</mark>';pos=r[1]});
+  return out+escHTML(text.slice(pos));
+}
+function shReaderRender(b){
+  const p=SH.cur;if(!p)return;const n=p.pages.length;
+  const hl=p.notes.filter(x=>x.quote).sort((a,c)=>a.page-c.page);
+  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button></div>'+
+   '<div id="shText" style="white-space:pre-wrap;font-size:14px;line-height:1.65;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;user-select:text">'+shMarked(p,SH.page)+'</div>'+
+   '<p style="font-size:12.5px;color:var(--muted);margin:0 0 6px">This is the text extracted from the PDF. Tables and columns may run together, so check the original for exact figures. Select a passage above to highlight it.</p>'+
+   '<textarea id="shNote" rows="2" style="width:100%" placeholder="Your note on the selected passage (optional)"></textarea><div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" onclick="shSaveHL()">Save selected passage as a highlight</button></div>'+
+   '<h3 style="margin:12px 0 4px;font-size:14px">Highlights</h3>'+(hl.length?hl.map(x=>'<div style="border-left:3px solid #d97706;padding:2px 8px;margin:6px 0;font-size:13px"><b>p. '+x.page+'</b> “'+escHTML(x.quote.slice(0,300))+'”'+(x.note?'<br><i>'+escHTML(x.note)+'</i>':'')+'<br><button class="btn btn-ghost" onclick="shRead(\''+p.id+'\','+x.page+')">Go to page</button> <button class="btn btn-ghost" onclick="shDelHL(\''+x.id+'\')">Delete</button></div>').join(''):'<p style="font-size:13px">None yet.</p>')+
+   '<h3 style="margin:12px 0 4px;font-size:14px">Summary, after you think first</h3><p style="font-size:13px;margin:0 0 4px">In your own words, in at least two lines: what do you think this paper says? The AI summary unlocks after that.</p><textarea id="shMine" rows="3" style="width:100%" oninput="shMineCheck()"></textarea><div class="row" style="margin-top:6px"><button class="btn btn-ghost" id="shAiBtn" onclick="shSummarise()" disabled>Summarise with AI</button></div><div id="shAi" style="margin-top:8px;font-size:13.5px;line-height:1.6;white-space:pre-wrap" aria-live="polite"></div>';
+}
+function shPage(d){if(!SH.cur)return;SH.page=Math.min(SH.cur.pages.length,Math.max(1,SH.page+d));shRender()}
+function shGo(v){if(!SH.cur)return;SH.page=Math.min(SH.cur.pages.length,Math.max(1,parseInt(v,10)||1));shRender()}
+function shMineOk(t){const lines=String(t).split(/\n/).map(x=>x.trim()).filter(Boolean);return lines.length>=2&&String(t).trim().split(/\s+/).length>=12}
+function shMineCheck(){const ok=shMineOk(document.getElementById('shMine').value);const b=document.getElementById('shAiBtn');b.disabled=!ok;b.className='btn '+(ok?'btn-purple':'btn-ghost')}
+async function shSaveHL(){
+  const p=SH.cur;if(!p)return;
+  const sel=window.getSelection(),txt=sel?String(sel.toString()).replace(/\s+/g,' ').trim():'';
+  const box=document.getElementById('shText');
+  if(!txt||!sel.anchorNode||!box.contains(sel.anchorNode)){showToast('Select some text on the page first');return}
+  /* store the quote exactly as it appears in the page text, so it can be found and marked again */
+  const pageText=p.pages[SH.page-1]||'';
+  const rx=new RegExp(txt.split(' ').map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('\\s+'));
+  const m=pageText.match(rx);
+  if(!m){showToast('That selection crosses a highlight. Select a shorter passage.');return}
+  p.notes.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),page:SH.page,quote:m[0],note:(document.getElementById('shNote').value||'').trim(),at:new Date().toISOString()});
+  await shPut(p);shRender();showToast('Highlight saved');
+}
+async function shDelHL(id){const p=SH.cur;if(!p)return;p.notes=p.notes.filter(x=>x.id!==id);await shPut(p);shRender()}
+async function shSummarise(){
+  const p=SH.cur,mine=document.getElementById('shMine').value,out=document.getElementById('shAi');
+  if(!p||!shMineOk(mine))return;
+  p.notes.push({id:'n'+Date.now().toString(36),page:0,quote:'',note:'My own summary before the AI: '+mine.trim(),at:new Date().toISOString()});
+  await shPut(p);
+  const full=p.pages.join('\n\n').replace(/[^\s@<>"']+@[^\s@<>"']+\.[A-Za-z]{2,}/g,'[author email removed]'),use=full.slice(0,12000);
+  out.textContent='Reading…';
+  try{
+    const a=await callAI('You are helping a psychology student read a paper. Summarise the paper text below under exactly these headings: Aim, Method, Key findings, Limitations. Use only what the text says. If something is not in the text write "not reported". Under 200 words. The text was extracted from a PDF and may be jumbled.\n\nPAPER TEXT'+(full.length>use.length?' (first 12,000 characters only)':'')+':\n'+use,{temp:0.2,max:700,noLang:true});
+    out.textContent=String(a||'').trim()+'\n\nCompare this with your own two lines. The AI can be wrong or miss a limitation.';
+  }catch(e){let m='The summary could not be made.';try{m=String(apiMsg(e)).replace(/<[^>]+>/g,'')}catch(x){}out.textContent=m}
+}
+function shCols(){try{const c=JSON.parse(LS.get('appu_shelf_cols')||'null');if(Array.isArray(c)&&c.length)return c}catch(e){}return['Sample','Method','Key finding']}
+function shMatrixRender(b){
+  const cols=shCols();
+  const head='<tr><th style="text-align:left;padding:4px">Paper</th>'+cols.map((c,i)=>'<th style="text-align:left;padding:4px">'+escHTML(c)+' <button class="btn btn-ghost" style="padding:0 6px" title="Remove column" onclick="shColDel('+i+')">×</button></th>').join('')+'</tr>';
+  const rows=SH.papers.map(p=>'<tr><td style="vertical-align:top;padding:4px;font-weight:700;min-width:140px">'+escHTML(p.title)+'</td>'+cols.map((c,i)=>'<td style="vertical-align:top;padding:4px"><textarea rows="3" style="width:100%;min-width:130px" onchange="shCell(\''+p.id+'\','+i+',this.value)">'+escHTML((p.cells||{})[c]||'')+'</textarea></td>').join('')+'</tr>').join('');
+  b.innerHTML='<p style="font-size:13.5px;margin:0 0 6px">One row per paper, one column per thing you compare. Fill it in from your reading. The cells are yours, not the AI\'s.</p><div class="row" style="gap:8px;flex-wrap:wrap"><input type="text" id="shCol" placeholder="New column, for example: Sample size" style="flex:1"><button class="btn btn-ghost" onclick="shColAdd()">Add column</button><button class="btn btn-purple" onclick="shMatrixCsv()">Download as CSV</button></div>'+(SH.papers.length?'<div style="overflow:auto;margin-top:8px"><table style="border-collapse:collapse;font-size:13px;width:100%">'+head+rows+'</table></div>':'<p style="font-size:13.5px">The shelf is empty.</p>');
+}
+function shColAdd(){const v=(document.getElementById('shCol').value||'').trim();if(!v)return;const c=shCols();if(c.indexOf(v)<0)c.push(v);LS.set('appu_shelf_cols',JSON.stringify(c));shRender()}
+function shColDel(i){const c=shCols();c.splice(i,1);LS.set('appu_shelf_cols',JSON.stringify(c));shRender()}
+async function shCell(id,i,v){const p=SH.papers.find(x=>x.id===id);if(!p)return;p.cells=p.cells||{};p.cells[shCols()[i]]=v;await shPut(p)}
+function shMatrixCsv(){const c=shCols();pdDownload('reading_matrix.csv',pdCsv(['Paper'].concat(c),SH.papers.map(p=>[p.title].concat(c.map(k=>(p.cells||{})[k]||'')))))}
+function shBackup(){
+  const bundle={app:'appuscholar-shelf',v:1,exported:new Date().toISOString(),papers:SH.papers};
+  const blob=new Blob([JSON.stringify(bundle)],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='appuscholar-shelf-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  SH.status='Shelf backed up: '+SH.papers.length+' papers.';shRender();
+}
+function shRestore(input){
+  const f=input.files&&input.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=async()=>{
+    let b=null;try{b=JSON.parse(String(rd.result))}catch(e){}
+    input.value='';
+    if(!b||b.app!=='appuscholar-shelf'||!Array.isArray(b.papers)){SH.status='That file is not a shelf backup.';shRender();return}
+    let n=0;for(const p of b.papers){if(p&&typeof p.id==='string'&&Array.isArray(p.pages)){p.notes=Array.isArray(p.notes)?p.notes:[];p.cells=p.cells&&typeof p.cells==='object'?p.cells:{};await shPut(p);n++}}
+    SH.status='Restored '+n+' papers.';await shRefresh();
+  };
+  rd.readAsText(f);
 }
 
 const STAT_TESTS={
