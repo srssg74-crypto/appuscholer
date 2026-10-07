@@ -945,6 +945,36 @@
   <p class="warn" style="margin-top:10px" data-i18n="settings_warn">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
 </div></dialog>
 
+<dialog id="guideDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>📖 Guide</h2>
+  <p style="font-size:13px;color:var(--muted);margin:0 0 8px">The guide is in English for now. A Hindi version is planned.</p>
+  <div class="row" style="gap:8px;flex-wrap:wrap">
+    <input type="search" id="guideQ" placeholder="Search the guide, for example: alpha, consent, backup" style="flex:1;min-width:220px" oninput="guideFilter()" aria-label="Search the guide">
+    <button class="btn btn-ghost" onclick="guidePrint()">🖨 Print or save as PDF</button>
+  </div>
+  <p id="guideCount" style="font-size:12.5px;color:var(--muted);margin:6px 0"></p>
+  <div id="guideList" style="max-height:62vh;overflow:auto;padding-right:4px"></div>
+  <div class="row" style="margin-top:10px"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('guideDlg').close()">Close</button></div>
+</div></dialog>
+
+<dialog id="reportDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>🛠 Report a problem</h2>
+  <p style="font-size:13.5px">Describe what you were doing and what went wrong. Do not type participant names or other personal details.</p>
+  <textarea id="repText" rows="4" style="width:100%" placeholder="For example: I pasted my data, pressed Parse, and the page showed an error."></textarea>
+  <p style="font-size:13px;margin:10px 0 4px"><b>What the app adds to the report.</b> This is everything. Nothing from your documents, sources, data or keys is included.</p>
+  <pre id="repFacts" style="font-size:12px;white-space:pre-wrap;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;max-height:200px;overflow:auto;margin:0"></pre>
+  <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:8px 0;cursor:pointer"><input type="checkbox" id="repUsage" onchange="repRender()"> Also include how often I opened each tool (counts only, no text)</label>
+  <p style="font-size:13px;margin:6px 0 2px"><b>On this computer only.</b> Which tools you used and where errors occurred. Nobody sees this unless you tick the box above.</p>
+  <pre id="repLocal" style="font-size:12px;white-space:pre-wrap;margin:0"></pre>
+  <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+    <button class="btn btn-purple" style="flex:1" id="repMail" onclick="repSend()">📧 Open an email to send</button>
+    <button class="btn btn-ghost" onclick="repCopy()">Copy the report</button>
+    <button class="btn btn-ghost" onclick="repClear()">Clear the counts</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('reportDlg').close()">Close</button>
+  </div>
+  <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">The email opens in your own email app. You read it and press send yourself.</p>
+</div></dialog>
+
 <dialog id="pdSendDlg"><div class="dlg-body">
   <h2>Personal details in this text</h2>
   <p id="pdSendList" style="font-size:14px"></p>
@@ -998,6 +1028,11 @@
 <dialog id="helpDlg" class="dlg-wide"><div class="dlg-body">
   <h2 data-i18n="help_h2">❓ Help &amp; Troubleshooting</h2>
   <p style="font-size:13px;color:var(--muted)" data-i18n="help_intro">Most problems have a quick fix below. Check here first — it's faster than waiting on an email.</p>
+
+  <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('helpDlg').close();guideOpen()">📖 Open the Guide</button>
+    <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();repOpen()">🛠 Report a problem</button>
+  </div>
 
   <details open style="margin-top:12px">
     <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_code">🔑 My access code won't work</summary>
@@ -1899,6 +1934,7 @@ initSupportUI();
 
 /* ============ Tool tabs (Psychology / Statistics / Style / Citations / Chat) ============ */
 function showTool(name){
+  try{usageBump('tools',name)}catch(e){}
   document.querySelectorAll('.tool-tab').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));
   document.querySelectorAll('.tool-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===name));
   LS.set('appu_tool_tab',name);
@@ -5931,6 +5967,224 @@ async function pdPreSend(prompt){
   if(a==='send'){window._pdOk[sc.sig]=1;return prompt}
   return pdMask(prompt);
 }
+const GUIDE=[
+{id:'start',g:'Begin',t:'Your first ten minutes',k:'start begin first key provider setup sample project',h:`
+<p>You need about ten minutes and a free AI key. Statistics, charts and citations work without a key, so you can try those first.</p>
+<ol>
+<li>Press <b>⚙ AI Provider / Key</b> at the top right. Pick Gemini or Groq, follow the link, copy the key, paste it in and press <b>Test</b>. The message under the button tells you whether it worked. The key stays in this browser.</li>
+<li>Press <b>New Research Project</b> in the left menu and give it a name. Everything you do afterwards is saved under that project.</li>
+<li>Open <b>Idea &amp; Feasibility</b>. Type one research question and what you really have: how many people you can reach, how many months, which software. Press <b>Assess feasibility</b>. Expect a frank read, and expect to disagree with part of it.</li>
+<li>Open <b>Research</b> and search your topic. Tick the papers that look relevant. The abstracts you ticked are all the AI sees when it drafts a review.</li>
+<li>Open <b>Statistics &amp; Charts</b>, then <b>Open Statistics Lab</b>. Paste this small table and press <b>Parse data</b>:<pre>group,score
+A,12
+A,15
+A,11
+B,9
+B,11
+B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what it picks.</li>
+<li>Open the guide again whenever you get stuck. Search for a word, such as <i>alpha</i> or <i>consent</i>.</li>
+</ol>`},
+{id:'stages',g:'Begin',t:'The six stages',k:'stages order idea literature design ethics analysis writing publish menu sidebar',h:`
+<p>The left menu follows the order most projects take. You can open any tool at any time. The stages are a suggestion.</p>
+<ul>
+<li><b>Idea &amp; Feasibility.</b> Decide what to study and whether you can finish it.</li>
+<li><b>Literature Review.</b> Find papers, read them, and draft the review from what you found.</li>
+<li><b>Design &amp; Ethics.</b> Choose the method, work out which approvals you need, and prepare consent forms and the ethics package.</li>
+<li><b>Collection &amp; Analysis.</b> Run tests on your data, make charts, and code interviews.</li>
+<li><b>Writing.</b> Train it on your own style, manage citations, and ask questions while you write.</li>
+<li><b>Review &amp; Publish.</b> Turn the document into slides. The AI text and Viva question buttons help you check your own work before you hand it in.</li>
+</ul>`},
+{id:'editor',g:'Tools',t:'The writing area and its buttons',k:'editor write continue improve extend template viva draft first ai text highlight document',h:`
+<p>The large page on the left is your document. Several buttons sit under it.</p>
+<ul>
+<li><b>Continue Writing</b> suggests the next few sentences. They appear in the AI suggestion pane. Press Tab in the editor to take them, or ignore them.</li>
+<li><b>Improve selection</b> rewrites the text you selected. Check that it still says what you meant.</li>
+<li><b>Extend</b> roughly doubles the length of the passage you selected, with more detail and examples. Press Tab to replace your selection with it.</li>
+<li><b>Template</b> inserts a ready-made outline for a lab report, an essay or a literature review. You fill it in.</li>
+<li><b>AI text</b> marks every passage the AI inserted, directly in the document. Use it before you submit, so you can see how much of the page is yours.</li>
+<li><b>Viva question</b> asks you an examiner-style question about your own writing. The answer box has no AI help.</li>
+<li><b>Draft first</b> turns the AI into a questioner. You write, and it asks about what you wrote.</li>
+</ul>
+<p><b>Worked example.</b> Write two rough paragraphs of your introduction. Turn on Draft first. Answer the questions it asks, then fix the paragraphs. You end up with sentences that are yours and an argument you can defend aloud.</p>`},
+{id:'idea',g:'Tools',t:'Idea & Feasibility',k:'idea feasibility topic question resources timeframe assess',h:`
+<p>Describe the question, what you can reach, how long you have, and any limit that worries you. The advisor gives an outside opinion on whether the plan fits your resources.</p>
+<p><b>Worked example.</b> Question: does sleep quality predict exam marks in college students? Resources: 80 students from your own department, a free survey form, no budget. Timeframe: one semester. The honest answer will probably point at sample size, a reliable sleep measure, and the ethics route for student participants.</p>
+<p>It will not approve your topic. Your supervisor does that.</p>`},
+{id:'research',g:'Tools',t:'Research (finding papers)',k:'research papers search openalex pubmed literature review gap abstracts sort cited',h:`
+<p>Type a topic and press <b>Find relevant papers</b>. Results come live from OpenAlex and PubMed. Sort by relevance, by most cited, or by newest. Tick the ones that matter.</p>
+<p>From your ticked papers you can draft a literature review or look for a research gap. The AI works only from the abstracts it was given, so it cannot cite a paper you did not tick. Open each paper and read it before you cite it in your own work.</p>
+<p>Your search words go to OpenAlex and PubMed. No document text does.</p>`},
+{id:'psych',g:'Tools',t:'Psychology Tools',k:'psychology tools summarize case study literature explain apa challenge devil argument',h:`
+<p>Select a passage of at least a few sentences, or select nothing to use the whole document, then press one button. The answer appears in the AI suggestion pane. Press Tab in the editor to insert it.</p>
+<ul>
+<li><b>Summarize research paper.</b> Paste an abstract or a section. You get four headings: Aim, Method, Key findings and Limitations. Anything the text does not say comes back as "not reported".</li>
+<li><b>Analyze case study.</b> Names the psychological issues and the theories that apply, as study material. It gives no diagnosis and no treatment advice. Remove names, dates of birth and addresses first. The app asks you to confirm this once per session.</li>
+<li><b>Literature review helper.</b> Advises how to organize a review paragraph: themes, how sources agree or clash, and angles for critique. It does not invent references.</li>
+<li><b>Explain concept simply.</b> Explains a term the way you would to a first-year student, with one everyday example and one point worth remembering for an exam.</li>
+<li><b>Format results in APA.</b> Paste raw SPSS, JASP or R output and get APA 7th wording.</li>
+<li><b>Challenge my argument.</b> Gives up to four weaknesses a critical reviewer would raise. It does not rewrite your text and it offers no replacement sentences.</li>
+</ul>
+<p>Treat every output as a draft from a fast but fallible assistant.</p>`},
+{id:'design',g:'Tools',t:'Design & Ethics',k:'design ethics regulatory pathway protocol synopsis ethics committee consent ctri registration pi budget',h:`
+<p>Six helpers, each producing a checklist or a draft document.</p>
+<ul>
+<li><b>Regulatory-pathway wizard.</b> Answer questions about your study to see which approvals may apply.</li>
+<li><b>Protocol / synopsis builder.</b> Builds the study outline most committees ask for.</li>
+<li><b>Ethics Committee package + consent.</b> Drafts the cover note and a consent form.</li>
+<li><b>CTRI registration readiness.</b> Checks whether a clinical-trial registration is likely to apply.</li>
+<li><b>PI eligibility &amp; training.</b> Lists who may lead the study and what training is expected.</li>
+<li><b>Trial budget estimator.</b> A starting estimate.</li>
+</ul>
+<p>These are starting checklists. They are not a legal ruling. Your own institution's Ethics Committee decides what applies to you, and you should ask them before you collect any data.</p>`},
+{id:'stats',g:'Tools',t:'Statistics Lab',k:'statistics stats test paste data parse csv t-test anova correlation chi regression alpha omega welch kruskal mann whitney spearman',h:`
+<p>Paste a table from Excel, SPSS or Google Sheets, or upload a .csv. The first row holds column names. Press <b>Parse data</b>, pick a test, and the lab computes the result and writes an APA sentence. Everything is calculated in your browser.</p>
+<p><b>Tests available.</b> Descriptives, one-sample, independent and paired t-tests, one-way ANOVA (Welch with a Games-Howell follow-up is the default, classic ANOVA and Tukey are there too), Kruskal-Wallis with a Dunn follow-up, Mann-Whitney, Wilcoxon, Pearson and Spearman correlation, simple regression, chi-square, Fisher's exact test, and Cronbach's alpha with McDonald's omega.</p>
+<p><b>Which test fits my data?</b> A guide that asks about your design and explains why it picks a test. Each answer has a short demo.</p>
+<p><b>Personal-data scan.</b> When you parse, the lab flags columns that look like names, phone numbers, emails, roll numbers or birth dates, and offers to remove them or replace them with codes. See <i>Handling participant data</i>.</p>
+<p><b>Worked example.</b> Two groups, ten scores each. Choose the independent-samples t-test. The lab reports a Welch t, the degrees of freedom, p, Hedges' g, and a sentence you can paste into your results.</p>
+<p>Anything the lab cannot compute, such as a two-way ANOVA or multiple regression, needs another program for now.</p>`},
+{id:'numcheck',g:'Tools',t:'Check the numbers in my document',k:'numbers check p value recompute apa statistics reporting errors',h:`
+<p>Press <b>Check the numbers in my document</b> in the Statistics panel. It finds results written in the usual APA order, such as <i>t(21) = 2.15, p = .043</i>, recomputes p from the statistic and degrees of freedom, and marks each one as matching, close, or wrong.</p>
+<p>It catches typos, rounding slips, and a p that was written as significant when the numbers say otherwise. It cannot tell you whether you picked the right test.</p>`},
+{id:'charts',g:'Tools',t:'Charts',k:'chart graph bar line venn figure picture',h:`
+<p>Chart Maker draws bar and line charts from numbers you type or paste, and two- or three-circle Venn diagrams. Add the finished chart to your document with one press.</p>
+<p>Label the axes with units, and give every figure a caption in the text.</p>`},
+{id:'qual',g:'Tools',t:'Qualitative Coding',k:'qualitative coding codes themes interview thematic tag passage export markdown',h:`
+<p>Select a passage in your document, then tap a code to tag it. Codes can sit under other codes, so related ideas group into themes. Coding works across all your documents. <b>Export all coded passages</b> gives you a Markdown file with each code and the passages under it.</p>
+<p><b>Worked example.</b> Paste an interview transcript. Make top-level codes such as <i>stress sources</i> and <i>coping</i>. Select a sentence about exam fear, tap the stress code, then move on. When you finish, export and read each code's passages together.</p>
+<p>Coding is your judgment. The tool only keeps the tags.</p>`},
+{id:'style',g:'Tools',t:'My Writing Style',k:'style writing voice learn files upload profile train',h:`
+<p>Upload your own earlier writing, up to 100 files in Word, PDF or text. Appuscholar writes a short profile of your style: sentence length, tone, habits. Switch on <b>Use my style in suggestions</b> and the AI follows the profile.</p>
+<p>You can edit the profile by hand. Only your own writing belongs in it. Files you did not write will pull the voice away from yours.</p>`},
+{id:'cite',g:'Tools',t:'Citation Manager',k:'citation cite reference apa mla chicago doi source bibliography cross-check',h:`
+<p>Choose a style (APA 7th, MLA 9th or Chicago). Add a source by typing the fields, or paste a DOI, a link, a PubMed ID, a full reference or just a title and press <b>Fill from DOI, link, PubMed ID or title</b>. Check what it filled. Then insert the citation into your text.</p>
+<p><b>Cross-check citations and references</b> compares what you cited in the text with your reference list. It lists citations with no reference, references nobody cited, and near-matches such as a misspelled author name.</p>
+<p>It checks consistency. It does not confirm that a paper says what you claim it says. Read the paper.</p>`},
+{id:'chat',g:'Tools',t:'Ask Appuscholar',k:'ask chat question study buddy insert',h:`
+<p>A chat for questions about your writing or your method. Every reply has an <b>Insert into document</b> button. It only knows what you type here. It cannot see your data unless you paste it, and it should not be given participant details.</p>`},
+{id:'slides',g:'Tools',t:'Make PPT',k:'slides powerpoint ppt presentation heading pptx',h:`
+<p>Your Heading 1 and Heading 2 styles become slide breaks. Text under a heading becomes bullet points. A picture becomes its own slide. Press <b>Generate slide preview</b>, check it, then download the .pptx.</p>`},
+{id:'data',g:'Practice',t:'Handling participant data',k:'participant data privacy personal names code key pseudonymisation anonymisation consent dpdp identifiers',h:`
+<p>The Statistics Lab flags columns that look like identifiers. For each one you choose to remove it, replace it with a code (P001, P002, and so on), or keep it. If you use codes, you download a key file that maps each code back to the person.</p>
+<p>Coding is <b>pseudonymisation</b>. It is weaker than anonymisation. While the key file exists, the data still counts as personal data. Store the key file apart from the coded data, for example on a different drive. If you lose it, nobody can recover the names.</p>
+<p>The scan reads column headings and the shape of the values. It cannot see a name typed inside an open answer. Read long text answers yourself before they go anywhere, including to an AI provider.</p>
+<p>Before text goes to an AI provider, Appuscholar looks for email addresses, phone numbers and ID numbers and asks whether to mask them. It cannot find a name inside a sentence. Never paste participant names into an AI box.</p>`},
+{id:'habits',g:'Practice',t:'Habits that keep your own thinking in the work',k:'habits thinking integrity ai honesty disclose declare supervisor viva',h:`
+<ul>
+<li>Write the first version yourself. Use the AI on your draft, not in place of it.</li>
+<li>Read every source you cite. Appuscholar can mislabel a paper, and so can any AI.</li>
+<li>Run <b>AI text</b> before you submit. Be ready to explain every highlighted passage.</li>
+<li>Follow your institution's rule on AI help and say where the AI helped. Rules differ between institutions, so ask your supervisor and put the answer in writing.</li>
+<li>Practise the viva question. If you cannot defend a paragraph aloud, rewrite it.</li>
+<li>Download a backup of your projects every week. Your work lives only in this browser.</li>
+</ul>`},
+{id:'never',g:'Practice',t:'What Appuscholar will not do',k:'will not never limits diagnosis legal medical advice submit invent data supervisor',h:`
+<ul>
+<li>It does not invent data, and it does not run a test on numbers you did not give it.</li>
+<li>It does not send your text anywhere until you press an AI button.</li>
+<li>It does not replace your supervisor, your ethics committee or a lawyer.</li>
+<li>It does not diagnose. A score on a screening scale is information for a trained professional.</li>
+<li>It does not submit anything for you.</li>
+<li>It does not guarantee that a result, a citation or an AI answer is correct.</li>
+</ul>`},
+{id:'faq',g:'Help',t:'Questions people ask',k:'faq problem error key stopped lost work backup hindi english slow quota rate limit',h:`
+<p><strong>The AI says my key failed.</strong> Open <b>⚙ AI Provider / Key</b>, press Test, and read the message under the button. Free keys run out of quota. If you saved a second key for another provider, Appuscholar tries it automatically.</p>
+<p><strong>My work vanished.</strong> Everything lives in this browser. Clearing site data, switching browsers or moving to another computer removes it. Use <b>Backup</b> every week and keep the file somewhere safe.</p>
+<p><strong>Which test do I use?</strong> Open the Statistics Lab and press <b>Which test fits my data?</b></p>
+<p><strong>The p-value looks different from SPSS.</strong> Check whether SPSS ran a Student or a Welch t-test and whether it reports a one- or two-tailed p. Appuscholar reports two-tailed p and uses Welch by default.</p>
+<p><strong>Something stayed in English after I chose Hindi.</strong> Test names and citation styles stay in English on purpose. The guide and the statistics text are still English only.</p>
+<p><strong>Something is broken.</strong> Open Help and press <b>Report a problem</b>.</p>`},
+{id:'gloss',g:'Help',t:'Glossary',k:'glossary p value effect size confidence interval alpha omega reliability normality welch hedges cohen pseudonymisation degrees of freedom',h:`
+<dl>
+<dt>p-value</dt><dd>How often data this extreme would turn up if there were no real effect. A small p does not mean a large or useful effect.</dd>
+<dt>Effect size</dt><dd>How big the difference or relationship is, in a unit you can compare across studies, such as Hedges' g or r.</dd>
+<dt>Degrees of freedom</dt><dd>The number of values that are free to vary once the statistic is fixed. Reported in brackets after the test letter.</dd>
+<dt>Cronbach's alpha</dt><dd>How consistently the items of one scale hang together. Reverse-score negatively worded items first.</dd>
+<dt>McDonald's omega</dt><dd>A reliability estimate that does not assume every item counts equally. It is usually the better choice.</dd>
+<dt>Welch test</dt><dd>A t-test or ANOVA that does not assume equal spread in each group. Safe to use by default.</dd>
+<dt>Hedges' g</dt><dd>Standardised difference between two means, corrected for small samples.</dd>
+<dt>Pseudonymisation</dt><dd>Swapping identifiers for codes while a key still exists. People can be re-identified with the key.</dd>
+<dt>Anonymisation</dt><dd>Removing identifiers so that nobody can be identified, even by whoever collected the data.</dd>
+</dl>`}
+];
+
+function guideStrip(h){return h.replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').toLowerCase()}
+function guideRender(list,open){
+  document.getElementById('guideList').innerHTML=list.length?list.map(x=>'<details'+(open?' open':'')+' style="margin:8px 0;border:1px solid var(--line);border-radius:10px;padding:8px 12px"><summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:14px">'+x.t.replace(/&/g,'&amp;')+' <span style="font-weight:400;color:var(--muted);font-size:12px">· '+x.g+'</span></summary><div class="guide-body" style="font-size:13.5px;line-height:1.65;margin-top:8px">'+x.h+'</div></details>').join(''):'<p style="font-size:13.5px">Nothing in the guide matches that. Try one word, such as <i>test</i> or <i>citation</i>.</p>';
+}
+function guideFilter(){
+  const q=(document.getElementById('guideQ').value||'').toLowerCase().trim();
+  const words=q.split(/\s+/).filter(Boolean);
+  const hits=!words.length?GUIDE:GUIDE.filter(x=>{const hay=(x.t+' '+x.k+' '+guideStrip(x.h)).toLowerCase();return words.every(w=>hay.indexOf(w)>=0)});
+  guideRender(hits,!!words.length&&hits.length<=3);
+  document.getElementById('guideCount').textContent=words.length?(hits.length+' of '+GUIDE.length+' sections match'):GUIDE.length+' sections';
+}
+function guideOpen(){
+  const d=document.getElementById('guideDlg');
+  document.getElementById('guideQ').value='';guideFilter();
+  if(!d.open)d.showModal();
+}
+function guidePrint(){
+  const w=window.open('','_blank');
+  if(!w){showToast('Allow pop-ups for this page, then press Print again');return}
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Appuscholar guide</title><style>body{font:14px/1.6 Georgia,serif;max-width:720px;margin:24px auto;padding:0 16px;color:#111}h1{font-size:24px}h2{font-size:17px;margin:22px 0 4px;border-bottom:1px solid #bbb}pre{background:#f4f4f4;padding:8px}dt{font-weight:bold;margin-top:6px}small{color:#555}</style></head><body><h1>Appuscholar guide</h1><small>Printed from the app. Build '+APP_BUILD+'.</small>'+GUIDE.map(x=>'<h2>'+x.t.replace(/&/g,'&amp;')+'</h2>'+x.h).join('')+'</body></html>');
+  w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},400);
+}
+
+/* ============ Problem reporting and local usage counts (item 58) ============
+   Local only. The report holds app version, tool, browser, screen size, provider name and the
+   last few error messages (shortened, with emails and phone numbers masked). Never document text. */
+const APP_BUILD='2026.10.07';
+const _errLog=[];
+function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
+function usageGet(){try{const u=JSON.parse(LS.get('appu_usage')||'{}');return{tools:u.tools||{},errors:u.errors||{}}}catch(e){return{tools:{},errors:{}}}}
+function usageBump(kind,name){try{const u=usageGet();u[kind][name]=(u[kind][name]||0)+1;LS.set('appu_usage',JSON.stringify(u))}catch(e){}}
+function repNote(msg,where){
+  try{
+    let m=String(msg||'').replace(/\s+/g,' ').slice(0,140);
+    try{m=pdMask(m)}catch(e){}
+    const tool=repTool();
+    _errLog.push({at:new Date().toTimeString().slice(0,5),tool:tool,msg:m,where:String(where||'').slice(0,60)});
+    if(_errLog.length>5)_errLog.shift();
+    usageBump('errors',tool);
+  }catch(e){}
+}
+window.addEventListener('error',e=>repNote(e.message,(e.filename||'').split('/').pop()+':'+e.lineno));
+window.addEventListener('unhandledrejection',e=>repNote(e.reason&&e.reason.message?e.reason.message:e.reason,'promise'));
+function repFacts(){
+  let prov='none',hasKey='no';try{prov=getProv();hasKey=getKey()?'yes':'no'}catch(e){}
+  const L=['Appuscholar build: '+APP_BUILD,'Tool open: '+repTool(),'Interface language: '+getLang(),'Browser: '+(navigator.userAgent||'unknown'),'Screen: '+screen.width+'x'+screen.height+', window '+innerWidth+'x'+innerHeight,'Online: '+(navigator.onLine?'yes':'no'),'AI provider chosen: '+prov+', key saved: '+hasKey,'Recent errors: '+(_errLog.length?'':'none')];
+  _errLog.forEach(e=>L.push('  '+e.at+' in '+e.tool+': '+e.msg+(e.where?' ('+e.where+')':'')));
+  return L.join('\n');
+}
+function repUsageText(){
+  const u=usageGet(),f=o=>Object.keys(o).sort((a,b)=>o[b]-o[a]).map(k=>k+' '+o[k]).join(', ')||'nothing yet';
+  return 'Tool opens: '+f(u.tools)+'\nErrors by tool: '+f(u.errors);
+}
+function repRender(){
+  document.getElementById('repFacts').textContent=repFacts()+(document.getElementById('repUsage').checked?'\n'+repUsageText():'');
+  document.getElementById('repLocal').textContent=repUsageText();
+}
+function repOpen(){
+  const d=document.getElementById('reportDlg');document.getElementById('repUsage').checked=false;repRender();
+  if(!d.open)d.showModal();
+}
+function repBody(){
+  const desc=(document.getElementById('repText').value||'').trim();
+  return (desc||'(please describe the problem here)')+'\n\n--- Added by the app ---\n'+repFacts()+(document.getElementById('repUsage').checked?'\n'+repUsageText():'');
+}
+function repSend(){
+  if(!SUPPORT_EMAIL){repCopy();return}
+  let body=repBody();
+  if(encodeURIComponent(body).length>1800){showToast('The report is long, so it was copied too. Paste it into the email if it looks cut off.');repCopy(true)}
+  location.href=mailtoLink('Appuscholar problem report ('+APP_BUILD+')',body.slice(0,1500));
+}
+function repCopy(quiet){
+  const t=repBody();
+  const done=()=>{if(!quiet)showToast('Report copied')};
+  try{navigator.clipboard.writeText(t).then(done,()=>showToast('Could not copy. Select the text by hand.'))}catch(e){showToast('Could not copy. Select the text by hand.')}
+}
+function repClear(){LS.rm('appu_usage');_errLog.length=0;repRender();showToast('Counts cleared')}
 
 const STAT_TESTS={
   desc:{label:'Descriptive statistics',fields:[{id:'dv',label:'Variable',type:'numeric'}]},
