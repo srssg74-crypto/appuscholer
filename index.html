@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Appuscholar. Copyright (c) 2026 Dr. Shiv Raj Sharma. All rights reserved. See the LICENSE file. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Appuscholar</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -396,6 +397,9 @@
       <button type="button" class="fmt-btn" onclick="insertTable()" title="Insert a table">⊞ Table</button>
       <span class="fmt-sep"></span>
       <button type="button" class="fmt-btn" onclick="openFindReplace()" title="Find and replace (Ctrl+F)">🔍 Find</button>
+      <button type="button" class="fmt-btn" id="dictBtn" onclick="dictToggle()" aria-pressed="false" title="Speak to type. Works in Chrome and Edge. Your voice goes to the browser's speech service.">🎤 Dictate</button>
+      <select id="dictLang" onchange="dictSetLang(this.value)" aria-label="Dictation language" style="font-size:12px;padding:3px"></select>
+      <span id="dictStatus" class="fmt-hint" style="display:none" aria-live="polite"></span>
       <button type="button" class="fmt-btn fmt-more-btn" id="fmtMoreBtn" onclick="toggleFmtMore()" aria-expanded="false" title="More formatting: font, size, colour, alignment, table rows and columns">More ▾</button>
       <span class="fmt-more" id="fmtMore">
         <select id="fontSel" onchange="applyFontName(this.value)" title="Font family" aria-label="Font family">
@@ -593,6 +597,7 @@
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('ctriDlg').showModal();ctriRender()" data-i18n="design_btn_ctri">📝 CTRI registration readiness</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('piDlg').showModal();piRender()" data-i18n="design_btn_pi">🎓 PI eligibility &amp; training</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('budgetDlg').showModal();budgetRender()" data-i18n="design_btn_budget">💰 Trial budget estimator</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="aiuOpen()">🤖 AI-use statement</button></div>
     </div></section>
 
     <section class="card tool-panel" data-panel="stats"><div class="panel">
@@ -1362,6 +1367,15 @@
   <h2>🛡 Ethics Committee package + consent form</h2>
   <p style="font-size:13px;color:var(--muted)">The documents an EC typically asks for, and a generator for the informed consent form itself. Check a box as each document is ready.</p>
   <div id="ecChecklist"></div>
+  <h3 style="margin-top:16px;font-size:15px">Your ethics approval record</h3>
+  <p class="desc" style="margin-top:0">Write down what your committee decided. Appuscholar never decides it for you.</p>
+  <div class="fld"><label for="ecStatus">Where things stand</label><select id="ecStatus" onchange="ecMinorsNote()"><option value="">Choose</option><option value="none">Not yet sent to a committee</option><option value="applied">Applied, waiting for a decision</option><option value="approved">Approved</option><option value="noreview">The committee told me in writing that full review is not needed</option><option value="nohuman">No human participants are involved</option></select></div>
+  <div class="fld"><label for="ecCommittee">Committee name</label><input id="ecCommittee" type="text" placeholder="e.g. Institutional Ethics Committee, Department of Psychology"></div>
+  <div style="display:flex;gap:8px"><div class="fld" style="flex:1"><label for="ecApprNo">Approval or reference number</label><input id="ecApprNo" type="text"></div><div class="fld" style="flex:1"><label for="ecApprDate">Date of the decision</label><input id="ecApprDate" type="date"></div></div>
+  <div class="fld"><label for="ecConsentMode">How participants agree to take part</label><select id="ecConsentMode"><option value="">Choose</option><option value="written">Signed consent form</option><option value="online">Tick-box consent before an online form</option><option value="verbal">Spoken consent, recorded by me</option><option value="waived">The committee waived consent</option></select></div>
+  <div class="fld"><label for="ecMinors">Participants under 18</label><select id="ecMinors" onchange="ecMinorsNote()"><option value="">Choose</option><option value="no">No, everyone is 18 or older</option><option value="yes">Yes, some are under 18</option><option value="unsure">Not sure yet</option></select></div>
+  <p class="desc" id="ecMinorsMsg" style="display:none;color:#92400e"></p>
+  <div class="row"><button class="btn btn-gold" style="flex:1" onclick="ecStatement()">Insert an ethics statement into my document</button></div>
   <h3 style="margin-top:16px;font-size:15px">Generate an informed consent form</h3>
   <div class="fld"><label for="ecTitle">Study title</label><input id="ecTitle" type="text" placeholder="e.g. EEG correlates of sustained attention in college students"></div>
   <div class="fld"><label for="ecPI">Principal investigator &amp; institution</label><input id="ecPI" type="text" placeholder="Name, department, institution"></div>
@@ -1373,6 +1387,30 @@
   <div class="row" style="margin-top:12px">
     <button class="btn btn-ghost" onclick="document.getElementById('ecDlg').close()">Close</button>
   </div>
+</div></dialog>
+
+<dialog id="aiuDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>🤖 AI-use statement</h2>
+  <p style="font-size:13px;color:var(--muted)">Many universities and journals now ask you to say where AI helped. Appuscholar keeps a private log in this browser: the date, the AI provider, the model and the kind of help. It never keeps what you typed or what the AI answered. Build your statement from it below.</p>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="aiuOn" onchange="aiuToggle()" style="width:17px;height:17px;accent-color:#6d28d9"> Keep the log</label>
+  <p class="desc" id="aiuCount"></p>
+  <div style="display:flex;gap:8px"><div class="fld" style="flex:1"><label for="aiuFrom">From</label><input type="date" id="aiuFrom" onchange="aiuRender()"></div><div class="fld" style="flex:1"><label for="aiuTo">To</label><input type="date" id="aiuTo" onchange="aiuRender()"></div></div>
+  <p class="desc" style="margin-top:0">Pick the dates that match this piece of work. Untick any kind of help that belongs to another project.</p>
+  <div id="aiuRows"></div>
+  <div class="fld" style="margin-top:10px"><label for="aiuOther">AI tools you used outside Appuscholar (optional)</label><textarea id="aiuOther" rows="2" placeholder="e.g. ChatGPT in another window to brainstorm headings; Grammarly for spelling"></textarea></div>
+  <h3 style="margin-top:12px;font-size:15px">What you did yourself</h3>
+  <p class="desc" style="margin-top:0">Tick only what is true.</p>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:5px;cursor:pointer"><input type="checkbox" id="aiuOwn" checked style="width:17px;height:17px;accent-color:#6d28d9"> I planned the argument and the structure myself</label>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:5px;cursor:pointer"><input type="checkbox" id="aiuReword" style="width:17px;height:17px;accent-color:#6d28d9"> I rewrote any AI wording in my own words</label>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:5px;cursor:pointer"><input type="checkbox" id="aiuCite" style="width:17px;height:17px;accent-color:#6d28d9"> I checked every citation against the original source</label>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:5px;cursor:pointer"><input type="checkbox" id="aiuFacts" style="width:17px;height:17px;accent-color:#6d28d9"> I checked every number and claim against my data and sources</label>
+  <label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="aiuNoData" style="width:17px;height:17px;accent-color:#6d28d9"> I sent no participant names or identifying details to an AI tool</label>
+  <div class="fld"><label for="aiuFmt">Style of statement</label><select id="aiuFmt"><option value="course">Coursework or assignment</option><option value="thesis">Thesis or dissertation</option><option value="journal">Journal manuscript</option></select></div>
+  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="aiuBuild()">Build the statement</button></div>
+  <div class="fld" style="margin-top:8px"><label for="aiuOut">Your statement (edit it so that it is true)</label><textarea id="aiuOut" rows="9"></textarea></div>
+  <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="aiuCopy()">Copy</button><button class="btn btn-ghost" style="flex:1" onclick="aiuInsert()">Insert into my document</button><button class="btn btn-ghost" style="flex:1" onclick="aiuDownload()">Download as text</button></div>
+  <p class="desc">The log covers only this browser on this computer. If you used Appuscholar elsewhere, or with the log off, add it in the box above. Your institution or the journal decides what you must disclose. AI cannot be listed as an author.</p>
+  <div class="row" style="margin-top:8px"><button class="btn btn-ghost" onclick="aiuClear()">Erase the log</button><button class="btn btn-ghost" onclick="document.getElementById('aiuDlg').close()">Close</button></div>
 </div></dialog>
 
 <dialog id="ctriDlg" class="dlg-wide"><div class="dlg-body">
@@ -1412,7 +1450,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" popover="manual"></div>
 <div id="offlineBar" role="status" style="display:none;position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:50;max-width:92vw;background:#3b0764;color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.3)">You are offline. Writing, citations, statistics and your shelf still work. AI, paper search and new downloads need a connection.</div>
-<footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜</footer>
+<footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜<br><span style="font-size:11px;letter-spacing:0;text-transform:none;opacity:.8">© 2026 Dr. Shiv Raj Sharma. All rights reserved.</span></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -2448,7 +2486,9 @@ async function docImportOne(file,origin){
   if(name.endsWith('.docx')){
     if(typeof mammoth==='undefined')throw new Error('Word reader needs internet once to load — try again when online');
     const buf=await file.arrayBuffer();
-    const result=await mammoth.convertToHtml({arrayBuffer:buf});
+    const mopt={arrayBuffer:buf};
+    if(mammoth.images&&mammoth.images.imgElement)mopt.convertImage=mammoth.images.imgElement(im=>im.read('base64').then(b=>imgShrinkDataUrl('data:'+im.contentType+';base64,'+b).then(src=>({src}))));
+    const result=await mammoth.convertToHtml(mopt);
     html=result.value||'<p></p>';
   }else if(name.endsWith('.doc')){
     throw new Error('"'+file.name+'" is an old .doc file — Save As .docx in Word first, then import that');
@@ -2554,6 +2594,7 @@ function upd(){
     const b=document.getElementById('saveBadge');
     if(docSaveBody(html)){
       lastSaved=html;
+      try{storageNudge()}catch(e){}
       try{provRecord()}catch(e){}
       try{touchActive()}catch(e){}
       if(saveDead){saveDead=false;b.textContent='Auto-save on';b.style.background='';b.style.color=''}
@@ -3321,14 +3362,116 @@ function insertHTMLBlockIntoEditor(html){
   upd();
 }
 
-/* ============ Images: insert, then resize by dragging the corner handle ============ */
+
+/* ============ Dictation (speak to type) ============
+   Uses the browser's own speech recogniser (Chrome, Edge, some mobile browsers). The audio goes to that
+   browser's speech service, which is Google in Chrome and Microsoft in Edge. Appuscholar never receives it.
+   Only finished phrases are typed into the document, at the cursor. */
+const DICT_LANGS=[['en-IN','English (India)'],['hi-IN','Hindi'],['en-GB','English (UK)'],['en-US','English (US)']];
+let dictRec=null,dictOn=false,dictFails=0,dictStarted=0;
+function dictSupported(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition)}
+function dictLang(){const l=LS.get('appu_dictlang');if(l&&DICT_LANGS.some(x=>x[0]===l))return l;return getContentLang()==='hi'?'hi-IN':'en-IN'}
+function dictFillLangs(){const el=document.getElementById('dictLang');if(!el)return;el.innerHTML=DICT_LANGS.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');el.value=dictLang()}
+function dictSetLang(v){LS.set('appu_dictlang',v);if(dictOn){dictStop();setTimeout(dictStart,300)}}
+function dictFormat(t,lang){
+  t=' '+String(t||'').trim();
+  const en=[[/ (full stop)\b/gi,'.'],[/ comma\b/gi,','],[/ question mark\b/gi,'?'],[/ exclamation (mark|point)\b/gi,'!'],[/ colon\b/gi,':'],[/ semicolon\b/gi,';'],[/ new paragraph\b/gi,'\n\n'],[/ new line\b/gi,'\n']];
+  const hi=[[/ पूर्ण ?विराम/g,'।'],[/ अल्प ?विराम/g,','],[/ प्रश्न ?चिह्न/g,'?'],[/ नई पंक्ति/g,'\n']];
+  (/^hi/.test(lang)?hi:en).forEach(r=>{t=t.replace(r[0],r[1])});
+  return t.replace(/\n[ \t]+/g,'\n').replace(/^[ \t]+|[ \t]+$/g,'');
+}
+function dictInsert(raw){
+  const lang=dictLang();let t=dictFormat(raw,lang);if(!t)return;
+  editor.focus();if(savedRange)restoreEditorSelection();
+  const sel=window.getSelection();let prev='';
+  try{if(sel&&sel.rangeCount){const r=sel.getRangeAt(0),n=r.startContainer;if(n.nodeType===3)prev=n.textContent.slice(0,r.startOffset)}}catch(e){}
+  if(!/^hi/.test(lang)){
+    const lead=(t.match(/^\n*/)||[''])[0].length,afterBreak=lead>0;
+    if(!prev||/[.?!]\s*$/.test(prev)||afterBreak)t=t.slice(0,lead)+t.charAt(lead).toUpperCase()+t.slice(lead+1);
+  }
+  const needSpace=prev&&!/\s$/.test(prev)&&!/^[.,?!:;।\n)]/.test(t);
+  try{document.execCommand('insertText',false,(needSpace?' ':'')+t)}catch(e){}
+  const s2=window.getSelection();if(s2&&s2.rangeCount&&editor.contains(s2.anchorNode))savedRange=s2.getRangeAt(0).cloneRange();
+  upd();
+}
+function dictUI(){
+  const b=document.getElementById('dictBtn'),st=document.getElementById('dictStatus');if(!b)return;
+  b.textContent=dictOn?'⏹ Stop':'🎤 Dictate';b.setAttribute('aria-pressed',dictOn?'true':'false');
+  b.style.background=dictOn?'#fee2e2':'';b.style.color=dictOn?'#991b1b':'';
+  if(st){st.style.display=dictOn?'inline':'none';if(!dictOn)st.textContent=''}
+}
+function dictStatus(interim){const st=document.getElementById('dictStatus');if(st&&dictOn)st.textContent='Listening… '+(interim?String(interim).slice(-70):'')}
+function dictToggle(){dictOn?dictStop():dictStart()}
+function dictStop(){
+  dictOn=false;
+  try{if(dictRec){dictRec.onend=null;dictRec.stop()}}catch(e){}
+  dictRec=null;dictUI();
+}
+function dictStart(){
+  if(!dictSupported()){showToast('Dictation works in Chrome and Edge. This browser does not offer it.');return}
+  if(LS.get('appu_dict_ack')!=='1'){
+    if(!confirm('Dictation uses your browser\'s own speech service. In Chrome the audio goes to Google, and in Edge to Microsoft, to be turned into text. Appuscholar never receives it.\n\nDo not dictate participant names, interviews or anything that identifies a person.\n\nContinue?'))return;
+    LS.set('appu_dict_ack','1');
+  }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const r=new SR();r.lang=dictLang();r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+  r.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];if(res.isFinal){dictFails=0;dictInsert(res[0].transcript)}else interim+=res[0].transcript}
+    dictStatus(interim);
+  };
+  r.onerror=e=>{
+    const c=e&&e.error;
+    if(c==='no-speech'||c==='aborted')return;
+    const msg={'not-allowed':'The microphone is blocked. Allow it in the address bar, then try again.','service-not-allowed':'The browser will not let this page use speech recognition.','network':'Dictation needs an internet connection.','audio-capture':'No microphone was found.','language-not-supported':'This browser cannot recognise that language.'}[c]||'Dictation stopped ('+(c||'unknown')+').';
+    showToast(msg);dictStop();
+  };
+  r.onend=()=>{
+    if(!dictOn)return;
+    if(Date.now()-dictStarted<1200){dictFails++}else dictFails=0;
+    if(dictFails>=3){showToast('Dictation keeps stopping. Check your microphone and try again.');dictStop();return}
+    try{dictStarted=Date.now();r.start()}catch(x){dictStop()}
+  };
+  dictRec=r;dictOn=true;dictFails=0;dictStarted=Date.now();
+  try{r.start()}catch(e){dictOn=false;dictRec=null}
+  dictUI();dictStatus('');
+}
+dictFillLangs();
+
+/* ============ Images: insert, then resize by dragging the corner handle ============
+   Pictures live inside the document text, and the browser gives the whole app about 5 MB. A phone photo is
+   3 to 6 MB, so one raw photo would stop auto-save. Big pictures are scaled to 1600 px on the long side first. */
+function imgShrinkDataUrl(src,maxEdge,q){
+  return new Promise(res=>{
+    const im=new Image();
+    im.onload=()=>{try{
+      const w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,(maxEdge||1600)/Math.max(w,h));
+      if(k===1&&src.length<350000){res(src);return}
+      const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));
+      const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+      let out='';
+      if(/^data:image\/png/.test(src)){out=c.toDataURL('image/png');if(out.length>400000)out=''}
+      if(!out)out=c.toDataURL('image/jpeg',q||0.85);
+      res(out.length<src.length?out:src);
+    }catch(e){res(src)}};
+    im.onerror=()=>res(src);
+    im.src=src;
+  });
+}
+function lsUsedChars(){let n=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);n+=k.length+(localStorage.getItem(k)||'').length}}catch(e){}return n}
+let storeWarned=false;
+function storageNudge(){
+  if(storeWarned)return;
+  if(lsUsedChars()>4000000){storeWarned=true;showToast('Browser storage is about 80% full. Download a backup now, and remove or shrink large pictures.')}
+}
 function insertImageFile(input){
   const f=input.files&&input.files[0];if(!f)return;
   if(!/^image\//.test(f.type)){showToast('Please choose an image file');input.value='';return}
-  if(f.size>8*1024*1024){showToast('That image is quite large — try one under 8 MB');input.value='';return}
+  if(f.size>25*1024*1024){showToast('That image is very large. Try one under 25 MB');input.value='';return}
   const r=new FileReader();
-  r.onload=()=>{
-    const html='<span class="img-wrap" contenteditable="false" style="width:360px"><img src="'+r.result+'"><span class="img-handle" title="Drag to resize"></span></span>&nbsp;';
+  r.onload=async()=>{
+    const src=await imgShrinkDataUrl(r.result);
+    const html='<span class="img-wrap" contenteditable="false" style="width:360px"><img src="'+src+'"><span class="img-handle" title="Drag to resize"></span></span>&nbsp;';
     insertHTMLBlockIntoEditor(html);
     showToast('Image inserted — drag its corner handle to resize');
   };
@@ -3885,6 +4028,12 @@ async function callAI(prompt,opts){
   }
 }
 async function callAIOnce(prompt,opts){
+  window._aiModel=null;
+  const r=await callAIRaw(prompt,opts);
+  try{const pv=getProv();aiuRecord(prompt,pv,window._aiModel||((PROVIDERS[pv]||{}).model)||'')}catch(e){}
+  return r;
+}
+async function callAIRaw(prompt,opts){
   const o=opts||{},temp=(o.temp==null?0.8:o.temp),maxTok=o.max||2000;
   if(!o.noLang)prompt=prompt+contentLangInstruction();
   await ensureKey();
@@ -3913,6 +4062,7 @@ async function callAIOnce(prompt,opts){
       if(!text)throw new Error(c.finishReason==='MAX_TOKENS'
         ?'The answer was cut off. Select a smaller piece of text and try again.'
         :'The AI returned an empty answer. Try again.');
+      window._aiModel=model;
       return text;
     }
     throw lastErr||new Error('No working Gemini model found.');
@@ -3944,6 +4094,140 @@ async function callAIOnce(prompt,opts){
   const text=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
   if(!text)throw new Error('The AI returned an empty answer. Try again.');
   return text;
+}
+
+
+/* ============ AI-use log and statement generator ============
+   Every successful AI call adds one line to a private log in this browser: the date, the provider,
+   the model and the kind of help. The text sent and the answer are never stored. The statement
+   generator turns the log into a disclosure the student can paste into coursework or a manuscript. */
+const AIU_KEY='appu_ailog',AIU_RULES=[
+ [/^Continue this writing/,'continuing my draft','text'],
+ [/^Improve this text/,'grammar and polish','text'],
+ [/^Expand this text/,'expanding my text','text'],
+ [/^Translate the following English academic quotation/,'translating a quotation into Hindi','text'],
+ [/academic writing assistant\. Below are/,'drafting a literature review paragraph from selected abstracts','text'],
+ [/APA 7th edition formatting expert/,'formatting statistics output in APA style','text'],
+ [/thesis supervisor reading/,'feedback on my draft','feedback'],
+ [/ask exactly ONE realistic, probing question/,'practice viva questions','feedback'],
+ [/Argue against the passage below/,'counter-arguments to my passage','feedback'],
+ [/find a research gap/,'looking for research gaps in selected abstracts','feedback'],
+ [/judge whether a project idea is realistic/,'checking whether my project idea is realistic','feedback'],
+ [/psychology academic writing coach\. Using the text/,'advice on building a literature review','feedback'],
+ [/Summari[sz]e the (research|paper) text below/,'summarising a paper','explain'],
+ [/helping a psychology student read a paper/,'summarising a paper','explain'],
+ [/psychology tutor helping a student study/,'analysing a case description','explain'],
+ [/^Explain the psychology concept/,'explaining a concept','explain'],
+ [/psychology statistics tutor/,'explaining statistics output in plain words','explain'],
+ [/studying the writing style|^Analyze the writing style/,'describing my writing style','explain'],
+ [/scholarly writing coach/,'answering a writing question','explain']
+];
+function aiuClassify(prompt){
+  const p=String(prompt||'');
+  if(/^You are Appu, the help assistant/.test(p))return null;
+  const head=p.slice(0,400);
+  for(let i=0;i<AIU_RULES.length;i++)if(AIU_RULES[i][0].test(head))return {k:AIU_RULES[i][1],g:AIU_RULES[i][2]};
+  return {k:'other help',g:'other'};
+}
+function aiuToday(){const d=new Date(),z=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())}
+function aiuLog(){try{const a=JSON.parse(LS.get(AIU_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function aiuOn(){return LS.get('appu_ailog_off')!=='1'}
+function aiuRecord(prompt,prov,model){
+  if(!aiuOn())return;
+  const c=aiuClassify(prompt);if(!c)return;
+  const a=aiuLog();
+  a.push({d:aiuToday(),p:prov,m:String(model||'').slice(0,80),k:c.k,g:c.g});
+  while(a.length>1500)a.shift();
+  LS.set(AIU_KEY,JSON.stringify(a));
+}
+const AIU_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function aiuDate(d){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||'');return m?(parseInt(m[3],10)+' '+AIU_MONTHS[parseInt(m[2],10)-1]+' '+m[1]):String(d||'')}
+function aiuJoin(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1]}
+function aiuInRange(){
+  const f=(document.getElementById('aiuFrom')||{}).value||'',t=(document.getElementById('aiuTo')||{}).value||'';
+  return aiuLog().filter(e=>(!f||e.d>=f)&&(!t||e.d<=t));
+}
+function aiuOpen(){
+  const d=document.getElementById('aiuDlg');
+  document.getElementById('aiuOn').checked=aiuOn();
+  const a=aiuLog();
+  document.getElementById('aiuFrom').value=a.length?a[0].d:'';
+  document.getElementById('aiuTo').value=a.length?a[a.length-1].d:'';
+  document.getElementById('aiuOut').value='';
+  aiuRender();
+  if(!d.open)d.showModal();
+}
+function aiuToggle(){LS.set('appu_ailog_off',document.getElementById('aiuOn').checked?'0':'1');aiuRender()}
+function aiuRender(){
+  const all=aiuLog(),list=aiuInRange(),box=document.getElementById('aiuRows'),cnt=document.getElementById('aiuCount');
+  cnt.textContent=all.length?(all.length+' request'+(all.length===1?'':'s')+' logged, '+list.length+' in the dates below.'):(aiuOn()?'Nothing logged yet.':'Logging is off. Nothing is being recorded.');
+  const by={};
+  list.forEach(e=>{const key=e.k;by[key]=by[key]||{n:0,g:e.g};by[key].n++});
+  const keys=Object.keys(by).sort((x,y)=>by[y].n-by[x].n);
+  box.innerHTML=keys.length?keys.map((k,i)=>'<label style="font-size:13.5px;display:flex;gap:8px;align-items:center;margin-bottom:5px;cursor:pointer"><input type="checkbox" class="aiuRow" data-k="'+escHTML(k)+'" checked style="width:17px;height:17px;accent-color:#6d28d9"> <span>'+escHTML(k.charAt(0).toUpperCase()+k.slice(1))+' <span style="color:var(--muted)">('+by[k].n+')</span></span></label>').join(''):'<p class="desc">No logged help in these dates.</p>';
+}
+function aiuClear(){
+  if(!aiuLog().length){showToast('The log is already empty');return}
+  if(!confirm('Erase the whole AI-use log on this computer? This cannot be undone.'))return;
+  LS.rm(AIU_KEY);document.getElementById('aiuOut').value='';aiuRender();showToast('Log erased');
+}
+function aiuBuild(){
+  const list=aiuInRange(),out=document.getElementById('aiuOut');
+  const keep={};document.querySelectorAll('#aiuRows .aiuRow').forEach(c=>{if(c.checked)keep[c.getAttribute('data-k')]=1});
+  const use=list.filter(e=>keep[e.k]);
+  const other=document.getElementById('aiuOther').value.trim();
+  const fmt=document.getElementById('aiuFmt').value;
+  const ck=id=>document.getElementById(id).checked;
+  if(list.length&&!use.length&&!other){showToast('The log shows '+list.length+' request'+(list.length===1?'':'s')+' in these dates. Tick them, or change the dates, before you say that no AI was used.');return}
+  const J=fmt==='journal';
+  if(!use.length&&!other){
+    out.value='Use of AI tools\n\n'+(J?'The author did not use AI tools in preparing this work.':'I did not use AI tools to prepare this work.')+'\n\n[Check this against your own records. The log only knows about Appuscholar in this browser.]';
+    return;
+  }
+  const pairs={},pl=[];
+  use.forEach(e=>{const key=e.p+'|'+e.m;if(!pairs[key]){pairs[key]=1;pl.push((PROVIDERS[e.p]?PROVIDERS[e.p].name:e.p)+(e.m?' ('+e.m+')':''))}});
+  const dates=use.map(e=>e.d).sort(),d1=dates[0],d2=dates[dates.length-1];
+  const when=!use.length?'':(d1===d2?'on '+aiuDate(d1):'between '+aiuDate(d1)+' and '+aiuDate(d2));
+  const by={g:{text:{},feedback:{},explain:{},other:{}}};
+  use.forEach(e=>{const g=by.g[e.g]||by.g.other;g[e.k]=(g[e.k]||0)+1});
+  const fmtG=g=>aiuJoin(Object.keys(g).sort((a,b)=>g[b]-g[a]).map(k=>k+' ('+g[k]+' request'+(g[k]===1?'':'s')+')'));
+  const me=J?'the author':'I',My=J?'the author\'s':'my',Me=J?'the author':'me';
+  const parts=[];
+  let first;
+  if(use.length){
+    first=(J?'During the preparation of this work the author used ':'I used ')+'Appuscholar, a writing assistant that runs in the browser and sends requests to '+aiuJoin(pl)+', '+when+'.';
+    parts.push(first);
+    if(Object.keys(by.g.text).length)parts.push('The AI produced or reworded text for '+Me+' in these ways: '+fmtG(by.g.text)+'.');
+    if(Object.keys(by.g.feedback).length)parts.push('The AI commented on '+My+' work or ideas without writing them: '+fmtG(by.g.feedback)+'.');
+    if(Object.keys(by.g.explain).length)parts.push('The AI explained or summarised material for '+Me+': '+fmtG(by.g.explain)+'.');
+    if(Object.keys(by.g.other).length)parts.push('The AI helped in other ways: '+fmtG(by.g.other)+'.');
+  }
+  if(other)parts.push((use.length?'Outside Appuscholar, ':'')+(J?'the author':'I')+' also used '+other.replace(/[.\s]+$/,'')+'.');
+  const o=[];
+  if(ck('aiuOwn'))o.push(J?'The author planned the argument and the structure.':'I planned the argument and the structure myself.');
+  if(ck('aiuReword'))o.push(J?'Any AI wording was rewritten by the author.':'I rewrote any AI wording in my own words before using it.');
+  if(ck('aiuCite'))o.push(J?'Every citation was checked against the original source.':'I checked every citation against the original source.');
+  if(ck('aiuFacts'))o.push(J?'Every number and claim was checked against the data and the sources.':'I checked every number and claim against my data and my sources.');
+  if(ck('aiuNoData'))o.push(J?'No participant names or identifying details were sent to an AI tool.':'I did not send participant names or identifying details to any AI tool.');
+  if(o.length)parts.push(o.join(' '));
+  if(use.length&&Object.keys(by.g.text).length&&!ck('aiuReword'))parts.push('[Say which passages still contain AI wording, since you did not tick that you rewrote it.]');
+  if(fmt==='thesis'&&use.length)parts.push('In all, '+use.length+' request'+(use.length===1?'':'s')+' were logged. The log is kept in my browser and I can show it to my supervisor on request.');
+  parts.push(J?'After using the tool the author reviewed and edited the output and takes full responsibility for the content of the publication. No AI tool is listed as an author.':'AI is not an author of this work. I am responsible for everything in it.');
+  const head=fmt==='journal'?'Declaration of AI use':(fmt==='thesis'?'Statement on the use of AI':'AI-use statement');
+  out.value=head+'\n\n'+parts.join(' ')+'\n\n[Your institution or the journal decides what you must disclose. Edit this text so that it is true.]';
+}
+function aiuCopy(){
+  const t=document.getElementById('aiuOut').value;if(!t){showToast('Build the statement first');return}
+  navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy. Select the text instead.'));
+}
+function aiuInsert(){
+  const t=document.getElementById('aiuOut').value;if(!t){showToast('Build the statement first');return}
+  insertIntoEditor(t,false);document.getElementById('aiuDlg').close();showToast('Statement inserted at the end of your document ✓');
+}
+function aiuDownload(){
+  const t=document.getElementById('aiuOut').value;if(!t){showToast('Build the statement first');return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download='ai-use-statement.txt';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
 }
 
 /* ============ FIX 7: selection vs tail, kept separate ============ */
@@ -4382,6 +4666,20 @@ function ecRender(){
   document.getElementById('ecRisks2').value=s.risks||'';
   document.getElementById('ecBenefits').value=s.benefits||'';
   document.getElementById('ecContact').value=s.contact||'';
+  document.getElementById('ecStatus').value=s.status||'';
+  document.getElementById('ecCommittee').value=s.committee||'';
+  document.getElementById('ecApprNo').value=s.apprNo||'';
+  document.getElementById('ecApprDate').value=s.apprDate||'';
+  document.getElementById('ecConsentMode').value=s.consentMode||'';
+  document.getElementById('ecMinors').value=s.minors||'';
+  ecMinorsNote();
+}
+function ecMinorsNote(){
+  const m=document.getElementById('ecMinors').value,b=document.getElementById('ecMinorsMsg');
+  if(m==='yes'||m==='unsure'){
+    b.style.display='block';
+    b.textContent=(m==='yes'?'':'Settle this before you collect data. ')+'Participants under 18 usually need a parent or guardian to give written permission, plus the young person\'s own agreement, and a committee that has approved this. In India a person under 18 is a child under the data-protection law, so extra care applies to their data. Ask your committee and your supervisor. Appuscholar is for adults and does not collect children\'s data itself.';
+  }else b.style.display='none';
 }
 function ecToggle(i,v){
   const s=designGet('ec');s.checklist=s.checklist||{};s.checklist[i]=v;
@@ -4396,9 +4694,33 @@ function ecSave(){
   s.risks=document.getElementById('ecRisks2').value.trim();
   s.benefits=document.getElementById('ecBenefits').value.trim();
   s.contact=document.getElementById('ecContact').value.trim();
-  s.done=s.done||!!(s.title||s.pi);
+  s.status=document.getElementById('ecStatus').value;
+  s.committee=document.getElementById('ecCommittee').value.trim();
+  s.apprNo=document.getElementById('ecApprNo').value.trim();
+  s.apprDate=document.getElementById('ecApprDate').value;
+  s.consentMode=document.getElementById('ecConsentMode').value;
+  s.minors=document.getElementById('ecMinors').value;
+  s.done=s.done||!!(s.title||s.pi||s.status);
   designSet('ec',s);designRenderDash();
   showToast('Saved ✓');
+}
+function ecStatement(){
+  ecSave();
+  const s=designGet('ec');
+  if(!s.status){showToast('Choose where things stand first');return}
+  const c=s.committee||'[committee name]',no=s.apprNo?' (reference '+s.apprNo+')':' (reference [number])',dt=s.apprDate?' on '+aiuDate(s.apprDate):' on [date]';
+  const consent={written:'Each participant read the information sheet and signed a consent form before taking part.',online:'Each participant read the information sheet and ticked a consent box before the online form opened.',verbal:'Each participant gave spoken consent, which the researcher recorded before the session began.',waived:'The committee waived the need for consent.'}[s.consentMode]||'[Describe how participants gave consent.]';
+  let t='';
+  if(s.status==='approved')t='The study was approved by '+c+no+dt+'. '+consent;
+  else if(s.status==='applied')t='[The study has been submitted to '+c+' and a decision is awaited. Do not write that the study was approved until you hold the approval letter.] '+consent;
+  else if(s.status==='noreview')t='The study was brought to '+c+', which decided in writing that full ethics review was not needed'+no+dt+'. '+consent;
+  else if(s.status==='nohuman')t='The study did not involve human participants.';
+  else t='[The study has not yet been sent to an ethics committee. Do not collect data until it has been.]';
+  if(s.minors==='yes')t+=' [Some participants were under 18. State how a parent or guardian gave permission and how the participants gave their own assent.]';
+  else if(s.minors==='unsure')t+=' [State whether any participant was under 18.]';
+  insertIntoEditor('Ethical considerations\n'+t,false);
+  document.getElementById('ecDlg').close();
+  showToast('Ethics statement inserted. Check every sentence is true.');
 }
 function ecGenerateConsent(){
   ecSave();
@@ -6033,7 +6355,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Writing.</b> Train it on your own style, manage citations, and ask questions while you write.</li>
 <li><b>Review &amp; Publish.</b> Turn the document into slides. The AI text and Viva question buttons help you check your own work before you hand it in.</li>
 </ul>`},
-{id:'editor',g:'Tools',t:'The writing area and its buttons',k:'editor write continue improve extend template viva draft first ai text highlight document',h:`
+{id:'editor',g:'Tools',t:'The writing area and its buttons',k:'editor write continue improve extend template viva draft first ai text highlight document dictate voice speak microphone dictation speech',h:`
 <p>The large page on the left is your document. Several buttons sit under it.</p>
 <ul>
 <li><b>Continue Writing</b> suggests the next few sentences. They appear in the AI suggestion pane. Press Tab in the editor to take them, or ignore them.</li>
@@ -6044,6 +6366,8 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Viva question</b> asks you an examiner-style question about your own writing. The answer box has no AI help.</li>
 <li><b>Draft first</b> turns the AI into a questioner. You write, and it asks about what you wrote.</li>
 </ul>
+<p><b>Dictate</b> types what you say, at your cursor. Pick the language beside the button, press it, and speak. It works in Chrome and Edge, needs internet, and types each phrase when you pause. Say <i>full stop</i>, <i>comma</i>, <i>question mark</i>, <i>new line</i> or <i>new paragraph</i> for punctuation. In Hindi say <i>पूर्ण विराम</i>, <i>अल्पविराम</i> or <i>नई पंक्ति</i>. Your voice goes to your browser's speech service, which is Google in Chrome and Microsoft in Edge. Appuscholar never receives it. Never dictate participant names, interview recordings or anything that identifies a person. Press the button again to stop.</p>
+<p>Pictures you add are scaled down to 1600 pixels on the long side before they go into the document, because the browser gives Appuscholar only about 5 MB in all. When storage passes about 80%, a message tells you to download a backup and shrink or remove large pictures.</p>
 <p><b>Worked example.</b> Write two rough paragraphs of your introduction. Turn on Draft first. Answer the questions it asks, then fix the paragraphs. You end up with sentences that are yours and an argument you can defend aloud.</p>`},
 {id:'idea',g:'Tools',t:'Idea & Feasibility',k:'idea feasibility topic question resources timeframe assess',h:`
 <p>Describe the question, what you can reach, how long you have, and any limit that worries you. The advisor gives an outside opinion on whether the plan fits your resources.</p>
@@ -6081,16 +6405,22 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 </ul>
 <p>Treat every output as a draft from a fast but fallible assistant.</p>`},
 {id:'design',g:'Tools',t:'Design & Ethics',k:'design ethics regulatory pathway protocol synopsis ethics committee consent ctri registration pi budget',h:`
-<p>Six helpers, each producing a checklist or a draft document.</p>
+<p>Seven helpers, each producing a checklist or a draft document.</p>
 <ul>
 <li><b>Regulatory-pathway wizard.</b> Answer questions about your study to see which approvals may apply.</li>
 <li><b>Protocol / synopsis builder.</b> Builds the study outline most committees ask for.</li>
-<li><b>Ethics Committee package + consent.</b> Drafts the cover note and a consent form.</li>
+<li><b>Ethics Committee package + consent.</b> Drafts the cover note and a consent form. It also holds your <strong>ethics approval record</strong>: committee, reference number, date, how participants agree, and whether anyone is under 18. One button writes a short ethics statement for your Method section. It never says a study is exempt. Only your committee can say that, in writing.</li>
 <li><b>CTRI registration readiness.</b> Checks whether a clinical-trial registration is likely to apply.</li>
 <li><b>PI eligibility &amp; training.</b> Lists who may lead the study and what training is expected.</li>
 <li><b>Trial budget estimator.</b> A starting estimate.</li>
+<li><b>AI-use statement.</b> See <i>AI-use statement</i>.</li>
 </ul>
 <p>These are starting checklists. They are not a legal ruling. Your own institution's Ethics Committee decides what applies to you, and you should ask them before you collect any data.</p>`},
+{id:'aiuse',g:'Tools',t:'AI-use statement',k:'ai use statement disclosure declare log provider model plagiarism misconduct journal thesis coursework author',h:`
+<p>Universities and journals now ask you to say where AI helped. Appuscholar keeps a private log of this in your browser. It records the date, the AI provider, the model and the kind of help, such as grammar and polish or practice viva questions. It never stores what you typed or what the AI replied.</p>
+<p>Open <b>AI-use statement</b> from Design &amp; Ethics. Choose the dates for this piece of work, untick any help that belongs to another project, add AI tools you used elsewhere, and tick only what you really did yourself. Press <b>Build the statement</b>. Edit the text until it is true, then copy it, insert it into your document, or download it.</p>
+<p>The log knows only about Appuscholar in this browser. If you used it on another computer, or with <b>Keep the log</b> switched off, add that yourself. If the log shows requests and you try to write that no AI was used, Appuscholar stops you. Your institution or the journal decides what you must disclose. AI cannot be an author.</p>
+<p><b>Erase the log</b> removes it from this computer.</p>`},
 {id:'stats',g:'Tools',t:'Statistics Lab',k:'statistics stats test paste data parse csv t-test anova correlation chi regression alpha omega welch kruskal mann whitney spearman',h:`
 <p>Paste a table from Excel, SPSS or Google Sheets, or upload a .csv. The first row holds column names. Press <b>Parse data</b>, pick a test, and the lab computes the result and writes an APA sentence. Everything is calculated in your browser.</p>
 <p><b>Tests available.</b> Descriptives, one-sample, independent and paired t-tests, one-way ANOVA (Welch with a Games-Howell follow-up is the default, classic ANOVA and Tukey are there too), Kruskal-Wallis with a Dunn follow-up, Mann-Whitney, Wilcoxon, Pearson and Spearman correlation, simple regression, chi-square, Fisher's exact test, and Cronbach's alpha with McDonald's omega.</p>
@@ -6251,7 +6581,7 @@ function guidePrint(){
 /* ============ Problem reporting and local usage counts (item 58) ============
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
-const APP_BUILD='2026.10.07';
+const APP_BUILD='2026.10.08';
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
 function usageGet(){try{const u=JSON.parse(LS.get('appu_usage')||'{}');return{tools:u.tools||{},errors:u.errors||{}}}catch(e){return{tools:{},errors:{}}}}
