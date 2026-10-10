@@ -174,6 +174,25 @@
   #editor table td,#editor table th{border:1px solid var(--chipline);padding:8px 10px;min-width:60px;vertical-align:top}
   #editor .img-wrap{position:relative;display:inline-block;max-width:100%;margin:8px 0}
   #editor .img-wrap img,#editor .img-wrap svg{max-width:100%;width:100%;height:auto;display:block;border-radius:6px}
+  #photoStudio{display:none;position:fixed;inset:0;z-index:200;background:var(--bg,#f6f3ff);flex-direction:column;font-size:14px}
+  body.popout-photo>*:not(#photoStudio):not(script):not(#toast){display:none !important}
+  body.popout-photo #photoStudio{display:flex}
+  #photoStudio .ps-top{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;background:var(--purple-700,#4c1d95);color:#fff}
+  #photoStudio .ps-top .spacer{flex:1}
+  #photoStudio .ps-body{flex:1;display:flex;min-height:0}
+  #photoStudio .ps-tools{display:flex;flex-direction:column;gap:6px;padding:8px;overflow:auto;border-right:1px solid var(--line);width:128px;flex:0 0 auto}
+  #photoStudio .ps-tools .btn{justify-content:flex-start;text-align:left;padding:7px 8px;font-size:13px}
+  #photoStudio .ps-tools .on{outline:3px solid var(--purple-600)}
+  #photoStudio .ps-stage{flex:1;display:flex;flex-direction:column;min-width:0}
+  #photoStudio .ps-opts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);min-height:44px}
+  #photoStudio .ps-opts label{font-size:12px;font-weight:700}
+  #photoStudio .ps-canvaswrap{flex:1;overflow:auto;background:#d9d9d9;padding:12px}
+  #photoStudio canvas{touch-action:none;display:block;margin:0 auto;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  #photoStudio .ps-side{width:260px;flex:0 0 auto;overflow:auto;padding:8px 10px;border-left:1px solid var(--line)}
+  #photoStudio .ps-side label{display:block;font-size:12px;font-weight:700;margin-top:8px}
+  #photoStudio .ps-side input[type=range]{width:100%}
+  #photoStudio .ps-side h4{margin:12px 0 4px;font-size:13px}
+  @media(max-width:760px){#photoStudio .ps-body{flex-direction:column}#photoStudio .ps-tools{flex-direction:row;width:auto;border-right:0;border-bottom:1px solid var(--line)}#photoStudio .ps-side{width:auto;border-left:0;border-top:1px solid var(--line);max-height:38vh}}
   #imgEditBtn{position:fixed;z-index:70;display:none;box-shadow:0 2px 8px rgba(0,0,0,.35)}
   #imgEditDlg canvas{width:auto;height:auto;max-width:100%;max-height:55vh;touch-action:none;border:1px solid var(--line);border-radius:8px;background:#e5e5e5;display:block;margin:8px auto}
   #imgEditDlg .ie-tools{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
@@ -454,6 +473,7 @@
         <span class="fmt-sep"></span>
         <button type="button" class="fmt-btn" onclick="tableAddRow()" title="Add a row to the table your cursor is in">+Row</button>
         <button type="button" class="fmt-btn" onclick="tableAddCol()" title="Add a column to the table your cursor is in">+Col</button>
+        <button type="button" class="fmt-btn" onclick="psOpen(null)" data-i18n="ps_tb_btn" title="Open the photo studio in its own window">🎨 Photo studio</button>
         <button type="button" class="fmt-btn" onclick="insertPageBreak()" title="Insert a page break">⤓ Page Break</button>
         <span class="fmt-hint">Select text, then click Bold / Italic / a list to format it — just like Word. Use Image / Table to drop those into the document too.</span>
       </span>
@@ -1060,6 +1080,74 @@
   <div class="row" style="margin-top:12px;display:none" id="termsRowRead"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('termsDlg').close()" data-i18n="close_btn">Close</button></div>
 </div></dialog>
 
+<div id="photoStudio">
+  <div class="ps-top">
+    <strong data-i18n="ps_title">🎨 Photo studio</strong>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('psFile').click()" data-i18n="ps_open">Open a picture…</button>
+    <input type="file" id="psFile" accept="image/*" style="display:none" onchange="psOpenFile(this)">
+    <span id="psStatus" style="font-size:12px;opacity:.9"></span>
+    <span class="spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="psUndo()" data-i18n="ie_undo">↶ Undo</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="psRedo()" data-i18n="ps_redo">↷ Redo</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="psReset()" data-i18n="ie_reset">Start over</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="psZoom(-1)">−</button><span id="psZoomLbl" style="min-width:42px;text-align:center">100%</span><button type="button" class="btn btn-ghost btn-sm" onclick="psZoom(1)">+</button><button type="button" class="btn btn-ghost btn-sm" onclick="psZoom(0)" data-i18n="ps_fit">Fit</button>
+    <button type="button" class="btn btn-gold btn-sm" onclick="psDone()" data-i18n="ps_done">Done: put it in my document</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="psDownload()" data-i18n="ps_dl">⬇ Save a copy</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="psCancel()" data-i18n="ps_close">Close</button>
+  </div>
+  <div class="ps-body">
+    <div class="ps-tools" id="psTools">
+      <button type="button" class="btn btn-ghost" data-tool="crop" onclick="psTool('crop')" data-i18n="ie_crop">✂ Crop</button>
+      <button type="button" class="btn btn-ghost" data-tool="bar" onclick="psTool('bar')" data-i18n="ie_bar">⬛ Black bar</button>
+      <button type="button" class="btn btn-ghost" data-tool="pix" onclick="psTool('pix')" data-i18n="ie_pix">▦ Pixelate</button>
+      <button type="button" class="btn btn-ghost" data-tool="blur" onclick="psTool('blur')" data-i18n="ps_blur">◌ Blur</button>
+      <button type="button" class="btn btn-ghost" data-tool="bg" onclick="psTool('bg')" data-i18n="ie_bg">◐ Plain background</button>
+      <button type="button" class="btn btn-ghost" data-tool="rect" onclick="psTool('rect')" data-i18n="ps_rect">▭ Box</button>
+      <button type="button" class="btn btn-ghost" data-tool="arrow" onclick="psTool('arrow')" data-i18n="ps_arrow">➜ Arrow</button>
+      <button type="button" class="btn btn-ghost" data-tool="pen" onclick="psTool('pen')" data-i18n="ps_pen">✎ Pen</button>
+      <button type="button" class="btn btn-ghost" data-tool="text" onclick="psTool('text')" data-i18n="ps_text">T Text</button>
+    </div>
+    <div class="ps-stage">
+      <div class="ps-opts" id="psOpts">
+        <span id="psHint" style="flex:1;min-width:220px"></span>
+        <label for="psColor" data-i18n="ps_color">Colour</label><input type="color" id="psColor" value="#e11d48">
+        <label for="psSize" data-i18n="ps_size">Size</label><input type="range" id="psSize" min="1" max="30" value="6" style="width:90px">
+        <label for="psAspect" data-i18n="ps_aspect">Crop shape</label>
+        <select id="psAspect"><option value="0" data-i18n="ps_asp_free">Free</option><option value="1">1 : 1</option><option value="1.3333">4 : 3</option><option value="0.75">3 : 4</option><option value="1.7778">16 : 9</option></select>
+        <label for="psBgShape" data-i18n="ps_bgshape">Background keep</label>
+        <select id="psBgShape"><option value="oval" data-i18n="ps_oval">Oval</option><option value="rect" data-i18n="ps_box">Box</option></select>
+        <label for="psBgCol" data-i18n="ie_bgcol">Plain background colour</label>
+        <select id="psBgCol"><option value="#ffffff" data-i18n="ie_col_w">White</option><option value="#d4d4d4" data-i18n="ie_col_l">Light grey</option><option value="#7a7a7a" data-i18n="ie_col_d">Dark grey</option><option value="#000000" data-i18n="ie_col_b">Black</option></select>
+        <input type="text" id="psTextIn" placeholder="Text to place, then click the picture" data-i18n-placeholder="ps_text_ph" style="min-width:180px">
+      </div>
+      <div class="ps-canvaswrap" id="psWrap"><canvas id="psCv" width="300" height="200"></canvas></div>
+    </div>
+    <div class="ps-side">
+      <h4 data-i18n="ps_light">Light and colour</h4>
+      <label for="psBr" data-i18n="ie_br">Brightness</label><input type="range" id="psBr" min="-100" max="100" value="0" oninput="psRender()">
+      <label for="psCo" data-i18n="ie_co">Contrast</label><input type="range" id="psCo" min="-100" max="100" value="0" oninput="psRender()">
+      <label for="psSa" data-i18n="ps_sat">Colour strength (left = black and white)</label><input type="range" id="psSa" min="-100" max="100" value="0" oninput="psRender()">
+      <h4 data-i18n="ps_shape">Turn, flip, size</h4>
+      <div class="ie-tools" style="display:flex;flex-wrap:wrap;gap:6px">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="psRot(-1)" data-i18n="ie_rotl">⟲ Turn left</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="psRot(1)" data-i18n="ie_rotr">⟳ Turn right</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="psFlip('h')" data-i18n="ps_fliph">⇋ Flip left-right</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="psFlip('v')" data-i18n="ps_flipv">⇅ Flip up-down</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="psSharpen()" data-i18n="ps_sharpen">Sharpen</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="psBorder()" data-i18n="ps_border">Add border</button>
+      </div>
+      <label for="psW" data-i18n="ps_width">Width in pixels</label>
+      <div style="display:flex;gap:6px"><input type="number" id="psW" min="50" max="4000" style="flex:1;padding:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="psResize()" data-i18n="ps_resize">Resize</button></div>
+      <h4 data-i18n="ie_cap_on">Add a numbered caption</h4>
+      <label style="margin-top:0"><input type="checkbox" id="psCapOn" onchange="psCapToggle()"> <span data-i18n="ie_cap_on">Add a numbered caption</span></label>
+      <div id="psCapFields" style="display:none">
+        <label for="psCapTitle" data-i18n="ie_cap_title">Figure title</label><input type="text" id="psCapTitle" style="width:100%;padding:6px">
+        <label for="psCapNote" data-i18n="ie_cap_note">Note under the figure</label><textarea id="psCapNote" rows="4" style="width:100%;padding:6px"></textarea>
+      </div>
+      <p class="desc" id="psCapExists" style="display:none" data-i18n="ie_cap_exists">This picture already has a caption.</p>
+    </div>
+  </div>
+</div>
 <button type="button" class="btn btn-purple btn-sm" id="imgEditBtn" onclick="ieOpenSel()" data-i18n="ie_btn">✎ Edit picture</button>
 <dialog id="imgEditDlg"><div class="dlg-body">
   <h2 data-i18n="ie_h">🖼 Edit picture</h2>
@@ -1091,6 +1179,7 @@
   <div class="row" style="margin-top:10px">
     <button type="button" class="btn btn-purple" onclick="ieApply()" data-i18n="ie_apply">Use this picture</button>
     <button type="button" class="btn btn-ghost" onclick="document.getElementById('imgEditDlg').close()" data-i18n="ie_cancel">Cancel</button>
+    <button type="button" class="btn btn-ghost" onclick="psOpenFromDialog()" data-i18n="ps_open_btn">🪟 Open in a bigger window</button>
   </div>
 </div></dialog>
 <dialog id="capDlg"><div class="dlg-body">
@@ -1735,6 +1824,7 @@ const I18N={
     help_contact_unset:"A direct contact option isn't set up yet — for now, reach whoever gave you Appuscholar.",
     help_tour_btn:'↺ Show the welcome tour again', help_close_btn:'Close',
     ie_btn:'✎ Edit picture', ie_h:'🖼 Edit picture', ie_desc:"Turn, crop, lighten or darken, and hide a participant's identity. Everything happens on this device.", ie_rotl:'⟲ Turn left', ie_rotr:'⟳ Turn right', ie_crop:'✂ Crop', ie_bar:'⬛ Black bar', ie_pix:'▦ Pixelate', ie_bg:'◐ Plain background', ie_undo:'↶ Undo', ie_reset:'Start over', ie_br:'Brightness', ie_co:'Contrast', ie_bgcol:'Plain background colour', ie_col_w:'White', ie_col_l:'Light grey', ie_col_d:'Dark grey', ie_col_b:'Black', ie_h_none:'Pick a tool above, then drag on the picture.', ie_h_crop:'Drag a box around the part to keep.', ie_h_bar:'Drag a box over the eyes, or over the whole face. It is filled black. A black bar hides identity far more safely than pixels.', ie_h_pix:'Drag a box over the area to pixelate. Pixelation can sometimes be partly undone, so for faces a black bar is safer.', ie_h_bg:'Drag a box around the person. Everything outside an oval inside that box turns into the plain colour. This is a manual outline, not an automatic cut-out.', ie_cap_on:'Add a numbered caption', ie_cap_exists:'This picture already has a caption.', ie_cap_title:'Figure title', ie_cap_note:'Note under the figure', ie_apply:'Use this picture', ie_cancel:'Cancel', ie_done:'Picture updated ✓', ie_fail:'Could not edit this picture. Try inserting it again from a file.', ie_note_bar:"Eyes or face were covered with a black bar to protect the participant's identity.", ie_note_pix:"Part of the face was pixelated to protect the participant's identity.", ie_note_bg:'The background was replaced with a plain colour.', cap_btn:'🏷 Caption', cap_h:'🏷 Numbered caption', cap_desc:'Adds "Figure 1" or "Table 1" with a title above the picture or table, in APA 7 style. Click a picture or a table, or put the cursor where the caption should go. Numbers update by themselves.', cap_kind:'Kind', cap_fig:'Figure', cap_tab:'Table', cap_title:'Title', cap_note:'Note under it (optional)', cap_insert:'Insert caption', cap_renum:'Renumber all', cap_renum_done:'{f} figure(s) and {t} table(s) numbered ✓', cap_inserted:'Caption added ✓', cap_need_title:'Write a title first.',
+    ps_title:'🎨 Photo studio', ps_open:'Open a picture…', ps_redo:'↷ Redo', ps_fit:'Fit', ps_done:'Done: put it in my document', ps_dl:'⬇ Save a copy', ps_close:'Close', ps_blur:'◌ Blur', ps_rect:'▭ Box', ps_arrow:'➜ Arrow', ps_pen:'✎ Pen', ps_text:'T Text', ps_color:'Colour', ps_size:'Size', ps_aspect:'Crop shape', ps_asp_free:'Free', ps_bgshape:'Background keep', ps_oval:'Oval', ps_box:'Box', ps_text_ph:'Text to place, then click the picture', ps_light:'Light and colour', ps_sat:'Colour strength (left = black and white)', ps_shape:'Turn, flip, size', ps_fliph:'⇋ Flip left-right', ps_flipv:'⇅ Flip up-down', ps_sharpen:'Sharpen', ps_border:'Add border', ps_width:'Width in pixels', ps_resize:'Resize', ps_h_blur:'Drag a box over the area to blur. A black bar hides identity far more safely than a blur.', ps_h_rect:'Drag a box to outline something. Colour and size are at the right of this bar.', ps_h_arrow:'Drag from the tail to the point of the arrow.', ps_h_pen:'Draw freely on the picture.', ps_h_text:'Type the text above, then click where it should go.', ps_note_blur:"Part of the face was blurred to protect the participant's identity.", ps_nochan:'This browser cannot open the photo studio. Using the small editor instead.', ps_nopic:'Open a picture first.', ps_noparent:'The document window is not listening. Keep the Appuscholar tab open, or use Save a copy.', ps_sending:'Sending to your document…', ps_saved:'Placed in your document ✓', ps_closeself:'You can close this window.', ps_openhint:'Press Open a picture to start.', ps_need_text:'Type the text first.', ps_open_btn:'🪟 Open in a bigger window', ps_tb_btn:'🎨 Photo studio',
   },
   hi:{
     help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
@@ -1936,6 +2026,7 @@ const I18N={
     help_contact_unset:'सीधा संपर्क विकल्प अभी सेट नहीं है — फ़िलहाल, Appuscholar देने वाले से संपर्क करें।',
     help_tour_btn:'↺ स्वागत मार्गदर्शन फिर दिखाएं', help_close_btn:'बंद करें',
     ie_btn:'✎ चित्र संपादित करें', ie_h:'🖼 चित्र संपादित करें', ie_desc:'चित्र को घुमाएँ, काटें, हल्का या गहरा करें, और प्रतिभागी की पहचान छिपाएँ। सब कुछ इसी डिवाइस पर होता है।', ie_rotl:'⟲ बाएँ घुमाएँ', ie_rotr:'⟳ दाएँ घुमाएँ', ie_crop:'✂ काटें', ie_bar:'⬛ काली पट्टी', ie_pix:'▦ पिक्सेल करें', ie_bg:'◐ सादी पृष्ठभूमि', ie_undo:'↶ वापस', ie_reset:'फिर से शुरू', ie_br:'चमक', ie_co:'कंट्रास्ट', ie_bgcol:'सादी पृष्ठभूमि का रंग', ie_col_w:'सफ़ेद', ie_col_l:'हल्का स्लेटी', ie_col_d:'गहरा स्लेटी', ie_col_b:'काला', ie_h_none:'ऊपर से कोई औज़ार चुनें, फिर चित्र पर खींचें।', ie_h_crop:'जो हिस्सा रखना है उसके चारों ओर डिब्बा खींचें।', ie_h_bar:'आँखों पर, या पूरे चेहरे पर डिब्बा खींचें। वह काला भर जाएगा। पहचान छिपाने के लिए काली पट्टी पिक्सेल से कहीं ज़्यादा सुरक्षित है।', ie_h_pix:'जिस हिस्से को पिक्सेल करना है उस पर डिब्बा खींचें। पिक्सेल कभी-कभी आंशिक रूप से वापस बनाया जा सकता है, इसलिए चेहरे के लिए काली पट्टी ज़्यादा सुरक्षित है।', ie_h_bg:'व्यक्ति के चारों ओर डिब्बा खींचें। उस डिब्बे के भीतर के अंडाकार के बाहर सब कुछ सादे रंग में बदल जाएगा। यह हाथ से खींची रूपरेखा है, अपने-आप कटाई नहीं।', ie_cap_on:'क्रमांकित कैप्शन जोड़ें', ie_cap_exists:'इस चित्र में पहले से कैप्शन है।', ie_cap_title:'चित्र का शीर्षक', ie_cap_note:'चित्र के नीचे टिप्पणी', ie_apply:'यह चित्र लगाएँ', ie_cancel:'रद्द करें', ie_done:'चित्र बदल गया ✓', ie_fail:'यह चित्र संपादित नहीं हो सका। इसे फ़ाइल से दोबारा डालकर देखें।', ie_note_bar:'प्रतिभागी की पहचान की रक्षा के लिए आँखें या चेहरा काली पट्टी से ढका गया।', ie_note_pix:'प्रतिभागी की पहचान की रक्षा के लिए चेहरे का हिस्सा पिक्सेल किया गया।', ie_note_bg:'पृष्ठभूमि को सादे रंग से बदला गया।', cap_btn:'🏷 कैप्शन', cap_h:'🏷 क्रमांकित कैप्शन', cap_desc:'चित्र या तालिका के ऊपर शीर्षक के साथ "Figure 1" या "Table 1" जोड़ता है, APA 7 शैली में। चित्र या तालिका पर क्लिक करें, या कर्सर वहाँ रखें जहाँ कैप्शन चाहिए। क्रमांक अपने-आप बदलते रहते हैं।', cap_kind:'प्रकार', cap_fig:'चित्र (Figure)', cap_tab:'तालिका (Table)', cap_title:'शीर्षक', cap_note:'इसके नीचे टिप्पणी (वैकल्पिक)', cap_insert:'कैप्शन जोड़ें', cap_renum:'सब दोबारा क्रमांकित करें', cap_renum_done:'{f} चित्र और {t} तालिका क्रमांकित ✓', cap_inserted:'कैप्शन जुड़ गया ✓', cap_need_title:'पहले शीर्षक लिखें।',
+    ps_title:'🎨 फ़ोटो स्टूडियो', ps_open:'चित्र खोलें…', ps_redo:'↷ फिर से', ps_fit:'फ़िट', ps_done:'हो गया: इसे मेरे दस्तावेज़ में रखें', ps_dl:'⬇ प्रति सहेजें', ps_close:'बंद करें', ps_blur:'◌ धुंधला', ps_rect:'▭ डिब्बा', ps_arrow:'➜ तीर', ps_pen:'✎ कलम', ps_text:'T लिखावट', ps_color:'रंग', ps_size:'आकार', ps_aspect:'कटाई का आकार', ps_asp_free:'खुला', ps_bgshape:'पृष्ठभूमि में रखें', ps_oval:'अंडाकार', ps_box:'डिब्बा', ps_text_ph:'जो लिखना है, फिर चित्र पर क्लिक करें', ps_light:'रोशनी और रंग', ps_sat:'रंग की गहराई (बाएँ = श्वेत-श्याम)', ps_shape:'घुमाएँ, पलटें, आकार', ps_fliph:'⇋ दाएँ-बाएँ पलटें', ps_flipv:'⇅ ऊपर-नीचे पलटें', ps_sharpen:'तीखा करें', ps_border:'किनारा जोड़ें', ps_width:'चौड़ाई (पिक्सेल में)', ps_resize:'आकार बदलें', ps_h_blur:'जिस हिस्से को धुंधला करना है उस पर डिब्बा खींचें। पहचान छिपाने के लिए काली पट्टी धुंधलेपन से कहीं ज़्यादा सुरक्षित है।', ps_h_rect:'किसी चीज़ को घेरने के लिए डिब्बा खींचें। रंग और आकार इस पट्टी के दाईं ओर हैं।', ps_h_arrow:'तीर की पूँछ से नोक तक खींचें।', ps_h_pen:'चित्र पर खुलकर बनाएँ।', ps_h_text:'ऊपर लिखावट टाइप करें, फिर जहाँ रखनी है वहाँ क्लिक करें।', ps_note_blur:'प्रतिभागी की पहचान की रक्षा के लिए चेहरे का हिस्सा धुंधला किया गया।', ps_nochan:'यह ब्राउज़र फ़ोटो स्टूडियो नहीं खोल सकता। छोटे संपादक का उपयोग हो रहा है।', ps_nopic:'पहले कोई चित्र खोलें।', ps_noparent:'दस्तावेज़ वाली विंडो सुन नहीं रही। Appuscholar का टैब खुला रखें, या प्रति सहेजें।', ps_sending:'आपके दस्तावेज़ में भेजा जा रहा है…', ps_saved:'आपके दस्तावेज़ में रख दिया ✓', ps_closeself:'अब आप यह विंडो बंद कर सकते हैं।', ps_openhint:'शुरू करने के लिए चित्र खोलें दबाएँ।', ps_need_text:'पहले लिखावट टाइप करें।', ps_open_btn:'🪟 बड़ी विंडो में खोलें', ps_tb_btn:'🎨 फ़ोटो स्टूडियो',
   }
 };
 function getLang(){const l=LS.get('appu_lang');return(l==='hi')?'hi':'en'}
@@ -2659,6 +2750,7 @@ function upd(){
   updOriginality();
   clearTimeout(saveT);
   saveT=setTimeout(()=>{
+    if(POPOUT)return; /* pop-out windows never save documents */
     const html=getEditorHTML();
     const b=document.getElementById('saveBadge');
     if(docSaveBody(html)){
@@ -3357,6 +3449,7 @@ function clearWritingSamples(){
   showToast(t('writingsample_cleared'));
 }
 window.addEventListener('beforeunload',e=>{
+  if(POPOUT)return;
   clearTimeout(saveT);docSaveBody(getEditorHTML());
   if(saveDead&&getEditorHTML()!==lastSaved){e.preventDefault();e.returnValue=''}
 });
@@ -3743,6 +3836,256 @@ function capInsert(){
     if(note){let after=target;if(kind==='table')after=target;after.insertAdjacentHTML('afterend',capNoteHTML(note))}
   }else insertHTMLBlockIntoEditor(h+capNoteHTML(note));
   renumberCaptions();upd();document.getElementById('capDlg').close();showToast(t('cap_inserted'));
+}
+
+
+/* ============ Photo studio: the picture editor in its own window (Version 4) ============
+   The main window hands over one picture through a BroadcastChannel. The studio window edits it with a bigger canvas and
+   more tools, then sends the result back. The main window puts the picture in the same place in the document and adds the
+   caption. The studio window never writes to the saved documents. */
+let photoChan=null;try{photoChan=new BroadcastChannel('appu_photo')}catch(e){photoChan=null}
+const PSMAIN={};
+function picCapExists(img){
+  const w=img.closest('.img-wrap')||img;let blk=w;while(blk.parentNode&&blk.parentNode!==editor)blk=blk.parentNode;
+  const pv=blk.previousElementSibling;
+  if(pv&&(pv.hasAttribute('data-cap')||pv.hasAttribute('data-cap-title')))return true;
+  return !!(pv&&pv.previousElementSibling&&pv.previousElementSibling.hasAttribute('data-cap'));
+}
+function picApplyResult(el,data,edits,capOn,title,note){
+  el.src=data;
+  if(edits)el.setAttribute('data-edits',edits);
+  if(capOn&&!picCapExists(el)){
+    const blk=ieBlockOf(el.closest('.img-wrap')||el);
+    blk.insertAdjacentHTML('beforebegin',capBlocksHTML('figure',title));
+    if(note)blk.insertAdjacentHTML('afterend',capNoteHTML(note));
+    if(title)el.setAttribute('alt',title);
+  }
+  renumberCaptions();upd();
+}
+function picInsertNew(data,edits,capOn,title,note){
+  const tag='ps'+Date.now();
+  insertHTMLBlockIntoEditor('<span class="img-wrap" contenteditable="false" style="width:360px"><img data-pstmp="'+tag+'" src="'+data+'"><span class="img-handle" title="Drag to resize"></span></span>&nbsp;');
+  const el=editor.querySelector('img[data-pstmp="'+tag+'"]');if(!el)return false;
+  el.removeAttribute('data-pstmp');picApplyResult(el,data,edits,capOn,title,note);return true;
+}
+function psOpen(img){
+  if(!photoChan){showToast(t('ps_nochan'));if(img)ieOpenFor(img);return}
+  const id='ps'+Date.now().toString(36);
+  PSMAIN[id]={el:img||null};
+  const w=window.open(location.href.split('#')[0]+'#popout=photo&id='+id,'appu_photo_'+id,'popup=yes,width=1280,height=860');
+  if(!w){delete PSMAIN[id];showToast(t('pop_blocked'));if(img)ieOpenFor(img);return}
+  try{w.focus()}catch(e){}
+  ieBtnHide();
+}
+function psOpenFromDialog(){const el=IE.el;document.getElementById('imgEditDlg').close();if(el)psOpen(el)}
+if(photoChan&&!POPOUT){
+  photoChan.onmessage=ev=>{
+    const m=ev.data||{};const rec=PSMAIN[m.id];if(!rec)return;
+    if(m.t==='ready'){
+      const el=rec.el&&document.body.contains(rec.el)?rec.el:null;
+      photoChan.postMessage({t:'load',id:m.id,src:el?el.src:'',capExists:el?picCapExists(el):false});
+    }else if(m.t==='done'){
+      let ok=true;
+      if(rec.el&&document.body.contains(rec.el))picApplyResult(rec.el,m.src,m.edits,m.capOn,m.title,m.note);
+      else ok=picInsertNew(m.src,m.edits,m.capOn,m.title,m.note);
+      photoChan.postMessage({t:'saved',id:m.id,ok:ok});
+      showToast(ok?t('ie_done'):t('ie_fail'));
+      try{window.focus()}catch(e){}
+      delete PSMAIN[m.id];
+    }else if(m.t==='cancel'){delete PSMAIN[m.id]}
+  };
+}
+/* ---- studio window ---- */
+const PS={base:null,orig:null,undo:[],redo:[],log:[],tool:'',drag:null,pen:[],zoom:0,id:'',png:false,capExists:false,loaded:false};
+function psCloneCv(c){const n=document.createElement('canvas');n.width=c.width;n.height=c.height;n.getContext('2d').drawImage(c,0,0);return n}
+function psStatus(k){document.getElementById('psStatus').textContent=k?t(k):''}
+function psLoadSrc(src,capExists){
+  const im=new Image();
+  im.onload=()=>{try{
+    const k=Math.min(1,2400/Math.max(im.naturalWidth,im.naturalHeight));
+    const c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*k));c.height=Math.max(1,Math.round(im.naturalHeight*k));
+    const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+    g.getImageData(0,0,1,1);
+    PS.base=c;PS.orig=psCloneCv(c);PS.undo=[];PS.redo=[];PS.log=[];PS.loaded=true;PS.png=/^data:image\/png/.test(src);
+    PS.capExists=!!capExists;document.getElementById('psCapOn').disabled=PS.capExists;document.getElementById('psCapExists').style.display=PS.capExists?'block':'none';
+    document.getElementById('psW').value=c.width;['psBr','psCo','psSa'].forEach(i=>document.getElementById(i).value=0);
+    PS.zoom=0;psTool('');psRender();psStatus('')
+  }catch(e){psStatus('ie_fail')}};
+  im.onerror=()=>psStatus('ie_fail');
+  im.src=src;
+}
+function psOpenFile(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  if(!/^image\//.test(f.type)){psStatus('ie_fail');return}
+  const r=new FileReader();r.onload=()=>psLoadSrc(r.result,false);r.readAsDataURL(f);inp.value='';
+}
+function psZoom(d){
+  const wrap=document.getElementById('psWrap');
+  if(d===0){PS.zoom=0}else{
+    let z=PS.zoom||psFitZoom();z=d>0?z*1.25:z/1.25;PS.zoom=Math.max(.1,Math.min(4,z))}
+  psRender();
+}
+function psFitZoom(){
+  if(!PS.base)return 1;const w=document.getElementById('psWrap');
+  return Math.min(1,(w.clientWidth-30)/PS.base.width,(w.clientHeight-30)/PS.base.height);
+}
+function psTool(k){
+  PS.tool=(PS.tool===k)?'':k;
+  document.querySelectorAll('#psTools [data-tool]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-tool')===PS.tool));
+  const hint={crop:'ie_h_crop',bar:'ie_h_bar',pix:'ie_h_pix',blur:'ps_h_blur',bg:'ie_h_bg',rect:'ps_h_rect',arrow:'ps_h_arrow',pen:'ps_h_pen',text:'ps_h_text'}[PS.tool]||'ie_h_none';
+  document.getElementById('psHint').textContent=t(hint);
+  const show=(id,on)=>{const e=document.getElementById(id);[e,document.querySelector('label[for='+id+']')].forEach(x=>{if(x)x.style.display=on?'':'none'})};
+  const T=PS.tool;
+  show('psColor',T==='rect'||T==='arrow'||T==='pen'||T==='text');show('psSize',T==='rect'||T==='arrow'||T==='pen'||T==='text');
+  show('psAspect',T==='crop');show('psBgShape',T==='bg');show('psBgCol',T==='bg');
+  document.getElementById('psTextIn').style.display=T==='text'?'':'none';
+}
+function psAdjust(src){
+  const br=+document.getElementById('psBr').value,co=+document.getElementById('psCo').value,sa=+document.getElementById('psSa').value;
+  if(!br&&!co&&!sa)return null;
+  const cv=psCloneCv(src),g=cv.getContext('2d'),d=g.getImageData(0,0,cv.width,cv.height),a=d.data;
+  const c=co*2.55,f=259*(c+255)/(255*(259-c)),add=br*2.55,s=1+sa/100;
+  for(let i=0;i<a.length;i+=4){
+    const r=a[i],gg=a[i+1],b=a[i+2],gr=.299*r+.587*gg+.114*b;
+    const v=[gr+(r-gr)*s,gr+(gg-gr)*s,gr+(b-gr)*s];
+    for(let j=0;j<3;j++){let x=f*(v[j]-128)+128+add;a[i+j]=x<0?0:x>255?255:x}
+  }
+  g.putImageData(d,0,0);return cv;
+}
+function psRect(){const d=PS.drag;let x1=d.x1,y1=d.y1;
+  if(PS.tool==='crop'){const ar=parseFloat(document.getElementById('psAspect').value)||0;
+    if(ar){const w=Math.abs(x1-d.x0),sy=y1>=d.y0?1:-1;y1=d.y0+sy*(w/ar)}}
+  return{x:Math.min(d.x0,x1),y:Math.min(d.y0,y1),w:Math.abs(x1-d.x0),h:Math.abs(y1-d.y0),x1:x1,y1:y1}}
+function psDrawArrow(g,x0,y0,x1,y1,col,sz){
+  g.strokeStyle=col;g.fillStyle=col;g.lineWidth=sz;g.lineCap='round';
+  g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();
+  const a=Math.atan2(y1-y0,x1-x0),h=Math.max(12,sz*4);
+  g.beginPath();g.moveTo(x1,y1);g.lineTo(x1-h*Math.cos(a-.45),y1-h*Math.sin(a-.45));g.lineTo(x1-h*Math.cos(a+.45),y1-h*Math.sin(a+.45));g.closePath();g.fill();
+}
+function psRender(){
+  const cv=document.getElementById('psCv');if(!PS.base)return;
+  if(cv.width!==PS.base.width||cv.height!==PS.base.height){cv.width=PS.base.width;cv.height=PS.base.height}
+  const z=PS.zoom||psFitZoom();cv.style.width=Math.round(PS.base.width*z)+'px';cv.style.height=Math.round(PS.base.height*z)+'px';
+  document.getElementById('psZoomLbl').textContent=Math.round(z*100)+'%';
+  const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);g.drawImage(psAdjust(PS.base)||PS.base,0,0);
+  const col=document.getElementById('psColor').value,sz=+document.getElementById('psSize').value;
+  if(PS.drag||PS.pen.length){
+    g.save();
+    if(PS.tool==='pen'&&PS.pen.length>1){g.strokeStyle=col;g.lineWidth=sz;g.lineCap='round';g.lineJoin='round';g.beginPath();PS.pen.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));g.stroke()}
+    else if(PS.drag){
+      const r=psRect();
+      if(PS.tool==='arrow')psDrawArrow(g,PS.drag.x0,PS.drag.y0,PS.drag.x1,PS.drag.y1,col,sz);
+      else{g.lineWidth=Math.max(2,cv.width/250);g.strokeStyle=(PS.tool==='rect')?col:'#f43f5e';if(PS.tool!=='rect')g.setLineDash([8,6]);
+        if(PS.tool==='bg'&&document.getElementById('psBgShape').value==='oval'){g.beginPath();g.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,Math.PI*2);g.stroke()}
+        else g.strokeRect(r.x,r.y,r.w,r.h)}
+    }
+    g.restore();
+  }
+}
+function psBake(){const a=psAdjust(PS.base);if(!a)return;PS.base=a;['psBr','psCo','psSa'].forEach(i=>document.getElementById(i).value=0);psLogAdd('light')}
+function psLogAdd(k){if(PS.log.indexOf(k)<0)PS.log.push(k)}
+function psSnap(){psBake();PS.undo.push({c:psCloneCv(PS.base),log:PS.log.slice()});if(PS.undo.length>15)PS.undo.shift();PS.redo=[]}
+function psUndo(){if(!PS.undo.length)return;PS.redo.push({c:psCloneCv(PS.base),log:PS.log.slice()});const h=PS.undo.pop();PS.base=h.c;PS.log=h.log;document.getElementById('psW').value=PS.base.width;psRender()}
+function psRedo(){if(!PS.redo.length)return;PS.undo.push({c:psCloneCv(PS.base),log:PS.log.slice()});const h=PS.redo.pop();PS.base=h.c;PS.log=h.log;document.getElementById('psW').value=PS.base.width;psRender()}
+function psReset(){if(!PS.orig)return;PS.base=psCloneCv(PS.orig);PS.undo=[];PS.redo=[];PS.log=[];['psBr','psCo','psSa'].forEach(i=>document.getElementById(i).value=0);document.getElementById('psW').value=PS.base.width;psRender()}
+function psRot(d){if(!PS.base)return;psSnap();const b=PS.base,n=document.createElement('canvas');n.width=b.height;n.height=b.width;const g=n.getContext('2d');g.save();g.translate(n.width/2,n.height/2);g.rotate(d*Math.PI/2);g.drawImage(b,-b.width/2,-b.height/2);g.restore();PS.base=n;psLogAdd('turned');document.getElementById('psW').value=n.width;psRender()}
+function psFlip(a){if(!PS.base)return;psSnap();const b=PS.base,n=document.createElement('canvas');n.width=b.width;n.height=b.height;const g=n.getContext('2d');g.save();if(a==='h'){g.translate(n.width,0);g.scale(-1,1)}else{g.translate(0,n.height);g.scale(1,-1)}g.drawImage(b,0,0);g.restore();PS.base=n;psLogAdd('flipped');psRender()}
+function psSharpen(){
+  if(!PS.base)return;psSnap();const b=PS.base,g=b.getContext('2d'),w=b.width,h=b.height,s=g.getImageData(0,0,w,h),o=g.createImageData(w,h),a=s.data,d=o.data;
+  const k=[0,-1,0,-1,5,-1,0,-1,0];
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;
+    if(x===0||y===0||x===w-1||y===h-1){d[i]=a[i];d[i+1]=a[i+1];d[i+2]=a[i+2];d[i+3]=255;continue}
+    for(let c=0;c<3;c++){let v=0,n=0;for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++)v+=a[((y+yy)*w+(x+xx))*4+c]*k[n++];d[i+c]=v<0?0:v>255?255:v}
+    d[i+3]=255}
+  g.putImageData(o,0,0);psLogAdd('sharpened');psRender();
+}
+function psBorder(){
+  if(!PS.base)return;psSnap();const b=PS.base,p=Math.max(2,Math.round(+document.getElementById('psSize').value)),n=document.createElement('canvas');
+  n.width=b.width+2*p;n.height=b.height+2*p;const g=n.getContext('2d');g.fillStyle=document.getElementById('psColor').value;g.fillRect(0,0,n.width,n.height);g.drawImage(b,p,p);PS.base=n;psLogAdd('border');document.getElementById('psW').value=n.width;psRender();
+}
+function psResize(){
+  if(!PS.base)return;const w=Math.max(50,Math.min(4000,parseInt(document.getElementById('psW').value,10)||PS.base.width));
+  if(w===PS.base.width)return;psSnap();const b=PS.base,h=Math.max(1,Math.round(b.height*w/b.width)),n=document.createElement('canvas');n.width=w;n.height=h;
+  const g=n.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(b,0,0,w,h);PS.base=n;psLogAdd('resized');psRender();
+}
+function psCommit(r){
+  psSnap();const b=PS.base,T=PS.tool,col=document.getElementById('psColor').value,sz=+document.getElementById('psSize').value;let g;
+  if(T==='crop'){const n=document.createElement('canvas');n.width=Math.max(1,Math.round(r.w));n.height=Math.max(1,Math.round(r.h));n.getContext('2d').drawImage(b,r.x,r.y,r.w,r.h,0,0,n.width,n.height);PS.base=n;psLogAdd('cropped');document.getElementById('psW').value=n.width}
+  else if(T==='bar'){g=b.getContext('2d');g.fillStyle='#000';g.fillRect(r.x,r.y,r.w,r.h);psLogAdd('bar')}
+  else if(T==='pix'||T==='blur'){
+    const div=T==='pix'?Math.max(6,Math.round(Math.min(r.w,r.h)/6)):Math.max(4,Math.round(Math.min(r.w,r.h)/10));
+    const sw=Math.max(1,Math.round(r.w/div)),sh=Math.max(1,Math.round(r.h/div));
+    const t1=document.createElement('canvas');t1.width=sw;t1.height=sh;t1.getContext('2d').drawImage(b,r.x,r.y,r.w,r.h,0,0,sw,sh);
+    g=b.getContext('2d');g.save();g.imageSmoothingEnabled=(T==='blur');g.drawImage(t1,0,0,sw,sh,r.x,r.y,r.w,r.h);g.restore();psLogAdd(T==='pix'?'pixelated':'blurred')}
+  else if(T==='bg'){
+    const n=document.createElement('canvas');n.width=b.width;n.height=b.height;g=n.getContext('2d');g.fillStyle=document.getElementById('psBgCol').value;g.fillRect(0,0,n.width,n.height);
+    g.save();g.beginPath();if(document.getElementById('psBgShape').value==='oval')g.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,Math.PI*2);else g.rect(r.x,r.y,r.w,r.h);g.clip();g.drawImage(b,0,0);g.restore();PS.base=n;psLogAdd('background')}
+  else if(T==='rect'){g=b.getContext('2d');g.strokeStyle=col;g.lineWidth=sz;g.strokeRect(r.x,r.y,r.w,r.h);psLogAdd('annotated')}
+  else if(T==='arrow'){g=b.getContext('2d');psDrawArrow(g,PS.drag.x0,PS.drag.y0,PS.drag.x1,PS.drag.y1,col,sz);psLogAdd('annotated')}
+  psRender();
+}
+function psPlaceText(x,y){
+  const txt=document.getElementById('psTextIn').value;if(!txt.trim()){psStatus('ps_need_text');return}
+  psSnap();const g=PS.base.getContext('2d'),sz=Math.max(12,+document.getElementById('psSize').value*4);
+  g.font='bold '+sz+'px Arial, Helvetica, sans-serif';g.textBaseline='top';g.lineJoin='round';g.lineWidth=Math.max(2,sz/8);g.strokeStyle='#ffffff';g.strokeText(txt,x,y);g.fillStyle=document.getElementById('psColor').value;g.fillText(txt,x,y);
+  psLogAdd('annotated');psRender();
+}
+(function(){
+  const cv=document.getElementById('psCv');if(!cv)return;
+  function pt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height}}
+  cv.addEventListener('pointerdown',e=>{
+    if(!PS.tool||!PS.base)return;const p=pt(e);
+    if(PS.tool==='text'){psPlaceText(p.x,p.y);e.preventDefault();return}
+    PS.drag={x0:p.x,y0:p.y,x1:p.x,y1:p.y};PS.pen=PS.tool==='pen'?[p]:[];try{cv.setPointerCapture(e.pointerId)}catch(x){}e.preventDefault();psRender()});
+  cv.addEventListener('pointermove',e=>{if(!PS.drag)return;const p=pt(e);PS.drag.x1=Math.max(0,Math.min(cv.width,p.x));PS.drag.y1=Math.max(0,Math.min(cv.height,p.y));if(PS.tool==='pen')PS.pen.push({x:PS.drag.x1,y:PS.drag.y1});psRender()});
+  cv.addEventListener('pointerup',()=>{
+    if(!PS.drag)return;const T=PS.tool;
+    if(T==='pen'){const pts=PS.pen;PS.drag=null;PS.pen=[];if(pts.length>1){psSnap();const g=PS.base.getContext('2d');g.strokeStyle=document.getElementById('psColor').value;g.lineWidth=+document.getElementById('psSize').value;g.lineCap='round';g.lineJoin='round';g.beginPath();pts.forEach((q,i)=>i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y));g.stroke();psLogAdd('annotated')}psRender();return}
+    const r=psRect();const dx=Math.abs(PS.drag.x1-PS.drag.x0),dy=Math.abs(PS.drag.y1-PS.drag.y0);
+    if(T==='arrow'?(dx<6&&dy<6):(r.w<6||r.h<6)){PS.drag=null;psRender();return}
+    psCommit(r);PS.drag=null;psRender()});
+  cv.addEventListener('pointercancel',()=>{PS.drag=null;PS.pen=[];psRender()});
+  document.addEventListener('keydown',e=>{if(!document.body.classList.contains('popout-photo'))return;if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();psUndo()}else if((e.ctrlKey||e.metaKey)&&(e.key==='y'||e.key==='Y')){e.preventDefault();psRedo()}});
+  window.addEventListener('resize',()=>{if(PS.base&&!PS.zoom)psRender()});
+  ['psColor','psSize'].forEach(i=>document.getElementById(i).addEventListener('input',()=>psRender()));
+})();
+function psMaskNote(){
+  const l=PS.log,o=[];
+  if(l.indexOf('bar')>=0)o.push(t('ie_note_bar'));
+  if(l.indexOf('pixelated')>=0)o.push(t('ie_note_pix'));
+  if(l.indexOf('blurred')>=0)o.push(t('ps_note_blur'));
+  if(l.indexOf('background')>=0)o.push(t('ie_note_bg'));
+  return o.join(' ');
+}
+function psCapToggle(){const on=document.getElementById('psCapOn').checked;document.getElementById('psCapFields').style.display=on?'block':'none';if(on&&!document.getElementById('psCapNote').value)document.getElementById('psCapNote').value=psMaskNote()}
+async function psExport(){
+  psBake();let data=PS.png?PS.base.toDataURL('image/png'):'';
+  if(!data||data.length>600000)data=PS.base.toDataURL('image/jpeg',0.92);
+  return imgShrinkDataUrl(data);
+}
+async function psDone(){
+  if(!PS.base||!PS.loaded){psStatus('ps_nopic');return}
+  if(!photoChan||!PS.id){psStatus('ps_noparent');return}
+  try{
+    const src=await psExport();
+    photoChan.postMessage({t:'done',id:PS.id,src:src,edits:PS.log.join(', '),capOn:document.getElementById('psCapOn').checked&&!PS.capExists,title:document.getElementById('psCapTitle').value.trim(),note:document.getElementById('psCapNote').value.trim()});
+    psStatus('ps_sending');PS.waitSaved=setTimeout(()=>psStatus('ps_noparent'),4000);
+  }catch(e){psStatus('ie_fail')}
+}
+async function psDownload(){
+  if(!PS.base)return;const src=await psExport();const a=document.createElement('a');a.href=src;a.download='picture.'+(/png/.test(src.slice(0,20))?'png':'jpg');document.body.appendChild(a);a.click();a.remove();
+}
+function psCancel(){if(photoChan&&PS.id)photoChan.postMessage({t:'cancel',id:PS.id});window.close();psStatus('ps_closeself')}
+function psStudioInit(){
+  const m=/[#&]id=([\w-]+)/.exec(location.hash);PS.id=m?m[1]:'';
+  document.body.classList.add('popout-photo');document.title='Appuscholar · '+t('ps_title').replace(/^\S+\s/,'');
+  psTool('');
+  if(photoChan){
+    photoChan.onmessage=ev=>{const d=ev.data||{};if(d.id!==PS.id)return;
+      if(d.t==='load'){if(d.src)psLoadSrc(d.src,d.capExists);else psStatus('ps_openhint')}
+      else if(d.t==='saved'){clearTimeout(PS.waitSaved);if(d.ok){psStatus('ps_saved');setTimeout(()=>window.close(),700)}else psStatus('ie_fail')}};
+    if(PS.id)photoChan.postMessage({t:'ready',id:PS.id});else psStatus('ps_openhint');
+  }
 }
 
 /* ============ Tables ============ */
@@ -6695,6 +7038,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 {id:'pictures',g:'Tools',t:'Pictures and captions',k:'picture photo image crop rotate eyes face identity black bar pixelate background caption figure table number apa',h:`
 <p>Insert a picture with <b>Image</b>. Tap the picture, then press <b>Edit picture</b>. You can turn it, <b>Crop</b> it, change brightness and contrast, and hide a participant's identity: <b>Black bar</b> over the eyes or the whole face, <b>Pixelate</b>, or <b>Plain background</b> (you draw the outline by hand; there is no automatic cut-out yet). Pick a tool, then drag on the picture. <b>Undo</b> steps back.</p>
 <p>A black bar hides a face far more safely than pixels, because pixelation can sometimes be partly undone. Whatever you hide, say so in the caption. Tick the caption box and the app writes a first draft of that note for you to check.</p>
+<p>On a laptop, press <b>Open in a bigger window</b> in the picture editor, or <b>Photo studio</b> under <b>More</b> in the toolbar, for a full-size canvas in its own window. It adds <b>Blur</b>, <b>Box</b>, <b>Arrow</b>, <b>Pen</b> and <b>Text</b> for labelling, flips, sharpen, a border, resize, redo, and a colour-strength slider. Press <b>Done</b> and the picture goes back to the same place, with its caption. Keep the Appuscholar tab open while the studio is open. <b>Save a copy</b> downloads the picture instead.</p>
 <p>The picture is redrawn when you press <b>Use this picture</b>, so hidden camera data such as the place and time a photo was taken is removed.</p>
 <p><b>Caption</b> adds "Figure 1" or "Table 1" with your title above the picture or table, the way APA 7 shows it. Numbers follow the order in your document and update when you add or remove one. Check what your journal or university asks for. Some want the caption below. References in your text, such as "see Figure 2", do not change by themselves, so reread them after you reorder.</p>`},
 {id:'qual',g:'Tools',t:'Qualitative Coding',k:'qualitative coding codes themes interview thematic tag passage export markdown',h:`
@@ -6836,8 +7180,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=3;
-const APP_BUILD='2026.10.10c';
+const APP_VERSION=4;
+const APP_BUILD='2026.10.10d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -8437,7 +8781,9 @@ function citCheckCaptureHash(){
     else if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{document.getElementById('welcomeDlg').showModal()}catch(e){}}
   }
 })();
-if(POPOUT){
+if(POPOUT==='photo'){
+  try{psStudioInit()}catch(e){}
+}else if(POPOUT){
   document.body.classList.add('popout');
   try{showTool(POPOUT)}catch(e){}
   document.title='Appuscholar · '+(POPOUT==='cite'?'Citations':'Research');
