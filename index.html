@@ -672,10 +672,11 @@
       <h3 data-i18n="tab_cite">📚 Citation Manager</h3>
       <p class="desc" data-i18n="cite_panel_desc">Add a source, then insert citations as you write.</p>
       <div class="fld"><label for="citStyle" data-i18n="cite_style_label">Citation style</label>
-        <select id="citStyle" onchange="citRender()"><option value="apa">APA (7th)</option><option value="mla">MLA (9th)</option><option value="chicago">Chicago</option></select>
+        <select id="citStyle" onchange="citStyleChanged()"><option value="apa">APA 7th</option><option value="apa6">APA 6th</option><option value="mla">MLA 9th</option><option value="chicago">Chicago (author-date)</option><option value="harvard">Harvard</option><option value="vancouver">Vancouver</option><option value="ieee">IEEE</option><option value="ama">AMA 11th</option></select>
+        <p class="desc" id="citStyleNote" style="margin-top:4px"></p>
       </div>
       <div class="fld"><label for="citType" data-i18n="cite_type_label">Source type</label>
-        <select id="citType" onchange="citRender()"><option data-i18n="cite_type_journal">Journal article</option><option data-i18n="cite_type_book">Book</option><option data-i18n="cite_type_website">Website</option></select>
+        <select id="citType" onchange="citRender()"><option value="Journal article" data-i18n="cite_type_journal">Journal article</option><option value="Book" data-i18n="cite_type_book">Book</option><option value="Website" data-i18n="cite_type_website">Website</option></select>
       </div>
       <div class="fld"><label for="citSourceLang" data-i18n="cite_sourcelang_label">Source language</label>
         <select id="citSourceLang"><option value="en" data-i18n="cite_sourcelang_en">English</option><option value="hi" data-i18n="cite_sourcelang_hi">Hindi</option></select>
@@ -684,6 +685,11 @@
       <div style="display:flex;gap:8px">
         <div class="fld" style="flex:1"><label for="citYear" data-i18n="cite_year_label">Year</label><input type="text" id="citYear" placeholder="1956"></div>
         <div class="fld" style="flex:2"><label for="citTitle" data-i18n="cite_title_label">Title</label><input type="text" id="citTitle" placeholder="Title of work"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="fld" style="flex:2"><label for="citMonth" data-i18n="cite_month_label">Month (websites)</label><select id="citMonth"><option value=""></option><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+        <div class="fld" style="flex:1"><label for="citDay" data-i18n="cite_day_label">Day</label><input type="text" id="citDay" inputmode="numeric" maxlength="2" placeholder="5"></div>
+        <div class="fld" style="flex:2"><label for="citAccessed" data-i18n="cite_accessed_label">Accessed on</label><input type="date" id="citAccessed"></div>
       </div>
       <div class="fld"><label for="citSource" data-i18n="cite_source_label">Journal / Publisher / Website</label><input type="text" id="citSource" placeholder="e.g. Psychological Review"></div>
       <div style="display:flex;gap:8px">
@@ -1714,6 +1720,7 @@ const I18N={
     cite_panel_desc:'Add a source, then insert citations as you write.',
     cite_style_label:'Citation style', cite_type_label:'Source type',
     cite_type_journal:'Journal article', cite_type_book:'Book', cite_type_website:'Website',
+    cite_month_label:'Month (websites)', cite_day_label:'Day', cite_accessed_label:'Accessed on', cite_note_numbered:'Numbered style: the number is the source\'s place in your library. Vancouver, IEEE and AMA number by first appearance in the text, so check the order before you submit.', cite_note_check:'Formats follow the published manuals as best I know them. Check one entry per style against the manual or your journal\'s rules.', cite_num_unsaved:'This source is not in your library yet, so its number is a guess. Add it to the library to fix the number.', cite_bib_fmt:'Reference list inserted ✓', cite_bib_fmt_num:'Reference list inserted, numbered in library order ✓',
     cite_sourcelang_label:'Source language', cite_sourcelang_en:'English', cite_sourcelang_hi:'Hindi',
     cite_author_label:'Author(s) — separate with ;', cite_year_label:'Year', cite_title_label:'Title',
     cite_source_label:'Journal / Publisher / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
@@ -1916,6 +1923,7 @@ const I18N={
     cite_panel_desc:'एक स्रोत जोड़ें, फिर लिखते समय उद्धरण डालें।',
     cite_style_label:'उद्धरण शैली', cite_type_label:'स्रोत प्रकार',
     cite_type_journal:'जर्नल लेख', cite_type_book:'पुस्तक', cite_type_website:'वेबसाइट',
+    cite_month_label:'महीना (वेबसाइट)', cite_day_label:'दिन', cite_accessed_label:'देखने की तारीख', cite_note_numbered:'क्रमांक वाली शैली: संख्या आपकी लाइब्रेरी में स्रोत का क्रम है। Vancouver, IEEE और AMA में संख्या पाठ में पहली बार आने के क्रम से तय होती है, इसलिए जमा करने से पहले क्रम जाँच लें।', cite_note_check:'प्रारूप प्रकाशित मैनुअल के अनुसार हैं। हर शैली की एक प्रविष्टि मैनुअल या अपनी पत्रिका के नियमों से मिला लें।', cite_num_unsaved:'यह स्रोत अभी लाइब्रेरी में नहीं है, इसलिए इसकी संख्या अनुमान है। संख्या पक्की करने के लिए इसे लाइब्रेरी में जोड़ें।', cite_bib_fmt:'संदर्भ सूची जोड़ दी गई ✓', cite_bib_fmt_num:'संदर्भ सूची लाइब्रेरी के क्रम में क्रमांक सहित जोड़ी गई ✓',
     cite_sourcelang_label:'स्रोत की भाषा', cite_sourcelang_en:'अंग्रेज़ी', cite_sourcelang_hi:'हिन्दी',
     cite_author_label:'लेखक — ; से अलग करें', cite_year_label:'वर्ष', cite_title_label:'शीर्षक',
     cite_source_label:'जर्नल / प्रकाशक / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
@@ -5716,56 +5724,294 @@ function citSaveLib(l){LS.set('appu_citations',JSON.stringify(l));citRender()}
 function citLastName(a){a=(a||'').split(';')[0].trim();if(!a)return'Author';
   if(a.includes(','))return a.split(',')[0].trim();
   const p=a.split(/\s+/);return p[p.length-1]}
+/* ---- Citation engine (Version 5) ----------------------------------------------------------
+   One entry object in, three things out: ref (plain text), refHTML (with italics) and intext.
+   Italic spans are marked with control characters while a reference is assembled, then turned into
+   <i> tags (refHTML) or removed (ref). All eight style rules below follow the published manuals as
+   I know them and are marked CHECK: one entry per style should be compared with the manual. */
+const CIT_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CIT_MON_MLA=['Jan.','Feb.','Mar.','Apr.','May','June','July','Aug.','Sept.','Oct.','Nov.','Dec.'];
+const CIT_MON_ABB=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CIT_MON_IEEE=['Jan.','Feb.','Mar.','Apr.','May','Jun.','Jul.','Aug.','Sep.','Oct.','Nov.','Dec.'];
+const CIT_STYLES={
+  apa:{numbered:false,head:'References'},apa6:{numbered:false,head:'References'},
+  mla:{numbered:false,head:'Works Cited'},chicago:{numbered:false,head:'References'},
+  harvard:{numbered:false,head:'Reference list'},
+  vancouver:{numbered:true,head:'References'},ieee:{numbered:true,head:'References'},ama:{numbered:true,head:'References'}
+};
+function citIsNumbered(st){return !!(CIT_STYLES[st]&&CIT_STYLES[st].numbered)}
+function citKind(t){
+  t=String(t||'');
+  if(/^book$/i.test(t)||t==='पुस्तक')return'book';
+  if(/^website$/i.test(t)||t==='वेबसाइट')return'web';
+  return'journal';
+}
+const IA='\u0001',IB='\u0002';
+function I(x){x=String(x==null?'':x);return x?IA+x+IB:''}
+function citBare(x){return String(x).replace(/[\u0001\u0002]/g,'')}
+function citHTMLof(x){return escHTML(String(x)).replace(/\u0001/g,'<i>').replace(/\u0002/g,'</i>')}
+function dot(x){x=String(x==null?'':x).trim();if(!x)return'';return /[.?!]$/.test(citBare(x))?x:x+'.'}
+function citTrimDot(x){return String(x==null?'':x).trim().replace(/\.$/,'')}
+function doiUrl(d){
+  if(d.doi)return'https://doi.org/'+String(d.doi).trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
+  return d.url?String(d.url).trim():'';
+}
+function citDoiBare(d){return d.doi?String(d.doi).trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,''):''}
+/* names */
+function citNames(raw){
+  return (raw||'').split(';').map(x=>x.trim()).filter(Boolean).map(n=>{
+    if(n.includes(',')){const i=n.indexOf(',');return{last:n.slice(0,i).trim(),first:n.slice(i+1).trim(),org:false}}
+    return{last:n,first:'',org:true};
+  });
+}
+function citInitials(first){
+  const out=[];
+  String(first||'').split(/[\s]+/).filter(Boolean).forEach(w=>{
+    w.split('-').forEach(part=>{
+      const p=part.replace(/\./g,'');
+      if(!p)return;
+      if(/^[A-Z]{2,3}$/.test(p)&&!/[a-z]/.test(p)&&(part.includes('.')||p.length<=3&&first.trim().split(/\s+/).length===1))p.split('').forEach(c=>out.push(c));
+      else out.push(p[0].toUpperCase());
+    });
+  });
+  return out;
+}
+function citIn(n,dots,sp){const i=citInitials(n.first);return i.length?i.map(c=>c+(dots?'.':'')).join(dots?(sp===false?'':' '):''):''}
+function citListJoin(l,andWord,oxford){
+  if(l.length<=1)return l.join('');
+  if(l.length===2)return l[0]+' '+andWord+' '+l[1];
+  return l.slice(0,-1).join(', ')+(oxford?',':'')+' '+andWord+' '+l[l.length-1];
+}
 function apaName(a){
   a=a.trim();if(!a.includes(','))return a;
-  const parts=a.split(','),last=parts[0].trim(),first=(parts[1]||'').trim();
-  const inits=first.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ');
-  return last+(inits?', '+inits:'');
+  const n=citNames(a)[0];const i=citIn(n,true);
+  return n.last+(i?', '+i:'');
 }
 function apaAuthors(raw){
-  const l=(raw||'').split(';').map(s=>s.trim()).filter(Boolean).map(apaName);
+  const l=(raw||'').split(';').map(x=>x.trim()).filter(Boolean).map(apaName);
   if(!l.length)return'Author';
   if(l.length===1)return l[0];
   if(l.length<=20)return l.slice(0,-1).join(', ')+', & '+l[l.length-1];
   return l.slice(0,19).join(', ')+', . . . '+l[l.length-1];
 }
-function dot(s){s=String(s==null?'':s).trim();return s?(/[.?!]$/.test(s)?s:s+'.'):''}
-function doiUrl(d){
-  if(d.doi)return'https://doi.org/'+String(d.doi).trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
-  return d.url?String(d.url).trim():'';
+function apa6Authors(raw){
+  const l=(raw||'').split(';').map(x=>x.trim()).filter(Boolean).map(apaName);
+  if(!l.length)return'Author';
+  if(l.length===1)return l[0];
+  if(l.length<=7)return l.slice(0,-1).join(', ')+', & '+l[l.length-1];
+  return l.slice(0,6).join(', ')+', . . . '+l[l.length-1];
 }
-function citFmt(d){
-  const st=document.getElementById('citStyle').value;
-  const names=(d.author||'').split(';').map(s=>s.trim()).filter(Boolean);
-  const ln=citLastName(d.author),y=(d.year||'').trim()||'n.d.';
-  const link=doiUrl(d),isJ=(d.type==='Journal article');
-  let ref='',intext='';
+function mlaAuthors(raw){
+  const ns=citNames(raw);if(!ns.length)return'';
+  const full=n=>n.org?n.last:n.last+(n.first?', '+n.first:'');
+  const rev=n=>n.org?n.last:(n.first?n.first+' ':'')+n.last;
+  if(ns.length===1)return full(ns[0]);
+  if(ns.length===2)return full(ns[0])+', and '+rev(ns[1]);
+  return full(ns[0])+', et al';
+}
+function chicagoAuthors(raw){
+  const ns=citNames(raw);if(!ns.length)return'';
+  const full=n=>n.org?n.last:n.last+(n.first?', '+n.first:'');
+  const rev=n=>n.org?n.last:(n.first?n.first+' ':'')+n.last;
+  let l=ns.map((n,i)=>i===0?full(n):rev(n)),etal=false;
+  if(l.length>10){l=l.slice(0,7);etal=true}
+  if(etal)return l.join(', ')+', et al';
+  if(l.length===2)return l[0]+', and '+l[1];
+  return citListJoin(l,'and',true);
+}
+function harvardAuthors(raw){
+  const ns=citNames(raw);if(!ns.length)return'';
+  const l=ns.map(n=>n.org?n.last:n.last+(citIn(n,true,false)?', '+citIn(n,true,false):''));
+  return citListJoin(l,'and',false);
+}
+function vancAuthors(raw,max,keep){
+  const ns=citNames(raw);if(!ns.length)return'';
+  let l=ns.map(n=>n.org?n.last:n.last+(citIn(n,false)?' '+citIn(n,false):'')),etal=false;
+  if(l.length>max){l=l.slice(0,keep);etal=true}
+  return l.join(', ')+(etal?', et al':'');
+}
+function ieeeAuthors(raw){
+  const ns=citNames(raw);if(!ns.length)return'';
+  let l=ns.map(n=>n.org?n.last:(citIn(n,true)?citIn(n,true)+' ':'')+n.last);
+  if(l.length>6)return l[0]+' et al.';
+  return citListJoin(l,'and',true);
+}
+/* dates */
+function citNum(x){const n=parseInt(x,10);return isFinite(n)&&n>0?n:0}
+function citAccParts(d){
+  const m=String(d.accessed||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?{y:+m[1],m:+m[2],d:+m[3]}:null;
+}
+function citPg(p,dash){p=String(p||'').trim();return dash?p.replace(/\s*[-–—]\s*/g,'–'):p}
+function citPP(p){return /[-–—,]/.test(String(p))?'pp. '+citPg(p,true):'p. '+p}
+function citLink(d){return doiUrl(d)}
+function citWho(ns,st){
+  const ln=(n)=>n.org?n.last:n.last;
+  const l=ns.map(ln);
+  if(!l.length)return'Author';
+  const one=l[0];
+  if(st==='apa'||st==='apa6'){
+    if(st==='apa'){return l.length>=3?one+' et al.':l.length===2?one+' & '+l[1]:one}
+    if(l.length>=6)return one+' et al.';
+    return l.length>=3?l.slice(0,-1).join(', ')+', & '+l[l.length-1]:l.length===2?one+' & '+l[1]:one;
+  }
+  if(st==='mla'||st==='chicago'){
+    if(st==='chicago'&&l.length===3)return l[0]+', '+l[1]+', and '+l[2];
+    return l.length>=(st==='mla'?3:4)?one+' et al.':l.length===2?one+' and '+l[1]:l.length===3?l[0]+', '+l[1]+', and '+l[2]:one;
+  }
+  if(st==='harvard'){
+    return l.length>=4?one+' et al.':l.length===3?l[0]+', '+l[1]+' and '+l[2]:l.length===2?one+' and '+l[1]:one;
+  }
+  return one;
+}
+function citFmt(d,n,styleOverride){
+  const st=styleOverride||document.getElementById('citStyle').value;
+  const kind=citKind(d.type);
+  const ns=citNames(d.author);
+  const y=(d.year||'').trim()||'n.d.';
+  const mo=citNum(d.month),dy=citNum(d.day),acc=citAccParts(d);
+  const link=citLink(d),bareDoi=citDoiBare(d);
+  const num=(n&&n>0)?n:0;
+  let ref='',intext='',sup=false;
+  const moName=mo?CIT_MONTHS[mo-1]:'';
   if(st==='apa'){
-    const tail=isJ
-      ? dot([d.source,(d.volume?', '+d.volume:''),(d.issue?'('+d.issue+')':''),(d.pages?', '+d.pages:'')].join(''))
-      : dot(d.source);
-    ref=apaAuthors(d.author)+' ('+y+'). '+dot(d.title)+(tail?' '+tail:'')+(link?' '+link:'');
-    const who=names.length>=3?ln+' et al.':names.length===2?ln+' & '+citLastName(names[1]):ln;
+    const who=citWho(ns,'apa');
+    const date=y+(kind==='web'&&moName?', '+moName+(dy?' '+dy:''):'');
+    const head=apaAuthors(d.author)+' ('+date+'). ';
+    if(kind==='journal'){
+      const vol=d.volume?', '+d.volume:'';
+      const tail=(d.source?I(d.source+vol)+(d.issue?'('+d.issue+')':''):(d.issue?'('+d.issue+')':''))+(d.pages?', '+citPg(d.pages,true):'');
+      ref=head+dot(d.title)+(tail?' '+dot(tail):'')+(link?' '+link:'');
+    }else if(kind==='book'){
+      ref=head+dot(I(d.title))+(d.source?' '+dot(d.source):'')+(link?' '+link:'');
+    }else{
+      ref=head+dot(I(d.title))+(d.source?' '+dot(d.source):'')+(link?' '+link:'');
+    }
+    intext='('+who+', '+y+')';
+  }else if(st==='apa6'){
+    const who=citWho(ns,'apa6');
+    const date=y+(kind==='web'&&moName?', '+moName+(dy?' '+dy:''):'');
+    const head=apa6Authors(d.author)+' ('+date+'). ';
+    const retrieved=acc?'Retrieved '+CIT_MONTHS[acc.m-1]+' '+acc.d+', '+acc.y+', from ':'Retrieved from ';
+    const loc=bareDoi?'doi:'+bareDoi:(d.url?retrieved+String(d.url).trim():'');
+    if(kind==='journal'){
+      const tail=[d.source?I(d.source):'',d.volume?I(d.volume)+(d.issue?'('+d.issue+')':''):(d.issue?'('+d.issue+')':''),d.pages?citPg(d.pages,true):''].filter(Boolean).join(', ');
+      ref=head+dot(d.title)+(tail?' '+dot(tail):'')+(loc?' '+loc:'');
+    }else if(kind==='book'){
+      ref=head+dot(I(d.title))+(d.source?' '+dot(d.source):'')+(loc?' '+loc:'');
+    }else{
+      ref=head+dot(I(d.title))+(loc?' '+loc:'');
+    }
     intext='('+who+', '+y+')';
   }else if(st==='mla'){
-    const tail=[d.source,(d.volume?', vol. '+d.volume:''),(d.issue?', no. '+d.issue:''),', '+y,(d.pages?', pp. '+d.pages:'')].join('');
-    ref=dot(d.author)+' "'+dot(d.title)+'" '+dot(tail)+(link?' '+link:'');
-    intext='('+ln+(d.pages?' '+String(d.pages).split(/[–-]/)[0].trim():'')+')';
-  }else{
-    const tail=[d.source,(d.volume?' '+d.volume:''),(d.issue?', no. '+d.issue:''),(d.pages?': '+d.pages:'')].join('');
-    ref=dot(d.author)+' '+y+'. "'+dot(d.title)+'" '+dot(tail)+(link?' '+link:'');
-    intext='('+ln+' '+y+')';
+    const au=mlaAuthors(d.author);
+    const head=au?dot(au)+' ':'';
+    const pubDate=(kind==='web'&&dy&&mo?dy+' '+CIT_MON_MLA[mo-1]+' ':(kind==='web'&&mo?CIT_MON_MLA[mo-1]+' ':''))+y;
+    const url=link;
+    const accTxt=acc?' Accessed '+acc.d+' '+CIT_MON_MLA[acc.m-1]+' '+acc.y+'.':'';
+    if(kind==='journal'){
+      const parts=[d.source?I(d.source):'',d.volume?'vol. '+d.volume:'',d.issue?'no. '+d.issue:'',y,d.pages?citPP(d.pages):''].filter(Boolean);
+      ref=head+'"'+dot(d.title)+'" '+dot(parts.join(', '))+(link?' '+url+'.':'');
+    }else if(kind==='book'){
+      ref=head+dot(I(d.title))+' '+dot([d.source,y].filter(Boolean).join(', '))+(link?' '+url+'.':'');
+    }else{
+      ref=head+'"'+dot(d.title)+'" '+dot([d.source?I(d.source):'',pubDate,url].filter(Boolean).join(', '))+accTxt;
+    }
+    const pg=d.pages?String(d.pages).split(/[–-]/)[0].trim():'';
+    const who=citWho(ns,'mla');
+    intext='('+who+(pg&&kind==='journal'?' '+pg:'')+')';
+  }else if(st==='chicago'){
+    const au=chicagoAuthors(d.author);
+    const head=(au?dot(au)+' ':'')+y+'. ';
+    const accTxt=acc?' Accessed '+CIT_MONTHS[acc.m-1]+' '+acc.d+', '+acc.y+'.':'';
+    if(kind==='journal'){
+      const vi=(d.volume?d.volume:'')+(d.issue?' ('+d.issue+')':'');
+      const tail=(d.source?I(d.source):'')+(vi?' '+vi:'')+(d.pages?': '+citPg(d.pages,true):'');
+      ref=head+'"'+dot(d.title)+'" '+dot(tail)+(link?' '+link+'.':'');
+    }else if(kind==='book'){
+      ref=head+dot(I(d.title))+(d.source?' '+dot(d.source):'')+(link?' '+link+'.':'');
+    }else{
+      const dt=moName?moName+(dy?' '+dy:'')+', '+y:'';
+      ref=head+'"'+dot(d.title)+'" '+(d.source?dot(d.source)+' ':'')+(dt?dot(dt)+' ':'')+(link?link+'.':'')+accTxt;
+    }
+    intext='('+citWho(ns,'chicago')+' '+y+')';
+  }else if(st==='harvard'){
+    const au=harvardAuthors(d.author);
+    const head=(au?au+' ':'')+'('+y+') ';
+    const accTxt=acc?' (Accessed: '+acc.d+' '+CIT_MONTHS[acc.m-1]+' '+acc.y+')':'';
+    if(kind==='journal'){
+      const vi=(d.volume?d.volume:'')+(d.issue?'('+d.issue+')':'');
+      const tail=[d.source?I(d.source):'',vi,d.pages?citPP(d.pages):''].filter(Boolean).join(', ');
+      ref=head+"'"+citTrimDot(d.title)+"', "+dot(tail)+(link?' Available at: '+link+accTxt+'.':'');
+    }else if(kind==='book'){
+      ref=head+dot(I(d.title))+(d.source?' '+dot(d.source):'')+(link?' Available at: '+link+accTxt+'.':'');
+    }else{
+      ref=head+dot(I(d.title))+(d.source?' '+dot(d.source):'')+(link?' Available at: '+link+accTxt+'.':'');
+    }
+    intext='('+citWho(ns,'harvard')+', '+y+')';
+  }else if(st==='vancouver'){
+    const au=vancAuthors(d.author,6,6);
+    const head=au?dot(au)+' ':'';
+    const mon=mo?CIT_MON_ABB[mo-1]:'';
+    const accTxt=acc?'[cited '+acc.y+' '+CIT_MON_ABB[acc.m-1]+' '+acc.d+'] ':'';
+    if(kind==='journal'){
+      const yr=y+(mon?' '+mon:'');
+      const tail=yr+(d.volume?';'+d.volume:'')+(d.issue?'('+d.issue+')':'')+(d.pages?':'+citPg(d.pages,false):'');
+      ref=head+dot(d.title)+' '+(d.source?dot(d.source)+' ':'')+dot(tail)+(bareDoi?' doi:'+bareDoi:(d.url?' Available from: '+String(d.url).trim():''));
+    }else if(kind==='book'){
+      ref=head+dot(d.title)+' '+dot([d.source,y].filter(Boolean).join('; '))+(link?' Available from: '+link:'');
+    }else{
+      const pd=y+(mon?' '+mon:'')+(mon&&dy?' '+dy:'');
+      ref=head+citTrimDot(d.title)+' [Internet]. '+(d.source?d.source+'; ':'')+pd+' '+accTxt+(link?'Available from: '+link:'');
+    }
+    intext='['+(num||'?')+']';
+  }else if(st==='ieee'){
+    const au=ieeeAuthors(d.author);
+    const mon=mo?CIT_MON_IEEE[mo-1]+' ':'';
+    const accTxt=acc?' (accessed '+CIT_MON_IEEE[acc.m-1]+' '+acc.d+', '+acc.y+')':'';
+    if(kind==='journal'){
+      const parts=[d.source?I(d.source):'',d.volume?'vol. '+d.volume:'',d.issue?'no. '+d.issue:'',d.pages?citPP(d.pages):'',mon+y].filter(Boolean);
+      ref=(au?au+', ':'')+'"'+citTrimDot(d.title)+',"'+' '+parts.join(', ')+(bareDoi?', doi: '+bareDoi+'.':'.');
+    }else if(kind==='book'){
+      ref=(au?au+', ':'')+I(citTrimDot(d.title))+'. '+(d.source?d.source+', ':'')+y+'.';
+    }else{
+      ref=(au?dot(au)+' ':'')+'"'+dot(d.title)+'" '+(d.source?dot(d.source)+' ':'')+(link?'[Online]. Available: '+link:'')+accTxt;
+    }
+    intext='['+(num||'?')+']';
+  }else{ /* ama */
+    const au=vancAuthors(d.author,6,3);
+    const head=au?dot(au)+' ':'';
+    if(kind==='journal'){
+      const tail=y+(d.volume?';'+d.volume:'')+(d.issue?'('+d.issue+')':'')+(d.pages?':'+citPg(d.pages,false):'');
+      ref=head+dot(d.title)+' '+(d.source?dot(I(d.source))+' ':'')+dot(tail)+(bareDoi?' doi:'+bareDoi:'');
+    }else if(kind==='book'){
+      ref=head+dot(I(d.title))+' '+dot([d.source,y].filter(Boolean).join('; '))+(link?' '+link:'');
+    }else{
+      const pub=moName?' Published '+moName+(dy?' '+dy:'')+', '+y+'.':' Published '+y+'.';
+      const ac=acc?' Accessed '+CIT_MONTHS[acc.m-1]+' '+acc.d+', '+acc.y+'.':'';
+      ref=head+dot(d.title)+' '+(d.source?dot(d.source):'')+pub+ac+(link?' '+link:'');
+    }
+    intext='['+(num||'?')+']';sup=true;
   }
-  return{ref:ref.replace(/\s{2,}/g,' ').trim(),intext};
+  ref=ref.replace(/[ \t]{2,}/g,' ').trim();
+  let pre='';
+  if(num){
+    if(st==='ieee')pre='['+num+'] ';
+    else if(st==='vancouver'||st==='ama')pre=num+'. ';
+  }
+  const refPlain=pre+citBare(ref);
+  const refHTML=escHTML(pre)+citHTMLof(ref);
+  return{ref:refPlain,refHTML:refHTML,intext:intext,sup:sup,num:num};
 }
 function citReadForm(){
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
   return{author:v('citAuthor'),year:v('citYear'),title:v('citTitle'),source:v('citSource'),
          volume:v('citVol'),issue:v('citIssue'),pages:v('citPages'),doi:v('citDOI'),url:v('citURL'),
+         month:v('citMonth'),day:v('citDay'),accessed:v('citAccessed'),
          type:v('citType'),style:v('citStyle'),lang:v('citSourceLang')||'en'};
 }
 function citClearForm(){
-  ['citAuthor','citYear','citTitle','citSource','citVol','citIssue','citPages','citDOI','citURL','citQuoteText']
+  ['citAuthor','citYear','citTitle','citSource','citVol','citIssue','citPages','citDOI','citURL','citQuoteText','citMonth','citDay','citAccessed']
     .forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   const langSel=document.getElementById('citSourceLang');if(langSel)langSel.value='en';
   showToast('Form cleared');
@@ -5778,8 +6024,25 @@ function citInsertAtCursor(txt){
   }
   insertIntoEditor(txt,hasSelection()||!!savedRange);
 }
+function citKey(d){return[citLastName(d.author),String(d.year||'').trim(),String(d.title||'').trim().toLowerCase()].join('|')}
+function citNumFor(d){
+  const l=citGetLib(),k=citKey(d);
+  for(let i=0;i<l.length;i++)if(citKey(l[i])===k)return{n:i+1,saved:true};
+  return{n:l.length+1,saved:false};
+}
+/* Puts the in-text citation at the cursor. Numbered styles use the source's library number; AMA
+   puts the number in superscript. */
+function citPutIntext(d){
+  const st=document.getElementById('citStyle').value;
+  let n=0,warn=false;
+  if(citIsNumbered(st)){const r=citNumFor(d);n=r.n;warn=!r.saved}
+  const f=citFmt(d,n);
+  if(f.sup&&!POPOUT){insertHTMLBlockIntoEditor('<sup>'+escHTML(String(n))+'</sup>')}
+  else citInsertAtCursor(' '+f.intext);
+  return warn;
+}
 function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
-  citInsertAtCursor(' '+citFmt(d).intext);showToast('Citation inserted ✓')}
+  const warn=citPutIntext(d);showToast(warn?t('cite_num_unsaved'):'Citation inserted ✓')}
 function citAdd(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
   const l=citGetLib();l.push(d);citSaveLib(l);actLog('cit');showToast('Saved to library ✓')}
 function citDel(i){citActiveIdx=-1;const l=citGetLib();l.splice(i,1);citSaveLib(l)}
@@ -5793,7 +6056,8 @@ function citPlainDocs(){
   return docsGet().map(d=>{
     const html=(d.id===cur&&typeof editor!=='undefined'&&editor)?getEditorHTML():(d.body||'');
     const div=document.createElement('div');div.innerHTML=bodyToHTML(html);
-    return{id:d.id,title:d.title||'Untitled',text:(div.textContent||'').replace(/\s+/g,' ')};
+    const sups=[].map.call(div.querySelectorAll('sup,span[style*="vertical-align: super"],span[style*="vertical-align:super"]'),x=>x.textContent||'');
+    return{id:d.id,title:d.title||'Untitled',text:(div.textContent||'').replace(/\s+/g,' '),sups:sups};
   });
 }
 function citRegex(entry){
@@ -5802,7 +6066,27 @@ function citRegex(entry){
   const esc=ln.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   return new RegExp('(?<![\\p{L}])'+esc+'(?![\\p{L}])[^;()]{0,40}?[\\s(,]+'+y+'[a-z]?(?!\\d)','gu');
 }
-function citUsage(entry,docs){
+function citNumsIn(str){
+  const out=new Set();
+  String(str).split(',').forEach(seg=>{
+    const m=seg.trim().match(/^(\d{1,3})\s*[–-]\s*(\d{1,3})$/);
+    if(m){const a=+m[1],b=+m[2];if(b>=a&&b-a<200)for(let i=a;i<=b;i++)out.add(i)}
+    else if(/^\d{1,3}$/.test(seg.trim()))out.add(+seg.trim());
+  });
+  return out;
+}
+function citUsageNumbered(n,docs){
+  const out=[];
+  docs.forEach(d=>{
+    let c=0;
+    (d.text.match(/\[\s*\d{1,3}(?:\s*[,–-]\s*\d{1,3})*\s*\]/g)||[]).forEach(g=>{if(citNumsIn(g.replace(/[\[\]]/g,'')).has(n))c++});
+    (d.sups||[]).forEach(sx=>{if(citNumsIn(sx).has(n))c++});
+    if(c)out.push({id:d.id,title:d.title,n:c});
+  });
+  return out;
+}
+function citUsage(entry,docs,idx){
+  if(citIsNumbered(document.getElementById('citStyle').value)&&idx>=0)return citUsageNumbered(idx+1,docs);
   const re=citRegex(entry);if(!re)return[];
   const out=[];
   docs.forEach(d=>{const n=(d.text.match(re)||[]).length;if(n)out.push({id:d.id,title:d.title,n})});
@@ -5813,8 +6097,9 @@ function citUsage(entry,docs){
    DOI so reopening the tab costs nothing. This is a warning signal, not a verdict: the flag comes
    from retraction databases that disagree with each other and miss cases, so "no flag" is never
    shown as "safe". Sources without a DOI cannot be checked and the summary says how many. */
-const RETRACT_KEY='appu_retraction_cache',RETRACT_TTL=7*24*3600*1000;
-let retrBusy=false;
+/* var, not const/let: showTool('cite') can run at start-up, before this line, when the student reloaded with the Citation tab open. */
+var RETRACT_KEY='appu_retraction_cache',RETRACT_TTL=7*24*3600*1000;
+var retrBusy=false;
 function retrNormDoi(d){return String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'').toLowerCase()}
 function retrValidDoi(d){return /^10\.\d{4,}\/\S+$/.test(d)&&!/[|,]/.test(d)}
 function retrCacheGet(){try{const o=JSON.parse(LS.get(RETRACT_KEY)||'{}');return(o&&typeof o==='object')?o:{}}catch(e){return{}}}
@@ -5974,7 +6259,14 @@ function citJumpToCaret(){
 document.addEventListener('selectionchange',citCaretSchedule);
 editor.addEventListener('keyup',citCaretSchedule);
 editor.addEventListener('click',citCaretSchedule);
+function citStyleChanged(){citRender();citStyleNoteUpdate()}
+function citStyleNoteUpdate(){
+  const el=document.getElementById('citStyleNote'),sel=document.getElementById('citStyle');
+  if(!el||!sel)return;
+  el.textContent=citIsNumbered(sel.value)?t('cite_note_numbered'):t('cite_note_check');
+}
 function citRender(){
+  citStyleNoteUpdate();
   const l=citGetLib(),box=document.getElementById('citLib');
   document.getElementById('citCount').textContent=l.length;
   const sumEl=document.getElementById('citUsageSummary');
@@ -5989,13 +6281,13 @@ function citRender(){
     retrEl.style.fontWeight=flagged?'700':'';
   }
   let docsPlain=[];try{docsPlain=citPlainDocs()}catch(e){docsPlain=[]}
-  const usage=l.map(d=>{try{return citUsage(d,docsPlain)}catch(e){return[]}});
+  const usage=l.map((d,i)=>{try{return citUsage(d,docsPlain,i)}catch(e){return[]}});
   if(sumEl){
     const cited=usage.filter(u=>u.length).length;
     sumEl.textContent=t('cite_usage_summary_fmt').replace('{c}',cited).replace('{n}',l.length).replace('{u}',l.length-cited);
   }
   box.innerHTML=l.map((d,i)=>{
-    const f=citFmt(d);
+    const f=citFmt(d,i+1);
     const u=usage[i];
     const usedLine=u.length
       ? '<div class="desc" style="margin-top:4px">'+escHTML(t('cite_used_in'))+' '+u.map(x=>
@@ -6003,21 +6295,26 @@ function citRender(){
       : '<div class="desc" style="margin-top:4px;opacity:.75">'+escHTML(t('cite_not_used'))+'</div>';
     const retrLine=(retrStatus[i]&&retrStatus[i].r)?'<div class="retr-warn">⚠ '+escHTML(t('retr_lib_warn'))+'</div>':'';
     return'<div class="cit-item'+(i===citActiveIdx?' cit-active':'')+'" id="citItem'+i+'"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
-      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+escHTML(f.ref)+usedLine+retrLine+
+      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+f.refHTML+usedLine+retrLine+
       '<div class="row" style="margin-top:6px">'+
-      '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.intext)+'</button>'+
+      '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.sup?'¹ ('+f.num+')':f.intext)+'</button>'+
       '</div></div>';
   }).join('');
 }
-function citUseLib(i){const d=citGetLib()[i];if(!d)return;citInsertAtCursor(' '+citFmt(d).intext);showToast('Citation inserted ✓')}
-/* FIX 8e: alphabetical reference list */
+function citUseLib(i){const d=citGetLib()[i];if(!d)return;citPutIntext(d);showToast('Citation inserted ✓')}
+/* Reference list, inserted as formatted paragraphs: a heading, then one paragraph per source with a
+   hanging indent and italics where the style asks for them. Author-date styles are sorted by
+   surname; numbered styles follow library order so the numbers match the in-text numbers. */
 function citInsertBib(){
   const l=citGetLib();if(!l.length){showToast('Library is empty — add a source first');return}
   const st=document.getElementById('citStyle').value;
-  const head=st==='mla'?'Works Cited':st==='chicago'?'Bibliography':'References';
-  const sorted=l.slice().sort((a,b)=>citLastName(a.author).localeCompare(citLastName(b.author),'en',{sensitivity:'base'}));
-  insertIntoEditor('\n\n'+head+'\n'+sorted.map(d=>citFmt(d).ref).join('\n'),false);
-  showToast('Reference list inserted, alphabetically ✓');
+  const meta=CIT_STYLES[st]||CIT_STYLES.apa,numbered=meta.numbered;
+  const items=l.map((d,i)=>({d:d,i:i}));
+  if(!numbered)items.sort((a,b)=>citLastName(a.d.author).localeCompare(citLastName(b.d.author),'en',{sensitivity:'base'}));
+  const head='<p class="ref-head" style="text-align:center;margin:14px 0 8px"><b>'+escHTML(meta.head)+'</b></p>';
+  const body=items.map(x=>'<p class="ref-item" style="padding-left:2em;text-indent:-2em;margin:0 0 6px">'+citFmt(x.d,numbered?x.i+1:0).refHTML+'</p>').join('');
+  insertHTMLBlockIntoEditor('<p><br></p>'+head+body);
+  showToast(numbered?t('cite_bib_fmt_num'):t('cite_bib_fmt'));
 }
 /* Source-language-aware quote insertion (bilingual batch two). A Hindi source is
    quoted exactly as pasted. An English source is quoted as-is too, UNLESS the
@@ -6092,7 +6389,7 @@ async function citLookup(){
     set('citTitle',(it.title||[''])[0]);
     set('citAuthor',(it.author||[]).map(a=>(a.family||'')+(a.given?', '+a.given:'')).join('; '));
     const dp=((it.issued||{})['date-parts']||[[]])[0]||[];
-    set('citYear',dp[0]||'');
+    set('citYear',dp[0]||'');set('citMonth',dp[1]||'');set('citDay',dp[2]||'');
     set('citSource',(it['container-title']||[''])[0]);
     set('citVol',it.volume);set('citIssue',it.issue);set('citPages',it.page);set('citDOI',it.DOI);
     set('citURL','');
@@ -6364,7 +6661,7 @@ function rsAddToLibrary(i,quiet){
 function rsInsertCitation(i){
   const p=rsResults[i];if(!p)return;
   const d=rsAddToLibrary(i,true);if(!d)return;
-  citInsertAtCursor(' '+citFmt(d).intext);
+  citPutIntext(d);
   showToast(p.retracted?t('retr_added_warn'):t('rs_inserted'));
 }
 function rsOaBrief(w){
@@ -7049,9 +7346,10 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>Upload your own earlier writing, up to 100 files in Word, PDF or text. Appuscholar writes a short profile of your style: sentence length, tone, habits. Switch on <b>Use my style in suggestions</b> and the AI follows the profile.</p>
 <p>You can edit the profile by hand. Only your own writing belongs in it. Files you did not write will pull the voice away from yours.</p>`},
 {id:'cite',g:'Tools',t:'Citation Manager',k:'citation cite reference apa mla chicago doi source bibliography cross-check',h:`
-<p>Choose a style (APA 7th, MLA 9th or Chicago). Add a source by typing the fields, or paste a DOI, a link, a PubMed ID, a full reference or just a title and press <b>Fill from DOI, link, PubMed ID or title</b>. Check what it filled. Then insert the citation into your text.</p>
+<p>Choose a style: APA 7th or 6th, MLA 9th, Chicago (author-date), Harvard, Vancouver, IEEE or AMA 11th. Journal names and book titles come out in italics where the style asks for it. For a website, fill the month, day and the date you accessed it. Vancouver, IEEE and AMA are numbered: the number is the source's place in your library, so check the order against your text before you submit. Compare one finished entry per style with the manual or your journal's rules. Add a source by typing the fields, or paste a DOI, a link, a PubMed ID, a full reference or just a title and press <b>Fill from DOI, link, PubMed ID or title</b>. Check what it filled. Then insert the citation into your text.</p>
 <p><b>Cross-check citations and references</b> compares what you cited in the text with your reference list. It lists citations with no reference, references nobody cited, and near-matches such as a misspelled author name.</p>
-<p>It checks consistency. It does not confirm that a paper says what you claim it says. Read the paper.</p>`},
+<p>It checks consistency. It does not confirm that a paper says what you claim it says. Read the paper.</p>
+<p>Insert reference list puts a formatted list in your document, with italics and a hanging indent. Author-date styles are sorted by surname. Numbered styles follow the library order.</p>`},
 {id:'appu',g:'Help',t:'Ask Appu (the guide helper)',k:'appu helper assistant ask question guide',h:`
 <p>Open the Guide and type a question in <b>Ask Appu</b>. Appu finds the three guide sections that match, sends them with your question to your AI provider, and answers from those sections only. If the guide does not cover it, Appu says so.</p>
 <p>Appu cannot see your documents or data. It will not rule on ethics, consent or law. Those questions go to your supervisor or ethics committee. Without an AI key, Appu lists the matching sections instead.</p>`},
@@ -7180,8 +7478,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=4;
-const APP_BUILD='2026.10.10d';
+const APP_VERSION=5;
+const APP_BUILD='2026.10.10e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
