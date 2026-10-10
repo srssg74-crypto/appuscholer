@@ -2474,9 +2474,21 @@ function docMigrate(){
    contenteditable div so formatting (bold, headings, lists…) can be kept.
    bodyToHTML() tells old plain-text bodies apart from new HTML ones so existing
    documents keep displaying correctly instead of being parsed as markup. */
-function looksLikeStoredHTML(s){return /<(p|div|br|b|i|u|strong|em|ul|ol|li|h1|h2|h3|blockquote)[ >]/i.test(s||'')}
+/* A stored document is HTML when it holds any of these tags. The list once left out span, img and table, so a document that was
+   plain typed text followed by a picture (no line break) was read as plain text and its picture markup was shown as code. */
+function looksLikeStoredHTML(s){return /<(p|div|br|b|i|u|strong|em|ul|ol|li|h[1-6]|blockquote|span|img|table|thead|tbody|tr|td|th|svg|a|sup|sub|hr|pre|code|font|figure)[\s>\/]/i.test(s||'')}
+/* Repair for documents already damaged by that bug: picture markup that was escaped once or twice (&lt;span ..., &amp;lt;span ...). */
+function repairEscapedImages(s){
+  if(!s||s.indexOf('img-wrap')<0||!/&(?:amp;)*lt;span class="img-wrap"/.test(s))return s;
+  const re=/&(?:amp;)*lt;span class="img-wrap"[\s\S]*?&(?:amp;)*lt;\/span&(?:amp;)*gt;\s*&(?:amp;)*lt;\/span&(?:amp;)*gt;/g;
+  return s.replace(re,seg=>{
+    let x=seg,n=0;while(/&amp;/.test(x)&&n++<8)x=x.replace(/&amp;/g,'&');
+    return x.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  });
+}
 function bodyToHTML(body){
   if(!body)return'';
+  body=repairEscapedImages(body);
   if(looksLikeStoredHTML(body))return body;
   return escHTML(body).replace(/\n/g,'<br>');
 }
@@ -6824,8 +6836,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=2;
-const APP_BUILD='2026.10.10b';
+const APP_VERSION=3;
+const APP_BUILD='2026.10.10c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
