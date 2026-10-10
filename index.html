@@ -725,6 +725,9 @@
       <p class="desc" id="citUsageSummary" style="margin-top:6px;font-weight:600"></p>
       <p class="desc" id="citRetractSummary" style="margin-top:2px"></p>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citRetractionRefresh(true)" data-i18n="cite_retract_btn">🛡 Check for retractions</button></div>
+      <p class="desc" id="citRealSummary" style="margin-top:2px"></p>
+      <p class="desc" id="citNumMissing" style="margin-top:2px;font-weight:600"></p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="rcRun(true)" data-i18n="rc_btn">🔎 Check that sources exist (Crossref)</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ccOpen()" data-i18n="cc_btn">📚 Cross-check citations and references</button></div>
       <div id="citLib" style="margin-top:8px"><p class="desc" data-i18n="cite_no_sources">No sources yet.</p></div>
       <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()" data-i18n="cite_insertbib_btn">Insert reference list</button></div>
@@ -1745,6 +1748,11 @@ const I18N={
     retr_badge:'Retracted', retr_tip:"OpenAlex marks this paper as retracted. Check the publisher's notice before you cite it.",
     retr_lib_warn:"OpenAlex marks this source as retracted. Check the publisher's notice before you cite it.",
     retr_summary_fmt:'Checked {c} sources with a DOI for retractions: {r} flagged. {n} without a DOI could not be checked. No flag does not prove a paper is sound.',
+    rc_btn:'🔎 Check that sources exist (Crossref)', rc_busy:'Checking your sources against Crossref…', rc_done:'Source check done', rc_fail:'Could not reach Crossref right now. Try again in a moment.', rc_empty:'Add a source to your library first.',
+    rc_summary_fmt:'Checked {n} sources against Crossref: {o} match, {d} differ, {f} not found. Books, reports, theses and Hindi sources are often not in Crossref, so "not found" is a prompt to look again, not proof the source is wrong.',
+    rc_ok:'Found in Crossref and the details match.', rc_nf:'Not found in Crossref. Check the DOI, title and author, or the source may simply not be indexed there.', rc_doi_missing:'No DOI saved. The match below came from a title search:',
+    rc_title:'Title differs. Crossref has:', rc_year:'Year differs. Crossref has:', rc_author:'First author differs. Crossref has:', rc_doi_found:'DOI found:', rc_err:'Could not check this one.',
+    num_missing_fmt:'Numbers cited in this document with no source in your library: {n}.',
     cite_retract_btn:'🛡 Check for retractions', retr_done:'Retraction check done', retr_failed:'Could not run the retraction check right now. Try again in a moment.',
     retr_nodoi:'None of your sources has a DOI, so there is nothing to check.', retr_added_warn:'Added, but this paper is marked as retracted. Check before citing it.',
     oa_badge_fmt:'Free · {type}', oa_free_btn:'Free full text',
@@ -1948,6 +1956,10 @@ const I18N={
     retr_badge:'वापस लिया गया', retr_tip:'OpenAlex इस शोध-पत्र को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_lib_warn:'OpenAlex इस स्रोत को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_summary_fmt:'DOI वाले {c} स्रोतों की वापसी (retraction) जांच की गई: {r} चिह्नित। DOI के बिना {n} स्रोतों की जांच नहीं हो सकी। कोई चिह्न न होना यह साबित नहीं करता कि शोध-पत्र भरोसेमंद है।',
+    rc_btn:'🔎 जांचें कि स्रोत मौजूद हैं (Crossref)', rc_busy:'आपके स्रोत Crossref से मिलाए जा रहे हैं…', rc_done:'स्रोतों की जांच पूरी हुई', rc_fail:'अभी Crossref तक नहीं पहुँच सके। थोड़ी देर बाद फिर कोशिश करें।', rc_empty:'पहले लाइब्रेरी में कोई स्रोत जोड़ें।',
+    rc_summary_fmt:'{n} स्रोत Crossref से मिलाए गए: {o} मेल खाते हैं, {d} में अंतर है, {f} नहीं मिले। किताबें, रिपोर्ट, शोध-प्रबंध और हिन्दी स्रोत अक्सर Crossref में नहीं होते, इसलिए "नहीं मिला" का मतलब दोबारा देखना है, स्रोत गलत होना नहीं।', rc_ok:'Crossref में मिला और विवरण मेल खाते हैं।', rc_nf:'Crossref में नहीं मिला। DOI, शीर्षक और लेखक जाँचें, या हो सकता है यह स्रोत वहाँ दर्ज ही न हो।', rc_doi_missing:'कोई DOI सहेजा नहीं है। नीचे का मिलान शीर्षक की खोज से आया:',
+    rc_title:'शीर्षक अलग है। Crossref में है:', rc_year:'वर्ष अलग है। Crossref में है:', rc_author:'पहला लेखक अलग है। Crossref में है:', rc_doi_found:'DOI मिला:', rc_err:'इसकी जांच नहीं हो सकी।',
+    num_missing_fmt:'इस दस्तावेज़ में ऐसी संख्याएँ हैं जिनका आपकी लाइब्रेरी में कोई स्रोत नहीं: {n}।',
     cite_retract_btn:'🛡 वापसी (retraction) जांचें', retr_done:'वापसी की जांच पूरी हुई', retr_failed:'अभी वापसी की जांच नहीं हो सकी। थोड़ी देर बाद फिर कोशिश करें।',
     retr_nodoi:'आपके किसी स्रोत में DOI नहीं है, इसलिए जांचने को कुछ नहीं है।', retr_added_warn:'जोड़ा गया, लेकिन यह शोध-पत्र वापस लिया गया (retracted) चिह्नित है। उद्धृत करने से पहले जांच लें।',
     oa_badge_fmt:'निःशुल्क · {type}', oa_free_btn:'निःशुल्क पूरा पाठ',
@@ -6259,6 +6271,89 @@ function citJumpToCaret(){
 document.addEventListener('selectionchange',citCaretSchedule);
 editor.addEventListener('keyup',citCaretSchedule);
 editor.addEventListener('click',citCaretSchedule);
+/* ---- Source reality check (Version 6) ----------------------------------------------------------
+   For each library entry: ask Crossref whether the paper exists and whether its title, year and first
+   author match what is saved. A DOI is looked up directly; without one, a title search is used and
+   the best hit must look like the same paper. The answer is a prompt to look again, never a verdict:
+   books, reports, theses and Hindi sources are often not in Crossref. Results are cached per entry. */
+var RC_KEY='appu_refcheck',rcBusy=false;
+function rcCache(){try{const o=JSON.parse(LS.get(RC_KEY)||'{}');return(o&&typeof o==='object')?o:{}}catch(e){return{}}}
+function rcWords(x){return String(x||'').toLowerCase().replace(/<[^>]*>/g,' ').replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>2)}
+function rcSim(a,b){
+  const A=new Set(rcWords(a)),B=new Set(rcWords(b));
+  if(!A.size||!B.size)return 0;
+  let n=0;A.forEach(w=>{if(B.has(w))n++});
+  return n/(A.size+B.size-n);
+}
+function rcCompare(d,it){
+  const msgs=[];
+  const ct=(it.title||[''])[0]||'';
+  const dp=((it.issued||it['published-print']||it['published-online']||{})['date-parts']||[[]])[0]||[];
+  const cy=dp[0]||'';
+  const ca=((it.author||[])[0]||{}).family||'';
+  const ty=String(d.year||'').trim();
+  if(ct&&rcSim(d.title,ct)<0.75)msgs.push({k:'title',v:ct});
+  if(cy&&/^\d{4}$/.test(ty)&&Math.abs(+ty-cy)>1)msgs.push({k:'year',v:String(cy)});
+  const ln=citLastName(d.author);
+  if(ca&&ln&&ln!=='Author'&&!citNames(d.author)[0].org&&ca.toLowerCase()!==ln.toLowerCase())msgs.push({k:'author',v:ca});
+  return{msgs:msgs,found:{title:ct,year:cy,author:ca,doi:it.DOI||''}};
+}
+async function rcCheckOne(d){
+  const doi=retrNormDoi(d.doi);
+  try{
+    if(retrValidDoi(doi)){
+      const r=await fetch('https://api.crossref.org/works/'+encodeURIComponent(doi));
+      if(r.status===404)return{s:'nf',t:Date.now()};
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const it=(await r.json()).message;
+      const c=rcCompare(d,it);
+      return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,t:Date.now()};
+    }
+    const q=(d.title||'')+' '+citLastName(d.author);
+    const r=await fetch('https://api.crossref.org/works?rows=3&query.bibliographic='+encodeURIComponent(q.slice(0,300)));
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const items=((await r.json()).message||{}).items||[];
+    let best=null,bs=0;
+    items.forEach(it=>{const sc=rcSim(d.title,(it.title||[''])[0]);if(sc>bs){bs=sc;best=it}});
+    if(!best||bs<0.6)return{s:'nf',t:Date.now()};
+    const c=rcCompare(d,best);
+    return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,viaTitle:true,t:Date.now()};
+  }catch(e){return{s:'err',t:Date.now()}}
+}
+async function rcRun(force){
+  if(rcBusy)return;
+  const l=citGetLib();
+  if(!l.length){if(force)showToast(t('rc_empty'));return}
+  rcBusy=true;showToast(t('rc_busy'));
+  const cache=rcCache();let net=false,errs=0;
+  try{
+    for(let i=0;i<l.length;i++){
+      const k=citKey(l[i]);
+      if(!force&&cache[k]&&cache[k].s!=='err')continue;
+      const res=await rcCheckOne(l[i]);
+      if(res.s==='err')errs++;else net=true;
+      cache[k]=res;
+      await new Promise(r=>setTimeout(r,200));
+    }
+    LS.set(RC_KEY,JSON.stringify(cache));
+    citRender();
+    showToast(errs&&!net?t('rc_fail'):t('rc_done'));
+  }finally{rcBusy=false}
+}
+function rcLine(d,c){
+  if(!c||c.s==='err')return c&&c.s==='err'?'<div class="desc" style="margin-top:4px">'+escHTML(t('rc_err'))+'</div>':'';
+  if(c.s==='ok')return'<div class="desc" style="margin-top:4px;color:#166534">✓ '+escHTML(t('rc_ok'))+(c.viaTitle&&c.f&&c.f.doi?' '+escHTML(t('rc_doi_found'))+' '+escHTML(c.f.doi):'')+'</div>';
+  if(c.s==='nf')return'<div class="desc" style="margin-top:4px;color:#92400e">? '+escHTML(t('rc_nf'))+'</div>';
+  return'<div class="desc" style="margin-top:4px;color:#92400e;font-weight:600">⚠ '+(c.m||[]).map(x=>escHTML(t('rc_'+x.k))+' '+escHTML(x.v)).join(' &nbsp;·&nbsp; ')+(c.viaTitle?'<br><span style="font-weight:400">'+escHTML(t('rc_doi_missing'))+(c.f&&c.f.doi?' '+escHTML(c.f.doi):'')+'</span>':'')+'</div>';
+}
+/* Numbers in the open document that point at no source in the library (numbered styles only). */
+function citMissingNumbers(docs,libLen){
+  const cur=docCurrentId(),d=docs.find(x=>x.id===cur);if(!d)return[];
+  const all=new Set();
+  (d.text.match(/\[\s*\d{1,3}(?:\s*[,–-]\s*\d{1,3})*\s*\]/g)||[]).forEach(g=>citNumsIn(g.replace(/[\[\]]/g,'')).forEach(n=>all.add(n)));
+  (d.sups||[]).forEach(sx=>{if(/^[\d,\s–-]+$/.test(sx))citNumsIn(sx).forEach(n=>all.add(n))});
+  return Array.from(all).filter(n=>n>libLen).sort((a,b)=>a-b);
+}
 function citStyleChanged(){citRender();citStyleNoteUpdate()}
 function citStyleNoteUpdate(){
   const el=document.getElementById('citStyleNote'),sel=document.getElementById('citStyle');
@@ -6271,7 +6366,7 @@ function citRender(){
   document.getElementById('citCount').textContent=l.length;
   const sumEl=document.getElementById('citUsageSummary');
   const retrEl=document.getElementById('citRetractSummary');
-  if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';if(sumEl)sumEl.textContent='';if(retrEl)retrEl.textContent='';return}
+  if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';if(sumEl)sumEl.textContent='';if(retrEl)retrEl.textContent='';const a=document.getElementById('citRealSummary'),b2=document.getElementById('citNumMissing');if(a)a.textContent='';if(b2)b2.textContent='';return}
   const retrCache=retrCacheGet();
   const retrStatus=l.map(d=>{const k=retrNormDoi(d.doi);return retrValidDoi(k)?(retrCache[k]||null):null});
   if(retrEl){
@@ -6281,6 +6376,18 @@ function citRender(){
     retrEl.style.fontWeight=flagged?'700':'';
   }
   let docsPlain=[];try{docsPlain=citPlainDocs()}catch(e){docsPlain=[]}
+  const nmEl=document.getElementById('citNumMissing');
+  if(nmEl){
+    let miss=[];
+    if(citIsNumbered(document.getElementById('citStyle').value)){try{miss=citMissingNumbers(docsPlain,l.length)}catch(e){miss=[]}}
+    nmEl.textContent=miss.length?t('num_missing_fmt').replace('{n}',miss.map(n=>'['+n+']').join(', ')):'';
+  }
+  const rcAll=rcCache();
+  const rcEl=document.getElementById('citRealSummary');
+  if(rcEl){
+    const rs=l.map(d=>rcAll[citKey(d)]).filter(x=>x&&x.s!=='err');
+    rcEl.textContent=rs.length?t('rc_summary_fmt').replace('{n}',rs.length).replace('{o}',rs.filter(x=>x.s==='ok').length).replace('{d}',rs.filter(x=>x.s==='diff').length).replace('{f}',rs.filter(x=>x.s==='nf').length):'';
+  }
   const usage=l.map((d,i)=>{try{return citUsage(d,docsPlain,i)}catch(e){return[]}});
   if(sumEl){
     const cited=usage.filter(u=>u.length).length;
@@ -6295,7 +6402,7 @@ function citRender(){
       : '<div class="desc" style="margin-top:4px;opacity:.75">'+escHTML(t('cite_not_used'))+'</div>';
     const retrLine=(retrStatus[i]&&retrStatus[i].r)?'<div class="retr-warn">⚠ '+escHTML(t('retr_lib_warn'))+'</div>':'';
     return'<div class="cit-item'+(i===citActiveIdx?' cit-active':'')+'" id="citItem'+i+'"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
-      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+f.refHTML+usedLine+retrLine+
+      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+f.refHTML+usedLine+retrLine+rcLine(d,rcAll[citKey(d)])+
       '<div class="row" style="margin-top:6px">'+
       '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.sup?'¹ ('+f.num+')':f.intext)+'</button>'+
       '</div></div>';
@@ -7349,6 +7456,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>Choose a style: APA 7th or 6th, MLA 9th, Chicago (author-date), Harvard, Vancouver, IEEE or AMA 11th. Journal names and book titles come out in italics where the style asks for it. For a website, fill the month, day and the date you accessed it. Vancouver, IEEE and AMA are numbered: the number is the source's place in your library, so check the order against your text before you submit. Compare one finished entry per style with the manual or your journal's rules. Add a source by typing the fields, or paste a DOI, a link, a PubMed ID, a full reference or just a title and press <b>Fill from DOI, link, PubMed ID or title</b>. Check what it filled. Then insert the citation into your text.</p>
 <p><b>Cross-check citations and references</b> compares what you cited in the text with your reference list. It lists citations with no reference, references nobody cited, and near-matches such as a misspelled author name.</p>
 <p>It checks consistency. It does not confirm that a paper says what you claim it says. Read the paper.</p>
+<p>Check that sources exist asks Crossref about each source in your library and says whether the title, year and first author match. A source that is not found may simply not be indexed there, as with many books, reports and Hindi sources, so treat it as a prompt to look again. With a numbered style, the library also warns when your text cites a number that has no source.</p>
 <p>Insert reference list puts a formatted list in your document, with italics and a hanging indent. Author-date styles are sorted by surname. Numbered styles follow the library order.</p>`},
 {id:'appu',g:'Help',t:'Ask Appu (the guide helper)',k:'appu helper assistant ask question guide',h:`
 <p>Open the Guide and type a question in <b>Ask Appu</b>. Appu finds the three guide sections that match, sends them with your question to your AI provider, and answers from those sections only. If the guide does not cover it, Appu says so.</p>
@@ -7478,8 +7586,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=5;
-const APP_BUILD='2026.10.10e';
+const APP_VERSION=6;
+const APP_BUILD='2026.10.10f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
