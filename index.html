@@ -174,6 +174,12 @@
   #editor table td,#editor table th{border:1px solid var(--chipline);padding:8px 10px;min-width:60px;vertical-align:top}
   #editor .img-wrap{position:relative;display:inline-block;max-width:100%;margin:8px 0}
   #editor .img-wrap img,#editor .img-wrap svg{max-width:100%;width:100%;height:auto;display:block;border-radius:6px}
+  #imgEditBtn{position:fixed;z-index:70;display:none;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  #imgEditDlg canvas{width:auto;height:auto;max-width:100%;max-height:55vh;touch-action:none;border:1px solid var(--line);border-radius:8px;background:#e5e5e5;display:block;margin:8px auto}
+  #imgEditDlg .ie-tools{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+  #imgEditDlg .ie-tools .on{outline:3px solid var(--purple-600)}
+  #imgEditDlg label{font-size:13px;font-weight:700;display:block;margin-top:8px}
+  #imgEditDlg input[type=range]{width:100%}
   #editor .img-wrap .img-handle{position:absolute;right:-6px;bottom:-6px;width:16px;height:16px;border-radius:50%;background:var(--purple-600);border:2px solid #fff;cursor:se-resize;box-shadow:0 1px 4px rgba(0,0,0,.4)}
   .card-head{flex:0 0 auto}
   .fmtbar{flex:0 0 auto}
@@ -396,6 +402,7 @@
       <span class="fmt-sep"></span>
       <button type="button" class="fmt-btn" onclick="document.getElementById('imgFileInput').click()" title="Insert a picture">🖼 Image</button>
       <button type="button" class="fmt-btn" onclick="insertTable()" title="Insert a table">⊞ Table</button>
+      <button type="button" class="fmt-btn" onclick="capOpen()" data-i18n="cap_btn" title="Number and title a figure or table">🏷 Caption</button>
       <span class="fmt-sep"></span>
       <button type="button" class="fmt-btn" onclick="openFindReplace()" title="Find and replace (Ctrl+F)">🔍 Find</button>
       <button type="button" class="fmt-btn" id="dictBtn" onclick="dictToggle()" aria-pressed="false" title="Speak to type. Works in Chrome and Edge. Your voice goes to the browser's speech service.">🎤 Dictate</button>
@@ -1053,6 +1060,52 @@
   <div class="row" style="margin-top:12px;display:none" id="termsRowRead"><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('termsDlg').close()" data-i18n="close_btn">Close</button></div>
 </div></dialog>
 
+<button type="button" class="btn btn-purple btn-sm" id="imgEditBtn" onclick="ieOpenSel()" data-i18n="ie_btn">✎ Edit picture</button>
+<dialog id="imgEditDlg"><div class="dlg-body">
+  <h2 data-i18n="ie_h">🖼 Edit picture</h2>
+  <p class="desc" data-i18n="ie_desc">Crop, turn, lighten or darken, and hide a participant's identity. Everything happens on this device.</p>
+  <div class="ie-tools">
+    <button type="button" class="btn btn-ghost btn-sm" onclick="ieRot(-1)" data-i18n="ie_rotl">⟲ Turn left</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="ieRot(1)" data-i18n="ie_rotr">⟳ Turn right</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-mode="crop" onclick="ieMode('crop')" data-i18n="ie_crop">✂ Crop</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-mode="bar" onclick="ieMode('bar')" data-i18n="ie_bar">⬛ Black bar</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-mode="pix" onclick="ieMode('pix')" data-i18n="ie_pix">▦ Pixelate</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-mode="bg" onclick="ieMode('bg')" data-i18n="ie_bg">◐ Plain background</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="ieUndo()" data-i18n="ie_undo">↶ Undo</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="ieReset()" data-i18n="ie_reset">Start over</button>
+  </div>
+  <p class="desc" id="ieHint" style="min-height:2.6em"></p>
+  <canvas id="ieCv" width="300" height="200"></canvas>
+  <label for="ieBr" data-i18n="ie_br">Brightness</label><input type="range" id="ieBr" min="-100" max="100" value="0" oninput="ieRender()">
+  <label for="ieCo" data-i18n="ie_co">Contrast</label><input type="range" id="ieCo" min="-100" max="100" value="0" oninput="ieRender()">
+  <label for="ieBgCol" data-i18n="ie_bgcol">Plain background colour</label>
+  <select id="ieBgCol" style="width:100%;padding:8px;border:2px solid var(--line);border-radius:8px"><option value="#ffffff" data-i18n="ie_col_w">White</option><option value="#d4d4d4" data-i18n="ie_col_l">Light grey</option><option value="#7a7a7a" data-i18n="ie_col_d">Dark grey</option><option value="#000000" data-i18n="ie_col_b">Black</option></select>
+  <div id="ieCapBox" style="margin-top:10px;padding:8px;border:1px solid var(--line);border-radius:8px">
+    <label style="margin-top:0"><input type="checkbox" id="ieCapOn" onchange="ieCapToggle()"> <span data-i18n="ie_cap_on">Add a numbered caption</span></label>
+    <div id="ieCapFields" style="display:none">
+      <label for="ieCapTitle" data-i18n="ie_cap_title">Figure title</label><input type="text" id="ieCapTitle" style="width:100%;padding:8px;border:2px solid var(--line);border-radius:8px">
+      <label for="ieCapNote" data-i18n="ie_cap_note">Note under the figure</label><textarea id="ieCapNote" rows="3" style="width:100%;padding:8px;border:2px solid var(--line);border-radius:8px"></textarea>
+    </div>
+    <p class="desc" id="ieCapExists" style="display:none;margin:4px 0 0" data-i18n="ie_cap_exists">This picture already has a caption.</p>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button type="button" class="btn btn-purple" onclick="ieApply()" data-i18n="ie_apply">Use this picture</button>
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('imgEditDlg').close()" data-i18n="ie_cancel">Cancel</button>
+  </div>
+</div></dialog>
+<dialog id="capDlg"><div class="dlg-body">
+  <h2 data-i18n="cap_h">🏷 Numbered caption</h2>
+  <p class="desc" data-i18n="cap_desc">Adds "Figure 1" or "Table 1" with a title above the picture or table, in APA 7 style. Click a picture or a table, or put the cursor where the caption should go. Numbers update by themselves.</p>
+  <label for="capKind" style="font-size:13px;font-weight:700" data-i18n="cap_kind">Kind</label>
+  <select id="capKind" style="width:100%;padding:8px;border:2px solid var(--line);border-radius:8px"><option value="figure" data-i18n="cap_fig">Figure</option><option value="table" data-i18n="cap_tab">Table</option></select>
+  <label for="capTitle" style="font-size:13px;font-weight:700;display:block;margin-top:8px" data-i18n="cap_title">Title</label><input type="text" id="capTitle" style="width:100%;padding:8px;border:2px solid var(--line);border-radius:8px">
+  <label for="capNote" style="font-size:13px;font-weight:700;display:block;margin-top:8px" data-i18n="cap_note">Note under it (optional)</label><textarea id="capNote" rows="2" style="width:100%;padding:8px;border:2px solid var(--line);border-radius:8px"></textarea>
+  <div class="row" style="margin-top:10px;flex-wrap:wrap">
+    <button type="button" class="btn btn-purple" onclick="capInsert()" data-i18n="cap_insert">Insert caption</button>
+    <button type="button" class="btn btn-ghost" onclick="renumberCaptions(true)" data-i18n="cap_renum">Renumber all</button>
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('capDlg').close()" data-i18n="close_btn">Close</button>
+  </div>
+</div></dialog>
 <dialog id="welcomeDlg"><div class="dlg-body">
   <h2 data-i18n="welcome_h2">💜 Welcome to Appuscholar</h2>
   <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="welcome_intro">A writing and research assistant, with a Psychology Tools pack built in. Everything you write stays on this computer.</p>
@@ -1680,7 +1733,8 @@ const I18N={
     faq_a_hindi:"A few things stay in English on purpose — statistical test names, citation style names (APA, MLA), and the external AI-provider sign-up pages — since those are the exact terms you'll meet everywhere else too. Anything other than that is a genuine bug worth reporting below.",
     help_contact_intro:"Still stuck? Tell us what happened and we'll help directly.", help_contact_btn:'📧 Email us',
     help_contact_unset:"A direct contact option isn't set up yet — for now, reach whoever gave you Appuscholar.",
-    help_tour_btn:'↺ Show the welcome tour again', help_close_btn:'Close'
+    help_tour_btn:'↺ Show the welcome tour again', help_close_btn:'Close',
+    ie_btn:'✎ Edit picture', ie_h:'🖼 Edit picture', ie_desc:"Turn, crop, lighten or darken, and hide a participant's identity. Everything happens on this device.", ie_rotl:'⟲ Turn left', ie_rotr:'⟳ Turn right', ie_crop:'✂ Crop', ie_bar:'⬛ Black bar', ie_pix:'▦ Pixelate', ie_bg:'◐ Plain background', ie_undo:'↶ Undo', ie_reset:'Start over', ie_br:'Brightness', ie_co:'Contrast', ie_bgcol:'Plain background colour', ie_col_w:'White', ie_col_l:'Light grey', ie_col_d:'Dark grey', ie_col_b:'Black', ie_h_none:'Pick a tool above, then drag on the picture.', ie_h_crop:'Drag a box around the part to keep.', ie_h_bar:'Drag a box over the eyes, or over the whole face. It is filled black. A black bar hides identity far more safely than pixels.', ie_h_pix:'Drag a box over the area to pixelate. Pixelation can sometimes be partly undone, so for faces a black bar is safer.', ie_h_bg:'Drag a box around the person. Everything outside an oval inside that box turns into the plain colour. This is a manual outline, not an automatic cut-out.', ie_cap_on:'Add a numbered caption', ie_cap_exists:'This picture already has a caption.', ie_cap_title:'Figure title', ie_cap_note:'Note under the figure', ie_apply:'Use this picture', ie_cancel:'Cancel', ie_done:'Picture updated ✓', ie_fail:'Could not edit this picture. Try inserting it again from a file.', ie_note_bar:"Eyes or face were covered with a black bar to protect the participant's identity.", ie_note_pix:"Part of the face was pixelated to protect the participant's identity.", ie_note_bg:'The background was replaced with a plain colour.', cap_btn:'🏷 Caption', cap_h:'🏷 Numbered caption', cap_desc:'Adds "Figure 1" or "Table 1" with a title above the picture or table, in APA 7 style. Click a picture or a table, or put the cursor where the caption should go. Numbers update by themselves.', cap_kind:'Kind', cap_fig:'Figure', cap_tab:'Table', cap_title:'Title', cap_note:'Note under it (optional)', cap_insert:'Insert caption', cap_renum:'Renumber all', cap_renum_done:'{f} figure(s) and {t} table(s) numbered ✓', cap_inserted:'Caption added ✓', cap_need_title:'Write a title first.',
   },
   hi:{
     help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
@@ -1880,7 +1934,8 @@ const I18N={
     faq_a_hindi:'कुछ चीज़ें जानबूझकर अंग्रेज़ी में रहती हैं — सांख्यिकी परीक्षणों के नाम, उद्धरण शैलियों के नाम (APA, MLA), और बाहरी AI-प्रदाता साइन-अप पेज — क्योंकि ये वही शब्द हैं जो आप हर जगह मिलेंगे। इसके अलावा कुछ भी अनुवादित न हो, तो वह एक असली बग है, नीचे बताइए।',
     help_contact_intro:'फिर भी अटके हैं? हमें बताएं क्या हुआ, हम सीधे मदद करेंगे।', help_contact_btn:'📧 हमें ईमेल करें',
     help_contact_unset:'सीधा संपर्क विकल्प अभी सेट नहीं है — फ़िलहाल, Appuscholar देने वाले से संपर्क करें।',
-    help_tour_btn:'↺ स्वागत मार्गदर्शन फिर दिखाएं', help_close_btn:'बंद करें'
+    help_tour_btn:'↺ स्वागत मार्गदर्शन फिर दिखाएं', help_close_btn:'बंद करें',
+    ie_btn:'✎ चित्र संपादित करें', ie_h:'🖼 चित्र संपादित करें', ie_desc:'चित्र को घुमाएँ, काटें, हल्का या गहरा करें, और प्रतिभागी की पहचान छिपाएँ। सब कुछ इसी डिवाइस पर होता है।', ie_rotl:'⟲ बाएँ घुमाएँ', ie_rotr:'⟳ दाएँ घुमाएँ', ie_crop:'✂ काटें', ie_bar:'⬛ काली पट्टी', ie_pix:'▦ पिक्सेल करें', ie_bg:'◐ सादी पृष्ठभूमि', ie_undo:'↶ वापस', ie_reset:'फिर से शुरू', ie_br:'चमक', ie_co:'कंट्रास्ट', ie_bgcol:'सादी पृष्ठभूमि का रंग', ie_col_w:'सफ़ेद', ie_col_l:'हल्का स्लेटी', ie_col_d:'गहरा स्लेटी', ie_col_b:'काला', ie_h_none:'ऊपर से कोई औज़ार चुनें, फिर चित्र पर खींचें।', ie_h_crop:'जो हिस्सा रखना है उसके चारों ओर डिब्बा खींचें।', ie_h_bar:'आँखों पर, या पूरे चेहरे पर डिब्बा खींचें। वह काला भर जाएगा। पहचान छिपाने के लिए काली पट्टी पिक्सेल से कहीं ज़्यादा सुरक्षित है।', ie_h_pix:'जिस हिस्से को पिक्सेल करना है उस पर डिब्बा खींचें। पिक्सेल कभी-कभी आंशिक रूप से वापस बनाया जा सकता है, इसलिए चेहरे के लिए काली पट्टी ज़्यादा सुरक्षित है।', ie_h_bg:'व्यक्ति के चारों ओर डिब्बा खींचें। उस डिब्बे के भीतर के अंडाकार के बाहर सब कुछ सादे रंग में बदल जाएगा। यह हाथ से खींची रूपरेखा है, अपने-आप कटाई नहीं।', ie_cap_on:'क्रमांकित कैप्शन जोड़ें', ie_cap_exists:'इस चित्र में पहले से कैप्शन है।', ie_cap_title:'चित्र का शीर्षक', ie_cap_note:'चित्र के नीचे टिप्पणी', ie_apply:'यह चित्र लगाएँ', ie_cancel:'रद्द करें', ie_done:'चित्र बदल गया ✓', ie_fail:'यह चित्र संपादित नहीं हो सका। इसे फ़ाइल से दोबारा डालकर देखें।', ie_note_bar:'प्रतिभागी की पहचान की रक्षा के लिए आँखें या चेहरा काली पट्टी से ढका गया।', ie_note_pix:'प्रतिभागी की पहचान की रक्षा के लिए चेहरे का हिस्सा पिक्सेल किया गया।', ie_note_bg:'पृष्ठभूमि को सादे रंग से बदला गया।', cap_btn:'🏷 कैप्शन', cap_h:'🏷 क्रमांकित कैप्शन', cap_desc:'चित्र या तालिका के ऊपर शीर्षक के साथ "Figure 1" या "Table 1" जोड़ता है, APA 7 शैली में। चित्र या तालिका पर क्लिक करें, या कर्सर वहाँ रखें जहाँ कैप्शन चाहिए। क्रमांक अपने-आप बदलते रहते हैं।', cap_kind:'प्रकार', cap_fig:'चित्र (Figure)', cap_tab:'तालिका (Table)', cap_title:'शीर्षक', cap_note:'इसके नीचे टिप्पणी (वैकल्पिक)', cap_insert:'कैप्शन जोड़ें', cap_renum:'सब दोबारा क्रमांकित करें', cap_renum_done:'{f} चित्र और {t} तालिका क्रमांकित ✓', cap_inserted:'कैप्शन जुड़ गया ✓', cap_need_title:'पहले शीर्षक लिखें।',
   }
 };
 function getLang(){const l=LS.get('appu_lang');return(l==='hi')?'hi':'en'}
@@ -3120,11 +3175,12 @@ function vzImgHTML(cb){
 function vzInsert(){
   const cp=vzCaption();
   vzImgHTML(png=>{
-    let h='<p><strong>Figure '+cp.n+'</strong></p>'+(cp.title?'<p><em>'+vzEsc(cp.title)+'</em></p>':'')+
+    let h='<p data-cap="figure"><strong>Figure '+cp.n+'</strong></p>'+(cp.title?'<p data-cap-title="1"><em>'+vzEsc(cp.title)+'</em></p>':'')+
       '<img src="'+png+'" alt="'+vzEsc(cp.title||'Figure '+cp.n)+'" style="max-width:520px;width:100%">'+
       (cp.note?'<p><em>Note.</em> '+vzEsc(cp.note)+'</p>':'')+'<p><br></p>';
     insertHTMLBlockIntoEditor(h);
     const f=document.getElementById('vzFig');f.value=(parseInt(f.value,10)||1)+1;
+    try{renumberCaptions();const c=editor.querySelectorAll('p[data-cap="figure"]').length;f.value=c+1}catch(e){}
     showToast(t('vz_inserted'));document.getElementById('vzDlg').close();
   });
 }
@@ -3498,6 +3554,184 @@ function insertImageFile(input){
   });
   document.addEventListener('pointerup',()=>{if(dragEl){dragEl=null;upd()}});
 })();
+
+
+/* ============ Picture editor and numbered captions (Version 2) ============
+   Click a picture, press Edit picture. Turn, crop, brightness and contrast, a black bar over eyes or face, pixelation,
+   and a plain background drawn by hand. The result is redrawn on a canvas, so hidden camera data is dropped as well.
+   Captions follow APA 7: number on one line, title under it, both above the figure or table. Numbers are kept in order. */
+const IE={el:null,sel:null,base:null,orig:null,hist:[],log:[],mode:'',drag:null,capExists:false};
+function ieCloneCv(c){const n=document.createElement('canvas');n.width=c.width;n.height=c.height;n.getContext('2d').drawImage(c,0,0);return n}
+function ieBtnHide(){const b=document.getElementById('imgEditBtn');if(b)b.style.display='none'}
+function ieBtnPlace(){
+  const b=document.getElementById('imgEditBtn');if(!b||!IE.sel||!document.body.contains(IE.sel)){ieBtnHide();return}
+  const r=IE.sel.getBoundingClientRect();
+  if(r.bottom<0||r.top>innerHeight){ieBtnHide();return}
+  b.style.display='block';b.style.left=Math.max(8,Math.min(innerWidth-130,r.left+8))+'px';b.style.top=Math.max(8,Math.min(innerHeight-44,r.top+8))+'px';
+}
+editor.addEventListener('click',e=>{
+  const im=e.target&&e.target.tagName==='IMG'?e.target:null;
+  if(!im||!editor.contains(im)){IE.sel=null;ieBtnHide();return}
+  IE.sel=im;ieBtnPlace();
+});
+window.addEventListener('scroll',()=>{if(IE.sel)ieBtnPlace()},true);
+window.addEventListener('resize',()=>{if(IE.sel)ieBtnPlace()});
+editor.addEventListener('input',()=>{if(IE.sel)ieBtnPlace()});
+function ieOpenSel(){if(IE.sel)ieOpenFor(IE.sel)}
+function ieOpenFor(img){
+  const im=new Image();
+  im.onload=()=>{try{
+    const k=Math.min(1,1600/Math.max(im.naturalWidth,im.naturalHeight));
+    const c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*k));c.height=Math.max(1,Math.round(im.naturalHeight*k));
+    const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+    c.getContext('2d').getImageData(0,0,1,1); /* throws if the picture came from another site */
+    IE.el=img;IE.base=c;IE.orig=ieCloneCv(c);IE.hist=[];IE.log=[];IE.mode='';IE.drag=null;IE.png=/^data:image\/png/.test(img.src);
+    document.getElementById('ieBr').value=0;document.getElementById('ieCo').value=0;
+    const w=img.closest('.img-wrap')||img;let blk=w;while(blk.parentNode&&blk.parentNode!==editor)blk=blk.parentNode;
+    let pv=blk.previousElementSibling;IE.capExists=!!(pv&&(pv.hasAttribute('data-cap')||pv.hasAttribute('data-cap-title')));
+    if(!IE.capExists&&pv&&pv.previousElementSibling&&pv.previousElementSibling.hasAttribute('data-cap'))IE.capExists=true;
+    document.getElementById('ieCapOn').checked=false;document.getElementById('ieCapOn').disabled=IE.capExists;
+    document.getElementById('ieCapFields').style.display='none';document.getElementById('ieCapExists').style.display=IE.capExists?'block':'none';
+    document.getElementById('ieCapTitle').value='';document.getElementById('ieCapNote').value='';
+    ieMode('');ieRender();document.getElementById('imgEditDlg').showModal();ieBtnHide();
+  }catch(e){showToast(t('ie_fail'))}};
+  im.onerror=()=>showToast(t('ie_fail'));
+  im.src=img.src;
+}
+function ieMode(m){
+  IE.mode=(IE.mode===m)?'':m;
+  document.querySelectorAll('#imgEditDlg [data-mode]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-mode')===IE.mode));
+  const key={crop:'ie_h_crop',bar:'ie_h_bar',pix:'ie_h_pix',bg:'ie_h_bg'}[IE.mode]||'ie_h_none';
+  document.getElementById('ieHint').textContent=t(key);
+}
+function ieAdjust(src){
+  const br=+document.getElementById('ieBr').value,co=+document.getElementById('ieCo').value;
+  if(!br&&!co)return null;
+  const cv=ieCloneCv(src),g=cv.getContext('2d'),d=g.getImageData(0,0,cv.width,cv.height),a=d.data;
+  const c=co*2.55,f=259*(c+255)/(255*(259-c)),add=br*2.55;
+  for(let i=0;i<a.length;i+=4){for(let j=0;j<3;j++){let v=f*(a[i+j]-128)+128+add;a[i+j]=v<0?0:v>255?255:v}}
+  g.putImageData(d,0,0);return cv;
+}
+function ieRender(){
+  const cv=document.getElementById('ieCv');if(!IE.base)return;
+  if(cv.width!==IE.base.width||cv.height!==IE.base.height){cv.width=IE.base.width;cv.height=IE.base.height}
+  const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);
+  g.drawImage(ieAdjust(IE.base)||IE.base,0,0);
+  if(IE.drag){const r=ieRect();g.save();g.lineWidth=Math.max(2,cv.width/200);g.strokeStyle='#f43f5e';g.setLineDash([8,6]);
+    if(IE.mode==='bg'){g.beginPath();g.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,Math.PI*2);g.stroke()}else g.strokeRect(r.x,r.y,r.w,r.h);g.restore()}
+}
+function ieRect(){const d=IE.drag;return{x:Math.min(d.x0,d.x1),y:Math.min(d.y0,d.y1),w:Math.abs(d.x1-d.x0),h:Math.abs(d.y1-d.y0)}}
+function ieBake(){
+  const a=ieAdjust(IE.base);if(!a)return;
+  IE.base=a;document.getElementById('ieBr').value=0;document.getElementById('ieCo').value=0;
+  if(IE.log.indexOf('brightness or contrast adjusted')<0)IE.log.push('brightness or contrast adjusted');
+}
+function ieSnap(){ieBake();IE.hist.push({c:ieCloneCv(IE.base),log:IE.log.slice()});if(IE.hist.length>12)IE.hist.shift()}
+function ieRot(d){
+  if(!IE.base)return;ieSnap();
+  const b=IE.base,n=document.createElement('canvas');n.width=b.height;n.height=b.width;const g=n.getContext('2d');
+  g.save();g.translate(n.width/2,n.height/2);g.rotate(d*Math.PI/2);g.drawImage(b,-b.width/2,-b.height/2);g.restore();
+  IE.base=n;IE.log.push('turned');ieRender();
+}
+function ieUndo(){
+  if(!IE.hist.length)return;const h=IE.hist.pop();IE.base=h.c;IE.log=h.log;ieRender();
+}
+function ieReset(){if(!IE.orig)return;IE.base=ieCloneCv(IE.orig);IE.hist=[];IE.log=[];document.getElementById('ieBr').value=0;document.getElementById('ieCo').value=0;ieRender()}
+function ieCommit(r){
+  ieSnap();const b=IE.base;let g;
+  if(IE.mode==='crop'){
+    const n=document.createElement('canvas');n.width=Math.round(r.w);n.height=Math.round(r.h);
+    n.getContext('2d').drawImage(b,r.x,r.y,r.w,r.h,0,0,n.width,n.height);IE.base=n;IE.log.push('cropped');
+  }else if(IE.mode==='bar'){
+    g=b.getContext('2d');g.fillStyle='#000';g.fillRect(r.x,r.y,r.w,r.h);IE.log.push('bar');
+  }else if(IE.mode==='pix'){
+    const blk=Math.max(6,Math.round(Math.min(r.w,r.h)/6)),sw=Math.max(1,Math.round(r.w/blk)),sh=Math.max(1,Math.round(r.h/blk));
+    const t1=document.createElement('canvas');t1.width=sw;t1.height=sh;const g1=t1.getContext('2d');g1.drawImage(b,r.x,r.y,r.w,r.h,0,0,sw,sh);
+    g=b.getContext('2d');g.save();g.imageSmoothingEnabled=false;g.drawImage(t1,0,0,sw,sh,r.x,r.y,r.w,r.h);g.restore();IE.log.push('pixelated');
+  }else if(IE.mode==='bg'){
+    const n=document.createElement('canvas');n.width=b.width;n.height=b.height;g=n.getContext('2d');
+    g.fillStyle=document.getElementById('ieBgCol').value;g.fillRect(0,0,n.width,n.height);
+    g.save();g.beginPath();g.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,Math.PI*2);g.clip();g.drawImage(b,0,0);g.restore();
+    IE.base=n;IE.log.push('background');
+  }
+  ieRender();
+}
+(function(){
+  const cv=document.getElementById('ieCv');
+  function pt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height}}
+  cv.addEventListener('pointerdown',e=>{if(!IE.mode||!IE.base)return;const p=pt(e);IE.drag={x0:p.x,y0:p.y,x1:p.x,y1:p.y};try{cv.setPointerCapture(e.pointerId)}catch(x){}e.preventDefault();ieRender()});
+  cv.addEventListener('pointermove',e=>{if(!IE.drag)return;const p=pt(e);IE.drag.x1=Math.max(0,Math.min(cv.width,p.x));IE.drag.y1=Math.max(0,Math.min(cv.height,p.y));ieRender()});
+  cv.addEventListener('pointerup',e=>{if(!IE.drag)return;const r=ieRect();IE.drag=null;if(r.w<6||r.h<6){ieRender();return}ieCommit(r)});
+  cv.addEventListener('pointercancel',()=>{IE.drag=null;ieRender()});
+})();
+function ieMaskNote(){
+  const l=IE.log,out=[];
+  if(l.indexOf('bar')>=0)out.push(t('ie_note_bar'));
+  if(l.indexOf('pixelated')>=0)out.push(t('ie_note_pix'));
+  if(l.indexOf('background')>=0)out.push(t('ie_note_bg'));
+  return out.join(' ');
+}
+function ieCapToggle(){
+  const on=document.getElementById('ieCapOn').checked;document.getElementById('ieCapFields').style.display=on?'block':'none';
+  if(on&&!document.getElementById('ieCapNote').value)document.getElementById('ieCapNote').value=ieMaskNote();
+}
+function capBlocksHTML(kind,title,note){
+  const lab=kind==='table'?'Table':'Figure';
+  return '<p data-cap="'+kind+'"><strong>'+lab+' 0</strong></p>'+(title?'<p data-cap-title="1"><em>'+vzEsc(title)+'</em></p>':'');
+}
+function capNoteHTML(note){return note?'<p data-cap-note="1"><em>Note.</em> '+vzEsc(note)+'</p>':''}
+function renumberCaptions(toast){
+  let f=0,tb=0;
+  editor.querySelectorAll('p[data-cap]').forEach(p=>{
+    const k=p.getAttribute('data-cap'),n=(k==='table')?++tb:++f;
+    let st=p.querySelector('strong');if(!st){st=document.createElement('strong');p.insertBefore(st,p.firstChild)}
+    st.textContent=(k==='table'?'Table ':'Figure ')+n;
+  });
+  if(toast){showToast(t('cap_renum_done').replace('{f}',f).replace('{t}',tb));upd()}
+  return{f:f,t:tb};
+}
+function ieBlockOf(el){let b=el;while(b.parentNode&&b.parentNode!==editor)b=b.parentNode;return b}
+async function ieApply(){
+  if(!IE.base||!IE.el)return;
+  try{
+    ieBake();
+    let data=IE.png?IE.base.toDataURL('image/png'):'';
+    if(!data||data.length>600000)data=IE.base.toDataURL('image/jpeg',0.92);
+    data=await imgShrinkDataUrl(data);
+    IE.el.src=data;
+    const edits=IE.log.filter((x,i,a)=>a.indexOf(x)===i).join(', ');
+    if(edits)IE.el.setAttribute('data-edits',edits);
+    if(document.getElementById('ieCapOn').checked&&!IE.capExists){
+      const title=document.getElementById('ieCapTitle').value.trim(),note=document.getElementById('ieCapNote').value.trim();
+      const blk=ieBlockOf(IE.el.closest('.img-wrap')||IE.el);
+      blk.insertAdjacentHTML('beforebegin',capBlocksHTML('figure',title));
+      if(note)blk.insertAdjacentHTML('afterend',capNoteHTML(note));
+      if(title)IE.el.setAttribute('alt',title);
+    }
+    renumberCaptions();upd();
+    document.getElementById('imgEditDlg').close();showToast(t('ie_done'));
+  }catch(e){showToast(t('ie_fail'))}
+}
+/* Caption dialog, for pictures already in the document and for tables */
+function capOpen(){
+  let kind='figure';
+  const tb=_nearestTable();if(tb)kind='table';
+  document.getElementById('capKind').value=kind;document.getElementById('capTitle').value='';document.getElementById('capNote').value='';
+  document.getElementById('capDlg').showModal();
+}
+function capInsert(){
+  const kind=document.getElementById('capKind').value,title=document.getElementById('capTitle').value.trim(),note=document.getElementById('capNote').value.trim();
+  if(!title){showToast(t('cap_need_title'));return}
+  let target=null;
+  if(kind==='table'){const tb=_nearestTable();if(tb)target=ieBlockOf(tb)}
+  else if(IE.sel&&document.body.contains(IE.sel))target=ieBlockOf(IE.sel.closest('.img-wrap')||IE.sel);
+  const h=capBlocksHTML(kind,title);
+  if(target){
+    target.insertAdjacentHTML('beforebegin',h);
+    if(note){let after=target;if(kind==='table')after=target;after.insertAdjacentHTML('afterend',capNoteHTML(note))}
+  }else insertHTMLBlockIntoEditor(h+capNoteHTML(note));
+  renumberCaptions();upd();document.getElementById('capDlg').close();showToast(t('cap_inserted'));
+}
 
 /* ============ Tables ============ */
 function insertTable(){
@@ -6446,6 +6680,11 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 {id:'charts',g:'Tools',t:'Charts',k:'chart graph bar line venn figure picture',h:`
 <p>Chart Maker draws bar and line charts from numbers you type or paste, and two- or three-circle Venn diagrams. Add the finished chart to your document with one press.</p>
 <p>Label the axes with units, and give every figure a caption in the text.</p>`},
+{id:'pictures',g:'Tools',t:'Pictures and captions',k:'picture photo image crop rotate eyes face identity black bar pixelate background caption figure table number apa',h:`
+<p>Insert a picture with <b>Image</b>. Tap the picture, then press <b>Edit picture</b>. You can turn it, <b>Crop</b> it, change brightness and contrast, and hide a participant's identity: <b>Black bar</b> over the eyes or the whole face, <b>Pixelate</b>, or <b>Plain background</b> (you draw the outline by hand; there is no automatic cut-out yet). Pick a tool, then drag on the picture. <b>Undo</b> steps back.</p>
+<p>A black bar hides a face far more safely than pixels, because pixelation can sometimes be partly undone. Whatever you hide, say so in the caption. Tick the caption box and the app writes a first draft of that note for you to check.</p>
+<p>The picture is redrawn when you press <b>Use this picture</b>, so hidden camera data such as the place and time a photo was taken is removed.</p>
+<p><b>Caption</b> adds "Figure 1" or "Table 1" with your title above the picture or table, the way APA 7 shows it. Numbers follow the order in your document and update when you add or remove one. Check what your journal or university asks for. Some want the caption below. References in your text, such as "see Figure 2", do not change by themselves, so reread them after you reorder.</p>`},
 {id:'qual',g:'Tools',t:'Qualitative Coding',k:'qualitative coding codes themes interview thematic tag passage export markdown',h:`
 <p>Select a passage in your document, then tap a code to tag it. Codes can sit under other codes, so related ideas group into themes. Coding works across all your documents. <b>Export all coded passages</b> gives you a Markdown file with each code and the passages under it.</p>
 <p><b>Worked example.</b> Paste an interview transcript. Make top-level codes such as <i>stress sources</i> and <i>coping</i>. Select a sentence about exam fear, tap the stress code, then move on. When you finish, export and read each code's passages together.</p>
@@ -6585,8 +6824,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=1;
-const APP_BUILD='2026.10.10';
+const APP_VERSION=2;
+const APP_BUILD='2026.10.10b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
