@@ -1310,6 +1310,8 @@
           <option value="welchAnova">One-way ANOVA, Welch (recommended)</option>
           <option value="anova1">One-way ANOVA, classic (equal spreads)</option>
           <option value="tukey">Tukey HSD post-hoc (after ANOVA)</option>
+          <option value="anova2">Two-way ANOVA (two grouping variables)</option>
+          <option value="mregress">Multiple linear regression</option>
         </optgroup>
         <optgroup label="Compare — non-parametric">
           <option value="mannwhitney">Mann-Whitney U</option>
@@ -7204,6 +7206,24 @@ function stkAssumpBlock(items,groupsForSpread,what){
   h+='<p class="desc">'+msg.join(' ')+'</p></div>';
   return h;
 }
+
+function stkAnova2Cells(){
+  var d=window._statsData,gv=function(id){var el=document.getElementById('sf_'+id);return el?el.value:''};
+  var dvI=parseInt(gv('dv'),10),aI=parseInt(gv('iv'),10),bI=parseInt(gv('iv2'),10);
+  var aL=[],bL=[],y=[],ai=[],bi=[],skipped=0;
+  d.rows.forEach(function(r){
+    var ga=r[aI],gb=r[bI],v=r[dvI];
+    if(ga===undefined||ga===''||gb===undefined||gb===''||v===undefined||v==='')return;
+    var x=parseFloat(v);if(!isFinite(x)){skipped++;return}
+    if(aL.indexOf(ga)<0)aL.push(ga);if(bL.indexOf(gb)<0)bL.push(gb);
+    y.push(x);ai.push(aL.indexOf(ga));bi.push(bL.indexOf(gb));
+  });
+  var cellVals=[],cellMap={};
+  y.forEach(function(v,k){var key=ai[k]+'|'+bi[k];(cellMap[key]=cellMap[key]||[]).push(v)});
+  var resid=[];y.forEach(function(v,k){var g=cellMap[ai[k]+'|'+bi[k]];resid.push(v-smean(g))});
+  Object.keys(cellMap).forEach(function(k){cellVals.push(cellMap[k])});
+  return{y:y,ai:ai,bi:bi,aL:aL,bL:bL,cellMap:cellMap,cellVals:cellVals,resid:resid,skipped:skipped,dvI:dvI,aI:aI,bI:bI};
+}
 function stkAssumpFor(key){
   try{
     var d=window._statsData,gv=function(id){var el=document.getElementById('sf_'+id);return el?el.value:''},items=[],spread=null,what='Group';
@@ -7211,6 +7231,13 @@ function stkAssumpFor(key){
     else if(key==='ttestInd'||key==='anova1'||key==='tukey'||key==='welchAnova'){
       var gr=statsGroupBy(parseInt(gv('dv'),10),parseInt(gv('iv'),10)),ks=Object.keys(gr);
       items=ks.map(function(k){return{label:k,vals:gr[k]}});spread=ks.map(function(k){return gr[k]});
+    }else if(key==='mregress'){
+      var m=stkMRData();if(!m.idxs.length||m.y.length<m.idxs.length+2)return '';
+      var o=stkOLS(m.xs,m.y);if(!o)return '';
+      what='Variable';items=[{label:'Residuals',vals:o.resid}];
+    }else if(key==='anova2'){
+      var c=stkAnova2Cells();if(!c)return '';
+      items=[{label:'Residuals (all cells)',vals:c.resid}];spread=c.cellVals;what='Variable';
     }else if(key==='ttestPaired'){
       var a=parseInt(gv('v1'),10),b=parseInt(gv('v2'),10),df=[];
       d.rows.forEach(function(r){var x=parseFloat(r[a]),y=parseFloat(r[b]);if(r[a]!==''&&r[b]!==''&&r[a]!==undefined&&r[b]!==undefined&&isFinite(x)&&isFinite(y))df.push(x-y)});
@@ -7225,6 +7252,80 @@ function stkAssumpFor(key){
     if(!items.length)return '';
     return stkAssumpBlock(items,spread,what);
   }catch(e){return ''}
+}
+
+/* ---------- Two-way ANOVA (Version 10) ---------- */
+/* Residual sum of squares of a least-squares fit; cols is an array of column arrays. Returns null when the columns are linearly dependent. */
+function stkRSS(cols,y){
+  var p=cols.length,n=y.length,i,j,k,A=[],b=[];
+  for(i=0;i<p;i++){A.push(new Array(p+1));for(j=0;j<p;j++){var t=0;for(k=0;k<n;k++)t+=cols[i][k]*cols[j][k];A[i][j]=t}
+    var t2=0;for(k=0;k<n;k++)t2+=cols[i][k]*y[k];A[i][p]=t2}
+  var scale=A.map(function(r,ix){return Math.abs(r[ix])||1});
+  for(i=0;i<p;i++){
+    var piv=i;for(j=i+1;j<p;j++)if(Math.abs(A[j][i])>Math.abs(A[piv][i]))piv=j;
+    if(Math.abs(A[piv][i])<1e-9*scale[i])return null;
+    var tmp=A[i];A[i]=A[piv];A[piv]=tmp;var sc=scale[i];scale[i]=scale[piv];scale[piv]=sc;
+    for(j=i+1;j<p;j++){var f=A[j][i]/A[i][i];for(k=i;k<=p;k++)A[j][k]-=f*A[i][k]}
+  }
+  var beta=new Array(p);
+  for(i=p-1;i>=0;i--){var sm=A[i][p];for(j=i+1;j<p;j++)sm-=A[i][j]*beta[j];beta[i]=sm/A[i][i]}
+  var rss=0;
+  for(k=0;k<n;k++){var fit=0;for(i=0;i<p;i++)fit+=beta[i]*cols[i][k];rss+=(y[k]-fit)*(y[k]-fit)}
+  return rss;
+}
+/* Type III two-way between-subjects ANOVA with sum-to-zero (effect) coding. a, b: level indices per observation. */
+function stkAnova2(y,a,b,la,lb){
+  var n=y.length,k,i,j;
+  function eff(lv,nl){var cs=[];for(i=0;i<nl-1;i++){var c=new Array(n);for(k=0;k<n;k++)c[k]=lv[k]===i?1:(lv[k]===nl-1?-1:0);cs.push(c)}return cs}
+  var ca=eff(a,la),cb=eff(b,lb),cab=[];
+  ca.forEach(function(x){cb.forEach(function(z){var c=new Array(n);for(k=0;k<n;k++)c[k]=x[k]*z[k];cab.push(c)})});
+  var one=new Array(n);for(k=0;k<n;k++)one[k]=1;
+  var full=[one].concat(ca,cb,cab),rF=stkRSS(full,y);
+  var rA=stkRSS([one].concat(cb,cab),y),rB=stkRSS([one].concat(ca,cab),y),rAB=stkRSS([one].concat(ca,cb),y);
+  if(rF===null||rA===null||rB===null||rAB===null)return null;
+  var dfe=n-la*lb;if(dfe<1)return null;
+  var mean=smean(y),sst=0;y.forEach(function(v){sst+=(v-mean)*(v-mean)});
+  var mse=rF/dfe,out={sse:rF,dfe:dfe,mse:mse,sst:sst,rows:[]};
+  [['A',rA-rF,la-1],['B',rB-rF,lb-1],['AB',rAB-rF,(la-1)*(lb-1)]].forEach(function(e){
+    var ss=Math.max(0,e[1]),df=e[2],F=(ss/df)/mse;
+    out.rows.push({id:e[0],ss:ss,df:df,ms:ss/df,F:F,p:pFromF(F,df,dfe),eta:ss/(ss+rF)});
+  });
+  return out;
+}
+
+/* ---------- Multiple regression (Version 11) ---------- */
+/* Ordinary least squares with an intercept. xs: array of predictor columns. Returns null when the predictors are linearly dependent. */
+function stkOLS(xs,y){
+  var n=y.length,k=xs.length,p=k+1,cols=[],i,j,r,c;
+  var one=new Array(n);for(r=0;r<n;r++)one[r]=1;cols.push(one);xs.forEach(function(x){cols.push(x)});
+  var M=[];
+  for(i=0;i<p;i++){M.push(new Array(2*p));for(j=0;j<p;j++){var t=0;for(r=0;r<n;r++)t+=cols[i][r]*cols[j][r];M[i][j]=t}
+    for(j=0;j<p;j++)M[i][p+j]=i===j?1:0}
+  var sc=M.map(function(row,ix){return Math.abs(row[ix])||1});
+  for(i=0;i<p;i++){
+    var piv=i;for(r=i+1;r<p;r++)if(Math.abs(M[r][i])>Math.abs(M[piv][i]))piv=r;
+    if(Math.abs(M[piv][i])<1e-10*sc[i])return null;
+    var tmp=M[i];M[i]=M[piv];M[piv]=tmp;var ts=sc[i];sc[i]=sc[piv];sc[piv]=ts;
+    var d=M[i][i];for(c=0;c<2*p;c++)M[i][c]/=d;
+    for(r=0;r<p;r++)if(r!==i){var f=M[r][i];if(f!==0)for(c=0;c<2*p;c++)M[r][c]-=f*M[i][c]}
+  }
+  var inv=M.map(function(row){return row.slice(p)}),xty=cols.map(function(col){var t=0;for(r=0;r<n;r++)t+=col[r]*y[r];return t});
+  var beta=inv.map(function(row){var t=0;for(j=0;j<p;j++)t+=row[j]*xty[j];return t});
+  var resid=[],sse=0;
+  for(r=0;r<n;r++){var fit=0;for(j=0;j<p;j++)fit+=beta[j]*cols[j][r];resid.push(y[r]-fit);sse+=(y[r]-fit)*(y[r]-fit)}
+  var my=smean(y),sst=0;y.forEach(function(v){sst+=(v-my)*(v-my)});
+  return{beta:beta,inv:inv,resid:resid,sse:sse,sst:sst,n:n,k:k};
+}
+function stkMRData(){
+  var d=window._statsData,dvI=parseInt(document.getElementById('sf_dv').value,10),
+      idxs=Array.from(document.querySelectorAll('.sfm_preds:checked')).map(function(c){return parseInt(c.value,10)}).filter(function(i){return i!==dvI});
+  var y=[],xs=idxs.map(function(){return[]}),dropped=0;
+  d.rows.forEach(function(r){
+    var v=parseFloat(r[dvI]),row=idxs.map(function(i){return parseFloat(r[i])});
+    if(r[dvI]===''||r[dvI]===undefined||!isFinite(v)||row.some(function(q,j){return r[idxs[j]]===''||r[idxs[j]]===undefined||!isFinite(q)})){dropped++;return}
+    y.push(v);row.forEach(function(q,j){xs[j].push(q)});
+  });
+  return{dvI:dvI,idxs:idxs,y:y,xs:xs,dropped:dropped};
 }
 
 function smean(a){return a.reduce((s,v)=>s+v,0)/a.length}
@@ -7712,6 +7813,8 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p><b>Worked example.</b> Two groups, ten scores each. Choose the independent-samples t-test. The lab reports a Welch t, the degrees of freedom, p, Hedges' g, and a sentence you can paste into your results.</p>
 <p>Small samples. Mann-Whitney and Wilcoxon give an exact p-value when no scores are tied and each group has fewer than 50. Otherwise they use a normal approximation with continuity and tie corrections, as R does. A 2 by 2 chi-square shows the plain and the Yates-corrected result side by side.</p>
 <p>Assumption checks. Under the parametric tests the lab runs a Shapiro-Wilk test for each group (for paired tests, on the differences; for regression, on the residuals) and a Brown-Forsythe test for equal spread. Read them as a prompt to look at the histogram. They are weak with small samples and over-sensitive with large ones. The Shapiro-Wilk W and p follow the Royston (1995) method used by R.</p>
+<p>Two-way ANOVA. Choose one score and two grouping variables. The lab fits every combination of the two factors, reports the two main effects and their interaction with Type III sums of squares, and shows the cell means. Every combination must contain at least one score. With unequal cell sizes SPSS and JASP agree with this table; R's basic <code>anova()</code> does not, because it uses Type I. A significant interaction means the main effects cannot be read alone.</p>
+<p>Multiple regression. Choose the outcome, then tick two to eight numeric predictors. The lab reports R², adjusted R², the overall F test, and for each predictor b, its standard error, the standardised β, t, p, a 95% confidence interval and the VIF. Rows with a missing value in any chosen column are left out and counted. A VIF of 5 or more is a warning about overlapping predictors. The residuals get the same Shapiro-Wilk check as the other tests.</p>
 <p>How the numbers were checked. Every test was compared with reference values from the SciPy library, and the distribution functions on a grid of 100 points. That is one independent check, not a replacement for your own: before a thesis relies on a result, run the same data in JASP, SPSS or R and compare.</p>
 <p>Anything the lab cannot compute, such as a two-way ANOVA or multiple regression, needs another program for now.</p>`},
 {id:'scales',g:'Tools',t:'Scale library',k:'scale library questionnaire rosenberg swls self-esteem life satisfaction score reverse licence attribution codebook',h:`
@@ -7876,8 +7979,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=9;
-const APP_BUILD='2026.10.10i';
+const APP_VERSION=11;
+const APP_BUILD='2026.10.10k';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -8302,6 +8405,8 @@ const STAT_TESTS={
   wilcoxon:{label:'Wilcoxon signed-rank',fields:[{id:'v1',label:'Variable 1 (e.g. pre)',type:'numeric'},{id:'v2',label:'Variable 2 (e.g. post)',type:'numeric'}]},
   pearson:{label:'Pearson correlation',fields:[{id:'v1',label:'Variable 1',type:'numeric'},{id:'v2',label:'Variable 2',type:'numeric'}]},
   chisq:{label:'Chi-square test of independence',fields:[{id:'v1',label:'Variable 1',type:'categorical'},{id:'v2',label:'Variable 2',type:'categorical'}]},
+  mregress:{label:'Multiple linear regression',fields:[{id:'dv',label:'Outcome (Y)',type:'numeric'},{id:'preds',label:'Predictors (tick 2 to 8; the outcome is ignored if ticked)',type:'numeric',multi:true,unchecked:true}]},
+  anova2:{label:'Two-way ANOVA (two grouping variables)',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Factor A (grouping variable)',type:'categorical'},{id:'iv2',label:'Factor B (grouping variable)',type:'categorical'}]},
   welchAnova:{label:"One-way ANOVA, Welch (recommended)",fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
   gof:{label:'Chi-square goodness-of-fit',fields:[{id:'v1',label:'Categorical variable',type:'categorical'}],extra:[{id:'exp',label:'Expected shares (optional)',placeholder:'e.g. A:50, B:30, C:20. Empty means equal shares'}]},
   kruskal:{label:'Kruskal-Wallis',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
@@ -8322,7 +8427,7 @@ function statsFieldsRender(){
     const cols=(window._statsData&&window._statsData.cols||[]).filter(c=>c.type===f.type);
     if(f.multi){
       html+='<div class="fld" style="flex-basis:100%"><label>'+escHTML(f.label)+'</label><div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px">'+
-        cols.map(c=>'<label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" class="sfm_'+f.id+'" value="'+c.index+'" checked> '+escHTML(c.name)+'</label>').join('')+'</div></div>';
+        cols.map(c=>'<label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" class="sfm_'+f.id+'" value="'+c.index+'"'+(f.unchecked?'':' checked')+'> '+escHTML(c.name)+'</label>').join('')+'</div></div>';
       return;
     }
     used[f.type]=used[f.type]||0;
@@ -9222,6 +9327,70 @@ function statsRunNow(){
       }
       statsResultsShow(html,apa);
       statsChartGrouped(rowKeys,colKeys,table,n1name+' by '+n2name);
+
+    }else if(key==='anova2'){
+      const c=stkAnova2Cells();
+      const dvName=d.cols[c.dvI].name,aName=d.cols[c.aI].name,bName=d.cols[c.bI].name;
+      window._statsSkipped=(window._statsSkipped||0)+c.skipped;
+      if(c.aI===c.bI){showToast('Choose two different grouping variables');return}
+      const la=c.aL.length,lb=c.bL.length;
+      if(la<2||lb<2){showToast('Each grouping variable needs at least 2 levels');return}
+      if(la>6||lb>6){showToast('This test handles up to 6 levels per factor');return}
+      let empty=0;for(let i=0;i<la;i++)for(let j=0;j<lb;j++)if(!c.cellMap[i+'|'+j])empty++;
+      if(empty){showToast('Every combination of the two factors needs at least one score, and '+empty+' combination'+(empty===1?' has':'s have')+' none. A two-way ANOVA cannot be calculated from this layout.');return}
+      const res=stkAnova2(c.y,c.ai,c.bi,la,lb);
+      if(!res){showToast('There are too few scores for this many cells (the error degrees of freedom must be at least 1), so the two-way ANOVA cannot be calculated.');return}
+      if(!(res.sse>0)){showToast('No cell has any spread (all scores inside each cell are the same), so the F tests cannot be calculated.');return}
+      const nm=[aName,bName,aName+' × '+bName],cellN=Object.keys(c.cellMap).map(k=>c.cellMap[k].length),balanced=cellN.every(v=>v===cellN[0]);
+      let rows='';
+      res.rows.forEach((r,i)=>{rows+='<tr><td>'+escHTML(nm[i])+'</td><td>'+r.ss.toFixed(2)+'</td><td>'+r.df+'</td><td>'+r.ms.toFixed(2)+'</td><td>'+r.F.toFixed(2)+'</td><td>'+pCell(r.p)+'</td><td>'+noLead(r.eta.toFixed(3))+'</td></tr>'});
+      rows+='<tr><td>Error</td><td>'+res.sse.toFixed(2)+'</td><td>'+res.dfe+'</td><td>'+res.mse.toFixed(2)+'</td><td></td><td></td><td></td></tr>';
+      let cellRows='';
+      for(let i=0;i<la;i++)for(let j=0;j<lb;j++){const g=c.cellMap[i+'|'+j];cellRows+='<tr><td>'+escHTML(c.aL[i])+'</td><td>'+escHTML(c.bL[j])+'</td><td>'+g.length+'</td><td>'+smean(g).toFixed(2)+'</td><td>'+(g.length>1?ssd(g).toFixed(2):'—')+'</td></tr>'}
+      const html='<table class="stats-table"><tr><th>'+escHTML(aName)+'</th><th>'+escHTML(bName)+'</th><th>N</th><th>M</th><th>SD</th></tr>'+cellRows+'</table>'+
+        '<table class="stats-table" style="margin-top:10px"><tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th><th>Partial η²</th></tr>'+rows+'</table>'+
+        '<p class="desc">Type III sums of squares, the default in SPSS and JASP. '+(balanced?'The design is balanced (equal cell sizes), so every sums-of-squares type gives the same answer.':'The cell sizes are unequal, so the sums-of-squares type matters. SPSS and JASP use Type III, which is what is shown; R\'s <code>anova()</code> uses Type I and will differ.')+
+        (res.rows[2].p<0.05?' The interaction is significant: read the main effects with care, because the effect of one factor depends on the level of the other. Look at the cell means and test simple effects before you interpret a main effect alone.':'')+'</p>';
+      const sent=(r,i)=>'the '+(i===2?'interaction between '+aName+' and '+bName:'main effect of '+nm[i])+' was '+(r.p<0.05?'significant':'not significant')+', F('+r.df+', '+res.dfe+') = '+r.F.toFixed(2)+', '+fmtP(r.p)+', ηp² = '+noLead(r.eta.toFixed(3));
+      const apa='A '+la+' × '+lb+' between-subjects ANOVA on '+dvName+' showed that '+res.rows.map(sent).join('; ')+'.';
+      statsResultsShow(html,apa);
+      const lab=[],mv=[],er=[];
+      for(let i=0;i<la;i++)for(let j=0;j<lb;j++){const g=c.cellMap[i+'|'+j];lab.push(c.aL[i]+' / '+c.bL[j]);mv.push(smean(g));er.push({plus:smean(g)+(g.length>1?ssd(g):0),minus:smean(g)-(g.length>1?ssd(g):0)})}
+      statsChartBarMeans(lab,mv,er,dvName+' by '+aName+' and '+bName+' (mean ± 1 SD)',dvName);
+
+    }else if(key==='mregress'){
+      const m=stkMRData(),dvName=d.cols[m.dvI].name,k=m.idxs.length,n=m.y.length;
+      if(k<2){showToast('Tick at least 2 predictors. For one predictor use simple linear regression.');return}
+      if(k>8){showToast('This test handles up to 8 predictors');return}
+      if(n<k+3){showToast('Need at least '+(k+3)+' complete rows for '+k+' predictors; there are '+n);return}
+      const o=stkOLS(m.xs,m.y);
+      if(!o){showToast('Two or more predictors carry the same information (one is a copy or an exact combination of others, or has no variation), so the regression cannot be calculated. Remove one.');return}
+      const dfe=n-k-1;
+      if(!(o.sse>1e-9*o.sst)){showToast('The predictors fit the outcome exactly, so the standard errors cannot be calculated.');return}
+      const mse=o.sse/dfe,r2=1-o.sse/o.sst,adj=1-(1-r2)*(n-1)/dfe,F=(r2/k)/((1-r2)/dfe),pF=pFromF(F,k,dfe),sdy=ssd(m.y),tc=stkTCrit(dfe,0.05);
+      const names=m.idxs.map(i=>d.cols[i].name);
+      const vif=m.xs.map((x,j)=>{const others=m.xs.filter((q,i)=>i!==j),q=stkOLS(others,x);if(!q)return Infinity;const r2j=1-q.sse/q.sst;return 1/(1-r2j)});
+      let rows='';
+      const coef=[];
+      for(let j=0;j<=k;j++){
+        const b=o.beta[j],se=Math.sqrt(mse*o.inv[j][j]),t=b/se,pj=pFromT(t,dfe),bet=j===0?null:b*ssd(m.xs[j-1])/sdy;
+        coef.push({b:b,se:se,t:t,p:pj,beta:bet});
+        rows+='<tr><td>'+(j===0?'Intercept':escHTML(names[j-1]))+'</td><td>'+b.toFixed(3)+'</td><td>'+se.toFixed(3)+'</td><td>'+(j===0?'':noLead(bet.toFixed(3)))+'</td><td>'+t.toFixed(2)+'</td><td>'+pCell(pj)+'</td><td>['+(b-tc*se).toFixed(3)+', '+(b+tc*se).toFixed(3)+']</td><td>'+(j===0?'':vif[j-1].toFixed(2))+'</td></tr>';
+      }
+      const maxV=Math.max.apply(null,vif);
+      let notes='';
+      if(n<10*k)notes+=' Only '+n+' complete rows for '+k+' predictors: a common rule of thumb asks for 10 to 15 per predictor, so the coefficients may not hold up in a new sample.';
+      if(maxV>=10)notes+=' A VIF of 10 or more means that predictor overlaps heavily with the others; its coefficient is unstable and its standard error inflated. Consider dropping or combining predictors.';
+      else if(maxV>=5)notes+=' A VIF above 5 means some predictors overlap noticeably, which widens their confidence intervals.';
+      if(m.dropped)notes+=' '+m.dropped+' row'+(m.dropped===1?' was':'s were')+' left out because a value was missing.';
+      const html='<p class="desc">Model: '+escHTML(dvName)+' predicted from '+names.map(escHTML).join(', ')+'. N = '+n+'.</p>'+
+        '<table class="stats-table"><tr><th>R²</th><th>Adjusted R²</th><th>F</th><th>df</th><th>p</th></tr><tr><td>'+noLead(r2.toFixed(3))+'</td><td>'+noLead(adj.toFixed(3))+'</td><td>'+F.toFixed(2)+'</td><td>'+k+', '+dfe+'</td><td>'+pCell(pF)+'</td></tr></table>'+
+        '<table class="stats-table" style="margin-top:10px"><tr><th>Predictor</th><th>b</th><th>SE</th><th>β</th><th>t</th><th>p</th><th>95% CI for b</th><th>VIF</th></tr>'+rows+'</table>'+
+        '<p class="desc">b is in the units of the outcome per one unit of the predictor, holding the other predictors constant. β is the standardised coefficient, useful for comparing predictors measured on different scales.'+notes+' Only numeric predictors are supported here; code a categorical predictor as 0 and 1 first.</p>';
+      const bits=names.map((nm,j)=>nm+' (β = '+(coef[j+1].beta<0?'-':'')+noLead(Math.abs(coef[j+1].beta).toFixed(2))+', '+fmtP(coef[j+1].p)+')');
+      const apa='A multiple linear regression with '+names.join(', ')+' as predictors of '+dvName+' '+(pF<0.05?'was significant':'was not significant')+', F('+k+', '+dfe+') = '+F.toFixed(2)+', '+fmtP(pF)+', R² = '+noLead(r2.toFixed(2))+', adjusted R² = '+noLead(adj.toFixed(2))+'. Individual predictors: '+bits.join('; ')+'.';
+      statsResultsShow(html,apa);
+      statsChartHistogram(o.resid,'Residuals of the regression');
 
     }else if(key==='welchAnova'){
       const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name,ivName=d.cols[ivI].name;
