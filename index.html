@@ -953,6 +953,7 @@
   <div class="row" style="margin-top:6px"><button class="btn btn-ghost" style="flex:1" onclick="termsOpen(true)" data-i18n="terms_reopen_btn">Terms and where your data goes</button></div>
   <p class="desc" id="aiTestOut" style="margin:6px 0 0;font-weight:600;word-break:break-word"></p>
   <p style="font-size:12px;color:var(--muted)" id="activeProv"></p>
+  <p style="font-size:12px;color:var(--muted)" id="buildLine"></p>
   <p class="warn" style="margin-top:10px" data-i18n="settings_warn">⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.</p>
 </div></dialog>
 
@@ -3446,13 +3447,14 @@ function imgShrinkDataUrl(src,maxEdge,q){
     const im=new Image();
     im.onload=()=>{try{
       const w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,(maxEdge||1600)/Math.max(w,h));
-      if(k===1&&src.length<350000){res(src);return}
+      if(/^data:image\/(gif|svg)/.test(src)){res(src);return}
+      /* Every other picture is redrawn on a canvas even when small, because that drops EXIF data (GPS position, device, time) that phone photos carry. */
       const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));
       const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
       let out='';
       if(/^data:image\/png/.test(src)){out=c.toDataURL('image/png');if(out.length>400000)out=''}
       if(!out)out=c.toDataURL('image/jpeg',q||0.85);
-      res(out.length<src.length?out:src);
+      res(out);
     }catch(e){res(src)}};
     im.onerror=()=>res(src);
     im.src=src;
@@ -6581,7 +6583,8 @@ function guidePrint(){
 /* ============ Problem reporting and local usage counts (item 58) ============
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
-const APP_BUILD='2026.10.08';
+const APP_BUILD='2026.10.10';
+(function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar build '+APP_BUILD})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
 function usageGet(){try{const u=JSON.parse(LS.get('appu_usage')||'{}');return{tools:u.tools||{},errors:u.errors||{}}}catch(e){return{tools:{},errors:{}}}}
