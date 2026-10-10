@@ -335,6 +335,7 @@
   </svg>
   <div class="brand">
     <h1>Appu<span>scholar</span></h1>
+    <span id="verBadge" title="Version of this upload" style="font-size:11px;font-weight:700;opacity:.85;border:1px solid currentColor;border-radius:10px;padding:1px 7px;margin-left:8px;white-space:nowrap"></span>
   </div>
   <div class="spacer"></div>
   <span class="badge" id="licenseBadge" style="display:none;background:#fbbf24;color:#3b0764"></span>
@@ -6583,8 +6584,10 @@ function guidePrint(){
 /* ============ Problem reporting and local usage counts (item 58) ============
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
+/* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
+const APP_VERSION=1;
 const APP_BUILD='2026.10.10';
-(function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar build '+APP_BUILD})();
+(function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
 function usageGet(){try{const u=JSON.parse(LS.get('appu_usage')||'{}');return{tools:u.tools||{},errors:u.errors||{}}}catch(e){return{tools:{},errors:{}}}}
