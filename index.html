@@ -7269,6 +7269,36 @@ function stkFisher2x2(a,b,c,d){
   for(let x=lo;x<=hi;x++){const l=lp(x);if(l<=obs+1e-7)p+=Math.exp(l)}
   return{p:Math.min(1,p),or:(b*c)===0?(a*d===0?NaN:Infinity):(a*d)/(b*c)};
 }
+/* Exact tests for small samples (as R's wilcox.test does when there are no tied scores and fewer than 50 per group).
+   Counts are built by addition only, so no precision is lost to cancellation. */
+function stkExactMW(n1,n2,U){
+  /* number of arrangements with Mann-Whitney U = u, from f(m,n,u) = f(m-1,n,u-n) + f(m,n-1,u) */
+  let prev=[];
+  for(let j=0;j<=n2;j++)prev.push([1]);              /* row i = 0 */
+  for(let i=1;i<=n1;i++){
+    const row=[[1]];                                  /* j = 0 */
+    for(let j=1;j<=n2;j++){
+      const len=i*j+1,a=new Array(len).fill(0),up=prev[j],left=row[j-1];
+      for(let u=0;u<len;u++){
+        let v=0;
+        if(u>=j&&u-j<up.length)v+=up[u-j];
+        if(u<left.length)v+=left[u];
+        a[u]=v;
+      }
+      row.push(a);
+    }
+    prev=row;
+  }
+  const f=prev[n2];let tot=0,cum=0;
+  for(let u=0;u<f.length;u++){tot+=f[u];if(u<=U+1e-9)cum+=f[u]}
+  return Math.min(1,2*cum/tot);
+}
+function stkExactSR(n,W){
+  const max=n*(n+1)/2,c=new Array(max+1).fill(0);c[0]=1;
+  for(let r=1;r<=n;r++)for(let sm=max;sm>=r;sm--)c[sm]+=c[sm-r];
+  let cum=0;for(let sm=0;sm<=max;sm++){if(sm<=W+1e-9)cum+=c[sm]}
+  return Math.min(1,2*cum/Math.pow(2,n));
+}
 function stkBinomTwo(x,n,pi){
   const lp=i=>stkLogChoose(n,i)+i*Math.log(pi)+(n-i)*Math.log(1-pi),obs=lp(x);let p=0;
   for(let i=0;i<=n;i++){const l=lp(i);if(l<=obs+1e-7)p+=Math.exp(l)}
@@ -7570,6 +7600,8 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p><b>Which test fits my data?</b> A guide that asks about your design and explains why it picks a test. Each answer has a short demo.</p>
 <p><b>Personal-data scan.</b> When you parse, the lab flags columns that look like names, phone numbers, emails, roll numbers or birth dates, and offers to remove them or replace them with codes. See <i>Handling participant data</i>.</p>
 <p><b>Worked example.</b> Two groups, ten scores each. Choose the independent-samples t-test. The lab reports a Welch t, the degrees of freedom, p, Hedges' g, and a sentence you can paste into your results.</p>
+<p>Small samples. Mann-Whitney and Wilcoxon give an exact p-value when no scores are tied and each group has fewer than 50. Otherwise they use a normal approximation with continuity and tie corrections, as R does. A 2 by 2 chi-square shows the plain and the Yates-corrected result side by side.</p>
+<p>How the numbers were checked. Every test was compared with reference values from the SciPy library, and the distribution functions on a grid of 100 points. That is one independent check, not a replacement for your own: before a thesis relies on a result, run the same data in JASP, SPSS or R and compare.</p>
 <p>Anything the lab cannot compute, such as a two-way ANOVA or multiple regression, needs another program for now.</p>`},
 {id:'scales',g:'Tools',t:'Scale library',k:'scale library questionnaire rosenberg swls self-esteem life satisfaction score reverse licence attribution codebook',h:`
 <p>Open <b>Scale library</b> in the Statistics panel. Each scale shows the owner's wording, the response options, how to score it, and a licence record: what the owner allows, whether commercial use is allowed, the credit line to print, and when it was checked. The text is fixed. The AI never rewrites it, because a reworded item is no longer the validated item.</p>
@@ -7733,8 +7765,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=7;
-const APP_BUILD='2026.10.10g';
+const APP_VERSION=8;
+const APP_BUILD='2026.10.10h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -8196,15 +8228,22 @@ function statsFieldsRender(){
 }
 function statsColVals(idx,numeric){
   const d=window._statsData;
-  return d.rows.map(r=>r[idx]).filter(v=>v!==undefined&&v!=='').map(v=>numeric?parseFloat(v):v);
+  const raw=d.rows.map(r=>r[idx]).filter(v=>v!==undefined&&v!=='');
+  if(!numeric)return raw;
+  const out=raw.map(v=>parseFloat(v)).filter(x=>isFinite(x));
+  window._statsSkipped=(window._statsSkipped||0)+(raw.length-out.length);
+  return out;
 }
 function statsGroupBy(dvIdx,ivIdx){
   const d=window._statsData,groups={};
   d.rows.forEach(r=>{
     const g=r[ivIdx],v=r[dvIdx];
     if(g===undefined||g===''||v===undefined||v==='')return;
-    (groups[g]=groups[g]||[]).push(parseFloat(v));
+    const x=parseFloat(v);
+    if(!isFinite(x)){window._statsSkipped=(window._statsSkipped||0)+1;return}
+    (groups[g]=groups[g]||[]).push(x);
   });
+  Object.keys(groups).forEach(k=>{if(!groups[k].length)delete groups[k]});
   return groups;
 }
 /* Studentized range critical values, α = .05, k = 2..6 groups (standard published table,
@@ -8313,10 +8352,18 @@ function statsChartGrouped(rowLabels,colLabels,table,title){
 }
 
 function noLead(s){return String(s).replace(/^(-?)0\./,'$1.')}
+function pCell(p){return p<0.001?'&lt; .001':noLead(p.toFixed(3))}
 function fmtP(p){return p<0.001?'p < .001':'p = '+noLead(p.toFixed(3))}
 function sig(p){return p<0.05}
 
 function statsResultsShow(html,apa){
+  /* Safety net: a result that contains an undefined number is never offered for the document. */
+  if(/NaN|Infinity|undefined(?! \(an empty cell\))/.test(html+' '+apa)){
+    document.getElementById('statsResults').innerHTML='<h3 style="margin-top:0">Results</h3><p class="desc"><b>This analysis produced a number that is undefined, so no result is shown.</b> It usually means a group has no spread (every value the same), a group is too small, or the data fit a line exactly. Look at the data and the groups, then try again.</p>';
+    window._statsAPA='';window._statsSummary='';
+    return;
+  }
+  if(window._statsSkipped)html+='<p class="desc">'+window._statsSkipped+' entr'+(window._statsSkipped===1?'y that is':'ies that are')+' not a number '+(window._statsSkipped===1?'was':'were')+' left out.</p>';
   document.getElementById('statsResults').innerHTML=
     '<h3 style="margin-top:0">Results</h3>'+html+
     '<div id="statsSentence">'+escHTML(apa)+'</div>'+
@@ -8820,6 +8867,7 @@ function statsRun(){
 function statsRunNow(){
   if(!window._statsData){showToast('Parse your data first');return}
   actLog('stat');
+  window._statsSkipped=0;
   const key=document.getElementById('statsTest').value;
   const gv=id=>{const el=document.getElementById('sf_'+id);return el?el.value:''};
   const d=window._statsData;
@@ -8838,11 +8886,14 @@ function statsRunNow(){
       const idx=parseInt(gv('dv'),10),name=d.cols[idx].name,vals=statsColVals(idx,true),mu=parseFloat(gv('mu'))||0;
       if(vals.length<2){showToast('Need at least 2 values');return}
       const m=smean(vals),s=ssd(vals),n=vals.length,df=n-1;
+      if(!(s>0)){showToast('Every value is the same, so there is no spread and this test cannot be calculated.');return}
       const t=(m-mu)/(s/Math.sqrt(n)),p=pFromT(t,df);
       const html='<table class="stats-table"><tr><th>M</th><th>SD</th><th>N</th><th>Test value</th><th>t</th><th>df</th><th>p</th></tr>'+
-        '<tr><td>'+m.toFixed(2)+'</td><td>'+s.toFixed(2)+'</td><td>'+n+'</td><td>'+mu+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
+        '<tr><td>'+m.toFixed(2)+'</td><td>'+s.toFixed(2)+'</td><td>'+n+'</td><td>'+mu+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+pCell(p)+'</td></tr></table>';
       const apa='A one-sample t-test showed that '+name+' (M = '+m.toFixed(2)+', SD = '+s.toFixed(2)+') was '+(sig(p)?'significantly '+(m>mu?'higher':'lower')+' than':'not significantly different from')+' the test value of '+mu+', t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+'.';
-      statsResultsShow(html,apa);
+      const tc1=stkTCrit(df,0.05),dlo=(m-mu)-tc1*s/Math.sqrt(n),dhi=(m-mu)+tc1*s/Math.sqrt(n),dEff=(m-mu)/s;
+      const ciTxt='mean difference = '+(m-mu).toFixed(2)+', 95% CI ['+dlo.toFixed(2)+', '+dhi.toFixed(2)+'], d = '+dEff.toFixed(2);
+      statsResultsShow(html+'<p class="desc">Mean difference '+(m-mu).toFixed(2)+', 95% CI ['+dlo.toFixed(2)+', '+dhi.toFixed(2)+'], Cohen\'s d = '+dEff.toFixed(2)+'.</p>',apa.replace(/\.$/,'')+', '+ciTxt+'.');
       statsChartHistogram(vals,'Distribution of '+name+' (test value = '+mu+')');
 
     }else if(key==='ttestInd'){
@@ -8852,6 +8903,7 @@ function statsRunNow(){
       const g1=groups[keys[0]],g2=groups[keys[1]];
       if(g1.length<2||g2.length<2){showToast('Each group needs at least 2 values');return}
       const n1=g1.length,n2=g2.length,m1=smean(g1),m2=smean(g2),v1=svar(g1),v2=svar(g2);
+      if(!(v1>0)&&!(v2>0)){showToast('Neither group has any spread (all values in each group are the same), so the t-test cannot be calculated.');return}
       const se2=v1/n1+v2/n2,df=se2*se2/((v1/n1)*(v1/n1)/(n1-1)+(v2/n2)*(v2/n2)/(n2-1));
       const t=(m1-m2)/Math.sqrt(se2),p=pFromT(t,df),dfS=n1+n2-2,pooled=((n1-1)*v1+(n2-1)*v2)/dfS;
       const tS=(m1-m2)/Math.sqrt(pooled*(1/n1+1/n2)),pS=pFromT(tS,dfS);
@@ -8870,14 +8922,16 @@ function statsRunNow(){
 
     }else if(key==='ttestPaired'){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       if(pairs.length<2){showToast('Need at least 2 complete pairs');return}
       const diffs=pairs.map(p=>p[0]-p[1]),n=diffs.length,md=smean(diffs),sdv=ssd(diffs),df=n-1;
+      if(!(sdv>0)){showToast('Every pair has exactly the same difference, so there is no spread and the paired t-test cannot be calculated.');return}
       const t=md/(sdv/Math.sqrt(n)),p=pFromT(t,df),dz=md/sdv;
       const html='<table class="stats-table"><tr><th>N pairs</th><th>Mean diff</th><th>SD diff</th><th>t</th><th>df</th><th>p</th></tr>'+
-        '<tr><td>'+n+'</td><td>'+md.toFixed(2)+'</td><td>'+sdv.toFixed(2)+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
+        '<tr><td>'+n+'</td><td>'+md.toFixed(2)+'</td><td>'+sdv.toFixed(2)+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+pCell(p)+'</td></tr></table>';
       const apa='A paired-samples t-test showed a '+(sig(p)?'significant':'non-significant')+' difference between '+n1name+' and '+n2name+' (M diff = '+md.toFixed(2)+', SD = '+sdv.toFixed(2)+'), t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', d = '+dz.toFixed(2)+'.';
-      statsResultsShow(html,apa);
+      const tcP=stkTCrit(df,0.05),plo=md-tcP*sdv/Math.sqrt(n),phi=md+tcP*sdv/Math.sqrt(n);
+      statsResultsShow(html+'<p class="desc">Mean difference '+md.toFixed(2)+', 95% CI ['+plo.toFixed(2)+', '+phi.toFixed(2)+'], d<sub>z</sub> = '+dz.toFixed(2)+'.</p>',apa.replace(/, d = /,', 95% CI ['+plo.toFixed(2)+', '+phi.toFixed(2)+'], d = '));
       {
         const v1s=pairs.map(p=>p[0]),v2s=pairs.map(p=>p[1]),mv1=smean(v1s),mv2=smean(v2s);
         statsChartBarMeans([n1name,n2name],[mv1,mv2],
@@ -8892,9 +8946,10 @@ function statsRunNow(){
       const all=[].concat(...keys.map(k=>groups[k])),grand=smean(all),N=all.length,k=keys.length;
       let ssb=0,ssw=0;
       keys.forEach(key2=>{const g=groups[key2],m=smean(g);ssb+=g.length*(m-grand)*(m-grand);g.forEach(v=>ssw+=(v-m)*(v-m))});
+      if(!(ssw>0)||N-k<1){showToast('No group has any spread, or there are too few values for the number of groups, so the ANOVA cannot be calculated.');return}
       const dfb=k-1,dfw=N-k,msb=ssb/dfb,msw=ssw/dfw,F=msb/msw,p=pFromF(F,dfb,dfw),eta2=ssb/(ssb+ssw);
       const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>M</th><th>SD</th></tr>'+
-        keys.map(key2=>{const g=groups[key2];return'<tr><td>'+escHTML(key2)+'</td><td>'+g.length+'</td><td>'+smean(g).toFixed(2)+'</td><td>'+ssd(g).toFixed(2)+'</td></tr>'}).join('')+
+        keys.map(key2=>{const g=groups[key2];return'<tr><td>'+escHTML(key2)+'</td><td>'+g.length+'</td><td>'+smean(g).toFixed(2)+'</td><td>'+(g.length>1?ssd(g).toFixed(2):'—')+'</td></tr>'}).join('')+
         '</table><p class="desc">F('+dfb+', '+dfw+') = '+F.toFixed(2)+', '+fmtP(p)+', η² = '+eta2.toFixed(3)+'</p>';
       const apa='A one-way ANOVA showed a '+(sig(p)?'significant':'non-significant')+' effect of '+ivName+' on '+dvName+', F('+dfb+', '+dfw+') = '+F.toFixed(2)+', '+fmtP(p)+', η² = '+eta2.toFixed(3)+'.'+(sig(p)?' Post-hoc comparisons (e.g. Tukey HSD) are needed to locate which groups differ.':'');
       statsResultsShow(html,apa);
@@ -8908,6 +8963,7 @@ function statsRunNow(){
       if(gk.length<3){showToast('Tukey HSD needs 3 or more groups');return}
       const all=[].concat(...gk.map(k2=>groups[k2])),N=all.length,kk=gk.length;
       let ssw=0;gk.forEach(k2=>{const g=groups[k2],m=smean(g);g.forEach(v=>ssw+=(v-m)*(v-m))});
+      if(!(ssw>0)||N-kk<1){showToast('No group has any spread, or there are too few values, so Tukey HSD cannot be calculated.');return}
       const dfw=N-kk,msw=ssw/dfw,qc=stkQtukey(0.95,kk,dfw);
       let html='<table class="stats-table"><tr><th>Comparison</th><th>Mean diff</th><th>q</th><th>p (adjusted)</th><th>Sig?</th></tr>';
       const apaBits=[];
@@ -8926,20 +8982,23 @@ function statsRunNow(){
 
     }else if(key==='regression'){
       const i1=parseInt(gv('iv'),10),i2=parseInt(gv('dv'),10),xName=d.cols[i1].name,yName=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       const n=pairs.length;
       if(n<3){showToast('Need at least 3 complete pairs');return}
       const xs=pairs.map(p=>p[0]),ys=pairs.map(p=>p[1]),mx=smean(xs),my=smean(ys);
       let sxy=0,sxx=0,syy=0;
       for(let i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx);syy+=(ys[i]-my)*(ys[i]-my)}
+      if(!(sxx>0)||!(syy>0)){showToast('One of the two variables has no spread (every value is the same), so a regression cannot be calculated.');return}
       const b1=sxy/sxx,b0=my-b1*mx,r2=(sxy*sxy)/(sxx*syy),df=n-2;
       const ssResid=syy-b1*sxy,mse=ssResid/df,seB1=Math.sqrt(mse/sxx);
+      if(!(ssResid>1e-10*syy)){showToast('The points fall exactly on a straight line, so the standard errors and p-value cannot be calculated. Check that the data are real measurements.');return}
       const t=b1/seB1,p=pFromT(t,df),F=t*t,pF=pFromF(F,1,df);
       const html='<table class="stats-table"><tr><th>N</th><th>b0 (intercept)</th><th>b1 (slope)</th><th>SE(b1)</th><th>t</th><th>df</th><th>p</th><th>R²</th></tr>'+
-        '<tr><td>'+n+'</td><td>'+b0.toFixed(3)+'</td><td>'+b1.toFixed(3)+'</td><td>'+seB1.toFixed(3)+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td><td>'+r2.toFixed(3)+'</td></tr></table>'+
+        '<tr><td>'+n+'</td><td>'+b0.toFixed(3)+'</td><td>'+b1.toFixed(3)+'</td><td>'+seB1.toFixed(3)+'</td><td>'+t.toFixed(2)+'</td><td>'+df+'</td><td>'+pCell(p)+'</td><td>'+r2.toFixed(3)+'</td></tr></table>'+
         '<p class="desc">ŷ = '+b0.toFixed(3)+' + '+b1.toFixed(3)+'·x &nbsp;|&nbsp; F(1, '+df+') = '+F.toFixed(2)+', '+fmtP(pF)+'</p>';
       const apa='A simple linear regression showed that '+xName+' '+(sig(p)?'significantly predicted':'did not significantly predict')+' '+yName+', b = '+b1.toFixed(3)+', SE = '+seB1.toFixed(3)+', t('+df+') = '+t.toFixed(2)+', '+fmtP(p)+', R² = '+r2.toFixed(3)+', F(1, '+df+') = '+F.toFixed(2)+', '+fmtP(pF)+'.';
-      statsResultsShow(html,apa);
+      const tcR=stkTCrit(df,0.05),seB0=Math.sqrt(mse*(1/n+mx*mx/sxx)),lo1=b1-tcR*seB1,hi1=b1+tcR*seB1;
+      statsResultsShow(html+'<p class="desc">95% CI for the slope ['+lo1.toFixed(3)+', '+hi1.toFixed(3)+'], SE(b0) = '+seB0.toFixed(3)+'. Standardised slope (β) = '+noLead(((sxy/Math.sqrt(sxx*syy))).toFixed(3))+'. Check the residuals for a curve or a fan shape before you trust these numbers.</p>',apa.replace(/, R² = /,', 95% CI ['+lo1.toFixed(3)+', '+hi1.toFixed(3)+'], R² = '));
       {
         const xMin=Math.min(...xs),xMax=Math.max(...xs);
         statsChartScatter(pairs.map(p=>({x:p[0],y:p[1]})),
@@ -8956,29 +9015,35 @@ function statsRunNow(){
       const R1=r.slice(0,n1).reduce((s,v)=>s+v,0);
       const U1=R1-n1*(n1+1)/2,U2=n1*n2-U1,U=Math.min(U1,U2);
       const NN=n1+n2,meanU=n1*n2/2,sdU=Math.sqrt(n1*n2/12*((NN+1)-stkTieTerm(combined)/(NN*(NN-1))));
-      const z=(U-meanU)/sdU,p=pFromZ(z),rrb=(U1-U2)/(n1*n2);
+      if(!(sdU>0)){showToast('All scores are identical, so they cannot be ranked and the test cannot be calculated.');return}
+      const hasTies=stkTieTerm(combined)>0,exactOK=!hasTies&&n1<50&&n2<50;
+      const z=Math.min(0,U-meanU+0.5)/sdU,p=exactOK?stkExactMW(n1,n2,U):pFromZ(z),rrb=(U1-U2)/(n1*n2);
+      const zTxt=exactOK?'':', z = '+z.toFixed(2);
       const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>Median</th></tr>'+
         '<tr><td>'+escHTML(keys[0])+'</td><td>'+n1+'</td><td>'+smedian(g1).toFixed(2)+'</td></tr>'+
         '<tr><td>'+escHTML(keys[1])+'</td><td>'+n2+'</td><td>'+smedian(g2).toFixed(2)+'</td></tr></table>'+
-        '<p class="desc">U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+', rank-biserial r = '+noLead(rrb.toFixed(2))+' (positive: '+escHTML(keys[0])+' tends to score higher). Normal approximation with a correction for tied scores.</p>';
-      const apa='A Mann-Whitney U test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+keys[0]+' (Mdn = '+smedian(g1).toFixed(2)+') and '+keys[1]+' (Mdn = '+smedian(g2).toFixed(2)+'), U = '+U.toFixed(1)+', z = '+z.toFixed(2)+', '+fmtP(p)+'.';
+        '<p class="desc">U = '+U.toFixed(1)+zTxt+', '+fmtP(p)+', rank-biserial r = '+noLead(rrb.toFixed(2))+' (positive: '+escHTML(keys[0])+' tends to score higher). '+(exactOK?'Exact p-value, because no scores are tied and each group has fewer than 50.':'Normal approximation with continuity and tie corrections, the same as R. Used because some scores are tied or a group has 50 or more.')+'</p>';
+      const apa='A Mann-Whitney U test showed that '+dvName+' '+(sig(p)?'differed significantly':'did not differ significantly')+' between '+keys[0]+' (Mdn = '+smedian(g1).toFixed(2)+') and '+keys[1]+' (Mdn = '+smedian(g2).toFixed(2)+'), U = '+U.toFixed(1)+zTxt+', '+fmtP(p)+(exactOK?' (exact)':'')+'.';
       statsResultsShow(html,apa);
       statsChartBarMeans([keys[0],keys[1]],[smedian(g1),smedian(g2)],null,dvName+' — medians by group',dvName);
 
     }else if(key==='wilcoxon'){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       const diffs=pairs.map(p=>p[0]-p[1]).filter(x=>x!==0);
       const n=diffs.length;
       if(n<2){showToast('Need at least 2 non-zero paired differences');return}
       const absd=diffs.map(Math.abs),r=ranks(absd);
       let wPlus=0,wMinus=0;
       diffs.forEach((x,i)=>{if(x>0)wPlus+=r[i];else wMinus+=r[i]});
-      const W=Math.min(wPlus,wMinus),meanW=n*(n+1)/4,sdW=Math.sqrt(n*(n+1)*(2*n+1)/24);
-      const z=(W-meanW)/sdW,p=pFromZ(z);
+      const W=Math.min(wPlus,wMinus),meanW=n*(n+1)/4;
+      const tieS=stkTieTerm(absd),nZero=pairs.length-n,exactOK=(tieS===0&&nZero===0&&n<50);
+      const sdW=Math.sqrt(Math.max(1e-12,n*(n+1)*(2*n+1)/24-tieS/48));
+      const z=Math.min(0,W-meanW+0.5)/sdW,p=exactOK?stkExactSR(n,W):pFromZ(z);
+      const rbc=(wPlus-wMinus)/(n*(n+1)/2);
       const html='<table class="stats-table"><tr><th>N (non-zero diffs)</th><th>W</th><th>z</th><th>p</th></tr>'+
-        '<tr><td>'+n+'</td><td>'+W.toFixed(1)+'</td><td>'+z.toFixed(2)+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
-      const apa='A Wilcoxon signed-rank test showed a '+(sig(p)?'significant':'non-significant')+' difference between '+n1name+' and '+n2name+', z = '+z.toFixed(2)+', '+fmtP(p)+' (normal approximation).';
+        '<tr><td>'+n+'</td><td>'+W.toFixed(1)+'</td><td>'+(exactOK?'—':z.toFixed(2))+'</td><td>'+pCell(p)+'</td></tr></table>';
+      const apa='A Wilcoxon signed-rank test showed a '+(sig(p)?'significant':'non-significant')+' difference between '+n1name+' and '+n2name+(exactOK?', '+fmtP(p)+' (exact)':', z = '+z.toFixed(2)+', '+fmtP(p)+' (normal approximation with continuity and tie corrections)')+', matched-pairs rank-biserial r = '+noLead(rbc.toFixed(2))+'.';
       statsResultsShow(html,apa);
       {
         const v1s=pairs.map(p=>p[0]),v2s=pairs.map(p=>p[1]);
@@ -8987,19 +9052,22 @@ function statsRunNow(){
 
     }else if(key==='pearson'){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]);
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       const n=pairs.length;
       if(n<3){showToast('Need at least 3 complete pairs');return}
       const xs=pairs.map(p=>p[0]),ys=pairs.map(p=>p[1]),mx=smean(xs),my=smean(ys);
       let sxy=0,sxx=0,syy=0;
       for(let i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx);syy+=(ys[i]-my)*(ys[i]-my)}
+      if(!(sxx>0)||!(syy>0)){showToast('One of the two variables has no spread (every value is the same), so a correlation cannot be calculated.');return}
       const r=sxy/Math.sqrt(sxx*syy),df=n-2;
       const t=r*Math.sqrt(df/(1-r*r)),p=pFromT(t,df);
       const strength=Math.abs(r)<0.1?'negligible':Math.abs(r)<0.3?'weak':Math.abs(r)<0.5?'moderate':Math.abs(r)<0.7?'strong':'very strong';
       const html='<table class="stats-table"><tr><th>N</th><th>r</th><th>df</th><th>p</th></tr>'+
-        '<tr><td>'+n+'</td><td>'+noLead(r.toFixed(2))+'</td><td>'+df+'</td><td>'+noLead(p.toFixed(3))+'</td></tr></table>';
+        '<tr><td>'+n+'</td><td>'+noLead(r.toFixed(2))+'</td><td>'+df+'</td><td>'+pCell(p)+'</td></tr></table>';
       const apa='There was a '+strength+' '+(r>=0?'positive':'negative')+' correlation between '+n1name+' and '+n2name+', which '+(sig(p)?'was':'was not')+' statistically significant, r('+df+') = '+noLead(r.toFixed(2))+', '+fmtP(p)+'.';
-      statsResultsShow(html,apa);
+      let ciR='';
+      if(n>3){const zf=Math.atanh(r),sef=1/Math.sqrt(n-3),cl=Math.tanh(zf-1.959963984540054*sef),ch=Math.tanh(zf+1.959963984540054*sef);ciR=', 95% CI ['+noLead(cl.toFixed(2))+', '+noLead(ch.toFixed(2))+']'}
+      statsResultsShow(html+(ciR?'<p class="desc">'+ciR.slice(2)+' (Fisher z).</p>':''),apa.replace(/\.$/,'')+ciR+'.');
       {
         const b1r=sxy/sxx,b0r=my-b1r*mx,xMin=Math.min(...xs),xMax=Math.max(...xs);
         statsChartScatter(pairs.map(pp=>({x:pp[0],y:pp[1]})),
@@ -9011,6 +9079,7 @@ function statsRunNow(){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
       const rows2=d.rows.filter(r=>r[i1]!==undefined&&r[i1]!==''&&r[i2]!==undefined&&r[i2]!=='');
       const rowKeys=[...new Set(rows2.map(r=>r[i1]))],colKeys=[...new Set(rows2.map(r=>r[i2]))];
+      if(rowKeys.length<2||colKeys.length<2){showToast('Each variable needs at least 2 different values');return}
       const table=rowKeys.map(()=>colKeys.map(()=>0));
       rows2.forEach(r=>{table[rowKeys.indexOf(r[i1])][colKeys.indexOf(r[i2])]++});
       const N=rows2.length;
@@ -9024,6 +9093,10 @@ function statsRunNow(){
       table.forEach((row,i)=>{html+='<tr><th>'+escHTML(rowKeys[i])+'</th>'+row.map(o=>'<td>'+o+'</td>').join('')+'</tr>'});
       html+='</table><p class="desc">χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'</p>';
       let apa='A chi-square test of independence showed '+(sig(p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', χ²('+df+', N = '+N+') = '+chi2.toFixed(2)+', '+fmtP(p)+", Cramér's V = "+v.toFixed(2)+'.';
+      if(rowKeys.length===2&&colKeys.length===2){
+        let chiY=0;table.forEach((row,i)=>row.forEach((o,j)=>{const e=rowT[i]*colT[j]/N;if(e>0){const dv=Math.max(0,Math.abs(o-e)-0.5);chiY+=dv*dv/e}}));
+        html+='<p class="desc">With the Yates continuity correction (the default in R and shown by SPSS): χ²(1, N = '+N+') = '+chiY.toFixed(2)+', '+fmtP(pFromChi(chiY,1))+'. Current guidance prefers the uncorrected test, or an exact test when a count is small.</p>';
+      }
       let minE=Infinity,lowC=0;
       table.forEach((row,i)=>row.forEach((o,j)=>{const e=rowT[i]*colT[j]/N;if(e<minE)minE=e;if(e<5)lowC++}));
       const nCells=rowKeys.length*colKeys.length;
