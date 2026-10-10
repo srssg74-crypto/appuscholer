@@ -344,6 +344,116 @@
   #statsSentence{background:var(--soft);border:1.5px dashed var(--dashed);border-radius:12px;padding:12px;font-size:14px;line-height:1.7;margin-top:8px;white-space:pre-wrap}
   .stats-fld-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
   .stats-fld-row .fld{flex:1;min-width:180px}
+  /* =====================================================================
+     Version 23 design pass. One container width shared by the header, the
+     project strip and the workspace; one control height; quieter buttons;
+     tidy toolbars; a two-column Statistics Lab. Colours are unchanged.
+     ===================================================================== */
+  :root{--wrap:1760px;--gut:24px;--ctl:34px;--ctl-s:30px;--r-ctl:9px;--r-card:14px}
+  header{padding:9px max(var(--gut),calc((100% - var(--wrap))/2 + var(--gut)));gap:8px;min-height:58px}
+  header .btn{min-height:32px;padding:6px 13px;font-size:12.5px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px}
+  header .btn:hover{background:rgba(255,255,255,.22);transform:none;box-shadow:none}
+  header .btn-gold{background:linear-gradient(135deg,var(--gold-bright),var(--gold));color:#3b0764;border-color:transparent}
+  header .btn-gold:hover{background:linear-gradient(135deg,var(--gold-bright),var(--gold));filter:brightness(1.06)}
+  .subbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;max-width:var(--wrap);margin:0 auto;padding:10px var(--gut) 0;min-height:48px}
+  #provTabs{padding:0;margin:0;max-width:none;flex:0 0 auto}
+  .project-bar{flex:1 1 360px;min-width:0;max-width:none;margin:0;padding:0;gap:8px;font-size:13px;flex-wrap:wrap}
+  #projectBarLabel{flex:1 1 220px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink)}
+  .project-bar .btn-sm{min-height:var(--ctl-s);padding:4px 11px;font-size:12.5px;white-space:nowrap}
+  .project-bar .btn-new{background:linear-gradient(180deg,var(--purple-500),var(--purple-600));color:#fff;border-color:var(--purple-700)}
+  .project-bar .btn-new:hover{background:linear-gradient(180deg,var(--purple-600),var(--purple-700));color:#fff}
+  .prov-toggle{min-height:var(--ctl-s);padding:4px 11px;border:1px solid var(--chipline);border-radius:9px}
+  main{margin-top:8px;padding-left:var(--gut);padding-right:var(--gut)}
+  @media(min-width:1100px){
+    main{max-width:var(--wrap);margin:10px auto 0;padding:0 var(--gut) 14px;column-gap:16px}
+    main .tool-sidebar{width:228px}
+    main .doc-pane .card-head .btn{padding:4px 11px;font-size:12.5px}
+  }
+  .card{border-radius:var(--r-card);box-shadow:0 1px 2px rgba(var(--shadow-ink),.05),0 14px 32px -14px rgba(var(--shadow-ink),.18)}
+  .tool-sidebar{border-radius:var(--r-card);box-shadow:0 1px 2px rgba(var(--shadow-ink),.05),0 14px 32px -14px rgba(var(--shadow-ink),.14)}
+  .stage-header{padding:7px 8px;font-weight:650}
+  .stage-tools .tool-tab{padding:5px 8px;font-weight:600}
+  /* buttons: one height, one weight, centred icon and label */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--ctl);padding:6px 14px;font-size:13px;font-weight:600;border-radius:var(--r-ctl);line-height:1.25;letter-spacing:.1px;transition:background .15s,border-color .15s,box-shadow .15s,transform .15s}
+  .btn-purple{background:linear-gradient(180deg,var(--purple-500),var(--purple-600));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(var(--shadow-ink),.22)}
+  .btn-purple:hover{background:linear-gradient(180deg,var(--purple-600),var(--purple-700))}
+  .btn-ghost{border:1px solid var(--chipline);background:var(--card);color:var(--accent-ink)}
+  .btn-ghost:hover{border-color:var(--purple-500);background:var(--soft)}
+  .btn-sm,.icon-btn{min-height:var(--ctl-s);padding:4px 11px;border:1px solid var(--chipline);border-radius:8px;font-weight:600;font-size:12.5px;display:inline-flex;align-items:center;justify-content:center;gap:5px;line-height:1.2}
+  .btn-sm:hover,.icon-btn:hover{border-color:var(--purple-500);background:var(--soft)}
+  .fmt-btn,.fmt-color-btn{min-width:30px;min-height:var(--ctl-s);padding:3px 9px;border:1px solid var(--chipline);border-radius:8px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:4px;line-height:1.2}
+  .fmt-btn:hover,.fmt-color-btn:hover{border-color:var(--purple-500);background:var(--soft)}
+  .fmt-btn.on{background:var(--purple-600);color:#fff;border-color:var(--purple-700)}
+  .fmtbar{gap:4px;padding:7px 12px;row-gap:6px}
+  .fmtbar select,.docbar select{min-height:var(--ctl-s);padding:3px 8px;border:1px solid var(--chipline);border-radius:8px;font-size:12.5px}
+  .card-head{padding:12px 16px;gap:8px}
+  .docbar{margin-top:2px;gap:6px;flex-wrap:nowrap}
+  .docbar select{flex:1 1 120px;min-width:0}
+  .docbar .icon-btn{flex:0 0 auto;white-space:nowrap}
+  .toolbar{gap:6px;padding:8px 12px}
+  .toolbar .btn,main .doc-pane .toolbar .btn{min-height:var(--ctl-s);padding:4px 11px;font-size:12.5px}
+  .toolbar .btn-purple{padding:4px 12px}
+  .dock-tab{border:1px solid var(--line);border-radius:9px;padding:6px 14px;font-weight:600}
+  .dock-tabs .pop-btn{border:1px solid var(--chipline);border-radius:8px;padding:5px 11px}
+  .stage-guide{padding:7px 10px;margin:0 0 10px}
+  .stage-guide .next-btn,.stage-guide .back-btn{border:1px solid var(--chipline);border-radius:8px;padding:3px 10px;font-weight:600}
+  /* fields: sentence-case labels, thin borders, soft focus ring */
+  .fld label{font-size:12.5px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;margin-bottom:4px}
+  .fld input,.fld select,.fld textarea,input[type=text]{border:1px solid var(--chipline);border-radius:9px}
+  input[type=text]{padding:9px 12px}
+  .fld input:focus,.fld select:focus,.fld textarea:focus,input[type=text]:focus{border-color:var(--purple-500);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+  /* Research helpers: a two-column grid of quiet tiles instead of five heavy bars */
+  .tool-panel[data-panel="psych"] .panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}
+  .tool-panel[data-panel="psych"] .panel>h3,.tool-panel[data-panel="psych"] .panel>p,.tool-panel[data-panel="psych"] .panel>.row:last-of-type{grid-column:1/-1}
+  .tool-panel[data-panel="psych"] .panel>.row{margin:0;display:flex}
+  .tool-panel[data-panel="psych"] .panel>div.row:nth-of-type(5){grid-column:1/-1}
+  .tool-panel[data-panel="psych"] .panel>.row .btn{min-height:46px;justify-content:flex-start;text-align:left;padding:8px 12px;background:var(--soft);color:var(--accent-ink);border:1px solid var(--chipline);box-shadow:none;font-size:13px}
+  .tool-panel[data-panel="psych"] .panel>.row .btn:hover{background:var(--purple-600);color:#fff;border-color:var(--purple-600)}
+  .tool-panel[data-panel="psych"] .panel>.row .btn-ghost{background:transparent;border-style:dashed}
+  /* Statistics Lab: data on the left, analysis on the right, results below */
+  dialog#statsDlg{max-width:1120px;width:95vw}
+  #statsDlg .dlg-body{padding:22px 26px 24px}
+  #statsDlg .stats-intro{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:0 0 16px}
+  .stats-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:18px;align-items:start}
+  .stats-grid:has(#statsTestArea[style*="none"]){grid-template-columns:minmax(0,1fr)}
+  .stats-left,.stats-right{background:var(--soft2);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 18px 18px;min-width:0}
+  .stats-step{display:flex;align-items:center;gap:9px;margin:0 0 12px;font-size:15px;font-weight:600;color:var(--head-title);font-family:var(--font-display)}
+  .stats-step span{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--purple-600);color:#fff;font:700 12px/1 "Segoe UI",system-ui,sans-serif}
+  #statsDlg .desc,#statsDlg #pdBox,#statsDlg #statsCols,#statsDlg #tgPanel{font-size:12.5px;line-height:1.5;color:var(--muted)}
+  #statsDlg #statsCols{margin-top:12px!important}
+  #statsDlg #pdBox{font-size:13px;color:var(--ink)}
+  #statsDlg textarea{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12.5px;line-height:1.5;resize:vertical}
+  #statsDlg .row .btn{min-height:var(--ctl)}
+  #statsResults:not(:empty){background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 20px 18px;margin-top:18px!important;box-shadow:0 1px 2px rgba(var(--shadow-ink),.05),0 14px 30px -16px rgba(var(--shadow-ink),.2)}
+  #statsResults h4{font-family:var(--font-display);font-weight:600;color:var(--head-title);font-size:15.5px;margin:18px 0 4px}
+  #statsResults h3{font-family:var(--font-display);font-weight:600;color:var(--head-title);font-size:18px}
+  #statsChartBox:not(:empty){background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 16px;margin-top:14px!important}
+  table.stats-table{border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-variant-numeric:tabular-nums;margin:10px 0}
+  table.stats-table th{background:var(--soft);font-weight:600;font-size:12px;color:var(--head-title);border:0;border-bottom:1px solid var(--line);padding:7px 10px}
+  table.stats-table td{border:0;border-bottom:1px solid var(--line);padding:7px 10px}
+  table.stats-table tr:last-child td{border-bottom:0}
+  table.stats-table tr:nth-child(even) td{background:var(--soft2)}
+  #statsSentence{border:0;border-left:4px solid var(--gold-bright);border-radius:4px 12px 12px 4px;background:var(--soft);font-family:Georgia,"Times New Roman",serif;font-size:14.5px}
+  .stats-chip{background:var(--card);border:1px solid var(--chipline);padding:3px 10px;font-size:12px}
+  @media(max-width:900px){.stats-grid{grid-template-columns:minmax(0,1fr)}#statsDlg .dlg-body{padding:18px 14px 20px}}
+  @media(max-width:1340px){.project-bar-status{display:none}}
+  @media(min-width:701px) and (max-width:1200px){#projectBarLabel{flex-basis:90px}.project-bar{gap:6px}}
+  /* phones */
+  @media(max-width:700px){
+    :root{--gut:12px}
+    header{gap:6px;padding:8px 12px}
+    header .btn{padding:5px 10px}
+    .subbar{flex-wrap:wrap;gap:6px;padding-top:8px}
+    .project-bar{flex-wrap:wrap;width:100%}
+    #projectBarLabel{white-space:normal;flex:1 1 100%}
+    .project-bar .spacer{display:none}
+    .project-bar .btn-sm{flex:1 1 auto}
+    .docbar{flex-wrap:wrap}
+    .fmtbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+    .fmtbar>*{flex:0 0 auto}
+    .card-head .btn{flex:1 1 calc(50% - 8px)}
+    .tool-panel[data-panel="psych"] .panel{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
@@ -370,15 +480,18 @@
   <button class="btn btn-ghost" onclick="openHelp()" data-i18n="help_btn">❓ Help</button>
   <button class="btn btn-gold" onclick="openSettings()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
 </header>
+<div class="subbar">
 <nav id="provTabs" aria-label="AI providers"></nav>
 
 <div class="project-bar" id="projectBar">
   <span id="projectBarLabel" data-i18n="project_bar_empty">No research project yet — working in scratch space</span>
   <span class="project-bar-status" id="projectBarStatus"></span>
   <div class="spacer"></div>
+  <button type="button" class="btn btn-purple btn-sm btn-new" onclick="openNewProjectDirect()" data-i18n="project_bar_new">✨ New project</button>
   <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as research project</button>
   <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()" data-i18n="projects_btn">📁 Research Projects</button>
   <button type="button" class="btn btn-ghost btn-sm" id="backupBarBtn" onclick="backupExport()" data-i18n="backup_btn" data-i18n-title="backup_btn_title" title="Save a copy of all your work to your computer">⬇ Backup</button>
+</div>
 </div>
 
 <main>
@@ -388,7 +501,7 @@
       <h2 data-i18n="doc_pane_h2">📝 Your Document</h2>
       <span class="badge" id="saveBadge" data-i18n="autosave_on">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
       <div class="spacer"></div>
-      <button class="btn btn-ghost" onclick="downloadDoc()" data-i18n="download_btn">⬇ Download</button>
+      <button class="btn btn-ghost" onclick="downloadDoc()" data-i18n="download_btn">⬇ Download (Word)</button>
       <button class="btn btn-ghost" onclick="downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.">⬇ Advanced format</button>
       <div class="docbar">
         <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase" data-i18n="doc_label">Doc</label>
@@ -545,7 +658,7 @@
       <button type="button" class="stage-header" onclick="toggleStageGroup('lit')">📖 <span class="stage-header-label" data-i18n="stage_lit">Literature Review</span><span class="stage-dot" data-stagedot="lit"></span><span class="chev">▾</span></button>
       <div class="stage-tools" data-stagetools="lit">
         <button type="button" class="tool-tab" data-tool="research" onclick="showTool('research')" data-i18n="tab_research" data-i18n-title="tab_research_title" title="Search academic databases for relevant papers, map how they cite each other, and draft a literature review">🔬 Research</button>
-        <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Ready-made psychological tests, scales and scoring keys to drop into your questionnaire">🧠 Psychology Tools</button>
+        <button type="button" class="tool-tab active" data-tool="psych" onclick="showTool('psych')" data-i18n="tab_psych" data-i18n-title="tab_psych_title" title="Summarize a paper, analyze a case study, explain a concept, format results in APA, or have your argument challenged">🧰 Research helpers</button>
       </div>
     </div>
 
@@ -605,7 +718,7 @@
     </div></section>
 
     <section class="card tool-panel active" data-panel="psych"><div class="panel">
-      <h3 data-i18n="tab_psych">🧠 Psychology Tools</h3>
+      <h3 data-i18n="tab_psych">🧰 Research helpers</h3>
       <p class="desc" data-i18n="psych_panel_desc">Select the text you want analyzed (or leave nothing selected to use the whole document).</p>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('paper')" data-i18n="psych_btn_summarize">📄 Summarize research paper</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="psychTool('case')" data-i18n="psych_btn_case">🧠 Analyze case study</button></div>
@@ -949,7 +1062,7 @@
     <label for="packSel" data-i18n="settings_pack_label">Specialty pack</label>
     <select id="packSel" onchange="setPack(this.value)">
       <option value="general" data-i18n="settings_pack_general">General research — core tools only</option>
-      <option value="psychology" data-i18n="settings_pack_psychology">Psychology — adds the Psychology Tools tab</option>
+      <option value="psychology" data-i18n="settings_pack_psychology">Psychology — adds the Research helpers tab</option>
     </select>
     <p class="desc" style="margin:4px 0 0" data-i18n="settings_pack_desc">The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.</p>
   </div>
@@ -1222,7 +1335,7 @@
 </div></dialog>
 <dialog id="welcomeDlg"><div class="dlg-body">
   <h2 data-i18n="welcome_h2">💜 Welcome to Appuscholar</h2>
-  <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="welcome_intro">A writing and research assistant, with a Psychology Tools pack built in. Everything you write stays on this computer.</p>
+  <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="welcome_intro">A writing and research assistant, with psychology research support built in. Everything you write stays on this computer.</p>
   <ol>
     <li data-i18n="welcome_step1">Click <b>⚙ AI Provider / Key</b> at the top right.</li>
     <li data-i18n="welcome_step2">Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.</li>
@@ -1294,7 +1407,11 @@
 
 <dialog id="statsDlg" class="dlg-wide"><div class="dlg-body">
   <h2>📊 Statistics Lab</h2>
-  <p style="font-size:13px;color:var(--muted)">Paste data from Excel, SPSS, Google Sheets or a CSV file — first row = column names. Everything is computed on this computer; your data is never sent anywhere unless you tap "Explain in plain language" below, and even then only the computed numbers are sent, not your raw data.</p>
+  <p class="stats-intro"><span aria-hidden="true">🔒</span><span>Paste data from Excel, SPSS, Google Sheets or a CSV file — first row = column names. Everything is computed on this computer; your data is never sent anywhere unless you tap "Explain in plain language" below, and even then only the computed numbers are sent, not your raw data.</span></p>
+
+  <div class="stats-grid">
+  <div class="stats-left">
+  <h3 class="stats-step"><span>1</span>Your data</h3>
 
   <div class="fld"><label for="statsDsName" data-i18n="rt_ds_label">Name of this dataset</label>
     <input type="text" id="statsDsName" maxlength="60" placeholder="e.g. Study 1 survey" oninput="rtNameChanged()">
@@ -1313,7 +1430,10 @@
   <div id="pdBox" style="display:none;margin-top:10px"></div>
   <div id="statsCols" style="margin-top:10px"></div>
 
-  <div id="statsTestArea" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+  </div>
+
+  <div id="statsTestArea" class="stats-right" style="display:none">
+  <h3 class="stats-step"><span>2</span>Choose and run a test</h3>
     <div class="fld"><label for="statsTest">Test</label>
       <select id="statsTest" onchange="statsFieldsRender()">
         <optgroup label="Describe">
@@ -1330,6 +1450,7 @@
           <option value="mregress">Multiple linear regression</option>
           <option value="rmanova">Repeated-measures ANOVA (same people, 3+ times)</option>
           <option value="friedman">Friedman test (same people, 3+ times, rank-based)</option>
+          <option value="mixed">Mixed ANOVA (groups, each measured 2+ times)</option>
         </optgroup>
         <optgroup label="Compare — non-parametric">
           <option value="mannwhitney">Mann-Whitney U</option>
@@ -1354,6 +1475,7 @@
     <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:8px 0;cursor:pointer"><input type="checkbox" id="statsGenFirst" onchange="genFirstToggle()"> Practice mode: commit to my design before the test runs</label>
     <div id="statsGate" style="display:none;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0"></div>
     <div class="row"><button class="btn btn-purple" style="flex:1" onclick="statsRun()">Run test</button></div>
+  </div>
   </div>
 
   <div id="statsResults" style="margin-top:14px"></div>
@@ -1680,9 +1802,9 @@ const I18N={
   en:{
     help_btn:'❓ Help', settings_btn:'⚙ AI Provider / Key', theme_btn_title:'Light / dark',
     project_bar_empty:'No research project yet — working in scratch space',
-    save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
+    project_bar_new:'✨ New project', save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
     doc_pane_h2:'📝 Your Document', autosave_on:'Auto-save on',
-    download_btn:'⬇ Download', latex_btn:'⬇ Advanced format', latex_btn_title:"A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.",
+    download_btn:'⬇ Download (Word)', latex_btn:'⬇ LaTeX file', latex_btn_title:"Download as a LaTeX file (.tex), the format some universities and journals ask for. It opens in Overleaf. Skip this unless you have been told you need it.",
     doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
     doc_import_btn:'📂 Import', doc_import_title:'Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor',
     editor_placeholder:'Start writing here… Select text and press Improve, or just write and let AI continue.',
@@ -1705,7 +1827,7 @@ const I18N={
     idea_constraints_label:'Anything else limiting this (optional)', idea_constraints_placeholder:'Budget, known ethics concerns, requirements your supervisor or department has set…',
     idea_assess_btn:'🔎 Assess feasibility', idea_saveproject_btn:'💾 Save this idea as a project',
     idea_panel_note:"This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most. Once the plan feels solid, head to the Research tab next to find a research gap and ground it in real literature.",
-    tab_psych:'🧠 Psychology Tools', tab_psych_title:'Ready-made psychological tests, scales and scoring keys to drop into your questionnaire',
+    tab_psych:'🧰 Research helpers', tab_psych_title:'Summarize a paper, analyze a case study, explain a concept, format results in APA, or have your argument challenged',
     tab_design:'⚖ Design &amp; Ethics', tab_design_title:'Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts',
     tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
     tab_qual:'🏷 Qualitative Coding', tab_qual_title:"Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents",
@@ -1860,7 +1982,7 @@ const I18N={
     settings_orcid_label:'Your researcher ID number — ORCID iD (optional, printed on exports and templates)',
     settings_orcid_link:"Don't have one? Get a free ORCID iD →",
     settings_pack_label:'Specialty pack', settings_pack_general:'General research — core tools only',
-    settings_pack_psychology:'Psychology — adds the Psychology Tools tab',
+    settings_pack_psychology:'Psychology — adds the Research helpers tab',
     settings_pack_desc:'The core tools (writing, statistics, citations, research) work for any field. A specialty pack adds field-specific tools on top. More packs are planned.',
     settings_contentlang_label:'AI content language', settings_contentlang_en:'English', settings_contentlang_hi:'Hindi (हिन्दी)',
     settings_contentlang_desc:'This is the language the AI writes in — your paper, explanations, stats write-ups — separate from the interface language toggle above. Saved with the open project, or as your default when no project is open.',
@@ -1874,7 +1996,7 @@ const I18N={
     settings_savekey_btn:'Save Key', settings_removekey_btn:'Remove key',
     settings_warn:'⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.',
     welcome_h2:'💜 Welcome to Appuscholar',
-    welcome_intro:'A writing and research assistant, with a Psychology Tools pack built in. Everything you write stays on this computer.',
+    welcome_intro:'A writing and research assistant, with psychology research support built in. Everything you write stays on this computer.',
     welcome_step1:'Click <b>⚙ AI Provider / Key</b> at the top right.',
     welcome_step2:'Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.',
     welcome_step3:'Follow the link, create a key, paste it in, press <b>Save Key</b>.',
@@ -1906,9 +2028,9 @@ const I18N={
   hi:{
     help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
     project_bar_empty:'अभी कोई शोध प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
-    save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
+    project_bar_new:'✨ नया प्रोजेक्ट', save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
     doc_pane_h2:'📝 आपका दस्तावेज़', autosave_on:'ऑटो-सेव चालू',
-    download_btn:'⬇ डाउनलोड करें', latex_btn:'⬇ उन्नत प्रारूप', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
+    download_btn:'⬇ डाउनलोड (Word)', latex_btn:'⬇ LaTeX फ़ाइल', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
     doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
     doc_import_btn:'📂 आयात करें', doc_import_title:'.docx, .pdf, .txt या .html फ़ाइल को नए दस्तावेज़ के रूप में आयात करें — या एडिटर पर खींच कर छोड़ें',
     editor_placeholder:'यहाँ लिखना शुरू करें… टेक्स्ट चुनें और "सुधारें" दबाएँ, या बस लिखें और AI को आगे बढ़ाने दें।',
@@ -1931,7 +2053,7 @@ const I18N={
     idea_constraints_label:'इसे सीमित करने वाली कोई और बात (वैकल्पिक)', idea_constraints_placeholder:'बजट, ज्ञात नैतिकता संबंधी चिंताएं, आपके गाइड या विभाग द्वारा तय की गई आवश्यकताएं…',
     idea_assess_btn:'🔎 व्यवहार्यता आंकें', idea_saveproject_btn:'💾 इस विचार को प्रोजेक्ट के रूप में सहेजें',
     idea_panel_note:'यह आपके विचार पर एक ईमानदार बाहरी राय देता है, स्वीकृति नहीं — AI गलत हो सकता है, और एक वास्तविक गाइड का निर्णय अभी भी सबसे अधिक मायने रखता है। योजना पक्की लगने पर, आगे Research टैब में जाकर शोध अंतराल खोजें और इसे वास्तविक साहित्य में आधारित करें।',
-    tab_psych:'🧠 मनोविज्ञान उपकरण', tab_psych_title:'अपनी प्रश्नावली में जोड़ने के लिए तैयार मनोवैज्ञानिक परीक्षण, स्केल और स्कोरिंग कुंजियाँ',
+    tab_psych:'🧰 शोध सहायक', tab_psych_title:'शोध-पत्र का सारांश, केस स्टडी का विश्लेषण, अवधारणा की व्याख्या, APA प्रारूप, या अपने तर्क की परीक्षा',
     tab_design:'⚖ डिज़ाइन और नैतिकता', tab_design_title:'डेटा संग्रह शुरू होने से पहले अपनी विधि की योजना बनाएं, सही नियामक मार्ग चुनें, और सहमति, नैतिकता समिति तथा पंजीकरण के कागज़ात तैयार करें',
     tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
     tab_qual:'🏷 गुणात्मक कोडिंग', tab_qual_title:'अपने टेक्स्ट के हिस्सों को अपने खुद के कोड से टैग करें (साक्षात्कार या खुले प्रश्नों के उत्तर), एक कोड ट्री बनाएं, और अपने सभी दस्तावेज़ों में किसी कोड के हर हिस्से को एक साथ देखें',
@@ -2085,7 +2207,7 @@ const I18N={
     settings_orcid_label:'आपका शोधकर्ता पहचान नंबर — ORCID iD (वैकल्पिक, निर्यात और टेम्पलेट्स पर छपता है)',
     settings_orcid_link:'नहीं है? मुफ़्त ORCID iD पाएं →',
     settings_pack_label:'विशेष पैक', settings_pack_general:'सामान्य शोध — केवल मुख्य उपकरण',
-    settings_pack_psychology:'मनोविज्ञान — मनोविज्ञान उपकरण टैब जोड़ता है',
+    settings_pack_psychology:'मनोविज्ञान — शोध सहायक टैब जोड़ता है',
     settings_pack_desc:'मुख्य उपकरण (लेखन, सांख्यिकी, उद्धरण, शोध) किसी भी विषय के लिए काम करते हैं। एक विशेष पैक इसके ऊपर विषय-विशिष्ट उपकरण जोड़ता है। और पैक जल्द आएंगे।',
     settings_contentlang_label:'AI सामग्री भाषा', settings_contentlang_en:'अंग्रेज़ी', settings_contentlang_hi:'हिन्दी',
     settings_contentlang_desc:'यह वह भाषा है जिसमें AI लिखता है — आपका पेपर, स्पष्टीकरण, सांख्यिकी लेखन — ऊपर दिए इंटरफ़ेस भाषा टॉगल से अलग। यह खुले प्रोजेक्ट के साथ सहेजी जाती है, या जब कोई प्रोजेक्ट खुला न हो तो आपके डिफ़ॉल्ट के रूप में।',
@@ -2099,7 +2221,7 @@ const I18N={
     settings_savekey_btn:'कुंजी सहेजें', settings_removekey_btn:'कुंजी हटाएं',
     settings_warn:'⚠ चूंकि यह ऐप एक लोकल फ़ाइल के रूप में चलता है, आपके कंप्यूटर पर हर HTML फ़ाइल एक ही स्टोरेज क्षेत्र साझा करती है। <b>इस कंप्यूटर पर याद रखें</b> के साथ सहेजी गई कुंजी किसी भी अन्य HTML फ़ाइल द्वारा पढ़ी जा सकती है जिसे आप खोलते हैं। पासफ़्रेज़ विकल्प इसे एन्क्रिप्ट करता है ताकि वे फ़ाइलें केवल अस्पष्ट टेक्स्ट देखें।',
     welcome_h2:'💜 Appuscholar में आपका स्वागत है',
-    welcome_intro:'एक लेखन और शोध सहायक, जिसमें मनोविज्ञान उपकरण पैक पहले से शामिल है। आप जो भी लिखते हैं वह इसी कंप्यूटर पर रहता है।',
+    welcome_intro:'एक लेखन और शोध सहायक, जिसमें मनोविज्ञान शोध के लिए सहायता पहले से शामिल है। आप जो भी लिखते हैं वह इसी कंप्यूटर पर रहता है।',
     welcome_step1:'ऊपर दाईं ओर <b>⚙ AI प्रदाता / कुंजी</b> पर क्लिक करें।',
     welcome_step2:'<b>Google Gemini</b> या <b>Groq</b> चुनें — दोनों में मुफ़्त स्तर है।',
     welcome_step3:'लिंक पर जाएं, एक कुंजी बनाएं, उसे पेस्ट करें, <b>कुंजी सहेजें</b> दबाएं।',
@@ -7786,6 +7908,41 @@ function stkGamesHowell(groups){
   return out;
 }
 function stkLogChoose(n,r){return gammaln(n+1)-gammaln(r+1)-gammaln(n-r+1)}
+/* Fisher-Freeman-Halton exact test for an r x c table of counts. Enumerates every table with the same row and column totals
+   and adds up the probabilities of those no more likely than the observed one. Returns null when there are too many tables. */
+function stkFisherRC(table,limit){
+  limit=limit||30000000;
+  var T=table.map(function(r){return r.slice()});
+  if(T.length>T[0].length){var tr=[];for(var j=0;j<T[0].length;j++){tr.push(T.map(function(r){return r[j]}))}T=tr}
+  var r=T.length,c=T[0].length,rs=T.map(function(row){return row.reduce(function(a,b){return a+b},0)}),cs=[];
+  for(var j2=0;j2<c;j2++){var t=0;for(var i=0;i<r;i++)t+=T[i][j2];cs.push(t)}
+  var N=rs.reduce(function(a,b){return a+b},0),lf=[0];for(var q=1;q<=N;q++)lf.push(lf[q-1]+Math.log(q));
+  var cst=-lf[N];rs.forEach(function(x){cst+=lf[x]});cs.forEach(function(x){cst+=lf[x]});
+  var acc=0;T.forEach(function(row){row.forEach(function(v){acc+=lf[v]})});
+  var obs=cst-acc,pv=0,tot=0,cnt=0,over=false;
+  function rec(i,rem,sumLf){
+    if(over)return;
+    if(i===r-1){
+      var s2=sumLf;for(var j3=0;j3<c;j3++)s2+=lf[rem[j3]];
+      var l=cst-s2,pr=Math.exp(l);cnt++;tot+=pr;if(l<=obs+1e-7)pv+=pr;
+      if(cnt>limit)over=true;return;
+    }
+    var row=new Array(c);
+    (function fill(j4,left,sl){
+      if(over)return;
+      if(j4===c-1){
+        if(left>rem[j4])return;
+        row[j4]=left;var nrem=new Array(c);for(var z=0;z<c;z++)nrem[z]=rem[z]-row[z];
+        rec(i+1,nrem,sl+lf[left]);return;
+      }
+      var mx=Math.min(left,rem[j4]);
+      for(var x=0;x<=mx;x++){row[j4]=x;fill(j4+1,left-x,sl+lf[x])}
+    })(0,rs[i],sumLf);
+  }
+  rec(0,cs.slice(),0);
+  if(over)return null;
+  return{p:Math.min(1,pv),tables:cnt,total:tot};
+}
 function stkFisher2x2(a,b,c,d){
   const r1=a+b,r2=c+d,c1=a+c,N=r1+r2,lo=Math.max(0,c1-r2),hi=Math.min(r1,c1);
   const lp=x=>stkLogChoose(r1,x)+stkLogChoose(r2,c1-x)-stkLogChoose(N,c1),obs=lp(a);let p=0;
@@ -8107,7 +8264,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>When you are online, the app always asks the website for the latest version first. The saved copy is used only when that fails. A new version therefore reaches you at the next load.</p>
 <p><strong>To install it.</strong> In Chrome or Edge on a computer or an Android phone, press <b>Install Appuscholar on this device</b> in Help, or use the browser menu. On an iPhone, open the Share menu in Safari and choose Add to Home Screen. Your work stays in the browser it was made in, so the installed copy and the browser tab may not show the same projects. Use Backup to move work between them.</p>
 <p>If something looks stuck on an old version, add <i>?nosw=1</i> to the end of the address and press Enter. That clears the saved copy. The next normal visit saves a fresh one.</p>`},
-{id:'psych',g:'Tools',t:'Psychology Tools',k:'psychology tools summarize case study literature explain apa challenge devil argument',h:`
+{id:'psych',g:'Tools',t:'Research helpers',k:'psychology tools summarize case study literature explain apa challenge devil argument',h:`
 <p>Select a passage of at least a few sentences, or select nothing to use the whole document, then press one button. The answer appears in the AI suggestion pane. Press Tab in the editor to insert it.</p>
 <ul>
 <li><b>Summarize research paper.</b> Paste an abstract or a section. You get four headings: Aim, Method, Key findings and Limitations. Anything the text does not say comes back as "not reported".</li>
@@ -8309,8 +8466,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=20;
-const APP_BUILD='2026.10.10t';
+const APP_VERSION=25;
+const APP_BUILD='2026.10.10y';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -8740,6 +8897,7 @@ const STAT_TESTS={
   mregress:{label:'Multiple linear regression',fields:[{id:'dv',label:'Outcome (Y)',type:'numeric'},{id:'preds',label:'Numeric predictors (tick any; a 0/1 column can go here too)',type:'numeric',multi:true,unchecked:true},{id:'cats',label:'Categorical predictors (tick any; each becomes 0/1 columns)',type:'categorical',multi:true,unchecked:true},{id:'preds2',label:'Step 2 (optional): numeric predictors added after the ones above',type:'numeric',multi:true,unchecked:true},{id:'cats2',label:'Step 2 (optional): categorical predictors added after the ones above',type:'categorical',multi:true,unchecked:true}],extra:[{id:'ref',label:'Reference level for a categorical predictor (optional)',placeholder:'e.g. gender=Male, group=Control. Empty means the largest group'}]},
   friedman:{label:'Friedman test (same people measured 3 or more times, ranks)',fields:[{id:'items',label:'One column per time point or condition (tick each; every row is one person)',type:'numeric',multi:true,unchecked:true}]},
   rmanova:{label:'Repeated-measures ANOVA (same people measured 3 or more times)',fields:[{id:'items',label:'One column per time point or condition (tick each; every row is one person)',type:'numeric',multi:true,unchecked:true}]},
+  mixed:{label:'Mixed ANOVA (separate groups, each person measured two or more times)',fields:[{id:'grp',label:'Grouping variable (who is in which group)',type:'categorical'},{id:'items',label:'One column per time point or condition (tick each; every row is one person)',type:'numeric',multi:true,unchecked:true}]},
   anova2:{label:'Two-way ANOVA (two grouping variables)',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Factor A (grouping variable)',type:'categorical'},{id:'iv2',label:'Factor B (grouping variable)',type:'categorical'}]},
   welchAnova:{label:"One-way ANOVA, Welch (recommended)",fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
   gof:{label:'Chi-square goodness-of-fit',fields:[{id:'v1',label:'Categorical variable',type:'categorical'}],extra:[{id:'exp',label:'Expected shares (optional)',placeholder:'e.g. A:50, B:30, C:20. Empty means equal shares'}]},
@@ -8917,6 +9075,17 @@ function statsChartHistogram(values,title){
   _statsChartInstance=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Count',data:bins,backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5}]},
     options:{plugins:{legend:{display:false},title:{display:!!title,text:title||''}},scales:{y:{beginAtZero:true,ticks:{stepSize:Math.max(1,Math.ceil(Math.max(...bins)/8))}}}}});
 }
+/* Interaction plot: x = levels of factor A, one line per level of factor B. means[i][j] is the cell mean of A level i and B level j. */
+function statsChartInteraction(aL,bL,means,aName,bName,dvName){
+  if(!statsChartAvailable())return statsChartNoLib();
+  const box=document.getElementById('statsChartBox');
+  box.innerHTML='<canvas id="statsChartCanvas" height="170"></canvas>';
+  const ctx=document.getElementById('statsChartCanvas').getContext('2d');
+  const palette=['#7c3aed','#f59e0b','#16a34a','#dc2626','#0891b2','#db2777'];
+  const datasets=bL.map((b,j)=>({label:String(b),data:aL.map((_,i)=>means[i][j]),borderColor:palette[j%palette.length],backgroundColor:palette[j%palette.length],borderWidth:2,pointRadius:5,pointStyle:['circle','rect','triangle','rectRot','cross','star'][j%6],tension:0,fill:false}));
+  _statsChartInstance=new Chart(ctx,{type:'line',data:{labels:aL.map(String),datasets},
+    options:{plugins:{title:{display:true,text:'Interaction plot: mean '+dvName+' by '+aName+', one line per '+bName+' (parallel lines mean no interaction)'},legend:{display:true,position:'bottom'}},scales:{x:{title:{display:true,text:aName}},y:{beginAtZero:false,title:{display:true,text:dvName}}}}});
+}
 function statsChartGrouped(rowLabels,colLabels,table,title){
   if(!statsChartAvailable())return statsChartNoLib();
   const box=document.getElementById('statsChartBox');
@@ -9044,6 +9213,7 @@ const TG_RES={
   anova1:{name:"Welch's one-way ANOVA with Games-Howell follow-up",keys:['welchAnova'],why:'Three or more separate groups and a numeric score. Welch\'s version does not need equal spread, and Games-Howell shows which pairs differ without the same assumption.',alt:[['kruskal','Kruskal-Wallis, if the groups are small and the scores skewed or have extreme values'],['anova1','One-way ANOVA, classic version, if you must match a course or journal that expects it']]},
   kruskal:{name:'Kruskal-Wallis with Dunn follow-up',keys:['kruskal'],why:'Three or more separate groups with ratings or ranks.',alt:[]},
   rmanova:{name:'Repeated-measures ANOVA',keys:[],why:'The same people measured three or more times. Apply the Greenhouse-Geisser correction.',alt:[]},
+  mixed:{name:'Mixed ANOVA',keys:['mixed'],why:'Separate groups, each measured two or more times: it tests the group difference, the change over time, and whether groups change differently.',alt:[]},
   friedman:{name:'Friedman test',keys:[],why:'The same people three or more times with ratings or ranks.',alt:[]},
   twoway:{name:'Two-way ANOVA or a mixed design',keys:[],why:'Two factors at once. Which version applies depends on whether either factor is repeated on the same people.',alt:[]}
 };
@@ -9347,6 +9517,7 @@ const TG_EXTRA={
   ttestInd:{assume:`Each person appears in one group only and the scores are independent. Welch's version does not need equal spread, and it copes with groups of different sizes.`,watch:`Groups under about 20 with strong skew or extreme values (use Mann-Whitney), or the same people in both groups (use the paired test).`},
   mannwhitney:{assume:`Each person appears in one group only. The test compares ranks, so it does not care about the exact size of the gaps between scores.`,watch:`The same people in both groups, or many ties in a tiny sample.`},
   friedman:{assume:`The same people were scored under every condition, and the scores can at least be put in order within each person. It needs no normal distribution.`,watch:`Fewer than about 10 people, many tied scores (a short rating scale), people missing a time point (they are left out), or conditions that were not counterbalanced.`},
+  mixed:{assume:`People in each group are independent of one another, the scores are roughly normal within each group and time, the spread is similar across groups, and the differences between each pair of times have equal spread (sphericity, tested and corrected below).`,watch:`Groups with fewer than about 10 people, very unequal group sizes (the time effect then gives each group equal weight, as SPSS does), people missing a time point (they are left out), and no check of equal covariance matrices across groups (Box's M is not run here).`},
   rmanova:{assume:`The same people were measured under every condition or at every time, and the differences between each pair of conditions have roughly equal spread (sphericity, tested and corrected below).`,watch:`Fewer than about 10 people, strongly skewed scores, people missing a time point (they are left out), or conditions that were not counterbalanced, so that order and practice effects mix with the condition.`},
   ttestPaired:{assume:`Each person has two scores that belong together, and the differences between them are not wildly skewed.`,watch:`Strongly skewed or ordinal differences (use Wilcoxon), or people with only one of the two scores.`},
   wilcoxon:{assume:`Each person has two scores that belong together. The test works on the ranks of the differences.`,watch:`Most people having exactly the same score at both times, which leaves few differences to rank.`},
@@ -9794,7 +9965,12 @@ function statsRunNow(){
         html+='<p class="desc"><b>The smallest expected count is '+minE.toFixed(2)+', below 5, so chi-square is unreliable here. Fisher\'s exact test (two-sided): '+fmtP(fx.p)+', odds ratio = '+orT+'.</b> Report the Fisher result.</p>';
         apa='A Fisher\'s exact test showed '+(sig(fx.p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', '+fmtP(fx.p)+', odds ratio = '+orT+' (N = '+N+').';
       }else if(lowC/nCells>0.2){
-        html+='<p class="desc">'+lowC+' of '+nCells+' cells have an expected count below 5, more than the 20% limit, so the chi-square p-value is not trustworthy. Merge sparse categories if that makes sense for your question, or ask a statistician about the Fisher-Freeman-Halton exact test.</p>';
+        html+='<p class="desc">'+lowC+' of '+nCells+' cells have an expected count below 5, more than the 20% limit, so the chi-square p-value is not trustworthy.</p>';
+        const fx=(N<=200)?stkFisherRC(table):null;
+        if(fx){
+          html+='<p class="desc"><b>Fisher-Freeman-Halton exact test: '+fmtP(fx.p)+'.</b> All '+fx.tables.toLocaleString('en-US')+' tables with the same row and column totals were enumerated, and the p value is the chance of a table no more likely than yours. Report this result.</p>';
+          apa='A Fisher-Freeman-Halton exact test showed '+(sig(fx.p)?'a significant association':'no significant association')+' between '+n1name+' and '+n2name+', '+fmtP(fx.p)+' (N = '+N+').';
+        }else html+='<p class="desc">There are too many possible tables to enumerate here for an exact test. Merge sparse categories if that makes sense for your question, or ask a statistician for the exact test.</p>';
       }
       statsResultsShow(html,apa);
       statsChartGrouped(rowKeys,colKeys,table,n1name+' by '+n2name);
@@ -9832,12 +10008,43 @@ function statsRunNow(){
         simpleAPA=' Because the interaction was significant, the simple effects of '+bName+' within each level of '+aName+' were examined (Bonferroni-adjusted): '+
           se.byA.map((q,i)=>c.aL[i]+', F('+q.df+', '+res.dfe+') = '+q.F.toFixed(2)+', '+fmtP(Math.min(1,q.p*la))).join('; ')+'.';
       }
+      let pairHTML='',pairAPA='';
+      {
+        const intSig=res.rows[2].p<0.05,famBits=[];
+        const cellOf=(fac,i,j)=>c.cellMap[fac?(j+'|'+i):(i+'|'+j)];
+        [0,1].forEach(fac=>{
+          const L=fac?lb:la,Lo=fac?la:lb,labs=fac?c.bL:c.aL,labsO=fac?c.aL:c.bL,nmF=fac?bName:aName,nmO=fac?aName:bName;
+          if(L<3)return;
+          const npair=L*(L-1)/2;
+          if(!intSig){
+            if(!(res.rows[fac].p<0.05))return;
+            const em=[];for(let i=0;i<L;i++){let t=0;for(let j=0;j<Lo;j++)t+=smean(cellOf(fac,i,j));em.push(t/Lo)}
+            let tb='<p class="desc" style="margin:10px 0 2px"><b>Pairwise comparisons of '+escHTML(nmF)+' (Tukey)</b></p><table class="stats-table"><tr><th>Pair</th><th>Mean diff</th><th>q</th><th>p (Tukey)</th></tr>',bits=[];
+            for(let i=0;i<L;i++)for(let k=i+1;k<L;k++){
+              let vs=0;for(let j=0;j<Lo;j++)vs+=1/cellOf(fac,i,j).length+1/cellOf(fac,k,j).length;
+              const dd=em[i]-em[k],q=Math.abs(dd)/Math.sqrt(res.mse/(Lo*Lo)*vs/2),pq=Math.max(0,1-stkPtukey(q,L,res.dfe));
+              tb+='<tr><td>'+escHTML(labs[i]+' − '+labs[k])+'</td><td>'+dd.toFixed(2)+'</td><td>'+q.toFixed(2)+'</td><td>'+pCell(pq)+'</td></tr>';
+              bits.push(labs[i]+' vs '+labs[k]+' ('+fmtP(pq)+')');
+            }
+            pairHTML+=tb+'</table><p class="desc">Differences between estimated marginal means of '+escHTML(nmF)+' (each level\'s mean averaged over the cell means of '+escHTML(nmO)+'), using the design\'s error term (MSE = '+res.mse.toFixed(2)+', df = '+res.dfe+')'+(balanced?'':' and the Tukey-Kramer adjustment for unequal cell sizes')+'. Run these only because the main effect is significant and the interaction is not.</p>';
+            famBits.push('For '+nmF+', Tukey comparisons of estimated marginal means gave: '+bits.join('; ')+'.');
+          }else{
+            let tb='<p class="desc" style="margin:10px 0 2px"><b>Pairwise comparisons of '+escHTML(nmF)+' within each level of '+escHTML(nmO)+' (Bonferroni)</b></p><table class="stats-table"><tr><th>'+escHTML(nmO)+'</th><th>Pair</th><th>Mean diff</th><th>t</th><th>p</th><th>p, Bonferroni (×'+(npair*Lo)+')</th></tr>';
+            for(let j=0;j<Lo;j++)for(let i=0;i<L;i++)for(let k=i+1;k<L;k++){
+              const gi=cellOf(fac,i,j),gk=cellOf(fac,k,j),dd=smean(gi)-smean(gk),t=dd/Math.sqrt(res.mse*(1/gi.length+1/gk.length)),p2=pFromT(t,res.dfe);
+              tb+='<tr><td>'+escHTML(labsO[j])+'</td><td>'+escHTML(labs[i]+' − '+labs[k])+'</td><td>'+dd.toFixed(2)+'</td><td>'+t.toFixed(2)+'</td><td>'+pCell(p2)+'</td><td>'+pCell(Math.min(1,p2*npair*Lo))+'</td></tr>';
+            }
+            pairHTML+=tb+'</table><p class="desc">Because the interaction is significant, the levels of '+escHTML(nmF)+' are compared inside each level of '+escHTML(nmO)+', not averaged over it. Every test uses the design\'s error term (MSE = '+res.mse.toFixed(2)+', df = '+res.dfe+'), and the Bonferroni column multiplies each p by all '+(npair*Lo)+' tests in the table.</p>';
+          }
+        });
+        pairAPA=famBits.length?' '+famBits.join(' '):'';
+      }
       const sent=(r,i)=>'the '+(i===2?'interaction between '+aName+' and '+bName:'main effect of '+nm[i])+' was '+(r.p<0.05?'significant':'not significant')+', F('+r.df+', '+res.dfe+') = '+r.F.toFixed(2)+', '+fmtP(r.p)+', ηp² = '+noLead(r.eta.toFixed(3));
-      const apa='A '+la+' × '+lb+' between-subjects ANOVA on '+dvName+' showed that '+res.rows.map(sent).join('; ')+'.'+simpleAPA;
-      statsResultsShow(html+simpleHTML,apa);
+      const apa='A '+la+' × '+lb+' between-subjects ANOVA on '+dvName+' showed that '+res.rows.map(sent).join('; ')+'.'+simpleAPA+pairAPA;
+      statsResultsShow(html+simpleHTML+pairHTML,apa);
       const lab=[],mv=[],er=[];
       for(let i=0;i<la;i++)for(let j=0;j<lb;j++){const g=c.cellMap[i+'|'+j];lab.push(c.aL[i]+' / '+c.bL[j]);mv.push(smean(g));er.push({plus:smean(g)+(g.length>1?ssd(g):0),minus:smean(g)-(g.length>1?ssd(g):0)})}
-      statsChartBarMeans(lab,mv,er,dvName+' by '+aName+' and '+bName+' (mean ± 1 SD)',dvName);
+      statsChartInteraction(c.aL,c.bL,c.aL.map((_,i)=>c.bL.map((_,j)=>smean(c.cellMap[i+'|'+j]))),aName,bName,dvName);
 
     }else if(key==='mregress'){
       const m=stkMRData(),dvName=d.cols[m.dvI].name,k=m.xs.length,n=m.y.length;
@@ -10108,6 +10315,71 @@ function statsRunNow(){
       const apa='A one-way repeated-measures ANOVA with a '+epsName+' correction (ε = '+noLead(eps.toFixed(2))+') showed that scores '+(sig(pC)?'differed significantly':'did not differ significantly')+' across the '+k+' conditions ('+names.join(', ')+'), '+dfTxt+'.'+(mauchOK?' Mauchly\'s test '+(pM<0.05?'indicated that sphericity was violated':'did not indicate a violation of sphericity')+', χ²('+dfM+') = '+chi.toFixed(2)+', '+fmtP(pM)+'.':'');
       statsResultsShow(html,apa);
       statsChartBarMeans(names,cm,names.map((_,j)=>{const sd3=ssd(X.map(r=>r[j]));return{plus:cm[j]+sd3,minus:cm[j]-sd3}}),'Mean by condition (± 1 SD)','');
+    }else if(key==='mixed'){
+      const gI=parseInt(gv('grp'),10),idxs=Array.from(document.querySelectorAll('.sfm_items:checked')).map(c=>parseInt(c.value,10)).filter(i=>i!==gI);
+      if(idxs.length<2){showToast('Tick at least 2 columns, one for each time point or condition.');return}
+      if(idxs.length>8){showToast('This test handles up to 8 conditions.');return}
+      const names=idxs.map(i=>d.cols[i].name),k=idxs.length,gName=d.cols[gI].name,X=[],gl=[],gi=[];
+      d.rows.forEach(r=>{
+        const lab=String(r[gI]===undefined?'':r[gI]).trim(),row=idxs.map(i=>(r[i]===''||r[i]===undefined)?NaN:parseFloat(r[i]));
+        if(lab!==''&&row.every(isFinite)){let q=gl.indexOf(lab);if(q<0){gl.push(lab);q=gl.length-1}gi.push(q);X.push(row)}else window._statsSkipped=(window._statsSkipped||0)+1});
+      const G=gl.length,n=X.length;
+      if(G<2){showToast('The grouping variable needs at least 2 groups among the people with complete scores.');return}
+      if(G>6){showToast('This test handles up to 6 groups.');return}
+      const ng=gl.map((_,q)=>gi.filter(v=>v===q).length);
+      if(ng.some(v=>v<2)){showToast('Every group needs at least 2 people with a score in every ticked column. Group "'+gl[ng.findIndex(v=>v<2)]+'" has fewer.');return}
+      if(n-G<k){showToast('Need more people: '+n+' people in '+G+' groups leave too few degrees of freedom for '+k+' conditions.');return}
+      const p1=k-1,H=[];for(let r=1;r<k;r++){const row=new Array(k).fill(0);for(let c=0;c<r;c++)row[c]=1;row[r]=-r;const nm2=Math.sqrt(r*(r+1));H.push(row.map(v=>v/nm2))}
+      const Y=X.map(r=>H.map(h=>h.reduce((a,v,i)=>a+v*r[i],0)));
+      const mg=gl.map((_,q)=>{const rows=Y.filter((_,i)=>gi[i]===q);return H.map((_,c)=>smean(rows.map(r=>r[c])))});
+      const Mall=H.map((_,c)=>smean(Y.map(r=>r[c])));
+      let E=0;Y.forEach((r,i)=>r.forEach((v,c)=>{E+=(v-mg[gi[i]][c])*(v-mg[gi[i]][c])}));
+      const dfE=(n-G)*p1;
+      const varf=(1/(G*G))*ng.reduce((a,v)=>a+1/v,0);
+      let SSt=0;for(let c=0;c<p1;c++){const L=smean(mg.map(m=>m[c]));SSt+=L*L/varf}
+      let SSi=0;gl.forEach((_,q)=>{for(let c=0;c<p1;c++)SSi+=ng[q]*(mg[q][c]-Mall[c])*(mg[q][c]-Mall[c])});
+      const Sb=X.map(r=>smean(r)),Sm=smean(Sb),gmn=gl.map((_,q)=>smean(Sb.filter((_,i)=>gi[i]===q)));
+      let SSg=0,SSs=0;gl.forEach((_,q)=>{SSg+=k*ng[q]*(gmn[q]-Sm)*(gmn[q]-Sm)});Sb.forEach((v,i)=>{SSs+=k*(v-gmn[gi[i]])*(v-gmn[gi[i]])});
+      if(!(E>1e-9*(E+SSt+SSi))||!(SSs>0)){showToast('There is no variation left inside the groups once the group means are removed, so the F tests cannot be calculated.');return}
+      const dfS=n-G,d1g=G-1,d1t=p1,d1i=(G-1)*p1;
+      const Fg=(SSg/d1g)/(SSs/dfS),pg=pFromF(Fg,d1g,dfS),Ft=(SSt/d1t)/(E/dfE),Fi=(SSi/d1i)/(E/dfE),pt=pFromF(Ft,d1t,dfE),pi=pFromF(Fi,d1i,dfE);
+      let eps=1,gg=1,hf=1,W=1,chi=0,pM=1,dfM=0,mauchOK=false;
+      if(k>2){
+        const A=[];for(let a=0;a<p1;a++){A.push([]);for(let b=0;b<p1;b++){let t2=0;Y.forEach((r,i)=>{t2+=(r[a]-mg[gi[i]][a])*(r[b]-mg[gi[i]][b])});A[a].push(t2/(n-G))}}
+        let trA=0,trA2=0;for(let a=0;a<p1;a++){trA+=A[a][a];for(let b=0;b<p1;b++)trA2+=A[a][b]*A[a][b]}
+        gg=trA*trA/(p1*trA2);hf=Math.min(1,(n*p1*gg-2)/(p1*(n-G-p1*gg)));
+        let det=1;{const M2=A.map(r=>r.slice());for(let a=0;a<p1;a++){let pv=a;for(let b=a+1;b<p1;b++)if(Math.abs(M2[b][a])>Math.abs(M2[pv][a]))pv=b;if(Math.abs(M2[pv][a])<1e-300){det=0;break}if(pv!==a){const tmp=M2[a];M2[a]=M2[pv];M2[pv]=tmp;det=-det}det*=M2[a][a];for(let b=a+1;b<p1;b++){const f=M2[b][a]/M2[a][a];for(let c=a;c<p1;c++)M2[b][c]-=f*M2[a][c]}}}
+        W=det/Math.pow(trA/p1,p1);const fW=(2*p1*p1+p1+2)/(6*p1);dfM=k*(k-1)/2-1;
+        mauchOK=isFinite(W)&&W>0;if(mauchOK){chi=Math.max(0,-(n-G-fW)*Math.log(Math.min(W,1)));pM=pFromChi(chi,dfM)}
+      }
+      const useGG=gg<0.75,epsV=k>2?(useGG?gg:hf):1,epsName=useGG?'Greenhouse-Geisser':'Huynh-Feldt';
+      const ptc=pFromF(Ft,epsV*d1t,epsV*dfE),pic=pFromF(Fi,epsV*d1i,epsV*dfE);
+      const pe=(a,b)=>a/(a+b),peg=pe(SSg,SSs),pet=pe(SSt,E),pei=pe(SSi,E);
+      const cellX=(q,j)=>X.filter((_,i)=>gi[i]===q).map(r=>r[j]);
+      let html='<table class="stats-table"><tr><th>'+escHTML(gName)+'</th><th>Condition</th><th>N</th><th>M</th><th>SD</th></tr>';
+      gl.forEach((g,q)=>names.forEach((nm,j)=>{const v=cellX(q,j);html+='<tr><td>'+escHTML(g)+'</td><td>'+escHTML(nm)+'</td><td>'+v.length+'</td><td>'+smean(v).toFixed(2)+'</td><td>'+ssd(v).toFixed(2)+'</td></tr>'}));
+      html+='</table>';
+      const row=(lab,ss,df,F,p,e2)=>'<tr><td>'+lab+'</td><td>'+ss.toFixed(2)+'</td><td>'+(Math.abs(df-Math.round(df))<1e-9?String(Math.round(df)):df.toFixed(2))+'</td><td>'+(ss/df).toFixed(2)+'</td><td>'+(F===null?'':F.toFixed(2))+'</td><td>'+(p===null?'':pCell(p))+'</td><td>'+(e2===null?'':noLead(e2.toFixed(3)))+'</td></tr>';
+      html+='<table class="stats-table"><tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th><th>Partial η²</th></tr>'+
+        '<tr><td colspan="7"><b>Between people</b></td></tr>'+row(escHTML(gName),SSg,d1g,Fg,pg,peg)+row('People within groups (error)',SSs,dfS,null,null,null)+
+        '<tr><td colspan="7"><b>Within people</b></td></tr>'+row('Conditions (sphericity assumed)',SSt,d1t,Ft,pt,pet)+(k>2?row('Conditions ('+epsName+')',SSt,epsV*d1t,Ft,ptc,pet):'')+
+        row(escHTML(gName)+' × conditions (sphericity assumed)',SSi,d1i,Fi,pi,pei)+(k>2?row(escHTML(gName)+' × conditions ('+epsName+')',SSi,epsV*d1i,Fi,pic,pei):'')+
+        row('Error (assumed)',E,dfE,null,null,null)+(k>2?row('Error ('+epsName+')',E,epsV*dfE,null,null,null):'')+'</table>';
+      if(k>2)html+='<p class="desc">Sphericity (the differences between every pair of conditions have equal spread), checked on the within-group covariance pooled over all groups. '+(mauchOK?'Mauchly\'s W = '+W.toFixed(3)+', χ²('+dfM+') = '+chi.toFixed(2)+', '+fmtP(pM)+'. ':'Mauchly\'s test could not be calculated for these data. ')+
+        'Greenhouse-Geisser ε = '+noLead(gg.toFixed(3))+', Huynh-Feldt ε = '+noLead(hf.toFixed(3))+'. The corrected rows to report are '+epsName+', chosen by the usual rule: Greenhouse-Geisser when ε is below .75, Huynh-Feldt otherwise.</p>';
+      else html+='<p class="desc">With two conditions there is only one difference between them, so sphericity cannot be violated and no correction is needed.</p>';
+      const unb=ng.some(v=>v!==ng[0]);
+      if(unb)html+='<p class="desc">The groups have unequal sizes ('+ng.join(', ')+'). The between-groups test weights people equally, and the conditions test and the interaction treat each group equally, which is the SPSS default (Type III). Check that this matches the question you are asking.</p>';
+      html+='<p class="desc">Box\'s M for equal covariance matrices across groups is not run. With groups of very different size and clearly different spread, treat the within-people p-values with care.</p>';
+      const sigI=sig(pic),sigT=sig(ptc),sigG=sig(pg);
+      html+='<p class="desc">'+(sigI?'<b>The interaction is significant</b>, so the groups change differently across the conditions. Interpret the plot and the group-by-condition means first; main effects alone can mislead. To follow up, run a repeated-measures ANOVA inside each group, or compare the groups at each condition with a one-way test.':'The interaction is not significant, so there is no evidence that the groups change differently across the conditions. The two main effects can be read on their own.')+'</p>';
+      const dfTxt=(df1,df2,F,p,e2)=>'F('+df1+', '+df2+') = '+F.toFixed(2)+', '+fmtP(p)+', ηp² = '+noLead(e2.toFixed(2));
+      const dd=x=>Math.abs(x-Math.round(x))<1e-9?String(Math.round(x)):x.toFixed(2);
+      const apa='A mixed ANOVA with '+gName+' as the between-people factor ('+G+' groups) and condition as the within-people factor ('+k+' levels) showed '+
+        (sigG?'a significant':'no significant')+' main effect of '+gName+', '+dfTxt(d1g,dfS,Fg,pg,peg)+'; '+(sigT?'a significant':'no significant')+' main effect of condition, '+dfTxt(dd(epsV*d1t),dd(epsV*dfE),Ft,ptc,pet)+'; and '+(sigI?'a significant':'no significant')+' interaction, '+dfTxt(dd(epsV*d1i),dd(epsV*dfE),Fi,pic,pei)+'.'+(k>2?' Degrees of freedom for the within-people effects use the '+epsName+' correction (ε = '+noLead(epsV.toFixed(2))+')'+(mauchOK?'; Mauchly\'s test '+(pM<0.05?'indicated that sphericity was violated':'did not indicate a violation of sphericity')+', χ²('+dfM+') = '+chi.toFixed(2)+', '+fmtP(pM)+'.':'.'):'');
+      statsResultsShow(html,apa);
+      statsChartInteraction(names,gl,names.map((_,j)=>gl.map((_,q)=>smean(cellX(q,j)))),'Condition',gName,'score');
+
 
     }else if(key==='alpha'){
       const idxs=Array.from(document.querySelectorAll('.sfm_items:checked')).map(c=>parseInt(c.value,10));
