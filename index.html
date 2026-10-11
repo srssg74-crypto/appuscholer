@@ -9710,7 +9710,7 @@ function guidePrint(){
    Guard: the AI must return exact quotations; the app checks each one against the paper text and
    shows a warning for any it cannot find. Nothing here is sent anywhere except through callAI. */
 const AP_SAMPLE=["Sleep and exam anxiety in first-year students: a fictional teaching paper\nThis paper is invented by the Appuscholar team for practice. The study, the people and the numbers do not exist.\n\nAbstract\nFirst-year students often report poor sleep in the weeks before examinations. We tested whether one week of a fixed bedtime routine lowered exam anxiety. Sixty first-year students from one college were randomly placed in a routine group or a waiting group. Exam anxiety was measured before and after the week. The routine group showed a larger fall in anxiety than the waiting group, t(58) = 2.36, p = .022, d = 0.61. Sleep quality and anxiety change were weakly related, r(58) = .31, p = .016. The sample was small and came from one college, so the result needs repeating.\n\nIntroduction\nExam periods are linked with short sleep and high anxiety in students (Nair & Brook, 2019). Earlier work has mostly been observational. Students who sleep badly report more anxiety, but these studies cannot say which comes first. However, very few studies have asked whether changing sleep habits for a short time changes anxiety before an exam. Little is known about what a low-cost routine, which a college could offer to every student, can achieve in one week. Rao and Dutta (2020) found that late bedtimes predicted lower marks, but they did not change bedtimes. The gap this study addresses is the lack of a controlled test of a short bedtime routine. We therefore asked whether a one-week bedtime routine lowers exam anxiety compared with no routine. We expected the routine group to show a larger drop in anxiety.\n\nMethod\nDesign. We used a randomised two-group design with a measurement before and after the week. Random assignment was chosen so that differences between the groups would be due to chance, and a waiting group was used because withholding the routine for one week carried little risk.", "Participants. Sixty first-year students (38 women, 22 men; mean age 18.7 years, SD = 0.8) were recruited by notice board posters in one college. Students with a diagnosed sleep disorder were not included. The sample size of 60 was set by the number of students who volunteered before the deadline; no power calculation was done.\n\nMaterials. Exam anxiety was measured with a 12-item scale, the Exam Worry Scale (invented for this paper), rated from 1 to 5. Higher scores mean more anxiety. Internal consistency in this sample was good (Cronbach's alpha = .86). Sleep quality was rated with one question, scored from 1 (very poor) to 10 (very good). We chose a short scale because students were completing it during busy weeks.\n\nProcedure. Students signed a consent form and completed the scale on paper. A coin toss decided the group for each student. The routine group were asked to go to bed within thirty minutes of a fixed time each night for seven days and to switch off screens one hour before. The waiting group were asked to keep their usual habits and were offered the routine after the study. Both groups completed the scale again on day eight. The college ethics committee approved the study. Students were told they could stop at any time.\n\nData processing. Paper forms were entered into a spreadsheet by one researcher and checked by a second. Two students did not return for the second measurement and were removed, leaving 58 for the analysis. Scale scores were the mean of the 12 items. Change scores were calculated as the score after minus the score before.\n\nStatistical analysis. Change scores of the two groups were compared with an independent-samples t-test. The relationship between sleep quality and anxiety change was tested with a Pearson correlation. The significance level was .05, two-tailed. Cohen's d was reported as the effect size. We did not test for normality.", "Results\nTable 1. Mean anxiety change (after minus before) by group. Routine group (n = 29): M = -0.52, SD = 0.71. Waiting group (n = 29): M = -0.12, SD = 0.62. A negative change means lower anxiety. The routine group showed a larger fall in anxiety than the waiting group, t(58) = 2.36, p = .022, d = 0.61. Figure 1 shows the two group means with their ranges. Sleep quality rated after the week was weakly related to anxiety change, r(58) = .31, p = .016, so students who rated their sleep better tended to show a smaller fall in anxiety.\n\nDiscussion\nThe findings suggest that a short bedtime routine can lower exam anxiety within one week. This is consistent with the idea that sleep and worry affect each other. The fall of half a point on a five-point scale is modest, but it was reached with a simple routine.\n\nLimitations\nThe sample was small and came from one college, so the result may not hold for other students. Anxiety was self-reported and students knew which group they were in, which may have shaped their answers. We did not measure sleep with a device. The follow-up was one week, so we do not know whether the effect lasts into the exam itself. We also did not check that the groups were similar at the start.\n\nRecommendations\nColleges could offer a bedtime routine before examinations at little cost. Future studies should use larger and more varied samples, include a check of sleep with a device, and follow students through the examination.\n\nConclusion\nA one-week bedtime routine was linked with a larger fall in exam anxiety than no routine in this small sample. The result needs repeating before it is used widely.\n\nReferences\nNair, A., & Brook, T. (2019). Example paper A: Sleep and exams. Journal of Teaching Examples, 1(1), 1-10. (invented)\nRao, S., & Dutta, P. (2020). Example paper B: Bedtimes and marks. Journal of Teaching Examples, 2(1), 11-20. (invented)"];
-const AP={doc:null,mode:'ask',stage:0,busy:false,log:[],res:{},qDraft:'',tryDraft:{},chkDraft:{},shown:{},numbers:null};
+const AP={doc:null,mode:'ask',stage:0,busy:false,log:[],res:{},qDraft:'',tryDraft:{},chkDraft:{},shown:{},numbers:null,les:{i:0,shown:{},look:{}}};
 const AP_STAGES=[
  {k:'gap',name:'Research gap and aim',ask:'In your own words: what was missing in earlier work, and what did this study set out to answer?',brief:'the research gap the authors name, the aim, and the objectives, research questions or hypotheses',terms:'gap aim objective purpose hypothesis hypotheses question however little known aimed examine investigate'},
  {k:'lit',name:'Literature review',ask:'Does the review of literature lead to the question? What would you expect it to cover that it may leave out?',brief:'what the literature review covers, how it connects to the research question, how recent its sources look (name the years you can see), and what seems to be missing',terms:'previous earlier literature review studies found research prior work according et al'},
@@ -9759,7 +9759,7 @@ function apLoad(title,pages,src,isSample){
   if(src==='abstract'){if(text.replace(/\s+/g,'').length<150){showToast('This search result has no abstract to read. Open the source and paste the paper text instead.');return false}}
   else if(text.replace(/\s+/g,'').length<500){showToast('This file has too little readable text. A scanned PDF has no text layer; paste the text instead.');return false}
   AP.doc=apBuild(title,pages,src);AP.doc.sample=!!isSample;AP.doc.abstractOnly=(src==='abstract');
-  AP.log=[];AP.res={};AP.stage=0;AP.tryDraft={};AP.chkDraft={};AP.shown={};AP.numbers=null;AP.qDraft='';
+  AP.log=[];AP.res={};AP.stage=0;AP.tryDraft={};AP.chkDraft={};AP.shown={};AP.numbers=null;AP.qDraft='';AP.les={i:0,shown:{},look:{}};
   const nt=apNotes()[AP.doc.id];
   if(nt&&nt.stages){Object.keys(nt.stages).forEach(k=>{const s=nt.stages[k];if(s.res)AP.res[k]=s.res;if(s.mine)AP.tryDraft[k]=s.mine})}
   AP.mode='ask';apRender();return true;
@@ -10008,17 +10008,153 @@ function apCardText(){
   return t;
 }
 function apCardDownload(){pdDownload('paper-card.txt',apCardText())}
+
+/* ---- guided lesson on the fictional sample paper (Version 41) ----
+   Written content, no AI call. Each step: the student tries first, sees what the paper says (quotations are checked
+   against the loaded text), tries to spot a weakness, then sees the weakness planted in that part. Teaching characters
+   are labelled as AI characters. Reactions and notes stay on this device; nothing is sent. */
+const AP_LESSON={id:'sleep-anxiety-sample',version:1,date:'11 October 2026',
+ status:'AI-written. Checked only by the AI that wrote it, and by a script that confirms every quotation is in the paper. No separate reviewer and no human reviewer yet.',
+ steps:[
+ {k:'gap',title:'The gap',appu:'I thought a gap just meant "nobody has done this". Is that enough?',
+  said:'The authors say earlier studies only watched students, so they could not tell whether poor sleep comes before anxiety or after it. Nobody had tested a short bedtime routine against a comparison group. Their question is whether a one-week routine lowers exam anxiety.',
+  q:['The gap this study addresses is the lack of a controlled test of a short bedtime routine.','We therefore asked whether a one-week bedtime routine lowers exam anxiety compared with no routine.'],
+  flaw:'The paper says "very few studies" and "little is known" but describes no search. A gap is a claim about everything written so far. Ask where the authors looked, and for how long, before you trust it.',
+  fq:['However, very few studies have asked whether changing sleep habits for a short time changes anxiety before an exam.'],
+  prg:'"Very few" is a number in disguise. Ask how few, and who counted.'},
+ {k:'lit',title:'The literature behind it',appu:'The introduction felt short to me. Am I being picky?',
+  said:'Two earlier papers are cited. Nair and Brook (2019) link exam periods with short sleep and high anxiety. Rao and Dutta (2020) found that late bedtimes predicted lower marks, without changing any bedtimes.',
+  q:['Exam periods are linked with short sleep and high anxiety in students (Nair & Brook, 2019).','Rao and Dutta (2020) found that late bedtimes predicted lower marks, but they did not change bedtimes.'],
+  flaw:'Two sources cannot carry a literature review. Nothing is cited on bedtime routines or on how exam anxiety is measured, and nothing is newer than 2020. Both papers are invented for this lesson, so you cannot look them up. With a real paper you would search for them yourself.',
+  fq:['Earlier work has mostly been observational.'],
+  prg:'A review that leads to a question needs more than two footnotes holding it up.'},
+ {k:'design',title:'The design',appu:'Random groups sound fair to me. What is left to check?',
+  said:'A randomised two-group design. One group followed a bedtime routine for a week and the other waited. Both were measured before and after. The waiting group was offered the routine afterwards.',
+  q:['We used a randomised two-group design with a measurement before and after the week.','a waiting group was used because withholding the routine for one week carried little risk'],
+  flaw:'Groups were made by "a coin toss" for each student. One toss per student can leave the groups uneven in size, and with 60 people it can leave them uneven in who they hold. The authors then admit they "did not check that the groups were similar at the start". Randomising is a promise about chance. A table of starting scores is how a reader checks the promise.',
+  fq:['A coin toss decided the group for each student.','We also did not check that the groups were similar at the start.'],
+  prg:'Random is fair, not equal. Fair can still hand one group all the night owls.'},
+ {k:'sample',title:'The participants',appu:'Sixty students feels like plenty. Is it?',
+  said:'Sixty first-year students from one college, 38 women and 22 men, mean age 18.7. They answered posters on a notice board. Students with a diagnosed sleep disorder were left out.',
+  q:['Sixty first-year students (38 women, 22 men; mean age 18.7 years, SD = 0.8) were recruited by notice board posters in one college.','Students with a diagnosed sleep disorder were not included.'],
+  flaw:'The size was set by who volunteered before a deadline, with "no power calculation". With 29 per group, a true effect of d = 0.61 would reach p < .05 in about 63 of 100 such studies (my calculation, two-tailed). About 44 per group would be needed for 80 of 100. Volunteers who answer a poster about sleep may also differ from students who do not.',
+  fq:['The sample size of 60 was set by the number of students who volunteered before the deadline; no power calculation was done.'],
+  prg:'Deadlines decide many things. Statistical power should not be one of them.'},
+ {k:'measures',title:'The measures',appu:'The scale has an alpha of .86. That sounds good.',
+  said:'Anxiety came from a 12-item Exam Worry Scale, each item rated 1 to 5, higher meaning more anxious, with alpha .86. Sleep quality came from one question scored 1 to 10.',
+  q:['Exam anxiety was measured with a 12-item scale, the Exam Worry Scale (invented for this paper), rated from 1 to 5.','Internal consistency in this sample was good (Cronbach\'s alpha = .86).'],
+  flaw:'The anxiety scale was made up for the study, so nobody has shown that it measures exam anxiety. An alpha of .86 comes from these same students and says the items hang together. It does not say the scale is right. Sleep quality is one question asked once, after the week, so it cannot show change.',
+  fq:['Sleep quality was rated with one question, scored from 1 (very poor) to 10 (very good).'],
+  prg:'Alpha tells you the items agree with each other. A choir can agree and still sing the wrong song.'},
+ {k:'procedure',title:'The procedure and ethics',appu:'What did the students actually do each night?',
+  notice:'Ethics and consent teaching in this step has not been read by a person. Treat it as a first draft, and ask your supervisor or ethics committee about anything real.',
+  said:'Students signed a consent form and completed the scale on paper. A coin toss placed them in a group. The routine group went to bed within 30 minutes of a fixed time each night for seven days and switched screens off an hour before. The waiting group kept their usual habits. Both groups repeated the scale on day eight. The college ethics committee approved the study.',
+  q:['Students signed a consent form and completed the scale on paper.','The college ethics committee approved the study.'],
+  flaw:'The routine group "were asked to" follow the routine. The paper does not say how anyone knew they did: no diary, no check. A result could come from a routine nobody followed. The paper also does not say how close day eight was to an exam.',
+  fq:['The routine group were asked to go to bed within thirty minutes of a fixed time each night for seven days and to switch off screens one hour before.'],
+  prg:'Asked and done are different things. A study needs evidence of the second.',noHumour:true},
+ {k:'data',title:'Data and numbers',appu:'They lost two students. Does that matter?',
+  said:'Forms were typed into a spreadsheet by one researcher and checked by a second. Two students did not return and were removed, leaving 58. Each score is the mean of the 12 items, and change is after minus before.',
+  q:['Paper forms were entered into a spreadsheet by one researcher and checked by a second.','Two students did not return for the second measurement and were removed, leaving 58 for the analysis.'],
+  flaw:'Sixty were randomised and 58 analysed, and the paper never says which group the two came from. Then the counting: with 58 people an independent t-test has 56 degrees of freedom, and so does a correlation. The paper reports t(58) and r(58), the values for 60. The p-values move only in the third decimal, so this slip is small. It does suggest the figures were not rechecked after the two students were removed.',
+  fq:['The routine group showed a larger fall in anxiety than the waiting group, t(58) = 2.36, p = .022, d = 0.61.'],
+  prg:'Degrees of freedom count heads. If the count says 60 and the paper says 58, somebody counted twice.'},
+ {k:'stats',title:'The statistics',appu:'A t-test for two groups. Fine, right?',
+  said:'Change scores (after minus before) were compared across the two groups with an independent-samples t-test. Sleep quality and anxiety change were related with a Pearson correlation. The level was .05, two-tailed, and Cohen\'s d gave the effect size.',
+  q:['Change scores of the two groups were compared with an independent-samples t-test.','The significance level was .05, two-tailed.'],
+  flaw:'"We did not test for normality." With about 29 per group a t-test copes with moderate skew, but the paper gives no sign either way. A bigger point: comparing change scores ignores where each student started. Adjusting for the starting score (ANCOVA) is the usual alternative, and it matters more when starting scores were never compared.',
+  fq:['We did not test for normality.'],
+  prg:'Skipping the check does not make the assumption true. It leaves it unchecked.'},
+ {k:'results',title:'The results',appu:'The correlation is .31. Positive means good, doesn\'t it?',
+  said:'Routine group: mean change -0.52 (SD 0.71, n = 29). Waiting group: -0.12 (SD 0.62, n = 29). A negative change means lower anxiety, so both fell and the routine group fell more. Sleep quality and anxiety change had r = .31.',
+  q:['Routine group (n = 29): M = -0.52, SD = 0.71.','Waiting group (n = 29): M = -0.12, SD = 0.62.'],
+  flaw:'Read the sign of r. Change is after minus before, so a positive r means students who rated their sleep better had a smaller fall in anxiety. That runs against the idea behind the study. The Results say so in plain words, the abstract says only "weakly related", and the Discussion carries on as if it fit.',
+  fq:['so students who rated their sleep better tended to show a smaller fall in anxiety.'],
+  prg:'The minus sign is the most skipped character in psychology. Read it twice.'},
+ {k:'conclusion',title:'Discussion and conclusion',appu:'The Discussion sounds convincing to me.',
+  said:'The Discussion says a short bedtime routine can lower exam anxiety within a week, calls the effect modest, and ties it to the idea that sleep and worry affect each other. The Conclusion is more careful: a larger fall in this small sample, to be repeated.',
+  q:['The findings suggest that a short bedtime routine can lower exam anxiety within one week.','The result needs repeating before it is used widely.'],
+  flaw:'The Discussion calls "the fall of half a point on a five-point scale" modest. Half a point is the routine group\'s own fall (-0.52). The difference between the groups, which is what the t-test is about, is 0.40. And "sleep and worry affect each other" leans on a correlation that pointed the other way.',
+  fq:['The fall of half a point on a five-point scale is modest, but it was reached with a simple routine.','This is consistent with the idea that sleep and worry affect each other.'],
+  prg:'A discussion section is where optimism gets in. Check every figure it quotes against the table.'},
+ {k:'limits',title:'Limitations',appu:'They listed limitations, so they were honest. Done?',
+  said:'The authors list five: a small sample from one college; self-report from students who knew their group; no device to measure sleep; a one-week follow-up; and no check that the groups matched at the start.',
+  q:['The sample was small and came from one college, so the result may not hold for other students.','We also did not check that the groups were similar at the start.'],
+  flaw:'Count what they left out: an invented scale with no validation, no check that the routine was followed, volunteers, no power calculation, no normality check, degrees of freedom for 60 when 58 were analysed, and a correlation that points the wrong way. Authors rarely list everything. Your own list is part of your appraisal.',
+  fq:['Anxiety was self-reported and students knew which group they were in, which may have shaped their answers.'],
+  prg:'A limitations section is the authors marking their own homework. Mark it again.'},
+ {k:'recs',title:'Recommendations',appu:'Do the recommendations follow from the data?',
+  said:'The authors say colleges could offer a bedtime routine before examinations. For later studies they ask for larger and more varied samples, a device to check sleep, and follow-up through the examination.',
+  q:['Colleges could offer a bedtime routine before examinations at little cost.','Future studies should use larger and more varied samples, include a check of sleep with a device, and follow students through the examination.'],
+  flaw:'The first sentence tells colleges to act. The Conclusion says the result needs repeating before it is used widely. Both sit in the same paper. A recommendation should not run ahead of the evidence under it.',
+  fq:['A one-week bedtime routine was linked with a larger fall in exam anxiety than no routine in this small sample.'],
+  prg:'Advice is cheap to write. Evidence is not.'}
+ ]};
+const AP_LES_FB_KEY='appu_lesson_fb';
+function apLesFb(){try{return JSON.parse(LS.get(AP_LES_FB_KEY)||'{}')}catch(e){return{}}}
+function apLesFbPut(k,patch){const all=apLesFb();const key=AP_LESSON.id+'@'+AP_LESSON.version;const o=all[key]=all[key]||{};o[k]=Object.assign(o[k]||{},patch);LS.set(AP_LES_FB_KEY,JSON.stringify(all))}
+function apLesFbGet(k){const o=apLesFb()[AP_LESSON.id+'@'+AP_LESSON.version];return(o&&o[k])||{}}
+function apLesReact(k,r){apLesFbPut(k,{r:r});apRender()}
+function apLesNote(k,v){apLesFbPut(k,{t:String(v).slice(0,300)})}
+function apLesStep(i){const n=AP_LESSON.steps.length+1;AP.les.i=Math.max(0,Math.min(n-1,i));apRender()}
+function apLesShow(k){AP.les.shown[k]=true;apRender()}
+function apLesLook(k){AP.les.look[k]=true;apRender()}
+function apLesTry(k,v){AP.tryDraft[k]=v;apNotePut(n=>{const s=n.stages[k]=n.stages[k]||{};s.mine=v})}
+function apLesFbText(){
+  const o=apLesFb()[AP_LESSON.id+'@'+AP_LESSON.version]||{};
+  const L=['Appuscholer lesson feedback','Lesson: '+AP_LESSON.id+', version '+AP_LESSON.version+' ('+AP_LESSON.date+')','Counts and text below are the only things in this file. No study data, no name, no AI-use log.',''];
+  AP_LESSON.steps.forEach((s,i)=>{const f=o[s.k];if(f&&(f.r||f.t))L.push('Step '+(i+1)+' ('+s.title+'): '+(f.r||'no reaction')+(f.t?' | '+f.t:''))});
+  if(L.length===4)L.push('(no reactions yet)');
+  return L.join('\n');
+}
+function apLesFbDownload(){pdDownload('lesson-feedback.txt',apLesFbText())}
+function apLessonHTML(){
+  const A=AP_LESSON,n=A.steps.length,i=AP.les.i;
+  let h='<div class="ap-box"><b>Guided lesson on this fictional paper</b> <span style="font-size:12px;color:var(--muted)">version '+A.version+', '+escHTML(A.date)+'</span><br><span class="ap-warn" style="font-size:12px">'+escHTML(A.status)+'</span><br><span style="font-size:12px;color:var(--muted)">Appu and Professor PRG are AI characters. Everything here runs on this device and no AI call is made. Your answers stay in this browser.</span></div>';
+  h+='<div class="row" style="gap:4px;flex-wrap:wrap;margin-bottom:8px">'+A.steps.map((s,j)=>'<button type="button" class="btn '+(j===i?'btn-purple':'btn-ghost')+'" style="padding:4px 8px;font-size:12px" title="'+escAttr(s.title)+'" onclick="apLesStep('+j+')">'+(j+1)+(AP.les.shown[s.k]?' ✓':'')+'</button>').join('')+'<button type="button" class="btn '+(i===n?'btn-purple':'btn-ghost')+'" style="padding:4px 8px;font-size:12px" title="Your verdict" onclick="apLesStep('+n+')">★</button></div>';
+  if(i>=n){
+    const c=(apNoteGet().card)||{};
+    h+='<h4 style="margin:6px 0">Your verdict</h4><div class="ap-box"><b>Professor PRG:</b> You have read a whole paper with a pencil in hand. One line, then: would you rely on this study, and for what?</div>';
+    h+='<div class="fld"><label for="apLesV">Your verdict in one line (it goes on the Paper card)</label><textarea id="apLesV" rows="2" oninput="apCardField(\'verdict\',this.value)">'+escHTML(c.verdict||'')+'</textarea></div>';
+    h+='<div class="fld"><label for="apLesR">What was hardest to see, and what will you look for first in the next paper?</label><textarea id="apLesR" rows="3" oninput="apCardField(\'reflection\',this.value)">'+escHTML(c.reflection||'')+'</textarea></div>';
+    h+='<details class="ap-box"><summary style="cursor:pointer">Feedback on this lesson (stays here until you choose to send it)</summary><pre style="white-space:pre-wrap;font-size:11px">'+escHTML(apLesFbText())+'</pre><div style="font-size:11px;color:var(--muted)">Check the text for names before you send it. The app sends nothing. Save the file and email it yourself if you wish.</div><div class="row"><button type="button" class="btn btn-ghost" id="apLesFbBtn" onclick="apLesFbDownload()">⬇ Save the feedback file (.txt)</button></div></details>';
+  }else{
+    const s=A.steps[i],st=AP_STAGES.filter(x=>x.k===s.k)[0],shown=AP.les.shown[s.k],look=AP.les.look[s.k];
+    h+='<h4 style="margin:6px 0">Step '+(i+1)+' of '+n+': '+escHTML(s.title)+'</h4>';
+    if(s.notice)h+='<div class="ap-banner">'+escHTML(s.notice)+'</div>';
+    h+='<div class="ap-box"><b>Appu:</b> '+escHTML(s.appu)+'</div>';
+    h+='<div class="ap-box"><b>Try first.</b> '+escHTML(st?st.ask:'')+'</div>';
+    h+='<div class="fld"><textarea id="apLesTry" rows="3" oninput="apLesTry(\''+s.k+'\',this.value)" placeholder="Write a sentence or two from what you have read. A guess is fine.">'+escHTML(AP.tryDraft[s.k]||'')+'</textarea></div>';
+    if(!shown)h+='<div class="row"><button type="button" class="btn btn-purple" id="apLesShowBtn" onclick="apLesShow(\''+s.k+'\')">Show what the paper says</button></div>';
+    else{
+      h+='<div class="ap-box"><b>What the paper says</b><br>'+escHTML(s.said)+apQuotesHTML(s.q.map(apCheckQuote))+'</div>';
+      h+='<div class="ap-box"><b>Spot the weakness.</b> Before you open the next box, name one weakness in this part. A guess is fine. The paper was written with flaws on purpose.</div>';
+      if(!look)h+='<div class="row"><button type="button" class="btn btn-ghost" id="apLesLookBtn" onclick="apLesLook(\''+s.k+'\')">Show the weakness planted here</button></div>';
+      else{
+        h+='<div class="ap-box"><b>The weakness</b><br>'+escHTML(s.flaw)+apQuotesHTML(s.fq.map(apCheckQuote))+'</div>';
+        h+='<div class="ap-box"><b>Professor PRG:</b> '+escHTML(s.prg)+'</div>';
+        const f=apLesFbGet(s.k);
+        h+='<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12px">This step was:</span>'+[['clear','Clear'],['confusing','Confusing'],['wrong','Looks wrong']].map(r=>'<button type="button" class="btn '+(f.r===r[0]?'btn-purple':'btn-ghost')+'" style="padding:3px 8px;font-size:12px" onclick="apLesReact(\''+s.k+'\',\''+r[0]+'\')">'+r[1]+'</button>').join('')+'</div>';
+        h+='<div class="fld"><input type="text" id="apLesFbT" maxlength="300" placeholder="Optional: one line on what to fix. No names." value="'+escAttr(f.t||'')+'" oninput="apLesNote(\''+s.k+'\',this.value)"></div>';
+      }
+    }
+  }
+  h+='<div class="row" style="margin-top:8px"><button type="button" class="btn btn-ghost" onclick="apLesStep(AP.les.i-1)"'+(i===0?' disabled':'')+'>← Previous</button><button type="button" class="btn btn-ghost" id="apLesNext" onclick="apLesStep(AP.les.i+1)"'+(i>=n?' disabled':'')+'>Next →</button></div>';
+  return h;
+}
+
 function apRender(){
   const m=document.getElementById('apMain');if(!m)return;
   const d=AP.doc;
   if(!d){m.innerHTML='';return}
   if(d.abstractOnly&&AP.mode==='walk')AP.mode='ask';
+  if(!d.sample&&AP.mode==='lesson')AP.mode='ask';
   const tab=(k,l)=>(d.abstractOnly&&k==='walk')?'<button type="button" class="btn btn-ghost" disabled title="The walk-through needs the full paper">'+l+' (full paper needed)</button>':'<button type="button" class="btn '+(AP.mode===k?'btn-purple':'btn-ghost')+'" onclick="apSet(\'mode\',\''+k+'\')">'+l+'</button>';
   let h='<div class="ap-box"><b>'+escHTML(d.title)+'</b><br><span style="font-size:12px;color:var(--muted)">'+(d.paged?d.pages.length+' pages, ':'')+d.chars.toLocaleString()+' characters read'+(d.refsCut?'; the reference list is kept out of the analysis':'')+(d.sample?'. This is a fictional paper written for practice.':'')+'</span>';
   if(d.abstractOnly)h+='<div class="ap-warn" style="margin-top:6px">Abstract only, shallow. An abstract is a summary of about 150 to 300 words. Most questions about method, sample, measures and limits cannot be answered from it, so expect many answers to say that the paper text does not report this. For a real analysis, get the full paper (the free PDF button on the search result, where one exists), download it and load it here.</div>';
   h+='<div style="font-size:12px;margin-top:6px">Sections found: '+(d.sections.length?d.sections.map(s=>escHTML(s.name)+(s.page?' (p. '+s.page+')':'')).join(' · '):'none. The text has no headings Appuscholer could recognise.')+'</div>';
   h+='<details style="margin-top:6px"><summary style="cursor:pointer;font-size:12px">Check what Appuscholer read</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:180px;overflow:auto">'+escHTML(d.chunks.map(c=>c.text).join('\n\n').slice(0,2500))+'</pre><div style="font-size:11px;color:var(--muted)">Papers with two columns can come out in a scrambled order. If this looks wrong, quotations may not match; paste the text instead.</div></details></div>';
-  h+='<div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">'+tab('ask','💬 Ask questions')+tab('walk','🧭 Walk me through it')+tab('card','🗂 Paper card')+'</div>';
+  h+='<div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">'+tab('ask','💬 Ask questions')+tab('walk','🧭 Walk me through it')+tab('card','🗂 Paper card')+(d.sample?tab('lesson','🎓 Lesson on this paper'):'')+'</div>';
   if(AP.busy)h+='<div class="ap-box">Reading the paper and writing the answer…</div>';
   if(AP.mode==='ask'){
     const chips=['What was the research gap?','Why did the authors choose this design?','Who were the participants and how were they chosen?','Which statistical test was used and why?','What are the limitations?'];
@@ -10056,6 +10192,8 @@ function apRender(){
       }
     }
     h+='<div class="row" style="margin-top:8px"><button type="button" class="btn btn-ghost" onclick="apSetStage(AP.stage-1)"'+(AP.stage===0?' disabled':'')+'>← Previous stage</button><button type="button" class="btn btn-ghost" id="apNextBtn" onclick="apSetStage(AP.stage+1)"'+(AP.stage===AP_STAGES.length-1?' disabled':'')+'>Next stage →</button></div>';
+  }else if(AP.mode==='lesson'){
+    h+=apLessonHTML();
   }else{
     const n=apNoteGet(),c=n.card||{};
     h+='<div class="ap-box"><b>Paper card.</b> Your own words come first. Edit freely; it saves as you type, in this browser.</div>';
@@ -10067,8 +10205,8 @@ function apRender(){
   m.innerHTML=h;
 }
 
-const APP_VERSION=40;
-const APP_BUILD='2026.10.11o';
+const APP_VERSION=41;
+const APP_BUILD='2026.10.11p';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
