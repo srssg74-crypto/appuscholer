@@ -9759,7 +9759,7 @@ function apLoad(title,pages,src,isSample){
   if(src==='abstract'){if(text.replace(/\s+/g,'').length<150){showToast('This search result has no abstract to read. Open the source and paste the paper text instead.');return false}}
   else if(text.replace(/\s+/g,'').length<500){showToast('This file has too little readable text. A scanned PDF has no text layer; paste the text instead.');return false}
   AP.doc=apBuild(title,pages,src);AP.doc.sample=!!isSample;AP.doc.abstractOnly=(src==='abstract');
-  AP.log=[];AP.res={};AP.stage=0;AP.tryDraft={};AP.chkDraft={};AP.shown={};AP.numbers=null;AP.qDraft='';AP.les={i:0,shown:{},look:{}};
+  AP.log=[];AP.res={};AP.stage=0;AP.tryDraft={};AP.chkDraft={};AP.shown={};AP.numbers=null;AP.qDraft='';AP.les={i:0,shown:{},look:{}};AP.refs=null;AP.refBusy=false;
   const nt=apNotes()[AP.doc.id];
   if(nt&&nt.stages){Object.keys(nt.stages).forEach(k=>{const s=nt.stages[k];if(s.res)AP.res[k]=s.res;if(s.mine)AP.tryDraft[k]=s.mine})}
   AP.mode='ask';apRender();return true;
@@ -10004,6 +10004,7 @@ function apCardText(){
     if(!st.mine&&!r)return;
     t+=s.name.toUpperCase()+'\nMy words: '+(st.mine||'(not written)')+'\n'+(r&&r.reading?'Reading: '+r.reading+'\n':'')+'\n';
   });
+  if(AP.refs&&AP.refs.finished){const f=Object.keys(AP.refs.flag);t+='REFERENCE LIST CHECK (OpenAlex)\n'+AP.refs.dois.length+' DOIs read, '+Object.keys(AP.refs.seen).length+' known to OpenAlex, '+(f.length?f.length+' flagged as retracted: '+f.join(', '):'none flagged')+'. A warning signal only; no flag is not proof of soundness.\n\n'}
   t+='STRENGTHS\n'+(c.strengths||'')+'\n\nWEAKNESSES\n'+(c.weak||'')+'\n\nMY VERDICT IN ONE LINE\n'+(c.verdict||'')+'\n\nMY NOTES\n'+(c.notes||'')+'\n\nMade with Appuscholer. Parts were written with AI help from the text of the paper; check every point against the paper itself.\n';
   return t;
 }
@@ -10143,6 +10144,57 @@ function apLessonHTML(){
   return h;
 }
 
+/* ---- retraction check on a paper's own reference list (Version 42) ----
+   Reads the DOIs printed in the paper's reference list and asks OpenAlex, in batches of 40, whether each is flagged
+   as retracted. A flag is a warning to follow up, never a verdict, and "no flag" is never shown as safe: OpenAlex
+   may not hold the paper, the retraction databases disagree and lag, and a reference with no DOI cannot be checked. */
+function apRefDois(){
+  const d=AP.doc;if(!d)return[];
+  const txt=d.chunks.filter(c=>c.ref).map(c=>c.text).join(' ');
+  const found=txt.match(/10\.\d{4,9}\/[^\s"<>]+/g)||[];
+  const out=[];
+  found.forEach(x=>{
+    let v=retrNormDoi(x).replace(/[.,;:)\]}'’”]+$/,'');
+    if(retrValidDoi(v)&&out.indexOf(v)<0)out.push(v);
+  });
+  return out;
+}
+async function apRefCheck(){
+  const d=AP.doc;if(!d||AP.refBusy)return;
+  if(!d.refsCut){AP.refs={none:'no reference list'};apRender();return}
+  const dois=apRefDois();
+  if(!dois.length){AP.refs={none:'no DOIs'};apRender();return}
+  AP.refBusy=true;AP.refs={dois:dois,flag:{},seen:{},done:0};apRender();
+  try{
+    for(let i=0;i<dois.length;i+=40){
+      const chunk=dois.slice(i,i+40);
+      const r=await fetch(oaUrl('https://api.openalex.org/works?filter=doi:'+chunk.map(x=>encodeURIComponent('https://doi.org/'+x)).join('|')+'&per-page=50&select=doi,is_retracted,display_name'));
+      if(!r.ok)throw oaHttpError(r);
+      const j=await r.json();
+      (j.results||[]).forEach(w=>{const k=retrNormDoi(w.doi);if(k){AP.refs.seen[k]=true;if(w.is_retracted===true)AP.refs.flag[k]=String(w.display_name||'').slice(0,160)}});
+      AP.refs.done=Math.min(dois.length,i+40);
+    }
+    AP.refs.finished=true;
+  }catch(e){AP.refs.error=(e&&e.message)||'the lookup failed'}
+  AP.refBusy=false;apRender();
+}
+function apRefHTML(){
+  const R=AP.refs;
+  let h='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-ghost" id="apRefBtn" onclick="apRefCheck()"'+(AP.refBusy?' disabled':'')+'>🧯 Check this paper\'s reference list for retractions</button></div>';
+  if(!R)return h;
+  if(R.none==='no reference list')return h+'<div class="ap-box">No reference list was found in this text, so nothing can be checked. If the list is missing from your copy, paste it in as part of the paper.</div>';
+  if(R.none==='no DOIs')return h+'<div class="ap-box">The reference list prints no DOIs, so nothing can be checked this way. Older papers often have none. The Citation tool can check a source if you add its DOI.</div>';
+  if(AP.refBusy)return h+'<div class="ap-box">Checking '+R.dois.length+' DOIs with OpenAlex… '+R.done+' done.</div>';
+  const fl=Object.keys(R.flag),seen=Object.keys(R.seen).length;
+  h+='<div class="ap-box"><b>Reference list check</b> <span style="font-size:12px;color:var(--muted)">(OpenAlex, '+R.dois.length+' DOI'+(R.dois.length===1?'':'s')+' read from the list)</span><br>';
+  if(R.error)h+='<span class="ap-warn">The check stopped: '+escHTML(R.error)+'. '+(R.done?R.done+' of '+R.dois.length+' were checked before it stopped.':'')+'</span><br>';
+  if(fl.length)h+='<div class="ap-banner">⚠ '+fl.length+' reference'+(fl.length===1?' is':'s are')+' flagged as retracted. Open each one and read the notice before you rely on it, or on this paper\'s claims that rest on it.</div>'+'<ul>'+fl.map(k=>'<li>'+escHTML(R.flag[k]||'(title not given)')+' — <a href="https://doi.org/'+escAttr(k)+'" target="_blank" rel="noopener">'+escHTML(k)+'</a></li>').join('')+'</ul>';
+  else if(!R.error)h+='No flag found on the references OpenAlex holds.<br>';
+  h+='<span style="font-size:12px">OpenAlex knew '+seen+' of the '+R.dois.length+' DOIs. For the rest it gave no answer at all.</span>';
+  h+='<div style="font-size:11px;color:var(--muted);margin-top:4px">This is a warning signal. No flag does not mean a paper is sound or safe: retraction databases disagree, lag behind, and miss cases, and references without a DOI were never checked.</div></div>';
+  return h;
+}
+
 function apRender(){
   const m=document.getElementById('apMain');if(!m)return;
   const d=AP.doc;
@@ -10155,6 +10207,7 @@ function apRender(){
   h+='<div style="font-size:12px;margin-top:6px">Sections found: '+(d.sections.length?d.sections.map(s=>escHTML(s.name)+(s.page?' (p. '+s.page+')':'')).join(' · '):'none. The text has no headings Appuscholer could recognise.')+'</div>';
   h+='<details style="margin-top:6px"><summary style="cursor:pointer;font-size:12px">Check what Appuscholer read</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:180px;overflow:auto">'+escHTML(d.chunks.map(c=>c.text).join('\n\n').slice(0,2500))+'</pre><div style="font-size:11px;color:var(--muted)">Papers with two columns can come out in a scrambled order. If this looks wrong, quotations may not match; paste the text instead.</div></details></div>';
   h+='<div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">'+tab('ask','💬 Ask questions')+tab('walk','🧭 Walk me through it')+tab('card','🗂 Paper card')+(d.sample?tab('lesson','🎓 Lesson on this paper'):'')+'</div>';
+  if(!d.abstractOnly)h+=apRefHTML();
   if(AP.busy)h+='<div class="ap-box">Reading the paper and writing the answer…</div>';
   if(AP.mode==='ask'){
     const chips=['What was the research gap?','Why did the authors choose this design?','Who were the participants and how were they chosen?','Which statistical test was used and why?','What are the limitations?'];
@@ -10205,8 +10258,8 @@ function apRender(){
   m.innerHTML=h;
 }
 
-const APP_VERSION=41;
-const APP_BUILD='2026.10.11p';
+const APP_VERSION=42;
+const APP_BUILD='2026.10.11q';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
