@@ -746,10 +746,11 @@
       <h3 data-i18n="stats_panel_h3">📊 Statistics Lab</h3>
       <p class="desc" data-i18n="stats_panel_desc">Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.</p>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('statsDlg').showModal()" data-i18n="stats_open_btn">Open Statistics Lab</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pwOpen()">🎯 Sample size and power</button></div>
       <h3 style="margin-top:16px" data-i18n="stats_charts_h3">📈 Charts</h3>
       <p class="desc" data-i18n="stats_charts_desc">Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.</p>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()" data-i18n="stats_chart_open_btn">Open Chart Maker</button></div>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="vzOpen()" data-i18n="vz_open_btn">📈 Open Chart Studio (box plot, bars with error bars, histogram, Q-Q)</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()" data-i18n="stats_chart_open_btn">📊 Quick chart (bars, lines, Venn)</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="vzOpen()" data-i18n="vz_open_btn">📈 Research figures (box plot, error bars, histogram, Q-Q)</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ncOpen()" data-i18n="nc_btn">🔢 Check the numbers in my document</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="rtOpen()" data-i18n="rt_btn">🔗 Check results against my data</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="slOpen()">📋 Scale library</button></div>
@@ -1448,6 +1449,9 @@
           <option value="tukey">Tukey HSD post-hoc (after ANOVA)</option>
           <option value="anova2">Two-way ANOVA (two grouping variables)</option>
           <option value="mregress">Multiple linear regression</option>
+          <option value="logistic">Logistic regression (yes/no outcome)</option>
+          <option value="moderate">Moderation (does W change the effect of X on Y?)</option>
+          <option value="mediate">Mediation (does M carry the effect of X on Y?)</option>
           <option value="rmanova">Repeated-measures ANOVA (same people, 3+ times)</option>
           <option value="friedman">Friedman test (same people, 3+ times, rank-based)</option>
           <option value="mixed">Mixed ANOVA (groups, each measured 2+ times)</option>
@@ -1525,7 +1529,7 @@
 </div></dialog>
 
 <dialog id="vzDlg" class="dlg-wide"><div class="dlg-body">
-  <h2 data-i18n="vz_h">📈 Chart Studio</h2>
+  <h2 data-i18n="vz_h">📈 Research figures</h2>
   <p class="desc" data-i18n="vz_desc">Paste your data (first row = column names) or use the data from the Statistics Lab. Pick a chart. Every chart is drawn on this computer and can be saved for your paper.</p>
   <div class="fld"><label for="vzPaste" data-i18n="vz_data">Your data</label><textarea id="vzPaste" rows="4" placeholder="group,score&#10;A,12&#10;A,15&#10;B,9" oninput="vzLoad()"></textarea></div>
   <div class="row"><button class="btn btn-ghost" onclick="vzUseLab()" data-i18n="vz_use_lab">Use the Statistics Lab data</button></div>
@@ -1574,8 +1578,49 @@
   </div>
   <div class="row" style="margin-top:12px"><button class="btn btn-ghost" onclick="document.getElementById('vzDlg').close()" data-i18n="close_btn">Close</button></div>
 </div></dialog>
+<dialog id="powerDlg" class="dlg-wide"><div class="dlg-body">
+  <h2>🎯 Sample size and power</h2>
+  <p style="font-size:13px;color:var(--muted)">How many people does the study need, how much power does a given sample have, or what is the smallest effect a given sample can detect. Everything is computed here from the exact noncentral distributions; nothing is uploaded.</p>
+  <div class="stats-fld-row">
+    <div class="fld"><label for="pwTest">Planned test</label>
+      <select id="pwTest" onchange="pwTestChange()">
+        <option value="ind">Independent-samples t-test (two groups)</option>
+        <option value="paired">Paired-samples t-test (same people twice)</option>
+        <option value="one">One-sample t-test</option>
+        <option value="anova">One-way ANOVA (three or more groups)</option>
+        <option value="corr">Correlation (Pearson r)</option>
+        <option value="regr">Multiple regression (overall test, R²)</option>
+        <option value="chisq">Chi-square test (table or goodness of fit)</option>
+      </select></div>
+    <div class="fld"><label for="pwSolve">I want to find</label>
+      <select id="pwSolve" onchange="pwTestChange()">
+        <option value="n">The sample size I need</option>
+        <option value="power">The power my sample gives</option>
+        <option value="effect">The smallest effect my sample can detect</option>
+      </select></div>
+  </div>
+  <div class="stats-fld-row">
+    <div class="fld" id="pwEffWrap"><label for="pwEffect" id="pwEffLbl">Effect size</label><input type="text" id="pwEffect" inputmode="decimal" value="0.5"></div>
+    <div class="fld" id="pwNWrap" style="display:none"><label for="pwN" id="pwNLbl">Sample size</label><input type="text" id="pwN" inputmode="numeric" value="30"></div>
+    <div class="fld" id="pwPowWrap"><label for="pwPow">Power you want</label><input type="text" id="pwPow" inputmode="decimal" value="0.80"></div>
+    <div class="fld"><label for="pwAlpha">Alpha</label><input type="text" id="pwAlpha" inputmode="decimal" value="0.05"></div>
+  </div>
+  <div class="stats-fld-row">
+    <div class="fld" id="pwTailWrap"><label for="pwTails">Tails</label><select id="pwTails"><option value="2">Two-tailed</option><option value="1">One-tailed</option></select></div>
+    <div class="fld" id="pwKWrap" style="display:none"><label for="pwK">Number of groups</label><input type="text" id="pwK" inputmode="numeric" value="3"></div>
+    <div class="fld" id="pwPWrap" style="display:none"><label for="pwP">Number of predictors</label><input type="text" id="pwP" inputmode="numeric" value="3"></div>
+    <div class="fld" id="pwDfWrap" style="display:none"><label for="pwDf">Degrees of freedom of the table</label><input type="text" id="pwDf" inputmode="numeric" value="1"></div>
+    <div class="fld" id="pwDropWrap"><label for="pwDrop">Expected dropout, % (optional)</label><input type="text" id="pwDrop" inputmode="decimal" value="0"></div>
+  </div>
+  <p class="desc" id="pwHint" style="margin:4px 0 8px"></p>
+  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pwRun()">Calculate</button></div>
+  <div id="pwOut" style="margin-top:12px"></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="document.getElementById('powerDlg').close()">Close</button>
+  </div>
+</div></dialog>
 <dialog id="chartDlg" class="dlg-wide"><div class="dlg-body">
-  <h2>📈 Chart Maker</h2>
+  <h2>📊 Quick chart</h2>
   <p style="font-size:13px;color:var(--muted)">Make a bar/line chart from your own numbers, or a Venn diagram — then insert it straight into your document as a picture.</p>
   <div class="fld"><label for="chartType">Chart type</label>
     <select id="chartType" onchange="chartTypeChange()">
@@ -1880,7 +1925,7 @@ const I18N={
     stats_panel_desc:'Paste your data, pick a test, get real computed results — t, F, χ², r, p, effect sizes — plus an APA-ready sentence. Runs in your browser; nothing is uploaded.',
     stats_open_btn:'Open Statistics Lab', stats_charts_h3:'📈 Charts',
     stats_charts_desc:'Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.',
-    stats_chart_open_btn:'Open Chart Maker',
+    stats_chart_open_btn:'📊 Quick chart (bars, lines, Venn)',
     style_panel_desc:'Teach Appuscholar to write like YOU. Upload your files — Word, PDF or text.',
     style_use_label:'Use my style in suggestions', style_profile_label:'My style profile',
     style_profile_placeholder:'e.g. Warm, reflective tone. Medium-length sentences…',
@@ -1917,7 +1962,7 @@ const I18N={
     nc_btn:'🔢 Check the numbers in my document', nc_h:'🔢 Numbers check', nc_desc:'Finds the statistics written in your document (t, F, χ², r, z and H, with their df and p), works out the p-value again from the test statistic and df, and flags any that do not match. It runs on this computer and uses no AI.', nc_none:'No statistics found. This check reads the APA pattern, for example "t(21) = 2.15, p = .043".', nc_sum:'Found {n}: {ok} consistent, {w} not consistent ({e} change the conclusion).', nc_ok:'Consistent', nc_warn:'Not consistent', nc_err:'Changes the conclusion', nc_rep:'You wrote', nc_calc:'Recomputed', nc_go:'Go to this text', nc_rescan:'Scan again', nc_c_onetail:'The reported p is about half of the recomputed one. Was a one-tailed test used? If so, say so in the text.', nc_c_zero:'p can never be exactly zero. Write p < .001.', nc_c_form:'A p-value must lie between 0 and 1.', nc_c_df:'The degrees of freedom must be positive.', nc_c_typo:'A typo in the statistic, the df or the p-value is the most common cause. Check them against your output.', nc_c_round:'The gap is small. A rounding slip or a rounded statistic can cause it. Check your output.', nc_note:'The check allows for rounding of the statistic. It reads only statistics written in the usual APA order, with p straight after the statistic. A consistent result does not show that the right test was used.',
     cc_btn:'📚 Cross-check citations and references', cc_h:'📚 Citation cross-check', cc_desc:'Compares the citations in your text with your reference list. It lists every source cited but missing from the list, and every list entry that is never cited. It runs on this computer and uses no AI.', cc_src_doc:'Reference list used: the "{h}" section of this document ({n} entries).', cc_src_lib:'This document has no References section yet, so your Citation Library ({n} sources) is used as the list.', cc_src_none:'There is no reference list to compare with. Add a References section to the document, or add sources to your library.', cc_sum:'{c} sources cited in the text. {m} not in the list. {u} list entries never cited.', cc_missing_h:'Cited in the text but missing from the list', cc_unused_h:'In the list but never cited', cc_none_missing:'None. Every citation has a list entry.', cc_none_unused:'None. Every list entry is cited.', cc_near_year:'The list has {n} with a different year ({y}). Check the year.', cc_near_name:'The list has a similar name: {n} ({y}). Check the spelling.', cc_unread:'List entries that could not be read: {n} (no surname before a comma, or no year in brackets). They are left out of the check.', cc_note:'Matching uses the first author\'s surname and the year. It reads APA-style citations such as (Smith, 2020), (Smith & Lee, 2020; Jones et al., 2019) and Smith (2020). A list entry is one paragraph, written like "Smith, J. (2020). Title."',
     terms_h:'Before you start', terms_data_h:'Where your data goes', terms_d1:'Your documents, sources, projects and statistics data stay in this browser on this computer. Appuscholar has no server, so nobody at Appuscholar can see them. Clearing your browser data erases them, so download a backup now and then.', terms_d2:'Your AI key also stays in this browser. It goes only to the AI provider you choose.', terms_d3:'When you press an AI button, the text you selected travels from your browser straight to that provider (Google, Groq, OpenRouter, DeepSeek, OpenAI or Anthropic). Appuscholar does not see it or keep it. The provider\'s own terms apply, and on a free key a provider may read or reuse what it receives. Never send names, phone numbers, roll numbers or other details that identify a participant.', terms_d4:'Paper search sends your search words, DOI or ORCID iD to OpenAlex, Crossref, PubMed and ORCID. The chart, Word and PDF tools and the fonts load from Cloudflare and Google, which can see your IP address, as any website can.', terms_use_h:'What Appuscholar is, and is not', terms_u1:'It is a writing and research helper. It is not medical, psychological or legal advice. A score on a screening scale is not a diagnosis.', terms_u2:'AI suggestions, plagiarism checks and AI detectors are only indicators, and they can be wrong. Check every citation and every number yourself.', terms_u3:'You are responsible for your ethics approval, your participants\' consent, your institution\'s rules on AI help, and for saying where AI helped.', terms_u4:'Appuscholar is free and comes as it is, with no promise that it is correct or always available.', terms_ver:'Version 1, 7 October 2026.', terms_age:'I am 18 years old or older. Appuscholar is not for anyone younger.', terms_agree:'I have read this and I agree.', terms_cont:'Continue', terms_back:'Go back (I tapped by mistake)', terms_need:'Tick both boxes to continue.', terms_leave:'You cannot use Appuscholar without accepting. To leave, close this browser tab.', terms_under:'I am under 18', terms_under_msg:'Appuscholar is for people aged 18 and over. Please close this page. If you are studying, ask your teacher or your institution which tools they allow.', terms_reopen_btn:'Terms and where your data goes',
-    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', devil_btn:'😈 Challenge my argument', vz_open_btn:'📈 Open Chart Studio (box plot, bars with error bars, histogram, Q-Q)', vz_h:'📈 Chart Studio', vz_desc:'Paste your data (first row = column names) or use the data from the Statistics Lab. Pick a chart. Every chart is drawn on this computer and can be saved for your paper.', vz_data:'Your data', vz_use_lab:'Use the Statistics Lab data', vz_type:'Chart', vz_t_box:'Box plot with every participant', vz_t_bar:'Bar of means with error bars', vz_t_hist:'Histogram with normal curve', vz_t_qq:'Q-Q plot (is it roughly normal?)', vz_y:'Score (numbers)', vz_g:'Groups (optional)', vz_none:'(no groups)', vz_err:'Error bars show', vz_pal:'Colours', vz_pal_c:'Colour (colour-blind safe)', vz_pal_g:'Black and white (for print)', vz_bins:'Bars (bins)', vz_pts:'Show every participant', vz_n:'Show n under each group', vz_title_in:'Draw the title inside the picture', vz_title:'Figure title', vz_xl:'Horizontal axis label', vz_yl:'Vertical axis label', vz_ymin:'Axis from', vz_ymax:'Axis to', vz_fig:'Figure number', vz_note:'Note under the figure (optional)', vz_insert:'Insert into my document', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'Parse some data in the Statistics Lab first, or paste it here.', vz_nodata:'No numbers to draw yet. Check that you picked a score column with numbers.', vz_th_group:'Group', vz_inserted:'Figure inserted ✓', vz_img_fail:'Could not make the picture. Try the SVG download.', vz_bar_zero:'Bars show size by their length, so a bar axis should start at zero. Starting higher makes small differences look large.', vz_box_key:'Box = middle half of scores. Thick line = median. Diamond = mean. Whiskers reach the furthest score within 1.5 box-lengths. Open circles = unusual scores beyond that. Dots = each participant.', vz_bar_key_ci:'Bars = group means. Error bars = 95% confidence interval. Dots = each participant.', vz_bar_key_sd:'Bars = group means. Error bars = one standard deviation. Dots = each participant.', vz_bar_key_se:'Bars = group means. Error bars = one standard error. Dots = each participant.', vz_bar_key_none:'Bars = group means. Dots = each participant.', vz_hist_key:'Bars count scores in each range. Dashed curve = the normal curve with the same mean and spread. Skewness = {s} (0 is symmetric; beyond about 1 or below -1 is clearly lopsided).', vz_qq_key:'Dots close to the dashed line mean the scores are close to a normal distribution. Bends at the ends suggest skew or outliers. With very few scores, expect wobble.', aitest_btn:'🔌 Test my AI connection', aitest_running:'Testing…', aitest_ok:'Working ✓ Provider: {p}.', aitest_reply:'The AI replied:', aitest_fail:'Not working. Provider: {p}.', ret_h:'👋 Welcome back', ret_q_intro:'Answer in your own words. Nobody grades these, and the app does not read them. They are saved on this computer so you can see how your thinking moved.', ret_q1:'In your own words, what is the main question your study is answering right now?', ret_q2:'What is the next concrete thing you will do on this project?', ret_q3:'What is the weakest part of your work right now, and why?', ret_save:'Save my answers', ret_skip:'Skip', ret_saved:'Saved on this computer ✓', ret_away:'You have been away {n} days.', ret_project:'Project: {p}, stage: {s}.', ret_doc:'Open document: {d}, {w} words.', ret_did:'Before you left you had recorded:', ret_docs:'{n} new document(s)', ret_cits:'{n} source(s) added', ret_stats:'{n} test(s) run', ret_quals:'{n} passage(s) coded', ret_ai:'{n} AI passage(s) inserted', ret_nolog:'No activity was recorded since your last visit.', ret_last:'Last time ({d}) you wrote:', recap_toggle:'Show a recap and three questions when I return after five days or more', viva_btn:'🎓 Viva question', viva_btn_title:"Practise answering an examiner's question about your writing, with no AI help in the answer box", viva_h:'🎓 Viva question', viva_desc:'The AI asks one question an examiner might ask about the passage you selected (or the end of your document). Answer from your own head. There is no AI help in the answer box, because the point is to rehearse the real moment.', viva_aud:'Who is asking?', viva_aud_viva:'An examiner at my viva or defence', viva_aud_conf:'A panel or audience at a conference', viva_get:'Get a question', viva_another:'Another question', viva_thinking:'🎓 Reading your passage…', viva_ph:'Type your answer, as if you were speaking.', viva_save:'Save my answer', viva_need:'Select or write a passage of at least a few sentences first.', viva_empty:'Write your answer first.', viva_saved:'Answer saved on this computer ✓', viva_count:'Answers saved so far: {n}.', devil_btn_title:'Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.', devil_need:'Select or write a passage of at least a few sentences first.', devil_thinking:'😈 Reading your argument…', devil_label:'A critical reviewer might say this. Answer each point in your own words. Nothing here is meant to be pasted in.', devil_ready:'Challenges ready in the AI pane', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', devil_btn:'😈 Challenge my argument', vz_open_btn:'📈 Research figures (box plot, error bars, histogram, Q-Q)', vz_h:'📈 Research figures', vz_desc:'Paste your data (first row = column names) or use the data from the Statistics Lab. Pick a chart. Every chart is drawn on this computer and can be saved for your paper.', vz_data:'Your data', vz_use_lab:'Use the Statistics Lab data', vz_type:'Chart', vz_t_box:'Box plot with every participant', vz_t_bar:'Bar of means with error bars', vz_t_hist:'Histogram with normal curve', vz_t_qq:'Q-Q plot (is it roughly normal?)', vz_y:'Score (numbers)', vz_g:'Groups (optional)', vz_none:'(no groups)', vz_err:'Error bars show', vz_pal:'Colours', vz_pal_c:'Colour (colour-blind safe)', vz_pal_g:'Black and white (for print)', vz_bins:'Bars (bins)', vz_pts:'Show every participant', vz_n:'Show n under each group', vz_title_in:'Draw the title inside the picture', vz_title:'Figure title', vz_xl:'Horizontal axis label', vz_yl:'Vertical axis label', vz_ymin:'Axis from', vz_ymax:'Axis to', vz_fig:'Figure number', vz_note:'Note under the figure (optional)', vz_insert:'Insert into my document', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'Parse some data in the Statistics Lab first, or paste it here.', vz_nodata:'No numbers to draw yet. Check that you picked a score column with numbers.', vz_th_group:'Group', vz_inserted:'Figure inserted ✓', vz_img_fail:'Could not make the picture. Try the SVG download.', vz_bar_zero:'Bars show size by their length, so a bar axis should start at zero. Starting higher makes small differences look large.', vz_box_key:'Box = middle half of scores. Thick line = median. Diamond = mean. Whiskers reach the furthest score within 1.5 box-lengths. Open circles = unusual scores beyond that. Dots = each participant.', vz_bar_key_ci:'Bars = group means. Error bars = 95% confidence interval. Dots = each participant.', vz_bar_key_sd:'Bars = group means. Error bars = one standard deviation. Dots = each participant.', vz_bar_key_se:'Bars = group means. Error bars = one standard error. Dots = each participant.', vz_bar_key_none:'Bars = group means. Dots = each participant.', vz_hist_key:'Bars count scores in each range. Dashed curve = the normal curve with the same mean and spread. Skewness = {s} (0 is symmetric; beyond about 1 or below -1 is clearly lopsided).', vz_qq_key:'Dots close to the dashed line mean the scores are close to a normal distribution. Bends at the ends suggest skew or outliers. With very few scores, expect wobble.', aitest_btn:'🔌 Test my AI connection', aitest_running:'Testing…', aitest_ok:'Working ✓ Provider: {p}.', aitest_reply:'The AI replied:', aitest_fail:'Not working. Provider: {p}.', ret_h:'👋 Welcome back', ret_q_intro:'Answer in your own words. Nobody grades these, and the app does not read them. They are saved on this computer so you can see how your thinking moved.', ret_q1:'In your own words, what is the main question your study is answering right now?', ret_q2:'What is the next concrete thing you will do on this project?', ret_q3:'What is the weakest part of your work right now, and why?', ret_save:'Save my answers', ret_skip:'Skip', ret_saved:'Saved on this computer ✓', ret_away:'You have been away {n} days.', ret_project:'Project: {p}, stage: {s}.', ret_doc:'Open document: {d}, {w} words.', ret_did:'Before you left you had recorded:', ret_docs:'{n} new document(s)', ret_cits:'{n} source(s) added', ret_stats:'{n} test(s) run', ret_quals:'{n} passage(s) coded', ret_ai:'{n} AI passage(s) inserted', ret_nolog:'No activity was recorded since your last visit.', ret_last:'Last time ({d}) you wrote:', recap_toggle:'Show a recap and three questions when I return after five days or more', viva_btn:'🎓 Viva question', viva_btn_title:"Practise answering an examiner's question about your writing, with no AI help in the answer box", viva_h:'🎓 Viva question', viva_desc:'The AI asks one question an examiner might ask about the passage you selected (or the end of your document). Answer from your own head. There is no AI help in the answer box, because the point is to rehearse the real moment.', viva_aud:'Who is asking?', viva_aud_viva:'An examiner at my viva or defence', viva_aud_conf:'A panel or audience at a conference', viva_get:'Get a question', viva_another:'Another question', viva_thinking:'🎓 Reading your passage…', viva_ph:'Type your answer, as if you were speaking.', viva_save:'Save my answer', viva_need:'Select or write a passage of at least a few sentences first.', viva_empty:'Write your answer first.', viva_saved:'Answer saved on this computer ✓', viva_count:'Answers saved so far: {n}.', devil_btn_title:'Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.', devil_need:'Select or write a passage of at least a few sentences first.', devil_thinking:'😈 Reading your argument…', devil_label:'A critical reviewer might say this. Answer each point in your own words. Nothing here is meant to be pasted in.', devil_ready:'Challenges ready in the AI pane', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
     rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
     cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
@@ -2106,7 +2151,7 @@ const I18N={
     stats_panel_desc:'अपना डेटा पेस्ट करें, एक परीक्षण चुनें, वास्तविक परिणाम पाएं — t, F, χ², r, p, प्रभाव आकार — साथ ही APA-तैयार वाक्य। यह आपके ब्राउज़र में चलता है; कुछ भी अपलोड नहीं होता।',
     stats_open_btn:'सांख्यिकी लैब खोलें', stats_charts_h3:'📈 चार्ट',
     stats_charts_desc:'अपने ही आंकड़ों से बार/लाइन चार्ट बनाएं, या 2 या 3 वृत्तों वाला वेन डायग्राम — फिर उसे सीधे अपने दस्तावेज़ में डालें।',
-    stats_chart_open_btn:'चार्ट मेकर खोलें',
+    stats_chart_open_btn:'📊 त्वरित चार्ट (बार, लाइन, वेन)',
     style_panel_desc:'Appuscholar को आपकी तरह लिखना सिखाएं। अपनी फ़ाइलें अपलोड करें — Word, PDF या टेक्स्ट।',
     style_use_label:'सुझावों में मेरी शैली का उपयोग करें', style_profile_label:'मेरी लेखन शैली प्रोफ़ाइल',
     style_profile_placeholder:'उदाहरण: गर्मजोशी भरा, चिंतनशील लहजा। मध्यम लंबाई के वाक्य…',
@@ -2143,7 +2188,7 @@ const I18N={
     nc_btn:'🔢 मेरे दस्तावेज़ की संख्याएँ जाँचें', nc_h:'🔢 संख्याओं की जाँच', nc_desc:'यह आपके दस्तावेज़ में लिखे आँकड़े (t, F, χ², r, z और H, df और p के साथ) ढूँढता है, परीक्षण-मान और df से p-मान दोबारा निकालता है और जहाँ दोनों मेल नहीं खाते वहाँ बताता है। यह इसी कंप्यूटर पर चलता है और एआई का उपयोग नहीं करता।', nc_none:'कोई आँकड़ा नहीं मिला। यह APA रूप पढ़ता है, जैसे "t(21) = 2.15, p = .043"।', nc_sum:'{n} मिले: {ok} मेल खाते हैं, {w} मेल नहीं खाते ({e} का निष्कर्ष बदल जाता है)।', nc_ok:'मेल खाता है', nc_warn:'मेल नहीं खाता', nc_err:'निष्कर्ष बदलता है', nc_rep:'आपने लिखा', nc_calc:'दोबारा निकाला गया', nc_go:'इस पाठ पर जाएँ', nc_rescan:'फिर से जाँचें', nc_c_onetail:'लिखा गया p दोबारा निकाले गए p का लगभग आधा है। क्या एकतरफ़ा परीक्षण किया गया था? यदि हाँ, तो पाठ में यह लिखें।', nc_c_zero:'p कभी ठीक शून्य नहीं होता। p < .001 लिखें।', nc_c_form:'p-मान 0 और 1 के बीच होना चाहिए।', nc_c_df:'स्वातंत्र्य-कोटि (df) धनात्मक होनी चाहिए।', nc_c_typo:'आँकड़े, df या p-मान में टाइपिंग की गलती सबसे आम कारण है। इन्हें अपने आउटपुट से मिलाएँ।', nc_c_round:'अंतर छोटा है। पूर्णांकन की चूक या पूर्णांकित आँकड़ा इसका कारण हो सकता है। अपना आउटपुट देखें।', nc_note:'यह जाँच आँकड़े के पूर्णांकन की छूट देती है। यह केवल सामान्य APA क्रम में लिखे आँकड़े पढ़ती है, जिसमें p आँकड़े के ठीक बाद हो। मेल खाना यह साबित नहीं करता कि सही परीक्षण चुना गया।',
     cc_btn:'📚 उद्धरण और संदर्भ सूची मिलाएँ', cc_h:'📚 उद्धरण की जाँच', cc_desc:'यह आपके पाठ के उद्धरणों को आपकी संदर्भ सूची से मिलाता है। जो स्रोत पाठ में उद्धृत है पर सूची में नहीं, और जो सूची में है पर कभी उद्धृत नहीं हुआ, दोनों दिखाता है। यह इसी कंप्यूटर पर चलता है और एआई का उपयोग नहीं करता।', cc_src_doc:'उपयोग की गई सूची: इस दस्तावेज़ का "{h}" खंड ({n} प्रविष्टियाँ)।', cc_src_lib:'इस दस्तावेज़ में अभी संदर्भ खंड नहीं है, इसलिए आपकी उद्धरण लाइब्रेरी ({n} स्रोत) को सूची माना गया है।', cc_src_none:'मिलाने के लिए कोई संदर्भ सूची नहीं है। दस्तावेज़ में संदर्भ खंड जोड़ें या लाइब्रेरी में स्रोत जोड़ें।', cc_sum:'पाठ में {c} स्रोत उद्धृत हैं। {m} सूची में नहीं हैं। {u} सूची प्रविष्टियाँ कभी उद्धृत नहीं हुईं।', cc_missing_h:'पाठ में उद्धृत पर सूची में नहीं', cc_unused_h:'सूची में है पर कभी उद्धृत नहीं', cc_none_missing:'कोई नहीं। हर उद्धरण की सूची में प्रविष्टि है।', cc_none_unused:'कोई नहीं। सूची की हर प्रविष्टि उद्धृत है।', cc_near_year:'सूची में {n} है पर वर्ष अलग है ({y})। वर्ष जाँचें।', cc_near_name:'सूची में मिलता-जुलता नाम है: {n} ({y})। वर्तनी जाँचें।', cc_unread:'{n} सूची प्रविष्टियाँ पढ़ी नहीं जा सकीं (अल्पविराम से पहले उपनाम नहीं, या कोष्ठक में वर्ष नहीं)। उन्हें जाँच से बाहर रखा गया है।', cc_note:'मिलान पहले लेखक के उपनाम और वर्ष से होता है। यह APA शैली के उद्धरण पढ़ता है, जैसे (Smith, 2020), (Smith & Lee, 2020; Jones et al., 2019) और Smith (2020)। सूची की एक प्रविष्टि एक अनुच्छेद है, जैसे "Smith, J. (2020). शीर्षक।"',
     terms_h:'शुरू करने से पहले', terms_data_h:'आपका डेटा कहाँ जाता है', terms_d1:'आपके दस्तावेज़, स्रोत, प्रोजेक्ट और सांख्यिकी डेटा इसी कंप्यूटर पर इसी ब्राउज़र में रहते हैं। Appuscholar का कोई सर्वर नहीं है, इसलिए Appuscholar में कोई उन्हें नहीं देख सकता। ब्राउज़र का डेटा मिटाने पर ये भी मिट जाते हैं, इसलिए समय-समय पर बैकअप डाउनलोड करें।', terms_d2:'आपकी एआई कुंजी भी इसी ब्राउज़र में रहती है। वह केवल उसी एआई प्रदाता को जाती है जिसे आप चुनते हैं।', terms_d3:'जब आप किसी एआई बटन को दबाते हैं, तो चुना हुआ पाठ आपके ब्राउज़र से सीधे उस प्रदाता (Google, Groq, OpenRouter, DeepSeek, OpenAI या Anthropic) के पास जाता है। Appuscholar उसे न देखता है, न रखता है। प्रदाता की अपनी शर्तें लागू होती हैं, और मुफ़्त कुंजी पर प्रदाता जो पाता है उसे पढ़ या दोबारा उपयोग कर सकता है। प्रतिभागी की पहचान बताने वाले नाम, फ़ोन नंबर, रोल नंबर या अन्य विवरण कभी न भेजें।', terms_d4:'शोध-पत्र खोज आपके खोज-शब्द, DOI या ORCID iD को OpenAlex, Crossref, PubMed और ORCID को भेजती है। चार्ट, Word और PDF के औज़ार और फ़ॉन्ट Cloudflare और Google से लोड होते हैं, जो किसी भी वेबसाइट की तरह आपका IP पता देख सकते हैं।', terms_use_h:'Appuscholar क्या है और क्या नहीं', terms_u1:'यह लेखन और शोध में सहायक है। यह चिकित्सीय, मनोवैज्ञानिक या कानूनी सलाह नहीं है। स्क्रीनिंग स्केल का अंक निदान नहीं है।', terms_u2:'एआई के सुझाव, साहित्यिक चोरी की जाँच और एआई-डिटेक्टर केवल संकेत देते हैं, और ग़लत भी हो सकते हैं। हर उद्धरण और हर संख्या ख़ुद जाँचें।', terms_u3:'आपकी नैतिक स्वीकृति, प्रतिभागियों की सहमति, एआई सहायता पर आपके संस्थान के नियम, और एआई ने कहाँ मदद की यह बताना, सब आपकी ज़िम्मेदारी है।', terms_u4:'Appuscholar मुफ़्त है और जैसा है वैसा मिलता है। इसके सही होने या हमेशा उपलब्ध रहने का कोई वादा नहीं है।', terms_ver:'संस्करण 1, 7 अक्टूबर 2026।', terms_age:'मेरी आयु 18 वर्ष या अधिक है। Appuscholar इससे छोटे लोगों के लिए नहीं है।', terms_agree:'मैंने यह पढ़ लिया है और मैं सहमत हूँ।', terms_cont:'आगे बढ़ें', terms_back:'वापस जाएँ (ग़लती से दबा)', terms_need:'आगे बढ़ने के लिए दोनों बॉक्स पर निशान लगाएँ।', terms_leave:'स्वीकार किए बिना Appuscholar का उपयोग नहीं हो सकता। बाहर जाने के लिए यह ब्राउज़र टैब बंद करें।', terms_under:'मैं 18 से छोटा/छोटी हूँ', terms_under_msg:'Appuscholar 18 वर्ष और उससे अधिक आयु के लोगों के लिए है। कृपया यह पृष्ठ बंद करें। यदि आप पढ़ रहे हैं, तो अपने शिक्षक या संस्थान से पूछें कि वे कौन से औज़ार स्वीकार करते हैं।', terms_reopen_btn:'शर्तें और आपका डेटा कहाँ जाता है',
-    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', devil_btn:'😈 मेरे तर्क को चुनौती दें', vz_open_btn:'📈 चार्ट स्टूडियो खोलें (बॉक्स प्लॉट, त्रुटि पट्टी वाले बार, हिस्टोग्राम, Q-Q)', vz_h:'📈 चार्ट स्टूडियो', vz_desc:'अपना डेटा चिपकाएँ (पहली पंक्ति = स्तंभ के नाम) या सांख्यिकी लैब का डेटा लें। चार्ट चुनें। हर चार्ट इसी कंप्यूटर पर बनता है और आपके शोध-पत्र के लिए सहेजा जा सकता है।', vz_data:'आपका डेटा', vz_use_lab:'सांख्यिकी लैब का डेटा लें', vz_type:'चार्ट', vz_t_box:'हर प्रतिभागी के साथ बॉक्स प्लॉट', vz_t_bar:'त्रुटि पट्टी सहित औसत का बार', vz_t_hist:'सामान्य वक्र सहित हिस्टोग्राम', vz_t_qq:'Q-Q प्लॉट (क्या यह लगभग सामान्य है?)', vz_y:'अंक (संख्याएँ)', vz_g:'समूह (वैकल्पिक)', vz_none:'(कोई समूह नहीं)', vz_err:'त्रुटि पट्टी दिखाती है', vz_pal:'रंग', vz_pal_c:'रंग (रंग-अंधता के लिए सुरक्षित)', vz_pal_g:'श्वेत-श्याम (छपाई के लिए)', vz_bins:'पट्टियाँ (बिन)', vz_pts:'हर प्रतिभागी दिखाएँ', vz_n:'हर समूह के नीचे n दिखाएँ', vz_title_in:'शीर्षक चित्र के अंदर बनाएँ', vz_title:'चित्र का शीर्षक', vz_xl:'क्षैतिज अक्ष का नाम', vz_yl:'ऊर्ध्वाधर अक्ष का नाम', vz_ymin:'अक्ष शुरू', vz_ymax:'अक्ष अंत', vz_fig:'चित्र संख्या', vz_note:'चित्र के नीचे टिप्पणी (वैकल्पिक)', vz_insert:'मेरे दस्तावेज़ में डालें', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'पहले सांख्यिकी लैब में डेटा पार्स करें, या यहाँ चिपकाएँ।', vz_nodata:'बनाने के लिए अभी कोई संख्या नहीं। जाँचें कि आपने संख्याओं वाला स्तंभ चुना है।', vz_th_group:'समूह', vz_inserted:'चित्र डाल दिया गया ✓', vz_img_fail:'चित्र नहीं बन सका। SVG डाउनलोड आज़माएँ।', vz_bar_zero:'बार अपनी लंबाई से मान दिखाते हैं, इसलिए बार का अक्ष शून्य से शुरू होना चाहिए। ऊँचे से शुरू करने पर छोटे अंतर बड़े दिखते हैं।', vz_box_key:'बॉक्स = बीच के आधे अंक। मोटी रेखा = माध्यिका। हीरा = माध्य। मूँछें बॉक्स की 1.5 लंबाई के भीतर के सबसे दूर के अंक तक जाती हैं। खुले गोले = उसके बाहर के असामान्य अंक। बिंदु = हर प्रतिभागी।', vz_bar_key_ci:'बार = समूह का माध्य। त्रुटि पट्टी = 95% विश्वास अंतराल। बिंदु = हर प्रतिभागी।', vz_bar_key_sd:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक विचलन। बिंदु = हर प्रतिभागी।', vz_bar_key_se:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक त्रुटि। बिंदु = हर प्रतिभागी।', vz_bar_key_none:'बार = समूह का माध्य। बिंदु = हर प्रतिभागी।', vz_hist_key:'पट्टियाँ हर सीमा में अंकों की गिनती दिखाती हैं। टूटा वक्र = उसी माध्य और फैलाव वाला सामान्य वक्र। विषमता = {s} (0 सममित है; लगभग 1 से ऊपर या -1 से नीचे साफ़ झुकाव है)।', vz_qq_key:'बिंदु टूटी रेखा के पास हों तो अंक लगभग सामान्य वितरण के हैं। सिरों पर मोड़ झुकाव या असामान्य अंक बताता है। बहुत कम अंकों में उतार-चढ़ाव स्वाभाविक है।', aitest_btn:'🔌 मेरा एआई कनेक्शन जाँचें', aitest_running:'जाँच हो रही है…', aitest_ok:'चल रहा है ✓ प्रदाता: {p}।', aitest_reply:'एआई का उत्तर:', aitest_fail:'काम नहीं कर रहा। प्रदाता: {p}।', ret_h:'👋 वापसी पर स्वागत', ret_q_intro:'अपने शब्दों में उत्तर दें। इन्हें कोई अंक नहीं देता और ऐप इन्हें पढ़ता नहीं। ये इसी कंप्यूटर में सहेजे जाते हैं ताकि आप देख सकें कि आपकी सोच कैसे बदली।', ret_q1:'अपने शब्दों में, आपका अध्ययन अभी किस मुख्य प्रश्न का उत्तर खोज रहा है?', ret_q2:'इस प्रोजेक्ट पर आप अगला ठोस काम क्या करेंगे?', ret_q3:'अभी आपके काम का सबसे कमज़ोर हिस्सा कौन सा है, और क्यों?', ret_save:'मेरे उत्तर सहेजें', ret_skip:'छोड़ें', ret_saved:'इसी कंप्यूटर में सहेजा गया ✓', ret_away:'आप {n} दिन से दूर थे।', ret_project:'प्रोजेक्ट: {p}, चरण: {s}।', ret_doc:'खुला दस्तावेज़: {d}, {w} शब्द।', ret_did:'जाने से पहले दर्ज था:', ret_docs:'{n} नए दस्तावेज़', ret_cits:'{n} स्रोत जोड़े गए', ret_stats:'{n} परीक्षण चलाए गए', ret_quals:'{n} अंश कोड किए गए', ret_ai:'{n} एआई अंश जोड़े गए', ret_nolog:'पिछली बार के बाद कोई गतिविधि दर्ज नहीं हुई।', ret_last:'पिछली बार ({d}) आपने लिखा था:', recap_toggle:'पाँच दिन या अधिक बाद लौटने पर सार और तीन प्रश्न दिखाएँ', viva_btn:'🎓 वाइवा प्रश्न', viva_btn_title:'अपने लेखन पर परीक्षक के प्रश्न का उत्तर देने का अभ्यास करें, उत्तर बॉक्स में एआई की मदद नहीं', viva_h:'🎓 वाइवा प्रश्न', viva_desc:'एआई आपके चुने अंश (या दस्तावेज़ के अंत) पर परीक्षक जैसा एक प्रश्न पूछता है। उत्तर अपने दम पर दें। उत्तर बॉक्स में एआई की मदद नहीं है, क्योंकि उद्देश्य असली क्षण का अभ्यास है।', viva_aud:'प्रश्न कौन पूछ रहा है?', viva_aud_viva:'वाइवा या बचाव में परीक्षक', viva_aud_conf:'सम्मेलन में पैनल या श्रोता', viva_get:'प्रश्न पाएँ', viva_another:'दूसरा प्रश्न', viva_thinking:'🎓 आपका अंश पढ़ रहा है…', viva_ph:'अपना उत्तर लिखें, जैसे बोल रहे हों।', viva_save:'मेरा उत्तर सहेजें', viva_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', viva_empty:'पहले अपना उत्तर लिखें।', viva_saved:'उत्तर इसी कंप्यूटर में सहेजा गया ✓', viva_count:'अब तक सहेजे उत्तर: {n}।', devil_btn_title:'आपके अंश के विरुद्ध वैसे ही तर्क देता है जैसे कोई आलोचक समीक्षक देगा। उत्तर में कुछ भी चिपकाने के लिए नहीं है।', devil_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', devil_thinking:'😈 आपका तर्क पढ़ रहा है…', devil_label:'कोई आलोचक समीक्षक यह कह सकता है। हर बिंदु का उत्तर अपने शब्दों में दें। यहाँ कुछ भी चिपकाने के लिए नहीं है।', devil_ready:'चुनौतियाँ एआई पैनल में तैयार हैं', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', devil_btn:'😈 मेरे तर्क को चुनौती दें', vz_open_btn:'📈 शोध चित्र (बॉक्स प्लॉट, त्रुटि पट्टी, हिस्टोग्राम, Q-Q)', vz_h:'📈 शोध चित्र', vz_desc:'अपना डेटा चिपकाएँ (पहली पंक्ति = स्तंभ के नाम) या सांख्यिकी लैब का डेटा लें। चार्ट चुनें। हर चार्ट इसी कंप्यूटर पर बनता है और आपके शोध-पत्र के लिए सहेजा जा सकता है।', vz_data:'आपका डेटा', vz_use_lab:'सांख्यिकी लैब का डेटा लें', vz_type:'चार्ट', vz_t_box:'हर प्रतिभागी के साथ बॉक्स प्लॉट', vz_t_bar:'त्रुटि पट्टी सहित औसत का बार', vz_t_hist:'सामान्य वक्र सहित हिस्टोग्राम', vz_t_qq:'Q-Q प्लॉट (क्या यह लगभग सामान्य है?)', vz_y:'अंक (संख्याएँ)', vz_g:'समूह (वैकल्पिक)', vz_none:'(कोई समूह नहीं)', vz_err:'त्रुटि पट्टी दिखाती है', vz_pal:'रंग', vz_pal_c:'रंग (रंग-अंधता के लिए सुरक्षित)', vz_pal_g:'श्वेत-श्याम (छपाई के लिए)', vz_bins:'पट्टियाँ (बिन)', vz_pts:'हर प्रतिभागी दिखाएँ', vz_n:'हर समूह के नीचे n दिखाएँ', vz_title_in:'शीर्षक चित्र के अंदर बनाएँ', vz_title:'चित्र का शीर्षक', vz_xl:'क्षैतिज अक्ष का नाम', vz_yl:'ऊर्ध्वाधर अक्ष का नाम', vz_ymin:'अक्ष शुरू', vz_ymax:'अक्ष अंत', vz_fig:'चित्र संख्या', vz_note:'चित्र के नीचे टिप्पणी (वैकल्पिक)', vz_insert:'मेरे दस्तावेज़ में डालें', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'पहले सांख्यिकी लैब में डेटा पार्स करें, या यहाँ चिपकाएँ।', vz_nodata:'बनाने के लिए अभी कोई संख्या नहीं। जाँचें कि आपने संख्याओं वाला स्तंभ चुना है।', vz_th_group:'समूह', vz_inserted:'चित्र डाल दिया गया ✓', vz_img_fail:'चित्र नहीं बन सका। SVG डाउनलोड आज़माएँ।', vz_bar_zero:'बार अपनी लंबाई से मान दिखाते हैं, इसलिए बार का अक्ष शून्य से शुरू होना चाहिए। ऊँचे से शुरू करने पर छोटे अंतर बड़े दिखते हैं।', vz_box_key:'बॉक्स = बीच के आधे अंक। मोटी रेखा = माध्यिका। हीरा = माध्य। मूँछें बॉक्स की 1.5 लंबाई के भीतर के सबसे दूर के अंक तक जाती हैं। खुले गोले = उसके बाहर के असामान्य अंक। बिंदु = हर प्रतिभागी।', vz_bar_key_ci:'बार = समूह का माध्य। त्रुटि पट्टी = 95% विश्वास अंतराल। बिंदु = हर प्रतिभागी।', vz_bar_key_sd:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक विचलन। बिंदु = हर प्रतिभागी।', vz_bar_key_se:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक त्रुटि। बिंदु = हर प्रतिभागी।', vz_bar_key_none:'बार = समूह का माध्य। बिंदु = हर प्रतिभागी।', vz_hist_key:'पट्टियाँ हर सीमा में अंकों की गिनती दिखाती हैं। टूटा वक्र = उसी माध्य और फैलाव वाला सामान्य वक्र। विषमता = {s} (0 सममित है; लगभग 1 से ऊपर या -1 से नीचे साफ़ झुकाव है)।', vz_qq_key:'बिंदु टूटी रेखा के पास हों तो अंक लगभग सामान्य वितरण के हैं। सिरों पर मोड़ झुकाव या असामान्य अंक बताता है। बहुत कम अंकों में उतार-चढ़ाव स्वाभाविक है।', aitest_btn:'🔌 मेरा एआई कनेक्शन जाँचें', aitest_running:'जाँच हो रही है…', aitest_ok:'चल रहा है ✓ प्रदाता: {p}।', aitest_reply:'एआई का उत्तर:', aitest_fail:'काम नहीं कर रहा। प्रदाता: {p}।', ret_h:'👋 वापसी पर स्वागत', ret_q_intro:'अपने शब्दों में उत्तर दें। इन्हें कोई अंक नहीं देता और ऐप इन्हें पढ़ता नहीं। ये इसी कंप्यूटर में सहेजे जाते हैं ताकि आप देख सकें कि आपकी सोच कैसे बदली।', ret_q1:'अपने शब्दों में, आपका अध्ययन अभी किस मुख्य प्रश्न का उत्तर खोज रहा है?', ret_q2:'इस प्रोजेक्ट पर आप अगला ठोस काम क्या करेंगे?', ret_q3:'अभी आपके काम का सबसे कमज़ोर हिस्सा कौन सा है, और क्यों?', ret_save:'मेरे उत्तर सहेजें', ret_skip:'छोड़ें', ret_saved:'इसी कंप्यूटर में सहेजा गया ✓', ret_away:'आप {n} दिन से दूर थे।', ret_project:'प्रोजेक्ट: {p}, चरण: {s}।', ret_doc:'खुला दस्तावेज़: {d}, {w} शब्द।', ret_did:'जाने से पहले दर्ज था:', ret_docs:'{n} नए दस्तावेज़', ret_cits:'{n} स्रोत जोड़े गए', ret_stats:'{n} परीक्षण चलाए गए', ret_quals:'{n} अंश कोड किए गए', ret_ai:'{n} एआई अंश जोड़े गए', ret_nolog:'पिछली बार के बाद कोई गतिविधि दर्ज नहीं हुई।', ret_last:'पिछली बार ({d}) आपने लिखा था:', recap_toggle:'पाँच दिन या अधिक बाद लौटने पर सार और तीन प्रश्न दिखाएँ', viva_btn:'🎓 वाइवा प्रश्न', viva_btn_title:'अपने लेखन पर परीक्षक के प्रश्न का उत्तर देने का अभ्यास करें, उत्तर बॉक्स में एआई की मदद नहीं', viva_h:'🎓 वाइवा प्रश्न', viva_desc:'एआई आपके चुने अंश (या दस्तावेज़ के अंत) पर परीक्षक जैसा एक प्रश्न पूछता है। उत्तर अपने दम पर दें। उत्तर बॉक्स में एआई की मदद नहीं है, क्योंकि उद्देश्य असली क्षण का अभ्यास है।', viva_aud:'प्रश्न कौन पूछ रहा है?', viva_aud_viva:'वाइवा या बचाव में परीक्षक', viva_aud_conf:'सम्मेलन में पैनल या श्रोता', viva_get:'प्रश्न पाएँ', viva_another:'दूसरा प्रश्न', viva_thinking:'🎓 आपका अंश पढ़ रहा है…', viva_ph:'अपना उत्तर लिखें, जैसे बोल रहे हों।', viva_save:'मेरा उत्तर सहेजें', viva_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', viva_empty:'पहले अपना उत्तर लिखें।', viva_saved:'उत्तर इसी कंप्यूटर में सहेजा गया ✓', viva_count:'अब तक सहेजे उत्तर: {n}।', devil_btn_title:'आपके अंश के विरुद्ध वैसे ही तर्क देता है जैसे कोई आलोचक समीक्षक देगा। उत्तर में कुछ भी चिपकाने के लिए नहीं है।', devil_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', devil_thinking:'😈 आपका तर्क पढ़ रहा है…', devil_label:'कोई आलोचक समीक्षक यह कह सकता है। हर बिंदु का उत्तर अपने शब्दों में दें। यहाँ कुछ भी चिपकाने के लिए नहीं है।', devil_ready:'चुनौतियाँ एआई पैनल में तैयार हैं', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
     rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
     cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
@@ -7598,7 +7643,7 @@ function stkAssumpBlock(items,groupsForSpread,what){
   }
   if(bf){
     if(flagS)msg.push('The spreads differ (p below .05). Welch t and Welch ANOVA with Games-Howell already allow for that; the classic Student t and one-way ANOVA do not.');
-    else msg.push('No sign of unequal spread.');
+    else msg.push(groupsForSpread.some(function(g){return g.length<10})?'No sign of unequal spread, but with a group under 10 people this test almost never fires, even when the spreads differ a lot. Compare the SDs in the table yourself.':'No sign of unequal spread.');
   }
   if(small)msg.push('With fewer than 20 values these tests have little power and miss real departures; with several hundred they flag differences too small to matter. Treat them as a prompt to look at the plot, not as a verdict.');
   h+='<p class="desc">'+msg.join(' ')+'</p></div>';
@@ -7633,6 +7678,11 @@ function stkAssumpFor(key){
       var m=stkMRData();if(m.err||m.xs.length<2||m.y.length<m.xs.length+2)return '';
       var o=stkOLS(m.xs,m.y);if(!o)return '';
       what='Variable';items=[{label:'Residuals',vals:o.resid}];
+    }else if(key==='moderate'){
+      var xi=parseInt(gv('x'),10),wi=parseInt(gv('w'),10),yi=parseInt(gv('dv'),10),XX=[],WW=[],YY=[];
+      d.rows.forEach(function(r){var a=parseFloat(r[xi]),b=parseFloat(r[wi]),c=parseFloat(r[yi]);if([a,b,c].every(isFinite)&&r[xi]!==''&&r[wi]!==''&&r[yi]!==''){XX.push(a);WW.push(b);YY.push(c)}});
+      if(YY.length<10)return '';var mxx=smean(XX),mww=smean(WW),xcc=XX.map(function(v){return v-mxx}),wcc=WW.map(function(v){return v-mww}),oo=stkOLS([xcc,wcc,xcc.map(function(v,i){return v*wcc[i]})],YY);if(!oo)return '';
+      what='Variable';items=[{label:'Residuals',vals:oo.resid}];
     }else if(key==='anova2'){
       var c=stkAnova2Cells();if(!c)return '';
       items=[{label:'Residuals (all cells)',vals:c.resid}];spread=c.cellVals;what='Variable';
@@ -7714,7 +7764,7 @@ function stkOLS(xs,y){
   var my=smean(y),sst=0;y.forEach(function(v){sst+=(v-my)*(v-my)});
   return{beta:beta,inv:inv,resid:resid,sse:sse,sst:sst,n:n,k:k};
 }
-function stkMRData(){
+function stkMRData(bin){
   var d=window._statsData,dvI=parseInt(document.getElementById('sf_dv').value,10);
   function ticked(cls,skip){return Array.from(document.querySelectorAll('.'+cls+':checked')).map(function(c){return parseInt(c.value,10)}).filter(function(i){return i!==dvI&&skip.indexOf(i)<0})}
   var idxs1=ticked('sfm_preds',[]),cidx1=ticked('sfm_cats',idxs1),taken=idxs1.concat(cidx1);
@@ -7725,12 +7775,23 @@ function stkMRData(){
   var kept=[],dropped=0;
   d.rows.forEach(function(r){
     var v=parseFloat(r[dvI]);
-    if(r[dvI]===''||r[dvI]===undefined||!isFinite(v)){dropped++;return}
+    if(r[dvI]===''||r[dvI]===undefined||(!bin&&!isFinite(v))){dropped++;return}
     for(var j=0;j<idxs.length;j++){var q=parseFloat(r[idxs[j]]);if(r[idxs[j]]===''||r[idxs[j]]===undefined||!isFinite(q)){dropped++;return}}
     for(var j2=0;j2<cidxs.length;j2++){if(r[cidxs[j2]]===''||r[cidxs[j2]]===undefined){dropped++;return}}
     kept.push(r);
   });
-  var y=kept.map(function(r){return parseFloat(r[dvI])}),xs=[],labels=[],isDummy=[],blk=[],refs=[],err='';
+  var y=kept.map(function(r){return parseFloat(r[dvI])}),xs=[],labels=[],isDummy=[],blk=[],refs=[],err='',posL='',negL='';
+  if(bin){
+    var lvB=[];kept.forEach(function(r){var k2=String(r[dvI]).trim();if(lvB.indexOf(k2)<0)lvB.push(k2)});
+    if(lvB.length!==2){err=lvB.length<2?'The outcome has only one answer among the rows used, so there is nothing to predict.':'The outcome has '+lvB.length+' different answers among the rows used ('+lvB.slice(0,5).join(', ')+'). It must have exactly two.'}
+    else{
+      var posEl=document.getElementById('sf_pos'),want=((posEl&&posEl.value)||'').trim().toLowerCase(),pos=null;
+      if(want){lvB.forEach(function(k2){if(k2.toLowerCase()===want)pos=k2});if(pos===null)err='“'+posEl.value.trim()+'” is not one of the two answers ('+lvB.join(', ')+').'}
+      else{lvB.forEach(function(k2){if(['1','yes','true','y','present','agree'].indexOf(k2.toLowerCase())>=0)pos=k2});
+        if(pos===null){var srt=lvB.slice().sort(function(a,b){var x=parseFloat(a),z=parseFloat(b);return isFinite(x)&&isFinite(z)?x-z:(a<b?-1:a>b?1:0)});pos=srt[1]}}
+      if(pos!==null){posL=pos;negL=lvB[0]===pos?lvB[1]:lvB[0];y=kept.map(function(r){return String(r[dvI]).trim()===pos?1:0})}
+    }
+  }
   function addNum(list,b){list.forEach(function(i){xs.push(kept.map(function(r){return parseFloat(r[i])}));labels.push(d.cols[i].name);isDummy.push(false);blk.push(b)})}
   function addCat(list,b){
     list.forEach(function(i){
@@ -7746,7 +7807,122 @@ function stkMRData(){
     });
   }
   addNum(idxs1,1);addCat(cidx1,1);addNum(idxs2,2);addCat(cidx2,2);
-  return{dvI:dvI,idxs:idxs,cidxs:cidxs,y:y,xs:xs,labels:labels,isDummy:isDummy,blk:blk,hasStep2:(idxs2.length+cidx2.length)>0,step1n:idxs1.length+cidx1.length,refs:refs,dropped:dropped,err:err};
+  return{posL:posL,negL:negL,dvI:dvI,idxs:idxs,cidxs:cidxs,y:y,xs:xs,labels:labels,isDummy:isDummy,blk:blk,hasStep2:(idxs2.length+cidx2.length)>0,step1n:idxs1.length+cidx1.length,refs:refs,dropped:dropped,err:err};
+}
+
+/* ---------- Logistic regression (Version 27) ---------- */
+/* Maximum likelihood by Newton-Raphson with step halving. xs: predictor columns, y: 0/1. */
+function stkLogit(xs,y){
+  var n=y.length,k=xs.length,p=k+1,cols=[],i,j,r,c,it;
+  var one=new Array(n);for(r=0;r<n;r++)one[r]=1;cols.push(one);xs.forEach(function(x){cols.push(x)});
+  var b=new Array(p).fill(0),n1=0;y.forEach(function(v){n1+=v});
+  if(n1===0||n1===n)return null;
+  b[0]=Math.log(n1/(n-n1));
+  function llF(bb){var t=0;for(r=0;r<n;r++){var z=0;for(j=0;j<p;j++)z+=bb[j]*cols[j][r];t+=y[r]*z-(z>0?z+Math.log(1+Math.exp(-z)):Math.log(1+Math.exp(z)))}return t}
+  function inv(H){
+    var M=[];for(i=0;i<p;i++){M.push(new Array(2*p));for(j=0;j<p;j++){M[i][j]=H[i][j];M[i][p+j]=i===j?1:0}}
+    var sc=M.map(function(row,ix){return Math.abs(row[ix])||1});
+    for(i=0;i<p;i++){var piv=i;for(r=i+1;r<p;r++)if(Math.abs(M[r][i])>Math.abs(M[piv][i]))piv=r;
+      if(Math.abs(M[piv][i])<1e-11*sc[i])return null;
+      var tmp=M[i];M[i]=M[piv];M[piv]=tmp;var ts=sc[i];sc[i]=sc[piv];sc[piv]=ts;
+      var d=M[i][i];for(c=0;c<2*p;c++)M[i][c]/=d;
+      for(r=0;r<p;r++)if(r!==i){var f=M[r][i];if(f!==0)for(c=0;c<2*p;c++)M[r][c]-=f*M[i][c]}}
+    return M.map(function(row){return row.slice(p)});
+  }
+  var cur=llF(b),conv=false,Hinv=null,pr=new Array(n);
+  for(it=0;it<100;it++){
+    var g=new Array(p).fill(0),H=[];for(i=0;i<p;i++)H.push(new Array(p).fill(0));
+    for(r=0;r<n;r++){var z=0;for(j=0;j<p;j++)z+=b[j]*cols[j][r];var pp=1/(1+Math.exp(-z));pr[r]=pp;var w=pp*(1-pp),e=y[r]-pp;
+      for(i=0;i<p;i++){g[i]+=cols[i][r]*e;for(j=0;j<=i;j++)H[i][j]+=cols[i][r]*cols[j][r]*w}}
+    for(i=0;i<p;i++)for(j=i+1;j<p;j++)H[i][j]=H[j][i];
+    var Hn=inv(H);if(!Hn){if(it===0)return{singular:true};return{sep:true}}Hinv=Hn;
+    var step=Hinv.map(function(row){var t=0;for(j=0;j<p;j++)t+=row[j]*g[j];return t});
+    var s2=1,nb,nl;
+    for(var h=0;h<30;h++){nb=b.map(function(v,q){return v+s2*step[q]});nl=llF(nb);if(isFinite(nl)&&nl>=cur-1e-12)break;s2/=2}
+    var dl=Math.abs(nl-cur);b=nb;cur=nl;
+    if(dl<1e-11*(1+Math.abs(cur))&&Math.max.apply(null,step.map(Math.abs))*s2<1e-8){conv=true;break}
+  }
+  for(r=0;r<n;r++){var z2=0;for(j=0;j<p;j++)z2+=b[j]*cols[j][r];pr[r]=1/(1+Math.exp(-z2))}
+  var se=Hinv.map(function(row,ix){return Math.sqrt(row[ix])});
+  var sep=!conv||b.some(function(v){return Math.abs(v)>30})||se.some(function(v){return !isFinite(v)||v>500});
+  var ll0=n1*Math.log(n1/n)+(n-n1)*Math.log((n-n1)/n);
+  return{beta:b,se:se,inv:Hinv,ll:cur,ll0:ll0,pr:pr,iter:it+1,conv:conv,sep:sep,n1:n1};
+}
+/* Area under the ROC curve from the fitted probabilities (Mann-Whitney form, ties count one half). */
+function stkAUC(pr,y){
+  var idx=pr.map(function(_,i){return i}).sort(function(a,b){return pr[a]-pr[b]}),rk=new Array(pr.length),i=0;
+  while(i<idx.length){var j=i;while(j+1<idx.length&&pr[idx[j+1]]===pr[idx[i]])j++;var avg=(i+j)/2+1;for(var q=i;q<=j;q++)rk[idx[q]]=avg;i=j+1}
+  var n1=0,sr=0;y.forEach(function(v,t){if(v===1){n1++;sr+=rk[t]}});var n0=y.length-n1;
+  return(sr-n1*(n1+1)/2)/(n1*n0);
+}
+
+/* ============ Sample size and power (Version 28) ============ */
+/* Noncentral distributions by Poisson mixtures (chi-square, F) and AS 243 (t). All sums run until the Poisson weights are negligible past the mode. */
+function pwLogPois(j,mu){return -mu+j*Math.log(mu)-gammaln(j+1)}
+function pwNcChiSf(x,df,lam){
+  if(x<=0)return 1;if(!(lam>0))return pFromChi(x,df);
+  var mu=lam/2,j0=Math.floor(mu),s=0,j,w,term;
+  for(j=j0;j<j0+100000;j++){w=Math.exp(pwLogPois(j,mu));term=w*gammaq((df+2*j)/2,x/2);s+=term;if(j>mu&&w<1e-16)break}
+  for(j=j0-1;j>=0;j--){w=Math.exp(pwLogPois(j,mu));term=w*gammaq((df+2*j)/2,x/2);s+=term;if(w<1e-16)break}
+  return Math.min(1,s);
+}
+function pwNcFSf(F,d1,d2,lam){
+  if(F<=0)return 1;if(!(lam>0))return pFromF(F,d1,d2);
+  var x=d1*F/(d1*F+d2),mu=lam/2,j0=Math.floor(mu),s=0,j,w;
+  for(j=j0;j<j0+100000;j++){w=Math.exp(pwLogPois(j,mu));s+=w*(1-betai(d1/2+j,d2/2,x));if(j>mu&&w<1e-16)break}
+  for(j=j0-1;j>=0;j--){w=Math.exp(pwLogPois(j,mu));s+=w*(1-betai(d1/2+j,d2/2,x));if(w<1e-16)break}
+  return Math.min(1,s);
+}
+/* P(T' <= t) for T' ~ noncentral t with df and noncentrality delta (Lenth 1989, AS 243). */
+function pwNctCdf(t,df,delta){
+  if(df<=0)return NaN;if(delta===0)return t>=0?1-0.5*pFromT(t,df):0.5*pFromT(-t,df);
+  var neg=t<0;if(neg){t=-t;delta=-delta}
+  var x=t*t/(t*t+df),lam=delta*delta/2,s=0,j,p,q,j0=Math.floor(lam),lg=Math.log(lam>0?lam:1e-300);
+  function wts(jj){var lp=-lam+jj*lg-gammaln(jj+1);return[Math.exp(lp),delta*Math.exp(-lam+jj*lg-gammaln(jj+1.5))/Math.SQRT2]}
+  for(j=j0;j<j0+100000;j++){var w=wts(j);s+=w[0]*betai(j+0.5,df/2,x)+w[1]*betai(j+1,df/2,x);if(j>lam&&w[0]<1e-16&&Math.abs(w[1])<1e-16)break}
+  for(j=j0-1;j>=0;j--){var w2=wts(j);s+=w2[0]*betai(j+0.5,df/2,x)+w2[1]*betai(j+1,df/2,x);if(w2[0]<1e-16&&Math.abs(w2[1])<1e-16)break}
+  var cdf=stkNormCdf(-delta)+0.5*s;
+  cdf=Math.min(1,Math.max(0,cdf));
+  return neg?1-cdf:cdf;
+}
+function pwChiCrit(alpha,df){var lo=0,hi=1000,i;while(pFromChi(hi,df)>alpha)hi*=2;for(i=0;i<200;i++){var m=(lo+hi)/2;if(pFromChi(m,df)>alpha)lo=m;else hi=m}return(lo+hi)/2}
+/* Power of a t test with noncentrality delta, df, alpha and tails (1 or 2). */
+function pwPowerT(delta,df,alpha,tails){
+  var tc=stkTCrit(df,tails===2?alpha:2*alpha);
+  if(tails===2)return 1-pwNctCdf(tc,df,delta)+pwNctCdf(-tc,df,delta);
+  return 1-pwNctCdf(tc,df,delta);
+}
+function pwPowerF(f2,d1,d2,alpha,lamFactor){
+  var Fc=stkFQuant(1-alpha,d1,d2);return pwNcFSf(Fc,d1,d2,f2*lamFactor);
+}
+/* spec: {test,alpha,tails,effect,k,p,df}, n: people (per group for 'ind') */
+function pwPower(spec,n){
+  var a=spec.alpha,e=spec.effect,tl=spec.tails||2;
+  switch(spec.test){
+    case 'ind':{var N=2*n;if(n<2)return NaN;return pwPowerT(e*Math.sqrt(n/2),N-2,a,tl)}
+    case 'paired':case 'one':{if(n<2)return NaN;return pwPowerT(e*Math.sqrt(n),n-1,a,tl)}
+    case 'anova':{var k=spec.k,N2=n*k;if(N2<=k)return NaN;return pwPowerF(e*e,k-1,N2-k,a,N2)}
+    case 'regr':{var kp=spec.p;if(n<=kp+1)return NaN;return pwPowerF(e,kp,n-kp-1,a,n)}
+    case 'chisq':{var Xc=pwChiCrit(a,spec.df);return pwNcChiSf(Xc,spec.df,e*e*n)}
+    case 'corr':{if(n<4)return NaN;var z=0.5*Math.log((1+e)/(1-e)),se=Math.sqrt(n-3),zc=stkQnorm(1-(tl===2?a/2:a));var m=z*se;return tl===2?(1-stkNormCdf(zc-m)+stkNormCdf(-zc-m)):1-stkNormCdf(zc-m)}
+  }
+  return NaN;
+}
+/* Smallest n with power >= target (n per group for 'ind'); null if above 100000. */
+function pwSolveN(spec,target){
+  var lo=2,hi=4,pw;
+  while(hi<=200000){pw=pwPower(spec,hi);if(isFinite(pw)&&pw>=target)break;lo=hi;hi*=2}
+  if(hi>200000)return null;
+  while(hi-lo>1){var m=Math.floor((lo+hi)/2),pm=pwPower(spec,m);if(isFinite(pm)&&pm>=target)hi=m;else lo=m}
+  var minN={ind:2,paired:3,one:3,anova:2,regr:spec.p+2,chisq:2,corr:4}[spec.test];
+  return Math.max(hi,minN);
+}
+/* Smallest effect with power >= target at the given n. */
+function pwSolveEffect(spec,n,target){
+  var hiMax={ind:5,paired:5,one:5,anova:3,regr:10,chisq:3,corr:0.9999}[spec.test],lo=1e-6,hi=hiMax,s2=Object.assign({},spec),i;
+  s2.effect=hi;var ph=pwPower(s2,n);if(!(ph>=target))return null;
+  for(i=0;i<60;i++){var m=(lo+hi)/2;s2.effect=m;if(pwPower(s2,n)>=target)hi=m;else lo=m}
+  return hi;
 }
 
 /* Simple effects after a significant interaction: one-way effect of one factor inside each level of the other, tested against the error term of the whole design. */
@@ -8302,6 +8478,10 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>Assumption checks. Under the parametric tests the lab runs a Shapiro-Wilk test for each group (for paired tests, on the differences; for regression, on the residuals) and a Brown-Forsythe test for equal spread. Read them as a prompt to look at the histogram. They are weak with small samples and over-sensitive with large ones. The Shapiro-Wilk W and p follow the Royston (1995) method used by R.</p>
 <p>Two-way ANOVA. Choose one score and two grouping variables. The lab fits every combination of the two factors, reports the two main effects and their interaction with Type III sums of squares, and shows the cell means. Every combination must contain at least one score. With unequal cell sizes SPSS and JASP agree with this table; R's basic <code>anova()</code> does not, because it uses Type I. A significant interaction means the main effects cannot be read alone, so the lab then adds simple-effects tables (one factor tested inside each level of the other, with a Bonferroni column).</p>
 <p>Multiple regression. Choose the outcome, then tick two to eight numeric predictors. The lab reports R², adjusted R², the overall F test, and for each predictor b, its standard error, the standardised β, t, p, a 95% confidence interval and the VIF. Rows with a missing value in any chosen column are left out and counted. Categorical predictors can be ticked too: each is turned into 0/1 columns against a reference level (the largest group unless you name one). Two extra lists let you enter predictors in a second step (hierarchical regression): the lab then reports the change in R² with its F test. A VIF of 5 or more is a warning about overlapping predictors. The residuals get the same Shapiro-Wilk check as the other tests.</p>
+<p>Logistic regression. Choose an outcome with exactly two answers (0/1 or yes/no), then tick the predictors. The lab reports the likelihood-ratio test of the whole model, three pseudo-R² values, the AUC, and for each predictor its odds ratio with a 95% interval. A classification table shows how many people the model sorted correctly. If one predictor separates the two outcomes perfectly, the model cannot be fitted and the lab says so. Plan on at least 10 cases in the rarer outcome for every predictor.</p>
+<p>Moderation. Choose the outcome Y, the predictor X and the moderator W, all numeric (a 0/1 column works for a two-group moderator). The lab centres X and W, tests the interaction, and reports the slope of X at low, average and high W with a plot. It also gives the Johnson-Neyman points, the values of W where the slope of X turns significant. Plan on 50 or more people, because interactions need large samples.</p>
+<p>Mediation. Choose X, the mediator M and the outcome Y. The lab gives the paths a, b, c′ and c with their tests, and the indirect effect a × b with a 5,000-resample percentile bootstrap interval. The seed is fixed, so the same data always give the same interval. The order X, M, Y has to come from your theory or design. Numbers measured all at one time cannot prove it.</p>
+<p>Sample size and power. Open it from the Statistics Lab panel. Pick the test you plan to run, then ask for one of three things: the number of people you need, the power a sample of a given size gives, or the smallest effect that sample can detect. The lab uses the exact noncentral distributions for the t-tests, ANOVA, regression and chi-square, and the Fisher z approximation for correlation. It also writes a sentence you can paste into a methods section or an ethics form. The effect size is the number that decides the result, so take it from earlier studies or from the smallest difference you would care about, and have a supervisor confirm it.</p>
 <p>How the numbers were checked. Every test was compared with reference values from the SciPy library, and the distribution functions on a grid of 100 points. That is one independent check, not a replacement for your own: before a thesis relies on a result, run the same data in JASP, SPSS or R and compare.</p>
 <p>Anything the lab cannot compute, such as a two-way ANOVA or multiple regression, needs another program for now.</p>`},
 {id:'scales',g:'Tools',t:'Scale library',k:'scale library questionnaire rosenberg swls self-esteem life satisfaction score reverse licence attribution codebook',h:`
@@ -8317,7 +8497,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>Press <b>Check the numbers in my document</b> in the Statistics panel. It finds results written in the usual APA order, such as <i>t(21) = 2.15, p = .043</i>, recomputes p from the statistic and degrees of freedom, and marks each one as matching, close, or wrong.</p>
 <p>It catches typos, rounding slips, and a p that was written as significant when the numbers say otherwise. It cannot tell you whether you picked the right test.</p>`},
 {id:'charts',g:'Tools',t:'Charts',k:'chart graph bar line venn figure picture',h:`
-<p>Chart Maker draws bar and line charts from numbers you type or paste, and two- or three-circle Venn diagrams. Add the finished chart to your document with one press.</p>
+<p>Quick chart draws bar and line charts from numbers you type or paste, and two- or three-circle Venn diagrams. Add the finished chart to your document with one press.</p>
 <p>Label the axes with units, and give every figure a caption in the text.</p>`},
 {id:'pictures',g:'Tools',t:'Pictures and captions',k:'picture photo image crop rotate eyes face identity black bar pixelate background caption figure table number apa',h:`
 <p>Insert a picture with <b>Image</b>. Tap the picture, then press <b>Edit picture</b>. You can turn it, <b>Crop</b> it, change brightness and contrast, and hide a participant's identity: <b>Black bar</b> over the eyes or the whole face, <b>Pixelate</b>, or <b>Plain background</b> (you draw the outline by hand; there is no automatic cut-out yet). Pick a tool, then drag on the picture. <b>Undo</b> steps back.</p>
@@ -8466,8 +8646,8 @@ function guidePrint(){
    Local only. The report holds app version, tool, browser, screen size, provider name and the
    last few error messages (shortened, with emails and phone numbers masked). Never document text. */
 /* APP_VERSION goes up by one with every upload so Dr. Sharma can see at a glance that the new files are live. */
-const APP_VERSION=25;
-const APP_BUILD='2026.10.10y';
+const APP_VERSION=29;
+const APP_BUILD='2026.10.11d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -8894,6 +9074,9 @@ const STAT_TESTS={
   mcnemar:{label:'McNemar test (same people, a yes/no answer at two times)',fields:[{id:'v1',label:'First time (a column with exactly two different answers)',type:'binary'},{id:'v2',label:'Second time (same two answers)',type:'binary'}],extra:[{id:'pos',label:'Which answer counts as yes (optional)',placeholder:'e.g. Yes. Empty: 1, yes, true or present, else the later answer in the alphabet'}]},
   cochran:{label:"Cochran's Q (same people, a yes/no answer at three or more times)",fields:[{id:'items',label:'One column per time or condition (tick each; every row is one person)',type:'binary',multi:true,unchecked:true}],extra:[{id:'pos',label:'Which answer counts as yes (optional)',placeholder:'e.g. Yes. Empty: 1, yes, true or present, else the later answer in the alphabet'}]},
   chisq:{label:'Chi-square test of independence',fields:[{id:'v1',label:'Variable 1',type:'categorical'},{id:'v2',label:'Variable 2',type:'categorical'}]},
+  moderate:{label:'Moderation: does the effect of X on Y depend on a moderator W?',fields:[{id:'dv',label:'Outcome (Y)',type:'numeric'},{id:'x',label:'Predictor (X)',type:'numeric'},{id:'w',label:'Moderator (W)',type:'numeric'}]},
+  mediate:{label:'Mediation: does a mediator M carry part of the effect of X on Y?',fields:[{id:'x',label:'Predictor (X)',type:'numeric'},{id:'m',label:'Mediator (M)',type:'numeric'},{id:'dv',label:'Outcome (Y)',type:'numeric'}]},
+  logistic:{label:'Logistic regression (a yes/no outcome predicted from other variables)',fields:[{id:'dv',label:'Outcome (a column with exactly two different answers, such as 0/1 or yes/no)',type:'binary'},{id:'preds',label:'Numeric predictors (tick any; a 0/1 column can go here too)',type:'numeric',multi:true,unchecked:true},{id:'cats',label:'Categorical predictors (tick any; each becomes 0/1 columns)',type:'categorical',multi:true,unchecked:true}],extra:[{id:'pos',label:'Which answer counts as the event (optional)',placeholder:'e.g. Yes. Empty: 1, yes, true or present, else the later answer in the alphabet'},{id:'ref',label:'Reference level for a categorical predictor (optional)',placeholder:'e.g. gender=Male, group=Control. Empty means the largest group'}]},
   mregress:{label:'Multiple linear regression',fields:[{id:'dv',label:'Outcome (Y)',type:'numeric'},{id:'preds',label:'Numeric predictors (tick any; a 0/1 column can go here too)',type:'numeric',multi:true,unchecked:true},{id:'cats',label:'Categorical predictors (tick any; each becomes 0/1 columns)',type:'categorical',multi:true,unchecked:true},{id:'preds2',label:'Step 2 (optional): numeric predictors added after the ones above',type:'numeric',multi:true,unchecked:true},{id:'cats2',label:'Step 2 (optional): categorical predictors added after the ones above',type:'categorical',multi:true,unchecked:true}],extra:[{id:'ref',label:'Reference level for a categorical predictor (optional)',placeholder:'e.g. gender=Male, group=Control. Empty means the largest group'}]},
   friedman:{label:'Friedman test (same people measured 3 or more times, ranks)',fields:[{id:'items',label:'One column per time point or condition (tick each; every row is one person)',type:'numeric',multi:true,unchecked:true}]},
   rmanova:{label:'Repeated-measures ANOVA (same people measured 3 or more times)',fields:[{id:'items',label:'One column per time point or condition (tick each; every row is one person)',type:'numeric',multi:true,unchecked:true}]},
@@ -9086,6 +9269,16 @@ function statsChartInteraction(aL,bL,means,aName,bName,dvName){
   _statsChartInstance=new Chart(ctx,{type:'line',data:{labels:aL.map(String),datasets},
     options:{plugins:{title:{display:true,text:'Interaction plot: mean '+dvName+' by '+aName+', one line per '+bName+' (parallel lines mean no interaction)'},legend:{display:true,position:'bottom'}},scales:{x:{title:{display:true,text:aName}},y:{beginAtZero:false,title:{display:true,text:dvName}}}}});
 }
+
+function statsChartSlopes(xmin,xmax,lines,xName,yName,wName){
+  if(!statsChartAvailable())return statsChartNoLib();
+  const box=document.getElementById('statsChartBox');
+  box.innerHTML='<canvas id="statsChartCanvas" height="170"></canvas>';
+  const ctx=document.getElementById('statsChartCanvas').getContext('2d');
+  const palette=['#0891b2','#7c3aed','#dc2626'],dash=[[6,4],[],[2,3]];
+  const datasets=lines.map((l,j)=>({label:l.label,data:[{x:xmin,y:l.b0+l.b1*xmin},{x:xmax,y:l.b0+l.b1*xmax}],showLine:true,borderColor:palette[j%3],backgroundColor:palette[j%3],borderWidth:2.5,borderDash:dash[j%3],pointRadius:0,fill:false}));
+  _statsChartInstance=new Chart(ctx,{type:'scatter',data:{datasets},options:{plugins:{title:{display:true,text:'Simple slopes: '+yName+' on '+xName+' at three levels of '+wName},legend:{display:true,position:'bottom'}},scales:{x:{type:'linear',title:{display:true,text:xName}},y:{title:{display:true,text:yName}}}}});
+}
 function statsChartGrouped(rowLabels,colLabels,table,title){
   if(!statsChartAvailable())return statsChartNoLib();
   const box=document.getElementById('statsChartBox');
@@ -9198,8 +9391,8 @@ const TG_RES={
   pearson:{name:'Pearson correlation',keys:['pearson'],why:'Two numeric scores and a question about how they move together. Correlation does not show cause.',alt:[['spearman','Spearman, if the plot is curved but still rising or falling, or if a few extreme values drive the result']]},
   spearman:{name:'Spearman correlation',keys:['spearman'],why:'A rating item or ranks are involved, so a rank-based correlation fits.',alt:[]},
   regression:{name:'Simple linear regression',keys:['regression'],why:'One numeric predictor and a numeric outcome.',alt:[['pearson','Pearson, if you only need the strength of the relationship']]},
-  multreg:{name:'Multiple regression',keys:[],why:'Two or more predictors of a numeric outcome. Plan on 10 to 20 cases per predictor.',alt:[]},
-  logistic:{name:'Logistic regression',keys:[],why:'A yes/no outcome predicted from other variables.',alt:[]},
+  multreg:{name:'Multiple regression',keys:['mregress'],why:'Two or more predictors of a numeric outcome. Plan on 10 to 20 cases per predictor.',alt:[]},
+  logistic:{name:'Logistic regression',keys:['logistic'],why:'A yes/no outcome predicted from other variables.',alt:[]},
   gof:{name:'Chi-square goodness-of-fit',keys:['gof'],why:'One categorical variable against counts you expected. With two categories and a small sample the app switches to an exact binomial test.',alt:[]},
   chisq:{name:'Chi-square test of independence',keys:['chisq'],why:'Two categorical variables, different people.',alt:[],note:'On a 2 by 2 table where any expected count is below 5, the app reports Fisher\'s exact test instead. For a larger table with many small counts it warns you: merge sparse categories or ask a statistician about the Fisher-Freeman-Halton test.'},
   mcnemar:{name:'McNemar test',keys:['mcnemar'],why:'Same people, a yes/no answer at two times.',alt:[]},
@@ -9517,6 +9710,9 @@ const TG_EXTRA={
   ttestInd:{assume:`Each person appears in one group only and the scores are independent. Welch's version does not need equal spread, and it copes with groups of different sizes.`,watch:`Groups under about 20 with strong skew or extreme values (use Mann-Whitney), or the same people in both groups (use the paired test).`},
   mannwhitney:{assume:`Each person appears in one group only. The test compares ranks, so it does not care about the exact size of the gaps between scores.`,watch:`The same people in both groups, or many ties in a tiny sample.`},
   friedman:{assume:`The same people were scored under every condition, and the scores can at least be put in order within each person. It needs no normal distribution.`,watch:`Fewer than about 10 people, many tied scores (a short rating scale), people missing a time point (they are left out), or conditions that were not counterbalanced.`},
+  moderate:{assume:`Each row is a different person, Y is numeric, and the relationship between X and Y changes in a straight-line way as W changes. The residuals are roughly normal with similar spread.`,watch:`Fewer than about 50 people (interactions need large samples), a moderator or predictor with extreme outliers, a moderator that is a category with very uneven groups (use a 0/1 column and check each group is large), and reading a significant interaction as proof that W causes the change.`},
+  mediate:{assume:`Each row is a different person, all three variables are numeric, and the paths are straight lines. The order X, then M, then Y must come from theory or design, because the numbers cannot tell the order.`,watch:`Fewer than about 100 people (the bootstrap interval is unstable), all three variables measured at one time (the result then describes an association pattern, not proof of a causal chain), a mediator that is nearly a copy of X or Y, and other variables that affect both M and Y but are not in the model.`},
+  logistic:{assume:`Each row is a different person, the outcome has two answers, and the log odds of the event rise or fall in a straight line with each numeric predictor. The predictors should not nearly copy one another.`,watch:`Fewer than about 10 events (or 10 non-events) per predictor, a predictor that predicts the outcome perfectly (the model then cannot be fitted), one person counted twice, and a curved relationship that a straight line on the log-odds scale misses.`},
   mixed:{assume:`People in each group are independent of one another, the scores are roughly normal within each group and time, the spread is similar across groups, and the differences between each pair of times have equal spread (sphericity, tested and corrected below).`,watch:`Groups with fewer than about 10 people, very unequal group sizes (the time effect then gives each group equal weight, as SPSS does), people missing a time point (they are left out), and no check of equal covariance matrices across groups (Box's M is not run here).`},
   rmanova:{assume:`The same people were measured under every condition or at every time, and the differences between each pair of conditions have roughly equal spread (sphericity, tested and corrected below).`,watch:`Fewer than about 10 people, strongly skewed scores, people missing a time point (they are left out), or conditions that were not counterbalanced, so that order and practice effects mix with the condition.`},
   ttestPaired:{assume:`Each person has two scores that belong together, and the differences between them are not wildly skewed.`,watch:`Strongly skewed or ordinal differences (use Wilcoxon), or people with only one of the two scores.`},
@@ -10096,6 +10292,139 @@ function statsRunNow(){
       const apa='A multiple linear regression with '+names.join(', ')+' as predictors of '+dvName+' '+(pF<0.05?'was significant':'was not significant')+', F('+k+', '+dfe+') = '+F.toFixed(2)+', '+fmtP(pF)+', R² = '+noLead(r2.toFixed(2))+', adjusted R² = '+noLead(adj.toFixed(2))+'. Individual predictors: '+bits.join('; ')+'.'+stepAPA;
       statsResultsShow(html,apa);
       statsChartHistogram(o.resid,'Residuals of the regression');
+    }else if(key==='logistic'){
+      const m=stkMRData(true),dvName=d.cols[m.dvI].name;
+      if(m.err){showToast(m.err);return}
+      const k=m.xs.length,n=m.y.length;
+      if(k<1){showToast('Tick at least 1 predictor column (a categorical predictor with 3 or more levels counts as several).');return}
+      if(k>12){showToast('This test handles up to 12 predictor columns after categorical predictors are expanded');return}
+      const ev=m.y.reduce((a,v)=>a+v,0),ne=n-ev;
+      if(n<k+10||ev<3||ne<3){showToast('Too few rows for this model: '+n+' complete rows with '+ev+' events and '+ne+' non-events. Need at least '+(k+10)+' rows and 3 of each outcome.');return}
+      const o=stkLogit(m.xs,m.y);
+      if(!o){showToast('The outcome has only one answer, so there is nothing to predict.');return}
+      if(o.sep&&!o.beta){showToast('The model could not be fitted. A predictor (or a combination of them) separates the two outcomes perfectly, or almost perfectly, so the estimates run off to infinity. This usually means too many predictors for the number of events. Remove a predictor, or merge small categories.');return}
+      if(o.singular){showToast('Two or more predictors carry the same information (one is a copy or an exact combination of others, or has no variation), so the model cannot be calculated. Remove one.');return}
+      if(o.sep){showToast('The model could not be fitted. A predictor (or a combination of them) separates the two outcomes perfectly, or almost perfectly, so the estimates run off to infinity. This usually means too many predictors for the number of events. Remove a predictor, or merge small categories.');return}
+      const lr=2*(o.ll-o.ll0),pLR=pFromChi(Math.max(0,lr),k),cs=1-Math.exp((2/n)*(o.ll0-o.ll)),nag=cs/(1-Math.exp((2/n)*o.ll0)),mcf=1-o.ll/o.ll0;
+      const auc=stkAUC(o.pr,m.y);
+      let tp=0,tn=0,fp=0,fn=0;o.pr.forEach((q,i)=>{const pd=q>=0.5?1:0;if(pd===1&&m.y[i]===1)tp++;else if(pd===0&&m.y[i]===0)tn++;else if(pd===1)fp++;else fn++});
+      const names=m.labels,f3=x=>noLead(x.toFixed(3)),f2=x=>noLead(x.toFixed(2));
+      const vif=k>1?m.xs.map((x,j)=>{const others=m.xs.filter((q,i)=>i!==j),q=stkOLS(others,x);if(!q)return Infinity;return 1/(1-(1-q.sse/q.sst))}):[1];
+      let rows='';const coef=[];
+      for(let j=0;j<=k;j++){
+        const b=o.beta[j],se=o.se[j],z=b/se,pj=pFromZ(z),orr=Math.exp(b),lo=Math.exp(b-1.959963984540054*se),hi=Math.exp(b+1.959963984540054*se);
+        coef.push({b:b,se:se,z:z,p:pj,or:orr,lo:lo,hi:hi});
+        rows+='<tr><td>'+(j===0?'Intercept':escHTML(names[j-1]))+'</td><td>'+b.toFixed(3)+'</td><td>'+se.toFixed(3)+'</td><td>'+z.toFixed(2)+'</td><td>'+pCell(pj)+'</td><td>'+(j===0?'':orr.toFixed(3))+'</td><td>'+(j===0?'':'['+lo.toFixed(3)+', '+hi.toFixed(3)+']')+'</td></tr>';
+      }
+      const maxV=Math.max.apply(null,vif),epv=Math.min(ev,ne)/k;
+      let notes='';
+      if(epv<10)notes+=' Only '+Math.min(ev,ne)+' cases in the rarer outcome for '+k+' predictor column'+(k===1?'':'s')+' ('+epv.toFixed(1)+' per predictor). A common rule of thumb asks for at least 10, and below that the estimates are biased and the intervals unreliable.';
+      if(maxV>=10)notes+=' A VIF of 10 or more means a predictor overlaps heavily with the others, so its odds ratio is unstable.';
+      else if(maxV>=5)notes+=' A VIF above 5 means some predictors overlap noticeably, which widens their intervals.';
+      if(m.refs.length)notes+=' Each categorical predictor is turned into 0/1 columns, one per level except the reference level, and each odds ratio compares a level with the reference level. Reference levels: '+m.refs.map(r=>r.name+' = '+r.level+(r.auto?' (the largest group)':'')).join('; ')+'.';
+      if(m.refs.some(r=>r.small))notes+=' At least one level of a categorical predictor has fewer than 5 rows, so its odds ratio rests on very little data.';
+      if(m.dropped)notes+=' '+m.dropped+' row'+(m.dropped===1?' was':'s were')+' left out because a value was missing.';
+      const acc=(tp+tn)/n,sens=tp+fn?tp/(tp+fn):NaN,spec=tn+fp?tn/(tn+fp):NaN;
+      const html='<p class="desc">Model: the log odds that '+escHTML(dvName)+' = <b>'+escHTML(m.posL)+'</b> (the event) rather than '+escHTML(m.negL)+', predicted from '+names.map(escHTML).join(', ')+'. N = '+n+' ('+ev+' events, '+ne+' non-events).</p>'+
+        '<table class="stats-table"><tr><th>Likelihood-ratio χ²</th><th>df</th><th>p</th><th>McFadden R²</th><th>Cox-Snell R²</th><th>Nagelkerke R²</th><th>AUC</th></tr><tr><td>'+lr.toFixed(2)+'</td><td>'+k+'</td><td>'+pCell(pLR)+'</td><td>'+f3(mcf)+'</td><td>'+f3(cs)+'</td><td>'+f3(nag)+'</td><td>'+f3(auc)+'</td></tr></table>'+
+        '<table class="stats-table" style="margin-top:10px"><tr><th>Predictor</th><th>b (log odds)</th><th>SE</th><th>Wald z</th><th>p</th><th>Odds ratio</th><th>95% CI for the odds ratio</th></tr>'+rows+'</table>'+
+        '<table class="stats-table" style="margin-top:10px"><tr><th></th><th>Predicted '+escHTML(m.negL)+'</th><th>Predicted '+escHTML(m.posL)+'</th></tr><tr><td>Actually '+escHTML(m.negL)+'</td><td>'+tn+'</td><td>'+fp+'</td></tr><tr><td>Actually '+escHTML(m.posL)+'</td><td>'+fn+'</td><td>'+tp+'</td></tr></table>'+
+        '<p class="desc">Correct at a .50 cut-off: '+(acc*100).toFixed(1)+'%. Sensitivity (events caught) '+(isFinite(sens)?(sens*100).toFixed(1)+'%':'–')+', specificity (non-events caught) '+(isFinite(spec)?(spec*100).toFixed(1)+'%':'–')+'. Accuracy looks good by default when one outcome is much commoner than the other, so read the AUC and the two rates beside it. These classification figures use the same people that built the model, so they are optimistic for new people.</p>'+
+        '<p class="desc">An odds ratio is the factor by which the odds of the event are multiplied for one more unit of a numeric predictor, or for the level against the reference level, with the other predictors held constant. Above 1 raises the odds, below 1 lowers them. The p-values are Wald tests; the likelihood-ratio test above is the one for the model as a whole. The intervals are Wald intervals. The Hosmer-Lemeshow test is not shown, because programs form its groups differently and report different values.'+notes+'</p>';
+      const bits=names.map((nm,j)=>nm+' (OR = '+coef[j+1].or.toFixed(2)+', 95% CI ['+coef[j+1].lo.toFixed(2)+', '+coef[j+1].hi.toFixed(2)+'], '+fmtP(coef[j+1].p)+')');
+      const apa='A logistic regression with '+names.join(', ')+' as predictors of '+dvName+' ('+m.posL+' versus '+m.negL+') '+(pLR<0.05?'was significant':'was not significant')+', χ²('+k+', N = '+n+') = '+lr.toFixed(2)+', '+fmtP(pLR)+', Nagelkerke R² = '+f3(nag)+'. The model classified '+(acc*100).toFixed(1)+'% of cases correctly (AUC = '+f2(auc)+'). Odds ratios: '+bits.join('; ')+'.';
+      statsResultsShow(html,apa);
+
+    }else if(key==='moderate'){
+      const yI=parseInt(gv('dv'),10),xI=parseInt(gv('x'),10),wI=parseInt(gv('w'),10);
+      if(new Set([yI,xI,wI]).size<3){showToast('Choose three different columns for Y, X and W');return}
+      const yN=d.cols[yI].name,xN=d.cols[xI].name,wN=d.cols[wI].name,X0=[],W0=[],Y0=[];let dropped=0;
+      d.rows.forEach(r=>{const a=parseFloat(r[xI]),b=parseFloat(r[wI]),c=parseFloat(r[yI]);if([r[xI],r[wI],r[yI]].some(v=>v===''||v===undefined)||![a,b,c].every(isFinite)){dropped++;return}X0.push(a);W0.push(b);Y0.push(c)});
+      window._statsSkipped=(window._statsSkipped||0)+dropped;
+      const n=Y0.length;
+      if(n<10){showToast('Need at least 10 people with all three values; there are '+n);return}
+      const mx=smean(X0),mw=smean(W0),sdx=ssd(X0),sdw=ssd(W0);
+      if(!(sdx>0)||!(sdw>0)){showToast('X and W each need some variation (not every person the same)');return}
+      const xc=X0.map(v=>v-mx),wc=W0.map(v=>v-mw),ic=xc.map((v,i)=>v*wc[i]);
+      const o=stkOLS([xc,wc,ic],Y0);
+      if(!o){showToast('The interaction cannot be calculated: X, W and their product carry the same information (for example, W is a copy of X).');return}
+      const dfe=n-4;if(dfe<1){showToast('Too few people for this model');return}
+      if(!(o.sse>1e-9*o.sst)){showToast('The model fits Y exactly, so standard errors cannot be calculated');return}
+      const mse=o.sse/dfe,V=o.inv.map(r=>r.map(v=>v*mse)),tc=stkTCrit(dfe,0.05),r2=1-o.sse/o.sst,F=(r2/3)/((1-r2)/dfe),pF=pFromF(F,3,dfe);
+      const o0=stkOLS([xc,wc],Y0),dr2=(o0.sse-o.sse)/o.sst,Fc=(o0.sse-o.sse)/mse,pFc=pFromF(Fc,1,dfe);
+      const nm=['Intercept',xN+' (centred)',wN+' (centred)',xN+' × '+wN];let rows='';const co=[];
+      for(let j=0;j<4;j++){const b=o.beta[j],se=Math.sqrt(V[j][j]),t=b/se,pj=pFromT(t,dfe);co.push({b:b,se:se,t:t,p:pj});
+        rows+='<tr><td>'+escHTML(nm[j])+'</td><td>'+b.toFixed(3)+'</td><td>'+se.toFixed(3)+'</td><td>'+t.toFixed(2)+'</td><td>'+pCell(pj)+'</td><td>['+(b-tc*se).toFixed(3)+', '+(b+tc*se).toFixed(3)+']</td></tr>'}
+      const sl=[-sdw,0,sdw].map((lev,q)=>{const sv=o.beta[1]+o.beta[3]*lev,vv=V[1][1]+2*lev*V[1][3]+lev*lev*V[3][3],se=Math.sqrt(vv),t=sv/se;return{lev:lev,raw:mw+lev,b:sv,se:se,t:t,p:pFromT(t,dfe),lo:sv-tc*se,hi:sv+tc*se,lab:['Low ('+wN+' = mean − 1 SD)','Average ('+wN+' = mean)','High ('+wN+' = mean + 1 SD)'][q]}});
+      const slRows=sl.map(q=>'<tr><td>'+escHTML(q.lab)+' = '+q.raw.toFixed(2)+'</td><td>'+q.b.toFixed(3)+'</td><td>'+q.se.toFixed(3)+'</td><td>'+q.t.toFixed(2)+'</td><td>'+pCell(q.p)+'</td><td>['+q.lo.toFixed(3)+', '+q.hi.toFixed(3)+']</td></tr>').join('');
+      // Johnson-Neyman: where is the slope of X significant, across the observed range of W
+      const A=o.beta[3]*o.beta[3]-tc*tc*V[3][3],B=2*(o.beta[1]*o.beta[3]-tc*tc*V[1][3]),C=o.beta[1]*o.beta[1]-tc*tc*V[1][1];
+      const wlo=Math.min.apply(null,wc),whi=Math.max.apply(null,wc);
+      const roots=[];const disc=B*B-4*A*C;
+      if(Math.abs(A)>1e-12){if(disc>0){const sq=Math.sqrt(disc);[(-B-sq)/(2*A),(-B+sq)/(2*A)].forEach(r=>{if(r>wlo&&r<whi)roots.push(r)})}}else if(Math.abs(B)>1e-12){const r=-C/B;if(r>wlo&&r<whi)roots.push(r)}
+      roots.sort((a,b)=>a-b);const cuts=[wlo].concat(roots,[whi]),segs=[];
+      for(let i=0;i<cuts.length-1;i++){const mid=(cuts[i]+cuts[i+1])/2;segs.push({lo:cuts[i],hi:cuts[i+1],sig:A*mid*mid+B*mid+C>0})}
+      const fw=v=>(v+mw).toFixed(2);
+      let jn='';
+      if(segs.every(q=>q.sig))jn='The effect of '+escHTML(xN)+' on '+escHTML(yN)+' is significant at every value of '+escHTML(wN)+' in your data ('+fw(wlo)+' to '+fw(whi)+').';
+      else if(segs.every(q=>!q.sig))jn='The effect of '+escHTML(xN)+' on '+escHTML(yN)+' is not significant at any value of '+escHTML(wN)+' in your data ('+fw(wlo)+' to '+fw(whi)+').';
+      else jn='The effect of '+escHTML(xN)+' on '+escHTML(yN)+' is significant where '+escHTML(wN)+' is '+segs.filter(q=>q.sig).map(q=>(q.lo===wlo?'at or below ':'from ')+(q.lo===wlo?fw(q.hi):fw(q.lo)+(q.hi===whi?' upward':' to '+fw(q.hi)))).join(' and ')+', and not significant elsewhere in the observed range ('+fw(wlo)+' to '+fw(whi)+'). These cut-offs are the Johnson-Neyman points.';
+      let notes='';
+      if(n<50)notes+=' With fewer than 50 people the test of an interaction has very little power, so a non-significant result says little.';
+      if(dropped)notes+=' '+dropped+' row'+(dropped===1?' was':'s were')+' left out because a value was missing.';
+      const html='<p class="desc">Model: '+escHTML(yN)+' predicted from '+escHTML(xN)+', '+escHTML(wN)+' and their product. N = '+n+'. '+escHTML(xN)+' and '+escHTML(wN)+' are centred on their means, so the coefficient for each of them is its effect at the average of the other.</p>'+
+        '<table class="stats-table"><tr><th>R²</th><th>F</th><th>df</th><th>p</th><th>ΔR² for the interaction</th><th>F change</th><th>df</th><th>p</th></tr><tr><td>'+noLead(r2.toFixed(3))+'</td><td>'+F.toFixed(2)+'</td><td>3, '+dfe+'</td><td>'+pCell(pF)+'</td><td>'+noLead(dr2.toFixed(3))+'</td><td>'+Fc.toFixed(2)+'</td><td>1, '+dfe+'</td><td>'+pCell(pFc)+'</td></tr></table>'+
+        '<table class="stats-table" style="margin-top:10px"><tr><th>Term</th><th>b</th><th>SE</th><th>t</th><th>p</th><th>95% CI for b</th></tr>'+rows+'</table>'+
+        '<p class="desc"><b>Simple slopes</b>: the effect of '+escHTML(xN)+' on '+escHTML(yN)+' at three levels of '+escHTML(wN)+'.</p>'+
+        '<table class="stats-table"><tr><th>Level of the moderator</th><th>Slope of X</th><th>SE</th><th>t</th><th>p</th><th>95% CI</th></tr>'+slRows+'</table>'+
+        '<p class="desc">'+jn+' The interaction p-value is the test of whether the slope changes with '+escHTML(wN)+'; the simple slopes describe the shape. A significant interaction does not show that '+escHTML(wN)+' causes the change.'+notes+'</p>';
+      const sigI=pFc<0.05;
+      const apa='A moderation analysis showed that '+wN+' '+(sigI?'significantly moderated':'did not significantly moderate')+' the effect of '+xN+' on '+yN+', b = '+co[3].b.toFixed(2)+', SE = '+co[3].se.toFixed(2)+', t('+dfe+') = '+co[3].t.toFixed(2)+', '+fmtP(pFc)+', ΔR² = '+noLead(dr2.toFixed(3))+'. The simple slope of '+xN+' was '+sl.map(q=>q.b.toFixed(2)+' ('+fmtP(q.p)+')').join(', ')+' at low, average and high '+wN+' (mean − 1 SD, mean, mean + 1 SD). Predictors were mean-centred.';
+      statsResultsShow(html,apa);
+      statsChartSlopes(Math.min.apply(null,X0),Math.max.apply(null,X0),sl.map(q=>({label:q.lab.split(' (')[0]+' '+wN+' ('+q.raw.toFixed(1)+')',b0:o.beta[0]+o.beta[2]*q.lev-q.b*mx,b1:q.b})),xN,yN,wN);
+
+    }else if(key==='mediate'){
+      const xI=parseInt(gv('x'),10),mI=parseInt(gv('m'),10),yI=parseInt(gv('dv'),10);
+      if(new Set([yI,xI,mI]).size<3){showToast('Choose three different columns for X, M and Y');return}
+      const xN=d.cols[xI].name,mN=d.cols[mI].name,yN=d.cols[yI].name,X=[],M=[],Y=[];let dropped=0;
+      d.rows.forEach(r=>{const a=parseFloat(r[xI]),b=parseFloat(r[mI]),c=parseFloat(r[yI]);if([r[xI],r[mI],r[yI]].some(v=>v===''||v===undefined)||![a,b,c].every(isFinite)){dropped++;return}X.push(a);M.push(b);Y.push(c)});
+      window._statsSkipped=(window._statsSkipped||0)+dropped;
+      const n=Y.length;
+      if(n<20){showToast('Need at least 20 people with all three values; there are '+n+'. A bootstrap interval needs more, ideally 100 or more.');return}
+      if(!(ssd(X)>0)||!(ssd(M)>0)||!(ssd(Y)>0)){showToast('X, M and Y each need some variation');return}
+      const oa=stkOLS([X],M),ob=stkOLS([X,M],Y),oc=stkOLS([X],Y);
+      if(!oa||!ob||!oc){showToast('X and M carry the same information (one is a copy of the other), so the paths cannot be separated.');return}
+      const dfa=n-2,dfb=n-3,dfc=n-2;
+      if(!(oa.sse>1e-9*oa.sst)||!(ob.sse>1e-9*ob.sst)||!(oc.sse>1e-9*oc.sst)){showToast('A path fits perfectly, so standard errors cannot be calculated');return}
+      const rowOf=(b,inv,sse,df)=>{const se=Math.sqrt(inv*sse/df),t=b/se,tc=stkTCrit(df,0.05);return{b:b,se:se,t:t,p:pFromT(t,df),lo:b-tc*se,hi:b+tc*se,df:df}};
+      const A=rowOf(oa.beta[1],oa.inv[1][1],oa.sse,dfa),Bp=rowOf(ob.beta[2],ob.inv[2][2],ob.sse,dfb),Cp=rowOf(ob.beta[1],ob.inv[1][1],ob.sse,dfb),Ct=rowOf(oc.beta[1],oc.inv[1][1],oc.sse,dfc);
+      const ab=A.b*Bp.b;
+      // percentile bootstrap, fixed seed so the same data always give the same interval
+      const REPS=5000;let sd0=(n*2654435761+12345)>>>0;const rnd=()=>{sd0=(sd0+0x6D2B79F5)>>>0;let t=sd0;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296};
+      const bs=new Array(REPS);
+      for(let rI=0;rI<REPS;rI++){let sx=0,sm=0,sy=0;const ix=new Array(n);for(let i=0;i<n;i++){const j=Math.floor(rnd()*n);ix[i]=j;sx+=X[j];sm+=M[j];sy+=Y[j]}
+        sx/=n;sm/=n;sy/=n;let sxx=0,sxm=0,smm=0,sxy=0,smy=0;
+        for(let i=0;i<n;i++){const j=ix[i],a=X[j]-sx,b=M[j]-sm,c=Y[j]-sy;sxx+=a*a;sxm+=a*b;smm+=b*b;sxy+=a*c;smy+=b*c}
+        const den=smm*sxx-sxm*sxm;bs[rI]=(sxx>0&&den>1e-12*Math.abs(smm*sxx))?(sxm/sxx)*((smy*sxx-sxy*sxm)/den):NaN}
+      const ok=bs.filter(v=>isFinite(v)).sort((a,b)=>a-b),qf=pq=>{const pos=pq*(ok.length-1),lo=Math.floor(pos),hi=Math.ceil(pos);return ok[lo]+(ok[hi]-ok[lo])*(pos-lo)};
+      const lo=qf(0.025),hi=qf(0.975),bse=Math.sqrt((()=>{const m=smean(ok);return ok.reduce((a,v)=>a+(v-m)*(v-m),0)/(ok.length-1)})());
+      const abStd=ab*ssd(X)/ssd(Y),sigAB=lo>0||hi<0;
+      const f3=v=>v.toFixed(3),pr=(lab,r)=>'<tr><td>'+lab+'</td><td>'+f3(r.b)+'</td><td>'+f3(r.se)+'</td><td>'+r.t.toFixed(2)+'</td><td>'+pCell(r.p)+'</td><td>['+f3(r.lo)+', '+f3(r.hi)+']</td></tr>';
+      const r2m=1-oa.sse/oa.sst,r2y=1-ob.sse/ob.sst;
+      let notes='';
+      if(n<100)notes+=' With fewer than 100 people the bootstrap interval is unstable and the test has low power.';
+      if(ok.length<REPS)notes+=' '+(REPS-ok.length)+' of the '+REPS+' resamples could not be calculated and were left out.';
+      if(dropped)notes+=' '+dropped+' row'+(dropped===1?' was':'s were')+' left out because a value was missing.';
+      const html='<p class="desc">Model: '+escHTML(xN)+' (X) → '+escHTML(mN)+' (M) → '+escHTML(yN)+' (Y). N = '+n+'.</p>'+
+        '<table class="stats-table"><tr><th>Path</th><th>b</th><th>SE</th><th>t</th><th>p</th><th>95% CI</th></tr>'+
+        pr('a: '+escHTML(xN)+' → '+escHTML(mN),A)+pr('b: '+escHTML(mN)+' → '+escHTML(yN)+' (controlling for '+escHTML(xN)+')',Bp)+pr('c′ (direct): '+escHTML(xN)+' → '+escHTML(yN)+' (controlling for '+escHTML(mN)+')',Cp)+pr('c (total): '+escHTML(xN)+' → '+escHTML(yN),Ct)+'</table>'+
+        '<table class="stats-table" style="margin-top:10px"><tr><th>Indirect effect (a × b)</th><th>Bootstrap SE</th><th>95% bootstrap CI</th><th>Standardised (X in SD units, Y in SD units)</th><th>R² of M</th><th>R² of Y</th></tr><tr><td>'+f3(ab)+'</td><td>'+f3(bse)+'</td><td>['+f3(lo)+', '+f3(hi)+']</td><td>'+f3(abStd)+'</td><td>'+noLead(r2m.toFixed(3))+'</td><td>'+noLead(r2y.toFixed(3))+'</td></tr></table>'+
+        '<p class="desc">'+(sigAB?'The indirect effect is significant: the interval does not contain zero.':'The indirect effect is not significant: the interval contains zero.')+' The interval is a percentile bootstrap from '+REPS.toLocaleString('en-US')+' resamples with a fixed seed, so the same data always give the same interval. The total effect c equals the direct effect c′ plus the indirect effect a × b. The standardised value is a × b multiplied by the SD of X and divided by the SD of Y.'+notes+'</p>'+
+        '<p class="desc">Mediation is a claim about causes. The statistics show whether the pattern fits the chain X → M → Y. They cannot show that M comes between X and Y in time, or rule out another variable that affects both M and Y. Data on all three variables measured at one time cannot establish the order. The p-values of the a, b and c paths are ordinary regression tests; the indirect effect is judged by its bootstrap interval.</p>';
+      const apa='A mediation analysis with a percentile bootstrap ('+REPS.toLocaleString('en-US')+' resamples) showed that the indirect effect of '+xN+' on '+yN+' through '+mN+' was '+(sigAB?'significant':'not significant')+', ab = '+f3(ab)+', 95% CI ['+f3(lo)+', '+f3(hi)+']. '+xN+' '+(A.p<0.05?'significantly predicted':'did not significantly predict')+' '+mN+' (a = '+A.b.toFixed(2)+', '+fmtP(A.p)+'), and '+mN+' '+(Bp.p<0.05?'significantly predicted':'did not significantly predict')+' '+yN+' when '+xN+' was controlled (b = '+Bp.b.toFixed(2)+', '+fmtP(Bp.p)+'). The direct effect was c′ = '+Cp.b.toFixed(2)+' ('+fmtP(Cp.p)+') and the total effect was c = '+Ct.b.toFixed(2)+' ('+fmtP(Ct.p)+').';
+      statsResultsShow(html,apa);
+      statsChartBarMeans(['a','b','c′ (direct)','c (total)','a × b (indirect)'],[A.b,Bp.b,Cp.b,Ct.b,ab],[A,Bp,Cp,Ct,{lo:lo,hi:hi}].map(r=>({plus:r.hi,minus:r.lo})),'Paths with 95% intervals','');
+
 
     }else if(key==='welchAnova'){
       const dvI=parseInt(gv('dv'),10),ivI=parseInt(gv('iv'),10),dvName=d.cols[dvI].name,ivName=d.cols[ivI].name;
@@ -10437,6 +10766,80 @@ function statsRunNow(){
       statsResultsShow(html,apa);
     }
   }catch(e){showToast('Could not run that test — check the columns you picked match what the test needs');}
+}
+
+const PW_INFO={
+  ind:{name:'independent-samples t-test',eff:'Cohen\'s d',sym:'d',conv:[.2,.5,.8],def:'0.5',nLbl:'People in each group',per:true,hint:'d is the difference between the two group means divided by the pooled standard deviation. Equal group sizes are assumed.'},
+  paired:{name:'paired-samples t-test',eff:'dz (mean of the differences ÷ SD of the differences)',sym:'dz',conv:[.2,.5,.8],def:'0.5',nLbl:'Number of pairs',hint:'dz uses the standard deviation of the differences between the two measurements. It is larger than d when the two measurements correlate.'},
+  one:{name:'one-sample t-test',eff:'Cohen\'s d',sym:'d',conv:[.2,.5,.8],def:'0.5',nLbl:'Number of people',hint:'d is the difference between the sample mean and the fixed value, divided by the standard deviation.'},
+  anova:{name:'one-way ANOVA',eff:'Cohen\'s f',sym:'f',conv:[.1,.25,.4],def:'0.25',nLbl:'People in each group',per:true,hint:'f is the spread of the group means divided by the common standard deviation. Equal group sizes are assumed. f = .25 corresponds to η² of about .06.'},
+  corr:{name:'correlation',eff:'population correlation r',sym:'r',conv:[.1,.3,.5],def:'0.3',nLbl:'Number of people',hint:'Uses the Fisher z approximation, which can differ by one or two people from an exact calculation.'},
+  regr:{name:'multiple regression (overall F test)',eff:'Cohen\'s f²',sym:'f²',conv:[.02,.15,.35],def:'0.15',nLbl:'Number of people',hint:'f² = R² ÷ (1 − R²) for the whole set of predictors. f² = .15 corresponds to R² of about .13.'},
+  chisq:{name:'chi-square test',eff:'Cohen\'s w',sym:'w',conv:[.1,.3,.5],def:'0.3',nLbl:'Total number of people',hint:'w = √(χ² ÷ N). For a 2×2 table w equals φ. Degrees of freedom: (rows − 1) × (columns − 1), or categories − 1 for goodness of fit.'}
+};
+function pwTestChange(){
+  const t=document.getElementById('pwTest').value,mode=document.getElementById('pwSolve').value,I=PW_INFO[t];
+  const show=(id,on)=>{document.getElementById(id).style.display=on?'':'none'};
+  document.getElementById('pwEffLbl').textContent='Effect size: '+I.eff;
+  document.getElementById('pwNLbl').textContent=I.nLbl;
+  show('pwEffWrap',mode!=='effect');show('pwNWrap',mode!=='n');show('pwPowWrap',mode!=='power');
+  show('pwTailWrap',t==='ind'||t==='paired'||t==='one'||t==='corr');show('pwKWrap',t==='anova');show('pwPWrap',t==='regr');show('pwDfWrap',t==='chisq');show('pwDropWrap',mode==='n');
+  if(document.getElementById('pwEffect').dataset.test!==t){document.getElementById('pwEffect').value=I.def;document.getElementById('pwEffect').dataset.test=t}
+  document.getElementById('pwHint').textContent=I.hint+' Cohen\'s benchmarks for '+I.sym+' are '+I.conv.map(x=>String(x).replace(/^0\./,'.')).join(', ')+' (small, medium, large). They are a last resort. Better is the smallest effect you would care about, or an effect taken from earlier studies, kept on the cautious side.';
+  document.getElementById('pwOut').innerHTML='';
+}
+function pwOpen(){document.getElementById('powerDlg').showModal();pwTestChange()}
+function pwArt(w){return /^(one|u)/i.test(w)?'a':/^[aeiou]/i.test(w)?'an':'a'}
+function pwNum(id){const v=parseFloat(String(document.getElementById(id).value).replace(',','.').trim());return v}
+function pwRun(){
+  const t=document.getElementById('pwTest').value,mode=document.getElementById('pwSolve').value,I=PW_INFO[t],out=document.getElementById('pwOut');
+  const err=m=>{out.innerHTML='<p class="desc" style="color:var(--danger,#b91c1c)">'+m+'</p>'};
+  const alpha=pwNum('pwAlpha'),tails=parseInt(document.getElementById('pwTails').value,10),drop=Math.max(0,pwNum('pwDrop')||0);
+  if(!(alpha>0&&alpha<0.5))return err('Alpha must be between 0 and .5 (usually .05).');
+  if(drop>=90)return err('Dropout must be below 90%.');
+  const spec={test:t,alpha:alpha,tails:(t==='anova'||t==='regr'||t==='chisq')?2:tails};
+  if(t==='anova'){spec.k=Math.round(pwNum('pwK'));if(!(spec.k>=3&&spec.k<=20))return err('Give 3 to 20 groups. For two groups use the independent-samples t-test.')}
+  if(t==='regr'){spec.p=Math.round(pwNum('pwP'));if(!(spec.p>=1&&spec.p<=50))return err('Give 1 to 50 predictors.')}
+  if(t==='chisq'){spec.df=Math.round(pwNum('pwDf'));if(!(spec.df>=1&&spec.df<=100))return err('Give the degrees of freedom, 1 to 100.')}
+  const f2=x=>(Math.abs(x)<10?x.toFixed(2):x.toFixed(1)).replace(/^(-?)0\./,'$1.'),pf=x=>x.toFixed(2).replace(/^0\./,'.');
+  const effTxt=e=>I.sym+' = '+(t==='corr'||t==='chisq'||t==='anova'||t==='regr'?f2(e):e.toFixed(2));
+  const tailTxt=(t==='anova'||t==='regr'||t==='chisq')?'':(spec.tails===2?'two-tailed, ':'one-tailed, ');
+  const tname=I.name;let html='',sentence='';
+  if(mode==='n'){
+    spec.effect=pwNum('pwEffect');const target=pwNum('pwPow');
+    if(!(spec.effect>0))return err('The effect size must be above zero.');
+    if(t==='corr'&&spec.effect>=0.99)return err('r must be below 1.');
+    if(!(target>=0.5&&target<0.9999))return err('Power must be between .50 and .9999 (usually .80).');
+    const n=pwSolveN(spec,target);
+    if(n===null)return err('That effect is so small that the sample would exceed 200,000. Check the effect size.');
+    const total=(I.per?n*(t==='anova'?spec.k:2):n),pw=pwPower(spec,n);
+    html+='<h4 style="margin:6px 0">'+(I.per?n+' people in each group ('+total+' in total)':n+' people')+'</h4>';
+    html+='<p class="desc">For a '+tname+' ('+tailTxt+'α = '+f2(alpha)+', '+effTxt(spec.effect)+') the power at this size is '+pf(pw)+'.</p>';
+    const rows=[0.8,0.9,0.95].map(q=>{const nn=pwSolveN(spec,q);return nn===null?'':'<tr><td>'+pf(q)+'</td><td>'+(I.per?nn+' per group ('+nn*(t==='anova'?spec.k:2)+' in total)':nn)+'</td></tr>'}).join('');
+    html+='<table class="stats-table"><tr><th>Power</th><th>People needed</th></tr>'+rows+'</table>';
+    sentence='An a priori power analysis for '+pwArt(tname)+' '+tname+' ('+tailTxt+'α = '+f2(alpha)+', '+effTxt(spec.effect)+', power = '+pf(target)+') showed that '+(I.per?n+' participants per group (N = '+total+')':n+' participants')+' were needed.';
+    if(drop>0){const gN=I.per?(t==='anova'?spec.k:2):1,recG=Math.ceil(n/(1-drop/100)),rec=recG*gN;html+='<p class="desc">With '+drop+'% expected dropout, recruit about <b>'+(I.per?recG+' per group ('+rec+' in total)':rec)+'</b>, so that at least '+total+' complete cases remain.</p>';sentence+=' Allowing for '+drop+'% dropout, the target was '+rec+' participants'+(I.per?' in total':'')+'.'}
+  }else if(mode==='power'){
+    spec.effect=pwNum('pwEffect');const n=Math.round(pwNum('pwN'));
+    if(!(spec.effect>0))return err('The effect size must be above zero.');
+    if(t==='corr'&&spec.effect>=0.99)return err('r must be below 1.');
+    if(!(n>=3))return err('Give the sample size (3 or more).');
+    const pw=pwPower(spec,n);if(!isFinite(pw))return err('That sample is too small for this test and design.');
+    html+='<h4 style="margin:6px 0">Power = '+pf(pw)+'</h4><p class="desc">For '+(I.per?n+' people in each group':n+' people')+' in '+pwArt(tname)+' '+tname+' ('+tailTxt+'α = '+f2(alpha)+', '+effTxt(spec.effect)+'). '+(pw<0.8?'This is below the usual .80, so a real effect of this size would be missed more than one time in five.':'This reaches the usual .80.')+'</p>';
+    sentence='With '+(I.per?n+' participants per group':n+' participants')+', '+pwArt(tname)+' '+tname+' ('+tailTxt+'α = '+f2(alpha)+') has power = '+pf(pw)+' to detect '+effTxt(spec.effect)+'.';
+  }else{
+    const n=Math.round(pwNum('pwN')),target=pwNum('pwPow');
+    if(!(n>=3))return err('Give the sample size (3 or more).');
+    if(!(target>=0.5&&target<0.9999))return err('Power must be between .50 and .9999 (usually .80).');
+    const e=pwSolveEffect(spec,n,target);if(e===null)return err('No effect in the usual range reaches that power with this sample.');
+    const lab=e<I.conv[0]?'below small':e<I.conv[1]?'between small and medium':e<I.conv[2]?'between medium and large':'large or above';
+    html+='<h4 style="margin:6px 0">Smallest detectable effect: '+effTxt(e)+'</h4><p class="desc">With '+(I.per?n+' people in each group':n+' people')+' in '+pwArt(tname)+' '+tname+' ('+tailTxt+'α = '+f2(alpha)+', power = '+pf(target)+'). By Cohen\'s benchmarks that is '+lab+'. Smaller true effects would often go undetected.</p>';
+    sentence='A sensitivity analysis for '+pwArt(tname)+' '+tname+' with '+(I.per?n+' participants per group':n+' participants')+' ('+tailTxt+'α = '+f2(alpha)+', power = '+pf(target)+') showed that the smallest detectable effect was '+effTxt(e)+'.';
+  }
+  html+='<p class="desc"><b>For your methods section or ethics form:</b></p><div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:10px 12px;font-size:14px" id="pwSentence">'+sentence+'</div>'+
+    '<div class="row" style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'pwSentence\').innerText).then(()=>showToast(\'Copied\'))">Copy sentence</button></div>'+
+    '<p class="desc">Power is worked out for one planned test, with the assumptions of that test. A study that plans several tests, a dropout rate you cannot predict, or data that break the assumptions will need a larger sample. A supervisor or statistician should confirm the effect size you chose.</p>';
+  out.innerHTML=html;
 }
 
 /* ============ Access control ============ */
