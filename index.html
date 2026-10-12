@@ -968,6 +968,20 @@
           <option value="fit">Fit to my question (AI)</option>
         </select>
       </div>
+      <details id="rsFilters" style="margin:4px 0 8px;font-size:12.5px"><summary style="cursor:pointer;font-weight:700;color:var(--muted)">Filter these results</summary>
+        <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0">
+          <label>Published from <input type="number" id="rsFYear" min="1900" max="2100" placeholder="year" style="width:80px;padding:4px 6px;border-radius:8px;border:2px solid var(--line)" oninput="rsApplySort(true)"></label>
+          <label style="display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="rsFOA" onchange="rsApplySort(true)">Open access only</label>
+          <label style="display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="rsFRet" onchange="rsApplySort(true)">Hide papers flagged as retracted</label>
+        </div>
+        <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0">
+          <label>Kind of study (confirmed) <select id="rsFDes" onchange="rsApplySort(true)" style="padding:4px 6px;border-radius:8px;border:2px solid var(--line)"></select></label>
+          <label>Sample at least (confirmed) <input type="number" id="rsFN" min="1" placeholder="n" style="width:80px;padding:4px 6px;border-radius:8px;border:2px solid var(--line)" oninput="rsApplySort(true)"></label>
+          <button type="button" class="btn btn-ghost" style="font-size:12px;padding:3px 8px" onclick="rsFilterClear()">Clear filters</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted)">Filters only hide papers from view; nothing is deleted. The last two use the Quick read, so a paper you have not quick-read yet is hidden while either is set, and a field the Quick read could not confirm counts as unknown. PubMed results carry no open-access flag, so the open-access filter hides them. Citation count and sample size do not measure the quality of a study.</div>
+      </details>
+      <div id="rsFStat" style="font-size:12px;color:var(--muted);margin:0 0 6px"></div>
       <div id="rsResults" style="margin-top:8px"></div>
       <div class="row" id="rsCsvRow" style="margin-top:6px"><button type="button" class="btn btn-ghost" id="rsCsvBtn" onclick="rsCsvDownload()">⬇ Download this list (.csv)</button></div>
 
@@ -8135,22 +8149,24 @@ function rsQuickHTML(p){
   else h+='Sample size: not given in the abstract<br>';
   return h+'</div>';
 }
-async function rsQuick(i,quiet){
-  const p=rsResults[i];if(!p)return false;
+async function rsQuick(i,quiet){return rsQuickP(rsResults[i],quiet)}
+async function rsQuickP(p,quiet){
+  if(!p)return false;
   const ab=String(p.abstract||'').trim();
   if(ab.replace(/\s+/g,'').length<150){if(!quiet)showToast('This result has no abstract to read.');return false}
   try{
     const raw=await callAI(rsQuickPrompt(ab),{temp:0.1,max:700,noLang:true});
     const r=rsQuickCheck(raw,ab);
     if(!r){if(!quiet)showToast('The AI reply could not be read. Try again.');return false}
-    p.quick=r;rsRenderResults();return true;
+    p.quick=r;if(!quiet)rsApplySort(true);return true;
   }catch(e){if(!quiet)showToast(apiMsg(e));return false}
 }
 async function rsQuickChecked(){
-  const idx=[];rsResults.forEach((p,i)=>{const el=document.getElementById('rsChk'+i);if(el&&el.checked)idx.push(i)});
+  const idx=[];rsResults.forEach((p,i)=>{const el=document.getElementById('rsChk'+i);if(el&&el.checked)idx.push(p)});
   if(!idx.length){showToast('Tick some papers first');return}
   const use=idx.slice(0,10);let ok=0;
-  for(const i of use){showToast('Quick read '+(use.indexOf(i)+1)+' of '+use.length+'…');if(await rsQuick(i,true))ok++}
+  for(const p of use){showToast('Quick read '+(use.indexOf(p)+1)+' of '+use.length+'…');if(await rsQuickP(p,true))ok++}
+  rsApplySort(true);
   showToast('Quick read done for '+ok+' of '+use.length+(idx.length>10?' (the first 10 ticked)':''));
 }
 function rsCsvText(){
@@ -8248,6 +8264,8 @@ function rsBuildQuery(q,kind,terms,design){
 async function researchSearch(){
   const q=document.getElementById('rsTopic').value.trim();
   if(!q){showToast('Type a topic or question first');return}
+  if(q.length>600){document.getElementById('rsStatus').textContent='That search is too long (over 600 characters). Write the topic as a sentence or two.';return}
+  if(!/[\p{L}\p{N}]/u.test(q)){document.getElementById('rsStatus').textContent='Use some words or numbers in the search. Symbols alone find nothing.';return}
   const useOA=document.getElementById('rsSrcOA').checked,
         usePm=document.getElementById('rsSrcPubmed').checked;
   if(!useOA&&!usePm){showToast('Pick at least one source');return}
@@ -8290,9 +8308,35 @@ async function researchSearch(){
     ? merged.length+' paper'+(merged.length===1?'':'s')+' found'+how+rankNote+(failed.length?' — could not reach: '+failed.join('; '):'')
     : 'No papers found'+how+(failed.length?' — could not reach: '+failed.join('; '):', try a broader search');
 }
-function rsApplySort(){
+/* ---- result filters (Version 43) ---- */
+function rsFilterInit(){const e=document.getElementById('rsFDes');if(e&&!e.options.length)e.innerHTML='<option value="">Any</option>'+RS_DESIGNS.map(x=>'<option value="'+escAttr(x)+'">'+escHTML(x)+'</option>').join('')}
+function rsFilterVals(){
+  const g=id=>document.getElementById(id);
+  return{year:parseInt((g('rsFYear')||{}).value,10)||0,oa:!!(g('rsFOA')&&g('rsFOA').checked),ret:!!(g('rsFRet')&&g('rsFRet').checked),des:(g('rsFDes')||{}).value||'',n:parseInt((g('rsFN')||{}).value,10)||0};
+}
+function rsFilterPass(p,f){
+  if(f.year&&!((parseInt(p.year,10)||0)>=f.year))return{ok:false};
+  if(f.oa&&!(p.oaStatus||p.oaUrl))return{ok:false};
+  if(f.ret&&p.retracted)return{ok:false};
+  if(f.des||f.n){
+    if(!p.quick)return{ok:false,needsQuick:true};
+    if(f.des&&!(p.quick.design&&p.quick.design.ok&&p.quick.design.type===f.des))return{ok:false};
+    if(f.n&&!(p.quick.sample&&p.quick.sample.ok&&p.quick.sample.n>=f.n))return{ok:false};
+  }
+  return{ok:true};
+}
+function rsFilterClear(){
+  ['rsFYear','rsFN'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  ['rsFOA','rsFRet'].forEach(id=>{const e=document.getElementById(id);if(e)e.checked=false});
+  const d=document.getElementById('rsFDes');if(d)d.value='';
+  rsApplySort(true);
+}
+function rsFilterActive(f){return !!(f.year||f.oa||f.ret||f.des||f.n)}
+function rsApplySort(keepActions){
+  rsFilterInit();
   const mode=document.getElementById('rsSort').value;
-  let list=rsResultsOriginal.slice();
+  const F=rsFilterVals();let needQ=0;
+  let list=rsResultsOriginal.filter(p=>{const r=rsFilterPass(p,F);if(r.needsQuick)needQ++;return r.ok});
   if(mode==='citations')list.sort((a,b)=>(b.citationCount||0)-(a.citationCount||0));
   else if(mode==='year')list.sort((a,b)=>(parseInt(b.year,10)||0)-(parseInt(a.year,10)||0));
   else if(mode==='fit'){
@@ -8301,7 +8345,13 @@ function rsApplySort(){
   }
   rsResults=list;
   rsRenderResults();
-  document.getElementById('rsActions').style.display='none';
+  const fs=document.getElementById('rsFStat');
+  if(fs){
+    if(rsFilterActive(F)&&rsResultsOriginal.length){
+      fs.textContent='Showing '+list.length+' of '+rsResultsOriginal.length+' papers. '+(rsResultsOriginal.length-list.length)+' hidden by your filters, not deleted.'+(needQ?' '+needQ+' of those are hidden only because they have no Quick read yet.':'')+(!list.length?' Clear a filter to see them again.':'');
+    }else fs.textContent='';
+  }
+  if(keepActions===true)rsToggleActions();else document.getElementById('rsActions').style.display='none';
 }
 function rsRenderResults(){
   const box=document.getElementById('rsResults');
@@ -10258,8 +10308,8 @@ function apRender(){
   m.innerHTML=h;
 }
 
-const APP_VERSION=42;
-const APP_BUILD='2026.10.11q';
+const APP_VERSION=43;
+const APP_BUILD='2026.10.11r';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
