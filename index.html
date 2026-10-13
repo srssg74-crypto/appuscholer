@@ -11078,11 +11078,12 @@ function thHTML(){const hi=thHi();return'<div class="th-top"><b id="thTitle"></b
 function apThDrawer(){const d=document.getElementById('thDr');if(!d)return;d.classList.toggle('open');thDrawer();setTimeout(()=>thFit(1),30)}
 function apThFs(){const e=document.getElementById('apTh');try{if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{(e.requestFullscreen||e.webkitRequestFullscreen).call(e)}}catch(x){}}
 function thPreload(){const files=['bg_class'];['einstein','kalam','raman'].forEach(x=>files.push('pt_'+x));Object.keys(TH_MAN).forEach(w=>Object.keys(TH_MAN[w]).forEach(p=>files.push('ch_'+w+'_'+p)));['meera','raj','appu'].forEach(w=>['c','o'].forEach(o=>files.push('face_'+w+'_'+o)));
-  return Promise.all(files.map((f,i)=>new Promise(res=>{const im=new Image();im.onload=()=>res(1);im.onerror=()=>res(i===0?0:1);im.src='assets/'+f+'.webp'}))).then(r=>r.every(x=>x))}
+  const ld=f=>new Promise(res=>{const im=new Image();im.onload=()=>res(1);im.onerror=()=>res(0);im.src='assets/'+f+'.webp'});
+  const first=ld('bg_class');files.slice(1).forEach(f=>{ld(f)});return first}
 async function apThOpen(){
   const s=apLesCur();if(!s||!apLesScenes().length)return;
-  const ok=await Promise.race([thPreload(),new Promise(r=>setTimeout(()=>r(false),9000))]);
-  if(!ok){showToast('The theatre pictures are not here yet (the assets folder). Using the classic stage.');return}
+  const ok=await Promise.race([thPreload(),new Promise(r=>setTimeout(()=>r(false),25000))]);
+  if(!ok){showToast('The theatre pictures are not here yet (the assets folder, starting with assets/bg_class.webp). Using the classic stage.');return}
   thCss();let d=document.getElementById('apTh');if(!d){d=document.createElement('dialog');d.id='apTh';d.addEventListener('cancel',e=>{e.preventDefault();apThClose()});document.body.appendChild(d)}
   clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();
   AP.th={open:1,tok:0,si:0,play:false,speaking:false,tab:'slides',qz:null,tm:0};
