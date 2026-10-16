@@ -9629,21 +9629,27 @@ function statsUpload(input){
    written inside open answers, and the interface says so. */
 const PD_HDR=[
   ['name',/\b(full name|first name|last name|surname|student name|participant name|respondent name|candidate name|name|naam)\b|नाम/i],
-  ['phone',/\b(phone|mobile|contact|cell|whatsapp|telephone|tel)\b/i],
+  ['phone',/\b(phone|mobile|mob|contact|cell|whatsapp|telephone|tel)\b|मोबाइल|फ़ोन|फोन|संपर्क/i],
   ['email',/e ?mail/i],
-  ['roll',/\b(roll|enrol|enrolment|enrollment|registration|reg no|admission|usn|prn|student id|matric)\b/i],
-  ['dob',/\b(dob|d o b|date of birth|birth date|birthday)\b/i],
-  ['address',/\b(address|village|street|pin code|pincode|postcode|zip)\b/i],
-  ['govid',/\b(aadhaar|aadhar|pan|passport|voter)\b/i]
+  ['roll',/\b(roll|enrol|enrolment|enrollment|registration|reg no|regn|admission|usn|prn|student id|matric)\b|अनुक्रमांक|नामांकन/i],
+  ['dob',/\b(dob|d o b|date of birth|birth date|birthday)\b|जन्म तिथि|जन्मतिथि/i],
+  ['address',/\b(address|village|street|pin code|pincode|postcode|zip)\b|पता|गाँव|गांव/i],
+  ['govid',/\b(aadhaar|aadhar|uid|uidai|pan|passport|voter|epic)\b|आधार/i]
 ];
+/* A heading that names a person only sometimes holds names ("Participant" is often P01, P02).
+   These count when most values are words, in any script, rather than codes or numbers. (Version 74) */
+const PD_WEAK_NAME=/\b(participant|respondent|student|candidate|interviewee|patient|client)\b|छात्र|प्रतिभागी|उत्तरदाता/i;
+const PD_MON='(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?';
 const PD_LABEL={name:'looks like names',phone:'looks like phone numbers',email:'looks like email addresses',roll:'looks like roll or enrolment numbers',dob:'looks like dates of birth',address:'looks like an address or place',govid:'looks like a government ID number'};
 const PD_DEFAULT={name:'code',roll:'code',phone:'remove',email:'remove',dob:'remove',address:'remove',govid:'remove'};
 function pdTestVal(kind,v){
   if(kind==='email')return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(v);
-  if(kind==='phone'){const d=v.replace(/[\s\-()]/g,'');return /^(\+?91)?[6-9]\d{9}$/.test(d)}
-  if(kind==='govid'){const d=v.replace(/[\s\-]/g,'');return /^\d{12}$/.test(d)||/^[A-Z]{5}\d{4}[A-Z]$/.test(d)}
-  if(kind==='dob')return /^(\d{1,2}[\/\-.]\d{1,2}[\/\-.](19[4-9]\d|20[01]\d)|(19[4-9]\d|20[01]\d)[\/\-.]\d{1,2}[\/\-.]\d{1,2})$/.test(v);
-  if(kind==='name')return /^[A-Za-z][A-Za-z.'’ ]*[A-Za-z.]\s+[A-Za-z][A-Za-z.'’ ]*$/.test(v);
+  if(kind==='phone'){const d=v.replace(/[\s\-()]/g,'');return /^(\+?91|0091|0)?[6-9]\d{9}$/.test(d)}
+  if(kind==='govid'){const d=v.replace(/[\s\-]/g,'');return /^[2-9]\d{11}$/.test(d)||/^[A-Z]{5}\d{4}[A-Z]$/i.test(d)}
+  if(kind==='dob')return /^(\d{1,2}[\/\-.]\d{1,2}[\/\-.](19[4-9]\d|20[01]\d)|(19[4-9]\d|20[01]\d)[\/\-.]\d{1,2}[\/\-.]\d{1,2})$/.test(v)||
+    new RegExp('^(\\d{1,2}(st|nd|rd|th)?[\\s\\-\\/]*'+PD_MON+'[\\s\\-\\/,]*(19[4-9]\\d|20[01]\\d)|'+PD_MON+'[\\s\\-\\/]*\\d{1,2}(st|nd|rd|th)?[\\s,]+(19[4-9]\\d|20[01]\\d))$','i').test(v);
+  if(kind==='name')return /^[A-Za-z][A-Za-z.'’ ]*[A-Za-z.]\s+[A-Za-z][A-Za-z.'’ ]*$/.test(v)||/^[\u0900-\u097F]+(\s+[\u0900-\u097F]+){1,3}$/.test(v);
+  if(kind==='word')return /^[A-Za-z][A-Za-z.'’\- ]{1,40}$/.test(v)||/^[\u0900-\u097F][\u0900-\u097F ]{1,40}$/.test(v);
   return false;
 }
 function pdScan(data){
@@ -9651,7 +9657,7 @@ function pdScan(data){
   data.headers.forEach((h,i)=>{
     const vals=data.rows.map(r=>(r[i]||'').trim()).filter(v=>v!=='');
     if(!vals.length)return;
-    const uniq=new Set(vals).size/vals.length,hn=String(h).toLowerCase().replace(/[_\-.]+/g,' ');
+    const uniq=new Set(vals).size/vals.length,hn=String(h).toLowerCase().replace(/[_\-.]+/g,' ').replace(/\s+/g,' ').trim();
     let kind=null,why='';
     for(const k of ['email','phone','govid','dob']){
       if(vals.filter(v=>pdTestVal(k,v)).length/vals.length>=0.6){kind=k;why='values';break}
@@ -9665,6 +9671,7 @@ function pdScan(data){
         }
       }
     }
+    if(!kind&&PD_WEAK_NAME.test(hn)&&!/\b(group|id|code|no|number|type|year|level|condition|status)\b/.test(hn)&&vals.length>=3&&uniq>=0.8&&vals.filter(v=>pdTestVal('word',v)).length/vals.length>=0.7){kind='name';why='heading'}
     if(!kind&&vals.length>=3&&uniq>=0.8&&vals.filter(v=>pdTestVal('name',v)).length/vals.length>=0.7){kind='name';why='values'}
     if(kind)out.push({index:i,name:h||('Col'+(i+1)),kind,why});
     else if(!/^-?\d+(\.\d+)?$/.test(vals[0])){
@@ -9739,8 +9746,8 @@ function pdApply(){
 /* Check text before it goes to an AI provider. Emails, phone numbers, ID numbers only. */
 const PD_SEND=[
   ['email address',/([^\s@<>"']+@[^\s@<>"']+\.[A-Za-z]{2,})/g,'[email]',null],
-  ['phone number',/(^|\D)((?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5})(?!\d)/g,'[phone]',1],
-  ['ID number',/(^|\D)(\d{4}\s\d{4}\s\d{4}|\d{12}|[A-Z]{5}\d{4}[A-Z])(?![A-Za-z0-9])/g,'[id number]',1]
+  ['phone number',/(^|\D)((?:(?:\+|00)?91[\s-]?|0)?(?:[6-9]\d{4}[\s-]?\d{5}|[6-9]\d{2}[\s-]\d{3}[\s-]\d{4})|0\d{2,4}[\s-]\d{6,8})(?!\d)/g,'[phone]',1],
+  ['ID number',/(^|[^\d-])([2-9]\d{3}[\s-]\d{4}[\s-]\d{4}|[2-9]\d{11}|[A-Z]{5}\d{4}[A-Z])(?![A-Za-z0-9-])/g,'[id number]',1]
 ];
 function pdScanText(text){
   const counts={};let total=0;const seen=[];
@@ -11902,8 +11909,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=73;
-const APP_BUILD='2026.10.17b';
+const APP_VERSION=74;
+const APP_BUILD='2026.10.17c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
