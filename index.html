@@ -9893,7 +9893,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>Today the library holds the Rosenberg Self-Esteem Scale and the Satisfaction With Life Scale. More scales arrive once the owner's original file is checked. Anything you add yourself still needs the owner's permission.</p>
 <p><b>Worked example.</b> Paste ten columns named RSES_01 to RSES_10 with answers coded 0 to 3. Press Parse data, open the Scale library, pick the Rosenberg scale and press Score this scale in my data. A column named RSES_total appears.</p>`},
 {id:'numcheck',g:'Tools',t:'Check the numbers in my document',k:'numbers check p value recompute apa statistics reporting errors',h:`
-<p>Press <b>Check the numbers in my document</b> in the Statistics panel. It finds results written in the usual APA order, such as <i>t(21) = 2.15, p = .043</i>, recomputes p from the statistic and degrees of freedom, and marks each one as matching, close, or wrong.</p>
+<p>Press <b>Check the numbers in my document</b> in the Statistics panel. It finds results written in the usual APA order, such as <i>t(21) = 2.15, p = .043</i>, recomputes p from the statistic and degrees of freedom, and marks each one as matching, close, or wrong. An effect size or a confidence interval between the statistic and p is fine (<i>t(21) = 2.15, d = 0.47, p = .043</i>), and so is a semicolon. Write <i>one-tailed p</i> and the check uses the one-tailed value.</p>
 <p>It catches typos, rounding slips, and a p that was written as significant when the numbers say otherwise. It cannot tell you whether you picked the right test.</p>`},
 {id:'charts',g:'Tools',t:'Charts',k:'chart graph bar line venn figure picture',h:`
 <p>Quick chart draws bar and line charts from numbers you type or paste, and two- or three-circle Venn diagrams. Add the finished chart to your document with one press.</p>
@@ -11902,8 +11902,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=72;
-const APP_BUILD='2026.10.17';
+const APP_VERSION=73;
+const APP_BUILD='2026.10.17b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -12761,14 +12761,22 @@ function ccJump(i){
 }
 
 /* ---- Numbers check (item 43, 2026-10-07): re-derives each reported p-value from its statistic and df. No AI. ---- */
-const NC_NUM='([\\u2212\\u2013-]?\\s*\\d*\\.?\\d+)',NC_P='\\s*,?\\s*[pP]\\s*([<>=\\u2264\\u2265])\\s*(\\d*\\.\\d+|\\d+)';
+/* Between the statistic and its p-value the check now also accepts a semicolon, an opening bracket,
+   up to two effect sizes or a confidence interval (t(38) = 2.45, d = 0.77, p = .019), and a
+   "one-tailed"/"two-tailed" label; a one-tailed p is judged against the one-tailed value. The start
+   of a statistic needs no letter before it, so "...was 5</p><p>t(38)" is found too. (Version 72) */
+const NC_NUM='([\\u2212\\u2013-]?\\s*\\d*\\.?\\d+)';
+const NC_MID='(?:\\s*[,;]\\s*(?:(?:Cohen\\u2019?\'?s\\s+|Hedges\\u2019?\'?\\s+)?(?:d|g|r|R\\s*(?:2|\\u00b2)|\\u03b7\\s*p?\\s*(?:2|\\u00b2)|partial\\s+\\u03b7\\s*(?:2|\\u00b2)|\\u03c9\\s*(?:2|\\u00b2)|\\u03b5\\s*(?:2|\\u00b2)|\\u03c6|V|w|\\u03b2|b|SE|MSE|OR)\\s*=\\s*[\\u2212\\u2013-]?\\s*\\d*\\.?\\d+|9[05]\\s*%\\s*CI\\s*\\[[^\\]\\n]{1,40}\\]))';
+const NC_P=NC_MID+'{0,2}\\s*[,;(]?\\s*(?:(?<tail>one|two|1|2)[- ]tailed\\s*)?[pP]\\s*(?<op>[<>=\\u2264\\u2265])\\s*(?<p>\\d*\\.\\d+|\\d+)';
+const NC_PRE='(?<![A-Za-z_\\u0370-\\u03ff])';
+const NC_G=m=>({tail:m.groups&&m.groups.tail?(/^(one|1)$/i.test(m.groups.tail)?1:2):0,op:m.groups.op,p:m.groups.p});
 const NC_RES=[
-  {k:'t',re:new RegExp('\\bt\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'F',re:new RegExp('\\bF\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*,\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],df2:m[2],stat:m[3],op:m[4],p:m[5]})},
-  {k:'chi',re:new RegExp('(?:\\u03c7\\s*(?:2|\\u00b2|\\^2)|chi[- ]?square|chi2)\\s*\\(\\s*(\\d+)(?:\\s*,\\s*N\\s*=\\s*\\d+)?\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'gi'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'H',re:new RegExp('\\bH\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'r',re:new RegExp('\\br\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'z',re:new RegExp('\\bz\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({stat:m[1],op:m[2],p:m[3]})}
+  {k:'t',re:new RegExp(NC_PRE+'t\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'F',re:new RegExp(NC_PRE+'F\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*,\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],df2:m[2],stat:m[3]},NC_G(m))},
+  {k:'chi',re:new RegExp('(?:\\u03c7\\s*(?:2|\\u00b2|\\^2)|chi[- ]?square|chi2)\\s*\\(\\s*(\\d+)(?:\\s*,\\s*N\\s*=\\s*\\d+)?\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'gi'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'H',re:new RegExp(NC_PRE+'H\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'r',re:new RegExp(NC_PRE+'r\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'z',re:new RegExp(NC_PRE+'z\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({stat:m[1]},NC_G(m))}
 ];
 function ncFind(text){
   const out=[];
@@ -12778,7 +12786,7 @@ function ncFind(text){
       const o=def.map(m);
       const statStr=String(o.stat).replace(/[−–]/g,'-').replace(/\s+/g,'');
       const dec=(statStr.split('.')[1]||'').length,pdec=(String(o.p).split('.')[1]||'').length;
-      out.push({kind:def.k,df1:o.df1!==undefined?parseFloat(o.df1):null,df2:o.df2!==undefined?parseFloat(o.df2):null,stat:parseFloat(statStr),dec:dec,op:o.op,p:parseFloat(o.p),pStr:String(o.p),pdec:pdec,start:m.index,end:m.index+m[0].length,raw:m[0]});
+      out.push({kind:def.k,tail:o.tail||0,df1:o.df1!==undefined?parseFloat(o.df1):null,df2:o.df2!==undefined?parseFloat(o.df2):null,stat:parseFloat(statStr),dec:dec,op:o.op,p:parseFloat(o.p),pStr:String(o.p),pdec:pdec,start:m.index,end:m.index+m[0].length,raw:m[0]});
     }
   });
   out.sort((a,b)=>a.start-b.start);
@@ -12800,7 +12808,8 @@ function ncJudge(f){
   const h=0.5*Math.pow(10,-f.dec),ax=Math.abs(f.stat);
   let a=Math.max(0,ax-h),b=ax+h;
   if(f.kind==='r'){b=Math.min(0.9999999,b)}
-  const pHi=ncPOf(f,a),pLo=ncPOf(f,b),pMid=ncPOf(f,ax);
+  const one=f.tail===1&&(f.kind==='t'||f.kind==='r'||f.kind==='z')?0.5:1;
+  const pHi=one*ncPOf(f,a),pLo=one*ncPOf(f,b),pMid=one*ncPOf(f,ax);
   r.pcalc=pMid;r.pLo=pLo;r.pHi=pHi;
   const hp=0.5*Math.pow(10,-f.pdec),eps=1e-12;
   let ok;
@@ -12817,7 +12826,7 @@ function ncJudge(f){
   const calcSig=pMid<0.05;
   r.status=repSig!==calcSig?'error':'warn';
   if(!zero){
-    if(f.op==='='&&!(f.p+hp<pLo/2-eps||f.p-hp>pHi/2+eps))r.note='nc_c_onetail';
+    if(one===1&&f.op==='='&&!(f.p+hp<pLo/2-eps||f.p-hp>pHi/2+eps))r.note='nc_c_onetail';
     else if(Math.abs((f.op==='='?f.p:f.p)-pMid)<0.005)r.note='nc_c_round';
     else r.note='nc_c_typo';
   }
