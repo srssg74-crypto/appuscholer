@@ -9540,19 +9540,49 @@ function statsSplitLine(l,delim){
   }
   out.push(cur);return out.map(s=>s.trim());
 }
+/* Missing-value codes that R, SPSS, Excel and Jamovi write into exported files. In a column whose
+   other entries are all numbers, these count as empty cells, so one "NA" no longer turns a whole
+   score column into a grouping column. Columns of words keep them as they are. (Version 72) */
+const STATS_NA_RE=/^(na|n\/a|#n\/a|nan|null|none|missing|-|--|\.|\?)$/i;
+const STATS_NUM_RE=/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
+function statsNumNorm(v){return String(v).replace(/^[−–]/,'-')}
 function statsParseText(text){
   const lines=text.split(/\r\n|\r|\n/).filter(l=>l.trim().length);
   if(!lines.length)return null;
   const delim=lines[0].includes('\t')?'\t':',';
   const split=l=>statsSplitLine(l,delim);
   const headers=split(lines[0]);
-  const rows=lines.slice(1).map(split).filter(r=>r.length===headers.length);
-  const cols=headers.map((h,i)=>{
-    const vals=rows.map(r=>r[i]).filter(v=>v!==undefined&&v!=='');
-    const numeric=vals.length>0&&vals.every(v=>/^-?\d+(\.\d+)?$/.test(v));
-    return{name:h||('Col'+(i+1)),index:i,type:numeric?'numeric':'categorical',n:vals.length};
+  const notes={padded:0,dropped:0,missing:{}};
+  /* A row that stops early (trailing empty cells left off) is padded with empty cells.
+     A row with more cells than the header cannot be lined up, so it is left out and counted. */
+  const rows=[];
+  lines.slice(1).map(split).forEach(r=>{
+    if(r.length===headers.length)rows.push(r);
+    else if(r.length<headers.length){while(r.length<headers.length)r.push('');rows.push(r);notes.padded++}
+    else notes.dropped++;
   });
-  return{headers,rows,cols};
+  const cols=headers.map((h,i)=>{
+    const name=h||('Col'+(i+1));
+    const vals=rows.map(r=>r[i]).filter(v=>v!==undefined&&v!=='');
+    const real=vals.filter(v=>!STATS_NA_RE.test(v)).map(statsNumNorm);
+    const numeric=real.length>0&&real.every(v=>STATS_NUM_RE.test(v));
+    if(numeric){
+      let miss=0;
+      rows.forEach(r=>{const v=r[i];if(v===undefined||v==='')return;if(STATS_NA_RE.test(v)){r[i]='';miss++}else r[i]=statsNumNorm(v)});
+      if(miss)notes.missing[name]=miss;
+      return{name,index:i,type:'numeric',n:real.length};
+    }
+    return{name,index:i,type:'categorical',n:vals.length};
+  });
+  return{headers,rows,cols,notes};
+}
+function statsParseNote(d){
+  if(!d||!d.notes)return'';
+  const n=d.notes,bits=[],mk=Object.keys(n.missing);
+  if(mk.length)bits.push('Treated as missing: '+mk.map(k=>escHTML(k)+' ('+n.missing[k]+')').join(', ')+'. These cells held a code such as NA, N/A or a full stop.');
+  if(n.padded)bits.push(n.padded+' row'+(n.padded===1?' was':'s were')+' shorter than the header row; the missing cells at the end were left empty.');
+  if(n.dropped)bits.push('<b>'+n.dropped+' row'+(n.dropped===1?' has':'s have')+' more cells than the header row and '+(n.dropped===1?'was':'were')+' left out.</b> A comma inside a value usually causes this; put such values in double quotes.');
+  return bits.length?'<p class="desc" style="margin:4px 0">'+bits.join(' ')+'</p>':'';
 }
 function rtHash(data){
   var str=data.cols.map(function(c){return c.name+'\u0002'+c.type}).join('\u0001')+'\u0003'+data.rows.map(function(r){return r.join('\u0001')}).join('\u0004');
@@ -9580,7 +9610,8 @@ function statsParse(){
   try{pdRender(data)}catch(e){}
   const box=document.getElementById('statsCols');
   box.innerHTML='<p class="desc" style="margin-bottom:4px">'+data.rows.length+' rows detected:</p>'+
-    data.cols.map(c=>'<span class="stats-chip '+(c.type==='numeric'?'num':'cat')+'"><b>'+escHTML(c.name)+'</b> · '+c.type+' · n='+c.n+'</span>').join('');
+    data.cols.map(c=>'<span class="stats-chip '+(c.type==='numeric'?'num':'cat')+'"><b>'+escHTML(c.name)+'</b> · '+c.type+' · n='+c.n+'</span>').join('')+
+    statsParseNote(data);
   document.getElementById('statsTestArea').style.display='block';
   statsFieldsRender();
   showToast('Data parsed ✓');
@@ -11871,8 +11902,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=71;
-const APP_BUILD='2026.10.13s';
+const APP_VERSION=72;
+const APP_BUILD='2026.10.17';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
