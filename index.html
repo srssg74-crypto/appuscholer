@@ -11909,8 +11909,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=74;
-const APP_BUILD='2026.10.17c';
+const APP_VERSION=75;
+const APP_BUILD='2026.10.17d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -12042,6 +12042,16 @@ function slScore(x,mat,coding){
   });
   return{totals:out,bad:bad,miss:miss};
 }
+/* Forms export answers as words ("Strongly agree"). A word that matches one of the scale's own
+   response options becomes its code under the chosen coding; anything else stays unscored. (Version 75) */
+function slLabelCode(x,coding,v){
+  const norm=s=>String(s).toLowerCase().replace(/[^a-z\u0900-\u097f]+/g,' ').trim();
+  const nv=norm(v);if(!nv)return NaN;
+  const i=x.labels.findIndex(l=>norm(l)===nv);
+  if(i<0||coding.max-coding.min+1!==x.labels.length)return NaN;
+  const agreeFirst=/^strongly agree/i.test(x.labels[0]);
+  return agreeFirst===(coding.dir==='agree-high')?coding.max-i:coding.min+i;
+}
 function slBand(x,t){if(t==null||!x.bands)return '';for(const b of x.bands)if(t<=b.max)return b.label;return x.bands[x.bands.length-1].label}
 function slScoreOpen(id){
   const x=slById(id),data=window._statsData;
@@ -12067,9 +12077,17 @@ function slScoreRun(){
   if(idx.some(v=>v<0)){out.textContent='Choose a column for every item.';return}
   if(new Set(idx).size!==idx.length){out.textContent='Each item needs its own column.';return}
   const coding=x.codings[parseInt(document.getElementById('slCoding').value,10)||0];
-  const mat=data.rows.map(r=>idx.map(k=>{const v=String(r[k]==null?'':r[k]).trim();return v===''?null:Number(v)}));
+  let mapped=0,unknown=0;const unk=[];
+  const mat=data.rows.map(r=>idx.map(k=>{
+    const v=String(r[k]==null?'':r[k]).trim();if(v==='')return null;
+    if(/^[+-]?\d+(\.\d+)?$/.test(v))return Number(v);
+    const c=slLabelCode(x,coding,v);
+    if(isFinite(c)){mapped++;return c}
+    unknown++;if(unk.length<3&&unk.indexOf(v)<0)unk.push(v);return NaN;
+  }));
   const r=slScore(x,mat,coding),valid=r.totals.filter(v=>v!=null);
-  if(!valid.length){out.textContent='No row could be scored. '+(r.bad?r.bad+' answers fall outside '+coding.min+' to '+coding.max+'. Check the coding choice above. ':'')+(r.miss?r.miss+' answers are missing.':'');return}
+  const unkTxt=unknown?' '+unknown+' answer'+(unknown>1?'s are':' is')+' words that are not this scale\'s response options (for example “'+unk.join('”, “')+'”). The options are: '+x.labels.join(', ')+'.':'';
+  if(!valid.length){out.textContent='No row could be scored. '+(r.bad?r.bad+' answers fall outside '+coding.min+' to '+coding.max+'. Check the coding choice above. ':'')+(r.miss-unknown>0?(r.miss-unknown)+' answers are missing.':'')+unkTxt;return}
   const col=x.id+'_total',band=x.id+'_band';
   const cols=data.headers.slice();
   const nameFree=n=>{let m=n,i=2;while(cols.indexOf(m)>=0)m=n+'_'+(i++);return m};
@@ -12083,7 +12101,7 @@ function slScoreRun(){
   const mean=valid.reduce((a,b)=>a+b,0)/valid.length,sd=valid.length>1?Math.sqrt(valid.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(valid.length-1)):0;
   document.getElementById('statsPaste').value=pdCsv(newHeaders,newRows);
   window._pdMsg=null;statsParse();
-  out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'');
+  out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'')+(mapped?' '+mapped+' answers written as words were turned into codes ('+escHTML(coding.label)+').':'')+escHTML(unkTxt);
 }
 
 /* ============ Reading shelf (item 55, first version) ============
