@@ -832,16 +832,16 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
     </div></section>
 
     <section class="card tool-panel" data-panel="close"><div class="panel">
-      <h3>🔍 Closeness check</h3>
-      <p class="desc">Compares the document you are writing with texts you already hold: papers on your Reading shelf, your other documents, and any passage you paste in. It marks every run of words that matches a source word for word, and says where. Everything happens in this browser. Nothing is sent anywhere, and no AI is used.</p>
-      <div class="ap-box" style="font-size:12.5px"><b>What it cannot do.</b> It sees only the sources you tick or paste. It does not search the web, books or journals you have not loaded, and it cannot see an idea copied in new words. Use it to catch a paraphrase that hugs a paper you read. It is not a plagiarism verdict, and it is not a similarity report for your institution.</div>
+      <h3 data-i18n="cl_h3">🔍 Closeness check</h3>
+      <p class="desc" data-i18n="cl_desc">Compares the document you are writing with texts you already hold: papers on your Reading shelf, your other documents, and any passage you paste in. It marks every run of words that matches a source word for word, and says where. Everything happens in this browser. Nothing is sent anywhere, and no AI is used.</p>
+      <div class="ap-box" style="font-size:12.5px" data-i18n="cl_cannot"><b>What it cannot do.</b> It sees only the sources you tick or paste. It does not search the web, books or journals you have not loaded, and it cannot see an idea copied in new words. Use it to catch a paraphrase that hugs a paper you read. It is not a plagiarism verdict, and it is not a similarity report for your institution.</div>
       <div id="clSel" style="margin:8px 0"></div>
-      <div class="fld"><label for="clPaste">Or paste a passage to compare with (for example text from a website or a book)</label><textarea id="clPaste" rows="3" placeholder="Paste the source text here"></textarea></div>
+      <div class="fld"><label for="clPaste" data-i18n="cl_paste_lbl">Or paste a passage to compare with (for example text from a website or a book)</label><textarea id="clPaste" rows="3" placeholder="Paste the source text here" data-i18n-placeholder="cl_paste_ph"></textarea></div>
       <div class="row" style="gap:10px;flex-wrap:wrap;font-size:12.5px;align-items:center">
-        <label>Word group <select id="clK" onchange="clSet()"><option value="5">5 words (more matches)</option><option value="6">6 words</option><option value="8">8 words (fewer matches)</option></select></label>
-        <label>Show passages of <select id="clMin" onchange="clSet()"><option value="8">8 words or more</option><option value="10">10 words or more</option><option value="15">15 words or more</option></select></label>
+        <label><span data-i18n="cl_wg">Word group</span> <select id="clK" onchange="clSet()"><option value="5" data-i18n="cl_wg5">5 words (more matches)</option><option value="6" data-i18n="cl_wg6">6 words</option><option value="8" data-i18n="cl_wg8">8 words (fewer matches)</option></select></label>
+        <label><span data-i18n="cl_show">Show passages of</span> <select id="clMin" onchange="clSet()"><option value="8" data-i18n="cl_m8">8 words or more</option><option value="10" data-i18n="cl_m10">10 words or more</option><option value="15" data-i18n="cl_m15">15 words or more</option></select></label>
       </div>
-      <div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" id="clRunBtn" onclick="clRun()">Check my document</button></div>
+      <div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" id="clRunBtn" onclick="clRun()" data-i18n="cl_run">Check my document</button></div>
       <div id="clOut"></div>
     </div></section>
     <section class="card tool-panel" data-panel="words"><div class="panel">
@@ -2087,6 +2087,7 @@ const I18N={
     idea_assess_btn:'🔎 Assess feasibility', idea_saveproject_btn:'💾 Save this idea as a project',
     idea_panel_note:"This gives an honest outside read on your idea, not approval — the AI can be wrong, and a real supervisor's judgment still matters most. Once the plan feels solid, head to the Research tab next to find a research gap and ground it in real literature.",
     tab_analyse:'📄 Analyse a paper', tab_analyse_title:'Give the app a research paper and learn to read it: ask questions or be walked through it stage by stage',
+    cl_h3:"🔍 Closeness check", cl_desc:"Compares the document you are writing with texts you already hold: papers on your Reading shelf, your other documents, and any passage you paste in. It marks every run of words that matches a source word for word, and says where. Everything happens in this browser. Nothing is sent anywhere, and no AI is used.", cl_cannot:"<b>What it cannot do.</b> It sees only the sources you tick or paste. It does not search the web, books or journals you have not loaded, and it cannot see an idea copied in new words. Use it to catch a paraphrase that hugs a paper you read. It is not a plagiarism verdict, and it is not a similarity report for your institution.", cl_paste_lbl:"Or paste a passage to compare with (for example text from a website or a book)", cl_paste_ph:"Paste the source text here", cl_wg:"Word group", cl_wg5:"5 words (more matches)", cl_wg6:"6 words", cl_wg8:"8 words (fewer matches)", cl_show:"Show passages of", cl_m8:"8 words or more", cl_m10:"10 words or more", cl_m15:"15 words or more", cl_run:"Check my document", cl_need30:"Write at least about 30 words first", cl_needsrc:"Tick a source, or paste a passage to compare with", cl_shelf_h:"Papers on your Reading shelf", cl_shelf_empty:"Your Reading shelf is empty. Add papers there, or paste a passage below.", cl_docs_h:"Your other documents", cl_kind_shelf:"Reading shelf", cl_kind_doc:"your document", cl_kind_paste:"pasted", cl_pasted_name:"Pasted passage", cl_res_pct:"<b>{pct}% of your words</b> ({c} of {n} counted) sit inside passages that match your chosen sources word for word, in runs of {m} words or more.", cl_res_lim:"Quoted text (in double or single quotation marks, or set as a block quotation) and the reference list were left out. This tool sees only the sources you ticked or pasted. It does not see the web, books, journals you have not loaded, or other students' work, and it cannot see copied ideas in new words. A low number is not a clean bill. A high number is a reason to look again, not proof of anything.", cl_none:"No passage of {m} words or more matched. That is only about the sources you chose.", cl_marked:"Your text with matches marked", cl_bysrc:"By source", cl_src_line:"{w} words in {r} passage(s)", cl_each:"Each matching passage", cl_pw:"{w} words. Source: {s}", cl_page:", page {p}", cl_also:". The same words also appear in {l}", cl_yours:"Yours:", cl_theirs:"The source reads:", cl_todo:"What to do: if these are the author's words, put them in quotation marks with a citation and page, or write the idea again in your own words and cite it.", cl_dl:"⬇ Download this report (.txt)", cl_ugc0:"Level 0 (up to 10%)", cl_ugc1:"Level 1 (above 10% to 40%)", cl_ugc2:"Level 2 (above 40% to 60%)", cl_ugc3:"Level 3 (above 60%)", cl_ugcw0:"UGC treats this as minor similarity, with no penalty.", cl_ugcw1:"For a thesis, UGC asks for a revised script within six months.", cl_ugcw2:"For a thesis, UGC bars a revised script for one year.", cl_ugcw3:"For a thesis, UGC cancels the registration for the programme.", cl_ugc:"Against your chosen sources alone, {pct}% falls in UGC {lv}. {what} Your university's checker (DrillBit, Turnitin or another) compares your work with a far larger database, so its number can be higher than this one.", 
     tab_close:'🔍 Closeness check', tab_close_title:'Compare your document with your own sources and mark passages that match word for word',
     tab_words:'📖 Words and grammar', tab_words_title:'Look up words, keep a word bank, and check your grammar',
     tab_psych:'🧰 Research helpers', tab_psych_title:'Summarize a paper, analyze a case study, explain a concept, format results in APA, or have your argument challenged',
@@ -2316,6 +2317,7 @@ const I18N={
     idea_assess_btn:'🔎 व्यवहार्यता आंकें', idea_saveproject_btn:'💾 इस विचार को प्रोजेक्ट के रूप में सहेजें',
     idea_panel_note:'यह आपके विचार पर एक ईमानदार बाहरी राय देता है, स्वीकृति नहीं — AI गलत हो सकता है, और एक वास्तविक गाइड का निर्णय अभी भी सबसे अधिक मायने रखता है। योजना पक्की लगने पर, आगे Research टैब में जाकर शोध अंतराल खोजें और इसे वास्तविक साहित्य में आधारित करें।',
     tab_analyse:'📄 शोध-पत्र का विश्लेषण', tab_analyse_title:'ऐप को कोई शोध-पत्र दें और उसे पढ़ना सीखें: प्रश्न पूछें या चरण-दर-चरण समझें',
+    cl_h3:"🔍 समानता जांच", cl_desc:"आप जो दस्तावेज़ लिख रहे हैं, उसे उन पाठों से मिलाता है जो आपके पास पहले से हैं: पढ़ने की शेल्फ़ पर रखे शोधपत्र, आपके दूसरे दस्तावेज़, और कोई भी अंश जो आप चिपकाएँ। जहाँ भी शब्दों की लड़ी किसी स्रोत से शब्दशः मिलती है, उसे चिह्नित करता है और बताता है कि कहाँ से। सब कुछ इसी ब्राउज़र में होता है। कुछ भी कहीं नहीं भेजा जाता, और एआई का उपयोग नहीं होता।", cl_cannot:"<b>यह क्या नहीं कर सकता।</b> यह केवल वही स्रोत देखता है जिन पर आप सही का निशान लगाएँ या जिन्हें चिपकाएँ। यह वेब, किताबें या वे जर्नल नहीं खोजता जो आपने नहीं डाले, और नए शब्दों में लिखा गया चुराया हुआ विचार नहीं पकड़ सकता। इसे उस भावानुवाद को पकड़ने के लिए इस्तेमाल करें जो किसी पढ़े हुए शोधपत्र से बहुत चिपका हुआ है। यह साहित्यिक चोरी का फ़ैसला नहीं है, और आपके संस्थान के लिए समानता रिपोर्ट भी नहीं है।", cl_paste_lbl:"या मिलाने के लिए कोई अंश चिपकाएँ (जैसे किसी वेबसाइट या किताब का पाठ)", cl_paste_ph:"स्रोत का पाठ यहाँ चिपकाएँ", cl_wg:"शब्द-समूह", cl_wg5:"5 शब्द (ज़्यादा मिलान)", cl_wg6:"6 शब्द", cl_wg8:"8 शब्द (कम मिलान)", cl_show:"इतने लंबे अंश दिखाएँ:", cl_m8:"8 या अधिक शब्द", cl_m10:"10 या अधिक शब्द", cl_m15:"15 या अधिक शब्द", cl_run:"मेरा दस्तावेज़ जाँचें", cl_need30:"पहले कम से कम लगभग 30 शब्द लिखें", cl_needsrc:"कोई स्रोत चुनें, या मिलाने के लिए कोई अंश चिपकाएँ", cl_shelf_h:"पढ़ने की शेल्फ़ पर रखे शोधपत्र", cl_shelf_empty:"आपकी पढ़ने की शेल्फ़ खाली है। वहाँ शोधपत्र जोड़ें, या नीचे कोई अंश चिपकाएँ।", cl_docs_h:"आपके दूसरे दस्तावेज़", cl_kind_shelf:"पढ़ने की शेल्फ़", cl_kind_doc:"आपका दस्तावेज़", cl_kind_paste:"चिपकाया गया", cl_pasted_name:"चिपकाया गया अंश", cl_res_pct:"<b>आपके {pct}% शब्द</b> (गिने गए {n} में से {c}) ऐसे अंशों में हैं जो आपके चुने स्रोतों से शब्दशः मिलते हैं, {m} या अधिक शब्दों की लड़ियों में।", cl_res_lim:"उद्धरण चिह्नों (दोहरे या एकल) में रखा पाठ, ब्लॉक उद्धरण और संदर्भ सूची गिनती से बाहर रखे गए। यह उपकरण केवल वही स्रोत देखता है जो आपने चुने या चिपकाए। यह वेब, किताबें, आपके न डाले गए जर्नल या दूसरे विद्यार्थियों का काम नहीं देखता, और नए शब्दों में लिखे गए विचार नहीं पकड़ सकता। कम संख्या का मतलब यह नहीं कि सब ठीक है। ज़्यादा संख्या दोबारा देखने का कारण है, किसी बात का सबूत नहीं।", cl_none:"{m} या अधिक शब्दों का कोई अंश नहीं मिला। यह बात केवल आपके चुने स्रोतों पर लागू होती है।", cl_marked:"आपका पाठ, मिलान चिह्नित", cl_bysrc:"स्रोत के अनुसार", cl_src_line:"{r} अंशों में {w} शब्द", cl_each:"हर मिलता अंश", cl_pw:"{w} शब्द। स्रोत: {s}", cl_page:", पृष्ठ {p}", cl_also:"। यही शब्द इनमें भी हैं: {l}", cl_yours:"आपका:", cl_theirs:"स्रोत में लिखा है:", cl_todo:"क्या करें: अगर ये लेखक के शब्द हैं, तो इन्हें उद्धरण चिह्नों में रखें और उद्धरण व पृष्ठ संख्या दें, या विचार को अपने शब्दों में दोबारा लिखें और स्रोत का उल्लेख करें।", cl_dl:"⬇ यह रिपोर्ट डाउनलोड करें (.txt)", cl_ugc0:"स्तर 0 (10% तक)", cl_ugc1:"स्तर 1 (10% से ऊपर 40% तक)", cl_ugc2:"स्तर 2 (40% से ऊपर 60% तक)", cl_ugc3:"स्तर 3 (60% से ऊपर)", cl_ugcw0:"UGC इसे मामूली समानता मानता है, कोई दंड नहीं।", cl_ugcw1:"शोध-प्रबंध के लिए UGC छह महीने के भीतर संशोधित पांडुलिपि माँगता है।", cl_ugcw2:"शोध-प्रबंध के लिए UGC एक साल तक संशोधित पांडुलिपि जमा करने पर रोक लगाता है।", cl_ugcw3:"शोध-प्रबंध के लिए UGC कार्यक्रम का पंजीकरण रद्द कर देता है।", cl_ugc:"केवल आपके चुने स्रोतों के आधार पर {pct}% UGC के {lv} में आता है। {what} आपके विश्वविद्यालय का जाँच-उपकरण (DrillBit, Turnitin या कोई और) कहीं बड़े डेटाबेस से मिलान करता है, इसलिए उसकी संख्या इससे ज़्यादा आ सकती है।", 
     tab_close:'🔍 समानता जांच', tab_close_title:'अपने दस्तावेज़ को अपने स्रोतों से मिलाएँ और शब्दशः मिलते अंश चिह्नित करें',
     tab_words:'📖 शब्द और व्याकरण', tab_words_title:'शब्दों के अर्थ देखें, शब्द-बैंक बनाएँ और व्याकरण जाँचें',
     tab_psych:'🧰 शोध सहायक', tab_psych_title:'शोध-पत्र का सारांश, केस स्टडी का विश्लेषण, अवधारणा की व्याख्या, APA प्रारूप, या अपने तर्क की परीक्षा',
@@ -2542,6 +2544,7 @@ function applyLang(){
 function toggleLang(){
   LS.set('appu_lang',getLang()==='hi'?'en':'hi');
   applyLang();
+  try{if(typeof CL!=='undefined'&&CL.res)clRender();if(typeof closeInit==='function'&&document.getElementById('clSel'))closeInit()}catch(e){}
   showToast(getLang()==='hi'?'भाषा: हिन्दी':'Language: English');
 }
 
@@ -7458,9 +7461,9 @@ async function closeInit(){
   const sel=document.getElementById('clSel');if(!sel)return;
   const had={};sel.querySelectorAll('input[type=checkbox]').forEach(c=>{had[c.value]=c.checked});
   let h='';
-  if(CL.shelf.length)h+='<div style="font-size:12.5px;font-weight:700;margin:4px 0">Papers on your Reading shelf</div>'+CL.shelf.map(p=>'<label style="display:flex;gap:6px;font-size:12.5px;align-items:flex-start;cursor:pointer"><input type="checkbox" value="s:'+escAttr(p.id)+'"'+(had['s:'+p.id]===false?'':' checked')+'><span>'+escHTML((p.title||p.file||'Paper').slice(0,100))+'</span></label>').join('');
-  else h+='<div style="font-size:12.5px;color:var(--muted)">Your Reading shelf is empty. Add papers there, or paste a passage below.</div>';
-  if(CL.docs.length)h+='<div style="font-size:12.5px;font-weight:700;margin:8px 0 4px">Your other documents</div>'+CL.docs.map(d=>'<label style="display:flex;gap:6px;font-size:12.5px;align-items:flex-start;cursor:pointer"><input type="checkbox" value="d:'+escAttr(d.id)+'"'+(had['d:'+d.id]===false?'':' checked')+'><span>'+escHTML((d.title||'Untitled').slice(0,100))+'</span></label>').join('');
+  if(CL.shelf.length)h+='<div style="font-size:12.5px;font-weight:700;margin:4px 0">'+t('cl_shelf_h')+'</div>'+CL.shelf.map(p=>'<label style="display:flex;gap:6px;font-size:12.5px;align-items:flex-start;cursor:pointer"><input type="checkbox" value="s:'+escAttr(p.id)+'"'+(had['s:'+p.id]===false?'':' checked')+'><span>'+escHTML((p.title||p.file||'Paper').slice(0,100))+'</span></label>').join('');
+  else h+='<div style="font-size:12.5px;color:var(--muted)">'+t('cl_shelf_empty')+'</div>';
+  if(CL.docs.length)h+='<div style="font-size:12.5px;font-weight:700;margin:8px 0 4px">'+t('cl_docs_h')+'</div>'+CL.docs.map(d=>'<label style="display:flex;gap:6px;font-size:12.5px;align-items:flex-start;cursor:pointer"><input type="checkbox" value="d:'+escAttr(d.id)+'"'+(had['d:'+d.id]===false?'':' checked')+'><span>'+escHTML((d.title||'Untitled').slice(0,100))+'</span></label>').join('');
   sel.innerHTML=h;
   const k=document.getElementById('clK'),m=document.getElementById('clMin');if(k)k.value=String(clK());if(m)m.value=String(clMin());
 }
@@ -7476,34 +7479,28 @@ function clGather(){
       const p=CL.shelf.find(x=>x.id===v.slice(2));if(!p)return;
       const pages=(p.pages||[]).map(x=>String(x||''));let txt='',starts=[];
       pages.forEach(pt=>{starts.push(txt.length);txt+=pt+'\n'});
-      out.push({name:p.title||p.file||'Paper',kind:'Reading shelf',text:txt,pageStarts:starts});
+      out.push({name:p.title||p.file||'Paper',kind:t('cl_kind_shelf'),text:txt,pageStarts:starts});
     }else if(v.indexOf('d:')===0){
       const d=CL.docs.find(x=>x.id===v.slice(2));if(!d)return;
-      out.push({name:d.title||'Untitled document',kind:'your document',text:clHtmlToText(d.body)});
+      out.push({name:d.title||'Untitled document',kind:t('cl_kind_doc'),text:clHtmlToText(d.body)});
     }
   });
   const pz=(document.getElementById('clPaste').value||'').trim();
-  if(pz)out.push({name:'Pasted passage',kind:'pasted',text:pz});
+  if(pz)out.push({name:t('cl_pasted_name'),kind:t('cl_kind_paste'),text:pz});
   return out;
 }
 /* UGC (Promotion of Academic Integrity and Prevention of Plagiarism in Higher Educational Institutions) Regulations, 2018, Reg. 9:
    Level 0 up to 10% (minor), Level 1 above 10 to 40%, Level 2 above 40 to 60%, Level 3 above 60%. The bands are applied to this
    tool's own number only as a reading aid; this check covers only the sources the student loaded. */
-function clUgcBand(pct){
-  if(pct<=10)return{lv:0,name:'Level 0 (up to 10%)',what:'UGC treats this as minor similarity, with no penalty.'};
-  if(pct<=40)return{lv:1,name:'Level 1 (above 10% to 40%)',what:'For a thesis, UGC asks for a revised script within six months.'};
-  if(pct<=60)return{lv:2,name:'Level 2 (above 40% to 60%)',what:'For a thesis, UGC bars a revised script for one year.'};
-  return{lv:3,name:'Level 3 (above 60%)',what:'For a thesis, UGC cancels the registration for the programme.'};
-}
-function clUgcText(r){
-  const b=clUgcBand(r.pct);
-  return 'Against your chosen sources alone, '+r.pct+'% falls in UGC '+b.name+'. '+b.what+' Your university\'s checker (DrillBit, Turnitin or another) compares your work with a far larger database, so its number can be higher than this one.';
-}
+const clT=(k,v,en)=>(en?(I18N.en[k]||k):t(k)).replace(/\{(\w+)\}/g,(m,x)=>(v&&x in v)?v[x]:m);
+function clUgcBand(pct,en){const lv=pct<=10?0:pct<=40?1:pct<=60?2:3;return{lv:lv,name:clT('cl_ugc'+lv,null,en),what:clT('cl_ugcw'+lv,null,en)}}
+/* en=true for the downloaded .txt report, which stays in English like the rest of that file */
+function clUgcText(r,en){const b=clUgcBand(r.pct,en);return clT('cl_ugc',{pct:r.pct,lv:b.name,what:b.what},en)}
 function clRun(){
   const text=getEditorText();
-  if(text.replace(/\s+/g,' ').trim().split(' ').length<30){showToast('Write at least about 30 words first');return}
+  if(text.replace(/\s+/g,' ').trim().split(' ').length<30){showToast(t('cl_need30'));return}
   const src=clGather();
-  if(!src.length){showToast('Tick a source, or paste a passage to compare with');return}
+  if(!src.length){showToast(t('cl_needsrc'));return}
   clSet();
   const t0=Date.now();
   const r=clCompare(text,src,clK(),clMin(),clBlockquoteRanges(text));
@@ -7514,24 +7511,23 @@ const CL_COLS=['rgba(220,38,38,.20)','rgba(37,99,235,.20)','rgba(5,150,105,.22)'
 function clRender(){
   const out=document.getElementById('clOut');if(!out)return;
   const r=CL.res;if(!r){out.innerHTML='';return}
-  let h='<div class="ap-box"><b>'+r.pct+'% of your words</b> ('+r.covered+' of '+r.counted+' counted) sit inside passages that match your chosen sources word for word, in runs of '+r.minRun+' words or more.<br><span style="display:block;margin:5px 0;font-size:12.5px">'+escHTML(clUgcText(r))+'</span><span style="font-size:12px;color:var(--muted)">Quoted text (in double or single quotation marks, or set as a block quotation) and the reference list were left out. This tool sees only the sources you ticked or pasted. It does not see the web, books, journals you have not loaded, or other students\' work, and it cannot see copied ideas in new words. A low number is not a clean bill. A high number is a reason to look again, not proof of anything.</span></div>';
-  if(!r.runs.length){h+='<div class="ap-box">No passage of '+r.minRun+' words or more matched. That is only about the sources you chose.</div>';out.innerHTML=h;return}
-  // highlighted text
+  let h='<div class="ap-box">'+clT('cl_res_pct',{pct:r.pct,c:r.covered,n:r.counted,m:r.minRun})+'<br><span style="display:block;margin:5px 0;font-size:12.5px">'+escHTML(clUgcText(r))+'</span><span style="font-size:12px;color:var(--muted)">'+escHTML(t('cl_res_lim'))+'</span></div>';
+  if(!r.runs.length){h+='<div class="ap-box">'+escHTML(clT('cl_none',{m:r.minRun}))+'</div>';out.innerHTML=h;return}
   let pieces='',pos=0;
   r.runs.forEach((x,n)=>{
     pieces+=escHTML(r.text.slice(pos,x.cs))+'<mark style="background:'+CL_COLS[x.src%CL_COLS.length]+';border-bottom:2px solid currentColor">'+escHTML(r.text.slice(x.cs,x.ce))+'</mark><sup style="font-size:10px"> ['+(x.src+1)+'.'+(n+1)+']</sup>';
     pos=x.ce;
   });
   pieces+=escHTML(r.text.slice(pos));
-  h+='<details open><summary style="cursor:pointer;font-weight:700">Your text with matches marked</summary><div style="white-space:pre-wrap;font-size:13px;line-height:1.6;max-height:320px;overflow:auto;border:1px solid var(--border,#ddd);border-radius:8px;padding:8px;margin-top:6px">'+pieces+'</div></details>';
-  h+='<div style="margin-top:10px;font-weight:700">By source</div>'+r.per.map((p,i)=>p.runs?'<div class="ap-box" style="padding:5px 9px"><span style="display:inline-block;width:10px;height:10px;background:'+CL_COLS[i%CL_COLS.length]+';border:1px solid currentColor;margin-right:6px"></span>['+(i+1)+'] '+escHTML(p.name)+' <span style="color:var(--muted);font-size:12px">('+escHTML(p.kind)+')</span>: '+p.words+' words in '+p.runs+' passage'+(p.runs===1?'':'s')+'</div>':'').join('');
-  h+='<div style="margin-top:10px;font-weight:700">Each matching passage</div>'+r.runs.map((x,n)=>'<div class="ap-box"><b>['+(x.src+1)+'.'+(n+1)+']</b> '+x.words+' words. Source: '+escHTML(r.sources[x.src].name)+(x.page?', page '+x.page:'')+(x.also&&x.also.length?'. The same words also appear in '+x.also.map(a=>'['+(a+1)+'] '+escHTML(r.sources[a].name)).join('; '):'')+'<br><span style="font-size:12.5px"><b>Yours:</b> '+escHTML(x.mine.slice(0,400))+'</span><br><span style="font-size:12.5px"><b>The source reads:</b> '+escHTML(x.theirs.slice(0,400))+'</span><div class="ap-warn" style="margin-top:3px">What to do: if these are the author\'s words, put them in quotation marks with a citation and page, or write the idea again in your own words and cite it.</div></div>').join('');
-  h+='<div class="row" style="margin-top:8px"><button type="button" class="btn btn-gold" id="clDl" onclick="clDownload()">⬇ Download this report (.txt)</button></div>';
+  h+='<details open><summary style="cursor:pointer;font-weight:700">'+escHTML(t('cl_marked'))+'</summary><div style="white-space:pre-wrap;font-size:13px;line-height:1.6;max-height:320px;overflow:auto;border:1px solid var(--border,#ddd);border-radius:8px;padding:8px;margin-top:6px">'+pieces+'</div></details>';
+  h+='<div style="margin-top:10px;font-weight:700">'+escHTML(t('cl_bysrc'))+'</div>'+r.per.map((p,i)=>p.runs?'<div class="ap-box" style="padding:5px 9px"><span style="display:inline-block;width:10px;height:10px;background:'+CL_COLS[i%CL_COLS.length]+';border:1px solid currentColor;margin-right:6px"></span>['+(i+1)+'] '+escHTML(p.name)+' <span style="color:var(--muted);font-size:12px">('+escHTML(p.kind)+')</span>: '+escHTML(clT('cl_src_line',{w:p.words,r:p.runs}))+'</div>':'').join('');
+  h+='<div style="margin-top:10px;font-weight:700">'+escHTML(t('cl_each'))+'</div>'+r.runs.map((x,n)=>'<div class="ap-box"><b>['+(x.src+1)+'.'+(n+1)+']</b> '+escHTML(clT('cl_pw',{w:x.words,s:r.sources[x.src].name})+(x.page?clT('cl_page',{p:x.page}):'')+(x.also&&x.also.length?clT('cl_also',{l:x.also.map(a=>'['+(a+1)+'] '+r.sources[a].name).join('; ')}):''))+'<br><span style="font-size:12.5px"><b>'+escHTML(t('cl_yours'))+'</b> '+escHTML(x.mine.slice(0,400))+'</span><br><span style="font-size:12.5px"><b>'+escHTML(t('cl_theirs'))+'</b> '+escHTML(x.theirs.slice(0,400))+'</span><div class="ap-warn" style="margin-top:3px">'+escHTML(t('cl_todo'))+'</div></div>').join('');
+  h+='<div class="row" style="margin-top:8px"><button type="button" class="btn btn-gold" id="clDl" onclick="clDownload()">'+escHTML(t('cl_dl'))+'</button></div>';
   out.innerHTML=h;
 }
 function clReportText(){
   const r=CL.res;if(!r)return'';
-  let t='CLOSENESS CHECK (made with Appuscholar)\nDate: '+new Date().toISOString().slice(0,10)+'\nSources compared: '+r.sources.map((s,i)=>'['+(i+1)+'] '+s.name+' ('+s.kind+')').join('; ')+'\nSettings: word groups of '+r.k+', passages of '+r.minRun+' words or more. Quoted text and the reference list left out.\nResult: '+r.pct+'% of counted words ('+r.covered+' of '+r.counted+') sit in matching passages.\nUGC 2018 levels: '+clUgcText(r)+'\n\nLIMITS: Only the listed sources were compared. The web, books, other journals and other students\' work were not checked, and ideas rewritten in new words cannot be seen. This is not a plagiarism verdict and does not meet any institution\'s similarity-report requirement.\n\n';
+  let t='CLOSENESS CHECK (made with Appuscholar)\nDate: '+new Date().toISOString().slice(0,10)+'\nSources compared: '+r.sources.map((s,i)=>'['+(i+1)+'] '+s.name+' ('+s.kind+')').join('; ')+'\nSettings: word groups of '+r.k+', passages of '+r.minRun+' words or more. Quoted text and the reference list left out.\nResult: '+r.pct+'% of counted words ('+r.covered+' of '+r.counted+') sit in matching passages.\nUGC 2018 levels: '+clUgcText(r,true)+'\n\nLIMITS: Only the listed sources were compared. The web, books, other journals and other students\' work were not checked, and ideas rewritten in new words cannot be seen. This is not a plagiarism verdict and does not meet any institution\'s similarity-report requirement.\n\n';
   r.runs.forEach((x,n)=>{t+='['+(x.src+1)+'.'+(n+1)+'] '+x.words+' words, source: '+r.sources[x.src].name+(x.page?', page '+x.page:'')+(x.also&&x.also.length?'; also in '+x.also.map(a=>r.sources[a].name).join('; '):'')+'\nYours: '+x.mine+'\nSource: '+x.theirs+'\n\n'});
   return t;
 }
@@ -12496,8 +12492,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=95;
-const APP_BUILD='2026.10.17x';
+const APP_VERSION=96;
+const APP_BUILD='2026.10.17y';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
