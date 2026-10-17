@@ -4265,7 +4265,7 @@ function insertIntoEditor(text,keepSelection,aiTag,runId){
     if(editor.innerHTML)text='\n'+text;
   }
   let html=escHTML(text).replace(/\n/g,'<br>');
-  if(aiTag){html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';actLog('ai')}
+  if(aiTag){html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';actLog('ai');try{aiuNoteInsert()}catch(e){}}
   if(runId){html='<span class="stat-tag" data-run="'+runId+'">'+html+'</span>'}
   let ok=false;
   try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
@@ -5489,6 +5489,9 @@ const AIU_KEY='appu_ailog',AIU_RULES=[
  [/Argue against the passage below/,'counter-arguments to my passage','feedback'],
  [/find a research gap/,'looking for research gaps in selected abstracts','feedback'],
  [/judge whether a project idea is realistic/,'checking whether my project idea is realistic','feedback'],
+ [/thesis supervisor helping a student[^]{0,60}narrow a research topic/,'narrowing my research topic','feedback'],
+ [/^You are a careful teacher helping an undergraduate[^]{0,80}read a research paper/,'asking questions about a paper','explain'],
+ [/^You are a patient teacher walking an undergraduate[^]{0,80}research paper/,'guided reading of a paper','explain'],
  [/academic writing coach[^]{0,60}Using the text/,'advice on building a literature review','feedback'],
  [/Summari[sz]e the (research|paper) text below/,'summarising a paper','explain'],
  [/helping a [^]{0,40}read a paper/,'summarising a paper','explain'],
@@ -5516,10 +5519,22 @@ function aiuToday(){const d=new Date(),z=n=>(n<10?'0':'')+n;return d.getFullYear
 function aiuLog(){try{const a=JSON.parse(LS.get(AIU_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function aiuOn(){return LS.get('appu_ailog_off')!=='1'}
 function aiuRecord(prompt,prov,model){
-  if(!aiuOn())return;
   const c=aiuClassify(prompt);if(!c)return;
+  window._aiuLast={p:prov,m:String(model||'').slice(0,80),g:c.g};
+  if(!aiuOn())return;
   const a=aiuLog();
   a.push({d:aiuToday(),p:prov,m:String(model||'').slice(0,80),k:c.k,g:c.g});
+  while(a.length>1500)a.shift();
+  LS.set(AIU_KEY,JSON.stringify(a));
+}
+/* An explanation, summary or chat answer is logged as "explained". When the student then presses
+   Insert, AI wording enters the document, and the statement must say so. Requests that already
+   count as produced text (Continue, Improve, Expand) are not logged twice. (Version 78) */
+const AIU_INSERT_K='putting an AI answer or summary into my document';
+function aiuNoteInsert(){
+  const l=window._aiuLast;if(!l||l.g==='text'||!aiuOn())return;
+  const a=aiuLog();
+  a.push({d:aiuToday(),p:l.p,m:l.m,k:AIU_INSERT_K,g:'text'});
   while(a.length>1500)a.shift();
   LS.set(AIU_KEY,JSON.stringify(a));
 }
@@ -5573,7 +5588,7 @@ function aiuBuild(){
   const when=!use.length?'':(d1===d2?'on '+aiuDate(d1):'between '+aiuDate(d1)+' and '+aiuDate(d2));
   const by={g:{text:{},feedback:{},explain:{},other:{}}};
   use.forEach(e=>{const g=by.g[e.g]||by.g.other;g[e.k]=(g[e.k]||0)+1});
-  const fmtG=g=>aiuJoin(Object.keys(g).sort((a,b)=>g[b]-g[a]).map(k=>k+' ('+g[k]+' request'+(g[k]===1?'':'s')+')'));
+  const fmtG=g=>aiuJoin(Object.keys(g).sort((a,b)=>g[b]-g[a]).map(k=>k+' ('+g[k]+(k===AIU_INSERT_K?' time':' request')+(g[k]===1?'':'s')+')'));
   const me=J?'the author':'I',My=J?'the author\'s':'my',Me=J?'the author':'me';
   const parts=[];
   let first;
@@ -5595,7 +5610,8 @@ function aiuBuild(){
   try{const sm=styleMeta(),ss=styleSamples();if(styleIsOn()&&sm.decl&&ss.length&&use.length)parts.push((J?'A profile of the author\'s own writing style, built from '+ss.length+' sample'+(ss.length===1?'':'s')+' that the author declared as their own work on '+aiuDate(sm.decl)+', was used to match the wording of AI suggestions.':'A profile of my own writing style, built from '+ss.length+' sample'+(ss.length===1?'':'s')+' that I declared as my own work on '+aiuDate(sm.decl)+', was used to match the wording of AI suggestions.'))}catch(e){}
   if(o.length)parts.push(o.join(' '));
   if(use.length&&Object.keys(by.g.text).length&&!ck('aiuReword'))parts.push('[Say which passages still contain AI wording, since you did not tick that you rewrote it.]');
-  if(fmt==='thesis'&&use.length)parts.push('In all, '+use.length+' request'+(use.length===1?'':'s')+' were logged. The log is kept in my browser and I can show it to my supervisor on request.');
+  const nReq=use.filter(e=>e.k!==AIU_INSERT_K).length;
+  if(fmt==='thesis'&&nReq)parts.push('In all, '+nReq+' request'+(nReq===1?' was':'s were')+' logged. The log is kept in my browser and I can show it to my supervisor on request.');
   parts.push(J?'After using the tool the author reviewed and edited the output and takes full responsibility for the content of the publication. No AI tool is listed as an author.':'AI is not an author of this work. I am responsible for everything in it.');
   const head=fmt==='journal'?'Declaration of AI use':(fmt==='thesis'?'Statement on the use of AI':'AI-use statement');
   out.value=head+'\n\n'+parts.join(' ')+'\n\n[Your institution or the journal decides what you must disclose. Edit this text so that it is true.]';
@@ -11957,8 +11973,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=77;
-const APP_BUILD='2026.10.17f';
+const APP_VERSION=78;
+const APP_BUILD='2026.10.17g';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
