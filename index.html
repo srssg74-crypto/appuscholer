@@ -5845,12 +5845,27 @@ function downloadDoc(){
 }
 
 /* ============ LaTeX export — hand the manuscript to Overleaf ============ */
+/* Symbols the Statistics Lab writes (η², χ², ω, α, rₛ, ×, −, ≤) are not in pdfLaTeX's default
+   input encoding, so Overleaf stopped with "Unicode character not set up for use with LaTeX".
+   Each becomes a LaTeX command. Devanagari is wrapped for XeLaTeX (see downloadLatex). (Version 79) */
+const _TEX_SYM={'α':'\\alpha','β':'\\beta','γ':'\\gamma','δ':'\\delta','ε':'\\varepsilon','ζ':'\\zeta','η':'\\eta','θ':'\\theta','κ':'\\kappa','λ':'\\lambda','μ':'\\mu','ν':'\\nu','ξ':'\\xi','π':'\\pi','ρ':'\\rho','σ':'\\sigma','τ':'\\tau','φ':'\\phi','χ':'\\chi','ψ':'\\psi','ω':'\\omega',
+  'Γ':'\\Gamma','Δ':'\\Delta','Θ':'\\Theta','Λ':'\\Lambda','Π':'\\Pi','Σ':'\\Sigma','Φ':'\\Phi','Ψ':'\\Psi','Ω':'\\Omega',
+  '×':'\\times','÷':'\\div','−':'-','±':'\\pm','∓':'\\mp','≤':'\\le','≥':'\\ge','≠':'\\neq','≈':'\\approx','∼':'\\sim','∞':'\\infty','√':'\\surd','∑':'\\sum','∏':'\\prod','∫':'\\int','∂':'\\partial','∈':'\\in','∉':'\\notin','∩':'\\cap','∪':'\\cup','⊂':'\\subset','→':'\\rightarrow','←':'\\leftarrow','↔':'\\leftrightarrow','⇒':'\\Rightarrow','′':'\\prime','″':'\\prime\\prime','·':'\\cdot','∙':'\\cdot','°':'^\\circ','‰':'\\text{\\textperthousand}'};
+const _TEX_SUP={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁺':'+','⁻':'-','ⁿ':'n'};
+const _TEX_SUB={'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9','ₐ':'a','ₑ':'e','ₒ':'o','ₓ':'x','ₕ':'h','ₖ':'k','ₗ':'l','ₘ':'m','ₙ':'n','ₚ':'p','ₛ':'s','ₜ':'t','ᵢ':'i','ⱼ':'j','ᵣ':'r'};
 function _texEsc(s){
-  return String(s==null?'':s)
+  let t=String(s==null?'':s)
     .replace(/\\/g,'\\textbackslash{}')
     .replace(/([#$%&_{}])/g,'\\$1')
     .replace(/~/g,'\\textasciitilde{}')
     .replace(/\^/g,'\\textasciicircum{}');
+  t=t.replace(/[\u0370-\u03FF\u2200-\u22FF\u2190-\u21FF×÷±·∙°′″‰−]/g,c=>_TEX_SYM[c]!==undefined?'\\ensuremath{'+_TEX_SYM[c]+'}':c);
+  t=t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿ]+/g,m=>'\\textsuperscript{'+m.split('').map(c=>_TEX_SUP[c]).join('')+'}');
+  t=t.replace(/[₀-₉ₐₑₒₓₕₖₗₘₙₚₛₜᵢⱼᵣ]+/g,m=>'\\textsubscript{'+m.split('').map(c=>_TEX_SUB[c]).join('')+'}');
+  /* Emoji and pictographs have no LaTeX form and stop pdfLaTeX; a tick becomes a root sign, the rest are dropped. */
+  t=t.replace(/[\u2713\u2714\u2705]/g,'\\ensuremath{\\surd}').replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D]/gu,'');
+  t=t.replace(/[\u0900-\u097F\u1CD0-\u1CFF\uA8E0-\uA8FF]+(?:[\s,.;:!?()'"\-–—‘’“”]*[\u0900-\u097F\u1CD0-\u1CFF\uA8E0-\uA8FF]+)*/g,m=>'{\\hindifont '+m+'}');
+  return t;
 }
 function _texInline(node){
   let out='';
@@ -5865,8 +5880,9 @@ function _texInline(node){
     else if(tag==='s'||tag==='strike'||tag==='del')out+='\\sout{'+inner()+'}';
     else if(tag==='sup')out+='\\textsuperscript{'+inner()+'}';
     else if(tag==='sub')out+='\\textsubscript{'+inner()+'}';
-    else if(tag==='br')out+='\\\\ ';
+    else if(tag==='br')out+='\\newline{}';
     else if(tag==='a')out+=inner()+'\\footnote{'+_texEsc(n.getAttribute('href')||'')+'}';
+    else if(tag==='img')out+='\\fbox{\\parbox{0.9\\linewidth}{\\centering [Picture'+(n.getAttribute('alt')?': '+_texEsc(n.getAttribute('alt')):'')+'. A .tex file holds text only: upload the picture to Overleaf and put it here with \\textbackslash includegraphics.]}}';
     else out+=inner();
   });
   return out;
@@ -5902,7 +5918,7 @@ function _texBlock(node,lines){
     else if(tag==='ul'||tag==='ol'){
       const env=tag==='ul'?'itemize':'enumerate';
       lines.push('\\begin{'+env+'}');
-      Array.from(el.children).forEach(li=>{if(li.tagName&&li.tagName.toLowerCase()==='li')lines.push('\\item '+_texInline(li))});
+      Array.from(el.children).forEach(li=>{if(li.tagName&&li.tagName.toLowerCase()==='li')lines.push('\\item{} '+_texInline(li))});
       lines.push('\\end{'+env+'}');
     }
     else if(tag==='table'){
@@ -5925,9 +5941,16 @@ function downloadLatex(){
   _texBlock(wrap,lines);
   const orcid=(LS.get('appu_orcid')||'').trim();
   const authorLine=orcid?'Author \\\\ ORCID: '+_texEsc(orcid):'Author';
+  const body=lines.join('\n\n'),deva=body.indexOf('\\hindifont')>=0||/\\hindifont/.test(_texEsc(title));
+  /* Hindi needs XeLaTeX and a Devanagari font. Without Hindi the file stays pdfLaTeX, Overleaf's default. */
+  const enc=deva?
+    '% Compile with XeLaTeX: in Overleaf open Menu, then set Compiler to XeLaTeX.\n'+
+    '\\usepackage{fontspec}\n'+
+    '\\IfFontExistsTF{Noto Serif Devanagari}{\\newfontfamily\\hindifont{Noto Serif Devanagari}[Script=Devanagari]}{\\IfFontExistsTF{Lohit Devanagari}{\\newfontfamily\\hindifont{Lohit Devanagari}[Script=Devanagari]}{\\IfFontExistsTF{Mangal}{\\newfontfamily\\hindifont{Mangal}[Script=Devanagari]}{\\newcommand\\hindifont{}\\typeout{No Devanagari font found: Hindi text will be missing.}}}}\n'
+    :'\\usepackage[utf8]{inputenc}\n\\usepackage[T1]{fontenc}\n';
   const tex='\\documentclass[12pt]{article}\n'+
     '\\usepackage[a4paper,margin=1in]{geometry}\n'+
-    '\\usepackage[utf8]{inputenc}\n'+
+    enc+
     '\\usepackage{ulem}\n'+
     '\\usepackage{apacite} % switch to a journal-specific citation package if needed\n'+
     '\\title{'+_texEsc(title)+'}\n'+
@@ -5935,13 +5958,13 @@ function downloadLatex(){
     '\\date{\\today}\n'+
     '\\begin{document}\n'+
     '\\maketitle\n\n'+
-    lines.join('\n\n')+'\n\n'+
+    body+'\n\n'+
     '\\end{document}\n';
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([tex],{type:'text/x-tex'}));
   a.download=safe+'.tex';a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  showToast('LaTeX exported ✓ — upload the .tex file to Overleaf, or compile locally');
+  showToast(deva?'LaTeX exported ✓ — it holds Hindi, so in Overleaf set the compiler to XeLaTeX (Menu, then Compiler)':'LaTeX exported ✓ — upload the .tex file to Overleaf, or compile locally');
 }
 
 /* ============ Design & Ethics — regulatory pathway, protocol, EC/consent, CTRI, PI readiness, budget ============
@@ -11973,8 +11996,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=78;
-const APP_BUILD='2026.10.17g';
+const APP_VERSION=79;
+const APP_BUILD='2026.10.17h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
