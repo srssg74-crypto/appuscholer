@@ -1998,6 +1998,29 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script>
+/* Chart.js and PptxGenJS come from a CDN. Some networks block one CDN or another (jsDelivr has been
+   blocked by Indian mobile networks before), so each library has spare copies on other hosts.
+   appuLib('Chart') resolves true once the library is there, trying each host in turn. (Version 81) */
+const APPU_LIB_SRC={
+  Chart:['https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js','https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'],
+  PptxGenJS:['https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js','https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js']
+};
+const _appuLibP={};
+function appuLib(name){
+  if(typeof window[name]!=='undefined')return Promise.resolve(true);
+  if(_appuLibP[name])return _appuLibP[name];
+  const list=(APPU_LIB_SRC[name]||[]).slice(1);
+  return _appuLibP[name]=(async()=>{
+    for(const u of list){
+      const ok=await new Promise(res=>{const sc=document.createElement('script');sc.src=u;sc.async=true;sc.onload=()=>res(true);sc.onerror=()=>{sc.remove();res(false)};document.head.appendChild(sc)});
+      if(ok&&typeof window[name]!=='undefined')return true;
+    }
+    _appuLibP[name]=null;return typeof window[name]!=='undefined';
+  })();
+}
+appuLib('Chart');appuLib('PptxGenJS');
+</script>
+<script>
 /* ============ FIX 5: storage never throws ============ */
 var sessionKeys = {};
 /* Pop-out window: the same page opened as a second browser window showing one tool. It shares this
@@ -4943,7 +4966,8 @@ function chartGenerate(){
   const title=document.getElementById('chartTitle').value.trim();
   const box=document.getElementById('chartPreviewBox');
   if(typeof Chart==='undefined'){
-    box.innerHTML='<p class="desc">📈 Charts need an internet connection the first time this page loads.</p>';
+    box.innerHTML='<p class="desc">📈 Loading the chart tool…</p>';
+    appuLib('Chart').then(ok=>{if(ok)chartGenerate();else box.innerHTML='<p class="desc">📈 '+t0x('lib_fail').replace('{what}','The chart tool')+'</p>'});
     return;
   }
   box.innerHTML='<canvas id="chartMakerCanvas" height="220"></canvas>';
@@ -5072,7 +5096,7 @@ function pptxBuildPreview(){
   document.getElementById('pptxDownloadRow').style.display='flex';
 }
 function pptxDownload(){
-  if(typeof PptxGenJS==='undefined'){showToast('The slide-maker library needs an internet connection to load — try again once you\'re online');return}
+  if(typeof PptxGenJS==='undefined'){showToast('Loading the slide maker…');appuLib('PptxGenJS').then(ok=>{if(ok)pptxDownload();else showToast(t0x('lib_fail').replace('{what}','The slide maker'))});return}
   const slides=_pptxSlideModel||docToSlideModel();
   if(!slides.length){showToast('Generate the preview first');return}
   const pptx=new PptxGenJS();
@@ -11996,8 +12020,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=80;
-const APP_BUILD='2026.10.17i';
+const APP_VERSION=81;
+const APP_BUILD='2026.10.17j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -12588,8 +12612,10 @@ function statsChartClear(){
 }
 function statsChartNoLib(){
   const box=document.getElementById('statsChartBox');
-  if(box)box.innerHTML='<p class="desc">📈 Charts need an internet connection the first time this page loads.</p>';
+  if(box)box.innerHTML='<p class="desc">📈 The chart tool is still loading. Press Run again in a few seconds.</p>';
+  appuLib('Chart').then(ok=>{if(!ok&&box)box.innerHTML='<p class="desc">📈 '+t0x('lib_fail').replace('{what}','The chart tool')+'</p>'});
 }
+function t0x(k){return k==='lib_fail'?'{what} could not be downloaded from jsDelivr, unpkg or cdnjs. If you are online, your network may block these sites: try another Wi-Fi or mobile data. Every number is still calculated without it.':k}
 function statsChartBarMeans(labels,values,errs,title,yLabel){
   if(!statsChartAvailable())return statsChartNoLib();
   if(!_errorBarsRegistered){try{Chart.register(_errorBarsPlugin)}catch(e){}_errorBarsRegistered=true}
