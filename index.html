@@ -7380,11 +7380,15 @@ function clTok(text){
 }
 /* Look-alike letters from Cyrillic and Greek mapped back to Latin, applied only inside words that already mix scripts. */
 const CL_HOMO={'а':'a','е':'e','о':'o','р':'p','с':'c','х':'x','у':'y','і':'i','ј':'j','ѕ':'s','ԁ':'d','ɡ':'g','ο':'o','α':'a','ν':'v','ρ':'p','τ':'t','ι':'i','κ':'k'};
-function clExcludeRanges(text){
-  const r=[];let m;
+/* Version 92: also leaves out text in single quotation marks (‘…’, common in Indian and British
+   writing), APA block quotations (indented quotes of 40+ words carry no quotation marks; the editor
+   keeps them as <blockquote>, passed in as extra ranges) and a reference heading followed by a colon. */
+function clExcludeRanges(text,extra){
+  const r=(extra||[]).slice();let m;
   const q1=/“[^”]{0,3000}”/g;while((m=q1.exec(text)))r.push([m.index,m.index+m[0].length]);
   const q2=/"[^"\n]{0,3000}"/g;while((m=q2.exec(text)))r.push([m.index,m.index+m[0].length]);
-  const h=/\n[ \t]*(references|reference list|bibliography|works cited)[ \t]*\n/ig;let last=-1;
+  const q3=/‘[\s\S]{0,3000}?’(?![\p{L}\p{N}])/gu;while((m=q3.exec(text)))r.push([m.index,m.index+m[0].length]);
+  const h=/\n[ \t]*(references|reference list|bibliography|works cited)[ \t]*:?[ \t]*\n/ig;let last=-1;
   while((m=h.exec(text)))last=m.index;
   if(last>=0)r.push([last,text.length]);
   return r;
@@ -7396,9 +7400,14 @@ function clK(){const v=parseInt(LS.get('appu_close_k')||'6',10);return[5,6,8].in
 function clMin(){const v=parseInt(LS.get('appu_close_min')||'8',10);return[8,10,15].indexOf(v)>=0?v:8}
 function clNorm(s){return s.map(t=>t.w)}
 /* Pure engine: studentText, sources [{name,kind,text,pages?}], k (word group size), minRun. Returns result object. */
-function clCompare(studentText,sources,k,minRun){
+function clBlockquoteRanges(text){
+  const out=[];let from=0;
+  try{editor.querySelectorAll('blockquote').forEach(b=>{const t=(b.innerText||b.textContent||'').trim();if(!t)return;const at=text.indexOf(t,from);if(at>=0){out.push([at,at+t.length]);from=at+t.length}})}catch(e){}
+  return out;
+}
+function clCompare(studentText,sources,k,minRun,extraExcl){
   const st=clTok(studentText);
-  const ex=clExcludeRanges(studentText);
+  const ex=clExcludeRanges(studentText,extraExcl);
   const excl=new Uint8Array(st.length);
   st.forEach((t,i)=>{for(let j=0;j<ex.length;j++){if(t.s>=ex[j][0]&&t.e<=ex[j][1]){excl[i]=1;break}}});
   const counted=excl.reduce((a,x)=>a+(x?0:1),0);
@@ -7481,7 +7490,7 @@ function clRun(){
   if(!src.length){showToast('Tick a source, or paste a passage to compare with');return}
   clSet();
   const t0=Date.now();
-  const r=clCompare(text,src,clK(),clMin());
+  const r=clCompare(text,src,clK(),clMin(),clBlockquoteRanges(text));
   r.text=text;r.ms=Date.now()-t0;
   CL.res=r;clRender();
 }
@@ -7489,7 +7498,7 @@ const CL_COLS=['rgba(220,38,38,.20)','rgba(37,99,235,.20)','rgba(5,150,105,.22)'
 function clRender(){
   const out=document.getElementById('clOut');if(!out)return;
   const r=CL.res;if(!r){out.innerHTML='';return}
-  let h='<div class="ap-box"><b>'+r.pct+'% of your words</b> ('+r.covered+' of '+r.counted+' counted) sit inside passages that match your chosen sources word for word, in runs of '+r.minRun+' words or more.<br><span style="font-size:12px;color:var(--muted)">Quoted text and the reference list were left out. This tool sees only the sources you ticked or pasted. It does not see the web, books, journals you have not loaded, or other students\' work, and it cannot see copied ideas in new words. A low number is not a clean bill. A high number is a reason to look again, not proof of anything.</span></div>';
+  let h='<div class="ap-box"><b>'+r.pct+'% of your words</b> ('+r.covered+' of '+r.counted+' counted) sit inside passages that match your chosen sources word for word, in runs of '+r.minRun+' words or more.<br><span style="font-size:12px;color:var(--muted)">Quoted text (in double or single quotation marks, or set as a block quotation) and the reference list were left out. This tool sees only the sources you ticked or pasted. It does not see the web, books, journals you have not loaded, or other students\' work, and it cannot see copied ideas in new words. A low number is not a clean bill. A high number is a reason to look again, not proof of anything.</span></div>';
   if(!r.runs.length){h+='<div class="ap-box">No passage of '+r.minRun+' words or more matched. That is only about the sources you chose.</div>';out.innerHTML=h;return}
   // highlighted text
   let pieces='',pos=0;
@@ -12471,8 +12480,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=91;
-const APP_BUILD='2026.10.17t';
+const APP_VERSION=92;
+const APP_BUILD='2026.10.17u';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
