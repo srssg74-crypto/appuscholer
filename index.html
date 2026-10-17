@@ -7486,6 +7486,19 @@ function clGather(){
   if(pz)out.push({name:'Pasted passage',kind:'pasted',text:pz});
   return out;
 }
+/* UGC (Promotion of Academic Integrity and Prevention of Plagiarism in Higher Educational Institutions) Regulations, 2018, Reg. 9:
+   Level 0 up to 10% (minor), Level 1 above 10 to 40%, Level 2 above 40 to 60%, Level 3 above 60%. The bands are applied to this
+   tool's own number only as a reading aid; this check covers only the sources the student loaded. */
+function clUgcBand(pct){
+  if(pct<=10)return{lv:0,name:'Level 0 (up to 10%)',what:'UGC treats this as minor similarity, with no penalty.'};
+  if(pct<=40)return{lv:1,name:'Level 1 (above 10% to 40%)',what:'For a thesis, UGC asks for a revised script within six months.'};
+  if(pct<=60)return{lv:2,name:'Level 2 (above 40% to 60%)',what:'For a thesis, UGC bars a revised script for one year.'};
+  return{lv:3,name:'Level 3 (above 60%)',what:'For a thesis, UGC cancels the registration for the programme.'};
+}
+function clUgcText(r){
+  const b=clUgcBand(r.pct);
+  return 'Against your chosen sources alone, '+r.pct+'% falls in UGC '+b.name+'. '+b.what+' Your university\'s checker (DrillBit, Turnitin or another) compares your work with a far larger database, so its number can be higher than this one.';
+}
 function clRun(){
   const text=getEditorText();
   if(text.replace(/\s+/g,' ').trim().split(' ').length<30){showToast('Write at least about 30 words first');return}
@@ -7501,7 +7514,7 @@ const CL_COLS=['rgba(220,38,38,.20)','rgba(37,99,235,.20)','rgba(5,150,105,.22)'
 function clRender(){
   const out=document.getElementById('clOut');if(!out)return;
   const r=CL.res;if(!r){out.innerHTML='';return}
-  let h='<div class="ap-box"><b>'+r.pct+'% of your words</b> ('+r.covered+' of '+r.counted+' counted) sit inside passages that match your chosen sources word for word, in runs of '+r.minRun+' words or more.<br><span style="font-size:12px;color:var(--muted)">Quoted text (in double or single quotation marks, or set as a block quotation) and the reference list were left out. This tool sees only the sources you ticked or pasted. It does not see the web, books, journals you have not loaded, or other students\' work, and it cannot see copied ideas in new words. A low number is not a clean bill. A high number is a reason to look again, not proof of anything.</span></div>';
+  let h='<div class="ap-box"><b>'+r.pct+'% of your words</b> ('+r.covered+' of '+r.counted+' counted) sit inside passages that match your chosen sources word for word, in runs of '+r.minRun+' words or more.<br><span style="display:block;margin:5px 0;font-size:12.5px">'+escHTML(clUgcText(r))+'</span><span style="font-size:12px;color:var(--muted)">Quoted text (in double or single quotation marks, or set as a block quotation) and the reference list were left out. This tool sees only the sources you ticked or pasted. It does not see the web, books, journals you have not loaded, or other students\' work, and it cannot see copied ideas in new words. A low number is not a clean bill. A high number is a reason to look again, not proof of anything.</span></div>';
   if(!r.runs.length){h+='<div class="ap-box">No passage of '+r.minRun+' words or more matched. That is only about the sources you chose.</div>';out.innerHTML=h;return}
   // highlighted text
   let pieces='',pos=0;
@@ -7518,7 +7531,7 @@ function clRender(){
 }
 function clReportText(){
   const r=CL.res;if(!r)return'';
-  let t='CLOSENESS CHECK (made with Appuscholar)\nDate: '+new Date().toISOString().slice(0,10)+'\nSources compared: '+r.sources.map((s,i)=>'['+(i+1)+'] '+s.name+' ('+s.kind+')').join('; ')+'\nSettings: word groups of '+r.k+', passages of '+r.minRun+' words or more. Quoted text and the reference list left out.\nResult: '+r.pct+'% of counted words ('+r.covered+' of '+r.counted+') sit in matching passages.\n\nLIMITS: Only the listed sources were compared. The web, books, other journals and other students\' work were not checked, and ideas rewritten in new words cannot be seen. This is not a plagiarism verdict and does not meet any institution\'s similarity-report requirement.\n\n';
+  let t='CLOSENESS CHECK (made with Appuscholar)\nDate: '+new Date().toISOString().slice(0,10)+'\nSources compared: '+r.sources.map((s,i)=>'['+(i+1)+'] '+s.name+' ('+s.kind+')').join('; ')+'\nSettings: word groups of '+r.k+', passages of '+r.minRun+' words or more. Quoted text and the reference list left out.\nResult: '+r.pct+'% of counted words ('+r.covered+' of '+r.counted+') sit in matching passages.\nUGC 2018 levels: '+clUgcText(r)+'\n\nLIMITS: Only the listed sources were compared. The web, books, other journals and other students\' work were not checked, and ideas rewritten in new words cannot be seen. This is not a plagiarism verdict and does not meet any institution\'s similarity-report requirement.\n\n';
   r.runs.forEach((x,n)=>{t+='['+(x.src+1)+'.'+(n+1)+'] '+x.words+' words, source: '+r.sources[x.src].name+(x.page?', page '+x.page:'')+(x.also&&x.also.length?'; also in '+x.also.map(a=>r.sources[a].name).join('; '):'')+'\nYours: '+x.mine+'\nSource: '+x.theirs+'\n\n'});
   return t;
 }
@@ -12483,8 +12496,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=94;
-const APP_BUILD='2026.10.17w';
+const APP_VERSION=95;
+const APP_BUILD='2026.10.17x';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
