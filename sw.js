@@ -2,7 +2,7 @@
    Same-origin files: network first, so a new upload reaches online students at once; the saved copy
    is used only when the network fails. Library and font files: saved copy first.
    AI providers, paper search and every other site are never touched. */
-const VER = 'appu-v84-2026.10.17m';
+const VER = 'appu-v85-2026.10.17n';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const LIBS = [
   'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
@@ -11,7 +11,7 @@ const LIBS = [
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
 ];
-const ASSETS = ["./assets/bg_class.webp", "./assets/face_raj_m0.webp", "./assets/face_raj_m1.webp", "./assets/face_raj_m2.webp", "./assets/face_raj_m3.webp", "./assets/face_raj_m4.webp", "./assets/face_raj_m5.webp", "./assets/face_raj_m6.webp", "./assets/ch_appu_explain.webp", "./assets/ch_appu_point.webp", "./assets/ch_appu_stand.webp", "./assets/ch_appu_talk.webp", "./assets/ch_appu_warn.webp", "./assets/ch_meera_explain.webp", "./assets/ch_meera_happy.webp", "./assets/ch_meera_point.webp", "./assets/ch_meera_stand.webp", "./assets/ch_meera_talk.webp", "./assets/ch_meera_think.webp", "./assets/ch_meera_warn.webp", "./assets/ch_raj_explain.webp", "./assets/ch_raj_happy.webp", "./assets/ch_raj_point.webp", "./assets/ch_raj_stand.webp", "./assets/ch_raj_talk.webp", "./assets/ch_raj_think.webp", "./assets/ch_raj_warn.webp", "./assets/face_appu_c.webp", "./assets/face_appu_o.webp", "./assets/face_meera_c.webp", "./assets/face_meera_o.webp", "./assets/face_raj_c.webp", "./assets/face_raj_o.webp", "./assets/pt_einstein.webp", "./assets/pt_kalam.webp", "./assets/pt_raman.webp"];
+const ASSETS = ["./assets/bg_class.webp", "./assets/ch_appu_explain.webp", "./assets/ch_appu_point.webp", "./assets/ch_appu_stand.webp", "./assets/ch_appu_talk.webp", "./assets/ch_appu_warn.webp", "./assets/ch_meera_explain.webp", "./assets/ch_meera_happy.webp", "./assets/ch_meera_point.webp", "./assets/ch_meera_stand.webp", "./assets/ch_meera_talk.webp", "./assets/ch_meera_think.webp", "./assets/ch_meera_warn.webp", "./assets/ch_raj_explain.webp", "./assets/ch_raj_happy.webp", "./assets/ch_raj_point.webp", "./assets/ch_raj_stand.webp", "./assets/ch_raj_talk.webp", "./assets/ch_raj_think.webp", "./assets/ch_raj_warn.webp", "./assets/face_appu_c.webp", "./assets/face_appu_o.webp", "./assets/face_meera_c.webp", "./assets/face_meera_o.webp", "./assets/face_raj_c.webp", "./assets/face_raj_o.webp", "./assets/pt_einstein.webp", "./assets/pt_kalam.webp", "./assets/pt_raman.webp"];
 const LIB_HOSTS = ['cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'unpkg.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {
