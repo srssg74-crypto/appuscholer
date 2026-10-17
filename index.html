@@ -8623,7 +8623,7 @@ function rsOaStatus(oa){
 }
 async function rsFetchOpenAlex(q,extra){
   const url=oaUrl('https://api.openalex.org/works?search='+encodeURIComponent(q)+(extra&&extra.filter?'&filter='+extra.filter:'')+
-    '&per-page='+((extra&&extra.per)||8)+'&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url,open_access,is_retracted');
+    '&per-page='+((extra&&extra.per)||8)+'&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url,open_access,is_retracted,biblio,type');
   const r=await fetch(url);
   if(!r.ok)throw oaHttpError(r);
   const j=await r.json();
@@ -8631,10 +8631,14 @@ async function rsFetchOpenAlex(q,extra){
     const authors=(w.authorships||[]).map(a=>a.author&&a.author.display_name).filter(Boolean);
     const venue=(w.primary_location&&w.primary_location.source&&w.primary_location.source.display_name)||'';
     const doi=(w.doi||'').replace(/^https?:\/\/doi\.org\//i,'');
+    const bb=w.biblio||{};
     return{
       source:'OpenAlex',oaId:(w.id||'').split('/').pop(),
-      title:w.display_name||'Untitled',
+      title:citCrPlain(w.display_name||'Untitled'),
       authors:authors.length>4?authors.slice(0,4).join(', ')+', et al.':(authors.join(', ')||'Unknown authors'),
+      /* Version 89: the full list, so a reference added from a search names every author (APA lists up to 20). */
+      authorList:authors,authorFmt:'given-first',workType:w.type||'',
+      volume:bb.volume||'',issue:bb.issue||'',pages:bb.first_page?(bb.first_page+(bb.last_page&&bb.last_page!==bb.first_page?'–'+bb.last_page:'')):'',
       year:String(w.publication_year||''),venue,
       abstract:rsReconstructAbstract(w.abstract_inverted_index),
       citationCount:w.cited_by_count||0,doi,
@@ -8675,11 +8679,14 @@ async function rsFetchPubmed(q,per){
   const abs=await rsPubmedAbstracts(ids);
   return ids.map(id=>{
     const it=dj.result&&dj.result[id];if(!it)return null;
-    const authors=(it.authors||[]).map(a=>a.name).filter(Boolean);
-    return{source:'PubMed',ssId:null,title:it.title||'Untitled',
+    const authors=(it.authors||[]).filter(a=>!a.authtype||a.authtype==='Author').map(a=>a.name).filter(Boolean);
+    const doi=(((it.articleids||[]).find(x=>x.idtype==='doi')||{}).value||'').trim();
+    return{source:'PubMed',ssId:null,title:citCrPlain(it.title||'Untitled'),
       authors:authors.length>4?authors.slice(0,4).join(', ')+', et al.':authors.join(', ')||'Unknown authors',
+      authorList:authors,authorFmt:'last-initials',
+      volume:it.volume||'',issue:it.issue||'',pages:(it.pages||'').replace(/-/g,'–'),
       year:(it.pubdate||'').slice(0,4),venue:it.fulljournalname||it.source||'',
-      abstract:abs[id]||'',pmid:id,citationCount:0,doi:'',url:'https://pubmed.ncbi.nlm.nih.gov/'+id+'/'};
+      abstract:abs[id]||'',pmid:id,citationCount:0,doi:doi,url:'https://pubmed.ncbi.nlm.nih.gov/'+id+'/'};
   }).filter(Boolean);
 }
 /* ---- quick read of an abstract (Version 40) ----
@@ -9154,6 +9161,17 @@ function rsAddManual(){
 }
 /* Search results store authors as one display string ("Michael Kuria, D. Ndetei, et al."). The citation
    formatter wants "Last, First; Last, First", so convert each name before it goes into the library. */
+/* One name in the "Last, First" form the citation engine expects. PubMed gives "van der Berg JA";
+   OpenAlex gives "Ana de Souza". Lower-case particles stay with the family name. (Version 89) */
+const RS_PARTICLES=/^(van|von|der|den|de|del|della|di|da|dos|das|du|le|la|bin|binti|al|el|ter|ten|zu|y)$/i;
+function rsNameToCit(n,fmt){
+  n=String(n||'').replace(/\s+/g,' ').trim();if(!n)return'';
+  const parts=n.split(' ');if(parts.length===1)return n;
+  const lastTok=parts[parts.length-1];
+  if(fmt==='last-initials'&&/^[A-Z]{1,4}$/.test(lastTok))return parts.slice(0,-1).join(' ')+', '+lastTok.split('').join('. ')+'.';
+  let i=parts.length-1;while(i>1&&RS_PARTICLES.test(parts[i-1]))i--;
+  return parts.slice(i).join(' ')+', '+parts.slice(0,i).join(' ');
+}
 function rsAuthorsToCit(str){
   const names=String(str||'').replace(/,?\s*et al\.?$/i,'').split(/,\s*/).map(x=>x.trim()).filter(Boolean);
   if(!names.length||names[0]==='Unknown authors')return'';
@@ -9166,9 +9184,12 @@ function rsAuthorsToCit(str){
 }
 function rsEntryFromResult(p){
   const sel=document.getElementById('citStyle');
-  return{author:rsAuthorsToCit(p.authors),year:String(p.year||''),title:p.title,
-    source:p.venue||'',volume:'',issue:'',pages:'',doi:p.doi||'',url:p.doi?'':(p.url||''),
-    type:p.source==='PubMed'||p.venue?'Journal article':'Website',style:(sel&&sel.value)||'apa'};
+  const wt=p.workType||'';
+  const type=/book-chapter/.test(wt)?'Book chapter':wt==='book'?'Book':wt==='dissertation'?'Thesis':wt==='report'?'Report':(p.source==='PubMed'||p.venue?'Journal article':'Website');
+  const author=p.authorList&&p.authorList.length?p.authorList.map(n=>rsNameToCit(n,p.authorFmt)).filter(Boolean).join('; '):rsAuthorsToCit(p.authors);
+  return{author:author,year:String(p.year||''),title:p.title,
+    source:type==='Book chapter'?'':(p.venue||''),container:type==='Book chapter'?(p.venue||''):'',volume:p.volume||'',issue:p.issue||'',pages:p.pages||'',doi:p.doi||'',url:p.doi?'':(p.url||''),
+    type:type,style:(sel&&sel.value)||'apa'};
 }
 function rsAddToLibrary(i,quiet){
   const p=rsResults[i];if(!p)return null;
@@ -12428,8 +12449,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=88;
-const APP_BUILD='2026.10.17q';
+const APP_VERSION=89;
+const APP_BUILD='2026.10.17r';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
