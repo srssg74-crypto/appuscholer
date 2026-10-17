@@ -1889,6 +1889,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
     <select id="regPop">
       <option value="adults">General adults, able to consent for themselves</option>
       <option value="minors">Minors (under 18)</option>
+      <option value="mental">Persons with mental illness (for example psychiatric in-patients or out-patients)</option>
       <option value="vulnerable">Cognitively impaired, institutionalised, or otherwise vulnerable adults</option>
       <option value="pregnant">Pregnant women</option>
     </select>
@@ -6382,24 +6383,29 @@ function regCompute(){
   let dcgi=false,ctriMandatory=true,ctriNote='';
   if(type==='drug'){
     lines.push('New Drugs and Clinical Trials Rules, 2019 (CDSCO) applies — this is an investigational drug trial.');
-    dcgi=true; ctriNote='Mandatory, and prospective — register before the first participant is enrolled.';
+    lines.push('Exception: an "academic clinical trial" needs no CDSCO permission. That means a drug already permitted in India, tested for a new use, dose, route or dosage form purely for academic research, with results that will not be submitted to the regulator or used for promotion. Ethics Committee approval is still required before it starts, and the EC must tell the DCGI within 30 working days if it is unsure whether the study is really academic (CDSCO FAQ on the 2019 Rules).');
+    dcgi=true; ctriNote='Register before the first participant is enrolled.';
   }else if(type==='device'){
     lines.push("Medical Device Rules, 2017 (CDSCO) applies — this is an investigational device trial. A brain-wave or neuro device usually falls under this unless it's already a licensed, unmodified medical device used strictly within its approved purpose.");
     dcgi=true; ctriNote="Mandatory for most device clinical investigations — confirm your device's risk classification with your EC.";
   }else if(type==='interventional'){
-    ctriNote='Mandatory. A behavioral or psychological intervention compared against a control or another condition counts as a clinical trial under the WHO/ICMR definition, whatever your department calls it.';
+    ctriNote='Expected before the first participant is enrolled. A behavioral or psychological intervention compared against a control or another condition counts as a clinical trial under the WHO/ICMR definition, whatever your department calls it. The ICMR 2017 guidelines require every clinical trial to be registered with CTRI; the law (CDSCO) enforces it for drug and device trials, and many journals and ethics committees insist on it for the rest.';
   }else{
     ctriMandatory=false;
     ctriNote='Not legally mandatory for a purely observational study, but registering anyway is increasingly expected — many journals now ask for it at submission.';
   }
-  if(pop!=='adults'){
-    const popLabel={minors:'minors',vulnerable:'cognitively impaired or institutionalised adults',pregnant:'pregnant women'}[pop]||pop;
-    lines.push('Vulnerable population ('+popLabel+') — expect your EC to require extra safeguards: assent plus guardian consent, an independent advocate, or additional institutional sign-off on top of the standard package. Build in extra review time.');
+  if(pop==='minors'){
+    lines.push('Minors — written consent from a parent or legal guardian, plus the child\'s own assent: oral assent from about 7 to 12 years (taken with the parent present, who countersigns), written assent from 13 to 18 (ICMR National Ethical Guidelines for Biomedical Research Involving Children, 2017). If a child turns 13 during the study, take written assent then. Expect extra EC review time.');
+  }else if(pop==='mental'){
+    lines.push('Persons with mental illness — Mental Healthcare Act, 2017, section 99: free and informed consent is needed from every participant, even for interviews or questionnaires. If someone cannot give informed consent but does not resist, the research needs prior permission from the State Mental Health Authority, which may accept consent from the person\'s nominated representative only if the study cannot be done with people who can consent and has Ethics Committee approval. The person or representative can withdraw at any time.');
+  }else if(pop!=='adults'){
+    const popLabel={vulnerable:'cognitively impaired or institutionalised adults',pregnant:'pregnant women'}[pop]||pop;
+    lines.push('Vulnerable population ('+popLabel+') — expect your EC to require extra safeguards: a legally acceptable representative\'s consent where the person cannot consent, an independent advocate or impartial witness, or additional institutional sign-off on top of the standard package. Build in extra review time.');
   }
   if(bio)lines.push("Biological samples — add a separate biospecimen consent clause; for genetic material, check whether ICMR's biobanking guidance or a material-transfer agreement applies.");
   if(multi)lines.push("Multi-site — each site normally needs its own EC approval, or a lead/central EC with the other sites' written concurrence. Confirm which model your sites use before you register.");
   lines.push((dcgi?'DCGI approval: likely required. Apply through CDSCO\'s SUGAM portal once your protocol and EC approval are in hand.':'DCGI approval: not triggered by this design.'));
-  lines.push('CTRI registration: '+(ctriMandatory?'mandatory':'not mandatory')+'. '+ctriNote);
+  lines.push('CTRI registration: '+(dcgi?'mandatory by law':ctriMandatory?'required by the ICMR guidelines':'not mandatory')+'. '+ctriNote);
   lines.push('Institutional Ethics Committee (IEC) approval is required before enrollment starts, regardless of the above.');
   document.getElementById('regResult').innerHTML='<div class="desc" style="background:var(--soft);border-radius:10px;padding:10px 12px"><ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">'
     +lines.map(l=>'<li>'+escHTML(l)+'</li>').join('')+'</ul></div>'
@@ -12449,8 +12455,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=89;
-const APP_BUILD='2026.10.17r';
+const APP_VERSION=90;
+const APP_BUILD='2026.10.17s';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
