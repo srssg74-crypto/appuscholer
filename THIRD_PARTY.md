@@ -2,7 +2,7 @@
 
 A registration or licence for Appuscholar covers only Dr. Shiv Raj Sharma's own work. The parts below belong to others. Licence names come from my own knowledge and were not checked against each package's licence file from the build environment. Confirm each one before relying on this list.
 
-## Code libraries (loaded from cdnjs when the app opens)
+## Code libraries (loaded from cdnjs and jsDelivr when the app opens)
 
 | Part | Version | Licence | Used for |
 |---|---|---|---|
