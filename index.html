@@ -4803,7 +4803,10 @@ function psAdjust(src){
 }
 function psRect(){const d=PS.drag;let x1=d.x1,y1=d.y1;
   if(PS.tool==='crop'){const ar=parseFloat(document.getElementById('psAspect').value)||0;
-    if(ar){const w=Math.abs(x1-d.x0),sy=y1>=d.y0?1:-1;y1=d.y0+sy*(w/ar)}}
+    if(ar){/* keep the fixed shape inside the picture: shrink the box rather than run past an edge */
+      const sx=x1>=d.x0?1:-1,sy=y1>=d.y0?1:-1,W=PS.base.width,H=PS.base.height;
+      const w=Math.min(Math.abs(x1-d.x0),sx>0?W-d.x0:d.x0,(sy>0?H-d.y0:d.y0)*ar);
+      x1=d.x0+sx*w;y1=d.y0+sy*(w/ar)}}
   return{x:Math.min(d.x0,x1),y:Math.min(d.y0,y1),w:Math.abs(x1-d.x0),h:Math.abs(y1-d.y0),x1:x1,y1:y1}}
 function psDrawArrow(g,x0,y0,x1,y1,col,sz){
   g.strokeStyle=col;g.fillStyle=col;g.lineWidth=sz;g.lineCap='round';
@@ -12480,8 +12483,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=93;
-const APP_BUILD='2026.10.17v';
+const APP_VERSION=94;
+const APP_BUILD='2026.10.17w';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
