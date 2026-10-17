@@ -1797,20 +1797,28 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 </div></dialog>
 <dialog id="chartDlg" class="dlg-wide"><div class="dlg-body">
   <h2>📊 Quick chart</h2>
-  <p style="font-size:13px;color:var(--muted)">Make a bar/line chart from your own numbers, or a Venn diagram — then insert it straight into your document as a picture.</p>
+  <p style="font-size:13px;color:var(--muted)">Bar, grouped, stacked, line, scatter, pie and Venn charts from your own numbers. Insert the chart straight into your document as a picture. For charts drawn from a data file (box plots, histograms, error bars), use Chart Studio in the Statistics Lab.</p>
   <div class="fld"><label for="chartType">Chart type</label>
     <select id="chartType" onchange="chartTypeChange()">
       <option value="bar">Bar chart</option>
+      <option value="hbar">Bar chart, horizontal (long labels)</option>
       <option value="line">Line chart</option>
+      <option value="grouped">Grouped bar chart (two or more series)</option>
+      <option value="stacked">Stacked bar chart (parts of a whole)</option>
+      <option value="mline">Line chart, several lines (e.g. pre / post by group)</option>
+      <option value="scatter">Scatter plot with line of best fit</option>
+      <option value="pie">Pie chart</option>
+      <option value="doughnut">Doughnut chart</option>
       <option value="venn2">Venn diagram — 2 sets</option>
       <option value="venn3">Venn diagram — 3 sets</option>
     </select>
   </div>
 
   <div id="chartDataArea">
-    <div class="fld"><label for="chartData">Data — one "label,value" pair per line</label>
+    <div class="fld"><label for="chartData" id="chartDataLabel">Data — one "label,value" pair per line</label>
       <textarea id="chartData" rows="6" placeholder="Anxious,14&#10;Avoidant,9&#10;Secure,22&#10;Disorganized,5"></textarea>
     </div>
+    <p class="desc" id="chartTip" style="margin:-4px 0 6px"></p>
     <div class="fld"><label for="chartTitle">Chart title (optional)</label><input type="text" id="chartTitle" placeholder="Attachment style distribution"></div>
     <div class="row"><button class="btn btn-purple" style="flex:1" onclick="chartGenerate()">Generate</button></div>
   </div>
@@ -4944,6 +4952,9 @@ let _chartMakerInstance=null,_chartMakerPendingHTML=null;
 function chartTypeChange(){
   const t=document.getElementById('chartType').value,isVenn=t==='venn2'||t==='venn3';
   document.getElementById('chartDataArea').style.display=isVenn?'none':'block';
+  const H=CHART_HELP[t]||CHART_HELP.bar,ta=document.getElementById('chartData');
+  document.getElementById('chartDataLabel').textContent=H[0];ta.placeholder=H[1];
+  const tip=document.getElementById('chartTip');if(tip)tip.textContent=H[2]||'';
   document.getElementById('vennDataArea').style.display=isVenn?'block':'none';
   const showC=t==='venn3';
   ['vennCRow','vennACwrap','vennBCwrap','vennABCwrap'].forEach(id=>{
@@ -4953,15 +4964,77 @@ function chartTypeChange(){
   document.getElementById('chartInsertRow').style.display='none';
   _chartMakerPendingHTML=null;
 }
+/* More chart types (Version 82). Label, example data and a short note for each. */
+const CHART_HELP={
+  bar:['Data — one "label,value" pair per line','Anxious,14\nAvoidant,9\nSecure,22\nDisorganized,5',''],
+  hbar:['Data — one "label,value" pair per line','Fear of failure,31\nFinancial worry,27\nHomesickness,18\nExam pressure,40','Use this when the labels are long.'],
+  line:['Data — one "label,value" pair per line','Week 1,22\nWeek 2,19\nWeek 3,17\nWeek 4,15','For change over time.'],
+  grouped:['Data — a heading row, then one row per group','Group,Pre-test,Post-test\nControl,24,23\nMindfulness,25,18\nCBT,26,16','First row: what each column is. Then the group name and one number per series.'],
+  stacked:['Data — a heading row, then one row per group','Year,Low stress,Moderate,High\nFirst year,20,35,15\nSecond year,28,30,10\nThird year,30,25,8','Each bar shows the parts that make up one whole.'],
+  mline:['Data — a heading row, then one row per time point','Time,Control,Treatment\nBaseline,24,25\nWeek 4,23,20\nWeek 8,23,16','Each column after the first becomes its own line.'],
+  scatter:['Data — one "x,y" pair of numbers per line (first line may name the two variables)','Sleep hours,Memory score\n5,12\n6,15\n6.5,14\n7,18\n8,21\n8.5,20','The chart shows the line of best fit and Pearson r. Run the correlation in the Statistics Lab for the full result.'],
+  pie:['Data — one "label,value" pair per line','Hostel,42\nDay scholar,35\nPaying guest,23','Pie charts are hard to read and APA style rarely uses them. A bar chart usually shows the same thing more clearly.'],
+  doughnut:['Data — one "label,value" pair per line','Hostel,42\nDay scholar,35\nPaying guest,23','A pie chart with a hole. The same advice applies: a bar chart is usually clearer.']
+};
+const CHART_COLS=['#7c3aed','#f59e0b','#0d9488','#e11d48','#2563eb','#65a30d','#9333ea','#ea580c','#0891b2','#be185d'];
+/* Rows of cells; a first row with a non-number after the first cell is the heading row. */
+function chartTable(){
+  const rows=document.getElementById('chartData').value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>(l.indexOf('\t')>=0?l.split('\t'):l.split(',')).map(c=>c.trim()));
+  let head=null;
+  if(rows.length&&rows[0].slice(1).some(c=>c!==''&&isNaN(parseFloat(c))))head=rows.shift();
+  return{head,rows:rows.filter(r=>r.length>=2)};
+}
 function chartParseLines(){
   return document.getElementById('chartData').value.split('\n').map(l=>l.trim()).filter(Boolean)
     .map(l=>{const i=l.lastIndexOf(',');if(i<0)return null;
       const label=l.slice(0,i).trim(),val=parseFloat(l.slice(i+1));
       return isNaN(val)?null:{label,val};}).filter(Boolean);
 }
+function chartConfig(type,rows,title){
+  const T={display:!!title,text:title||''};
+  if(type==='bar'||type==='hbar'||type==='line'){
+    return{type:type==='line'?'line':'bar',
+      data:{labels:rows.map(r=>r.label),datasets:[{label:title||'Value',data:rows.map(r=>r.val),backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5,fill:false,tension:.25}]},
+      options:{indexAxis:type==='hbar'?'y':'x',animation:false,plugins:{legend:{display:false},title:T},scales:type==='hbar'?{x:{beginAtZero:true}}:{y:{beginAtZero:true}}}};
+  }
+  if(type==='pie'||type==='doughnut'){
+    if(rows.some(r=>r.val<0))return{err:'A pie chart cannot show negative numbers. Use a bar chart.'};
+    const tot=rows.reduce((a,r)=>a+r.val,0);if(!(tot>0))return{err:'The numbers add up to zero, so there is nothing to divide into slices.'};
+    return{type,data:{labels:rows.map(r=>r.label+' ('+(100*r.val/tot).toFixed(1)+'%)'),datasets:[{data:rows.map(r=>r.val),backgroundColor:rows.map((_,i)=>CHART_COLS[i%CHART_COLS.length]),borderColor:'#ffffff',borderWidth:2}]},
+      options:{animation:false,plugins:{legend:{display:true,position:'right'},title:T}},note:rows.length>6?'With more than six slices a pie chart is very hard to read. A bar chart would be clearer.':''};
+  }
+  const tb=chartTable();
+  if(type==='scatter'){
+    const pts=tb.rows.map(r=>({x:parseFloat(r[0]),y:parseFloat(r[1])})).filter(p=>isFinite(p.x)&&isFinite(p.y));
+    if(pts.length<3)return{err:'A scatter plot needs at least three "x,y" pairs of numbers.'};
+    const n=pts.length,mx=pts.reduce((a,p)=>a+p.x,0)/n,my=pts.reduce((a,p)=>a+p.y,0)/n;
+    let sxy=0,sxx=0,syy=0;pts.forEach(p=>{sxy+=(p.x-mx)*(p.y-my);sxx+=(p.x-mx)*(p.x-mx);syy+=(p.y-my)*(p.y-my)});
+    if(!(sxx>0))return{err:'Every x value is the same, so no line can be drawn.'};
+    const b=sxy/sxx,a=my-b*mx,r=syy>0?sxy/Math.sqrt(sxx*syy):NaN;
+    const xs=pts.map(p=>p.x),x0=Math.min(...xs),x1=Math.max(...xs);
+    const xl=tb.head?tb.head[0]:'x',yl=tb.head?tb.head[1]:'y';
+    const rTxt=isFinite(r)?'r = '+r.toFixed(2).replace(/^(-?)0\./,'$1.')+', N = '+n:'N = '+n;
+    return{type:'scatter',data:{datasets:[
+        {label:'Participants',data:pts,backgroundColor:'rgba(124,58,237,.65)',pointRadius:4},
+        {label:'Line of best fit',type:'line',data:[{x:x0,y:a+b*x0},{x:x1,y:a+b*x1}],borderColor:'#e11d48',borderWidth:2,pointRadius:0,fill:false}]},
+      options:{animation:false,plugins:{legend:{display:false},title:{display:true,text:(title?title+'  ':'')+'('+rTxt+')'}},scales:{x:{type:'linear',title:{display:true,text:xl}},y:{title:{display:true,text:yl}}}},
+      note:'Line: '+yl+' = '+a.toFixed(2)+(b<0?' − ':' + ')+Math.abs(b).toFixed(2)+' × '+xl+'. A line on a chart is not a test. Run the correlation or regression in the Statistics Lab to report it.'};
+  }
+  /* grouped, stacked, mline */
+  if(!tb.rows.length)return{err:'Add a heading row and at least one row of numbers.'};
+  const nSer=Math.max(...tb.rows.map(r=>r.length))-1;
+  if(nSer<1)return{err:'Each row needs a label and at least one number.'};
+  const names=tb.head?tb.head.slice(1):Array.from({length:nSer},(_,i)=>'Series '+(i+1));
+  const ds=Array.from({length:nSer},(_,j)=>({label:names[j]||('Series '+(j+1)),data:tb.rows.map(r=>{const v=parseFloat(r[j+1]);return isFinite(v)?v:null}),
+    backgroundColor:CHART_COLS[j%CHART_COLS.length],borderColor:CHART_COLS[j%CHART_COLS.length],borderWidth:type==='mline'?2.5:1,fill:false,tension:.2,pointRadius:type==='mline'?4:0,spanGaps:true}));
+  const st=type==='stacked';
+  return{type:type==='mline'?'line':'bar',data:{labels:tb.rows.map(r=>r[0]),datasets:ds},
+    options:{animation:false,plugins:{legend:{display:true,position:'bottom'},title:T},scales:{x:{stacked:st,title:{display:!!(tb.head&&tb.head[0]),text:tb.head?tb.head[0]:''}},y:{stacked:st,beginAtZero:true}}}};
+}
 function chartGenerate(){
-  const rows=chartParseLines();
-  if(rows.length<1){showToast('Add at least one "label,value" line first');return}
+  const type0=document.getElementById('chartType').value,multi=['grouped','stacked','mline','scatter'].indexOf(type0)>=0;
+  const rows=multi?[]:chartParseLines();
+  if(!multi&&rows.length<1){showToast('Add at least one "label,value" line first');return}
   const type=document.getElementById('chartType').value;
   const title=document.getElementById('chartTitle').value.trim();
   const box=document.getElementById('chartPreviewBox');
@@ -4970,15 +5043,14 @@ function chartGenerate(){
     appuLib('Chart').then(ok=>{if(ok)chartGenerate();else box.innerHTML='<p class="desc">📈 '+t0x('lib_fail').replace('{what}','The chart tool')+'</p>'});
     return;
   }
-  box.innerHTML='<canvas id="chartMakerCanvas" height="220"></canvas>';
+  const cfg=chartConfig(type,rows,title);
+  if(cfg.err){box.innerHTML='<p class="desc">'+escHTML(cfg.err)+'</p>';document.getElementById('chartInsertRow').style.display='none';return}
+  box.innerHTML='<canvas id="chartMakerCanvas" height="220"></canvas>'+(cfg.note?'<p class="desc" style="margin-top:6px">'+escHTML(cfg.note)+'</p>':'');
   const ctx=document.getElementById('chartMakerCanvas').getContext('2d');
   if(_chartMakerInstance){try{_chartMakerInstance.destroy()}catch(e){}}
-  _chartMakerInstance=new Chart(ctx,{
-    type:type==='line'?'line':'bar',
-    data:{labels:rows.map(r=>r.label),datasets:[{label:title||'Value',data:rows.map(r=>r.val),
-      backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5,fill:type==='line'?false:true,tension:.25}]},
-    options:{plugins:{legend:{display:false},title:{display:!!title,text:title||''}},scales:{y:{beginAtZero:true}}}
-  });
+  /* A white background so the picture does not turn black when pasted into Word or a dark page. */
+  cfg.plugins=[{id:'appuWhiteBg',beforeDraw(c){const g=c.ctx;g.save();g.globalCompositeOperation='destination-over';g.fillStyle='#ffffff';g.fillRect(0,0,c.width,c.height);g.restore()}}];
+  _chartMakerInstance=new Chart(ctx,cfg);
   setTimeout(()=>{
     const canvas=document.getElementById('chartMakerCanvas');
     _chartMakerPendingHTML='<img src="'+canvas.toDataURL('image/png')+'" style="max-width:520px;width:100%">&nbsp;';
@@ -12020,8 +12092,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=81;
-const APP_BUILD='2026.10.17j';
+const APP_VERSION=82;
+const APP_BUILD='2026.10.17k';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
