@@ -827,7 +827,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
       </label>
       <div id="qualTree"></div>
       <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="qualAddCode(null)" data-i18n="qual_add_top_btn">+ New top-level code</button></div>
-      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="qualExportMarkdown()" data-i18n="qual_export_btn">⬇ Export all coded passages (Markdown)</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="qualExportMarkdown()" data-i18n="qual_export_btn">⬇ Export all coded passages (Markdown)</button><button class="btn btn-ghost" style="flex:1" onclick="qualExportCsv()">⬇ Export for Excel (CSV)</button></div>
       <p class="desc" id="qualEmptyNote" style="margin-top:8px" data-i18n="qual_empty_note">No codes yet — add one above, then select text in your document and tap it to tag that passage.</p>
     </div></section>
 
@@ -6558,6 +6558,10 @@ function qualDeleteCode(id){
   qualRenderTree();
   showToast('Deleted ✓');
 }
+/* Version 87: a passage can now cross bold or italic words, an existing tag (two codes on the same
+   words is normal in qualitative coding) and paragraph breaks. Each piece of selected text is wrapped
+   in its own tag span; the pieces share a data-qgroup id, so they are counted and exported as one
+   passage. Before this, anything but plain text inside one text node failed with a wrong message. */
 function qualTagSelection(codeId){
   restoreEditorSelection();
   const sel=window.getSelection();
@@ -6565,17 +6569,35 @@ function qualTagSelection(codeId){
     showToast('Select some text in your document first, then tap a code to tag it');return;
   }
   const codes=qualCodesGet(),c=codes.find(x=>x.id===codeId);if(!c)return;
-  const range=sel.getRangeAt(0);
-  const span=document.createElement('span');
-  span.className='qual-tag';span.dataset.qcode=codeId;span.title=c.name;
-  span.style.background=c.color+'55';span.style.boxShadow='0 0 0 1px '+c.color+'88';
-  try{range.surroundContents(span)}
-  catch(e){showToast('Select a passage within a single paragraph (not across headings or list items)');return}
+  const range=sel.getRangeAt(0),root=range.commonAncestorContainer.nodeType===3?range.commonAncestorContainer.parentNode:range.commonAncestorContainer;
+  const parts=[],w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+  while((n=w.nextNode())){
+    if(!range.intersectsNode(n))continue;
+    const st=n===range.startContainer?range.startOffset:0,en=n===range.endContainer?range.endOffset:n.nodeValue.length;
+    if(en<=st||!n.nodeValue.slice(st,en).trim())continue;
+    const own=n.parentElement&&n.parentElement.closest('.qual-tag[data-qcode="'+codeId+'"]');
+    if(own&&editor.contains(own))continue;
+    if(n.parentElement&&n.parentElement.closest('.img-wrap,svg'))continue;
+    parts.push([n,st,en]);
+  }
+  if(!parts.length){showToast('That text already carries this code');return}
+  const g='g'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  let last=null;
+  parts.forEach(([t,st,en])=>{
+    let mid=t;
+    if(en<t.nodeValue.length)t.splitText(en);
+    if(st>0)mid=t.splitText(st);
+    const span=document.createElement('span');
+    span.className='qual-tag';span.dataset.qcode=codeId;span.dataset.qgroup=g;span.title=c.name;
+    span.style.background=c.color+'55';span.style.boxShadow='0 0 0 1px '+c.color+'88';
+    mid.parentNode.insertBefore(span,mid);span.appendChild(mid);last=span;
+  });
   sel.removeAllRanges();
-  const r2=document.createRange();r2.selectNodeContents(span);r2.collapse(false);
+  const r2=document.createRange();r2.selectNodeContents(last);r2.collapse(false);
   sel.addRange(r2);savedRange=r2.cloneRange();
   docSaveBody(getEditorHTML());lastSaved=getEditorHTML();upd();actLog('qual');
-  showToast('Tagged as "'+c.name+'" ✓');
+  qualRenderTree();
+  showToast('Tagged as "'+c.name+'" ✓'+(parts.length>1?' ('+parts.length+' pieces joined as one passage)':''));
 }
 function qualToggleColors(){
   const cb=document.getElementById('qualShowColors'),on=cb?cb.checked:true;
@@ -6587,12 +6609,13 @@ function qualRenderTree(){
   const codes=qualCodesGet();
   const note=document.getElementById('qualEmptyNote');
   if(note)note.style.display=codes.length?'none':'';
+  const cnt=qualCounts();
   function renderLevel(parentId,depth){
     return codes.filter(c=>c.parentId===parentId).map(c=>{
       const kids=renderLevel(c.id,depth+1);
       return '<div class="qual-code-row" style="padding-left:'+(depth*18)+'px">'+
         '<span class="qual-code-swatch" style="background:'+c.color+'" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+c.id+'\')"></span>'+
-        '<span class="qual-code-name" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+c.id+'\')">'+escHTML(c.name)+'</span>'+
+        '<span class="qual-code-name" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+c.id+'\')">'+escHTML(c.name)+' <span style="font-weight:400;color:var(--muted);font-size:12px" title="Passages tagged">('+(cnt[c.id]||0)+')</span></span>'+
         '<button type="button" onclick="qualAddCode(\''+c.id+'\')" title="Add a sub-code">+</button>'+
         '<button type="button" onclick="qualOpenPassages(\''+c.id+'\')" title="View tagged passages">👁</button>'+
         '<button type="button" onclick="qualRenameCode(\''+c.id+'\')" title="Rename">✎</button>'+
@@ -6602,15 +6625,26 @@ function qualRenderTree(){
   }
   el.innerHTML=renderLevel(null,0);
 }
+/* Passages per code across every document, counting joined pieces once. */
+function qualCounts(){
+  const out={},seen={};
+  const scan=html=>{const div=document.createElement('div');div.innerHTML=html||'';div.querySelectorAll('.qual-tag[data-qcode]').forEach((sp,i)=>{const k=sp.dataset.qcode+'|'+(sp.dataset.qgroup||Math.random());if(seen[k])return;seen[k]=1;out[sp.dataset.qcode]=(out[sp.dataset.qcode]||0)+1})};
+  try{const cur=docCurrentId();docsGet().forEach(d=>scan(d.id===cur?getEditorHTML():d.body))}catch(e){}
+  return out;
+}
 function qualFindPassages(codeId){
   docSaveBody(getEditorHTML()); // make sure the open document's latest text is in docsGet() before scanning
   const docs=docsGet(),out=[];
   docs.forEach(d=>{
     const div=document.createElement('div');div.innerHTML=d.body||'';
-    div.querySelectorAll('.qual-tag[data-qcode="'+codeId+'"]').forEach(span=>{
-      const txt=(span.textContent||'').trim();
-      if(txt)out.push({doc:d.title||'Untitled',text:txt});
+    const groups=new Map();
+    const blk=el=>el.closest('p,li,h1,h2,h3,h4,h5,h6,td,blockquote,div')||div;
+    div.querySelectorAll('.qual-tag[data-qcode="'+codeId+'"]').forEach((span,i)=>{
+      const k=span.dataset.qgroup||('s'+i),txt=(span.textContent||''),g=groups.get(k);
+      /* pieces in the same paragraph join directly; a new paragraph gets a space */
+      if(!g)groups.set(k,{t:txt,b:blk(span)});else{g.t+=(g.b===blk(span)?'':' ')+txt;g.b=blk(span)}
     });
+    groups.forEach(v=>{const txt=v.t.replace(/\s+/g,' ').trim();if(txt)out.push({doc:d.title||'Untitled',text:txt})});
   });
   return out;
 }
@@ -6628,8 +6662,8 @@ function qualBuildMarkdown(){
   const codes=qualCodesGet(),lines=['# Coded passages',''];
   function walk(parentId,depth){
     codes.filter(c=>c.parentId===parentId).forEach(c=>{
-      lines.push('#'.repeat(Math.min(depth+2,6))+' '+c.name);
-      const passages=qualFindPassages(c.id);
+      const passages=qualFindPassages(c.id),nd=new Set(passages.map(p=>p.doc)).size;
+      lines.push('#'.repeat(Math.min(depth+2,6))+' '+c.name+' ('+passages.length+' passage'+(passages.length===1?'':'s')+(passages.length?', '+nd+' document'+(nd===1?'':'s'):'')+')');
       if(!passages.length)lines.push('_No passages tagged yet._');
       else passages.forEach(p=>lines.push('- **'+p.doc+':** "'+p.text.replace(/\s+/g,' ')+'"'));
       lines.push('');
@@ -6638,6 +6672,17 @@ function qualBuildMarkdown(){
   }
   walk(null,0);
   return lines.join('\n');
+}
+/* One row per passage, for Excel or Google Sheets: code, parent code, document, passage. */
+function qualExportCsv(){
+  const codes=qualCodesGet();if(!codes.length){showToast('Add at least one code first');return}
+  const byId={};codes.forEach(c=>byId[c.id]=c);
+  const path=c=>{const a=[];let x=c;while(x){a.unshift(x.name);x=x.parentId?byId[x.parentId]:null}return a.join(' > ')};
+  const rows=[];
+  codes.forEach(c=>qualFindPassages(c.id).forEach(p=>rows.push([c.name,path(c),p.doc,p.text])));
+  if(!rows.length){showToast('No passages are tagged yet');return}
+  pdDownload('appuscholar-coded-passages-'+(new Date().toISOString().slice(0,10))+'.csv',pdCsv(['code','code_path','document','passage'],rows));
+  showToast('Exported '+rows.length+' passages ✓ Opens in Excel');
 }
 function qualExportMarkdown(){
   const codes=qualCodesGet();
@@ -12229,8 +12274,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=86;
-const APP_BUILD='2026.10.17o';
+const APP_VERSION=87;
+const APP_BUILD='2026.10.17p';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
