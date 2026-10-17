@@ -6041,19 +6041,173 @@ document.addEventListener('keydown',e=>{
 document.getElementById('findInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();findNext()}});
 document.getElementById('replaceInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();replaceOne()}});
 
-function downloadDoc(){
+/* ============ Word download as a real .docx (Version 88) ============
+   Before this, "Download (Word)" saved the page's HTML under a .doc name. Word opened it in Protected
+   View, pictures stored inside the page did not appear, the colour of every qualitative code and the
+   AI-text markers went into the file, page breaks came out as lines and tables had no borders.
+   This builds an Office Open XML document directly: APA-style Times New Roman 12 pt, double spacing,
+   real headings, lists, tables with borders, page breaks, pictures (SVG charts are turned into PNG),
+   and a Devanagari font for Hindi. No library is needed; the ZIP container is written below. */
+const DX_EMU=9525,DX_MAXW=6*914400;
+function dxEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'')}
+const _dxCrcT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function dxCrc(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=_dxCrcT[(c^u8[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+/* files: [{name, data:Uint8Array}] -> ZIP (stored, no compression) */
+function dxZip(files){
+  const enc=new TextEncoder(),parts=[],central=[];let off=0;
+  const u16=v=>[v&255,(v>>>8)&255],u32=v=>[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];
+  files.forEach(f=>{
+    const nm=enc.encode(f.name),crc=dxCrc(f.data),sz=f.data.length;
+    const lh=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(sz),...u32(sz),...u16(nm.length),...u16(0)]);
+    parts.push(lh,nm,f.data);
+    central.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(sz),...u32(sz),...u16(nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nm);
+    off+=lh.length+nm.length+sz;
+  });
+  const cdSize=central.reduce((a,p)=>a+p.length,0);
+  const end=new Uint8Array([0x50,0x4b,5,6,...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdSize),...u32(off),...u16(0)]);
+  return new Blob([...parts,...central,end],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+function dxDataUrlBytes(u){
+  const m=/^data:([^;,]+)(;base64)?,(.*)$/s.exec(u||'');if(!m)return null;
+  if(m[2]){const s=atob(m[3]),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return{type:m[1],bytes:b}}
+  return{type:m[1],bytes:new TextEncoder().encode(decodeURIComponent(m[3]))};
+}
+/* Any picture (PNG, JPEG, GIF, WebP, SVG, inline <svg>) -> PNG or JPEG bytes Word can show, with its pixel size. */
+function dxPicture(src,svgEl,wantW){
+  return new Promise(res=>{
+    const d=src?dxDataUrlBytes(src):null;
+    const direct=d&&(d.type==='image/png'||d.type==='image/jpeg');
+    let url=src;
+    if(svgEl){let x=new XMLSerializer().serializeToString(svgEl);if(x.indexOf('xmlns=')<0)x=x.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(x)}
+    if(!url){res(null);return}
+    const im=new Image();
+    im.onload=()=>{
+      let w=im.naturalWidth||(svgEl&&svgEl.viewBox&&svgEl.viewBox.baseVal&&svgEl.viewBox.baseVal.width)||420,h=im.naturalHeight||(svgEl&&svgEl.viewBox&&svgEl.viewBox.baseVal&&svgEl.viewBox.baseVal.height)||300;
+      if(direct){res({bytes:d.bytes,ext:d.type==='image/png'?'png':'jpeg',w,h});return}
+      const sc=Math.min(3,Math.max(1,1200/w)),c=document.createElement('canvas');c.width=Math.round(w*sc);c.height=Math.round(h*sc);
+      const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+      c.toBlob(b=>{if(!b){res(null);return}b.arrayBuffer().then(ab=>res({bytes:new Uint8Array(ab),ext:'png',w,h}))},'image/png');
+    };
+    im.onerror=()=>res(null);
+    im.src=url;
+  });
+}
+async function dxBuild(root,title){
+  const media=[],nums=[];let pid=0;
+  const P=[];
+  const runProps=f=>{let r='';if(f.b)r+='<w:b/><w:bCs/>';if(f.i)r+='<w:i/><w:iCs/>';if(f.s)r+='<w:strike/>';if(f.u)r+='<w:u w:val="single"/>';if(f.sup)r+='<w:vertAlign w:val="superscript"/>';else if(f.sub)r+='<w:vertAlign w:val="subscript"/>';return r?'<w:rPr>'+r+'</w:rPr>':''};
+  const textRun=(t,f)=>t?'<w:r>'+runProps(f)+'<w:t xml:space="preserve">'+dxEsc(t)+'</w:t></w:r>':'';
+  async function picRun(src,svgEl,wantW){
+    const p=await dxPicture(src,svgEl,wantW);if(!p)return textRun('[picture]',{i:true});
+    const id=media.length+1,rid='rIdImg'+id;media.push({name:'image'+id+'.'+p.ext,bytes:p.bytes,rid,ext:p.ext});
+    let cx=Math.round((wantW||p.w)*DX_EMU),cy=Math.round(cx*p.h/p.w);if(cx>DX_MAXW){cy=Math.round(cy*DX_MAXW/cx);cx=DX_MAXW}
+    pid++;
+    return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+pid+'" name="Picture '+pid+'"/>'+
+      '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'+
+      '<pic:nvPicPr><pic:cNvPr id="'+pid+'" name="image'+id+'.'+p.ext+'"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+rid+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'+
+      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
+  }
+  async function inline(node,f){
+    let out='';
+    for(const n of Array.from(node.childNodes)){
+      if(n.nodeType===3){out+=textRun(n.nodeValue.replace(/\s+/g,' '),f);continue}
+      if(n.nodeType!==1)continue;
+      const t=n.tagName,cl=n.classList;
+      if(cl&&cl.contains('img-handle'))continue;
+      if(t==='BR'){out+='<w:r><w:br/></w:r>';continue}
+      if(t==='IMG'){const wrap=n.closest('.img-wrap');const ww=parseFloat((wrap&&wrap.style.width)||n.style.width||n.getAttribute('width')||0)||0;out+=await picRun(n.getAttribute('src'),null,ww||null);continue}
+      if(t==='svg'||t==='SVG'){const wrap=n.closest('.img-wrap');const ww=parseFloat((wrap&&wrap.style.width)||0)||420;out+=await picRun(null,n,ww);continue}
+      if(t==='SCRIPT'||t==='STYLE'||t==='BUTTON'||t==='INPUT')continue;
+      const g=Object.assign({},f);
+      if(t==='B'||t==='STRONG')g.b=true;else if(t==='I'||t==='EM')g.i=true;else if(t==='U')g.u=true;else if(t==='S'||t==='STRIKE'||t==='DEL')g.s=true;else if(t==='SUP')g.sup=true;else if(t==='SUB')g.sub=true;
+      out+=await inline(n,g);
+    }
+    return out;
+  }
+  const para=(runs,ppr)=>'<w:p>'+(ppr?'<w:pPr>'+ppr+'</w:pPr>':'')+runs+'</w:p>';
+  const isBlock=n=>n.nodeType===1&&/^(P|DIV|H[1-6]|UL|OL|TABLE|BLOCKQUOTE|HR|PRE|FIGURE|SECTION|ARTICLE)$/.test(n.tagName);
+  async function block(n){
+    const t=n.tagName;
+    if(/^H[1-6]$/.test(t)){const lv=Math.min(+t[1],3);P.push(para(await inline(n,{}),'<w:pStyle w:val="Heading'+lv+'"/>'));return}
+    if(t==='HR'){P.push(n.classList.contains('page-break')?'<w:p><w:r><w:br w:type="page"/></w:r></w:p>':para('','<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="999999"/></w:pBdr>'));return}
+    if(t==='UL'||t==='OL'){
+      const id=nums.length+1;nums.push(t==='OL'?1:0);
+      for(const li of Array.from(n.children)){if(li.tagName!=='LI')continue;
+        const sub=Array.from(li.children).filter(c=>c.tagName==='UL'||c.tagName==='OL');
+        const clone=li.cloneNode(true);clone.querySelectorAll('ul,ol').forEach(x=>x.remove());
+        P.push(para(await inline(clone,{}),'<w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="'+id+'"/></w:numPr>'));
+        for(const s of sub)await block(s);
+      }
+      return;
+    }
+    if(t==='TABLE'){
+      const nc=Math.max(1,...Array.from(n.rows).map(r=>Array.from(r.cells).reduce((k,c)=>k+(c.colSpan||1),0))),cw=Math.floor(9026/nc);
+      let x='<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(s=>'<w:'+s+' w:val="single" w:sz="4" w:space="0" w:color="000000"/>').join('')+'</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'+('<w:gridCol w:w="'+cw+'"/>').repeat(nc)+'</w:tblGrid>';
+      for(const tr of Array.from(n.rows)){x+='<w:tr>';for(const td of Array.from(tr.cells)){const sp=td.colSpan||1;x+='<w:tc><w:tcPr><w:tcW w:w="'+(cw*sp)+'" w:type="dxa"/>'+(sp>1?'<w:gridSpan w:val="'+sp+'"/>':'')+'</w:tcPr>'+para(await inline(td,td.tagName==='TH'?{b:true}:{}),'<w:spacing w:line="240" w:lineRule="auto" w:after="0"/>')+'</w:tc>'}x+='</w:tr>'}
+      P.push(x+'</w:tbl>');P.push(para('',''));return;
+    }
+    if(t==='BLOCKQUOTE'&&!Array.from(n.children).some(isBlock)){P.push(para(await inline(n,{}),'<w:ind w:left="720"/>'));return}
+    if(Array.from(n.children).some(isBlock)){
+      let buf=document.createElement('span');
+      const flush=async()=>{if(buf.textContent.trim()||buf.querySelector('img,svg'))P.push(para(await inline(buf,{}),t==='BLOCKQUOTE'?'<w:ind w:left="720"/>':''));buf=document.createElement('span')};
+      for(const c of Array.from(n.childNodes)){if(isBlock(c)){await flush();await block(c)}else buf.appendChild(c.cloneNode(true))}
+      await flush();return;
+    }
+    const cap=n.getAttribute&&n.getAttribute('data-cap');
+    const ppr=(cap?'<w:keepNext/>':'')+(n.style&&n.style.textAlign==='center'?'<w:jc w:val="center"/>':'');
+    P.push(para(await inline(n,{}),ppr));
+  }
+  let loose=document.createElement('span');
+  const flushLoose=async()=>{if(loose.textContent.trim()||loose.querySelector('img,svg'))P.push(para(await inline(loose,{}),''));loose=document.createElement('span')};
+  for(const c of Array.from(root.childNodes)){if(isBlock(c)){await flushLoose();await block(c)}else loose.appendChild(c.cloneNode(true))}
+  await flushLoose();
+  const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+W+'><w:body>'+(P.join('')||'<w:p/>')+
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  const font='<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Nirmala UI"/>';
+  const hd=(id,name,lv,extra)=>'<w:style w:type="paragraph" w:styleId="'+id+'"><w:name w:val="'+name+'"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/>'+extra[0]+'<w:outlineLvl w:val="'+lv+'"/></w:pPr><w:rPr><w:b/><w:bCs/>'+extra[1]+'</w:rPr></w:style>';
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+
+    '<w:docDefaults><w:rPrDefault><w:rPr>'+font+'<w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="en-IN" w:bidi="hi-IN"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="480" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'+
+    '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>'+
+    hd('Heading1','heading 1',0,['<w:jc w:val="center"/>',''])+hd('Heading2','heading 2',1,['',''])+hd('Heading3','heading 3',2,['','<w:i/><w:iCs/>'])+
+    '<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/><w:pPr><w:ind w:left="720"/></w:pPr></w:style>'+
+    '<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/><w:tblPr><w:tblCellMar><w:left w:w="108" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>';
+  const abs='<w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="singleLevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>'+
+    '<w:abstractNum w:abstractNumId="1"><w:multiLevelType w:val="singleLevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>';
+  const numbering='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+abs+
+    nums.map((a,i)=>'<w:num w:numId="'+(i+1)+'"><w:abstractNumId w:val="'+a+'"/><w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride></w:num>').join('')+'</w:numbering>';
+  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+    '<Relationship Id="rIdNum" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>'+
+    media.map(m=>'<Relationship Id="'+m.rid+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/'+m.name+'"/>').join('')+'</Relationships>';
+  const now=new Date().toISOString().replace(/\.\d+Z$/,'Z');
+  const core='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+dxEsc(title)+'</dc:title><dcterms:created xsi:type="dcterms:W3CDTF">'+now+'</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">'+now+'</dcterms:modified></cp:coreProperties>';
+  const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/>'+
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>';
+  const root_rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>';
+  const e=s=>new TextEncoder().encode(s);
+  return dxZip([{name:'[Content_Types].xml',data:e(ct)},{name:'_rels/.rels',data:e(root_rels)},{name:'docProps/core.xml',data:e(core)},
+    {name:'word/document.xml',data:e(doc)},{name:'word/styles.xml',data:e(styles)},{name:'word/numbering.xml',data:e(numbering)},{name:'word/_rels/document.xml.rels',data:e(rels)}]
+    .concat(media.map(m=>({name:'word/media/'+m.name,data:m.bytes}))));
+}
+async function downloadDoc(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
   const title=(cur&&cur.title)||'appuscholar-document';
   const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-document';
-  const body=getEditorHTML();
-  const html='<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8">'+
-    '<title>'+escHTML(title)+'</title><style>body{font-family:"Times New Roman",serif;font-size:12pt;line-height:2}</style>'+
-    '</head><body>'+body+'</body></html>';
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['﻿'+html],{type:'application/msword'}));
-  a.download=safe+'.doc';a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  showToast('Downloaded ✓ — opens in Word');
+  showToast('Preparing the Word file…');
+  try{
+    const holder=document.createElement('div');holder.innerHTML=getEditorHTML();
+    const blob=await dxBuild(holder,title);
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safe+'.docx';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    showToast('Downloaded ✓ A Word file (.docx) that also opens in Google Docs and LibreOffice');
+  }catch(e){
+    /* Last resort: the old HTML-as-Word file, which Word can still open. */
+    const html='<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+escHTML(title)+'</title><style>body{font-family:"Times New Roman",serif;font-size:12pt;line-height:2}</style></head><body>'+getEditorHTML()+'</body></html>';
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+html],{type:'application/msword'}));a.download=safe+'.doc';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    showToast('Downloaded in the older Word format');
+  }
 }
 
 /* ============ LaTeX export — hand the manuscript to Overleaf ============ */
@@ -12274,8 +12428,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=87;
-const APP_BUILD='2026.10.17p';
+const APP_VERSION=88;
+const APP_BUILD='2026.10.17q';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
