@@ -2142,9 +2142,9 @@ const I18N={
     nc_btn:'🔢 Check the numbers in my document', nc_h:'🔢 Numbers check', nc_desc:'Finds the statistics written in your document (t, F, χ², r, z and H, with their df and p), works out the p-value again from the test statistic and df, and flags any that do not match. It runs on this computer and uses no AI.', nc_none:'No statistics found. This check reads the APA pattern, for example "t(21) = 2.15, p = .043".', nc_sum:'Found {n}: {ok} consistent, {w} not consistent ({e} change the conclusion).', nc_ok:'Consistent', nc_warn:'Not consistent', nc_err:'Changes the conclusion', nc_rep:'You wrote', nc_calc:'Recomputed', nc_go:'Go to this text', nc_rescan:'Scan again', nc_c_onetail:'The reported p is about half of the recomputed one. Was a one-tailed test used? If so, say so in the text.', nc_c_zero:'p can never be exactly zero. Write p < .001.', nc_c_form:'A p-value must lie between 0 and 1.', nc_c_df:'The degrees of freedom must be positive.', nc_c_typo:'A typo in the statistic, the df or the p-value is the most common cause. Check them against your output.', nc_c_round:'The gap is small. A rounding slip or a rounded statistic can cause it. Check your output.', nc_note:'The check allows for rounding of the statistic. It reads only statistics written in the usual APA order, with p straight after the statistic. A consistent result does not show that the right test was used.',
     cc_btn:'📚 Cross-check citations and references', cc_h:'📚 Citation cross-check', cc_desc:'Compares the citations in your text with your reference list. It lists every source cited but missing from the list, and every list entry that is never cited. It runs on this computer and uses no AI.', cc_src_doc:'Reference list used: the "{h}" section of this document ({n} entries).', cc_src_lib:'This document has no References section yet, so your Citation Library ({n} sources) is used as the list.', cc_src_none:'There is no reference list to compare with. Add a References section to the document, or add sources to your library.', cc_sum:'{c} sources cited in the text. {m} not in the list. {u} list entries never cited.', cc_missing_h:'Cited in the text but missing from the list', cc_unused_h:'In the list but never cited', cc_none_missing:'None. Every citation has a list entry.', cc_none_unused:'None. Every list entry is cited.', cc_near_year:'The list has {n} with a different year ({y}). Check the year.', cc_near_name:'The list has a similar name: {n} ({y}). Check the spelling.', cc_unread:'List entries that could not be read: {n} (no surname before a comma, or no year in brackets). They are left out of the check.', cc_note:'Matching uses the first author\'s surname and the year. It reads APA-style citations such as (Smith, 2020), (Smith & Lee, 2020; Jones et al., 2019) and Smith (2020). A list entry is one paragraph, written like "Smith, J. (2020). Title."',
     terms_h:'Before you start', terms_data_h:'Where your data goes', terms_d1:'Your documents, sources, projects and statistics data stay in this browser on this computer. Appuscholar has no server, so nobody at Appuscholar can see them. Clearing your browser data erases them, so download a backup now and then.', terms_d2:'Your AI key also stays in this browser. It goes only to the AI provider you choose.', terms_d3:'When you press an AI button, the text you selected travels from your browser straight to that provider (Google, Groq, OpenRouter, DeepSeek, OpenAI or Anthropic). Appuscholar does not see it or keep it. The provider\'s own terms apply, and on a free key a provider may read or reuse what it receives. Never send names, phone numbers, roll numbers or other details that identify a participant.', terms_d4:'Paper search sends your search words, DOI or ORCID iD to OpenAlex, Crossref, PubMed and ORCID. The chart, Word and PDF tools and the fonts load from Cloudflare and Google, which can see your IP address, as any website can.', terms_use_h:'What Appuscholar is, and is not', terms_u1:'It is a writing and research helper. It is not medical, psychological or legal advice. A score on a screening scale is not a diagnosis.', terms_u2:'AI suggestions, plagiarism checks and AI detectors are only indicators, and they can be wrong. Check every citation and every number yourself.', terms_u3:'You are responsible for your ethics approval, your participants\' consent, your institution\'s rules on AI help, and for saying where AI helped.', terms_u4:'Appuscholar is free and comes as it is, with no promise that it is correct or always available.', terms_ver:'Version 1, 7 October 2026.', terms_age:'I am 18 years old or older. Appuscholar is not for anyone younger.', terms_agree:'I have read this and I agree.', terms_cont:'Continue', terms_back:'Go back (I tapped by mistake)', terms_need:'Tick both boxes to continue.', terms_leave:'You cannot use Appuscholar without accepting. To leave, close this browser tab.', terms_under:'I am under 18', terms_under_msg:'Appuscholar is for people aged 18 and over. Please close this page. If you are studying, ask your teacher or your institution which tools they allow.', terms_reopen_btn:'Terms and where your data goes',
-    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', devil_btn:'😈 Challenge my argument', vz_open_btn:'📈 Research figures (box plot, error bars, histogram, Q-Q)', vz_h:'📈 Research figures', vz_desc:'Paste your data (first row = column names) or use the data from the Statistics Lab. Pick a chart. Every chart is drawn on this computer and can be saved for your paper.', vz_data:'Your data', vz_use_lab:'Use the Statistics Lab data', vz_type:'Chart', vz_t_box:'Box plot with every participant', vz_t_bar:'Bar of means with error bars', vz_t_hist:'Histogram with normal curve', vz_t_qq:'Q-Q plot (is it roughly normal?)', vz_y:'Score (numbers)', vz_g:'Groups (optional)', vz_none:'(no groups)', vz_err:'Error bars show', vz_pal:'Colours', vz_pal_c:'Colour (colour-blind safe)', vz_pal_g:'Black and white (for print)', vz_bins:'Bars (bins)', vz_pts:'Show every participant', vz_n:'Show n under each group', vz_title_in:'Draw the title inside the picture', vz_title:'Figure title', vz_xl:'Horizontal axis label', vz_yl:'Vertical axis label', vz_ymin:'Axis from', vz_ymax:'Axis to', vz_fig:'Figure number', vz_note:'Note under the figure (optional)', vz_insert:'Insert into my document', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'Parse some data in the Statistics Lab first, or paste it here.', vz_nodata:'No numbers to draw yet. Check that you picked a score column with numbers.', vz_th_group:'Group', vz_inserted:'Figure inserted ✓', vz_img_fail:'Could not make the picture. Try the SVG download.', vz_bar_zero:'Bars show size by their length, so a bar axis should start at zero. Starting higher makes small differences look large.', vz_box_key:'Box = middle half of scores. Thick line = median. Diamond = mean. Whiskers reach the furthest score within 1.5 box-lengths. Open circles = unusual scores beyond that. Dots = each participant.', vz_bar_key_ci:'Bars = group means. Error bars = 95% confidence interval. Dots = each participant.', vz_bar_key_sd:'Bars = group means. Error bars = one standard deviation. Dots = each participant.', vz_bar_key_se:'Bars = group means. Error bars = one standard error. Dots = each participant.', vz_bar_key_none:'Bars = group means. Dots = each participant.', vz_hist_key:'Bars count scores in each range. Dashed curve = the normal curve with the same mean and spread. Skewness = {s} (0 is symmetric; beyond about 1 or below -1 is clearly lopsided).', vz_qq_key:'Dots close to the dashed line mean the scores are close to a normal distribution. Bends at the ends suggest skew or outliers. With very few scores, expect wobble.', aitest_btn:'🔌 Test my AI connection', aitest_running:'Testing…', aitest_ok:'Working ✓ Provider: {p}.', aitest_reply:'The AI replied:', aitest_fail:'Not working. Provider: {p}.', ret_h:'👋 Welcome back', ret_q_intro:'Answer in your own words. Nobody grades these, and the app does not read them. They are saved on this computer so you can see how your thinking moved.', ret_q1:'In your own words, what is the main question your study is answering right now?', ret_q2:'What is the next concrete thing you will do on this project?', ret_q3:'What is the weakest part of your work right now, and why?', ret_save:'Save my answers', ret_skip:'Skip', ret_saved:'Saved on this computer ✓', ret_away:'You have been away {n} days.', ret_project:'Project: {p}, stage: {s}.', ret_doc:'Open document: {d}, {w} words.', ret_did:'Before you left you had recorded:', ret_docs:'{n} new document(s)', ret_cits:'{n} source(s) added', ret_stats:'{n} test(s) run', ret_quals:'{n} passage(s) coded', ret_ai:'{n} AI passage(s) inserted', ret_nolog:'No activity was recorded since your last visit.', ret_last:'Last time ({d}) you wrote:', recap_toggle:'Show a recap and three questions when I return after five days or more', viva_btn:'🎓 Viva question', viva_btn_title:"Practise answering an examiner's question about your writing, with no AI help in the answer box", viva_h:'🎓 Viva question', viva_desc:'The AI asks one question an examiner might ask about the passage you selected (or the end of your document). Answer from your own head. There is no AI help in the answer box, because the point is to rehearse the real moment.', viva_aud:'Who is asking?', viva_aud_viva:'An examiner at my viva or defence', viva_aud_conf:'A panel or audience at a conference', viva_get:'Get a question', viva_another:'Another question', viva_thinking:'🎓 Reading your passage…', viva_ph:'Type your answer, as if you were speaking.', viva_save:'Save my answer', viva_need:'Select or write a passage of at least a few sentences first.', viva_empty:'Write your answer first.', viva_saved:'Answer saved on this computer ✓', viva_count:'Answers saved so far: {n}.', devil_btn_title:'Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.', devil_need:'Select or write a passage of at least a few sentences first.', devil_thinking:'😈 Reading your argument…', devil_label:'A critical reviewer might say this. Answer each point in your own words. Nothing here is meant to be pasted in.', devil_ready:'Challenges ready in the AI pane', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
+    dock_ai_tab:'✨ AI suggestion', df_btn:'✍ Draft first', df_btn_title:'Write first. The AI then asks questions about your writing instead of writing for you.', df_on:'Draft first is ON. The AI will ask questions about your writing and will not write for you.', df_off:'Draft first is off.', df_need_text:'Write at least a few sentences first. Then ask for feedback.', df_need_sel:'Select the passage you want feedback on first.', df_label:'Feedback on your draft. Nothing here is meant to be pasted in, so the writing stays yours.', df_thinking:'💜 Reading your draft…', df_ready:'Questions ready in the AI pane', prov_h:'📊 My writing', prov_desc:'Where the words in your documents came from. It counts text typed in this editor against text inserted from an AI suggestion or the chat. It cannot see your thinking, and text you retype from an AI answer counts as yours. No targets, no score. It is just a mirror.', prov_total:'All documents: {w} words. Typed here {t}%, inserted from AI {a}%.', prov_none:'No writing yet.', prov_doc_fmt:'{n} words, typed here {t}%. AI passages: {p} ({k} left as inserted, {e} edited{u}).', prov_doc_plain:'{n} words, typed here {t}%.', devil_btn:'😈 Challenge my argument', vz_open_btn:'📈 Research figures (box plot, error bars, histogram, Q-Q)', vz_h:'📈 Research figures', vz_desc:'Paste your data (first row = column names) or use the data from the Statistics Lab. Pick a chart. Every chart is drawn on this computer and can be saved for your paper.', vz_data:'Your data', vz_use_lab:'Use the Statistics Lab data', vz_type:'Chart', vz_t_box:'Box plot with every participant', vz_t_bar:'Bar of means with error bars', vz_t_hist:'Histogram with normal curve', vz_t_qq:'Q-Q plot (is it roughly normal?)', vz_y:'Score (numbers)', vz_g:'Groups (optional)', vz_none:'(no groups)', vz_err:'Error bars show', vz_pal:'Colours', vz_pal_c:'Colour (colour-blind safe)', vz_pal_g:'Black and white (for print)', vz_bins:'Bars (bins)', vz_pts:'Show every participant', vz_n:'Show n under each group', vz_title_in:'Draw the title inside the picture', vz_title:'Figure title', vz_xl:'Horizontal axis label', vz_yl:'Vertical axis label', vz_ymin:'Axis from', vz_ymax:'Axis to', vz_fig:'Figure number', vz_note:'Note under the figure (optional)', vz_insert:'Insert into my document', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'Parse some data in the Statistics Lab first, or paste it here.', vz_nodata:'No numbers to draw yet. Check that you picked a score column with numbers.', vz_th_group:'Group', vz_inserted:'Figure inserted ✓', vz_img_fail:'Could not make the picture. Try the SVG download.', vz_bar_zero:'Bars show size by their length, so a bar axis should start at zero. Starting higher makes small differences look large.', vz_box_key:'Box = middle half of scores. Thick line = median. Diamond = mean. Whiskers reach the furthest score within 1.5 box-lengths. Open circles = unusual scores beyond that. Dots = each participant.', vz_bar_key_ci:'Bars = group means. Error bars = 95% confidence interval. Dots = each participant.', vz_bar_key_sd:'Bars = group means. Error bars = one standard deviation. Dots = each participant.', vz_bar_key_se:'Bars = group means. Error bars = one standard error. Dots = each participant.', vz_bar_key_none:'Bars = group means. Dots = each participant.', vz_hist_key:'Bars count scores in each range. Dashed curve = the normal curve with the same mean and spread. Skewness = {s} (0 is symmetric; beyond about 1 or below -1 is clearly lopsided).', vz_qq_key:'Dots close to the dashed line mean the scores are close to a normal distribution. Bends at the ends suggest skew or outliers. With very few scores, expect wobble.', aitest_btn:'🔌 Test my AI connection', aitest_running:'Testing…', aitest_ok:'Working ✓ Provider: {p}.', aitest_reply:'The AI replied:', aitest_fail:'Not working. Provider: {p}.', ret_h:'👋 Welcome back', ret_q_intro:'Answer in your own words. Nobody grades these, and the app does not read them. They are saved on this computer so you can see how your thinking moved.', ret_q1:'In your own words, what is the main question your study is answering right now?', ret_q2:'What is the next concrete thing you will do on this project?', ret_q3:'What is the weakest part of your work right now, and why?', ret_save:'Save my answers', ret_skip:'Skip', ret_saved:'Saved on this computer ✓', ret_away:'You have been away {n} days.', ret_project:'Project: {p}, stage: {s}.', ret_doc:'Open document: {d}, {w} words.', ret_did:'Before you left you had recorded:', ret_docs:'{n} new document(s)', ret_cits:'{n} source(s) added', ret_stats:'{n} test(s) run', ret_quals:'{n} passage(s) coded', ret_ai:'{n} AI passage(s) inserted', ret_nolog:'No activity was recorded since your last visit.', ret_last:'Last time ({d}) you wrote:', recap_toggle:'Show a recap and three questions when I return after five days or more', viva_btn:'🎓 Viva question', viva_btn_title:"Practise answering an examiner's question about your writing, with no AI help in the answer box", viva_h:'🎓 Viva question', viva_desc:'The AI asks one question an examiner might ask about the passage you selected (or the end of your document). Answer from your own head. There is no AI help in the answer box, because the point is to rehearse the real moment.', viva_aud:'Who is asking?', viva_aud_viva:'An examiner at my viva or defence', viva_aud_conf:'A panel or audience at a conference', viva_get:'Get a question', viva_another:'Another question', viva_thinking:'🎓 Reading your passage…', viva_ph:'Type your answer, as if you were speaking.', viva_save:'Save my answer', viva_need:'Select or write a passage of at least a few sentences first.', viva_empty:'Write your answer first.', viva_saved:'Answer saved on this computer ✓', viva_count:'Answers saved so far: {n}.', devil_btn_title:'Argues against your passage the way a critical reviewer would. Nothing in the reply is meant to be pasted in.', devil_need:'Select or write a passage of at least a few sentences first.', devil_thinking:'😈 Reading your argument…', devil_label:'A critical reviewer might say this. Answer each point in your own words. Nothing here is meant to be pasted in.', devil_ready:'Challenges ready in the AI pane', prov_unknown:', {u} older ones not tracked', prov_trend:'Share typed here, at the end of each week', prov_trend_none:'The weekly picture builds up as you keep writing.', prov_week:'week of {d}', backup_btn:'⬇ Backup', backup_btn_title:'Save a copy of all your work to your computer', backup_btn_full:'⬇ Download backup', restore_btn:'⬆ Restore from backup', backup_h:'Back up your work', backup_desc:'Your documents, citations and projects live only in this browser. Clearing the browser data erases them. Download a backup file now and then, and keep it somewhere safe. It never contains your AI key or access code.', backup_never:'No backup yet.', backup_last:'Last backup: {d}.', backup_done:'Backup downloaded ✓ Keep the file somewhere safe.', backup_nudge_new:'You have written {w} words and never made a backup. Clearing this browser would erase them.', backup_nudge_old:'Your last backup is {n} days old. Save a fresh copy of your work?', backup_now:'Back up now', backup_later:'Later', restore_bad:'That file is not an Appuscholar backup.', restore_confirm:'Restore this backup?\n\nIt holds {n} document(s) saved {d}.\nThis REPLACES the documents, citations and projects now in this browser. Your AI key stays as it is.', restore_done:'Backup restored ✓ Reloading…', restore_full:'The backup could not be restored: it needs about {mb} MB and this browser does not have that much free space for Appuscholar. Nothing was changed. Your current work is still here. Free some space (delete old documents or pictures, or empty the reading shelf), or restore on a computer with more space.', restore_full_lost:'The backup could not be restored because this browser ran out of space, and some of your current work could not be put back. Keep the backup file safe and do not clear this browser. Make a new backup of what is left now, then ask for help.', pop_btn:'⧉ Pop out', pop_btn_title:'Open this tool in its own window, for a second screen', pop_blocked:'Your browser blocked the new window. Allow pop-ups for this site and try again.', pop_unsupported:'Only Citations and Research can open in their own window.', pop_sent:'Sent to your writing window ✓', pop_nowin:'The writing window is not open.', sel_find:'🔎 Find papers', sel_cite:'📚 Cite', sel_improve:'💜 Improve', sel_cite_toast:'Pick a source and press Insert. It goes right after your passage.', dock_tools_tab:'Tools', fmt_more_btn:'More {a}',
     rs_insert_cite:'Insert citation', rs_inserted:'Citation inserted and saved to your library ✓',
-    cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
+    cite_lookup_empty:'Paste a DOI, a link, a PubMed ID or a title first', cite_lookup_busy:'🔎 Looking it up…', cite_lookup_nopmid:'Could not find a DOI for that PubMed ID. Paste the DOI or the title instead.', cite_lookup_nf:'Not found on Crossref. Please fill it in by hand.', cite_lookup_ok:'Found ✓ The DOI and every other box below are now filled. Check them, then press + Library', cite_lookup_fail:'Could not reach Crossref. Please fill it in by hand.', cite_lookup_weak:'Crossref has no close match for that title. Its nearest record is:\n\n"{t}"\n{a}, {y}\n\nIs this the paper you mean?', cite_insert_btn:'Insert citation', cite_addlib_btn:'+ Library',
     cite_clear_btn:'Clear form',
     cite_quote_label:'Quote from this source (optional)', cite_quote_placeholder:'Paste the exact quoted text here…',
     cite_quote_desc:'A Hindi source is quoted as written. An English source is translated automatically when your content language is set to Hindi, and marked (अनुवादित) with the original kept on hover.',
@@ -2371,9 +2371,9 @@ const I18N={
     nc_btn:'🔢 मेरे दस्तावेज़ की संख्याएँ जाँचें', nc_h:'🔢 संख्याओं की जाँच', nc_desc:'यह आपके दस्तावेज़ में लिखे आँकड़े (t, F, χ², r, z और H, df और p के साथ) ढूँढता है, परीक्षण-मान और df से p-मान दोबारा निकालता है और जहाँ दोनों मेल नहीं खाते वहाँ बताता है। यह इसी कंप्यूटर पर चलता है और एआई का उपयोग नहीं करता।', nc_none:'कोई आँकड़ा नहीं मिला। यह APA रूप पढ़ता है, जैसे "t(21) = 2.15, p = .043"।', nc_sum:'{n} मिले: {ok} मेल खाते हैं, {w} मेल नहीं खाते ({e} का निष्कर्ष बदल जाता है)।', nc_ok:'मेल खाता है', nc_warn:'मेल नहीं खाता', nc_err:'निष्कर्ष बदलता है', nc_rep:'आपने लिखा', nc_calc:'दोबारा निकाला गया', nc_go:'इस पाठ पर जाएँ', nc_rescan:'फिर से जाँचें', nc_c_onetail:'लिखा गया p दोबारा निकाले गए p का लगभग आधा है। क्या एकतरफ़ा परीक्षण किया गया था? यदि हाँ, तो पाठ में यह लिखें।', nc_c_zero:'p कभी ठीक शून्य नहीं होता। p < .001 लिखें।', nc_c_form:'p-मान 0 और 1 के बीच होना चाहिए।', nc_c_df:'स्वातंत्र्य-कोटि (df) धनात्मक होनी चाहिए।', nc_c_typo:'आँकड़े, df या p-मान में टाइपिंग की गलती सबसे आम कारण है। इन्हें अपने आउटपुट से मिलाएँ।', nc_c_round:'अंतर छोटा है। पूर्णांकन की चूक या पूर्णांकित आँकड़ा इसका कारण हो सकता है। अपना आउटपुट देखें।', nc_note:'यह जाँच आँकड़े के पूर्णांकन की छूट देती है। यह केवल सामान्य APA क्रम में लिखे आँकड़े पढ़ती है, जिसमें p आँकड़े के ठीक बाद हो। मेल खाना यह साबित नहीं करता कि सही परीक्षण चुना गया।',
     cc_btn:'📚 उद्धरण और संदर्भ सूची मिलाएँ', cc_h:'📚 उद्धरण की जाँच', cc_desc:'यह आपके पाठ के उद्धरणों को आपकी संदर्भ सूची से मिलाता है। जो स्रोत पाठ में उद्धृत है पर सूची में नहीं, और जो सूची में है पर कभी उद्धृत नहीं हुआ, दोनों दिखाता है। यह इसी कंप्यूटर पर चलता है और एआई का उपयोग नहीं करता।', cc_src_doc:'उपयोग की गई सूची: इस दस्तावेज़ का "{h}" खंड ({n} प्रविष्टियाँ)।', cc_src_lib:'इस दस्तावेज़ में अभी संदर्भ खंड नहीं है, इसलिए आपकी उद्धरण लाइब्रेरी ({n} स्रोत) को सूची माना गया है।', cc_src_none:'मिलाने के लिए कोई संदर्भ सूची नहीं है। दस्तावेज़ में संदर्भ खंड जोड़ें या लाइब्रेरी में स्रोत जोड़ें।', cc_sum:'पाठ में {c} स्रोत उद्धृत हैं। {m} सूची में नहीं हैं। {u} सूची प्रविष्टियाँ कभी उद्धृत नहीं हुईं।', cc_missing_h:'पाठ में उद्धृत पर सूची में नहीं', cc_unused_h:'सूची में है पर कभी उद्धृत नहीं', cc_none_missing:'कोई नहीं। हर उद्धरण की सूची में प्रविष्टि है।', cc_none_unused:'कोई नहीं। सूची की हर प्रविष्टि उद्धृत है।', cc_near_year:'सूची में {n} है पर वर्ष अलग है ({y})। वर्ष जाँचें।', cc_near_name:'सूची में मिलता-जुलता नाम है: {n} ({y})। वर्तनी जाँचें।', cc_unread:'{n} सूची प्रविष्टियाँ पढ़ी नहीं जा सकीं (अल्पविराम से पहले उपनाम नहीं, या कोष्ठक में वर्ष नहीं)। उन्हें जाँच से बाहर रखा गया है।', cc_note:'मिलान पहले लेखक के उपनाम और वर्ष से होता है। यह APA शैली के उद्धरण पढ़ता है, जैसे (Smith, 2020), (Smith & Lee, 2020; Jones et al., 2019) और Smith (2020)। सूची की एक प्रविष्टि एक अनुच्छेद है, जैसे "Smith, J. (2020). शीर्षक।"',
     terms_h:'शुरू करने से पहले', terms_data_h:'आपका डेटा कहाँ जाता है', terms_d1:'आपके दस्तावेज़, स्रोत, प्रोजेक्ट और सांख्यिकी डेटा इसी कंप्यूटर पर इसी ब्राउज़र में रहते हैं। Appuscholar का कोई सर्वर नहीं है, इसलिए Appuscholar में कोई उन्हें नहीं देख सकता। ब्राउज़र का डेटा मिटाने पर ये भी मिट जाते हैं, इसलिए समय-समय पर बैकअप डाउनलोड करें।', terms_d2:'आपकी एआई कुंजी भी इसी ब्राउज़र में रहती है। वह केवल उसी एआई प्रदाता को जाती है जिसे आप चुनते हैं।', terms_d3:'जब आप किसी एआई बटन को दबाते हैं, तो चुना हुआ पाठ आपके ब्राउज़र से सीधे उस प्रदाता (Google, Groq, OpenRouter, DeepSeek, OpenAI या Anthropic) के पास जाता है। Appuscholar उसे न देखता है, न रखता है। प्रदाता की अपनी शर्तें लागू होती हैं, और मुफ़्त कुंजी पर प्रदाता जो पाता है उसे पढ़ या दोबारा उपयोग कर सकता है। प्रतिभागी की पहचान बताने वाले नाम, फ़ोन नंबर, रोल नंबर या अन्य विवरण कभी न भेजें।', terms_d4:'शोध-पत्र खोज आपके खोज-शब्द, DOI या ORCID iD को OpenAlex, Crossref, PubMed और ORCID को भेजती है। चार्ट, Word और PDF के औज़ार और फ़ॉन्ट Cloudflare और Google से लोड होते हैं, जो किसी भी वेबसाइट की तरह आपका IP पता देख सकते हैं।', terms_use_h:'Appuscholar क्या है और क्या नहीं', terms_u1:'यह लेखन और शोध में सहायक है। यह चिकित्सीय, मनोवैज्ञानिक या कानूनी सलाह नहीं है। स्क्रीनिंग स्केल का अंक निदान नहीं है।', terms_u2:'एआई के सुझाव, साहित्यिक चोरी की जाँच और एआई-डिटेक्टर केवल संकेत देते हैं, और ग़लत भी हो सकते हैं। हर उद्धरण और हर संख्या ख़ुद जाँचें।', terms_u3:'आपकी नैतिक स्वीकृति, प्रतिभागियों की सहमति, एआई सहायता पर आपके संस्थान के नियम, और एआई ने कहाँ मदद की यह बताना, सब आपकी ज़िम्मेदारी है।', terms_u4:'Appuscholar मुफ़्त है और जैसा है वैसा मिलता है। इसके सही होने या हमेशा उपलब्ध रहने का कोई वादा नहीं है।', terms_ver:'संस्करण 1, 7 अक्टूबर 2026।', terms_age:'मेरी आयु 18 वर्ष या अधिक है। Appuscholar इससे छोटे लोगों के लिए नहीं है।', terms_agree:'मैंने यह पढ़ लिया है और मैं सहमत हूँ।', terms_cont:'आगे बढ़ें', terms_back:'वापस जाएँ (ग़लती से दबा)', terms_need:'आगे बढ़ने के लिए दोनों बॉक्स पर निशान लगाएँ।', terms_leave:'स्वीकार किए बिना Appuscholar का उपयोग नहीं हो सकता। बाहर जाने के लिए यह ब्राउज़र टैब बंद करें।', terms_under:'मैं 18 से छोटा/छोटी हूँ', terms_under_msg:'Appuscholar 18 वर्ष और उससे अधिक आयु के लोगों के लिए है। कृपया यह पृष्ठ बंद करें। यदि आप पढ़ रहे हैं, तो अपने शिक्षक या संस्थान से पूछें कि वे कौन से औज़ार स्वीकार करते हैं।', terms_reopen_btn:'शर्तें और आपका डेटा कहाँ जाता है',
-    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', devil_btn:'😈 मेरे तर्क को चुनौती दें', vz_open_btn:'📈 शोध चित्र (बॉक्स प्लॉट, त्रुटि पट्टी, हिस्टोग्राम, Q-Q)', vz_h:'📈 शोध चित्र', vz_desc:'अपना डेटा चिपकाएँ (पहली पंक्ति = स्तंभ के नाम) या सांख्यिकी लैब का डेटा लें। चार्ट चुनें। हर चार्ट इसी कंप्यूटर पर बनता है और आपके शोध-पत्र के लिए सहेजा जा सकता है।', vz_data:'आपका डेटा', vz_use_lab:'सांख्यिकी लैब का डेटा लें', vz_type:'चार्ट', vz_t_box:'हर प्रतिभागी के साथ बॉक्स प्लॉट', vz_t_bar:'त्रुटि पट्टी सहित औसत का बार', vz_t_hist:'सामान्य वक्र सहित हिस्टोग्राम', vz_t_qq:'Q-Q प्लॉट (क्या यह लगभग सामान्य है?)', vz_y:'अंक (संख्याएँ)', vz_g:'समूह (वैकल्पिक)', vz_none:'(कोई समूह नहीं)', vz_err:'त्रुटि पट्टी दिखाती है', vz_pal:'रंग', vz_pal_c:'रंग (रंग-अंधता के लिए सुरक्षित)', vz_pal_g:'श्वेत-श्याम (छपाई के लिए)', vz_bins:'पट्टियाँ (बिन)', vz_pts:'हर प्रतिभागी दिखाएँ', vz_n:'हर समूह के नीचे n दिखाएँ', vz_title_in:'शीर्षक चित्र के अंदर बनाएँ', vz_title:'चित्र का शीर्षक', vz_xl:'क्षैतिज अक्ष का नाम', vz_yl:'ऊर्ध्वाधर अक्ष का नाम', vz_ymin:'अक्ष शुरू', vz_ymax:'अक्ष अंत', vz_fig:'चित्र संख्या', vz_note:'चित्र के नीचे टिप्पणी (वैकल्पिक)', vz_insert:'मेरे दस्तावेज़ में डालें', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'पहले सांख्यिकी लैब में डेटा पार्स करें, या यहाँ चिपकाएँ।', vz_nodata:'बनाने के लिए अभी कोई संख्या नहीं। जाँचें कि आपने संख्याओं वाला स्तंभ चुना है।', vz_th_group:'समूह', vz_inserted:'चित्र डाल दिया गया ✓', vz_img_fail:'चित्र नहीं बन सका। SVG डाउनलोड आज़माएँ।', vz_bar_zero:'बार अपनी लंबाई से मान दिखाते हैं, इसलिए बार का अक्ष शून्य से शुरू होना चाहिए। ऊँचे से शुरू करने पर छोटे अंतर बड़े दिखते हैं।', vz_box_key:'बॉक्स = बीच के आधे अंक। मोटी रेखा = माध्यिका। हीरा = माध्य। मूँछें बॉक्स की 1.5 लंबाई के भीतर के सबसे दूर के अंक तक जाती हैं। खुले गोले = उसके बाहर के असामान्य अंक। बिंदु = हर प्रतिभागी।', vz_bar_key_ci:'बार = समूह का माध्य। त्रुटि पट्टी = 95% विश्वास अंतराल। बिंदु = हर प्रतिभागी।', vz_bar_key_sd:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक विचलन। बिंदु = हर प्रतिभागी।', vz_bar_key_se:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक त्रुटि। बिंदु = हर प्रतिभागी।', vz_bar_key_none:'बार = समूह का माध्य। बिंदु = हर प्रतिभागी।', vz_hist_key:'पट्टियाँ हर सीमा में अंकों की गिनती दिखाती हैं। टूटा वक्र = उसी माध्य और फैलाव वाला सामान्य वक्र। विषमता = {s} (0 सममित है; लगभग 1 से ऊपर या -1 से नीचे साफ़ झुकाव है)।', vz_qq_key:'बिंदु टूटी रेखा के पास हों तो अंक लगभग सामान्य वितरण के हैं। सिरों पर मोड़ झुकाव या असामान्य अंक बताता है। बहुत कम अंकों में उतार-चढ़ाव स्वाभाविक है।', aitest_btn:'🔌 मेरा एआई कनेक्शन जाँचें', aitest_running:'जाँच हो रही है…', aitest_ok:'चल रहा है ✓ प्रदाता: {p}।', aitest_reply:'एआई का उत्तर:', aitest_fail:'काम नहीं कर रहा। प्रदाता: {p}।', ret_h:'👋 वापसी पर स्वागत', ret_q_intro:'अपने शब्दों में उत्तर दें। इन्हें कोई अंक नहीं देता और ऐप इन्हें पढ़ता नहीं। ये इसी कंप्यूटर में सहेजे जाते हैं ताकि आप देख सकें कि आपकी सोच कैसे बदली।', ret_q1:'अपने शब्दों में, आपका अध्ययन अभी किस मुख्य प्रश्न का उत्तर खोज रहा है?', ret_q2:'इस प्रोजेक्ट पर आप अगला ठोस काम क्या करेंगे?', ret_q3:'अभी आपके काम का सबसे कमज़ोर हिस्सा कौन सा है, और क्यों?', ret_save:'मेरे उत्तर सहेजें', ret_skip:'छोड़ें', ret_saved:'इसी कंप्यूटर में सहेजा गया ✓', ret_away:'आप {n} दिन से दूर थे।', ret_project:'प्रोजेक्ट: {p}, चरण: {s}।', ret_doc:'खुला दस्तावेज़: {d}, {w} शब्द।', ret_did:'जाने से पहले दर्ज था:', ret_docs:'{n} नए दस्तावेज़', ret_cits:'{n} स्रोत जोड़े गए', ret_stats:'{n} परीक्षण चलाए गए', ret_quals:'{n} अंश कोड किए गए', ret_ai:'{n} एआई अंश जोड़े गए', ret_nolog:'पिछली बार के बाद कोई गतिविधि दर्ज नहीं हुई।', ret_last:'पिछली बार ({d}) आपने लिखा था:', recap_toggle:'पाँच दिन या अधिक बाद लौटने पर सार और तीन प्रश्न दिखाएँ', viva_btn:'🎓 वाइवा प्रश्न', viva_btn_title:'अपने लेखन पर परीक्षक के प्रश्न का उत्तर देने का अभ्यास करें, उत्तर बॉक्स में एआई की मदद नहीं', viva_h:'🎓 वाइवा प्रश्न', viva_desc:'एआई आपके चुने अंश (या दस्तावेज़ के अंत) पर परीक्षक जैसा एक प्रश्न पूछता है। उत्तर अपने दम पर दें। उत्तर बॉक्स में एआई की मदद नहीं है, क्योंकि उद्देश्य असली क्षण का अभ्यास है।', viva_aud:'प्रश्न कौन पूछ रहा है?', viva_aud_viva:'वाइवा या बचाव में परीक्षक', viva_aud_conf:'सम्मेलन में पैनल या श्रोता', viva_get:'प्रश्न पाएँ', viva_another:'दूसरा प्रश्न', viva_thinking:'🎓 आपका अंश पढ़ रहा है…', viva_ph:'अपना उत्तर लिखें, जैसे बोल रहे हों।', viva_save:'मेरा उत्तर सहेजें', viva_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', viva_empty:'पहले अपना उत्तर लिखें।', viva_saved:'उत्तर इसी कंप्यूटर में सहेजा गया ✓', viva_count:'अब तक सहेजे उत्तर: {n}।', devil_btn_title:'आपके अंश के विरुद्ध वैसे ही तर्क देता है जैसे कोई आलोचक समीक्षक देगा। उत्तर में कुछ भी चिपकाने के लिए नहीं है।', devil_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', devil_thinking:'😈 आपका तर्क पढ़ रहा है…', devil_label:'कोई आलोचक समीक्षक यह कह सकता है। हर बिंदु का उत्तर अपने शब्दों में दें। यहाँ कुछ भी चिपकाने के लिए नहीं है।', devil_ready:'चुनौतियाँ एआई पैनल में तैयार हैं', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
+    dock_ai_tab:'✨ एआई सुझाव', df_btn:'✍ पहले खुद लिखें', df_btn_title:'पहले खुद लिखें। फिर एआई आपके लेखन पर सवाल पूछेगा, आपके लिए लिखेगा नहीं।', df_on:'पहले खुद लिखें मोड चालू है। एआई आपके लेखन पर सवाल पूछेगा और आपके लिए नहीं लिखेगा।', df_off:'पहले खुद लिखें मोड बंद है।', df_need_text:'पहले कम से कम कुछ वाक्य खुद लिखें। फिर प्रतिक्रिया माँगें।', df_need_sel:'पहले वह अंश चुनें जिस पर प्रतिक्रिया चाहिए।', df_label:'आपके मसौदे पर प्रतिक्रिया। यहाँ कुछ भी चिपकाने के लिए नहीं है, ताकि लेखन आपका ही रहे।', df_thinking:'💜 आपका मसौदा पढ़ रहा है…', df_ready:'सवाल एआई पैनल में तैयार हैं', prov_h:'📊 मेरा लेखन', prov_desc:'आपके दस्तावेज़ों के शब्द कहाँ से आए। यह इस एडिटर में टाइप किए गए पाठ की गिनती करता है और एआई सुझाव या चैट से जोड़े गए पाठ की अलग गिनती। यह आपकी सोच नहीं देख सकता, और एआई उत्तर से दोबारा टाइप किया पाठ आपका गिना जाता है। कोई लक्ष्य नहीं, कोई अंक नहीं। यह बस एक दर्पण है।', prov_total:'सभी दस्तावेज़: {w} शब्द। यहाँ टाइप किए {t}%, एआई से जोड़े {a}%।', prov_none:'अभी तक कोई लेखन नहीं।', prov_doc_fmt:'{n} शब्द, यहाँ टाइप किए {t}%। एआई अंश: {p} ({k} जैसे जोड़े वैसे, {e} बदले गए{u})।', prov_doc_plain:'{n} शब्द, यहाँ टाइप किए {t}%।', devil_btn:'😈 मेरे तर्क को चुनौती दें', vz_open_btn:'📈 शोध चित्र (बॉक्स प्लॉट, त्रुटि पट्टी, हिस्टोग्राम, Q-Q)', vz_h:'📈 शोध चित्र', vz_desc:'अपना डेटा चिपकाएँ (पहली पंक्ति = स्तंभ के नाम) या सांख्यिकी लैब का डेटा लें। चार्ट चुनें। हर चार्ट इसी कंप्यूटर पर बनता है और आपके शोध-पत्र के लिए सहेजा जा सकता है।', vz_data:'आपका डेटा', vz_use_lab:'सांख्यिकी लैब का डेटा लें', vz_type:'चार्ट', vz_t_box:'हर प्रतिभागी के साथ बॉक्स प्लॉट', vz_t_bar:'त्रुटि पट्टी सहित औसत का बार', vz_t_hist:'सामान्य वक्र सहित हिस्टोग्राम', vz_t_qq:'Q-Q प्लॉट (क्या यह लगभग सामान्य है?)', vz_y:'अंक (संख्याएँ)', vz_g:'समूह (वैकल्पिक)', vz_none:'(कोई समूह नहीं)', vz_err:'त्रुटि पट्टी दिखाती है', vz_pal:'रंग', vz_pal_c:'रंग (रंग-अंधता के लिए सुरक्षित)', vz_pal_g:'श्वेत-श्याम (छपाई के लिए)', vz_bins:'पट्टियाँ (बिन)', vz_pts:'हर प्रतिभागी दिखाएँ', vz_n:'हर समूह के नीचे n दिखाएँ', vz_title_in:'शीर्षक चित्र के अंदर बनाएँ', vz_title:'चित्र का शीर्षक', vz_xl:'क्षैतिज अक्ष का नाम', vz_yl:'ऊर्ध्वाधर अक्ष का नाम', vz_ymin:'अक्ष शुरू', vz_ymax:'अक्ष अंत', vz_fig:'चित्र संख्या', vz_note:'चित्र के नीचे टिप्पणी (वैकल्पिक)', vz_insert:'मेरे दस्तावेज़ में डालें', vz_png:'⬇ PNG', vz_svg:'⬇ SVG', vz_no_lab:'पहले सांख्यिकी लैब में डेटा पार्स करें, या यहाँ चिपकाएँ।', vz_nodata:'बनाने के लिए अभी कोई संख्या नहीं। जाँचें कि आपने संख्याओं वाला स्तंभ चुना है।', vz_th_group:'समूह', vz_inserted:'चित्र डाल दिया गया ✓', vz_img_fail:'चित्र नहीं बन सका। SVG डाउनलोड आज़माएँ।', vz_bar_zero:'बार अपनी लंबाई से मान दिखाते हैं, इसलिए बार का अक्ष शून्य से शुरू होना चाहिए। ऊँचे से शुरू करने पर छोटे अंतर बड़े दिखते हैं।', vz_box_key:'बॉक्स = बीच के आधे अंक। मोटी रेखा = माध्यिका। हीरा = माध्य। मूँछें बॉक्स की 1.5 लंबाई के भीतर के सबसे दूर के अंक तक जाती हैं। खुले गोले = उसके बाहर के असामान्य अंक। बिंदु = हर प्रतिभागी।', vz_bar_key_ci:'बार = समूह का माध्य। त्रुटि पट्टी = 95% विश्वास अंतराल। बिंदु = हर प्रतिभागी।', vz_bar_key_sd:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक विचलन। बिंदु = हर प्रतिभागी।', vz_bar_key_se:'बार = समूह का माध्य। त्रुटि पट्टी = एक मानक त्रुटि। बिंदु = हर प्रतिभागी।', vz_bar_key_none:'बार = समूह का माध्य। बिंदु = हर प्रतिभागी।', vz_hist_key:'पट्टियाँ हर सीमा में अंकों की गिनती दिखाती हैं। टूटा वक्र = उसी माध्य और फैलाव वाला सामान्य वक्र। विषमता = {s} (0 सममित है; लगभग 1 से ऊपर या -1 से नीचे साफ़ झुकाव है)।', vz_qq_key:'बिंदु टूटी रेखा के पास हों तो अंक लगभग सामान्य वितरण के हैं। सिरों पर मोड़ झुकाव या असामान्य अंक बताता है। बहुत कम अंकों में उतार-चढ़ाव स्वाभाविक है।', aitest_btn:'🔌 मेरा एआई कनेक्शन जाँचें', aitest_running:'जाँच हो रही है…', aitest_ok:'चल रहा है ✓ प्रदाता: {p}।', aitest_reply:'एआई का उत्तर:', aitest_fail:'काम नहीं कर रहा। प्रदाता: {p}।', ret_h:'👋 वापसी पर स्वागत', ret_q_intro:'अपने शब्दों में उत्तर दें। इन्हें कोई अंक नहीं देता और ऐप इन्हें पढ़ता नहीं। ये इसी कंप्यूटर में सहेजे जाते हैं ताकि आप देख सकें कि आपकी सोच कैसे बदली।', ret_q1:'अपने शब्दों में, आपका अध्ययन अभी किस मुख्य प्रश्न का उत्तर खोज रहा है?', ret_q2:'इस प्रोजेक्ट पर आप अगला ठोस काम क्या करेंगे?', ret_q3:'अभी आपके काम का सबसे कमज़ोर हिस्सा कौन सा है, और क्यों?', ret_save:'मेरे उत्तर सहेजें', ret_skip:'छोड़ें', ret_saved:'इसी कंप्यूटर में सहेजा गया ✓', ret_away:'आप {n} दिन से दूर थे।', ret_project:'प्रोजेक्ट: {p}, चरण: {s}।', ret_doc:'खुला दस्तावेज़: {d}, {w} शब्द।', ret_did:'जाने से पहले दर्ज था:', ret_docs:'{n} नए दस्तावेज़', ret_cits:'{n} स्रोत जोड़े गए', ret_stats:'{n} परीक्षण चलाए गए', ret_quals:'{n} अंश कोड किए गए', ret_ai:'{n} एआई अंश जोड़े गए', ret_nolog:'पिछली बार के बाद कोई गतिविधि दर्ज नहीं हुई।', ret_last:'पिछली बार ({d}) आपने लिखा था:', recap_toggle:'पाँच दिन या अधिक बाद लौटने पर सार और तीन प्रश्न दिखाएँ', viva_btn:'🎓 वाइवा प्रश्न', viva_btn_title:'अपने लेखन पर परीक्षक के प्रश्न का उत्तर देने का अभ्यास करें, उत्तर बॉक्स में एआई की मदद नहीं', viva_h:'🎓 वाइवा प्रश्न', viva_desc:'एआई आपके चुने अंश (या दस्तावेज़ के अंत) पर परीक्षक जैसा एक प्रश्न पूछता है। उत्तर अपने दम पर दें। उत्तर बॉक्स में एआई की मदद नहीं है, क्योंकि उद्देश्य असली क्षण का अभ्यास है।', viva_aud:'प्रश्न कौन पूछ रहा है?', viva_aud_viva:'वाइवा या बचाव में परीक्षक', viva_aud_conf:'सम्मेलन में पैनल या श्रोता', viva_get:'प्रश्न पाएँ', viva_another:'दूसरा प्रश्न', viva_thinking:'🎓 आपका अंश पढ़ रहा है…', viva_ph:'अपना उत्तर लिखें, जैसे बोल रहे हों।', viva_save:'मेरा उत्तर सहेजें', viva_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', viva_empty:'पहले अपना उत्तर लिखें।', viva_saved:'उत्तर इसी कंप्यूटर में सहेजा गया ✓', viva_count:'अब तक सहेजे उत्तर: {n}।', devil_btn_title:'आपके अंश के विरुद्ध वैसे ही तर्क देता है जैसे कोई आलोचक समीक्षक देगा। उत्तर में कुछ भी चिपकाने के लिए नहीं है।', devil_need:'पहले कुछ वाक्यों का अंश चुनें या लिखें।', devil_thinking:'😈 आपका तर्क पढ़ रहा है…', devil_label:'कोई आलोचक समीक्षक यह कह सकता है। हर बिंदु का उत्तर अपने शब्दों में दें। यहाँ कुछ भी चिपकाने के लिए नहीं है।', devil_ready:'चुनौतियाँ एआई पैनल में तैयार हैं', prov_unknown:', {u} पुराने ट्रैक नहीं हुए', prov_trend:'हर सप्ताह के अंत में यहाँ टाइप किया हिस्सा', prov_trend_none:'जैसे-जैसे आप लिखते रहेंगे, साप्ताहिक तस्वीर बनती जाएगी।', prov_week:'{d} वाला सप्ताह', backup_btn:'⬇ बैकअप', backup_btn_title:'अपने सारे काम की एक प्रति अपने कंप्यूटर में सहेजें', backup_btn_full:'⬇ बैकअप डाउनलोड करें', restore_btn:'⬆ बैकअप से वापस लाएँ', backup_h:'अपने काम का बैकअप लें', backup_desc:'आपके दस्तावेज़, सन्दर्भ और प्रोजेक्ट केवल इसी ब्राउज़र में रहते हैं। ब्राउज़र का डेटा साफ़ करने पर वे मिट जाते हैं। समय-समय पर बैकअप फ़ाइल डाउनलोड करें और सुरक्षित रखें। उसमें आपकी एआई कुंजी या एक्सेस कोड नहीं होता।', backup_never:'अभी तक कोई बैकअप नहीं।', backup_last:'पिछला बैकअप: {d}।', backup_done:'बैकअप डाउनलोड हो गया ✓ फ़ाइल को सुरक्षित रखें।', backup_nudge_new:'आपने {w} शब्द लिखे हैं और कभी बैकअप नहीं लिया। इस ब्राउज़र का डेटा साफ़ होने पर वे मिट जाएँगे।', backup_nudge_old:'आपका पिछला बैकअप {n} दिन पुराना है। अपने काम की नई प्रति सहेजें?', backup_now:'अभी बैकअप लें', backup_later:'बाद में', restore_bad:'यह फ़ाइल Appuscholar का बैकअप नहीं है।', restore_confirm:'यह बैकअप वापस लाएँ?\n\nइसमें {d} को सहेजे गए {n} दस्तावेज़ हैं।\nयह इस ब्राउज़र के मौजूदा दस्तावेज़, सन्दर्भ और प्रोजेक्ट को बदल देगा। आपकी एआई कुंजी जैसी है वैसी रहेगी।', restore_done:'बैकअप वापस आ गया ✓ पुनः लोड हो रहा है…', restore_full:'बैकअप वापस नहीं आ सका: इसे लगभग {mb} MB जगह चाहिए और इस ब्राउज़र में Appuscholar के लिए इतनी खाली जगह नहीं है। कुछ भी नहीं बदला गया। आपका अभी का काम सुरक्षित है। कुछ जगह खाली करें (पुराने दस्तावेज़ या चित्र हटाएँ, या पढ़ने की शेल्फ़ खाली करें), या ज़्यादा जगह वाले कंप्यूटर पर बैकअप वापस लाएँ।', restore_full_lost:'जगह ख़त्म होने के कारण बैकअप वापस नहीं आ सका, और आपके अभी के काम का कुछ हिस्सा भी वापस नहीं रखा जा सका। बैकअप फ़ाइल सँभालकर रखें और यह ब्राउज़र साफ़ न करें। जो बचा है उसका अभी नया बैकअप बनाएँ, फिर मदद माँगें।', pop_btn:'⧉ अलग विंडो', pop_btn_title:'इस उपकरण को दूसरी स्क्रीन के लिए अलग विंडो में खोलें', pop_blocked:'आपके ब्राउज़र ने नई विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।', pop_unsupported:'केवल सन्दर्भ और शोध अलग विंडो में खुल सकते हैं।', pop_sent:'लेखन विंडो में भेज दिया ✓', pop_nowin:'लेखन विंडो खुली नहीं है।', sel_find:'🔎 शोध-पत्र खोजें', sel_cite:'📚 सन्दर्भ', sel_improve:'💜 सुधारें', sel_cite_toast:'कोई स्रोत चुनें और Insert दबाएँ। वह आपके अंश के ठीक बाद जुड़ेगा।', dock_tools_tab:'उपकरण', fmt_more_btn:'और {a}',
     rs_insert_cite:'उद्धरण डालें', rs_inserted:'उद्धरण डाल दिया गया और आपकी लाइब्रेरी में सहेजा गया ✓',
-    cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
+    cite_lookup_empty:'पहले DOI, लिंक, PubMed ID या शीर्षक चिपकाएँ', cite_lookup_busy:'🔎 खोज रहे हैं…', cite_lookup_nopmid:'इस PubMed ID का DOI नहीं मिला। DOI या शीर्षक चिपकाएँ।', cite_lookup_nf:'Crossref पर नहीं मिला। कृपया हाथ से भरें।', cite_lookup_ok:'मिल गया ✓ DOI और नीचे के सभी बॉक्स भर गए हैं। जाँचें, फिर + लाइब्रेरी दबाएँ', cite_lookup_fail:'Crossref तक नहीं पहुँच सके। कृपया हाथ से भरें।', cite_lookup_weak:'Crossref पर इस शीर्षक से मिलता-जुलता कोई रिकॉर्ड नहीं मिला। सबसे पास वाला रिकॉर्ड है:\n\n"{t}"\n{a}, {y}\n\nक्या आपका मतलब यही शोध-पत्र है?', cite_insert_btn:'उद्धरण डालें', cite_addlib_btn:'+ लाइब्रेरी',
     cite_clear_btn:'फॉर्म साफ़ करें',
     cite_quote_label:'इस स्रोत से उद्धरण (वैकल्पिक)', cite_quote_placeholder:'उद्धृत पाठ यहाँ पेस्ट करें…',
     cite_quote_desc:'हिन्दी स्रोत जैसा लिखा गया है वैसा ही उद्धृत होता है। अंग्रेज़ी स्रोत का अनुवाद अपने आप हो जाता है जब आपकी सामग्री भाषा हिन्दी हो, और उसे (अनुवादित) चिह्नित किया जाता है, मूल पाठ होवर पर दिखता है।',
@@ -4153,10 +4153,29 @@ async function backupRestoreFile(input){
   if(!confirm(msg)){input.value='';return}
   window._bkRestoring=true;try{clearTimeout(saveT)}catch(e){}
   try{if(clean.appu_docs)clean.appu_docs=await imgExternalizeJson(clean.appu_docs)}catch(e){}
+  /* Every key is written and read back. If the browser refuses any of them (usually because the
+     backup is larger than the free storage), the old data goes back exactly as it was, nothing is
+     reloaded, and the student is told. Before Version 76 the old data was deleted first and write
+     errors were ignored, so a too-large backup left a half-restored app reporting success. */
+  let old={},failed=null;
+  try{old=backupCollect()}catch(e){}
   try{
-    const old=backupCollect();Object.keys(old).forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
-    Object.keys(clean).forEach(k=>{try{localStorage.setItem(k,clean[k])}catch(e){}});
-  }catch(e){}
+    Object.keys(old).forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+    for(const k of Object.keys(clean)){
+      try{localStorage.setItem(k,clean[k])}catch(e){failed=e;break}
+      try{if(localStorage.getItem(k)!==clean[k]){failed=new Error('readback');break}}catch(e){failed=e;break}
+    }
+  }catch(e){failed=e}
+  if(failed){
+    try{Object.keys(clean).forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}catch(e){}
+    let back=true;
+    Object.keys(old).forEach(k=>{try{localStorage.setItem(k,old[k])}catch(e){back=false}});
+    window._bkRestoring=false;input.value='';
+    const mb=(Object.keys(clean).reduce((a,k)=>a+k.length+clean[k].length,0)*2/1048576).toFixed(1);
+    const msg=t(back?'restore_full':'restore_full_lost').replace('{mb}',mb);
+    try{alert(msg)}catch(e){showToast(msg)}
+    return;
+  }
   showToast(t('restore_done'));
   setTimeout(()=>location.reload(),700);
 }
@@ -4246,7 +4265,7 @@ function insertIntoEditor(text,keepSelection,aiTag,runId){
     if(editor.innerHTML)text='\n'+text;
   }
   let html=escHTML(text).replace(/\n/g,'<br>');
-  if(aiTag){html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';actLog('ai')}
+  if(aiTag){html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';actLog('ai');try{aiuNoteInsert()}catch(e){}}
   if(runId){html='<span class="stat-tag" data-run="'+runId+'">'+html+'</span>'}
   let ok=false;
   try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
@@ -5470,6 +5489,9 @@ const AIU_KEY='appu_ailog',AIU_RULES=[
  [/Argue against the passage below/,'counter-arguments to my passage','feedback'],
  [/find a research gap/,'looking for research gaps in selected abstracts','feedback'],
  [/judge whether a project idea is realistic/,'checking whether my project idea is realistic','feedback'],
+ [/thesis supervisor helping a student[^]{0,60}narrow a research topic/,'narrowing my research topic','feedback'],
+ [/^You are a careful teacher helping an undergraduate[^]{0,80}read a research paper/,'asking questions about a paper','explain'],
+ [/^You are a patient teacher walking an undergraduate[^]{0,80}research paper/,'guided reading of a paper','explain'],
  [/academic writing coach[^]{0,60}Using the text/,'advice on building a literature review','feedback'],
  [/Summari[sz]e the (research|paper) text below/,'summarising a paper','explain'],
  [/helping a [^]{0,40}read a paper/,'summarising a paper','explain'],
@@ -5497,10 +5519,22 @@ function aiuToday(){const d=new Date(),z=n=>(n<10?'0':'')+n;return d.getFullYear
 function aiuLog(){try{const a=JSON.parse(LS.get(AIU_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function aiuOn(){return LS.get('appu_ailog_off')!=='1'}
 function aiuRecord(prompt,prov,model){
-  if(!aiuOn())return;
   const c=aiuClassify(prompt);if(!c)return;
+  window._aiuLast={p:prov,m:String(model||'').slice(0,80),g:c.g};
+  if(!aiuOn())return;
   const a=aiuLog();
   a.push({d:aiuToday(),p:prov,m:String(model||'').slice(0,80),k:c.k,g:c.g});
+  while(a.length>1500)a.shift();
+  LS.set(AIU_KEY,JSON.stringify(a));
+}
+/* An explanation, summary or chat answer is logged as "explained". When the student then presses
+   Insert, AI wording enters the document, and the statement must say so. Requests that already
+   count as produced text (Continue, Improve, Expand) are not logged twice. (Version 78) */
+const AIU_INSERT_K='putting an AI answer or summary into my document';
+function aiuNoteInsert(){
+  const l=window._aiuLast;if(!l||l.g==='text'||!aiuOn())return;
+  const a=aiuLog();
+  a.push({d:aiuToday(),p:l.p,m:l.m,k:AIU_INSERT_K,g:'text'});
   while(a.length>1500)a.shift();
   LS.set(AIU_KEY,JSON.stringify(a));
 }
@@ -5554,7 +5588,7 @@ function aiuBuild(){
   const when=!use.length?'':(d1===d2?'on '+aiuDate(d1):'between '+aiuDate(d1)+' and '+aiuDate(d2));
   const by={g:{text:{},feedback:{},explain:{},other:{}}};
   use.forEach(e=>{const g=by.g[e.g]||by.g.other;g[e.k]=(g[e.k]||0)+1});
-  const fmtG=g=>aiuJoin(Object.keys(g).sort((a,b)=>g[b]-g[a]).map(k=>k+' ('+g[k]+' request'+(g[k]===1?'':'s')+')'));
+  const fmtG=g=>aiuJoin(Object.keys(g).sort((a,b)=>g[b]-g[a]).map(k=>k+' ('+g[k]+(k===AIU_INSERT_K?' time':' request')+(g[k]===1?'':'s')+')'));
   const me=J?'the author':'I',My=J?'the author\'s':'my',Me=J?'the author':'me';
   const parts=[];
   let first;
@@ -5576,7 +5610,8 @@ function aiuBuild(){
   try{const sm=styleMeta(),ss=styleSamples();if(styleIsOn()&&sm.decl&&ss.length&&use.length)parts.push((J?'A profile of the author\'s own writing style, built from '+ss.length+' sample'+(ss.length===1?'':'s')+' that the author declared as their own work on '+aiuDate(sm.decl)+', was used to match the wording of AI suggestions.':'A profile of my own writing style, built from '+ss.length+' sample'+(ss.length===1?'':'s')+' that I declared as my own work on '+aiuDate(sm.decl)+', was used to match the wording of AI suggestions.'))}catch(e){}
   if(o.length)parts.push(o.join(' '));
   if(use.length&&Object.keys(by.g.text).length&&!ck('aiuReword'))parts.push('[Say which passages still contain AI wording, since you did not tick that you rewrote it.]');
-  if(fmt==='thesis'&&use.length)parts.push('In all, '+use.length+' request'+(use.length===1?'':'s')+' were logged. The log is kept in my browser and I can show it to my supervisor on request.');
+  const nReq=use.filter(e=>e.k!==AIU_INSERT_K).length;
+  if(fmt==='thesis'&&nReq)parts.push('In all, '+nReq+' request'+(nReq===1?' was':'s were')+' logged. The log is kept in my browser and I can show it to my supervisor on request.');
   parts.push(J?'After using the tool the author reviewed and edited the output and takes full responsibility for the content of the publication. No AI tool is listed as an author.':'AI is not an author of this work. I am responsible for everything in it.');
   const head=fmt==='journal'?'Declaration of AI use':(fmt==='thesis'?'Statement on the use of AI':'AI-use statement');
   out.value=head+'\n\n'+parts.join(' ')+'\n\n[Your institution or the journal decides what you must disclose. Edit this text so that it is true.]';
@@ -5810,12 +5845,27 @@ function downloadDoc(){
 }
 
 /* ============ LaTeX export — hand the manuscript to Overleaf ============ */
+/* Symbols the Statistics Lab writes (η², χ², ω, α, rₛ, ×, −, ≤) are not in pdfLaTeX's default
+   input encoding, so Overleaf stopped with "Unicode character not set up for use with LaTeX".
+   Each becomes a LaTeX command. Devanagari is wrapped for XeLaTeX (see downloadLatex). (Version 79) */
+const _TEX_SYM={'α':'\\alpha','β':'\\beta','γ':'\\gamma','δ':'\\delta','ε':'\\varepsilon','ζ':'\\zeta','η':'\\eta','θ':'\\theta','κ':'\\kappa','λ':'\\lambda','μ':'\\mu','ν':'\\nu','ξ':'\\xi','π':'\\pi','ρ':'\\rho','σ':'\\sigma','τ':'\\tau','φ':'\\phi','χ':'\\chi','ψ':'\\psi','ω':'\\omega',
+  'Γ':'\\Gamma','Δ':'\\Delta','Θ':'\\Theta','Λ':'\\Lambda','Π':'\\Pi','Σ':'\\Sigma','Φ':'\\Phi','Ψ':'\\Psi','Ω':'\\Omega',
+  '×':'\\times','÷':'\\div','−':'-','±':'\\pm','∓':'\\mp','≤':'\\le','≥':'\\ge','≠':'\\neq','≈':'\\approx','∼':'\\sim','∞':'\\infty','√':'\\surd','∑':'\\sum','∏':'\\prod','∫':'\\int','∂':'\\partial','∈':'\\in','∉':'\\notin','∩':'\\cap','∪':'\\cup','⊂':'\\subset','→':'\\rightarrow','←':'\\leftarrow','↔':'\\leftrightarrow','⇒':'\\Rightarrow','′':'\\prime','″':'\\prime\\prime','·':'\\cdot','∙':'\\cdot','°':'^\\circ','‰':'\\text{\\textperthousand}'};
+const _TEX_SUP={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁺':'+','⁻':'-','ⁿ':'n'};
+const _TEX_SUB={'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9','ₐ':'a','ₑ':'e','ₒ':'o','ₓ':'x','ₕ':'h','ₖ':'k','ₗ':'l','ₘ':'m','ₙ':'n','ₚ':'p','ₛ':'s','ₜ':'t','ᵢ':'i','ⱼ':'j','ᵣ':'r'};
 function _texEsc(s){
-  return String(s==null?'':s)
+  let t=String(s==null?'':s)
     .replace(/\\/g,'\\textbackslash{}')
     .replace(/([#$%&_{}])/g,'\\$1')
     .replace(/~/g,'\\textasciitilde{}')
     .replace(/\^/g,'\\textasciicircum{}');
+  t=t.replace(/[\u0370-\u03FF\u2200-\u22FF\u2190-\u21FF×÷±·∙°′″‰−]/g,c=>_TEX_SYM[c]!==undefined?'\\ensuremath{'+_TEX_SYM[c]+'}':c);
+  t=t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿ]+/g,m=>'\\textsuperscript{'+m.split('').map(c=>_TEX_SUP[c]).join('')+'}');
+  t=t.replace(/[₀-₉ₐₑₒₓₕₖₗₘₙₚₛₜᵢⱼᵣ]+/g,m=>'\\textsubscript{'+m.split('').map(c=>_TEX_SUB[c]).join('')+'}');
+  /* Emoji and pictographs have no LaTeX form and stop pdfLaTeX; a tick becomes a root sign, the rest are dropped. */
+  t=t.replace(/[\u2713\u2714\u2705]/g,'\\ensuremath{\\surd}').replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D]/gu,'');
+  t=t.replace(/[\u0900-\u097F\u1CD0-\u1CFF\uA8E0-\uA8FF]+(?:[\s,.;:!?()'"\-–—‘’“”]*[\u0900-\u097F\u1CD0-\u1CFF\uA8E0-\uA8FF]+)*/g,m=>'{\\hindifont '+m+'}');
+  return t;
 }
 function _texInline(node){
   let out='';
@@ -5830,8 +5880,9 @@ function _texInline(node){
     else if(tag==='s'||tag==='strike'||tag==='del')out+='\\sout{'+inner()+'}';
     else if(tag==='sup')out+='\\textsuperscript{'+inner()+'}';
     else if(tag==='sub')out+='\\textsubscript{'+inner()+'}';
-    else if(tag==='br')out+='\\\\ ';
+    else if(tag==='br')out+='\\newline{}';
     else if(tag==='a')out+=inner()+'\\footnote{'+_texEsc(n.getAttribute('href')||'')+'}';
+    else if(tag==='img')out+='\\fbox{\\parbox{0.9\\linewidth}{\\centering [Picture'+(n.getAttribute('alt')?': '+_texEsc(n.getAttribute('alt')):'')+'. A .tex file holds text only: upload the picture to Overleaf and put it here with \\textbackslash includegraphics.]}}';
     else out+=inner();
   });
   return out;
@@ -5867,7 +5918,7 @@ function _texBlock(node,lines){
     else if(tag==='ul'||tag==='ol'){
       const env=tag==='ul'?'itemize':'enumerate';
       lines.push('\\begin{'+env+'}');
-      Array.from(el.children).forEach(li=>{if(li.tagName&&li.tagName.toLowerCase()==='li')lines.push('\\item '+_texInline(li))});
+      Array.from(el.children).forEach(li=>{if(li.tagName&&li.tagName.toLowerCase()==='li')lines.push('\\item{} '+_texInline(li))});
       lines.push('\\end{'+env+'}');
     }
     else if(tag==='table'){
@@ -5890,9 +5941,16 @@ function downloadLatex(){
   _texBlock(wrap,lines);
   const orcid=(LS.get('appu_orcid')||'').trim();
   const authorLine=orcid?'Author \\\\ ORCID: '+_texEsc(orcid):'Author';
+  const body=lines.join('\n\n'),deva=body.indexOf('\\hindifont')>=0||/\\hindifont/.test(_texEsc(title));
+  /* Hindi needs XeLaTeX and a Devanagari font. Without Hindi the file stays pdfLaTeX, Overleaf's default. */
+  const enc=deva?
+    '% Compile with XeLaTeX: in Overleaf open Menu, then set Compiler to XeLaTeX.\n'+
+    '\\usepackage{fontspec}\n'+
+    '\\IfFontExistsTF{Noto Serif Devanagari}{\\newfontfamily\\hindifont{Noto Serif Devanagari}[Script=Devanagari]}{\\IfFontExistsTF{Lohit Devanagari}{\\newfontfamily\\hindifont{Lohit Devanagari}[Script=Devanagari]}{\\IfFontExistsTF{Mangal}{\\newfontfamily\\hindifont{Mangal}[Script=Devanagari]}{\\newcommand\\hindifont{}\\typeout{No Devanagari font found: Hindi text will be missing.}}}}\n'
+    :'\\usepackage[utf8]{inputenc}\n\\usepackage[T1]{fontenc}\n';
   const tex='\\documentclass[12pt]{article}\n'+
     '\\usepackage[a4paper,margin=1in]{geometry}\n'+
-    '\\usepackage[utf8]{inputenc}\n'+
+    enc+
     '\\usepackage{ulem}\n'+
     '\\usepackage{apacite} % switch to a journal-specific citation package if needed\n'+
     '\\title{'+_texEsc(title)+'}\n'+
@@ -5900,13 +5958,13 @@ function downloadLatex(){
     '\\date{\\today}\n'+
     '\\begin{document}\n'+
     '\\maketitle\n\n'+
-    lines.join('\n\n')+'\n\n'+
+    body+'\n\n'+
     '\\end{document}\n';
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([tex],{type:'text/x-tex'}));
   a.download=safe+'.tex';a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  showToast('LaTeX exported ✓ — upload the .tex file to Overleaf, or compile locally');
+  showToast(deva?'LaTeX exported ✓ — it holds Hindi, so in Overleaf set the compiler to XeLaTeX (Menu, then Compiler)':'LaTeX exported ✓ — upload the .tex file to Overleaf, or compile locally');
 }
 
 /* ============ Design & Ethics — regulatory pathway, protocol, EC/consent, CTRI, PI readiness, budget ============
@@ -7972,6 +8030,27 @@ async function citPmidToDoi(pmid){
   const d=ids.find(x=>x.idtype==='doi');
   return d?String(d.value).toLowerCase():'';
 }
+/* Crossref text fields can hold markup (<i>, <sup>, &amp;). Plain text only goes into the form. (Version 77) */
+function citCrPlain(x){
+  x=String(x==null?'':x);if(!/[<&]/.test(x))return x.trim();
+  try{const d=new DOMParser().parseFromString('<!doctype html><body>'+x,'text/html');return(d.body.textContent||'').replace(/\s+/g,' ').trim()}catch(e){return x.replace(/<[^>]*>/g,'').trim()}
+}
+/* An organisation author (Open Science Collaboration) comes as {name}, not {family, given}. */
+function citCrNames(list){
+  return(list||[]).map(a=>a.family?citCrPlain(a.family)+(a.given?', '+citCrPlain(a.given):''):citCrPlain(a.name||a.given||'')).filter(Boolean).join('; ');
+}
+/* APA wants the subtitle after a colon; Crossref often keeps it in its own field. */
+function citCrTitle(it){
+  const t=citCrPlain((it.title||[''])[0]),st=citCrPlain((it.subtitle||[''])[0]);
+  if(!st||t.toLowerCase().indexOf(st.toLowerCase())>=0)return t;
+  return t.replace(/[:.\s]+$/,'')+': '+st;
+}
+/* How much of the searched title the found title shares, 0 to 1, by words of 3+ letters. */
+function citTitleOverlap(q,found){
+  const w=s=>String(s).toLowerCase().normalize('NFKD').replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(x=>x.length>=3);
+  const a=w(q),b=new Set(w(found));if(!a.length)return 1;
+  return a.filter(x=>b.has(x)).length/a.length;
+}
 /* FIX 9: real metadata from Crossref instead of an invented citation.
    Accepts a DOI, a doi.org or PubMed link, a PubMed ID, a pasted full reference, or just a title. */
 async function citLookup(){
@@ -7994,18 +8073,26 @@ async function citLookup(){
     const j=await r.json();
     const it=doi?j.message:((j.message&&j.message.items)||[])[0];
     if(!it){showToast(t('cite_lookup_nf'));return}
+    /* A title search always returns its best guess, even for a title Crossref does not hold.
+       A weak match is offered, not filled in silently. */
+    if(!doi){
+      const ft=citCrTitle(it),ov=citTitleOverlap(query,ft);
+      if(ov<0.6&&!confirm(t('cite_lookup_weak').replace('{t}',ft).replace('{y}',(((it.issued||{})['date-parts']||[[]])[0]||[])[0]||'n.d.').replace('{a}',citCrNames((it.author||[]).slice(0,1))||'?'))){showToast(t('cite_lookup_nf'));return}
+    }
     const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v==null?'':String(v)};
-    set('citTitle',(it.title||[''])[0]);
-    set('citAuthor',(it.author||[]).map(a=>(a.family||'')+(a.given?', '+a.given:'')).join('; '));
+    set('citTitle',citCrTitle(it));
+    set('citAuthor',citCrNames(it.author));
     const dp=((it.issued||{})['date-parts']||[[]])[0]||[];
     set('citYear',dp[0]||'');set('citMonth',dp[1]||'');set('citDay',dp[2]||'');
     const ctype=String(it.type||'');
     const isCh=(ctype==='book-chapter'||ctype==='book-section'||ctype==='reference-entry'),isConf=(ctype==='proceedings-article'),isRep=(ctype==='report'),isThesis=(ctype==='dissertation'),isBook=(ctype==='book'||ctype==='monograph'||ctype==='edited-book');
-    if(isCh||isConf){set('citContainer',(it['container-title']||[''])[0]);set('citSource',it.publisher||'')}
-    else if(isBook||isRep||isThesis){set('citSource',it.publisher||(it['container-title']||[''])[0]||'');set('citContainer','')}
-    else{set('citSource',(it['container-title']||[''])[0]);set('citContainer','')}
-    set('citEditors',(it.editor||[]).map(a=>(a.family||'')+(a.given?', '+a.given:'')).join('; '));
-    set('citVol',it.volume);set('citIssue',it.issue);set('citPages',it.page);set('citDOI',it.DOI);
+    const ctr=citCrPlain((it['container-title']||[''])[0]),pubr=citCrPlain(it.publisher||'');
+    if(isCh||isConf){set('citContainer',ctr);set('citSource',pubr)}
+    else if(isBook||isRep||isThesis){set('citSource',pubr||ctr||'');set('citContainer','')}
+    else{set('citSource',ctr);set('citContainer','')}
+    set('citEditors',citCrNames(it.editor));
+    /* Online journals (PLOS ONE, Frontiers) give an article number instead of pages; APA 7 prints it as "Article e0123". */
+    set('citVol',it.volume);set('citIssue',it.issue);set('citPages',it.page||(it['article-number']?'Article '+it['article-number']:''));set('citDOI',it.DOI);
     set('citURL','');
     document.getElementById('citType').value=isCh?'Book chapter':isConf?'Conference paper':isRep?'Report':isThesis?'Thesis':isBook?'Book':'Journal article';citTypeChanged();
     citRender();
@@ -9540,19 +9627,49 @@ function statsSplitLine(l,delim){
   }
   out.push(cur);return out.map(s=>s.trim());
 }
+/* Missing-value codes that R, SPSS, Excel and Jamovi write into exported files. In a column whose
+   other entries are all numbers, these count as empty cells, so one "NA" no longer turns a whole
+   score column into a grouping column. Columns of words keep them as they are. (Version 72) */
+const STATS_NA_RE=/^(na|n\/a|#n\/a|nan|null|none|missing|-|--|\.|\?)$/i;
+const STATS_NUM_RE=/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
+function statsNumNorm(v){return String(v).replace(/^[−–]/,'-')}
 function statsParseText(text){
   const lines=text.split(/\r\n|\r|\n/).filter(l=>l.trim().length);
   if(!lines.length)return null;
   const delim=lines[0].includes('\t')?'\t':',';
   const split=l=>statsSplitLine(l,delim);
   const headers=split(lines[0]);
-  const rows=lines.slice(1).map(split).filter(r=>r.length===headers.length);
-  const cols=headers.map((h,i)=>{
-    const vals=rows.map(r=>r[i]).filter(v=>v!==undefined&&v!=='');
-    const numeric=vals.length>0&&vals.every(v=>/^-?\d+(\.\d+)?$/.test(v));
-    return{name:h||('Col'+(i+1)),index:i,type:numeric?'numeric':'categorical',n:vals.length};
+  const notes={padded:0,dropped:0,missing:{}};
+  /* A row that stops early (trailing empty cells left off) is padded with empty cells.
+     A row with more cells than the header cannot be lined up, so it is left out and counted. */
+  const rows=[];
+  lines.slice(1).map(split).forEach(r=>{
+    if(r.length===headers.length)rows.push(r);
+    else if(r.length<headers.length){while(r.length<headers.length)r.push('');rows.push(r);notes.padded++}
+    else notes.dropped++;
   });
-  return{headers,rows,cols};
+  const cols=headers.map((h,i)=>{
+    const name=h||('Col'+(i+1));
+    const vals=rows.map(r=>r[i]).filter(v=>v!==undefined&&v!=='');
+    const real=vals.filter(v=>!STATS_NA_RE.test(v)).map(statsNumNorm);
+    const numeric=real.length>0&&real.every(v=>STATS_NUM_RE.test(v));
+    if(numeric){
+      let miss=0;
+      rows.forEach(r=>{const v=r[i];if(v===undefined||v==='')return;if(STATS_NA_RE.test(v)){r[i]='';miss++}else r[i]=statsNumNorm(v)});
+      if(miss)notes.missing[name]=miss;
+      return{name,index:i,type:'numeric',n:real.length};
+    }
+    return{name,index:i,type:'categorical',n:vals.length};
+  });
+  return{headers,rows,cols,notes};
+}
+function statsParseNote(d){
+  if(!d||!d.notes)return'';
+  const n=d.notes,bits=[],mk=Object.keys(n.missing);
+  if(mk.length)bits.push('Treated as missing: '+mk.map(k=>escHTML(k)+' ('+n.missing[k]+')').join(', ')+'. These cells held a code such as NA, N/A or a full stop.');
+  if(n.padded)bits.push(n.padded+' row'+(n.padded===1?' was':'s were')+' shorter than the header row; the missing cells at the end were left empty.');
+  if(n.dropped)bits.push('<b>'+n.dropped+' row'+(n.dropped===1?' has':'s have')+' more cells than the header row and '+(n.dropped===1?'was':'were')+' left out.</b> A comma inside a value usually causes this; put such values in double quotes.');
+  return bits.length?'<p class="desc" style="margin:4px 0">'+bits.join(' ')+'</p>':'';
 }
 function rtHash(data){
   var str=data.cols.map(function(c){return c.name+'\u0002'+c.type}).join('\u0001')+'\u0003'+data.rows.map(function(r){return r.join('\u0001')}).join('\u0004');
@@ -9580,7 +9697,8 @@ function statsParse(){
   try{pdRender(data)}catch(e){}
   const box=document.getElementById('statsCols');
   box.innerHTML='<p class="desc" style="margin-bottom:4px">'+data.rows.length+' rows detected:</p>'+
-    data.cols.map(c=>'<span class="stats-chip '+(c.type==='numeric'?'num':'cat')+'"><b>'+escHTML(c.name)+'</b> · '+c.type+' · n='+c.n+'</span>').join('');
+    data.cols.map(c=>'<span class="stats-chip '+(c.type==='numeric'?'num':'cat')+'"><b>'+escHTML(c.name)+'</b> · '+c.type+' · n='+c.n+'</span>').join('')+
+    statsParseNote(data);
   document.getElementById('statsTestArea').style.display='block';
   statsFieldsRender();
   showToast('Data parsed ✓');
@@ -9598,21 +9716,27 @@ function statsUpload(input){
    written inside open answers, and the interface says so. */
 const PD_HDR=[
   ['name',/\b(full name|first name|last name|surname|student name|participant name|respondent name|candidate name|name|naam)\b|नाम/i],
-  ['phone',/\b(phone|mobile|contact|cell|whatsapp|telephone|tel)\b/i],
+  ['phone',/\b(phone|mobile|mob|contact|cell|whatsapp|telephone|tel)\b|मोबाइल|फ़ोन|फोन|संपर्क/i],
   ['email',/e ?mail/i],
-  ['roll',/\b(roll|enrol|enrolment|enrollment|registration|reg no|admission|usn|prn|student id|matric)\b/i],
-  ['dob',/\b(dob|d o b|date of birth|birth date|birthday)\b/i],
-  ['address',/\b(address|village|street|pin code|pincode|postcode|zip)\b/i],
-  ['govid',/\b(aadhaar|aadhar|pan|passport|voter)\b/i]
+  ['roll',/\b(roll|enrol|enrolment|enrollment|registration|reg no|regn|admission|usn|prn|student id|matric)\b|अनुक्रमांक|नामांकन/i],
+  ['dob',/\b(dob|d o b|date of birth|birth date|birthday)\b|जन्म तिथि|जन्मतिथि/i],
+  ['address',/\b(address|village|street|pin code|pincode|postcode|zip)\b|पता|गाँव|गांव/i],
+  ['govid',/\b(aadhaar|aadhar|uid|uidai|pan|passport|voter|epic)\b|आधार/i]
 ];
+/* A heading that names a person only sometimes holds names ("Participant" is often P01, P02).
+   These count when most values are words, in any script, rather than codes or numbers. (Version 74) */
+const PD_WEAK_NAME=/\b(participant|respondent|student|candidate|interviewee|patient|client)\b|छात्र|प्रतिभागी|उत्तरदाता/i;
+const PD_MON='(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?';
 const PD_LABEL={name:'looks like names',phone:'looks like phone numbers',email:'looks like email addresses',roll:'looks like roll or enrolment numbers',dob:'looks like dates of birth',address:'looks like an address or place',govid:'looks like a government ID number'};
 const PD_DEFAULT={name:'code',roll:'code',phone:'remove',email:'remove',dob:'remove',address:'remove',govid:'remove'};
 function pdTestVal(kind,v){
   if(kind==='email')return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(v);
-  if(kind==='phone'){const d=v.replace(/[\s\-()]/g,'');return /^(\+?91)?[6-9]\d{9}$/.test(d)}
-  if(kind==='govid'){const d=v.replace(/[\s\-]/g,'');return /^\d{12}$/.test(d)||/^[A-Z]{5}\d{4}[A-Z]$/.test(d)}
-  if(kind==='dob')return /^(\d{1,2}[\/\-.]\d{1,2}[\/\-.](19[4-9]\d|20[01]\d)|(19[4-9]\d|20[01]\d)[\/\-.]\d{1,2}[\/\-.]\d{1,2})$/.test(v);
-  if(kind==='name')return /^[A-Za-z][A-Za-z.'’ ]*[A-Za-z.]\s+[A-Za-z][A-Za-z.'’ ]*$/.test(v);
+  if(kind==='phone'){const d=v.replace(/[\s\-()]/g,'');return /^(\+?91|0091|0)?[6-9]\d{9}$/.test(d)}
+  if(kind==='govid'){const d=v.replace(/[\s\-]/g,'');return /^[2-9]\d{11}$/.test(d)||/^[A-Z]{5}\d{4}[A-Z]$/i.test(d)}
+  if(kind==='dob')return /^(\d{1,2}[\/\-.]\d{1,2}[\/\-.](19[4-9]\d|20[01]\d)|(19[4-9]\d|20[01]\d)[\/\-.]\d{1,2}[\/\-.]\d{1,2})$/.test(v)||
+    new RegExp('^(\\d{1,2}(st|nd|rd|th)?[\\s\\-\\/]*'+PD_MON+'[\\s\\-\\/,]*(19[4-9]\\d|20[01]\\d)|'+PD_MON+'[\\s\\-\\/]*\\d{1,2}(st|nd|rd|th)?[\\s,]+(19[4-9]\\d|20[01]\\d))$','i').test(v);
+  if(kind==='name')return /^[A-Za-z][A-Za-z.'’ ]*[A-Za-z.]\s+[A-Za-z][A-Za-z.'’ ]*$/.test(v)||/^[\u0900-\u097F]+(\s+[\u0900-\u097F]+){1,3}$/.test(v);
+  if(kind==='word')return /^[A-Za-z][A-Za-z.'’\- ]{1,40}$/.test(v)||/^[\u0900-\u097F][\u0900-\u097F ]{1,40}$/.test(v);
   return false;
 }
 function pdScan(data){
@@ -9620,7 +9744,7 @@ function pdScan(data){
   data.headers.forEach((h,i)=>{
     const vals=data.rows.map(r=>(r[i]||'').trim()).filter(v=>v!=='');
     if(!vals.length)return;
-    const uniq=new Set(vals).size/vals.length,hn=String(h).toLowerCase().replace(/[_\-.]+/g,' ');
+    const uniq=new Set(vals).size/vals.length,hn=String(h).toLowerCase().replace(/[_\-.]+/g,' ').replace(/\s+/g,' ').trim();
     let kind=null,why='';
     for(const k of ['email','phone','govid','dob']){
       if(vals.filter(v=>pdTestVal(k,v)).length/vals.length>=0.6){kind=k;why='values';break}
@@ -9634,6 +9758,7 @@ function pdScan(data){
         }
       }
     }
+    if(!kind&&PD_WEAK_NAME.test(hn)&&!/\b(group|id|code|no|number|type|year|level|condition|status)\b/.test(hn)&&vals.length>=3&&uniq>=0.8&&vals.filter(v=>pdTestVal('word',v)).length/vals.length>=0.7){kind='name';why='heading'}
     if(!kind&&vals.length>=3&&uniq>=0.8&&vals.filter(v=>pdTestVal('name',v)).length/vals.length>=0.7){kind='name';why='values'}
     if(kind)out.push({index:i,name:h||('Col'+(i+1)),kind,why});
     else if(!/^-?\d+(\.\d+)?$/.test(vals[0])){
@@ -9708,8 +9833,8 @@ function pdApply(){
 /* Check text before it goes to an AI provider. Emails, phone numbers, ID numbers only. */
 const PD_SEND=[
   ['email address',/([^\s@<>"']+@[^\s@<>"']+\.[A-Za-z]{2,})/g,'[email]',null],
-  ['phone number',/(^|\D)((?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5})(?!\d)/g,'[phone]',1],
-  ['ID number',/(^|\D)(\d{4}\s\d{4}\s\d{4}|\d{12}|[A-Z]{5}\d{4}[A-Z])(?![A-Za-z0-9])/g,'[id number]',1]
+  ['phone number',/(^|\D)((?:(?:\+|00)?91[\s-]?|0)?(?:[6-9]\d{4}[\s-]?\d{5}|[6-9]\d{2}[\s-]\d{3}[\s-]\d{4})|0\d{2,4}[\s-]\d{6,8})(?!\d)/g,'[phone]',1],
+  ['ID number',/(^|[^\d-])([2-9]\d{3}[\s-]\d{4}[\s-]\d{4}|[2-9]\d{11}|[A-Z]{5}\d{4}[A-Z])(?![A-Za-z0-9-])/g,'[id number]',1]
 ];
 function pdScanText(text){
   const counts={};let total=0;const seen=[];
@@ -9862,7 +9987,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <p>Today the library holds the Rosenberg Self-Esteem Scale and the Satisfaction With Life Scale. More scales arrive once the owner's original file is checked. Anything you add yourself still needs the owner's permission.</p>
 <p><b>Worked example.</b> Paste ten columns named RSES_01 to RSES_10 with answers coded 0 to 3. Press Parse data, open the Scale library, pick the Rosenberg scale and press Score this scale in my data. A column named RSES_total appears.</p>`},
 {id:'numcheck',g:'Tools',t:'Check the numbers in my document',k:'numbers check p value recompute apa statistics reporting errors',h:`
-<p>Press <b>Check the numbers in my document</b> in the Statistics panel. It finds results written in the usual APA order, such as <i>t(21) = 2.15, p = .043</i>, recomputes p from the statistic and degrees of freedom, and marks each one as matching, close, or wrong.</p>
+<p>Press <b>Check the numbers in my document</b> in the Statistics panel. It finds results written in the usual APA order, such as <i>t(21) = 2.15, p = .043</i>, recomputes p from the statistic and degrees of freedom, and marks each one as matching, close, or wrong. An effect size or a confidence interval between the statistic and p is fine (<i>t(21) = 2.15, d = 0.47, p = .043</i>), and so is a semicolon. Write <i>one-tailed p</i> and the check uses the one-tailed value.</p>
 <p>It catches typos, rounding slips, and a p that was written as significant when the numbers say otherwise. It cannot tell you whether you picked the right test.</p>`},
 {id:'charts',g:'Tools',t:'Charts',k:'chart graph bar line venn figure picture',h:`
 <p>Quick chart draws bar and line charts from numbers you type or paste, and two- or three-circle Venn diagrams. Add the finished chart to your document with one press.</p>
@@ -11871,8 +11996,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=71;
-const APP_BUILD='2026.10.13s';
+const APP_VERSION=79;
+const APP_BUILD='2026.10.17h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -12004,6 +12129,16 @@ function slScore(x,mat,coding){
   });
   return{totals:out,bad:bad,miss:miss};
 }
+/* Forms export answers as words ("Strongly agree"). A word that matches one of the scale's own
+   response options becomes its code under the chosen coding; anything else stays unscored. (Version 75) */
+function slLabelCode(x,coding,v){
+  const norm=s=>String(s).toLowerCase().replace(/[^a-z\u0900-\u097f]+/g,' ').trim();
+  const nv=norm(v);if(!nv)return NaN;
+  const i=x.labels.findIndex(l=>norm(l)===nv);
+  if(i<0||coding.max-coding.min+1!==x.labels.length)return NaN;
+  const agreeFirst=/^strongly agree/i.test(x.labels[0]);
+  return agreeFirst===(coding.dir==='agree-high')?coding.max-i:coding.min+i;
+}
 function slBand(x,t){if(t==null||!x.bands)return '';for(const b of x.bands)if(t<=b.max)return b.label;return x.bands[x.bands.length-1].label}
 function slScoreOpen(id){
   const x=slById(id),data=window._statsData;
@@ -12029,9 +12164,17 @@ function slScoreRun(){
   if(idx.some(v=>v<0)){out.textContent='Choose a column for every item.';return}
   if(new Set(idx).size!==idx.length){out.textContent='Each item needs its own column.';return}
   const coding=x.codings[parseInt(document.getElementById('slCoding').value,10)||0];
-  const mat=data.rows.map(r=>idx.map(k=>{const v=String(r[k]==null?'':r[k]).trim();return v===''?null:Number(v)}));
+  let mapped=0,unknown=0;const unk=[];
+  const mat=data.rows.map(r=>idx.map(k=>{
+    const v=String(r[k]==null?'':r[k]).trim();if(v==='')return null;
+    if(/^[+-]?\d+(\.\d+)?$/.test(v))return Number(v);
+    const c=slLabelCode(x,coding,v);
+    if(isFinite(c)){mapped++;return c}
+    unknown++;if(unk.length<3&&unk.indexOf(v)<0)unk.push(v);return NaN;
+  }));
   const r=slScore(x,mat,coding),valid=r.totals.filter(v=>v!=null);
-  if(!valid.length){out.textContent='No row could be scored. '+(r.bad?r.bad+' answers fall outside '+coding.min+' to '+coding.max+'. Check the coding choice above. ':'')+(r.miss?r.miss+' answers are missing.':'');return}
+  const unkTxt=unknown?' '+unknown+' answer'+(unknown>1?'s are':' is')+' words that are not this scale\'s response options (for example “'+unk.join('”, “')+'”). The options are: '+x.labels.join(', ')+'.':'';
+  if(!valid.length){out.textContent='No row could be scored. '+(r.bad?r.bad+' answers fall outside '+coding.min+' to '+coding.max+'. Check the coding choice above. ':'')+(r.miss-unknown>0?(r.miss-unknown)+' answers are missing.':'')+unkTxt;return}
   const col=x.id+'_total',band=x.id+'_band';
   const cols=data.headers.slice();
   const nameFree=n=>{let m=n,i=2;while(cols.indexOf(m)>=0)m=n+'_'+(i++);return m};
@@ -12045,7 +12188,7 @@ function slScoreRun(){
   const mean=valid.reduce((a,b)=>a+b,0)/valid.length,sd=valid.length>1?Math.sqrt(valid.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(valid.length-1)):0;
   document.getElementById('statsPaste').value=pdCsv(newHeaders,newRows);
   window._pdMsg=null;statsParse();
-  out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'');
+  out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'')+(mapped?' '+mapped+' answers written as words were turned into codes ('+escHTML(coding.label)+').':'')+escHTML(unkTxt);
 }
 
 /* ============ Reading shelf (item 55, first version) ============
@@ -12730,14 +12873,22 @@ function ccJump(i){
 }
 
 /* ---- Numbers check (item 43, 2026-10-07): re-derives each reported p-value from its statistic and df. No AI. ---- */
-const NC_NUM='([\\u2212\\u2013-]?\\s*\\d*\\.?\\d+)',NC_P='\\s*,?\\s*[pP]\\s*([<>=\\u2264\\u2265])\\s*(\\d*\\.\\d+|\\d+)';
+/* Between the statistic and its p-value the check now also accepts a semicolon, an opening bracket,
+   up to two effect sizes or a confidence interval (t(38) = 2.45, d = 0.77, p = .019), and a
+   "one-tailed"/"two-tailed" label; a one-tailed p is judged against the one-tailed value. The start
+   of a statistic needs no letter before it, so "...was 5</p><p>t(38)" is found too. (Version 72) */
+const NC_NUM='([\\u2212\\u2013-]?\\s*\\d*\\.?\\d+)';
+const NC_MID='(?:\\s*[,;]\\s*(?:(?:Cohen\\u2019?\'?s\\s+|Hedges\\u2019?\'?\\s+)?(?:d|g|r|R\\s*(?:2|\\u00b2)|\\u03b7\\s*p?\\s*(?:2|\\u00b2)|partial\\s+\\u03b7\\s*(?:2|\\u00b2)|\\u03c9\\s*(?:2|\\u00b2)|\\u03b5\\s*(?:2|\\u00b2)|\\u03c6|V|w|\\u03b2|b|SE|MSE|OR)\\s*=\\s*[\\u2212\\u2013-]?\\s*\\d*\\.?\\d+|9[05]\\s*%\\s*CI\\s*\\[[^\\]\\n]{1,40}\\]))';
+const NC_P=NC_MID+'{0,2}\\s*[,;(]?\\s*(?:(?<tail>one|two|1|2)[- ]tailed\\s*)?[pP]\\s*(?<op>[<>=\\u2264\\u2265])\\s*(?<p>\\d*\\.\\d+|\\d+)';
+const NC_PRE='(?<![A-Za-z_\\u0370-\\u03ff])';
+const NC_G=m=>({tail:m.groups&&m.groups.tail?(/^(one|1)$/i.test(m.groups.tail)?1:2):0,op:m.groups.op,p:m.groups.p});
 const NC_RES=[
-  {k:'t',re:new RegExp('\\bt\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'F',re:new RegExp('\\bF\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*,\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],df2:m[2],stat:m[3],op:m[4],p:m[5]})},
-  {k:'chi',re:new RegExp('(?:\\u03c7\\s*(?:2|\\u00b2|\\^2)|chi[- ]?square|chi2)\\s*\\(\\s*(\\d+)(?:\\s*,\\s*N\\s*=\\s*\\d+)?\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'gi'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'H',re:new RegExp('\\bH\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'r',re:new RegExp('\\br\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({df1:m[1],stat:m[2],op:m[3],p:m[4]})},
-  {k:'z',re:new RegExp('\\bz\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>({stat:m[1],op:m[2],p:m[3]})}
+  {k:'t',re:new RegExp(NC_PRE+'t\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'F',re:new RegExp(NC_PRE+'F\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*,\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],df2:m[2],stat:m[3]},NC_G(m))},
+  {k:'chi',re:new RegExp('(?:\\u03c7\\s*(?:2|\\u00b2|\\^2)|chi[- ]?square|chi2)\\s*\\(\\s*(\\d+)(?:\\s*,\\s*N\\s*=\\s*\\d+)?\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'gi'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'H',re:new RegExp(NC_PRE+'H\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'r',re:new RegExp(NC_PRE+'r\\s*\\(\\s*(\\d+)\\s*\\)\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({df1:m[1],stat:m[2]},NC_G(m))},
+  {k:'z',re:new RegExp(NC_PRE+'z\\s*=\\s*'+NC_NUM+NC_P,'g'),map:m=>Object.assign({stat:m[1]},NC_G(m))}
 ];
 function ncFind(text){
   const out=[];
@@ -12747,7 +12898,7 @@ function ncFind(text){
       const o=def.map(m);
       const statStr=String(o.stat).replace(/[−–]/g,'-').replace(/\s+/g,'');
       const dec=(statStr.split('.')[1]||'').length,pdec=(String(o.p).split('.')[1]||'').length;
-      out.push({kind:def.k,df1:o.df1!==undefined?parseFloat(o.df1):null,df2:o.df2!==undefined?parseFloat(o.df2):null,stat:parseFloat(statStr),dec:dec,op:o.op,p:parseFloat(o.p),pStr:String(o.p),pdec:pdec,start:m.index,end:m.index+m[0].length,raw:m[0]});
+      out.push({kind:def.k,tail:o.tail||0,df1:o.df1!==undefined?parseFloat(o.df1):null,df2:o.df2!==undefined?parseFloat(o.df2):null,stat:parseFloat(statStr),dec:dec,op:o.op,p:parseFloat(o.p),pStr:String(o.p),pdec:pdec,start:m.index,end:m.index+m[0].length,raw:m[0]});
     }
   });
   out.sort((a,b)=>a.start-b.start);
@@ -12769,7 +12920,8 @@ function ncJudge(f){
   const h=0.5*Math.pow(10,-f.dec),ax=Math.abs(f.stat);
   let a=Math.max(0,ax-h),b=ax+h;
   if(f.kind==='r'){b=Math.min(0.9999999,b)}
-  const pHi=ncPOf(f,a),pLo=ncPOf(f,b),pMid=ncPOf(f,ax);
+  const one=f.tail===1&&(f.kind==='t'||f.kind==='r'||f.kind==='z')?0.5:1;
+  const pHi=one*ncPOf(f,a),pLo=one*ncPOf(f,b),pMid=one*ncPOf(f,ax);
   r.pcalc=pMid;r.pLo=pLo;r.pHi=pHi;
   const hp=0.5*Math.pow(10,-f.pdec),eps=1e-12;
   let ok;
@@ -12786,7 +12938,7 @@ function ncJudge(f){
   const calcSig=pMid<0.05;
   r.status=repSig!==calcSig?'error':'warn';
   if(!zero){
-    if(f.op==='='&&!(f.p+hp<pLo/2-eps||f.p-hp>pHi/2+eps))r.note='nc_c_onetail';
+    if(one===1&&f.op==='='&&!(f.p+hp<pLo/2-eps||f.p-hp>pHi/2+eps))r.note='nc_c_onetail';
     else if(Math.abs((f.op==='='?f.p:f.p)-pMid)<0.005)r.note='nc_c_round';
     else r.note='nc_c_typo';
   }
