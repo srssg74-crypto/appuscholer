@@ -1797,20 +1797,28 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 </div></dialog>
 <dialog id="chartDlg" class="dlg-wide"><div class="dlg-body">
   <h2>📊 Quick chart</h2>
-  <p style="font-size:13px;color:var(--muted)">Make a bar/line chart from your own numbers, or a Venn diagram — then insert it straight into your document as a picture.</p>
+  <p style="font-size:13px;color:var(--muted)">Bar, grouped, stacked, line, scatter, pie and Venn charts from your own numbers. Insert the chart straight into your document as a picture. For charts drawn from a data file (box plots, histograms, error bars), use Chart Studio in the Statistics Lab.</p>
   <div class="fld"><label for="chartType">Chart type</label>
     <select id="chartType" onchange="chartTypeChange()">
       <option value="bar">Bar chart</option>
+      <option value="hbar">Bar chart, horizontal (long labels)</option>
       <option value="line">Line chart</option>
+      <option value="grouped">Grouped bar chart (two or more series)</option>
+      <option value="stacked">Stacked bar chart (parts of a whole)</option>
+      <option value="mline">Line chart, several lines (e.g. pre / post by group)</option>
+      <option value="scatter">Scatter plot with line of best fit</option>
+      <option value="pie">Pie chart</option>
+      <option value="doughnut">Doughnut chart</option>
       <option value="venn2">Venn diagram — 2 sets</option>
       <option value="venn3">Venn diagram — 3 sets</option>
     </select>
   </div>
 
   <div id="chartDataArea">
-    <div class="fld"><label for="chartData">Data — one "label,value" pair per line</label>
+    <div class="fld"><label for="chartData" id="chartDataLabel">Data — one "label,value" pair per line</label>
       <textarea id="chartData" rows="6" placeholder="Anxious,14&#10;Avoidant,9&#10;Secure,22&#10;Disorganized,5"></textarea>
     </div>
+    <p class="desc" id="chartTip" style="margin:-4px 0 6px"></p>
     <div class="fld"><label for="chartTitle">Chart title (optional)</label><input type="text" id="chartTitle" placeholder="Attachment style distribution"></div>
     <div class="row"><button class="btn btn-purple" style="flex:1" onclick="chartGenerate()">Generate</button></div>
   </div>
@@ -4944,6 +4952,9 @@ let _chartMakerInstance=null,_chartMakerPendingHTML=null;
 function chartTypeChange(){
   const t=document.getElementById('chartType').value,isVenn=t==='venn2'||t==='venn3';
   document.getElementById('chartDataArea').style.display=isVenn?'none':'block';
+  const H=CHART_HELP[t]||CHART_HELP.bar,ta=document.getElementById('chartData');
+  document.getElementById('chartDataLabel').textContent=H[0];ta.placeholder=H[1];
+  const tip=document.getElementById('chartTip');if(tip)tip.textContent=H[2]||'';
   document.getElementById('vennDataArea').style.display=isVenn?'block':'none';
   const showC=t==='venn3';
   ['vennCRow','vennACwrap','vennBCwrap','vennABCwrap'].forEach(id=>{
@@ -4953,15 +4964,77 @@ function chartTypeChange(){
   document.getElementById('chartInsertRow').style.display='none';
   _chartMakerPendingHTML=null;
 }
+/* More chart types (Version 82). Label, example data and a short note for each. */
+const CHART_HELP={
+  bar:['Data — one "label,value" pair per line','Anxious,14\nAvoidant,9\nSecure,22\nDisorganized,5',''],
+  hbar:['Data — one "label,value" pair per line','Fear of failure,31\nFinancial worry,27\nHomesickness,18\nExam pressure,40','Use this when the labels are long.'],
+  line:['Data — one "label,value" pair per line','Week 1,22\nWeek 2,19\nWeek 3,17\nWeek 4,15','For change over time.'],
+  grouped:['Data — a heading row, then one row per group','Group,Pre-test,Post-test\nControl,24,23\nMindfulness,25,18\nCBT,26,16','First row: what each column is. Then the group name and one number per series.'],
+  stacked:['Data — a heading row, then one row per group','Year,Low stress,Moderate,High\nFirst year,20,35,15\nSecond year,28,30,10\nThird year,30,25,8','Each bar shows the parts that make up one whole.'],
+  mline:['Data — a heading row, then one row per time point','Time,Control,Treatment\nBaseline,24,25\nWeek 4,23,20\nWeek 8,23,16','Each column after the first becomes its own line.'],
+  scatter:['Data — one "x,y" pair of numbers per line (first line may name the two variables)','Sleep hours,Memory score\n5,12\n6,15\n6.5,14\n7,18\n8,21\n8.5,20','The chart shows the line of best fit and Pearson r. Run the correlation in the Statistics Lab for the full result.'],
+  pie:['Data — one "label,value" pair per line','Hostel,42\nDay scholar,35\nPaying guest,23','Pie charts are hard to read and APA style rarely uses them. A bar chart usually shows the same thing more clearly.'],
+  doughnut:['Data — one "label,value" pair per line','Hostel,42\nDay scholar,35\nPaying guest,23','A pie chart with a hole. The same advice applies: a bar chart is usually clearer.']
+};
+const CHART_COLS=['#7c3aed','#f59e0b','#0d9488','#e11d48','#2563eb','#65a30d','#9333ea','#ea580c','#0891b2','#be185d'];
+/* Rows of cells; a first row with a non-number after the first cell is the heading row. */
+function chartTable(){
+  const rows=document.getElementById('chartData').value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>(l.indexOf('\t')>=0?l.split('\t'):l.split(',')).map(c=>c.trim()));
+  let head=null;
+  if(rows.length&&rows[0].slice(1).some(c=>c!==''&&isNaN(parseFloat(c))))head=rows.shift();
+  return{head,rows:rows.filter(r=>r.length>=2)};
+}
 function chartParseLines(){
   return document.getElementById('chartData').value.split('\n').map(l=>l.trim()).filter(Boolean)
     .map(l=>{const i=l.lastIndexOf(',');if(i<0)return null;
       const label=l.slice(0,i).trim(),val=parseFloat(l.slice(i+1));
       return isNaN(val)?null:{label,val};}).filter(Boolean);
 }
+function chartConfig(type,rows,title){
+  const T={display:!!title,text:title||''};
+  if(type==='bar'||type==='hbar'||type==='line'){
+    return{type:type==='line'?'line':'bar',
+      data:{labels:rows.map(r=>r.label),datasets:[{label:title||'Value',data:rows.map(r=>r.val),backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5,fill:false,tension:.25}]},
+      options:{indexAxis:type==='hbar'?'y':'x',animation:false,plugins:{legend:{display:false},title:T},scales:type==='hbar'?{x:{beginAtZero:true}}:{y:{beginAtZero:true}}}};
+  }
+  if(type==='pie'||type==='doughnut'){
+    if(rows.some(r=>r.val<0))return{err:'A pie chart cannot show negative numbers. Use a bar chart.'};
+    const tot=rows.reduce((a,r)=>a+r.val,0);if(!(tot>0))return{err:'The numbers add up to zero, so there is nothing to divide into slices.'};
+    return{type,data:{labels:rows.map(r=>r.label+' ('+(100*r.val/tot).toFixed(1)+'%)'),datasets:[{data:rows.map(r=>r.val),backgroundColor:rows.map((_,i)=>CHART_COLS[i%CHART_COLS.length]),borderColor:'#ffffff',borderWidth:2}]},
+      options:{animation:false,plugins:{legend:{display:true,position:'right'},title:T}},note:rows.length>6?'With more than six slices a pie chart is very hard to read. A bar chart would be clearer.':''};
+  }
+  const tb=chartTable();
+  if(type==='scatter'){
+    const pts=tb.rows.map(r=>({x:parseFloat(r[0]),y:parseFloat(r[1])})).filter(p=>isFinite(p.x)&&isFinite(p.y));
+    if(pts.length<3)return{err:'A scatter plot needs at least three "x,y" pairs of numbers.'};
+    const n=pts.length,mx=pts.reduce((a,p)=>a+p.x,0)/n,my=pts.reduce((a,p)=>a+p.y,0)/n;
+    let sxy=0,sxx=0,syy=0;pts.forEach(p=>{sxy+=(p.x-mx)*(p.y-my);sxx+=(p.x-mx)*(p.x-mx);syy+=(p.y-my)*(p.y-my)});
+    if(!(sxx>0))return{err:'Every x value is the same, so no line can be drawn.'};
+    const b=sxy/sxx,a=my-b*mx,r=syy>0?sxy/Math.sqrt(sxx*syy):NaN;
+    const xs=pts.map(p=>p.x),x0=Math.min(...xs),x1=Math.max(...xs);
+    const xl=tb.head?tb.head[0]:'x',yl=tb.head?tb.head[1]:'y';
+    const rTxt=isFinite(r)?'r = '+r.toFixed(2).replace(/^(-?)0\./,'$1.')+', N = '+n:'N = '+n;
+    return{type:'scatter',data:{datasets:[
+        {label:'Participants',data:pts,backgroundColor:'rgba(124,58,237,.65)',pointRadius:4},
+        {label:'Line of best fit',type:'line',data:[{x:x0,y:a+b*x0},{x:x1,y:a+b*x1}],borderColor:'#e11d48',borderWidth:2,pointRadius:0,fill:false}]},
+      options:{animation:false,plugins:{legend:{display:false},title:{display:true,text:(title?title+'  ':'')+'('+rTxt+')'}},scales:{x:{type:'linear',title:{display:true,text:xl}},y:{title:{display:true,text:yl}}}},
+      note:'Line: '+yl+' = '+a.toFixed(2)+(b<0?' − ':' + ')+Math.abs(b).toFixed(2)+' × '+xl+'. A line on a chart is not a test. Run the correlation or regression in the Statistics Lab to report it.'};
+  }
+  /* grouped, stacked, mline */
+  if(!tb.rows.length)return{err:'Add a heading row and at least one row of numbers.'};
+  const nSer=Math.max(...tb.rows.map(r=>r.length))-1;
+  if(nSer<1)return{err:'Each row needs a label and at least one number.'};
+  const names=tb.head?tb.head.slice(1):Array.from({length:nSer},(_,i)=>'Series '+(i+1));
+  const ds=Array.from({length:nSer},(_,j)=>({label:names[j]||('Series '+(j+1)),data:tb.rows.map(r=>{const v=parseFloat(r[j+1]);return isFinite(v)?v:null}),
+    backgroundColor:CHART_COLS[j%CHART_COLS.length],borderColor:CHART_COLS[j%CHART_COLS.length],borderWidth:type==='mline'?2.5:1,fill:false,tension:.2,pointRadius:type==='mline'?4:0,spanGaps:true}));
+  const st=type==='stacked';
+  return{type:type==='mline'?'line':'bar',data:{labels:tb.rows.map(r=>r[0]),datasets:ds},
+    options:{animation:false,plugins:{legend:{display:true,position:'bottom'},title:T},scales:{x:{stacked:st,title:{display:!!(tb.head&&tb.head[0]),text:tb.head?tb.head[0]:''}},y:{stacked:st,beginAtZero:true}}}};
+}
 function chartGenerate(){
-  const rows=chartParseLines();
-  if(rows.length<1){showToast('Add at least one "label,value" line first');return}
+  const type0=document.getElementById('chartType').value,multi=['grouped','stacked','mline','scatter'].indexOf(type0)>=0;
+  const rows=multi?[]:chartParseLines();
+  if(!multi&&rows.length<1){showToast('Add at least one "label,value" line first');return}
   const type=document.getElementById('chartType').value;
   const title=document.getElementById('chartTitle').value.trim();
   const box=document.getElementById('chartPreviewBox');
@@ -4970,15 +5043,14 @@ function chartGenerate(){
     appuLib('Chart').then(ok=>{if(ok)chartGenerate();else box.innerHTML='<p class="desc">📈 '+t0x('lib_fail').replace('{what}','The chart tool')+'</p>'});
     return;
   }
-  box.innerHTML='<canvas id="chartMakerCanvas" height="220"></canvas>';
+  const cfg=chartConfig(type,rows,title);
+  if(cfg.err){box.innerHTML='<p class="desc">'+escHTML(cfg.err)+'</p>';document.getElementById('chartInsertRow').style.display='none';return}
+  box.innerHTML='<canvas id="chartMakerCanvas" height="220"></canvas>'+(cfg.note?'<p class="desc" style="margin-top:6px">'+escHTML(cfg.note)+'</p>':'');
   const ctx=document.getElementById('chartMakerCanvas').getContext('2d');
   if(_chartMakerInstance){try{_chartMakerInstance.destroy()}catch(e){}}
-  _chartMakerInstance=new Chart(ctx,{
-    type:type==='line'?'line':'bar',
-    data:{labels:rows.map(r=>r.label),datasets:[{label:title||'Value',data:rows.map(r=>r.val),
-      backgroundColor:'#a78bfa',borderColor:'#5b21b6',borderWidth:1.5,fill:type==='line'?false:true,tension:.25}]},
-    options:{plugins:{legend:{display:false},title:{display:!!title,text:title||''}},scales:{y:{beginAtZero:true}}}
-  });
+  /* A white background so the picture does not turn black when pasted into Word or a dark page. */
+  cfg.plugins=[{id:'appuWhiteBg',beforeDraw(c){const g=c.ctx;g.save();g.globalCompositeOperation='destination-over';g.fillStyle='#ffffff';g.fillRect(0,0,c.width,c.height);g.restore()}}];
+  _chartMakerInstance=new Chart(ctx,cfg);
   setTimeout(()=>{
     const canvas=document.getElementById('chartMakerCanvas');
     _chartMakerPendingHTML='<img src="'+canvas.toDataURL('image/png')+'" style="max-width:520px;width:100%">&nbsp;';
@@ -5040,38 +5112,81 @@ function chartInsertToDoc(){
    With no headings at all, the whole document becomes one bullet slide so
    there is still something to export, plus a nudge to add headings. */
 let _pptxSlideModel=null;
-function docToSlideModel(){
-  const nodes=Array.from(editor.children);
-  const slides=[];
-  let cur=null;
-  function pushCur(){if(cur&&(cur.title||cur.bullets.length||cur.images.length))slides.push(cur)}
-  function textOf(n){return (n.innerText||n.textContent||'').trim()}
-  nodes.forEach(n=>{
-    const tag=n.tagName;
-    if(tag==='H1'||tag==='H2'||tag==='H3'){
-      pushCur();cur={title:textOf(n),bullets:[],images:[]};
-      return;
-    }
-    if(!cur)cur={title:null,bullets:[],images:[]};
-    if(tag==='UL'||tag==='OL'){
-      Array.from(n.children).forEach(li=>{const t=textOf(li);if(t)cur.bullets.push(t)});
-    }else if(tag==='TABLE'){
-      const rows=Array.from(n.rows).map(r=>Array.from(r.cells).map(c=>textOf(c)).join(' | '));
-      if(rows.length)cur.bullets.push('Table: '+rows.join(' — '));
-    }else{
-      n.querySelectorAll&&n.querySelectorAll('img').forEach(img=>{if(img.src)cur.images.push(img.src)});
-      const t=textOf(n);
-      if(t&&n.querySelector&&!n.querySelector('img'))cur.bullets.push(t);
-    }
-  });
-  pushCur();
-  if(!slides.length){
-    const whole=getEditorText().trim();
-    if(whole){
-      const parts=whole.split(/\n+/).map(s=>s.trim()).filter(Boolean).slice(0,10);
-      slides.push({title:(docsGet().find(d=>d.id===docCurrentId())||{}).title||'Untitled',bullets:parts,images:[]});
-    }
+/* Turns the document into slides (rewritten in Version 83). A full paper used to come out as one
+   slide: only Heading 1-3 started a slide, an imported or pasted paper often has none (its headings
+   are bold lines or "2. Method"), and a pasted paper sits in one block split by line breaks.
+   Now the text is split into paragraphs, heading-like lines start slides, each paragraph becomes one
+   short bullet, and a long section continues on further slides. */
+const SLIDE_MAX_BULLETS=6,SLIDE_BULLET_CHARS=200;
+const SLIDE_SECTION_RE=/^(abstract|introduction|background|review of (the )?literature|literature review|theoretical (background|framework)|aims?|objectives?|research questions?|hypothes[ie]s|method(s|ology)?|materials and methods|participants|sample|design|procedure|measures|instruments?|tools?|data analysis|statistical analysis|ethic(s|al considerations)|results?|findings|discussion|implications|limitations|future (research|directions)|conclusions?|summary|recommendations|references|bibliography|acknowledge?ments?|appendix|appendices|keywords?)\b/i;
+function slideIsHeading(el,t){
+  if(!t||t.length>90||/[.:;,]$/.test(t)&&!/^\d/.test(t))return false;
+  if(/^H[1-6]$/.test(el.tagName))return true;
+  if(t.split(/\s+/).length>12)return false;
+  if(SLIDE_SECTION_RE.test(t.replace(/^[\dIVX]+(\.\d+)*[.)]?\s+/,'')))return true;
+  if(/^(\d+(\.\d+){0,2}|[IVX]{1,4})[.)]?\s+[A-Zऀ-ॿ]/.test(t)&&t.length<70)return true;
+  if(/[A-Z]{3}/.test(t)&&t===t.toUpperCase()&&t.length<60)return true;
+  const bold=Array.from(el.querySelectorAll('b,strong')).map(x=>(x.textContent||'').trim()).join(' ').trim();
+  if(bold&&bold.length>=t.length*0.9&&t.length<70)return true;
+  return false;
+}
+function slideBullet(t){
+  t=t.replace(/\s+/g,' ').trim();if(t.length<=SLIDE_BULLET_CHARS)return t;
+  const m=t.match(/^.{25,}?[.!?](?=\s+[A-Z(ऀ-ॿ"“])/);
+  let f=m?m[0]:t;
+  if(f.length>SLIDE_BULLET_CHARS){f=f.slice(0,SLIDE_BULLET_CHARS);f=f.slice(0,Math.max(f.lastIndexOf(' '),SLIDE_BULLET_CHARS-40))+'…'}
+  return f;
+}
+function slideBlocks(){
+  const out=[];
+  const isBlock=n=>n.nodeType===1&&/^(P|DIV|H[1-6]|UL|OL|TABLE|BLOCKQUOTE|SECTION|ARTICLE|FIGURE|PRE)$/.test(n.tagName);
+  function walk(node){
+    Array.from(node.childNodes).forEach(n=>{
+      if(n.nodeType!==1){if(n.nodeType===3&&n.textContent.trim())out.push({el:node,text:n.textContent.trim()});return}
+      if(n.classList&&n.classList.contains('page-break'))return;
+      if((n.tagName==='DIV'||n.tagName==='SECTION'||n.tagName==='ARTICLE'||n.tagName==='BLOCKQUOTE')&&Array.from(n.children).some(isBlock)){walk(n);return}
+      if(n.tagName==='UL'||n.tagName==='OL'){Array.from(n.children).forEach(li=>{const t=(li.innerText||li.textContent||'').trim();if(t)out.push({el:li,text:t,li:true})});return}
+      if(n.tagName==='TABLE'){const rows=Array.from(n.rows).map(r=>Array.from(r.cells).map(c=>(c.textContent||'').trim()).join(' | '));if(rows.length)out.push({el:n,text:'Table: '+rows.slice(0,4).join(' — ')+(rows.length>4?' …':''),table:true});return}
+      const imgs=n.querySelectorAll?Array.from(n.querySelectorAll('img')).map(i=>i.src).filter(Boolean):[];
+      if(n.tagName==='IMG'&&n.src)imgs.push(n.src);
+      if(imgs.length)out.push({el:n,text:'',imgs});
+      /* A pasted paper is often one block whose lines are separated by <br>: each line is its own paragraph. */
+      const raw=(n.innerText||n.textContent||'');
+      const parts=n.querySelector&&n.querySelector('br')?raw.split(/\n+/):[raw];
+      parts.map(x=>x.trim()).filter(Boolean).forEach(x=>{
+        let el=n;
+        if(parts.length>1){el=document.createElement('p');el.textContent=x}
+        out.push({el,text:x});
+      });
+    });
   }
+  walk(editor);
+  return out;
+}
+function docToSlideModel(){
+  const blocks=slideBlocks(),slides=[];
+  const docTitle=(docsGet().find(d=>d.id===docCurrentId())||{}).title||'';
+  let cur=null,firstTitle=null;
+  const push=()=>{if(cur&&(cur.bullets.length||cur.images.length||cur.title))slides.push(cur)};
+  blocks.forEach((b,i)=>{
+    if(b.text&&!b.table&&!b.li&&slideIsHeading(b.el,b.text)){
+      if(firstTitle===null&&!slides.length&&!(cur&&cur.bullets.length)&&!SLIDE_SECTION_RE.test(b.text.replace(/^[\dIVX]+(\.\d+)*[.)]?\s+/,''))){firstTitle=b.text;return}
+      push();cur={title:b.text.replace(/\s+/g,' '),bullets:[],images:[],base:b.text};return;
+    }
+    if(!cur)cur={title:null,bullets:[],images:[],base:null};
+    if(b.imgs){cur.images.push(...b.imgs);return}
+    if(cur.bullets.length>=SLIDE_MAX_BULLETS){
+      const t=cur.base||cur.title;push();cur={title:(t?t+' (continued)':null),bullets:[],images:[],base:t};
+    }
+    cur.bullets.push(slideBullet(b.text));
+  });
+  push();
+  /* References: one slide is enough. */
+  for(let i=slides.length-1;i>0;i--){const t=slides[i].base||'';if(/^(\d+\.?\s*)?(references|bibliography)/i.test(t)&&slides[i-1].base===t){slides[i-1].more=(slides[i-1].more||0)+slides[i].bullets.length+(slides[i].more||0);slides.splice(i,1)}}
+  slides.forEach(s=>{if(s.more)s.bullets.push('… and '+s.more+' more references')});
+  const title=firstTitle||docTitle;
+  if(title&&slides.length)slides.unshift({title:title,bullets:[],images:[],cover:true});
+  let un=0;slides.forEach(s=>{if(!s.title&&!s.cover){s.title=(title||docTitle||'')+(un++?' (continued)':'')||null}});
   return slides;
 }
 function pptxBuildPreview(){
@@ -5083,12 +5198,12 @@ function pptxBuildPreview(){
     document.getElementById('pptxDownloadRow').style.display='none';
     return;
   }
-  const hasHeadings=slides.some(s=>s.title);
-  let html=hasHeadings?'':'<p class="warn">No Heading 1/2/3 found — treating the whole document as one slide. Add headings in the formatting bar for a proper slide-by-slide breakdown.</p>';
+  const nSec=slides.filter(s=>!s.cover&&s.base).length;
+  let html='<p class="desc">'+slides.length+' slide'+(slides.length===1?'':'s')+'. A new slide starts at each heading (Heading 1-3, a bold line, a numbered heading such as "2. Method", or a section name such as Results). Each paragraph becomes one short bullet, cut to its first sentence; a long section continues on the next slide. Edit the wording in PowerPoint.</p>'+(nSec?'':'<p class="warn">No headings were found, so the slides follow the paragraphs in order. Mark your section titles as headings in the formatting bar for one slide per section.</p>');
   slides.forEach((s,i)=>{
     html+='<div class="slide-card"><div class="slide-num">Slide '+(i+1)+'</div>'+
       '<h4>'+escHTML(s.title||'(untitled slide)')+'</h4>';
-    if(s.bullets.length)html+='<ul>'+s.bullets.slice(0,8).map(b=>'<li>'+escHTML(b.slice(0,200))+'</li>').join('')+'</ul>';
+    if(s.bullets.length)html+='<ul>'+s.bullets.map(b=>'<li>'+escHTML(b)+'</li>').join('')+'</ul>';
     s.images.forEach(src=>html+='<img src="'+src+'">');
     html+='</div>';
   });
@@ -5103,15 +5218,20 @@ function pptxDownload(){
   pptx.defineSlideMaster({title:'APPU',background:{color:'FFFFFF'}});
   slides.forEach(s=>{
     const slide=pptx.addSlide();
-    let y=0.4;
-    if(s.title){slide.addText(s.title,{x:0.5,y,w:9,h:1,fontSize:28,bold:true,color:'5B21B6',fontFace:'Georgia'});y+=1.1}
-    if(s.bullets.length){
-      slide.addText(s.bullets.slice(0,10).map(b=>({text:b.slice(0,300),options:{bullet:true,breakLine:true}})),
-        {x:0.5,y,w:9,h:5.5-y,fontSize:16,color:'1E1B2E',fontFace:'Georgia',valign:'top'});
+    /* The title slide, and a section heading with no text of its own (e.g. "2. Method" before "2.1 Participants"), become divider slides. */
+    if(s.cover||(!s.bullets.length&&!s.images.length)){
+      slide.addText(s.title||'',{x:0.6,y:1.8,w:8.8,h:1.6,fontSize:s.cover?34:30,bold:true,color:'5B21B6',fontFace:'Georgia',align:'center',valign:'middle',fit:'shrink'});
+      return;
     }
-    s.images.slice(0,1).forEach(src=>{
-      try{slide.addImage({data:src,x:5.3,y:1.3,w:4,h:3})}catch(e){}
-    });
+    let y=0.4;
+    if(s.title){slide.addText(s.title,{x:0.5,y,w:9,h:0.9,fontSize:s.title.length>45?22:28,bold:true,color:'5B21B6',fontFace:'Georgia',fit:'shrink'});y+=1.0}
+    const img=s.images[0],tw=img?5:9;
+    if(s.bullets.length){
+      const len=s.bullets.reduce((a,b)=>a+b.length,0);
+      slide.addText(s.bullets.map(b=>({text:b,options:{bullet:true,breakLine:true,paraSpaceAfter:6}})),
+        {x:0.5,y,w:tw,h:5.4-y,fontSize:len>900?13:len>600?14:16,color:'1E1B2E',fontFace:'Georgia',valign:'top',fit:'shrink'});
+    }
+    if(img){try{slide.addImage({data:img,x:s.bullets.length?5.6:1.5,y:y+0.1,w:s.bullets.length?3.9:7,h:s.bullets.length?3:4.2,sizing:{type:'contain',w:s.bullets.length?3.9:7,h:s.bullets.length?3:4.2}})}catch(e){}}
   });
   const title=(docsGet().find(d=>d.id===docCurrentId())||{}).title||'appuscholar-slides';
   const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-slides';
@@ -12020,8 +12140,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=81;
-const APP_BUILD='2026.10.17j';
+const APP_VERSION=83;
+const APP_BUILD='2026.10.17l';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
