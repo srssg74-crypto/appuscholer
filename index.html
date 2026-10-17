@@ -274,6 +274,12 @@
   dialog{border:none;border-radius:16px;padding:0;max-width:480px;width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.25);background:var(--card);color:var(--ink)}
   dialog::backdrop{background:rgba(30,10,60,.5)}
   .dlg-body{padding:24px}
+  .just-inserted{outline:3px solid #f59e0b;outline-offset:3px;transition:outline-color 2s}
+  .place-pick{display:flex;gap:6px;align-items:center;flex:1 1 100%;font-size:13px}.place-pick select{flex:1;min-width:0}
+  /* Version 84: the last row of buttons in a dialog stays in view at the bottom, so Close, Save and
+     Insert can be reached without scrolling past a long form or a chart. */
+  dialog[open]{max-height:92vh;overflow:auto}
+  .dlg-body>.row:last-child,.dlg-body>.dlg-actions{position:sticky;bottom:0;padding:10px 0 4px;background:var(--card);z-index:3;box-shadow:0 -10px 12px -12px rgba(0,0,0,.35);flex-wrap:wrap;gap:8px}
   .dlg-x{display:block;position:sticky;top:6px;z-index:20;margin:6px 8px -42px auto;width:36px;height:36px;border:0;border-radius:50%;background:var(--card);color:var(--ink);font-size:18px;line-height:36px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.25);padding:0}
   .dlg-x:hover{background:var(--line)}
   .dlg-x:focus-visible{outline:3px solid var(--gold)}
@@ -806,7 +812,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pwOpen()">🎯 Sample size and power</button></div>
       <h3 style="margin-top:16px" data-i18n="stats_charts_h3">📈 Charts</h3>
       <p class="desc" data-i18n="stats_charts_desc">Make a bar/line chart from your own numbers, or a 2- or 3-circle Venn diagram — then drop it straight into your document.</p>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal()" data-i18n="stats_chart_open_btn">📊 Quick chart (bars, lines, Venn)</button></div>
+      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="document.getElementById('chartDlg').showModal();placeFill('chartWhere')" data-i18n="stats_chart_open_btn">📊 Quick chart (bars, lines, Venn)</button></div>
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="vzOpen()" data-i18n="vz_open_btn">📈 Research figures (box plot, error bars, histogram, Q-Q)</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ncOpen()" data-i18n="nc_btn">🔢 Check the numbers in my document</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="rtOpen()" data-i18n="rt_btn">🔗 Check results against my data</button></div>
@@ -1734,6 +1740,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
     <div id="vzOut" style="margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;overflow:auto"></div>
     <div id="vzTable" style="margin-top:10px;overflow:auto"></div>
     <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+      <label class="place-pick">Put it: <select id="vzWhere"></select></label>
       <button class="btn btn-purple" onclick="vzInsert()" data-i18n="vz_insert">Insert into my document</button>
       <button class="btn btn-ghost" onclick="vzDownload('png')" data-i18n="vz_png">⬇ PNG</button>
       <button class="btn btn-ghost" onclick="vzDownload('svg')" data-i18n="vz_svg">⬇ SVG</button>
@@ -1845,10 +1852,15 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   </div>
 
   <div id="chartPreviewBox" style="margin-top:14px"></div>
-  <div class="row" id="chartInsertRow" style="margin-top:10px;display:none">
-    <button class="btn btn-gold" style="flex:1" onclick="chartInsertToDoc()">Insert into document</button>
-  </div>
-  <div class="row" style="margin-top:12px">
+  <div class="row dlg-actions" style="margin-top:12px">
+    <span id="chartInsertRow" style="display:none;gap:8px;flex-wrap:wrap;flex:1 1 100%">
+      <label class="place-pick">Put it: <select id="chartWhere"></select></label>
+      <button class="btn btn-gold" style="flex:1 1 180px" onclick="chartInsertToDoc()">➕ Insert into my document</button>
+      <button class="btn btn-ghost" style="flex:1 1 120px" onclick="chartSavePng()">⬇ Save as picture</button>
+      <button class="btn btn-ghost" style="flex:1 1 120px" onclick="chartCopyPng()">📋 Copy picture</button>
+    </span>
+    <button class="btn btn-ghost" onclick="chartEditData()">✏ Change data</button>
+    <button class="btn btn-ghost" onclick="chartClearAll()">🧹 Clear</button>
     <button class="btn btn-ghost" onclick="document.getElementById('chartDlg').close()">Close</button>
   </div>
 </div></dialog>
@@ -1905,10 +1917,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   <div class="fld"><label for="protoProc">Procedures</label><textarea id="protoProc" rows="3" placeholder="What a participant actually does, in order, from recruitment to debrief"></textarea></div>
   <div class="fld"><label for="protoRisk">Risks &amp; benefits</label><textarea id="protoRisk" rows="2" placeholder="What could go wrong, how you'll manage it, what participants or the field gain"></textarea></div>
   <div class="fld"><label for="protoDmp">Data management plan</label><textarea id="protoDmp" rows="2" placeholder="Where data lives, who can see it, how it's anonymised, how long you keep it"></textarea></div>
-  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="protoSave()">Save</button><button class="btn btn-gold" style="flex:1" onclick="protoGenerate()">Generate protocol document</button></div>
-  <div class="row" style="margin-top:12px">
-    <button class="btn btn-ghost" onclick="document.getElementById('protoDlg').close()">Close</button>
-  </div>
+  <div class="row" style="margin-top:12px"><button class="btn btn-purple" style="flex:1" onclick="protoSave()">Save</button><button class="btn btn-gold" style="flex:1" onclick="protoGenerate()">Generate protocol document</button><button class="btn btn-ghost" onclick="document.getElementById('protoDlg').close()">Close</button></div>
 </div></dialog>
 
 <dialog id="ecDlg" class="dlg-wide"><div class="dlg-body">
@@ -1931,10 +1940,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   <div class="fld"><label for="ecRisks2">Risks &amp; discomforts</label><textarea id="ecRisks2" rows="2" placeholder="Be specific and honest, even if minor"></textarea></div>
   <div class="fld"><label for="ecBenefits">Benefits</label><textarea id="ecBenefits" rows="2" placeholder="To the participant directly, and/or to the field"></textarea></div>
   <div class="fld"><label for="ecContact">Contact for questions or complaints</label><input id="ecContact" type="text" placeholder="PI email/phone, and the EC's own contact"></div>
-  <div class="row"><button class="btn btn-purple" style="flex:1" onclick="ecSave()">Save</button><button class="btn btn-gold" style="flex:1" onclick="ecGenerateConsent()">Generate consent form</button></div>
-  <div class="row" style="margin-top:12px">
-    <button class="btn btn-ghost" onclick="document.getElementById('ecDlg').close()">Close</button>
-  </div>
+  <div class="row" style="margin-top:12px"><button class="btn btn-purple" style="flex:1" onclick="ecSave()">Save</button><button class="btn btn-gold" style="flex:1" onclick="ecGenerateConsent()">Generate consent form</button><button class="btn btn-ghost" onclick="document.getElementById('ecDlg').close()">Close</button></div>
 </div></dialog>
 
 <dialog id="aiuDlg" class="dlg-wide"><div class="dlg-body">
@@ -1956,9 +1962,8 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   <div class="fld"><label for="aiuFmt">Style of statement</label><select id="aiuFmt"><option value="course">Coursework or assignment</option><option value="thesis">Thesis or dissertation</option><option value="journal">Journal manuscript</option></select></div>
   <div class="row"><button class="btn btn-purple" style="flex:1" onclick="aiuBuild()">Build the statement</button></div>
   <div class="fld" style="margin-top:8px"><label for="aiuOut">Your statement (edit it so that it is true)</label><textarea id="aiuOut" rows="9"></textarea></div>
-  <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="aiuCopy()">Copy</button><button class="btn btn-ghost" style="flex:1" onclick="aiuInsert()">Insert into my document</button><button class="btn btn-ghost" style="flex:1" onclick="aiuDownload()">Download as text</button></div>
   <p class="desc">The log covers only this browser on this computer. If you used Appuscholar elsewhere, or with the log off, add it in the box above. Your institution or the journal decides what you must disclose. AI cannot be listed as an author.</p>
-  <div class="row" style="margin-top:8px"><button class="btn btn-ghost" onclick="aiuClear()">Erase the log</button><button class="btn btn-ghost" onclick="document.getElementById('aiuDlg').close()">Close</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="aiuCopy()">Copy</button><button class="btn btn-ghost" style="flex:1" onclick="aiuInsert()">Insert into my document</button><button class="btn btn-ghost" style="flex:1" onclick="aiuDownload()">Download as text</button><button class="btn btn-ghost" onclick="aiuClear()">Erase the log</button><button class="btn btn-ghost" onclick="document.getElementById('aiuDlg').close()">Close</button></div>
 </div></dialog>
 
 <dialog id="ctriDlg" class="dlg-wide"><div class="dlg-body">
@@ -3771,7 +3776,7 @@ function vzUseLab(){
   document.getElementById('vzPaste').value=[d.headers.join(',')].concat(d.rows.map(r=>r.join(','))).join('\n');
   vzLoad();
 }
-function vzOpen(){document.getElementById('vzDlg').showModal();if(window._statsData&&!document.getElementById('vzPaste').value)vzUseLab()}
+function vzOpen(){document.getElementById('vzDlg').showModal();placeFill('vzWhere');if(window._statsData&&!document.getElementById('vzPaste').value)vzUseLab()}
 function vzSync(){
   const ty=document.getElementById('vzType').value;
   const show=(id,on)=>{document.getElementById(id).style.display=on?'':'none'};
@@ -3970,7 +3975,7 @@ function vzInsert(){
     let h='<p data-cap="figure"><strong>Figure '+cp.n+'</strong></p>'+(cp.title?'<p data-cap-title="1"><em>'+vzEsc(cp.title)+'</em></p>':'')+
       '<img src="'+png+'" alt="'+vzEsc(cp.title||'Figure '+cp.n)+'" style="max-width:520px;width:100%">'+
       (cp.note?'<p><em>Note.</em> '+vzEsc(cp.note)+'</p>':'')+'<p><br></p>';
-    insertHTMLBlockIntoEditor(h);
+    insertHTMLBlockIntoEditor(h,(document.getElementById('vzWhere')||{}).value||'end');
     const f=document.getElementById('vzFig');f.value=(parseInt(f.value,10)||1)+1;
     try{renumberCaptions();const c=editor.querySelectorAll('p[data-cap="figure"]').length;f.value=c+1}catch(e){}
     showToast(t('vz_inserted'));document.getElementById('vzDlg').close();
@@ -4321,9 +4326,36 @@ function insertIntoEditor(text,keepSelection,aiTag,runId){
 /* Insert already-trusted HTML (an image, a table, a chart) at the caret — unlike
    insertIntoEditor(), this does NOT escape its input, so only ever call it with
    markup this app generated itself, never with anything a user typed or an AI wrote. */
-function insertHTMLBlockIntoEditor(html){
+/* "Where should it go?" for charts and figures (Version 84). Lists the cursor, the start, the end of
+   each section (found by its heading) and the end of the document. */
+function placeHeadings(){
+  const els=Array.from(editor.querySelectorAll('h1,h2,h3,h4,h5,h6,p,div,li')).filter(e=>!e.querySelector('p,div,h1,h2,h3,h4,h5,h6,ul,ol,table')&&!e.closest('li')&&!e.closest('.img-wrap'));
+  return els.map(e=>({el:e,t:(e.innerText||e.textContent||'').replace(/\s+/g,' ').trim()})).filter(x=>x.t&&slideIsHeading(x.el,x.t));
+}
+function placeFill(selId){
+  const sel=document.getElementById(selId);if(!sel)return;
+  const hs=placeHeadings(),cur=savedRange&&editor.contains(savedRange.startContainer);
+  let ctx='';
+  if(cur){try{let n=savedRange.startContainer;if(n.nodeType===3)n=n.parentElement;const blk=n.closest('p,li,h1,h2,h3,h4,h5,h6,div,td')||n;const r=savedRange.cloneRange();r.setStart(blk,0);const t=r.toString().replace(/\s+/g,' ').trim();ctx=(t||(blk.textContent||'').trim()).slice(-40)}catch(e){}}
+  sel.innerHTML=(cur?'<option value="cursor">Where my cursor was'+(ctx?': …'+escHTML(ctx):'')+'</option>':'')+
+    hs.map((h,i)=>'<option value="sec:'+i+'">End of section: '+escHTML(h.t.slice(0,60))+'</option>').join('')+
+    '<option value="start">Start of the document</option><option value="end">End of the document</option>';
+  sel.value=cur?'cursor':'end';
+}
+function placeRange(where){
+  const r=document.createRange();
+  if(where==='start'){r.setStart(editor,0);r.collapse(true);return r}
+  if(where&&where.indexOf('sec:')===0){
+    const hs=placeHeadings(),i=parseInt(where.slice(4),10),h=hs[i];
+    if(h){const nx=hs[i+1];if(nx){r.setStartBefore(nx.el.closest('li')||nx.el);r.collapse(true);return r}}
+  }
+  if(where==='cursor'&&savedRange&&editor.contains(savedRange.startContainer))return savedRange.cloneRange();
+  r.selectNodeContents(editor);r.collapse(false);return r;
+}
+function insertHTMLBlockIntoEditor(html,where){
   editor.focus();
-  if(savedRange)restoreEditorSelection();else placeCaretAtEnd();
+  if(where){const r=placeRange(where),sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);savedRange=r.cloneRange();html='<span data-justins="1"></span>'+html}
+  else if(savedRange)restoreEditorSelection();else placeCaretAtEnd();
   let ok=false;
   try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
   if(!ok){
@@ -4336,6 +4368,8 @@ function insertHTMLBlockIntoEditor(html){
   }
   const sel2=window.getSelection();
   if(sel2&&sel2.rangeCount&&editor.contains(sel2.anchorNode))savedRange=sel2.getRangeAt(0).cloneRange();
+  const mk=editor.querySelector('[data-justins]');
+  if(mk){const nxt=mk.nextElementSibling||mk.parentElement;try{(nxt||mk).scrollIntoView({block:'center',behavior:'smooth'});if(nxt&&nxt!==editor){nxt.classList.add('just-inserted');setTimeout(()=>nxt.classList.remove('just-inserted'),2500)}}catch(e){}mk.remove()}
   upd();
 }
 
@@ -5055,7 +5089,40 @@ function chartGenerate(){
     const canvas=document.getElementById('chartMakerCanvas');
     _chartMakerPendingHTML='<img src="'+canvas.toDataURL('image/png')+'" style="max-width:520px;width:100%">&nbsp;';
     document.getElementById('chartInsertRow').style.display='flex';
+    try{document.getElementById('chartPreviewBox').scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}
   },60);
+}
+/* Version 84: after a chart is drawn the student can save it, copy it, go back to the data, or start again. */
+function chartCurrentPng(){
+  const c=document.getElementById('chartMakerCanvas');if(c)return c.toDataURL('image/png');
+  const sv=document.querySelector('#chartPreviewBox svg');
+  if(sv){let x=new XMLSerializer().serializeToString(sv);if(x.indexOf('xmlns=')<0)x=x.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(x)}
+  const m=/src="(data:image\/[^"]+)"/.exec(_chartMakerPendingHTML||'');return m?m[1]:'';
+}
+function chartFileName(){const t=(document.getElementById('chartTitle').value||document.getElementById('vennTitle')&&document.getElementById('vennTitle').value||'chart').trim();return (t.replace(/[^\w\- ]+/g,'').trim()||'chart').slice(0,60)}
+function chartSavePng(){
+  const u=chartCurrentPng();if(!u){showToast('Generate the chart first');return}
+  const done=(href,ext)=>{const a=document.createElement('a');a.href=href;a.download=chartFileName()+'.'+ext;document.body.appendChild(a);a.click();a.remove()};
+  if(u.indexOf('data:image/svg')===0){done(u,'svg');showToast('Saved as a picture (SVG) ✓');return}
+  done(u,'png');showToast('Saved to your Downloads ✓');
+}
+async function chartCopyPng(){
+  const u=chartCurrentPng();if(!u){showToast('Generate the chart first');return}
+  try{const blob=await (await fetch(u)).blob();
+    const png=blob.type==='image/png'?blob:await new Promise(res=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width*2;c.height=im.height*2;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);c.toBlob(res,'image/png')};im.src=u});
+    await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);showToast('Copied ✓ Paste it into Word, PowerPoint or WhatsApp');
+  }catch(e){showToast('This browser will not copy pictures. Use Save as picture instead.')}
+}
+function chartEditData(){
+  const t=document.getElementById('chartType').value,isVenn=t==='venn2'||t==='venn3';
+  const el=document.getElementById(isVenn?'vennA':'chartData');
+  try{el.scrollIntoView({block:'center',behavior:'smooth'});el.focus()}catch(e){}
+}
+function chartClearAll(){
+  ['chartData','chartTitle','vennA','vennB','vennC','vennASize','vennBSize','vennCSize','vennAB','vennAC','vennBC','vennABC','vennTitle'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  if(_chartMakerInstance){try{_chartMakerInstance.destroy()}catch(e){}_chartMakerInstance=null}
+  document.getElementById('chartPreviewBox').innerHTML='';document.getElementById('chartInsertRow').style.display='none';_chartMakerPendingHTML=null;
+  chartEditData();showToast('Cleared');
 }
 function _vennNum(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)||v<0?0:v}
 function vennGenerate(){
@@ -5098,11 +5165,12 @@ function vennGenerate(){
   document.getElementById('chartPreviewBox').innerHTML='<div style="max-width:460px;margin:0 auto">'+svg+'</div>';
   _chartMakerPendingHTML='<span class="img-wrap" contenteditable="false" style="width:420px">'+svg+'<span class="img-handle" title="Drag to resize"></span></span>&nbsp;';
   document.getElementById('chartInsertRow').style.display='flex';
+  try{document.getElementById('chartPreviewBox').scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}
 }
 function chartInsertToDoc(){
   if(!_chartMakerPendingHTML){showToast('Generate a chart first');return}
-  insertHTMLBlockIntoEditor(_chartMakerPendingHTML);
-  showToast('Inserted into your document ✓');
+  insertHTMLBlockIntoEditor(_chartMakerPendingHTML,(document.getElementById('chartWhere')||{}).value||'end');
+  showToast('Inserted ✓ It is marked in your document. Drag the corner to resize it; Ctrl+Z undoes it.');
   document.getElementById('chartDlg').close();
 }
 
@@ -12140,8 +12208,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=83;
-const APP_BUILD='2026.10.17l';
+const APP_VERSION=84;
+const APP_BUILD='2026.10.17m';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
