@@ -12480,8 +12480,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=92;
-const APP_BUILD='2026.10.17u';
+const APP_VERSION=93;
+const APP_BUILD='2026.10.17v';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -12736,11 +12736,34 @@ async function shExtractPdf(file){
     tc.items.forEach(it=>{t+=it.str+(it.hasEOL?'\n':' ')});
     pages.push(t.replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').trim());
   }
-  return{pages:pages,total:pdf.numPages};
+  let meta='';try{const md=await pdf.getMetadata();meta=String((md&&md.info&&md.info.Title)||'').trim()}catch(e){}
+  return{pages:pages,total:pdf.numPages,meta:meta};
 }
-function shGuessTitle(pages,fallback){
-  const first=(pages[0]||'').split('\n').map(x=>x.trim()).filter(x=>x.length>8&&x.length<180);
-  return first[0]||fallback;
+/* Version 93: the first line of a journal PDF is usually a running header ("Journal of …", a DOI,
+   "Contents lists available at ScienceDirect", "RESEARCH ARTICLE"), which became the paper's title.
+   The PDF's own title field is used when it looks real; otherwise the first line that looks like a
+   title, joined with the next line when the title wraps. */
+const SH_HEADER=/running head|short title|journal|doi|https?:|www\.|\bvol(ume)?\b|\bissn\b|©|copyright|received|accepted|published|available online|contents lists|sciencedirect|elsevier|springer|wiley|taylor|francis|sage|frontiers|plos|mdpi|bmc|\bresearch article\b|\boriginal (article|research|paper)\b|\breview article\b|open access|\bpp?\.\s*\d|^\s*\d+\s*$|^page \d|creative commons|licen[cs]e|corresponding author|citation:|keywords?:|abstract\b/i;
+function shTitleOk(t){
+  t=String(t||'').trim();if(t.length<10||t.length>220)return false;
+  if(/^(microsoft (word|powerpoint)|untitled|document\d*|title|\S+\.(docx?|pdf|tex|indd))/i.test(t)||/\.(docx?|pdf)$/i.test(t))return false;
+  if(SH_HEADER.test(t))return false;
+  const words=t.split(/\s+/);if(words.length<3||words.length>30)return false;
+  const letters=(t.match(/\p{L}/gu)||[]).length;return letters/t.length>0.6;
+}
+function shGuessTitle(pages,fallback,meta){
+  if(shTitleOk(meta))return String(meta).trim();
+  const lines=(pages[0]||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,30);
+  for(let i=0;i<lines.length;i++){
+    if(!shTitleOk(lines[i]))continue;
+    let t=lines[i];
+    /* a title that wraps: the next line continues it when this one has no end punctuation and the next starts in lower case or is short */
+    const nx=lines[i+1]||'';
+    const looksName=/\b\p{Lu}\.(\s|$)/u.test(nx)||/,\s*\p{Lu}\p{Ll}+\s+\p{Lu}/u.test(nx)||/\b\p{Lu}\p{Ll}+\s+\p{Lu}\p{Ll}+\s+[a-z\d*†‡]\b/u.test(nx)||/\d|@|\b(department|university|college|institute|school|hospital)\b/i.test(nx);
+    if(nx&&!/[.?!:]$/.test(t)&&nx.length<120&&!SH_HEADER.test(nx)&&!looksName&&(/^[a-z(]/.test(nx)||(nx.split(/\s+/).length<=10&&/\b(of|and|in|for|the|with|among|to|a|an|on|at|from|by|versus|vs)\b/.test(nx))))t+=' '+nx;
+    return t.replace(/\s+/g,' ');
+  }
+  return fallback;
 }
 async function shAddFiles(input){
   const files=Array.from(input.files||[]);input.value='';
@@ -12754,7 +12777,7 @@ async function shAddFiles(input){
     try{
       const r=await shExtractPdf(f),chars=r.pages.reduce((a,x)=>a+x.length,0);
       if(chars<200){msgs.push(f.name+': no readable text (it looks scanned). Not added.');continue}
-      const rec={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:shGuessTitle(r.pages,f.name.replace(/\.pdf$/i,'')),file:f.name,size:f.size,added:new Date().toISOString(),pages:r.pages,total:r.total,notes:[],cells:{}};
+      const rec={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:shGuessTitle(r.pages,f.name.replace(/\.pdf$/i,''),r.meta),file:f.name,size:f.size,added:new Date().toISOString(),pages:r.pages,total:r.total,notes:[],cells:{}};
       await shPut(rec);have.push(rec);
       msgs.push(f.name+': added, '+r.pages.length+' pages'+(r.total>r.pages.length?' (first '+r.pages.length+' of '+r.total+')':''));
     }catch(e){msgs.push(f.name+': '+(e&&e.message?e.message:'could not be read'))}
