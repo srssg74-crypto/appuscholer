@@ -479,7 +479,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 .tr-pd{background:#fdecec;color:#8a1c1c;border-radius:6px;padding:4px 8px;font-size:12px;margin-top:4px}.tr-tw{overflow-x:auto}.tr-tbl{border-collapse:collapse;width:100%;font-size:13px}.tr-tbl th,.tr-tbl td{border:1px solid var(--border);padding:4px 6px;text-align:left;vertical-align:top}
 .tr-bar{display:inline-block;width:110px;height:8px;border-radius:4px;background:var(--border);vertical-align:middle;overflow:hidden}.tr-bar span{display:block;height:100%;background:var(--purple,#6b4fa0)}.tr-prog{margin:6px 0;font-size:14px}.tr-form .fld{margin-bottom:6px}
 #apHome{display:none}
-.trcp{border:1px solid var(--border);border-radius:6px;background:#fff;color:#222;padding:14px 16px;max-width:360px;margin:0 auto;font-size:11px;aspect-ratio:1/1.414;overflow:hidden}.trcp-classic{border:4px double #4B2E83}.trcp-inst{text-align:center;color:#4B2E83;font-weight:700;text-transform:uppercase;font-size:13px;margin-top:6px}.trcp-dept{text-align:center;color:#5F5F6E}.trcp-rule{border-bottom:2px solid #4B2E83;margin:8px 0 18px}.trcp-title{text-align:center;color:#4B2E83;font-weight:700;font-size:17px;line-height:1.2;margin:10px 0 4px}.trcp-prog{text-align:center;color:#5F5F6E;margin-bottom:14px}.trcp-band{background:#4B2E83;color:#fff;display:flex;gap:10px;align-items:center;padding:10px;margin:-14px -16px 22px}.trcp-band b{text-transform:uppercase;font-size:13px}.trcp-tbl{width:90%;margin:0 auto;border-collapse:collapse}.trcp-tbl td{border:1px solid #9E8FC0;padding:3px 5px;height:16px}.trcp-tbl td:first-child{background:#EDE7F6;color:#4B2E83;font-weight:700;width:40%}body.at-home #apHome{display:grid;grid-template-columns:330px minmax(0,1fr);gap:26px;align-items:start;padding:8px 0 24px}
+.trcp{border:1px solid var(--border);border-radius:6px;background:#fff;color:#222;padding:14px 16px;max-width:360px;margin:0 auto;font-size:11px;aspect-ratio:1/1.414;overflow:hidden}.trcp-classic{border:4px double #4B2E83}.trcp-thesis{border:3px solid #4B2E83}.trcp-inst{text-align:center;color:#4B2E83;font-weight:700;text-transform:uppercase;font-size:13px;margin-top:6px}.trcp-dept{text-align:center;color:#5F5F6E}.trcp-rule{border-bottom:2px solid #4B2E83;margin:8px 0 18px}.trcp-title{text-align:center;color:#4B2E83;font-weight:700;font-size:17px;line-height:1.2;margin:10px 0 4px}.trcp-prog{text-align:center;color:#5F5F6E;margin-bottom:14px}.trcp-band{background:#4B2E83;color:#fff;display:flex;gap:10px;align-items:center;padding:10px;margin:-14px -16px 22px}.trcp-band b{text-transform:uppercase;font-size:13px}.trcp-tbl{width:90%;margin:0 auto;border-collapse:collapse}.trcp-tbl td{border:1px solid #9E8FC0;padding:3px 5px;height:16px}.trcp-tbl td:first-child{background:#EDE7F6;color:#4B2E83;font-weight:700;width:40%}body.at-home #apHome{display:grid;grid-template-columns:330px minmax(0,1fr);gap:26px;align-items:start;padding:8px 0 24px}
 .hm-me{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 6px 24px rgba(var(--shadow-ink),.08)}
 .hm-av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,var(--purple-500),var(--gold-bright));color:#fff;display:grid;place-items:center;font:700 30px var(--font-display);margin-bottom:12px}
 .hm-me h2{margin:0 0 2px;font:700 22px var(--font-display);color:var(--ink);overflow-wrap:anywhere}
@@ -5909,6 +5909,7 @@ const AIU_KEY='appu_ailog',AIU_RULES=[
  [/thesis supervisor reading/,'feedback on my draft','feedback'],
  [/ask exactly ONE realistic, probing question/,'practice viva questions','feedback'],
  [/conducting a mock viva/,'mock viva practice','feedback'],
+ [/turn a blank college logbook/,'reading my college logbook format','structure'],
  [/Argue against the passage below/,'counter-arguments to my passage','feedback'],
  [/find a research gap/,'looking for research gaps in selected abstracts','feedback'],
  [/judge whether a project idea is realistic/,'checking whether my project idea is realistic','feedback'],
@@ -12714,7 +12715,7 @@ const TR_L={
  tpl:['Template','टेम्पलेट'],
  s_cover:['Cover','मुखपृष्ठ'],s_details:['Details','विवरण'],s_ethics:['Undertaking','वचन-पत्र'],s_plan:['Learning plan','सीखने की योजना'],s_log:['Daily log','दैनिक लॉग'],s_refl:['Weekly reflection','साप्ताहिक चिंतन'],s_cases:['Case records','केस रिकॉर्ड'],s_summary:['Summary','सारांश'],s_sup:['Supervisor pages','पर्यवेक्षक पृष्ठ'],s_postings:['Postings','पोस्टिंग'],s_leave:['Leave','अवकाश'],s_skills:['Skills','कौशल'],s_dl:['Download','डाउनलोड'],
  inst:['Institute name','संस्थान का नाम'],dept:['Department','विभाग'],doctitle:['Title of this record','इस रिकॉर्ड का शीर्षक'],prog:['Programme and level','कार्यक्रम और स्तर'],name:['Student name','छात्र का नाम'],enrol:['Enrolment or registration number','नामांकन या पंजीकरण संख्या'],session:['Academic session','शैक्षणिक सत्र'],org:['Placement organisation','प्लेसमेंट संस्था'],from:['From','से'],to:['To','तक'],mentor:['Faculty mentor','संकाय मार्गदर्शक'],sup:['Supervisor at placement','प्लेसमेंट पर्यवेक्षक'],submit:['Date of submission','जमा करने की तिथि'],
- logo:['Institute logo or picture','संस्थान का लोगो या चित्र'],cstyle:['Cover design','मुखपृष्ठ डिज़ाइन'],cs_classic:['Classic, with a border','क्लासिक, किनारे सहित'],cs_band:['Modern, with a coloured band','आधुनिक, रंगीन पट्टी सहित'],cs_simple:['Simple','सरल'],preview:['Preview of the cover','मुखपृष्ठ का पूर्वावलोकन'],logopos:['Place it','कहाँ रखें'],pos_c:['Top centre','ऊपर बीच में'],pos_l:['Top left','ऊपर बाएँ'],pos_b:['Wide banner','चौड़ा बैनर'],logodel:['Remove picture','चित्र हटाएँ'],
+ logo:['Institute logo or picture','संस्थान का लोगो या चित्र'],cstyle:['Cover design','मुखपृष्ठ डिज़ाइन'],cs_thesis:['Thesis style title page','थीसिस जैसा शीर्षक पृष्ठ'],s_custom:['Customise','अनुकूलित करें'],rep_note:['This is a representative format. Rename, hide, move or add sections and headings to match what your college asks for.','यह एक प्रतिनिधि प्रारूप है। अपने कॉलेज की माँग के अनुसार खंड और शीर्षक बदलें, छिपाएँ, आगे-पीछे करें या जोड़ें।'],cu_secs:['Sections','खंड'],cu_name:['Name','नाम'],cu_show:['Show','दिखाएँ'],cu_move:['Move','क्रम बदलें'],cu_addsec:['Add a section','खंड जोड़ें'],cu_title:['Section title','खंड का शीर्षक'],cu_kind:['Type','प्रकार'],cu_text:['Text','पाठ'],cu_table:['Table','तालिका'],cu_cols:['Column headings, separated by commas','स्तंभ शीर्षक, अल्पविराम से अलग'],cu_recs:['Record types and their headings','रिकॉर्ड के प्रकार और उनके शीर्षक'],cu_heads:['headings','शीर्षक'],cu_headlines:['Headings, one per line','शीर्षक, हर पंक्ति में एक'],cu_reset:['Back to the original','मूल पर लौटें'],cu_addrec:['Add a record type','रिकॉर्ड का प्रकार जोड़ें'],up_h:['Upload your college format','अपने कॉलेज का प्रारूप अपलोड करें'],up_desc:['Upload a blank copy of your college logbook or record format (Word, text PDF or text file). Your AI reads it and proposes sections and headings; you choose what to keep. Use a blank form: never a filled one with names.','अपने कॉलेज की logbook या रिकॉर्ड प्रारूप की खाली प्रति अपलोड करें (Word, टेक्स्ट PDF या टेक्स्ट फ़ाइल)। आपका AI इसे पढ़कर खंड और शीर्षक सुझाता है; आप तय करते हैं क्या रखना है। खाली फ़ॉर्म इस्तेमाल करें: नाम भरा हुआ कभी नहीं।'],up_reading:['Reading the format…','प्रारूप पढ़ा जा रहा है…'],up_photo:['Photos cannot be read yet. Upload the Word file or a text PDF, or add the sections by hand above.','फ़ोटो अभी पढ़ी नहीं जा सकतीं। Word फ़ाइल या टेक्स्ट PDF अपलोड करें, या ऊपर हाथ से खंड जोड़ें।'],up_scan:['This looks like a scanned copy with no readable text. Upload the Word file or a text PDF, or add the sections by hand above.','यह स्कैन की गई प्रति लगती है जिसमें पढ़ने योग्य पाठ नहीं है। Word फ़ाइल या टेक्स्ट PDF अपलोड करें, या ऊपर हाथ से खंड जोड़ें।'],up_filled:['This form seems to be filled in with personal details. Please upload a blank copy.','यह फ़ॉर्म व्यक्तिगत विवरण से भरा लगता है। कृपया खाली प्रति अपलोड करें।'],up_noai:['Could not reach your AI provider. Add the sections by hand above.','आपके AI प्रदाता तक नहीं पहुँच सके। ऊपर हाथ से खंड जोड़ें।'],up_bad:['The AI reply could not be read as a format. Try again, or add the sections by hand.','AI का उत्तर प्रारूप के रूप में पढ़ा नहीं जा सका। फिर कोशिश करें, या हाथ से खंड जोड़ें।'],up_found:['Proposed from','इससे सुझाया गया:'],up_acts:['Activity types','गतिविधियों के प्रकार'],up_check:['Untick anything that is not in your format. Everything stays editable afterwards.','जो आपके प्रारूप में नहीं है उस पर से टिक हटाएँ। बाद में सब कुछ बदला जा सकता है।'],up_apply:['Add the ticked items','टिक किए गए जोड़ें'],fmt_h:['Share your format','अपना प्रारूप साझा करें'],fmt_desc:['Save your sections and headings (no entries, nothing personal) as a small file. Classmates load it here to get the same format. Send good college formats to the Appuscholar team so they can be added for every student.','अपने खंड और शीर्षक (कोई प्रविष्टि नहीं, कुछ भी व्यक्तिगत नहीं) एक छोटी फ़ाइल में सहेजें। सहपाठी इसे यहाँ लोड करके वही प्रारूप पा सकते हैं। अच्छे कॉलेज प्रारूप Appuscholar टीम को भेजें ताकि वे हर छात्र के लिए जोड़े जा सकें।'],fmt_save:['Save my format as a file','मेरा प्रारूप फ़ाइल में सहेजें'],fmt_load:['Load a format file','प्रारूप फ़ाइल लोड करें'],fmt_confirm:['Use this format? Your entries stay; sections and headings change.','यह प्रारूप इस्तेमाल करें? आपकी प्रविष्टियाँ रहेंगी; खंड और शीर्षक बदलेंगे।'],cs_classic:['Classic, with a border','क्लासिक, किनारे सहित'],cs_band:['Modern, with a coloured band','आधुनिक, रंगीन पट्टी सहित'],cs_simple:['Simple','सरल'],preview:['Preview of the cover','मुखपृष्ठ का पूर्वावलोकन'],logopos:['Place it','कहाँ रखें'],pos_c:['Top centre','ऊपर बीच में'],pos_l:['Top left','ऊपर बाएँ'],pos_b:['Wide banner','चौड़ा बैनर'],logodel:['Remove picture','चित्र हटाएँ'],
  year:['Year or semester','वर्ष या सेमेस्टर'],setting:['Setting (hospital, clinic, school, NGO, community)','स्थान (अस्पताल, क्लिनिक, स्कूल, NGO, समुदाय)'],supdes:['Supervisor designation','पर्यवेक्षक का पद'],hours:['Hours required','आवश्यक घंटे'],approval:['Approval or letter reference (optional)','अनुमति या पत्र संदर्भ (वैकल्पिक)'],
  eth_intro:['Tick each line before you start logging work, then sign the printed page. Your supervisor countersigns it.','काम लॉग करने से पहले हर पंक्ति पर टिक करें, फिर छपे पृष्ठ पर हस्ताक्षर करें। आपके पर्यवेक्षक प्रति-हस्ताक्षर करेंगे।'],
  eth_rem:['The undertaking is not ticked yet. You can still log work, but please complete it first.','वचन-पत्र पर अभी टिक नहीं हुआ है। आप फिर भी काम लॉग कर सकते हैं, पर पहले इसे पूरा करें।'],
@@ -12778,8 +12779,8 @@ const TR_TPL={
 const TR_COURSE_TPL={rci:'rci',pdcp:'rci',mbbs:'mbbs',nursing:'nursing',other:'custom'};
 let TR=null,TR_TAB='cover',TR_T=0;
 function trLoad(){try{const o=JSON.parse(LS.get(TR_KEY)||'null');if(o&&typeof o==='object')return trFix(o)}catch(e){}return null}
-function trFix(o){o.tpl=TR_TPL[o.tpl]?o.tpl:'psych';['cover','det','eth','tg'].forEach(k=>{if(!o[k]||typeof o[k]!=='object'||Array.isArray(o[k]))o[k]={}});['plan','log','refl','cases','post','leave','skills','acts'].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});if(!Array.isArray(o.eth.t))o.eth.t=[];return o}
-function trNew(tpl){const me=apMe();const o=trFix({tpl:tpl||'psych'});o.cover.name=me.name||'';o.cover.title=trB(TR_TPL[o.tpl].title);trTplInit(o);return o}
+function trFix(o){o.tpl=TR_TPL[o.tpl]?o.tpl:'psych';['cover','det','eth','tg'].forEach(k=>{if(!o[k]||typeof o[k]!=='object'||Array.isArray(o[k]))o[k]={}});['plan','log','refl','cases','post','leave','skills','acts'].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});if(!o.cust||typeof o.cust!=='object')o.cust={};if(!Array.isArray(o.eth.t))o.eth.t=[];return o}
+function trNew(tpl){const me=apMe();const o=trFix({tpl:tpl||'psych',coverStyle:'thesis'});o.cover.name=me.name||'';o.cover.title=trB(TR_TPL[o.tpl].title);trTplInit(o);return o}
 function trTplInit(o){
   if(o.tpl==='mbbs'){if(!o.post.length)o.post=TR_POST.map(p=>({k:p[0],w:p[1],from:'',to:'',done:0}));if(!o.skills.length)o.skills=TR_SKILLS.map(n=>({n,o:'',a:'',s:'',i:'',rem:''}))}
   if(o.tpl==='custom'&&!o.acts.length)o.acts=['Observation','Assisted work','Independent work','Meeting or seminar','Report writing','Other'];
@@ -12787,20 +12788,20 @@ function trTplInit(o){
 function trSave(){clearTimeout(TR_T);TR_T=setTimeout(trSaveNow,300)}
 function trSaveNow(){clearTimeout(TR_T);if(!TR)return;try{LS.set(TR_KEY,JSON.stringify(TR))}catch(e){showToast('Could not save: the browser storage is full. Remove the logo picture or download a backup.')}}
 function trActs(o){o=o||TR;const t=TR_TPL[o.tpl];if(t.acts)return t.acts.map(a=>[a[0],trB(a[1])]);return o.acts.map((a,i)=>['c'+i,a])}
-function trActName(id){const a=trActs().find(x=>x[0]===id);return a?a[1]:id}
+function trActName(id){const a=trActs().find(x=>x[0]===id);if(a)return a[1];for(const k in TR_TPL){const L=TR_TPL[k].acts;if(L){const b=L.find(x=>x[0]===id);if(b)return trB(b[1])}}return id}
 function trHrs(a,b){const m=s=>{const r=/^(\d{1,2}):(\d{2})$/.exec(s||'');return r?(+r[1])*60+(+r[2]):null};const x=m(a),y=m(b);if(x==null||y==null)return '';let d=y-x;if(d<0)d+=1440;return String(Math.round(d/15)/4)}
 function trTotHrs(){return TR.log.reduce((s,e)=>s+(parseFloat(e.hrs)||0),0)}
 function trTargets(){const t=TR_TPL[TR.tpl];const base=(t.targets||[]).map(x=>[x[0],x[1]]);Object.keys(TR.tg).forEach(k=>{const v=parseInt(TR.tg[k],10);const i=base.findIndex(x=>x[0]===k);if(i>=0){if(v>0)base[i][1]=v;else base.splice(i,1)}else if(v>0)base.push([k,v])});return base}
 function trCount(id){return TR.log.filter(e=>e.act===id).length}
-function trEmpty(c){const r=TR_REC[c.rec];if(!r)return 0;return r.h.filter((h,i)=>!String((c.f||{})[i]||'').trim()).length}
+function trEmpty(c){const r=trRec(c.rec);if(!r)return 0;return r.h.filter((h,i)=>!String((c.f||{})[i]||'').trim()).length}
 function trPdHTML(text,fn){try{const sc=pdScanText(text);if(!sc.total)return'';return'<div class="tr-pd">⚠ '+escHTML(trT('pd_found'))+' '+escHTML(Object.keys(sc.counts).map(k=>sc.counts[k]+' '+k).join(', '))+' <button type="button" class="btn btn-ghost" onclick="'+fn+'">'+escHTML(trT('pd_mask'))+'</button></div>'}catch(e){return''}}
 function trOpen(){
   if(!TR)TR=trLoad();
   if(!TR){const me=apMe();TR=trNew(TR_COURSE_TPL[me.course]||'psych');trSaveNow()}
-  if(!TR_TPL[TR.tpl].sec.includes(TR_TAB)&&TR_TAB!=='dl')TR_TAB='cover';
+  if(!trSecs().includes(TR_TAB)&&TR_TAB!=='dl'&&TR_TAB!=='custom')TR_TAB='cover';
   trRender();const d=document.getElementById('trDlg');if(d&&!d.open)d.showModal();
 }
-function trTab(t){TR_TAB=t;trRender();const b=document.getElementById('trBody');if(b)b.scrollTop=0}
+function trTab(t){if(t!=='dl'&&t!=='custom'&&TR&&!trSecs().includes(t))t='cover';TR_TAB=t;trRender();const b=document.getElementById('trBody');if(b)b.scrollTop=0}
 function trSetTpl(v){if(!TR_TPL[v]||v===TR.tpl)return;if(!confirm(trT('confirm_tpl'))){trRender();return}TR.tpl=v;trTplInit(TR);if(!TR.cover.title)TR.cover.title=trB(TR_TPL[v].title);trSaveNow();trRender()}
 function trF(path,v){const p=path.split('.');let o=TR;for(let i=0;i<p.length-1;i++){if(o[p[i]]==null)o[p[i]]={};o=o[p[i]]}o[p[p.length-1]]=v;trSave();if(TR_TAB==='cover'&&path.indexOf('cover.')===0){const pv=document.querySelector('#trBody .trcp');if(pv)pv.parentNode.outerHTML=trCoverPrev()}}
 function trIn(path,label,type,ph){const p=path.split('.');let v=TR;p.forEach(k=>{v=v==null?'':v[k]});v=v==null?'':v;const id='tr_'+path.replace(/\./g,'_');
@@ -12808,25 +12809,26 @@ function trIn(path,label,type,ph){const p=path.split('.');let v=TR;p.forEach(k=>
   return'<div class="fld"><label for="'+id+'">'+escHTML(label)+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v)+'"'+(ph?' placeholder="'+escHTML(ph)+'"':'')+' oninput="trF(\''+path+'\',this.value)"></div>'}
 function trRender(){
   const b=document.getElementById('trBody');if(!b||!TR)return;
-  const t=TR_TPL[TR.tpl],secs=t.sec.concat(['dl']);
+  const t=TR_TPL[TR.tpl],secs=trSecs().concat(['custom','dl']);
   document.getElementById('trH').textContent=trT('title');document.getElementById('trDesc').textContent=trT('desc');
   let h='<div class="fld"><label for="trTpl">'+escHTML(trT('tpl'))+'</label><select id="trTpl" onchange="trSetTpl(this.value)">'+Object.keys(TR_TPL).map(k=>'<option value="'+k+'"'+(k===TR.tpl?' selected':'')+'>'+escHTML(trB(TR_TPL[k].n))+'</option>').join('')+'</select></div>';
-  h+='<div class="tr-tabs" role="tablist">'+secs.map((s,i)=>'<button type="button" role="tab" class="'+(TR_TAB===s?'on':'')+'" onclick="trTab(\''+s+'\')">'+(s==='dl'?'':(i+1)+'. ')+escHTML(trT(s==='dl'?'s_dl':'s_'+s))+'</button>').join('')+'</div>';
+  h+='<div class="tr-tabs" role="tablist">'+secs.map((s,i)=>'<button type="button" role="tab" class="'+(TR_TAB===s?'on':'')+'" onclick="trTab(\''+s+'\')">'+(s==='dl'||s==='custom'?'':(i+1)+'. ')+escHTML(s==='dl'?trT('s_dl'):s==='custom'?'⚙ '+trT('s_custom'):trSecName(s))+'</button>').join('')+'</div>';
   if(TR_TAB!=='ethics'&&!trEthDone())h+='<p class="tr-warn">'+escHTML(trT('eth_rem'))+' <a href="#" onclick="trTab(\'ethics\');return false">'+escHTML(trT('s_ethics'))+' →</a></p>';
-  h+='<div class="tr-sec">'+(window['trSec_'+TR_TAB]||trSec_cover)()+'</div>';
+  h+='<div class="tr-sec">'+(TR_TAB.indexOf('x:')===0?trSec_x(TR_TAB.slice(2)):(window['trSec_'+TR_TAB]||trSec_cover)())+'</div>';
   b.innerHTML=h;
 }
 function trEthDone(){const n=TR_UND[TR_TPL[TR.tpl].und].length;let k=0;for(let i=0;i<n;i++)if(TR.eth.t[i])k++;return k===n}
 function trSec_cover(){
   const c='cover.';let h=trIn(c+'inst',trT('inst'))+trIn(c+'dept',trT('dept'))+trIn(c+'title',trT('doctitle'))+trIn(c+'prog',trT('prog'))+trIn(c+'name',trT('name'))+trIn(c+'enrol',trT('enrol'))+trIn(c+'session',trT('session'))+trIn(c+'org',trT('org'))
    +'<div class="row" style="gap:8px">'+trIn(c+'from',trT('from'),'date')+trIn(c+'to',trT('to'),'date')+'</div>'+trIn(c+'mentor',trT('mentor'))+trIn(c+'sup',trT('sup'))+trIn(c+'submit',trT('submit'),'date');
-  h+='<div class="fld"><label for="trCs">'+escHTML(trT('cstyle'))+'</label><select id="trCs" onchange="TR.coverStyle=this.value;trSaveNow();trRender()">'+['classic','band','simple'].map(k=>'<option value="'+k+'"'+((TR.coverStyle||'classic')===k?' selected':'')+'>'+escHTML(trT('cs_'+k))+'</option>').join('')+'</select></div>'+trCoverPrev();
+  h+='<div class="fld"><label for="trCs">'+escHTML(trT('cstyle'))+'</label><select id="trCs" onchange="TR.coverStyle=this.value;trSaveNow();trRender()">'+['thesis','classic','band','simple'].map(k=>'<option value="'+k+'"'+((TR.coverStyle||'thesis')===k?' selected':'')+'>'+escHTML(trT('cs_'+k))+'</option>').join('')+'</select></div>'+trCoverPrev();
   h+='<div class="fld"><label for="trLogo">'+escHTML(trT('logo'))+'</label><input type="file" id="trLogo" accept="image/png,image/jpeg,image/webp" onchange="trLogo(this.files[0]);this.value=\'\'"></div>';
   if(TR.logo&&TR.logo.src)h+='<div class="tr-logo-prev" style="text-align:'+(TR.logo.pos==='l'?'left':'center')+'"><img src="'+escHTML(TR.logo.src)+'" alt="" style="max-width:'+(TR.logo.pos==='b'?'100%':'140px')+';max-height:'+(TR.logo.pos==='b'?'160px':'120px')+'"></div><div class="row" style="gap:8px;align-items:center"><label for="trLogoPos">'+escHTML(trT('logopos'))+'</label><select id="trLogoPos" onchange="TR.logo.pos=this.value;trSaveNow();trRender()">'+[['c','pos_c'],['l','pos_l'],['b','pos_b']].map(x=>'<option value="'+x[0]+'"'+((TR.logo.pos||'c')===x[0]?' selected':'')+'>'+escHTML(trT(x[1]))+'</option>').join('')+'</select><button type="button" class="btn btn-ghost" onclick="TR.logo=null;trSaveNow();trRender()">'+escHTML(trT('logodel'))+'</button></div>';
   return h}
-function trCoverPrev(){const c=TR.cover,st=TR.coverStyle||'classic',E=escHTML,t=TR_TPL[TR.tpl],lg=TR.logo&&TR.logo.src?'<img src="'+E(TR.logo.src)+'" alt="" style="max-height:38px;max-width:'+(TR.logo.pos==='b'&&st!=='band'?'100%':'60px')+'">':'';
+function trCoverPrev(){const c=TR.cover,st=TR.coverStyle||'thesis',E=escHTML,t=TR_TPL[TR.tpl],lg=TR.logo&&TR.logo.src?'<img src="'+E(TR.logo.src)+'" alt="" style="max-height:38px;max-width:'+(TR.logo.pos==='b'&&st!=='band'?'100%':'60px')+'">':'';
   const inst=E(c.inst||trT('inst')),fields=[['name',c.name],['enrol',c.enrol],['session',c.session],['org',c.org],['mentor',c.mentor]].map(x=>'<tr><td>'+E(trT(x[0]))+'</td><td>'+E(x[1]||'')+'</td></tr>').join('');
   const top=st==='band'?'<div class="trcp-band">'+lg+'<div><b>'+inst+'</b><br><small>'+E(c.dept||'')+'</small></div></div>':'<div style="text-align:'+(TR.logo&&TR.logo.pos==='l'?'left':'center')+'">'+lg+'</div><div class="trcp-inst">'+inst+'</div><div class="trcp-dept">'+E(c.dept||'')+'</div><div class="trcp-rule"></div>';
+  if(st==='thesis'){const hi=getLang()==='hi';return'<div class="fld"><label>'+E(trT('preview'))+'</label><div class="trcp trcp-thesis"><div class="trcp-title" style="text-transform:uppercase;margin-top:18px">'+E(c.title||trB(t.title))+'</div><div class="trcp-prog"><i>'+(hi?'प्रस्तुत किया गया':'submitted to')+'</i></div><div style="text-align:center;font-weight:700">'+inst+'</div><div class="trcp-prog" style="margin-top:6px"><i>'+(hi?'की आंशिक पूर्ति में':'in partial fulfilment of')+'</i><br><b style="color:#222">'+E(c.prog||'')+'</b></div><div style="display:flex;justify-content:space-around;margin:14px 0;text-align:center"><div><i style="color:#5F5F6E">'+(hi?'प्रस्तुतकर्ता':'Submitted by')+'</i><br><b>'+E(c.name||'')+'</b></div><div><i style="color:#5F5F6E">'+(hi?'पर्यवेक्षण में':'Supervised by')+'</i><br><b>'+E(c.mentor||'')+'</b></div></div><div style="text-align:center">'+lg+'</div><div class="trcp-dept">'+E(c.dept||'')+'</div><div class="trcp-inst">'+inst+'</div><div class="trcp-dept">'+E(c.session||'')+'</div></div></div>'}
   return'<div class="fld"><label>'+E(trT('preview'))+'</label><div class="trcp trcp-'+st+'">'+top+'<div class="trcp-title">'+E(c.title||trB(t.title))+'</div><div class="trcp-prog">'+E(c.prog||'')+'</div><table class="trcp-tbl">'+fields+'</table></div></div>'}
 function trLogo(f){if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(im,0,0,cv.width,cv.height);TR.logo={src:cv.toDataURL('image/jpeg',0.85),pos:(TR.logo&&TR.logo.pos)||'c'};trSaveNow();trRender()};im.src=r.result};r.readAsDataURL(f)}
 function trSec_details(){const d='det.';return trIn('cover.prog',trT('prog'))+trIn(d+'year',trT('year'))+trIn('cover.inst',trT('inst'))+trIn('cover.dept',trT('dept'))+trIn('cover.session',trT('session'))+trIn('cover.mentor',trT('mentor'))+trIn('cover.org',trT('org'))+trIn(d+'setting',trT('setting'))+trIn('cover.sup',trT('sup'))+trIn(d+'supdes',trT('supdes'))+'<div class="row" style="gap:8px">'+trIn('cover.from',trT('from'),'date')+trIn('cover.to',trT('to'),'date')+'</div>'+trIn(d+'hours',trT('hours'),'number')+trIn(d+'approval',trT('approval'))}
@@ -12864,8 +12866,8 @@ function trSec_refl(){let h='';TR.refl.forEach((r,i)=>{const f=(k,l)=>'<div clas
   h+='<div class="tr-card"><b>'+escHTML(trT('wk'))+' '+(i+1)+'</b>'+f('learn','r_learn')+f('theory','r_theory')+f('ethic','r_ethic')+f('fb','r_fb')+f('goal','r_goal')+trPdHTML([r.learn,r.theory,r.ethic,r.fb,r.goal].join(' '),'trMaskRefl('+i+')')+'<button type="button" class="btn btn-ghost" onclick="trDel(\'refl\','+i+')">'+escHTML(trT('del'))+'</button></div>'});
   return h+'<button type="button" class="btn btn-purple" onclick="TR.refl.push({});trSaveNow();trRender()">+ '+escHTML(trT('wk'))+' '+(TR.refl.length+1)+'</button>'}
 function trMaskRefl(i){const r=TR.refl[i];['learn','theory','ethic','fb','goal'].forEach(k=>{if(r[k])r[k]=pdMask(r[k])});trSaveNow();trRender()}
-function trSec_cases(){const t=TR_TPL[TR.tpl];let h='<div class="row" style="gap:8px;align-items:end"><div class="fld"><label for="trRt">'+escHTML(trT('rectype'))+'</label><select id="trRt">'+t.recs.map(k=>'<option value="'+k+'">'+escHTML(trB(TR_REC[k].n))+'</option>').join('')+'</select></div><button type="button" class="btn btn-purple" onclick="trCaseAdd()">+ '+escHTML(trT('newcase'))+'</button></div>';
-  TR.cases.forEach((c,i)=>{const r=TR_REC[c.rec];if(!r)return;const em=trEmpty(c);
+function trSec_cases(){const t=TR_TPL[TR.tpl];let h='<div class="row" style="gap:8px;align-items:end"><div class="fld"><label for="trRt">'+escHTML(trT('rectype'))+'</label><select id="trRt">'+trRecKeys().map(k=>'<option value="'+k+'">'+escHTML(trB(trRec(k).n))+'</option>').join('')+'</select></div><button type="button" class="btn btn-purple" onclick="trCaseAdd()">+ '+escHTML(trT('newcase'))+'</button></div>';
+  TR.cases.forEach((c,i)=>{const r=trRec(c.rec);if(!r)return;const em=trEmpty(c);
     h+='<details class="tr-card"'+(c.open?' open':'')+' ontoggle="TR.cases['+i+'].open=this.open;trSave()"><summary><b>'+escHTML(trB(r.n))+'</b> · '+escHTML(c.code||'—')+' · <span class="'+(em?'tr-warn-i':'tr-ok-i')+'">'+(em?em+' '+escHTML(trT('empty')):'✓ '+escHTML(trT('complete')))+'</span></summary>'
      +'<div class="fld"><label>'+escHTML(trT('code'))+'</label><input value="'+escHTML(c.code||'')+'" maxlength="20" placeholder="C-014" oninput="TR.cases['+i+'].code=this.value;trSave()"></div>'
      +r.h.map((hh,j)=>'<div class="fld"><label>'+escHTML(trB(hh))+'</label><textarea rows="3" oninput="TR.cases['+i+'].f['+j+']=this.value;trSave()">'+escHTML((c.f||{})[j]||'')+'</textarea></div>').join('')
@@ -12878,7 +12880,7 @@ function trSec_summary(){const t=TR_TPL[TR.tpl];let h='';
   const tg=trTargets();
   if(tg.length||t.recTargets){h+='<h4>'+escHTML(trT('progress'))+'</h4>';
     tg.forEach(([id,n])=>{const k=trCount(id);h+='<div class="tr-prog">'+escHTML(trActName(id))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+' <button type="button" class="btn btn-ghost" onclick="trEditTarget(\''+id+'\','+n+')">'+escHTML(trT('edit_target'))+'</button></div>'});
-    (t.recTargets||[]).forEach(([rk,n])=>{const k=TR.cases.filter(c=>c.rec===rk).length;h+='<div class="tr-prog">'+escHTML(trB(TR_REC[rk].n))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+'</div>'});
+    (t.recTargets||[]).forEach(([rk,n])=>{const k=TR.cases.filter(c=>c.rec===rk).length;h+='<div class="tr-prog">'+escHTML(trB((trRec(rk)||{n:rk}).n))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+'</div>'});
     if(t.tsrc)h+='<p class="desc">'+escHTML(trB(t.tsrc))+'</p>'}
   if(t.note)h+='<p class="desc">'+escHTML(trT(t.note))+'</p>';
   const req=parseFloat(TR.det.hours)||0,tot=trTotHrs();h+='<div class="tr-prog">'+escHTML(trT('totalhrs'))+': <b>'+tot+'</b>'+(req?' '+escHTML(trT('of'))+' '+req+' '+trBar(tot,req):'')+'</div>';
@@ -12902,6 +12904,80 @@ function trSec_sup(){return'<p class="desc">'+escHTML(trT('sup_note'))+'</p>'}
 function trSec_dl(){return'<p class="desc">'+escHTML(trT('dl_desc'))+'</p><div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" id="trDlBtn" onclick="trDownload()">⬇ '+escHTML(trT('dl_btn'))+'</button><button type="button" class="btn btn-ghost" onclick="trExport()">💾 '+escHTML(trT('exp_btn'))+'</button><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'trImp\').click()">📂 '+escHTML(trT('imp_btn'))+'</button><input type="file" id="trImp" accept=".json" style="display:none" onchange="trImport(this.files[0]);this.value=\'\'"></div><p class="desc">'+escHTML(trT('privacy'))+'</p>'}
 function trExport(){trSaveNow();const blob=new Blob([JSON.stringify({appuscholar_training_record:1,data:TR})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='training-record-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 function trImport(f){if(!f)return;f.text().then(s=>{const o=JSON.parse(s);if(!o||!o.appuscholar_training_record||!o.data)throw new Error('x');if(TR&&TR.log.length&&!confirm(trT('confirm_imp')))return;TR=trFix(o.data);trSaveNow();trRender();showToast('Loaded ✓')}).catch(()=>showToast('That file is not a Training record backup'))}
+/* ---- Customise (Version 112): students shape the record to their college's format ----
+   Sections can be renamed, hidden, moved and added (text or table); record types can be renamed,
+   their headings edited, and new types added. A blank college format (Word, text PDF or text) can be
+   uploaded: the student's own AI proposes sections and record headings, the student ticks what to keep.
+   The format can be saved as a small file and shared with classmates or a teacher. */
+function trCust(){if(!TR.cust||typeof TR.cust!=='object')TR.cust={};const c=TR.cust;['names','hide','recs'].forEach(k=>{if(!c[k]||typeof c[k]!=='object'||Array.isArray(c[k]))c[k]={}});['order','extra','newRecs'].forEach(k=>{if(!Array.isArray(c[k]))c[k]=[]});return c}
+function trSecs(all){const t=TR_TPL[TR.tpl],c=trCust();const base=t.sec.concat(c.extra.map(x=>'x:'+x.id));
+  let ord=c.order.filter(k=>base.includes(k));base.forEach(k=>{if(!ord.includes(k)){const si=ord.indexOf('summary');if(k.indexOf('x:')===0&&si>=0)ord.splice(si,0,k);else ord.push(k)}});
+  ord=ord.filter(k=>k!=='cover');ord.unshift('cover');return all?ord:ord.filter(k=>!c.hide[k])}
+function trSecName(k){const c=trCust();if(c.names[k])return c.names[k];if(k.indexOf('x:')===0){const x=c.extra.find(e=>'x:'+e.id===k);return x?(x.title||'—'):k}return trT('s_'+k)}
+function trRecKeys(){const t=TR_TPL[TR.tpl],c=trCust();return t.recs.concat(c.newRecs.map(r=>r.k))}
+function trRec(k){const c=trCust();const nr=c.newRecs.find(r=>r.k===k);if(nr)return{n:nr.n||'—',h:nr.h||[]};const b=TR_REC[k];if(!b)return null;const o=c.recs[k];return{n:(o&&o.n)||b.n,h:(o&&Array.isArray(o.h)&&o.h.length)?o.h:b.h}}
+function trSec_x(id){const c=trCust(),x=c.extra.find(e=>e.id===id);if(!x)return'';
+  if(x.kind==='table'){const cols=x.cols&&x.cols.length?x.cols:['—'];x.rows=x.rows||[];let h='<div class="tr-tw"><table class="tr-tbl"><thead><tr>'+cols.map(cn=>'<th>'+escHTML(cn)+'</th>').join('')+'<th></th></tr></thead><tbody>';
+    x.rows.forEach((r,i)=>{h+='<tr>'+cols.map((cn,j)=>'<td><input style="width:100%;min-width:80px" value="'+escHTML(r[j]||'')+'" oninput="trXCell(\''+id+'\','+i+','+j+',this.value)"></td>').join('')+'<td><button type="button" class="btn btn-ghost" onclick="trXDelRow(\''+id+'\','+i+')">✕</button></td></tr>'});
+    return h+'</tbody></table></div><button type="button" class="btn btn-purple" onclick="trXAddRow(\''+id+'\')">+ '+escHTML(trT('add'))+'</button>'}
+  return'<div class="fld"><textarea rows="10" style="width:100%" oninput="trXText(\''+id+'\',this.value)">'+escHTML(x.text||'')+'</textarea></div>'+trPdHTML(x.text||'','trXMask(\''+id+'\')')}
+function trXGet(id){return trCust().extra.find(e=>e.id===id)}
+function trXCell(id,i,j,v){const x=trXGet(id);if(!x)return;x.rows[i]=x.rows[i]||[];x.rows[i][j]=v;trSave()}
+function trXAddRow(id){const x=trXGet(id);if(!x)return;x.rows=x.rows||[];x.rows.push([]);trSaveNow();trRender()}
+function trXDelRow(id,i){const x=trXGet(id);if(!x)return;x.rows.splice(i,1);trSaveNow();trRender()}
+function trXText(id,v){const x=trXGet(id);if(!x)return;x.text=v;trSave()}
+function trXMask(id){const x=trXGet(id);if(!x)return;x.text=pdMask(x.text||'');trSaveNow();trRender()}
+function trSec_custom(){const c=trCust(),E=escHTML,all=trSecs(true);
+  let h='<p class="tr-warn">'+E(trT('rep_note'))+'</p><h4>'+E(trT('cu_secs'))+'</h4><div class="tr-tw"><table class="tr-tbl"><thead><tr><th>#</th><th>'+E(trT('cu_name'))+'</th><th>'+E(trT('cu_show'))+'</th><th>'+E(trT('cu_move'))+'</th><th></th></tr></thead><tbody>';
+  all.forEach((k,i)=>{const fixed=k==='cover',isX=k.indexOf('x:')===0;
+    h+='<tr><td>'+(i+1)+'</td><td><input style="width:100%" value="'+E(trSecName(k))+'" '+(fixed?'disabled':'')+' onchange="trCuName(\''+k+'\',this.value)"></td><td style="text-align:center"><input type="checkbox" '+(c.hide[k]?'':'checked ')+(fixed?'disabled':'')+' onchange="trCuHide(\''+k+'\',!this.checked)"></td><td>'+(fixed?'':'<button type="button" class="btn btn-ghost" '+(i<=1?'disabled':'')+' onclick="trCuMove(\''+k+'\',-1)">↑</button><button type="button" class="btn btn-ghost" '+(i===all.length-1?'disabled':'')+' onclick="trCuMove(\''+k+'\',1)">↓</button>')+'</td><td>'+(isX?'<button type="button" class="btn btn-ghost" onclick="trCuDelX(\''+k.slice(2)+'\')">✕</button>':'')+'</td></tr>'});
+  h+='</tbody></table></div>';
+  h+='<details class="tr-card"><summary>+ '+E(trT('cu_addsec'))+'</summary><div class="fld"><label for="trCuT">'+E(trT('cu_title'))+'</label><input id="trCuT" maxlength="80"></div><div class="fld"><label for="trCuK">'+E(trT('cu_kind'))+'</label><select id="trCuK" onchange="document.getElementById(\'trCuColsF\').style.display=this.value===\'table\'?\'\':\'none\'"><option value="text">'+E(trT('cu_text'))+'</option><option value="table">'+E(trT('cu_table'))+'</option></select></div><div class="fld" id="trCuColsF" style="display:none"><label for="trCuCols">'+E(trT('cu_cols'))+'</label><input id="trCuCols" placeholder="Date, Activity, Remarks"></div><button type="button" class="btn btn-purple" onclick="trCuAddSec()">'+E(trT('add'))+'</button></details>';
+  h+='<h4>'+E(trT('cu_recs'))+'</h4>';
+  trRecKeys().forEach(k=>{const r=trRec(k),isNew=c.newRecs.some(x=>x.k===k);
+    h+='<details class="tr-card"><summary>'+E(trB(r.n))+' · '+r.h.length+' '+E(trT('cu_heads'))+'</summary><div class="fld"><label>'+E(trT('cu_name'))+'</label><input value="'+E(trB(r.n))+'" onchange="trCuRec(\''+k+'\',\'n\',this.value)"></div><div class="fld"><label>'+E(trT('cu_headlines'))+'</label><textarea rows="'+Math.min(14,r.h.length+2)+'" style="width:100%" onchange="trCuRec(\''+k+'\',\'h\',this.value)">'+E(r.h.map(x=>trB(x)).join('\n'))+'</textarea></div>'+(isNew?'<button type="button" class="btn btn-ghost" onclick="trCuDelRec(\''+k+'\')">'+E(trT('del'))+'</button>':'<button type="button" class="btn btn-ghost" onclick="delete trCust().recs[\''+k+'\'];trSaveNow();trRender()">'+E(trT('cu_reset'))+'</button>')+'</details>'});
+  h+='<details class="tr-card"><summary>+ '+E(trT('cu_addrec'))+'</summary><div class="fld"><label for="trCuRn">'+E(trT('cu_name'))+'</label><input id="trCuRn" maxlength="80"></div><div class="fld"><label for="trCuRh">'+E(trT('cu_headlines'))+'</label><textarea id="trCuRh" rows="6" style="width:100%"></textarea></div><button type="button" class="btn btn-purple" onclick="trCuAddRec()">'+E(trT('add'))+'</button></details>';
+  h+='<h4>'+E(trT('up_h'))+'</h4><p class="desc">'+E(trT('up_desc'))+'</p><div class="fld"><input type="file" id="trUp" accept=".docx,.pdf,.txt,.md" onchange="trUpload(this.files[0]);this.value=\'\'"></div><div id="trUpOut"></div>';
+  h+='<h4>'+E(trT('fmt_h'))+'</h4><p class="desc">'+E(trT('fmt_desc'))+'</p><div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" onclick="trFmtExport()">💾 '+E(trT('fmt_save'))+'</button><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'trFmtIn\').click()">📂 '+E(trT('fmt_load'))+'</button><input type="file" id="trFmtIn" accept=".json" style="display:none" onchange="trFmtImport(this.files[0]);this.value=\'\'"></div>';
+  return h}
+function trCuName(k,v){const c=trCust();v=String(v||'').trim();if(k.indexOf('x:')===0){const x=c.extra.find(e=>'x:'+e.id===k);if(x)x.title=v}else if(v&&v!==trT('s_'+k))c.names[k]=v;else delete c.names[k];trSaveNow();trRender()}
+function trCuHide(k,h){const c=trCust();if(h)c.hide[k]=true;else delete c.hide[k];trSaveNow();trRender()}
+function trCuMove(k,d){const c=trCust(),o=trSecs(true),i=o.indexOf(k),j=i+d;if(i<1||j<1||j>=o.length)return;[o[i],o[j]]=[o[j],o[i]];c.order=o;trSaveNow();trRender()}
+function trCuAddSec(){const c=trCust(),t=(document.getElementById('trCuT').value||'').trim();if(!t){showToast('Give the section a title');return}const kind=document.getElementById('trCuK').value;const cols=kind==='table'?(document.getElementById('trCuCols').value||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,8):[];
+  c.extra.push({id:'e'+Date.now().toString(36),title:t.slice(0,80),kind,cols:cols.length?cols:(kind==='table'?['Item','Details']:[]),rows:[],text:''});trSaveNow();trRender()}
+function trCuDelX(id){if(!confirm(trT('confirm_del')))return;const c=trCust();c.extra=c.extra.filter(e=>e.id!==id);c.order=c.order.filter(k=>k!=='x:'+id);delete c.hide['x:'+id];trSaveNow();trRender()}
+function trCuRec(k,f,v){const c=trCust();const nr=c.newRecs.find(r=>r.k===k);const val=f==='h'?String(v).split(/\n/).map(s=>s.trim()).filter(Boolean).slice(0,40):String(v).trim().slice(0,80);
+  if(nr){nr[f]=val}else{c.recs[k]=c.recs[k]||{};c.recs[k][f]=val}trSaveNow();trRender()}
+function trCuAddRec(){const c=trCust(),n=(document.getElementById('trCuRn').value||'').trim(),h=(document.getElementById('trCuRh').value||'').split(/\n/).map(s=>s.trim()).filter(Boolean).slice(0,40);if(!n||!h.length){showToast('Give the record a name and at least one heading');return}c.newRecs.push({k:'u'+Date.now().toString(36),n:n.slice(0,80),h});trSaveNow();trRender()}
+function trCuDelRec(k){if(TR.cases.some(x=>x.rec===k)){showToast('Some of your records use this type. Delete those records first.');return}if(!confirm(trT('confirm_del')))return;const c=trCust();c.newRecs=c.newRecs.filter(r=>r.k!==k);trSaveNow();trRender()}
+function trFmtExport(){const c=trCust();const blob=new Blob([JSON.stringify({appuscholar_training_format:1,tpl:TR.tpl,cust:{names:c.names,hide:c.hide,order:c.order,extra:c.extra.map(x=>({id:x.id,title:x.title,kind:x.kind,cols:x.cols,rows:[],text:''})),recs:c.recs,newRecs:c.newRecs},acts:TR.tpl==='custom'?TR.acts:undefined,coverStyle:TR.coverStyle,title:TR.cover.title,inst:TR.cover.inst,dept:TR.cover.dept})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(String(TR.cover.inst||'college').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')||'college')+'-training-format.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function trFmtImport(f){if(!f)return;f.text().then(s=>{const o=JSON.parse(s);if(!o||!o.appuscholar_training_format||!o.cust)throw new Error('x');if(!confirm(trT('fmt_confirm')))return;
+  if(TR_TPL[o.tpl])TR.tpl=o.tpl;TR.cust=o.cust;trCust();if(Array.isArray(o.acts)&&TR.tpl==='custom')TR.acts=o.acts;if(o.coverStyle)TR.coverStyle=o.coverStyle;['title','inst','dept'].forEach(k=>{if(o[k]&&!TR.cover[k])TR.cover[k]=o[k]});trTplInit(TR);trSaveNow();trRender();showToast('Loaded ✓')}).catch(()=>showToast('That file is not an Appuscholar training format'))}
+let TR_UP=null;
+async function trUpload(f){const out=document.getElementById('trUpOut');if(!f||!out)return;const E=escHTML;
+  if(/\.(jpe?g|png|webp|heic)$/i.test(f.name)){out.innerHTML='<p class="tr-warn">'+E(trT('up_photo'))+'</p>';return}
+  out.innerHTML='<p class="desc">'+E(trT('up_reading'))+'</p>';
+  let txt='';try{txt=String(await readFileText(f)).replace(/\r/g,'').replace(/[ \t]+/g,' ').trim()}catch(e){out.innerHTML='<p class="tr-warn">'+E(e.message||String(e))+'</p>';return}
+  if(txt.replace(/\s/g,'').length<40){out.innerHTML='<p class="tr-warn">'+E(trT('up_scan'))+'</p>';return}
+  try{const sc=pdScanText(txt);if(sc.total>=2){out.innerHTML='<p class="tr-warn">'+E(trT('up_filled'))+' ('+E(Object.keys(sc.counts).map(k=>sc.counts[k]+' '+k).join(', '))+')</p>';return}}catch(e){}
+  const prompt='You are helping a student turn a blank college logbook or internship record format into a template. Read the format below and reply with JSON only, no other text, in this shape: {"title":"document title if printed","sections":[{"title":"section title as printed","kind":"text or table","columns":["column headings, only for tables"]}],"records":[{"name":"name of a case or record form","headings":["headings in that form, in order"]}],"activities":["activity types if the format lists them"],"targets":[{"activity":"name","number":0}]}. Copy titles and headings as printed; do not invent any section, heading or number that is not in the format. Leave out cover-page fields such as name, roll number and signatures.\n\nFORMAT:\n'+txt.slice(0,14000);
+  let raw='';try{raw=await callAI(prompt,{temp:0.1,max:2500})}catch(e){out.innerHTML='<p class="tr-warn">'+E(trT('up_noai'))+' '+E(e&&e.message||'')+'</p>';return}
+  let o=null;try{const m=String(raw).match(/\{[\s\S]*\}/);o=JSON.parse(m?m[0]:raw)}catch(e){}
+  if(!o||(!Array.isArray(o.sections)&&!Array.isArray(o.records))){out.innerHTML='<p class="tr-warn">'+E(trT('up_bad'))+'</p>';return}
+  const S=(o.sections||[]).filter(s=>s&&s.title).slice(0,30),R=(o.records||[]).filter(r=>r&&r.name&&Array.isArray(r.headings)&&r.headings.length).slice(0,12);
+  TR_UP={S,R,title:o.title||'',acts:Array.isArray(o.activities)?o.activities.filter(Boolean).slice(0,30):[]};
+  let h='<div class="tr-card"><p><b>'+E(trT('up_found'))+'</b> '+E(f.name)+'</p>';
+  if(S.length)h+='<p><b>'+E(trT('cu_secs'))+'</b></p>'+S.map((s,i)=>'<label class="tr-chk"><input type="checkbox" checked data-up="s'+i+'"> '+E(s.title)+(s.kind==='table'&&Array.isArray(s.columns)&&s.columns.length?' <small>('+E(s.columns.join(', '))+')</small>':'')+'</label>').join('');
+  if(R.length)h+='<p><b>'+E(trT('cu_recs'))+'</b></p>'+R.map((r,i)=>'<label class="tr-chk"><input type="checkbox" checked data-up="r'+i+'"> '+E(r.name)+' <small>('+r.headings.length+' '+E(trT('cu_heads'))+')</small></label>').join('');
+  if(TR_UP.acts.length&&TR.tpl==='custom')h+='<label class="tr-chk"><input type="checkbox" checked data-up="acts"> '+E(trT('up_acts'))+': '+E(TR_UP.acts.join(', '))+'</label>';
+  h+='<p class="desc">'+E(trT('up_check'))+'</p><button type="button" class="btn btn-purple" onclick="trUpApply()">'+E(trT('up_apply'))+'</button></div>';out.innerHTML=h}
+function trUpApply(){if(!TR_UP)return;const c=trCust(),on=k=>{const e=document.querySelector('#trUpOut input[data-up="'+k+'"]');return e&&e.checked};  TR_UP.S.forEach((s,i)=>{if(!on('s'+i))return;const kind=s.kind==='table'?'table':'text';c.extra.push({id:'e'+Date.now().toString(36)+i,title:String(s.title).slice(0,80),kind,cols:kind==='table'?(s.columns||[]).map(String).slice(0,8):[],rows:[],text:''})});
+  TR_UP.R.forEach((r,i)=>{if(!on('r'+i))return;c.newRecs.push({k:'u'+Date.now().toString(36)+i,n:String(r.name).slice(0,80),h:r.headings.map(String).slice(0,40)})});
+  if(TR_UP.acts.length&&on('acts')&&TR.tpl==='custom')TR.acts=TR_UP.acts.map(String);
+  if(TR_UP.title&&!TR.cover.title)TR.cover.title=TR_UP.title;
+  TR_UP=null;trSaveNow();trRender();showToast('Added ✓ Check each section, and rename or hide anything you do not need.')}
+
 /* ---- Word file (Version 111): a designed, editable logbook ----
    Built directly as Office Open XML so every table shares one grid: A4 with 2 cm margins
    (9638 twips of text width), the label column always 3200 wide, wide tables on landscape pages
@@ -12941,91 +13017,96 @@ function trxSect(o){o=o||{};const L=o.land;return'<w:sectPr>'+(o.hdr?'<w:headerR
 const trxBreak=o=>'<w:p><w:pPr>'+trxSect(o)+'</w:pPr></w:p>';
 function trxSign(lbls){const hi=getLang()==='hi',half=Math.floor(TRX.W/2);const rows=[{c:lbls.map(l=>({t:l,b:true,al:'center',c:TRX.acc,fill:TRX.light,va:'center'}))}];[[hi?'हस्ताक्षर':'Signature',900],[hi?'नाम':'Name',420],[hi?'तिथि':'Date',420]].forEach(([k,m])=>rows.push({min:m,c:lbls.map(()=>({t:k,c:TRX.grey,sz:16,va:'bottom'}))}));return trxTbl([half,TRX.W-half],rows)}
 async function trDocx(){
-  const t=TR_TPL[TR.tpl],c=TR.cover,hi=getLang()==='hi',st=TR.coverStyle||'classic',num=k=>(t.sec.indexOf(k)+1)+'. '+trT('s_'+k);
+  const t=TR_TPL[TR.tpl],c=TR.cover,hi=getLang()==='hi',st=TR.coverStyle||'thesis',secs=trSecs(),num=k=>(secs.indexOf(k)+1)+'. '+trSecName(k);
+  const W=TRX.W,K=TRX.K,N=700,KV=[K,W-K],NUMW=[N,W-N],HALF=[Math.floor(W/2),W-Math.floor(W/2)];
   const media=[];let pid=0;
   async function pic(src,maxW,maxH){const p=await dxPicture(src);if(!p)return'';const id=media.length+1,rid='rIdImg'+id;media.push({name:'image'+id+'.'+p.ext,bytes:p.bytes,rid,ext:p.ext});
     let cx=maxW*635,cy=Math.round(cx*p.h/p.w);if(cy>maxH*635){cy=maxH*635;cx=Math.round(cy*p.w/p.h)}pid++;
     return'<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+pid+'" name="Logo '+pid+'"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="'+pid+'" name="'+media[id-1].name+'"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+rid+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>'}
-  /* sizes in twentieths of a point; 1 twip = 635 EMU */
-  const logoPos=(TR.logo&&TR.logo.pos)||'c',hasLogo=TR.logo&&TR.logo.src;
-  let B='';
+  const lab=(x)=>({t:x,b:true,fill:TRX.light,c:TRX.acc});
+  const kv=(pairs,min)=>trxTbl(KV,pairs.map(p=>({min:min||420,c:[lab(p[0]),{t:p[1]||''}]})));
+  const logoPos=(TR.logo&&TR.logo.pos)||'c',hasLogo=TR.logo&&TR.logo.src,inst=c.inst||(hi?'संस्थान का नाम':'Institute name');
+  const title=c.title||trB(t.title);
+  let B='',border='';
   /* ---- cover ---- */
   const coverRows=[[trT('name'),c.name],[trT('enrol'),c.enrol],[trT('prog'),c.prog],[trT('session'),c.session],[trT('org'),c.org],[trT('from')+' – '+trT('to'),(c.from||'')+(c.to?' – '+c.to:'')],[trT('mentor'),c.mentor],[trT('sup'),c.sup],[trT('submit'),c.submit]];
-  const coverTbl=trxTbl([2900,5000],coverRows.map(p=>({min:460,c:[{t:p[0],b:true,fill:TRX.light,c:TRX.acc,va:'center'},{t:p[1]||'',va:'center',sz:22}]})),{center:true});
-  const titleBlock=trxT(c.title||trB(t.title),{b:true,sz:44,c:TRX.acc,al:'center',after:120,line:276})+(c.prog?trxT(c.prog,{sz:26,c:TRX.grey,al:'center',after:60}):'')+trxT(trB(t.n),{sz:20,c:TRX.grey,al:'center',i:true,after:480});
-  let border='';
-  if(st==='band'){
-    const lg=hasLogo?await pic(TR.logo.src,1500,1500):'';
-    const band='<w:p><w:pPr><w:spacing w:after="40"/><w:jc w:val="'+(hasLogo?'left':'center')+'"/></w:pPr>'+trxR(c.inst||(hi?'संस्थान का नाम':'Institute name'),{b:true,sz:36,c:'FFFFFF',caps:true})+'</w:p>'+trxT(c.dept||'',{sz:22,c:'FFFFFF',al:hasLogo?'left':'center',after:0});
-    B+=trxTbl(hasLogo?[2100,TRX.W-2100]:[TRX.W],[{min:1900,c:(hasLogo?[{xml:'<w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'+lg+'</w:p>',fill:TRX.acc,va:'center'}]:[]).concat([{xml:band,fill:TRX.acc,va:'center'}])}],{nob:true,after:1200});
-    B+=titleBlock+coverTbl;
+  if(st==='thesis'){
+    const ln=(x,o)=>trxT(x,Object.assign({al:'center',after:60,line:276},o||{}));
+    B+=ln('',{after:240});
+    B+=ln(title,{b:true,sz:44,c:TRX.acc,after:360,caps:true});
+    B+=ln(hi?'एक पर्यवेक्षित प्रशिक्षण रिकॉर्ड जो प्रस्तुत किया गया':'A record of supervised training submitted to',{i:true,sz:24,c:TRX.grey});
+    B+=ln(inst,{b:true,sz:28,after:200});
+    if(c.prog){B+=ln(hi?'की आवश्यकताओं की आंशिक पूर्ति में':'in partial fulfilment of the requirements for',{i:true,sz:24,c:TRX.grey});B+=ln(c.prog,{b:true,sz:28,after:480})}else B+=ln('',{after:480});
+    B+=trxTbl(HALF,[{c:[{xml:ln(hi?'प्रस्तुतकर्ता':'Submitted by',{i:true,c:TRX.grey,sz:22})+ln(c.name||'____________________',{b:true,sz:26})+ln(c.enrol?((hi?'नामांकन: ':'Enrolment: ')+c.enrol):'',{sz:22})},{xml:ln(hi?'पर्यवेक्षण में':'Under the supervision of',{i:true,c:TRX.grey,sz:22})+ln(c.mentor||'____________________',{b:true,sz:26})+ln(c.sup?(c.sup+(c.org?', '+c.org:'')):(c.org||''),{sz:22})}]}],{nob:true,after:480});
+    if(hasLogo)B+='<w:p><w:pPr><w:spacing w:after="240"/><w:jc w:val="center"/></w:pPr>'+await pic(TR.logo.src,logoPos==='b'?W:1800,logoPos==='b'?2400:1800)+'</w:p>';
+    B+=ln(c.dept||'',{sz:24});B+=ln(inst,{b:true,sz:28,caps:true,c:TRX.acc});B+=ln(c.session||c.submit||'',{sz:24,after:0});
+    border='<w:pgBorders w:offsetFrom="page"><w:top w:val="single" w:sz="18" w:space="24" w:color="'+TRX.acc+'"/><w:left w:val="single" w:sz="18" w:space="24" w:color="'+TRX.acc+'"/><w:bottom w:val="single" w:sz="18" w:space="24" w:color="'+TRX.acc+'"/><w:right w:val="single" w:sz="18" w:space="24" w:color="'+TRX.acc+'"/></w:pgBorders>';
   }else{
-    if(st==='classic')border='<w:pgBorders w:offsetFrom="page"><w:top w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/><w:left w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/><w:bottom w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/><w:right w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/></w:pgBorders>';
-    B+=trxT('',{after:st==='classic'?360:200});
-    if(hasLogo){const banner=logoPos==='b';B+='<w:p><w:pPr><w:spacing w:after="240"/><w:jc w:val="'+(logoPos==='l'?'left':'center')+'"/></w:pPr>'+await pic(TR.logo.src,banner?9638:2000,banner?2600:2000)+'</w:p>'}
-    B+=trxT(c.inst||(hi?'संस्थान का नाम':'Institute name'),{b:true,sz:36,c:TRX.acc,al:'center',caps:true,after:60,line:276});
-    B+=trxT(c.dept||'',{sz:24,c:TRX.grey,al:'center',after:240});
-    B+=trxP('',{bdr:12,after:600});
+    const coverTbl=trxTbl(KV,coverRows.map(p=>({min:460,c:[Object.assign(lab(p[0]),{va:'center'}),{t:p[1]||'',va:'center',sz:22}]})));
+    const titleBlock=trxT(title,{b:true,sz:44,c:TRX.acc,al:'center',after:120,line:276})+(c.prog?trxT(c.prog,{sz:26,c:TRX.grey,al:'center',after:60}):'')+trxT(trB(t.n),{sz:20,c:TRX.grey,al:'center',i:true,after:480});
+    if(st==='band'){const lg=hasLogo?await pic(TR.logo.src,1500,1500):'';
+      const band='<w:p><w:pPr><w:spacing w:after="40"/><w:jc w:val="'+(hasLogo?'left':'center')+'"/></w:pPr>'+trxR(inst,{b:true,sz:36,c:'FFFFFF',caps:true})+'</w:p>'+trxT(c.dept||'',{sz:22,c:'FFFFFF',al:hasLogo?'left':'center',after:0});
+      B+=trxTbl(hasLogo?[2100,W-2100]:[W],[{min:1900,c:(hasLogo?[{xml:'<w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'+lg+'</w:p>',fill:TRX.acc,va:'center'}]:[]).concat([{xml:band,fill:TRX.acc,va:'center'}])}],{nob:true,after:1200});
+    }else{
+      if(st==='classic')border='<w:pgBorders w:offsetFrom="page"><w:top w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/><w:left w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/><w:bottom w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/><w:right w:val="double" w:sz="12" w:space="24" w:color="'+TRX.acc+'"/></w:pgBorders>';
+      B+=trxT('',{after:st==='classic'?360:200});
+      if(hasLogo){const banner=logoPos==='b';B+='<w:p><w:pPr><w:spacing w:after="240"/><w:jc w:val="'+(logoPos==='l'?'left':'center')+'"/></w:pPr>'+await pic(TR.logo.src,banner?W:2000,banner?2600:2000)+'</w:p>'}
+      B+=trxT(inst,{b:true,sz:36,c:TRX.acc,al:'center',caps:true,after:60,line:276});B+=trxT(c.dept||'',{sz:24,c:TRX.grey,al:'center',after:240});B+=trxP('',{bdr:12,after:600});
+    }
     B+=titleBlock+coverTbl;
   }
   B+=trxBreak({border});
   /* ---- instructions ---- */
   const ins=TR_INSTR[TR.tpl]||TR_INSTR.psych;
   B+=trxH1(hi?'उपयोग के निर्देश':'Instructions');
-  B+=trxT(trB(ins.src),{i:true,c:TRX.grey,after:200});
-  B+=trxTbl([600,TRX.W-600],ins.L.map((l,i)=>({c:[{t:String(i+1),b:true,al:'center',c:TRX.acc,fill:TRX.light},{t:trB(l)}]})));
-  /* ---- details, undertaking, plan (portrait) ---- */
-  B+=trxH1(num('details'),true);
-  B+=trxKV([[trT('prog'),c.prog],[trT('year'),TR.det.year],[trT('inst'),c.inst],[trT('dept'),c.dept],[trT('session'),c.session],[trT('mentor'),c.mentor],[trT('org'),c.org],[trT('setting'),TR.det.setting],[trT('sup'),c.sup],[trT('supdes'),TR.det.supdes],[trT('from')+' – '+trT('to'),(c.from||'')+(c.to?' – '+c.to:'')],[trT('hours'),TR.det.hours],[trT('approval'),TR.det.approval]]);
-  B+=trxH1(num('ethics'),true);
-  B+=trxT(trT('eth_intro'),{c:TRX.grey,after:160});
-  B+=trxTbl([700,TRX.W-700],TR_UND[t.und].map((x,i)=>({min:440,c:[{t:TR.eth.t[i]?'☑':'☐',al:'center',sz:26,va:'center'},{t:trB(x),va:'center'}]})));
-  B+=trxSign([hi?'छात्र':'Student',hi?'पर्यवेक्षक':'Supervisor']);
-  if(t.sec.includes('plan')){B+=trxH1(num('plan'),true);const pl=TR.plan.length?TR.plan:[{},{},{}];
-    B+=trxTbl([700,5000,TRX.W-5700],[{h:true,c:['#',trT('obj'),trT('how')]}].concat(pl.map((p,i)=>({min:600,c:[{t:String(i+1),al:'center'},{t:p.o||''},{t:p.how||''}]}))))}
-  /* ---- landscape: postings, leave, log, skills ---- */
-  B+=trxBreak({hdr:true});
-  const WL=TRX.WL;let firstL=true;const lh=k=>{const r=trxH1(num(k),!firstL);firstL=false;return r};
-  if(t.sec.includes('postings')){B+=lh('postings');B+=trxTbl([4570,1500,1800,1800,1500,3400],[{h:true,c:[trT('dept2'),trT('planned'),trT('from'),trT('to'),trT('done'),trT('signsup')]}].concat(TR.post.map(p=>({min:520,c:[{t:p.k},{t:p.w,al:'center'},{t:p.from,al:'center'},{t:p.to,al:'center'},{t:p.done,al:'center'},'']}))));B+=trxT(trB(t.tsrc),{i:true,c:TRX.grey,sz:18})}
-  if(t.sec.includes('leave')){B+=lh('leave');const lv=TR.leave.length?TR.leave:[];B+=trxTbl([2600,2600,1600,2600,5170],[{h:true,c:[trT('from'),trT('to'),trT('lv_days'),trT('lv_type'),trT('signsup')]}].concat(lv.concat([{},{},{}]).map(l=>({min:480,c:[{t:l.from||'',al:'center'},{t:l.to||'',al:'center'},{t:l.days||'',al:'center'},{t:l.type||''},'']}))));B+=trxT(trT('lv_used')+': '+trLeaveUsed()+' / 15',{b:true,c:TRX.acc})}
-  B+=lh('log');const mb=TR.tpl==='mbbs';
-  const logW=[1350,1500,800,2300,1500,5320,1800];
-  const logRows=TR.log.slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))).map(e=>({min:420,c:[{t:e.d,al:'center'},{t:(e.tin||'')+(e.tout?' – '+e.tout:''),al:'center'},{t:e.hrs,al:'center'},{t:trActName(e.act)},{t:mb?e.dept:e.code,al:mb?null:'center'},{t:e.note},'']}));
-  for(let i=0;i<Math.max(5,12-logRows.length);i++)logRows.push({min:480,c:['','','','','','','']});
-  B+=trxTbl(logW,[{h:true,c:[trT('date'),trT('tin')+' – '+trT('tout'),trT('hrs'),trT('act'),mb?trT('dept2'):trT('code'),trT('note'),trT('supi')]}].concat(logRows));
-  B+=trxT(trT('totalhrs')+': '+trTotHrs(),{b:true,c:TRX.acc});
-  if(t.sec.includes('skills')){B+=lh('skills');B+=trxT(trT('sk_hint'),{c:TRX.grey,sz:18});B+=trxTbl([3570,1900,1900,2100,2100,1500,1500],[{h:true,c:[trT('sk'),trT('sk_o'),trT('sk_a'),trT('sk_s'),trT('sk_i'),trT('sk_rem'),trT('supi')]}].concat(TR.skills.concat([{},{}]).map(s=>({min:460,c:[{t:s.n||''},{t:s.o||'',al:'center'},{t:s.a||'',al:'center'},{t:s.s||'',al:'center'},{t:s.i||'',al:'center'},{t:s.rem||''},'']}))))}
-  B+=trxBreak({hdr:true,land:true});
-  /* ---- portrait: reflections, cases, summary, supervisor pages ---- */
-  let firstP=true;const ph=k=>{const r=trxH1(num(k),!firstP);firstP=false;return r};
-  const KW=[TRX.K,TRX.W-TRX.K];
-  if(t.sec.includes('refl')){B+=ph('refl');(TR.refl.length?TR.refl:[{}]).forEach((r,i)=>{B+=trxH2(trT('wk')+' '+(i+1));B+=trxTbl(KW,[['learn','r_learn'],['theory','r_theory'],['ethic','r_ethic'],['fb','r_fb'],['goal','r_goal']].map(x=>({min:700,c:[{t:trT(x[1]),b:true,fill:TRX.light,c:TRX.acc},{t:r[x[0]]||''}]})))})}
-  B+=ph('cases');
-  if(!TR.cases.length)B+=trxT(hi?'(अभी कोई रिकॉर्ड नहीं)':'(No records yet)',{i:true,c:TRX.grey});
-  TR.cases.forEach((cs,i)=>{const r=TR_REC[cs.rec];if(!r)return;B+=trxH2(trB(r.n)+' '+(i+1)+(cs.code?' · '+cs.code:''));
-    B+=trxTbl(KW,[{c:[{t:trT('code'),b:true,fill:TRX.light,c:TRX.acc},{t:cs.code||''}]}].concat(r.h.map((hh,j)=>{const v=(cs.f||{})[j]||'';return{min:v?0:700,c:[{t:trB(hh),b:true,fill:TRX.light,c:TRX.acc},{t:v}]}})));
-    B+=trxSign([hi?'छात्र':'Student',hi?'पर्यवेक्षक':'Supervisor'])});
-  B+=ph('summary');const tg=trTargets();
-  const sRows=trActs().map(a=>{const k=trCount(a[0]),g=tg.find(x=>x[0]===a[0]);return(k||g)?{c:[{t:a[1]},{t:String(k),al:'center'},{t:g?String(g[1]):'',al:'center'}]}:null}).filter(Boolean)
-    .concat((t.recTargets||[]).map(([rk,n])=>({c:[{t:trB(TR_REC[rk].n)},{t:String(TR.cases.filter(x=>x.rec===rk).length),al:'center'},{t:String(n),al:'center'}]})))
-    .concat([{c:[{t:trT('totalhrs'),b:true},{t:String(trTotHrs()),al:'center',b:true},{t:TR.det.hours||'',al:'center'}]}]);
-  B+=trxTbl([TRX.W-3600,1800,1800],[{h:true,c:[trT('act'),trT('entries'),trT('target')]}].concat(sRows));
-  if(t.tsrc&&(tg.length||t.recTargets))B+=trxT(trB(t.tsrc),{i:true,c:TRX.grey,sz:18});
-  B+=ph('sup');B+=trxT(trT('sup_note'),{i:true,c:TRX.grey,after:200});
-  const ev=TR_EVAL[t.ev];
-  const grid=(ttl,cols)=>{const cw=1300,first=TRX.W-cw*cols.length;return trxH2(ttl)+trxTbl([first].concat(cols.map(()=>cw)),[{h:true,c:[''].concat(cols)}].concat(ev.map(x=>({min:440,c:[{t:trB(x),va:'center'}].concat(cols.map(()=>''))}))))+trxTbl([TRX.W],[{min:1300,c:[{t:hi?'टिप्पणी':'Comments',b:true,c:TRX.acc}]}])+trxSign([hi?'पर्यवेक्षक':'Supervisor',hi?'विभागाध्यक्ष':'Head of Department'])};
-  if(TR.tpl==='mbbs'){TR.post.forEach((p,i)=>{if(i)B+=trxP('',{pb:true,after:0});B+=grid((hi?'फ़ीडबैक फ़ॉर्म: ':'Feedback form: ')+p.k,['A','B','C','D'])+trxT(hi?'A उत्कृष्ट · B अच्छा · C औसत · D और प्रशिक्षण चाहिए':'A Outstanding · B Good · C Average · D Needs further training',{sz:18,c:TRX.grey})})}
-  else{const cols=hi?['उत्कृष्ट','अच्छा','संतोषजनक','सुधार चाहिए']:['Excellent','Good','Satisfactory','Needs improvement'];B+=grid(hi?'मध्य-प्लेसमेंट मूल्यांकन':'Mid-placement evaluation',cols)+trxP('',{pb:true,after:0})+grid(hi?'अंतिम मूल्यांकन':'Final evaluation',cols)}
+  B+=trxTbl([W],[{c:[{t:trT('rep_note'),i:true,c:TRX.acc,fill:'F7F4FC'}]}]);
+  B+=trxT(trB(ins.src),{i:true,c:TRX.grey,after:160});
+  B+=trxTbl(NUMW,ins.L.map((l,i)=>({c:[{t:String(i+1),b:true,al:'center',c:TRX.acc,fill:TRX.light},{t:trB(l)}]})));
+  /* ---- sections in the student's order ---- */
+  const mb=TR.tpl==='mbbs',ev=TR_EVAL[t.ev];
+  const R={
+   details:()=>kv([[trT('prog'),c.prog],[trT('year'),TR.det.year],[trT('inst'),c.inst],[trT('dept'),c.dept],[trT('session'),c.session],[trT('mentor'),c.mentor],[trT('org'),c.org],[trT('setting'),TR.det.setting],[trT('sup'),c.sup],[trT('supdes'),TR.det.supdes],[trT('from')+' – '+trT('to'),(c.from||'')+(c.to?' – '+c.to:'')],[trT('hours'),TR.det.hours],[trT('approval'),TR.det.approval]]),
+   ethics:()=>trxT(trT('eth_intro'),{c:TRX.grey,after:160})+trxTbl(NUMW,TR_UND[t.und].map((x,i)=>({min:440,c:[{t:TR.eth.t[i]?'☑':'☐',al:'center',sz:26,va:'center'},{t:trB(x),va:'center'}]})))+trxSign([hi?'छात्र':'Student',hi?'पर्यवेक्षक':'Supervisor']),
+   plan:()=>{const pl=TR.plan.length?TR.plan:[{},{},{}];const w=Math.floor((W-N)/2);return trxTbl([N,w,W-N-w],[{h:true,c:['#',trT('obj'),trT('how')]}].concat(pl.map((p,i)=>({min:600,c:[{t:String(i+1),al:'center'},{t:p.o||''},{t:p.how||''}]}))))},
+   postings:()=>trxTbl([K,1000,1300,1300,1000,W-K-4600],[{h:true,c:[trT('dept2'),trT('planned'),trT('from'),trT('to'),trT('done'),trT('signsup')]}].concat(TR.post.map(p=>({min:520,c:[{t:p.k},{t:p.w,al:'center'},{t:p.from,al:'center'},{t:p.to,al:'center'},{t:p.done,al:'center'},'']}))))+trxT(trB(t.tsrc),{i:true,c:TRX.grey,sz:18}),
+   leave:()=>{const lv=TR.leave.concat([{},{},{}]);return trxTbl([N,1600,1600,900,1700,W-N-5800],[{h:true,c:['#',trT('from'),trT('to'),trT('lv_days'),trT('lv_type'),trT('signsup')]}].concat(lv.map((l,i)=>({min:480,c:[{t:String(i+1),al:'center'},{t:l.from||'',al:'center'},{t:l.to||'',al:'center'},{t:l.days||'',al:'center'},{t:l.type||''},'']}))))+trxT(trT('lv_used')+': '+trLeaveUsed()+' / 15',{b:true,c:TRX.acc})},
+   log:()=>{const lw=[N,1150,1000,700,1600,900,W-N-6450,1100];
+     const rows=TR.log.slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))).map((e,i)=>({min:420,c:[{t:String(i+1),al:'center'},{t:e.d,al:'center'},{t:(e.tin||'')+(e.tout?'–'+e.tout:''),al:'center'},{t:e.hrs,al:'center'},{t:trActName(e.act)},{t:mb?e.dept:e.code,al:'center'},{t:e.note},'']}));
+     const n0=rows.length;for(let i=0;i<Math.max(5,12-n0);i++)rows.push({min:480,c:[{t:String(n0+i+1),al:'center'},'','','','','','','']});
+     return trxTbl(lw,[{h:true,c:['#',trT('date'),trT('tin')+'–'+trT('tout'),trT('hrs'),trT('act'),mb?trT('dept2'):trT('code'),trT('note'),trT('supi')]}].concat(rows),{sz:18})+trxT(trT('totalhrs')+': '+trTotHrs(),{b:true,c:TRX.acc})},
+   skills:()=>trxT(trT('sk_hint'),{c:TRX.grey,sz:18})+trxTbl([K,1100,1100,1100,1100,1038,1000],[{h:true,c:[trT('sk'),trT('sk_o'),trT('sk_a'),trT('sk_s'),trT('sk_i'),trT('sk_rem'),trT('supi')]}].concat(TR.skills.concat([{},{}]).map(s=>({min:460,c:[{t:s.n||''},{t:s.o||'',al:'center'},{t:s.a||'',al:'center'},{t:s.s||'',al:'center'},{t:s.i||'',al:'center'},{t:s.rem||''},'']}))),{sz:18}),
+   refl:()=>(TR.refl.length?TR.refl:[{}]).map((r,i)=>trxH2(trT('wk')+' '+(i+1))+trxTbl(KV,[['learn','r_learn'],['theory','r_theory'],['ethic','r_ethic'],['fb','r_fb'],['goal','r_goal']].map(x=>({min:700,c:[lab(trT(x[1])),{t:r[x[0]]||''}]})))).join(''),
+   cases:()=>{if(!TR.cases.length)return trxT(hi?'(अभी कोई रिकॉर्ड नहीं)':'(No records yet)',{i:true,c:TRX.grey});
+     return TR.cases.map((cs,i)=>{const r=trRec(cs.rec);if(!r)return'';return trxH2(trB(r.n)+' '+(i+1)+(cs.code?' · '+cs.code:''))+trxTbl(KV,[{c:[lab(trT('code')),{t:cs.code||''}]}].concat(r.h.map((hh,j)=>{const v=(cs.f||{})[j]||'';return{min:v?0:700,c:[lab(trB(hh)),{t:v}]}})))+trxSign([hi?'छात्र':'Student',hi?'पर्यवेक्षक':'Supervisor'])}).join('')},
+   summary:()=>{const tg=trTargets(),w=Math.floor((W-K)/2);
+     const rows=trActs().map(a=>{const k=trCount(a[0]),g=tg.find(x=>x[0]===a[0]);return(k||g)?{c:[{t:a[1]},{t:String(k),al:'center'},{t:g?String(g[1]):'',al:'center'}]}:null}).filter(Boolean)
+      .concat((t.recTargets||[]).map(([rk,n])=>({c:[{t:trB((trRec(rk)||{n:rk}).n)},{t:String(TR.cases.filter(x=>x.rec===rk).length),al:'center'},{t:String(n),al:'center'}]})))
+      .concat([{c:[{t:trT('totalhrs'),b:true},{t:String(trTotHrs()),al:'center',b:true},{t:TR.det.hours||'',al:'center'}]}]);
+     return trxTbl([K,w,W-K-w],[{h:true,c:[trT('act'),trT('entries'),trT('target')]}].concat(rows))+(t.tsrc&&(tg.length||t.recTargets)?trxT(trB(t.tsrc),{i:true,c:TRX.grey,sz:18}):'')},
+   sup:()=>{const cols=mb?['A','B','C','D']:(hi?['उत्कृष्ट','अच्छा','संतोषजनक','सुधार चाहिए']:['Excellent','Good','Satisfactory','Needs improvement']);const cw=Math.floor((W-K)/cols.length);const ws=[K].concat(cols.map((x,i)=>i<cols.length-1?cw:W-K-cw*(cols.length-1)));
+     const grid=ttl=>trxH2(ttl)+trxTbl(ws,[{h:true,c:[''].concat(cols)}].concat(ev.map(x=>({min:440,c:[{t:trB(x),va:'center'}].concat(cols.map(()=>''))}))))+trxTbl([W],[{min:1300,c:[{t:hi?'टिप्पणी':'Comments',b:true,c:TRX.acc}]}])+trxSign([hi?'पर्यवेक्षक':'Supervisor',hi?'विभागाध्यक्ष':'Head of Department']);
+     let h=trxT(trT('sup_note'),{i:true,c:TRX.grey,after:200});
+     if(mb)TR.post.forEach((p,i)=>{if(i)h+=trxP('',{pb:true,after:0});h+=grid((hi?'फ़ीडबैक फ़ॉर्म: ':'Feedback form: ')+p.k)+trxT(hi?'A उत्कृष्ट · B अच्छा · C औसत · D और प्रशिक्षण चाहिए':'A Outstanding · B Good · C Average · D Needs further training',{sz:18,c:TRX.grey})});
+     else h+=grid(hi?'मध्य-प्लेसमेंट मूल्यांकन':'Mid-placement evaluation')+trxP('',{pb:true,after:0})+grid(hi?'अंतिम मूल्यांकन':'Final evaluation');
+     return h}
+  };
+  secs.forEach((k,i)=>{if(k==='cover')return;
+    let body='';
+    if(k.indexOf('x:')===0){const x=trCust().extra.find(e=>'x:'+e.id===k);if(!x)return;
+      if(x.kind==='table'){const cols=x.cols&&x.cols.length?x.cols:['—'];const cw=Math.floor(W/cols.length);const ws=cols.map((cn,j)=>j<cols.length-1?cw:W-cw*(cols.length-1));const rows=(x.rows||[]).concat([[],[],[]]);
+        body=trxTbl(ws,[{h:true,c:cols}].concat(rows.map(r=>({min:460,c:cols.map((cn,j)=>({t:(r||[])[j]||''}))}))))}
+      else body=trxTbl([W],[{min:x.text?0:4000,c:[{t:x.text||''}]}])}
+    else if(R[k])body=R[k]();
+    B+=trxH1(num(k),true)+body});
   /* certificate */
   const certTxt=hi?'प्रमाणित किया जाता है कि '+(c.name||'____________')+' ने '+(c.org||'____________')+' में '+(c.from||'________')+' से '+(c.to||'________')+' तक मेरे पर्यवेक्षण में '+trTotHrs()+' घंटे का कार्य पूरा किया।':'This is to certify that '+(c.name||'____________')+' has completed '+trTotHrs()+' hours of supervised work at '+(c.org||'____________')+' from '+(c.from||'________')+' to '+(c.to||'________')+' under my supervision.';
-  const cert=trxT(hi?'पूर्णता प्रमाणपत्र':'Certificate of completion',{b:true,sz:36,c:TRX.acc,al:'center',before:200,after:120})+(TR.tpl==='mbbs'?trxT(hi?'संस्थागत सारांश, अनुसूची IV का आधिकारिक प्रमाणपत्र नहीं।':'Institutional summary, not the official Schedule IV certificate.',{i:true,c:TRX.grey,al:'center',sz:18}):'')+trxT(certTxt,{sz:24,al:'both',before:480,after:960,line:360})+trxT((hi?'हस्ताक्षर और मुहर':'Signature and seal')+'  ______________________',{al:'right',after:240})+trxT((hi?'नाम और पद':'Name and designation')+'  ______________________',{al:'right',after:240})+trxT((hi?'तिथि':'Date')+'  ______________________',{al:'right',after:200});
-  B+=trxP('',{pb:true,after:0})+trxTbl([TRX.W],[{min:7000,c:[{xml:cert,va:'center'}]}],{bc:TRX.acc,bsz:18});
+  const cert=trxT(hi?'पूर्णता प्रमाणपत्र':'Certificate of completion',{b:true,sz:36,c:TRX.acc,al:'center',before:200,after:120})+(mb?trxT(hi?'संस्थागत सारांश, अनुसूची IV का आधिकारिक प्रमाणपत्र नहीं।':'Institutional summary, not the official Schedule IV certificate.',{i:true,c:TRX.grey,al:'center',sz:18}):'')+trxT(certTxt,{sz:24,al:'both',before:480,after:960,line:360})+trxT((hi?'हस्ताक्षर और मुहर':'Signature and seal')+'  ______________________',{al:'right',after:240})+trxT((hi?'नाम और पद':'Name and designation')+'  ______________________',{al:'right',after:240})+trxT((hi?'तिथि':'Date')+'  ______________________',{al:'right',after:200});
+  B+=trxP('',{pb:true,after:0})+trxTbl([W],[{min:7000,c:[{xml:cert,va:'center'}]}],{bc:TRX.acc,bsz:18});
   /* ---- package ---- */
   const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
   const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+B+trxSect({hdr:true})+'</w:body></w:document>';
-  const hdrTxt=(c.title||trB(t.title))+(c.name?'  ·  '+c.name:'');
+  const hdrTxt=title+(c.name?'  ·  '+c.name:'');
   const hdr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr '+NS+'>'+trxP(trxR(hdrTxt,{sz:16,c:TRX.grey}),{bdr:4,bc:TRX.line,after:0,al:'right'})+'</w:hdr>';
-  const fr=o=>trxR('',o);
   const ftr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr '+NS+'><w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'+trxR((hi?'पृष्ठ ':'Page '),{sz:16,c:TRX.grey})+'<w:fldSimple w:instr=" PAGE "><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="'+TRX.grey+'"/></w:rPr><w:t>1</w:t></w:r></w:fldSimple></w:p></w:ftr>';
   const font='<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Nirmala UI"/>';
   const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr>'+font+'<w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="en-IN" w:bidi="hi-IN"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
@@ -13035,7 +13116,7 @@ async function trDocx(){
    +'<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>';
   const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdH1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/><Relationship Id="rIdF1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>'+media.map(m=>'<Relationship Id="'+m.rid+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/'+m.name+'"/>').join('')+'</Relationships>';
   const now=new Date().toISOString().replace(/\.\d+Z$/,'Z');
-  const core='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+dxEsc(c.title||trB(t.title))+'</dc:title><dc:creator>'+dxEsc(c.name||'Appuscholar')+'</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">'+now+'</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">'+now+'</dcterms:modified></cp:coreProperties>';
+  const core='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+dxEsc(title)+'</dc:title><dc:creator>'+dxEsc(c.name||'Appuscholar')+'</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">'+now+'</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">'+now+'</dcterms:modified></cp:coreProperties>';
   const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>';
   const root='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>';
   const e=s=>new TextEncoder().encode(s);
@@ -13131,8 +13212,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=111;
-const APP_BUILD='2026.10.20b';
+const APP_VERSION=112;
+const APP_BUILD='2026.10.20c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
