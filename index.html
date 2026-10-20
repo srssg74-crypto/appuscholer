@@ -474,6 +474,10 @@
 .stagebar .sb-sep{flex:none;color:rgba(255,255,255,.4);font-size:12px}
 body.at-home main{display:block !important;height:auto !important}
 body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.tool-shell{display:none !important}
+.tr-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px}.tr-tabs button{border:1px solid var(--border);background:transparent;border-radius:14px;padding:4px 10px;font-size:12.5px;cursor:pointer;color:inherit}.tr-tabs button.on{background:var(--purple,#6b4fa0);color:#fff;border-color:transparent}
+.tr-card{border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:8px 0}.tr-card summary{cursor:pointer}.tr-chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:14px}.tr-warn{background:#fff6e0;color:#6b4a00;border-radius:6px;padding:6px 10px;font-size:13px}.tr-ok{color:#1b7a3a;font-weight:700}.tr-warn-i{color:#a05a00}.tr-ok-i{color:#1b7a3a}
+.tr-pd{background:#fdecec;color:#8a1c1c;border-radius:6px;padding:4px 8px;font-size:12px;margin-top:4px}.tr-tw{overflow-x:auto}.tr-tbl{border-collapse:collapse;width:100%;font-size:13px}.tr-tbl th,.tr-tbl td{border:1px solid var(--border);padding:4px 6px;text-align:left;vertical-align:top}
+.tr-bar{display:inline-block;width:110px;height:8px;border-radius:4px;background:var(--border);vertical-align:middle;overflow:hidden}.tr-bar span{display:block;height:100%;background:var(--purple,#6b4fa0)}.tr-prog{margin:6px 0;font-size:14px}.tr-form .fld{margin-bottom:6px}
 #apHome{display:none}body.at-home #apHome{display:grid;grid-template-columns:330px minmax(0,1fr);gap:26px;align-items:start;padding:8px 0 24px}
 .hm-me{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 6px 24px rgba(var(--shadow-ink),.08)}
 .hm-av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,var(--purple-500),var(--gold-bright));color:#fff;display:grid;place-items:center;font:700 30px var(--font-display);margin-bottom:12px}
@@ -1135,6 +1139,8 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 <dialog id="apMeDlg"><div class="dlg-body"><h2 id="apMeT"></h2>
   <div class="fld"><label for="apMeName" id="apMeNL"></label><input type="text" id="apMeName" maxlength="80"></div>
   <div class="fld"><label for="apMePos" id="apMePL"></label><input type="text" id="apMePos" maxlength="120"></div>
+  <div class="fld"><label for="apMeRole" id="apMeRL"></label><select id="apMeRole"></select></div>
+  <div class="fld"><label for="apMeCourse" id="apMeCL"></label><select id="apMeCourse"></select></div>
   <div class="row" style="gap:8px"><button type="button" class="btn btn-purple" style="flex:1" id="apMeSave" onclick="apMeSave()"></button><button type="button" class="btn btn-ghost" id="apMeCancel" onclick="document.getElementById('apMeDlg').close()"></button></div></div></dialog>
 <dialog id="stageIntroDlg" class="dlg-wide"><div class="dlg-body">
   <h2 id="stageIntroH2" data-i18n="stageintro_h2">Your project has six stages</h2>
@@ -1180,6 +1186,12 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   <div class="fld"><label for="retQ2" data-i18n="ret_q2">What is the next concrete thing you will do on this project?</label><textarea id="retQ2" rows="2"></textarea></div>
   <div class="fld"><label for="retQ3" data-i18n="ret_q3">What is the weakest part of your work right now, and why?</label><textarea id="retQ3" rows="2"></textarea></div>
   <div class="row"><button class="btn btn-purple" style="flex:1" onclick="retSave()" data-i18n="ret_save">Save my answers</button><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('returnDlg').close()" data-i18n="ret_skip">Skip</button></div>
+</div></dialog>
+<dialog id="trDlg" class="dlg-wide"><div class="dlg-body">
+  <h2 id="trH">🗂 Training record</h2>
+  <p class="desc" id="trDesc"></p>
+  <div id="trBody"></div>
+  <div class="row" style="margin-top:10px"><button class="btn btn-ghost" onclick="trSaveNow();document.getElementById('trDlg').close();try{if(apHomeIs())apHomeRender()}catch(e){}" data-i18n="close_btn">Close</button></div>
 </div></dialog>
 <dialog id="mvDlg" class="dlg-wide"><div class="dlg-body">
   <h2 data-i18n="mv_h">🎙 Mock viva</h2>
@@ -6290,7 +6302,7 @@ function dxPicture(src,svgEl,wantW){
     im.src=url;
   });
 }
-async function dxBuild(root,title){
+async function dxBuild(root,title,opts){
   const media=[],nums=[];let pid=0;
   const P=[];
   const runProps=f=>{let r='';if(f.b)r+='<w:b/><w:bCs/>';if(f.i)r+='<w:i/><w:iCs/>';if(f.s)r+='<w:strike/>';if(f.u)r+='<w:u w:val="single"/>';if(f.sup)r+='<w:vertAlign w:val="superscript"/>';else if(f.sub)r+='<w:vertAlign w:val="subscript"/>';return r?'<w:rPr>'+r+'</w:rPr>':''};
@@ -6340,8 +6352,9 @@ async function dxBuild(root,title){
     }
     if(t==='TABLE'){
       const nc=Math.max(1,...Array.from(n.rows).map(r=>Array.from(r.cells).reduce((k,c)=>k+(c.colSpan||1),0))),cw=Math.floor(9026/nc);
-      let x='<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(s=>'<w:'+s+' w:val="single" w:sz="4" w:space="0" w:color="000000"/>').join('')+'</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'+('<w:gridCol w:w="'+cw+'"/>').repeat(nc)+'</w:tblGrid>';
-      for(const tr of Array.from(n.rows)){x+='<w:tr>';for(const td of Array.from(tr.cells)){const sp=td.colSpan||1;x+='<w:tc><w:tcPr><w:tcW w:w="'+(cw*sp)+'" w:type="dxa"/>'+(sp>1?'<w:gridSpan w:val="'+sp+'"/>':'')+'</w:tcPr>'+para(await inline(td,td.tagName==='TH'?{b:true}:{}),'<w:spacing w:line="240" w:lineRule="auto" w:after="0"/>')+'</w:tc>'}x+='</w:tr>'}
+      const fr=n.rows[0]?Array.from(n.rows[0].cells):[],ws=fr.map(c=>parseFloat(c.getAttribute&&c.getAttribute('data-w'))||0),useW=fr.length===nc&&ws.every(v=>v>0),cwx=i=>useW?Math.floor(9026*ws[i]/ws.reduce((a,v)=>a+v,0)):cw;
+      let x='<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(s=>'<w:'+s+' w:val="single" w:sz="4" w:space="0" w:color="000000"/>').join('')+'</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'+Array.from({length:nc},(_,i)=>'<w:gridCol w:w="'+cwx(i)+'"/>').join('')+'</w:tblGrid>';
+      for(const tr of Array.from(n.rows)){x+='<w:tr>';let ci=0;for(const td of Array.from(tr.cells)){const sp=td.colSpan||1;let tw=0;for(let q=0;q<sp;q++)tw+=cwx(ci+q);ci+=sp;x+='<w:tc><w:tcPr><w:tcW w:w="'+tw+'" w:type="dxa"/>'+(sp>1?'<w:gridSpan w:val="'+sp+'"/>':'')+'</w:tcPr>'+para(await inline(td,td.tagName==='TH'?{b:true}:{}),'<w:spacing w:line="240" w:lineRule="auto" w:after="0"/>')+'</w:tc>'}x+='</w:tr>'}
       P.push(x+'</w:tbl>');P.push(para('',''));return;
     }
     if(t==='BLOCKQUOTE'&&!Array.from(n.children).some(isBlock)){P.push(para(await inline(n,{}),'<w:ind w:left="720"/>'));return}
@@ -6365,7 +6378,7 @@ async function dxBuild(root,title){
   const font='<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Nirmala UI"/>';
   const hd=(id,name,lv,extra)=>'<w:style w:type="paragraph" w:styleId="'+id+'"><w:name w:val="'+name+'"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/>'+extra[0]+'<w:outlineLvl w:val="'+lv+'"/></w:pPr><w:rPr><w:b/><w:bCs/>'+extra[1]+'</w:rPr></w:style>';
   const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+
-    '<w:docDefaults><w:rPrDefault><w:rPr>'+font+'<w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="en-IN" w:bidi="hi-IN"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="480" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'+
+    '<w:docDefaults><w:rPrDefault><w:rPr>'+font+'<w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="en-IN" w:bidi="hi-IN"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr>'+(opts&&opts.single?'<w:spacing w:after="60" w:line="276" w:lineRule="auto"/>':'<w:spacing w:after="0" w:line="480" w:lineRule="auto"/>')+'</w:pPr></w:pPrDefault></w:docDefaults>'+
     '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>'+
     hd('Heading1','heading 1',0,['<w:jc w:val="center"/>',''])+hd('Heading2','heading 2',1,['',''])+hd('Heading3','heading 3',2,['','<w:i/><w:iCs/>'])+
     '<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/><w:pPr><w:ind w:left="720"/></w:pPr></w:style>'+
@@ -12684,6 +12697,240 @@ function apRender(){
   m.innerHTML=h;
 }
 
+/* ============ Training record (Version 110) ============
+   Logbook, case records and the internship report for psychology interns, clinical psychology
+   trainees (RCI), MBBS interns (CRMI) and nursing students, plus a custom template. One engine,
+   one template per course. Rules from Dr. Sharma (19 Oct 2026): never block a student with fewer
+   cases (targets show progress only); the ethics undertaking comes third; editable cover with the
+   institute's logo. Everything stays in this browser (appu_trec). No client names or hospital IDs:
+   the personal-data scan checks notes and case records and offers to mask what it finds.
+   The Word file is built with dxBuild (Version 88) in single spacing. */
+const TR_KEY='appu_trec';
+const trB=x=>Array.isArray(x)?(getLang()==='hi'?(x[1]||x[0]):x[0]):String(x==null?'':x);
+const TR_L={
+ title:['🗂 Training record','🗂 प्रशिक्षण रिकॉर्ड'],
+ desc:['Your logbook, case records and internship report in one place. Targets only show progress: you can always print and download, whatever your numbers are. Use a case code you make up (for example C-014), never a name or hospital number.','आपकी logbook, केस रिकॉर्ड और इंटर्नशिप रिपोर्ट एक जगह। लक्ष्य केवल प्रगति दिखाते हैं: संख्या कुछ भी हो, आप हमेशा प्रिंट और डाउनलोड कर सकते हैं। अपना बनाया केस कोड इस्तेमाल करें (जैसे C-014), कभी नाम या अस्पताल नंबर नहीं।'],
+ tpl:['Template','टेम्पलेट'],
+ s_cover:['Cover','मुखपृष्ठ'],s_details:['Details','विवरण'],s_ethics:['Undertaking','वचन-पत्र'],s_plan:['Learning plan','सीखने की योजना'],s_log:['Daily log','दैनिक लॉग'],s_refl:['Weekly reflection','साप्ताहिक चिंतन'],s_cases:['Case records','केस रिकॉर्ड'],s_summary:['Summary','सारांश'],s_sup:['Supervisor pages','पर्यवेक्षक पृष्ठ'],s_postings:['Postings','पोस्टिंग'],s_leave:['Leave','अवकाश'],s_skills:['Skills','कौशल'],s_dl:['Download','डाउनलोड'],
+ inst:['Institute name','संस्थान का नाम'],dept:['Department','विभाग'],doctitle:['Title of this record','इस रिकॉर्ड का शीर्षक'],prog:['Programme and level','कार्यक्रम और स्तर'],name:['Student name','छात्र का नाम'],enrol:['Enrolment or registration number','नामांकन या पंजीकरण संख्या'],session:['Academic session','शैक्षणिक सत्र'],org:['Placement organisation','प्लेसमेंट संस्था'],from:['From','से'],to:['To','तक'],mentor:['Faculty mentor','संकाय मार्गदर्शक'],sup:['Supervisor at placement','प्लेसमेंट पर्यवेक्षक'],submit:['Date of submission','जमा करने की तिथि'],
+ logo:['Institute logo or picture','संस्थान का लोगो या चित्र'],logopos:['Place it','कहाँ रखें'],pos_c:['Top centre','ऊपर बीच में'],pos_l:['Top left','ऊपर बाएँ'],pos_b:['Wide banner','चौड़ा बैनर'],logodel:['Remove picture','चित्र हटाएँ'],
+ year:['Year or semester','वर्ष या सेमेस्टर'],setting:['Setting (hospital, clinic, school, NGO, community)','स्थान (अस्पताल, क्लिनिक, स्कूल, NGO, समुदाय)'],supdes:['Supervisor designation','पर्यवेक्षक का पद'],hours:['Hours required','आवश्यक घंटे'],approval:['Approval or letter reference (optional)','अनुमति या पत्र संदर्भ (वैकल्पिक)'],
+ eth_intro:['Tick each line before you start logging work, then sign the printed page. Your supervisor countersigns it.','काम लॉग करने से पहले हर पंक्ति पर टिक करें, फिर छपे पृष्ठ पर हस्ताक्षर करें। आपके पर्यवेक्षक प्रति-हस्ताक्षर करेंगे।'],
+ eth_rem:['The undertaking is not ticked yet. You can still log work, but please complete it first.','वचन-पत्र पर अभी टिक नहीं हुआ है। आप फिर भी काम लॉग कर सकते हैं, पर पहले इसे पूरा करें।'],
+ eth_ok:['Undertaking complete','वचन-पत्र पूरा'],
+ obj:['Objective','उद्देश्य'],how:['How I will show it','मैं इसे कैसे दिखाऊँगा/दिखाऊँगी'],add:['Add','जोड़ें'],del:['Delete','हटाएँ'],starter:['Add starter objectives','शुरुआती उद्देश्य जोड़ें'],
+ date:['Date','तिथि'],tin:['Time in','आने का समय'],tout:['Time out','जाने का समय'],hrs:['Hours','घंटे'],act:['Activity','गतिविधि'],code:['Case code','केस कोड'],note:['What I did and learned (no names)','मैंने क्या किया और सीखा (कोई नाम नहीं)'],supi:['Supervisor','पर्यवेक्षक'],dept2:['Department or posting','विभाग या पोस्टिंग'],
+ addentry:['Add entry','प्रविष्टि जोड़ें'],entries:['entries','प्रविष्टियाँ'],totalhrs:['Total hours','कुल घंटे'],
+ wk:['Week','सप्ताह'],r_learn:['What I learned','मैंने क्या सीखा'],r_theory:['Theory or evidence behind it','इसके पीछे का सिद्धांत या प्रमाण'],r_ethic:['An ethical point I met (no identifiers)','एक नैतिक बिंदु जो सामने आया (कोई पहचान नहीं)'],r_fb:['Feedback I received and what I changed','मिली प्रतिक्रिया और मैंने क्या बदला'],r_goal:['Goal for next week','अगले सप्ताह का लक्ष्य'],
+ newcase:['New record','नया रिकॉर्ड'],rectype:['Type of record','रिकॉर्ड का प्रकार'],empty:['empty headings','खाली शीर्षक'],complete:['All headings filled','सभी शीर्षक भरे'],
+ pd_found:['Possible personal details found:','संभावित व्यक्तिगत जानकारी मिली:'],pd_mask:['Mask them','इन्हें छिपाएँ'],
+ progress:['Progress','प्रगति'],of:['of','में से'],bytype:['Entries by activity','गतिविधि के अनुसार प्रविष्टियाँ'],target:['Target','लक्ष्य'],
+ weeks:['Weeks','सप्ताह'],planned:['Planned weeks','नियोजित सप्ताह'],done:['Weeks done','पूरे सप्ताह'],
+ lv_type:['Type','प्रकार'],lv_days:['Days','दिन'],lv_used:['Leave days used','उपयोग किए अवकाश दिन'],lv_over:['Above the 15-day limit: the internship is extended in the posting concerned (NMC CRMI Regulations 2021, Schedule I).','15 दिन की सीमा से अधिक: संबंधित पोस्टिंग में इंटर्नशिप बढ़ेगी (NMC CRMI विनियम 2021, अनुसूची I)।'],
+ sk:['Skill','कौशल'],sk_o:['Observed','देखा'],sk_a:['Assisted','सहायता की'],sk_s:['Done under supervision','निगरानी में किया'],sk_i:['Able to do independently','स्वतंत्र रूप से कर सकता/सकती हूँ'],sk_rem:['Remarks','टिप्पणी'],sk_hint:['Write the date and how many times, for example 12/10 ×3.','तिथि और कितनी बार लिखें, जैसे 12/10 ×3।'],
+ sup_note:['These pages are printed blank. Your supervisor fills, signs and seals them. Appuscholar never fills ratings or comments.','ये पृष्ठ खाली छपते हैं। आपके पर्यवेक्षक इन्हें भरते, हस्ताक्षर करते और मुहर लगाते हैं। Appuscholar कभी रेटिंग या टिप्पणी नहीं भरता।'],
+ dl_btn:['Download the Word file','Word फ़ाइल डाउनलोड करें'],dl_desc:['Everything above, in order, as an editable .docx. You can change anything in Word afterwards.','ऊपर का सब कुछ, क्रम से, एक संपादन-योग्य .docx में। बाद में Word में कुछ भी बदल सकते हैं।'],
+ exp_btn:['Save a backup of this record','इस रिकॉर्ड का बैकअप सहेजें'],imp_btn:['Load a backup','बैकअप लोड करें'],
+ confirm_tpl:['Change the template? Your entries stay; activity names and targets change.','टेम्पलेट बदलें? आपकी प्रविष्टियाँ रहेंगी; गतिविधियों के नाम और लक्ष्य बदलेंगे।'],
+ confirm_del:['Delete this?','इसे हटाएँ?'],confirm_imp:['Replace your current record with this backup?','अपने मौजूदा रिकॉर्ड को इस बैकअप से बदलें?'],
+ acts_edit:['Your activity types, one per line','आपकी गतिविधियों के प्रकार, हर पंक्ति में एक'],
+ nursing_note:['Check your college clinical record and procedure book for the required numbers and forms. Add them as targets in Summary.','आवश्यक संख्याओं और फ़ॉर्म के लिए अपनी कॉलेज की clinical record और procedure book देखें। इन्हें सारांश में लक्ष्य के रूप में जोड़ें।'],
+ edit_target:['Edit','बदलें'],signst:['Signature of student','छात्र के हस्ताक्षर'],signsup:['Signature of supervisor, with seal','पर्यवेक्षक के हस्ताक्षर, मुहर सहित'],
+ privacy:['Stays on this device only. Back it up with the button below or with the app backup.','केवल इसी डिवाइस पर रहता है। नीचे के बटन से या ऐप बैकअप से इसका बैकअप लें।']
+};
+const trT=k=>trB(TR_L[k]||k);
+const TR_ACT_PSY=[['hist',['Case history','केस हिस्ट्री']],['int',['Clinical interview','क्लिनिकल साक्षात्कार']],['mse',['Mental status examination','मानसिक स्थिति परीक्षण']],['test',['Psychological testing (psychodiagnostic)','मनोवैज्ञानिक परीक्षण (मनोनैदानिक)']],['neuro',['Neuropsychological assessment','तंत्रिका-मनोवैज्ञानिक आकलन']],['couns',['Counselling session','परामर्श सत्र']],['ther',['Psychotherapy session','मनोचिकित्सा सत्र']],['bt',['Behaviour therapy session','व्यवहार चिकित्सा सत्र']],['grp',['Group or family session','समूह या परिवार सत्र']],['conf',['Case conference or seminar','केस कॉन्फ्रेंस या सेमिनार']],['obs',['Observation','अवलोकन']],['rep',['Report writing','रिपोर्ट लेखन']],['comm',['Community or outreach work','सामुदायिक कार्य']],['oth',['Other','अन्य']]];
+const TR_REC={
+ hist:{n:['Case history','केस हिस्ट्री'],h:[['Identifying data (no name)','पहचान विवरण (नाम नहीं)'],['Presenting complaints and duration','मुख्य शिकायतें और अवधि'],['History of present illness','वर्तमान बीमारी का इतिहास'],['Past history','पिछला इतिहास'],['Family history','पारिवारिक इतिहास'],['Personal history','व्यक्तिगत इतिहास'],['Premorbid personality','रोग-पूर्व व्यक्तित्व'],['Summary','सारांश']]},
+ mse:{n:['Mental status examination','मानसिक स्थिति परीक्षण'],h:[['General appearance and behaviour','सामान्य रूप और व्यवहार'],['Psychomotor activity','मनोगत्यात्मक गतिविधि'],['Speech','वाणी'],['Mood and affect','मनोदशा और भाव'],['Thought: stream, form and content','विचार: प्रवाह, रूप और विषय'],['Perception','प्रत्यक्षण'],['Cognitive functions','संज्ञानात्मक कार्य'],['Insight and judgement','अंतर्दृष्टि और निर्णय']]},
+ pdx:{n:['Psychodiagnostic record','मनोनैदानिक रिकॉर्ड'],h:[['Socio-demographic data','सामाजिक-जनसांख्यिकीय विवरण'],['Presenting complaints','मुख्य शिकायतें'],['History','इतिहास'],['Premorbid personality','रोग-पूर्व व्यक्तित्व'],['Physical and mental status examination','शारीरिक और मानसिक स्थिति परीक्षण'],['Formulation','सूत्रीकरण (formulation)'],['Differential diagnosis','विभेदक निदान'],['Sociocultural factors','सामाजिक-सांस्कृतिक कारक'],['Management plan','प्रबंधन योजना'],['Rationale for testing','परीक्षण का औचित्य'],['Areas investigated','जाँचे गए क्षेत्र'],['Tests used and why','प्रयुक्त परीक्षण और क्यों'],['Behavioural observations and validity of results','व्यवहारिक अवलोकन और परिणामों की वैधता'],['Findings','निष्कर्ष'],['Impression','प्रभाव (impression)']]},
+ thx:{n:['Therapy record','थेरेपी रिकॉर्ड'],h:[['Diagnosis','निदान'],['Reasons for intervention','हस्तक्षेप के कारण'],['Short-term objectives','अल्पकालिक उद्देश्य'],['Long-term objectives','दीर्घकालिक उद्देश्य'],['Technique and rationale','तकनीक और औचित्य'],['Therapy process, session by session','थेरेपी प्रक्रिया, सत्र दर सत्र'],['Changes in approach and why','दृष्टिकोण में बदलाव और क्यों'],['Outcome','परिणाम'],['Prevention of relapse','पुनरावृत्ति की रोकथाम'],['Follow-up','फॉलो-अप']]},
+ ses:{n:['Session note','सत्र नोट'],h:[['Session number','सत्र संख्या'],['Goals for this session','इस सत्र के लक्ष्य'],['What happened','क्या हुआ'],['Techniques used','प्रयुक्त तकनीकें'],['Client response','क्लाइंट की प्रतिक्रिया'],['Plan for next session','अगले सत्र की योजना']]},
+ mcase:{n:['Case write-up','केस विवरण'],h:[['History','इतिहास'],['Examination','परीक्षण'],['Investigations','जाँचें'],['Diagnosis','निदान'],['Management','प्रबंधन'],['What I learned','मैंने क्या सीखा']]},
+ ncp:{n:['Nursing care plan','नर्सिंग देखभाल योजना'],h:[['Assessment','आकलन'],['Nursing diagnosis','नर्सिंग निदान'],['Goals','लक्ष्य'],['Interventions','हस्तक्षेप'],['Rationale','औचित्य'],['Evaluation','मूल्यांकन']]},
+ gen:{n:['Case or activity record','केस या गतिविधि रिकॉर्ड'],h:[['Background','पृष्ठभूमि'],['What I did','मैंने क्या किया'],['What I observed','मैंने क्या देखा'],['What I learned','मैंने क्या सीखा']]}
+};
+const TR_UND={
+ psy:[['I will work only within the role my supervisor has authorised.','मैं केवल उसी भूमिका में काम करूँगा/करूँगी जिसकी अनुमति मेरे पर्यवेक्षक ने दी है।'],['I will not keep client details on my phone or in messaging apps.','मैं क्लाइंट का विवरण अपने फ़ोन या मैसेजिंग ऐप में नहीं रखूँगा/रखूँगी।'],['I will not copy restricted test material.','मैं प्रतिबंधित परीक्षण सामग्री की नकल नहीं करूँगा/करूँगी।'],['I will not invent hours, signatures or cases.','मैं घंटे, हस्ताक्षर या केस नहीं गढ़ूँगा/गढ़ूँगी।'],['I will remove names and identifying details from anything I use later.','बाद में जो भी इस्तेमाल करूँगा/करूँगी, उससे नाम और पहचान वाले विवरण हटा दूँगा/दूँगी।']],
+ clin:[['I will keep patient information confidential.','मैं रोगी की जानकारी गोपनीय रखूँगा/रखूँगी।'],['I will take consent before any examination or procedure.','किसी भी परीक्षण या प्रक्रिया से पहले सहमति लूँगा/लूँगी।'],['I will follow infection control rules.','मैं संक्रमण नियंत्रण के नियमों का पालन करूँगा/करूँगी।'],['I will follow medication safety rules.','मैं दवा सुरक्षा के नियमों का पालन करूँगा/करूँगी।'],['I will work within the limits of my competence and ask for help.','अपनी क्षमता की सीमा में काम करूँगा/करूँगी और मदद माँगूँगा/माँगूँगी।'],['My records will be truthful.','मेरे रिकॉर्ड सच्चे होंगे।'],['I will not write patient names or hospital numbers in this logbook.','इस logbook में रोगी के नाम या अस्पताल नंबर नहीं लिखूँगा/लिखूँगी।']]
+};
+const TR_EVAL={
+ psy:[['Professional conduct and punctuality','व्यावसायिक आचरण और समय-पालन'],['Rapport and interviewing','संबंध और साक्षात्कार'],['Assessment and testing','आकलन और परीक्षण'],['Case formulation','केस सूत्रीकरण'],['Intervention skills','हस्तक्षेप कौशल'],['Report writing','रिपोर्ट लेखन'],['Ethical sensitivity','नैतिक संवेदनशीलता'],['Use of supervision','पर्यवेक्षण का उपयोग']],
+ nur:[['Patient care','रोगी देखभाल'],['Procedures','प्रक्रियाएँ'],['Communication','संवाद'],['Documentation','दस्तावेज़ीकरण'],['Health education','स्वास्थ्य शिक्षा'],['Professional conduct','व्यावसायिक आचरण']],
+ gen:[['Attendance and punctuality','उपस्थिति और समय-पालन'],['Skills','कौशल'],['Communication','संवाद'],['Professional conduct','व्यावसायिक आचरण'],['Learning and initiative','सीखना और पहल']],
+ mbbs:[['Knowledge','ज्ञान'],['Patient care','रोगी देखभाल'],['Procedural skills','प्रक्रियात्मक कौशल'],['Independent care','स्वतंत्र देखभाल'],['Communication skills','संवाद कौशल'],['System-based practice','प्रणाली-आधारित अभ्यास'],['Professionalism','व्यावसायिकता'],['Life-long learning','आजीवन सीखना']]
+};
+const TR_POST=[['Community Medicine',12],['General Medicine',6],['Psychiatry',2],['Paediatrics',3],['General Surgery',6],['Anaesthesiology and Critical Care',2],['Obstetrics and Gynaecology, incl. Family Welfare',7],['Orthopaedics, incl. PM&R',2],['Emergency, Trauma and Casualty',2],['Forensic Medicine and Toxicology',1],['Dermatology, Venereology and Leprology',1],['Otorhinolaryngology',2],['Ophthalmology',2],['Elective: broad specialty group',4],['Elective: Indian Systems of Medicine',1]];
+const TR_SKILLS=['Venepuncture and blood sampling','IV cannulation','IM, SC and ID injections','Urinary catheterisation','Nasogastric tube insertion','Suturing of simple wounds','Wound dressing','Basic life support','ECG recording and reading','Conducting a normal delivery','Writing a prescription','Medico-legal case documentation','Death certificate writing'];
+const TR_TPL={
+ psych:{n:['Psychology internship (BA, MA, MSc, PhD)','मनोविज्ञान इंटर्नशिप (BA, MA, MSc, PhD)'],acts:TR_ACT_PSY,recs:['hist','mse','pdx','thx','ses','gen'],sec:['cover','details','ethics','plan','log','refl','cases','summary','sup'],und:'psy',ev:'psy',targets:[],title:['Internship logbook and report','इंटर्नशिप लॉगबुक और रिपोर्ट']},
+ rci:{n:['Clinical psychology trainee (RCI)','क्लिनिकल मनोविज्ञान प्रशिक्षु (RCI)'],acts:TR_ACT_PSY,recs:['pdx','thx','hist','mse','ses'],sec:['cover','details','ethics','plan','log','refl','cases','summary','sup'],und:'psy',ev:'psy',
+  targets:[['hist',50],['int',40],['test',40],['neuro',5]],recTargets:[['pdx',5],['thx',5]],
+  tsrc:['Starting numbers: RCI M.Phil Clinical Psychology, Part I minimum (course document, Gyan Vihar University). Part II asks for 70, 60, 50 and 10. The RCI M.A. (2025-26) guidelines give no case counts, only five psychodiagnostic and five therapy records. Your department may set different numbers: edit them.','शुरुआती संख्याएँ: RCI M.Phil क्लिनिकल मनोविज्ञान, भाग I न्यूनतम (पाठ्यक्रम दस्तावेज़, ज्ञान विहार विश्वविद्यालय)। भाग II में 70, 60, 50 और 10 माँगे गए हैं। RCI M.A. (2025-26) दिशानिर्देश केस संख्या नहीं देते, केवल पाँच मनोनैदानिक और पाँच थेरेपी रिकॉर्ड। आपका विभाग अलग संख्या रख सकता है: इन्हें बदलें।'],title:['Clinical training logbook and records','क्लिनिकल प्रशिक्षण लॉगबुक और रिकॉर्ड']},
+ mbbs:{n:['MBBS internship (CRMI)','MBBS इंटर्नशिप (CRMI)'],acts:[['ward',['Ward work','वार्ड कार्य']],['opd',['OPD','OPD']],['emer',['Emergency or casualty duty','आपातकालीन ड्यूटी']],['proc',['Procedure','प्रक्रिया']],['pres',['Case presentation','केस प्रस्तुति']],['night',['Night duty','रात्रि ड्यूटी']],['comm',['Community visit','सामुदायिक भ्रमण']],['teach',['Teaching session','शिक्षण सत्र']],['oth',['Other','अन्य']]],
+  recs:['mcase','gen'],sec:['cover','details','ethics','postings','leave','log','skills','cases','summary','sup'],und:'clin',ev:'mbbs',targets:[],
+  tsrc:['Postings and weeks from the NMC Compulsory Rotating Medical Internship Regulations, 2021, Schedule III. This is not an NMC-issued form.','पोस्टिंग और सप्ताह NMC अनिवार्य रोटेटिंग मेडिकल इंटर्नशिप विनियम, 2021, अनुसूची III से। यह NMC द्वारा जारी फ़ॉर्म नहीं है।'],title:['Compulsory Rotating Medical Internship logbook','अनिवार्य रोटेटिंग मेडिकल इंटर्नशिप लॉगबुक']},
+ nursing:{n:['Nursing clinical record (B.Sc. Nursing)','नर्सिंग क्लिनिकल रिकॉर्ड (B.Sc. नर्सिंग)'],acts:[['care',['Patient care assignment','रोगी देखभाल असाइनमेंट']],['proc',['Procedure','प्रक्रिया']],['edu',['Health education','स्वास्थ्य शिक्षा']],['cs',['Case study','केस अध्ययन']],['cp',['Care plan','देखभाल योजना']],['comm',['Community visit','सामुदायिक भ्रमण']],['oth',['Other','अन्य']]],
+  recs:['ncp','gen'],sec:['cover','details','ethics','log','refl','cases','summary','sup'],und:'clin',ev:'nur',targets:[],note:'nursing_note',title:['Clinical experience record','क्लिनिकल अनुभव रिकॉर्ड']},
+ custom:{n:['Custom (any subject)','कस्टम (कोई भी विषय)'],acts:null,recs:['gen','hist'],sec:['cover','details','ethics','plan','log','refl','cases','summary','sup'],und:'psy',ev:'gen',targets:[],title:['Logbook and report','लॉगबुक और रिपोर्ट']}
+};
+const TR_COURSE_TPL={rci:'rci',pdcp:'rci',mbbs:'mbbs',nursing:'nursing',other:'custom'};
+let TR=null,TR_TAB='cover',TR_T=0;
+function trLoad(){try{const o=JSON.parse(LS.get(TR_KEY)||'null');if(o&&typeof o==='object')return trFix(o)}catch(e){}return null}
+function trFix(o){o.tpl=TR_TPL[o.tpl]?o.tpl:'psych';['cover','det','eth','tg'].forEach(k=>{if(!o[k]||typeof o[k]!=='object'||Array.isArray(o[k]))o[k]={}});['plan','log','refl','cases','post','leave','skills','acts'].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});if(!Array.isArray(o.eth.t))o.eth.t=[];return o}
+function trNew(tpl){const me=apMe();const o=trFix({tpl:tpl||'psych'});o.cover.name=me.name||'';o.cover.title=trB(TR_TPL[o.tpl].title);trTplInit(o);return o}
+function trTplInit(o){
+  if(o.tpl==='mbbs'){if(!o.post.length)o.post=TR_POST.map(p=>({k:p[0],w:p[1],from:'',to:'',done:0}));if(!o.skills.length)o.skills=TR_SKILLS.map(n=>({n,o:'',a:'',s:'',i:'',rem:''}))}
+  if(o.tpl==='custom'&&!o.acts.length)o.acts=['Observation','Assisted work','Independent work','Meeting or seminar','Report writing','Other'];
+}
+function trSave(){clearTimeout(TR_T);TR_T=setTimeout(trSaveNow,300)}
+function trSaveNow(){clearTimeout(TR_T);if(!TR)return;try{LS.set(TR_KEY,JSON.stringify(TR))}catch(e){showToast('Could not save: the browser storage is full. Remove the logo picture or download a backup.')}}
+function trActs(o){o=o||TR;const t=TR_TPL[o.tpl];if(t.acts)return t.acts.map(a=>[a[0],trB(a[1])]);return o.acts.map((a,i)=>['c'+i,a])}
+function trActName(id){const a=trActs().find(x=>x[0]===id);return a?a[1]:id}
+function trHrs(a,b){const m=s=>{const r=/^(\d{1,2}):(\d{2})$/.exec(s||'');return r?(+r[1])*60+(+r[2]):null};const x=m(a),y=m(b);if(x==null||y==null)return '';let d=y-x;if(d<0)d+=1440;return String(Math.round(d/15)/4)}
+function trTotHrs(){return TR.log.reduce((s,e)=>s+(parseFloat(e.hrs)||0),0)}
+function trTargets(){const t=TR_TPL[TR.tpl];const base=(t.targets||[]).map(x=>[x[0],x[1]]);Object.keys(TR.tg).forEach(k=>{const v=parseInt(TR.tg[k],10);const i=base.findIndex(x=>x[0]===k);if(i>=0){if(v>0)base[i][1]=v;else base.splice(i,1)}else if(v>0)base.push([k,v])});return base}
+function trCount(id){return TR.log.filter(e=>e.act===id).length}
+function trEmpty(c){const r=TR_REC[c.rec];if(!r)return 0;return r.h.filter((h,i)=>!String((c.f||{})[i]||'').trim()).length}
+function trPdHTML(text,fn){try{const sc=pdScanText(text);if(!sc.total)return'';return'<div class="tr-pd">⚠ '+escHTML(trT('pd_found'))+' '+escHTML(Object.keys(sc.counts).map(k=>sc.counts[k]+' '+k).join(', '))+' <button type="button" class="btn btn-ghost" onclick="'+fn+'">'+escHTML(trT('pd_mask'))+'</button></div>'}catch(e){return''}}
+function trOpen(){
+  if(!TR)TR=trLoad();
+  if(!TR){const me=apMe();TR=trNew(TR_COURSE_TPL[me.course]||'psych');trSaveNow()}
+  if(!TR_TPL[TR.tpl].sec.includes(TR_TAB)&&TR_TAB!=='dl')TR_TAB='cover';
+  trRender();const d=document.getElementById('trDlg');if(d&&!d.open)d.showModal();
+}
+function trTab(t){TR_TAB=t;trRender();const b=document.getElementById('trBody');if(b)b.scrollTop=0}
+function trSetTpl(v){if(!TR_TPL[v]||v===TR.tpl)return;if(!confirm(trT('confirm_tpl'))){trRender();return}TR.tpl=v;trTplInit(TR);if(!TR.cover.title)TR.cover.title=trB(TR_TPL[v].title);trSaveNow();trRender()}
+function trF(path,v){const p=path.split('.');let o=TR;for(let i=0;i<p.length-1;i++){if(o[p[i]]==null)o[p[i]]={};o=o[p[i]]}o[p[p.length-1]]=v;trSave()}
+function trIn(path,label,type,ph){const p=path.split('.');let v=TR;p.forEach(k=>{v=v==null?'':v[k]});v=v==null?'':v;const id='tr_'+path.replace(/\./g,'_');
+  if(type==='area')return'<div class="fld"><label for="'+id+'">'+escHTML(label)+'</label><textarea id="'+id+'" rows="3" oninput="trF(\''+path+'\',this.value)">'+escHTML(v)+'</textarea></div>';
+  return'<div class="fld"><label for="'+id+'">'+escHTML(label)+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v)+'"'+(ph?' placeholder="'+escHTML(ph)+'"':'')+' oninput="trF(\''+path+'\',this.value)"></div>'}
+function trRender(){
+  const b=document.getElementById('trBody');if(!b||!TR)return;
+  const t=TR_TPL[TR.tpl],secs=t.sec.concat(['dl']);
+  document.getElementById('trH').textContent=trT('title');document.getElementById('trDesc').textContent=trT('desc');
+  let h='<div class="fld"><label for="trTpl">'+escHTML(trT('tpl'))+'</label><select id="trTpl" onchange="trSetTpl(this.value)">'+Object.keys(TR_TPL).map(k=>'<option value="'+k+'"'+(k===TR.tpl?' selected':'')+'>'+escHTML(trB(TR_TPL[k].n))+'</option>').join('')+'</select></div>';
+  h+='<div class="tr-tabs" role="tablist">'+secs.map((s,i)=>'<button type="button" role="tab" class="'+(TR_TAB===s?'on':'')+'" onclick="trTab(\''+s+'\')">'+(s==='dl'?'':(i+1)+'. ')+escHTML(trT(s==='dl'?'s_dl':'s_'+s))+'</button>').join('')+'</div>';
+  if(TR_TAB!=='ethics'&&!trEthDone())h+='<p class="tr-warn">'+escHTML(trT('eth_rem'))+' <a href="#" onclick="trTab(\'ethics\');return false">'+escHTML(trT('s_ethics'))+' →</a></p>';
+  h+='<div class="tr-sec">'+(window['trSec_'+TR_TAB]||trSec_cover)()+'</div>';
+  b.innerHTML=h;
+}
+function trEthDone(){const n=TR_UND[TR_TPL[TR.tpl].und].length;let k=0;for(let i=0;i<n;i++)if(TR.eth.t[i])k++;return k===n}
+function trSec_cover(){
+  const c='cover.';let h=trIn(c+'inst',trT('inst'))+trIn(c+'dept',trT('dept'))+trIn(c+'title',trT('doctitle'))+trIn(c+'prog',trT('prog'))+trIn(c+'name',trT('name'))+trIn(c+'enrol',trT('enrol'))+trIn(c+'session',trT('session'))+trIn(c+'org',trT('org'))
+   +'<div class="row" style="gap:8px">'+trIn(c+'from',trT('from'),'date')+trIn(c+'to',trT('to'),'date')+'</div>'+trIn(c+'mentor',trT('mentor'))+trIn(c+'sup',trT('sup'))+trIn(c+'submit',trT('submit'),'date');
+  h+='<div class="fld"><label for="trLogo">'+escHTML(trT('logo'))+'</label><input type="file" id="trLogo" accept="image/png,image/jpeg,image/webp" onchange="trLogo(this.files[0]);this.value=\'\'"></div>';
+  if(TR.logo&&TR.logo.src)h+='<div class="tr-logo-prev" style="text-align:'+(TR.logo.pos==='l'?'left':'center')+'"><img src="'+escHTML(TR.logo.src)+'" alt="" style="max-width:'+(TR.logo.pos==='b'?'100%':'140px')+';max-height:'+(TR.logo.pos==='b'?'160px':'120px')+'"></div><div class="row" style="gap:8px;align-items:center"><label for="trLogoPos">'+escHTML(trT('logopos'))+'</label><select id="trLogoPos" onchange="TR.logo.pos=this.value;trSaveNow();trRender()">'+[['c','pos_c'],['l','pos_l'],['b','pos_b']].map(x=>'<option value="'+x[0]+'"'+((TR.logo.pos||'c')===x[0]?' selected':'')+'>'+escHTML(trT(x[1]))+'</option>').join('')+'</select><button type="button" class="btn btn-ghost" onclick="TR.logo=null;trSaveNow();trRender()">'+escHTML(trT('logodel'))+'</button></div>';
+  return h}
+function trLogo(f){if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(im,0,0,cv.width,cv.height);TR.logo={src:cv.toDataURL('image/jpeg',0.85),pos:(TR.logo&&TR.logo.pos)||'c'};trSaveNow();trRender()};im.src=r.result};r.readAsDataURL(f)}
+function trSec_details(){const d='det.';return trIn('cover.prog',trT('prog'))+trIn(d+'year',trT('year'))+trIn('cover.inst',trT('inst'))+trIn('cover.dept',trT('dept'))+trIn('cover.session',trT('session'))+trIn('cover.mentor',trT('mentor'))+trIn('cover.org',trT('org'))+trIn(d+'setting',trT('setting'))+trIn('cover.sup',trT('sup'))+trIn(d+'supdes',trT('supdes'))+'<div class="row" style="gap:8px">'+trIn('cover.from',trT('from'),'date')+trIn('cover.to',trT('to'),'date')+'</div>'+trIn(d+'hours',trT('hours'),'number')+trIn(d+'approval',trT('approval'))}
+function trSec_ethics(){const L=TR_UND[TR_TPL[TR.tpl].und];let h='<p class="desc">'+escHTML(trT('eth_intro'))+'</p>';
+  L.forEach((x,i)=>{h+='<label class="tr-chk"><input type="checkbox" '+(TR.eth.t[i]?'checked ':'')+'onchange="TR.eth.t['+i+']=this.checked;if(trEthDone()&&!TR.eth.d)TR.eth.d=new Date().toISOString().slice(0,10);trSaveNow();trRender()"> '+escHTML(trB(x))+'</label>'});
+  if(trEthDone())h+='<p class="tr-ok">✓ '+escHTML(trT('eth_ok'))+(TR.eth.d?' · '+escHTML(TR.eth.d):'')+'</p>';return h}
+const TR_OBJ={psych:[['Take a full case history under supervision','पर्यवेक्षण में पूरी केस हिस्ट्री लेना'],['Carry out a mental status examination','मानसिक स्थिति परीक्षण करना'],['Administer and score two standard tests','दो मानक परीक्षण देना और अंक निकालना'],['Write one case report','एक केस रिपोर्ट लिखना']],rci:[['Complete the psychodiagnostic records required for Part I','भाग I के लिए आवश्यक मनोनैदानिक रिकॉर्ड पूरे करना'],['Formulate cases and discuss them in case conference','केस का सूत्रीकरण करना और केस कॉन्फ्रेंस में चर्चा करना'],['Conduct supervised therapy sessions','पर्यवेक्षण में थेरेपी सत्र करना'],['Carry out neuropsychological assessments','तंत्रिका-मनोवैज्ञानिक आकलन करना']]};
+function trSec_plan(){let h='';TR.plan.forEach((p,i)=>{h+='<div class="tr-card"><div class="fld"><label>'+escHTML(trT('obj'))+' '+(i+1)+'</label><input value="'+escHTML(p.o||'')+'" oninput="TR.plan['+i+'].o=this.value;trSave()"></div><div class="fld"><label>'+escHTML(trT('how'))+'</label><input value="'+escHTML(p.how||'')+'" oninput="TR.plan['+i+'].how=this.value;trSave()"></div><button type="button" class="btn btn-ghost" onclick="trDel(\'plan\','+i+')">'+escHTML(trT('del'))+'</button></div>'});
+  h+='<div class="row" style="gap:8px"><button type="button" class="btn btn-purple" onclick="TR.plan.push({o:\'\',how:\'\'});trSaveNow();trRender()">+ '+escHTML(trT('add'))+'</button>'+(TR.plan.length?'':'<button type="button" class="btn btn-ghost" onclick="trStarterObj()">'+escHTML(trT('starter'))+'</button>')+'</div>';return h}
+function trStarterObj(){(TR_OBJ[TR.tpl]||TR_OBJ.psych).forEach(x=>TR.plan.push({o:trB(x),how:''}));trSaveNow();trRender()}
+function trDel(k,i){if(!confirm(trT('confirm_del')))return;TR[k].splice(i,1);trSaveNow();trRender()}
+function trSec_log(){
+  const acts=trActs(),mb=TR.tpl==='mbbs';
+  let h='<div class="tr-card tr-form"><div class="row" style="gap:8px;flex-wrap:wrap">'
+   +'<div class="fld"><label for="trLd">'+escHTML(trT('date'))+'</label><input type="date" id="trLd" value="'+new Date().toISOString().slice(0,10)+'"></div>'
+   +'<div class="fld"><label for="trLi">'+escHTML(trT('tin'))+'</label><input type="time" id="trLi"></div><div class="fld"><label for="trLo">'+escHTML(trT('tout'))+'</label><input type="time" id="trLo"></div>'
+   +'<div class="fld"><label for="trLa">'+escHTML(trT('act'))+'</label><select id="trLa">'+acts.map(a=>'<option value="'+escHTML(a[0])+'">'+escHTML(a[1])+'</option>').join('')+'</select></div>'
+   +(mb?'<div class="fld"><label for="trLp">'+escHTML(trT('dept2'))+'</label><select id="trLp">'+TR.post.map(p=>'<option>'+escHTML(p.k)+'</option>').join('')+'</select></div>':'<div class="fld"><label for="trLc">'+escHTML(trT('code'))+'</label><input id="trLc" placeholder="C-014" maxlength="20"></div>')
+   +'<div class="fld"><label for="trLs">'+escHTML(trT('supi'))+'</label><input id="trLs" maxlength="60"></div></div>'
+   +'<div class="fld"><label for="trLn">'+escHTML(trT('note'))+'</label><textarea id="trLn" rows="2"></textarea></div>'
+   +'<button type="button" class="btn btn-purple" id="trLadd" onclick="trLogAdd()">+ '+escHTML(trT('addentry'))+'</button></div>';
+  if(TR_TPL[TR.tpl].acts===null)h+='<details class="tr-card"><summary>'+escHTML(trT('acts_edit'))+'</summary><textarea rows="5" style="width:100%" onchange="TR.acts=this.value.split(/\\n/).map(s=>s.trim()).filter(Boolean);trSaveNow();trRender()">'+escHTML(TR.acts.join('\n'))+'</textarea></details>';
+  h+='<p><b>'+TR.log.length+'</b> '+escHTML(trT('entries'))+' · '+escHTML(trT('totalhrs'))+': <b id="trTot">'+trTotHrs()+'</b></p>';
+  const all=TR.log.map((e,i)=>[e,i]).sort((x,y)=>String(y[0].d).localeCompare(String(x[0].d)));
+  h+='<div class="tr-tw"><table class="tr-tbl"><thead><tr><th>'+escHTML(trT('date'))+'</th><th>'+escHTML(trT('hrs'))+'</th><th>'+escHTML(trT('act'))+'</th><th>'+escHTML(mb?trT('dept2'):trT('code'))+'</th><th>'+escHTML(trT('note'))+'</th><th>'+escHTML(trT('supi'))+'</th><th></th></tr></thead><tbody>'
+   +all.map(([e,i])=>'<tr><td>'+escHTML(e.d)+'</td><td>'+escHTML(e.hrs)+'</td><td>'+escHTML(trActName(e.act))+'</td><td>'+escHTML(mb?e.dept||'':e.code||'')+'</td><td>'+escHTML(e.note)+trPdHTML(e.note,'trMaskLog('+i+')')+'</td><td>'+escHTML(e.sup)+'</td><td><button type="button" class="btn btn-ghost" title="'+escHTML(trT('del'))+'" onclick="trDel(\'log\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>';
+  return h}
+function trLogAdd(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+  const e={d:g('trLd'),tin:g('trLi'),tout:g('trLo'),act:g('trLa'),code:g('trLc'),dept:g('trLp'),sup:g('trLs'),note:g('trLn')};
+  e.hrs=trHrs(e.tin,e.tout);if(!e.d){showToast('Add a date first');return}
+  TR.log.push(e);trSaveNow();trRender();
+  const sc=pdScanText(e.note);if(sc.total)showToast('Possible personal details in that note. Mask them in the table below.');}
+function trMaskLog(i){TR.log[i].note=pdMask(TR.log[i].note);trSaveNow();trRender()}
+function trSec_refl(){let h='';TR.refl.forEach((r,i)=>{const f=(k,l)=>'<div class="fld"><label>'+escHTML(trT(l))+'</label><textarea rows="2" oninput="TR.refl['+i+'].'+k+'=this.value;trSave()">'+escHTML(r[k]||'')+'</textarea></div>';
+  h+='<div class="tr-card"><b>'+escHTML(trT('wk'))+' '+(i+1)+'</b>'+f('learn','r_learn')+f('theory','r_theory')+f('ethic','r_ethic')+f('fb','r_fb')+f('goal','r_goal')+trPdHTML([r.learn,r.theory,r.ethic,r.fb,r.goal].join(' '),'trMaskRefl('+i+')')+'<button type="button" class="btn btn-ghost" onclick="trDel(\'refl\','+i+')">'+escHTML(trT('del'))+'</button></div>'});
+  return h+'<button type="button" class="btn btn-purple" onclick="TR.refl.push({});trSaveNow();trRender()">+ '+escHTML(trT('wk'))+' '+(TR.refl.length+1)+'</button>'}
+function trMaskRefl(i){const r=TR.refl[i];['learn','theory','ethic','fb','goal'].forEach(k=>{if(r[k])r[k]=pdMask(r[k])});trSaveNow();trRender()}
+function trSec_cases(){const t=TR_TPL[TR.tpl];let h='<div class="row" style="gap:8px;align-items:end"><div class="fld"><label for="trRt">'+escHTML(trT('rectype'))+'</label><select id="trRt">'+t.recs.map(k=>'<option value="'+k+'">'+escHTML(trB(TR_REC[k].n))+'</option>').join('')+'</select></div><button type="button" class="btn btn-purple" onclick="trCaseAdd()">+ '+escHTML(trT('newcase'))+'</button></div>';
+  TR.cases.forEach((c,i)=>{const r=TR_REC[c.rec];if(!r)return;const em=trEmpty(c);
+    h+='<details class="tr-card"'+(c.open?' open':'')+' ontoggle="TR.cases['+i+'].open=this.open;trSave()"><summary><b>'+escHTML(trB(r.n))+'</b> · '+escHTML(c.code||'—')+' · <span class="'+(em?'tr-warn-i':'tr-ok-i')+'">'+(em?em+' '+escHTML(trT('empty')):'✓ '+escHTML(trT('complete')))+'</span></summary>'
+     +'<div class="fld"><label>'+escHTML(trT('code'))+'</label><input value="'+escHTML(c.code||'')+'" maxlength="20" placeholder="C-014" oninput="TR.cases['+i+'].code=this.value;trSave()"></div>'
+     +r.h.map((hh,j)=>'<div class="fld"><label>'+escHTML(trB(hh))+'</label><textarea rows="3" oninput="TR.cases['+i+'].f['+j+']=this.value;trSave()">'+escHTML((c.f||{})[j]||'')+'</textarea></div>').join('')
+     +trPdHTML(Object.values(c.f||{}).join(' '),'trMaskCase('+i+')')+'<button type="button" class="btn btn-ghost" onclick="trDel(\'cases\','+i+')">'+escHTML(trT('del'))+'</button></details>'});
+  return h}
+function trCaseAdd(){const s=document.getElementById('trRt');TR.cases.push({rec:s?s.value:'gen',code:'',f:{},open:true});trSaveNow();trRender()}
+function trMaskCase(i){const c=TR.cases[i];Object.keys(c.f||{}).forEach(k=>{c.f[k]=pdMask(c.f[k])});trSaveNow();trRender()}
+function trBar(n,of){const p=of?Math.min(100,Math.round(100*n/of)):0;return'<span class="tr-bar"><span style="width:'+p+'%"></span></span>'}
+function trSec_summary(){const t=TR_TPL[TR.tpl];let h='';
+  const tg=trTargets();
+  if(tg.length||t.recTargets){h+='<h4>'+escHTML(trT('progress'))+'</h4>';
+    tg.forEach(([id,n])=>{const k=trCount(id);h+='<div class="tr-prog">'+escHTML(trActName(id))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+' <button type="button" class="btn btn-ghost" onclick="trEditTarget(\''+id+'\','+n+')">'+escHTML(trT('edit_target'))+'</button></div>'});
+    (t.recTargets||[]).forEach(([rk,n])=>{const k=TR.cases.filter(c=>c.rec===rk).length;h+='<div class="tr-prog">'+escHTML(trB(TR_REC[rk].n))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+'</div>'});
+    if(t.tsrc)h+='<p class="desc">'+escHTML(trB(t.tsrc))+'</p>'}
+  if(t.note)h+='<p class="desc">'+escHTML(trT(t.note))+'</p>';
+  const req=parseFloat(TR.det.hours)||0,tot=trTotHrs();h+='<div class="tr-prog">'+escHTML(trT('totalhrs'))+': <b>'+tot+'</b>'+(req?' '+escHTML(trT('of'))+' '+req+' '+trBar(tot,req):'')+'</div>';
+  if(TR.tpl==='mbbs'){const wd=TR.post.reduce((s,p)=>s+(parseFloat(p.done)||0),0),wp=TR.post.reduce((s,p)=>s+(parseFloat(p.w)||0),0);h+='<div class="tr-prog">'+escHTML(trT('done'))+': <b>'+wd+'</b> '+escHTML(trT('of'))+' '+wp+' '+trBar(wd,wp)+'</div>';const lu=trLeaveUsed();h+='<div class="tr-prog">'+escHTML(trT('lv_used'))+': <b>'+lu+'</b> '+escHTML(trT('of'))+' 15'+(lu>15?' <span class="tr-warn-i">⚠</span>':'')+'</div>'}
+  h+='<h4>'+escHTML(trT('bytype'))+'</h4><table class="tr-tbl"><tbody>'+trActs().map(a=>{const k=trCount(a[0]);return k?'<tr><td>'+escHTML(a[1])+'</td><td><b>'+k+'</b></td></tr>':''}).join('')+'</tbody></table>';
+  h+='<p class="desc">'+escHTML(trT('privacy'))+'</p>';
+  if(!tg.length)h+='<details class="tr-card"><summary>+ '+escHTML(trT('target'))+'</summary><div class="row" style="gap:8px"><select id="trNewTg">'+trActs().map(a=>'<option value="'+escHTML(a[0])+'">'+escHTML(a[1])+'</option>').join('')+'</select><input id="trNewTgN" type="number" min="1" style="width:90px"><button type="button" class="btn btn-purple" onclick="trF(\'tg.\'+document.getElementById(\'trNewTg\').value,document.getElementById(\'trNewTgN\').value);trSaveNow();trRender()">'+escHTML(trT('add'))+'</button></div></details>';
+  return h}
+function trEditTarget(id,n){const v=prompt(trActName(id)+' — '+trT('target')+' (0 = remove)',String(n));if(v==null)return;TR.tg[id]=String(parseInt(v,10)||0);trSaveNow();trRender()}
+function trLeaveUsed(){return TR.leave.reduce((s,l)=>s+(parseFloat(l.days)||0),0)}
+function trSec_postings(){let h='<p class="desc">'+escHTML(trB(TR_TPL.mbbs.tsrc))+'</p><div class="tr-tw"><table class="tr-tbl"><thead><tr><th>'+escHTML(trT('dept2'))+'</th><th>'+escHTML(trT('planned'))+'</th><th>'+escHTML(trT('from'))+'</th><th>'+escHTML(trT('to'))+'</th><th>'+escHTML(trT('done'))+'</th><th></th></tr></thead><tbody>';
+  TR.post.forEach((p,i)=>{h+='<tr><td>'+escHTML(p.k)+'</td><td><input type="number" min="0" style="width:60px" value="'+escHTML(p.w)+'" oninput="TR.post['+i+'].w=this.value;trSave()"></td><td><input type="date" value="'+escHTML(p.from)+'" oninput="TR.post['+i+'].from=this.value;trSave()"></td><td><input type="date" value="'+escHTML(p.to)+'" oninput="TR.post['+i+'].to=this.value;trSave()"></td><td><input type="number" min="0" step="0.5" style="width:60px" value="'+escHTML(p.done)+'" oninput="TR.post['+i+'].done=this.value;trSave()"> '+trBar(parseFloat(p.done)||0,parseFloat(p.w)||0)+'</td><td></td></tr>'});
+  return h+'</tbody></table></div>'}
+function trSec_leave(){const lu=trLeaveUsed();let h='<p>'+escHTML(trT('lv_used'))+': <b>'+lu+'</b> '+escHTML(trT('of'))+' 15</p>'+(lu>15?'<p class="tr-warn">'+escHTML(trT('lv_over'))+'</p>':'');
+  h+='<div class="tr-tw"><table class="tr-tbl"><thead><tr><th>'+escHTML(trT('from'))+'</th><th>'+escHTML(trT('to'))+'</th><th>'+escHTML(trT('lv_days'))+'</th><th>'+escHTML(trT('lv_type'))+'</th><th></th></tr></thead><tbody>'+TR.leave.map((l,i)=>'<tr><td><input type="date" value="'+escHTML(l.from||'')+'" oninput="TR.leave['+i+'].from=this.value;trSave()"></td><td><input type="date" value="'+escHTML(l.to||'')+'" oninput="TR.leave['+i+'].to=this.value;trSave()"></td><td><input type="number" min="0" style="width:60px" value="'+escHTML(l.days||'')+'" onchange="TR.leave['+i+'].days=this.value;trSaveNow();trRender()"></td><td><select onchange="TR.leave['+i+'].type=this.value;trSave()">'+['Normal','Medical','Paternity','Maternity','Other'].map(x=>'<option'+(l.type===x?' selected':'')+'>'+x+'</option>').join('')+'</select></td><td><button type="button" class="btn btn-ghost" onclick="trDel(\'leave\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>';
+  return h+'<button type="button" class="btn btn-purple" onclick="TR.leave.push({type:\'Normal\'});trSaveNow();trRender()">+ '+escHTML(trT('add'))+'</button>'}
+function trSec_skills(){let h='<p class="desc">'+escHTML(trT('sk_hint'))+'</p><div class="tr-tw"><table class="tr-tbl"><thead><tr><th>'+escHTML(trT('sk'))+'</th><th>'+escHTML(trT('sk_o'))+'</th><th>'+escHTML(trT('sk_a'))+'</th><th>'+escHTML(trT('sk_s'))+'</th><th>'+escHTML(trT('sk_i'))+'</th><th>'+escHTML(trT('sk_rem'))+'</th><th></th></tr></thead><tbody>';
+  TR.skills.forEach((s,i)=>{const c=k=>'<td><input style="width:100%;min-width:70px" value="'+escHTML(s[k]||'')+'" oninput="TR.skills['+i+'].'+k+'=this.value;trSave()"></td>';h+='<tr>'+c('n')+c('o')+c('a')+c('s')+c('i')+c('rem')+'<td><button type="button" class="btn btn-ghost" onclick="trDel(\'skills\','+i+')">✕</button></td></tr>'});
+  return h+'</tbody></table></div><button type="button" class="btn btn-purple" onclick="TR.skills.push({n:\'\'});trSaveNow();trRender()">+ '+escHTML(trT('add'))+'</button>'}
+function trSec_sup(){return'<p class="desc">'+escHTML(trT('sup_note'))+'</p>'}
+function trSec_dl(){return'<p class="desc">'+escHTML(trT('dl_desc'))+'</p><div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" id="trDlBtn" onclick="trDownload()">⬇ '+escHTML(trT('dl_btn'))+'</button><button type="button" class="btn btn-ghost" onclick="trExport()">💾 '+escHTML(trT('exp_btn'))+'</button><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'trImp\').click()">📂 '+escHTML(trT('imp_btn'))+'</button><input type="file" id="trImp" accept=".json" style="display:none" onchange="trImport(this.files[0]);this.value=\'\'"></div><p class="desc">'+escHTML(trT('privacy'))+'</p>'}
+function trExport(){trSaveNow();const blob=new Blob([JSON.stringify({appuscholar_training_record:1,data:TR})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='training-record-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function trImport(f){if(!f)return;f.text().then(s=>{const o=JSON.parse(s);if(!o||!o.appuscholar_training_record||!o.data)throw new Error('x');if(TR&&TR.log.length&&!confirm(trT('confirm_imp')))return;TR=trFix(o.data);trSaveNow();trRender();showToast('Loaded ✓')}).catch(()=>showToast('That file is not a Training record backup'))}
+/* ---- Word file ---- */
+function trDocHTML(){
+  const t=TR_TPL[TR.tpl],c=TR.cover,E=escHTML,hi=getLang()==='hi',pb='<hr class="page-break">';
+  const row=(a,b)=>'<tr><td data-w="38"><b>'+E(a)+'</b></td><td data-w="62">'+E(b||'')+'</td></tr>';
+  let h='';
+  if(TR.logo&&TR.logo.src)h+='<p style="text-align:'+(TR.logo.pos==='l'?'left':'center')+'"><img src="'+TR.logo.src+'" width="'+(TR.logo.pos==='b'?600:140)+'"></p>';
+  h+='<h1>'+E(c.inst||'')+'</h1>'+(c.dept?'<p style="text-align:center">'+E(c.dept)+'</p>':'')+'<p style="text-align:center"> </p><h1>'+E(c.title||trB(t.title))+'</h1>'+(c.prog?'<p style="text-align:center">'+E(c.prog)+'</p>':'')+'<p style="text-align:center"> </p>';
+  h+='<table>'+row(trT('name'),c.name)+row(trT('enrol'),c.enrol)+row(trT('session'),c.session)+row(trT('org'),c.org)+row(trT('from')+' – '+trT('to'),(c.from||'')+' – '+(c.to||''))+row(trT('mentor'),c.mentor)+row(trT('sup'),c.sup)+row(trT('submit'),c.submit)+'</table>'+pb;
+  let n=2;const H=k=>'<h2>'+(n++)+'. '+E(trT(k))+'</h2>';
+  h+=H('s_details')+'<table>'+row(trT('prog'),c.prog)+row(trT('year'),TR.det.year)+row(trT('inst'),c.inst)+row(trT('dept'),c.dept)+row(trT('session'),c.session)+row(trT('mentor'),c.mentor)+row(trT('org'),c.org)+row(trT('setting'),TR.det.setting)+row(trT('sup'),c.sup)+row(trT('supdes'),TR.det.supdes)+row(trT('hours'),TR.det.hours)+row(trT('approval'),TR.det.approval)+'</table>';
+  h+=H('s_ethics')+'<ul>'+TR_UND[t.und].map((x,i)=>'<li>'+(TR.eth.t[i]?'☑ ':'☐ ')+E(trB(x))+'</li>').join('')+'</ul><p>'+E(trT('signst'))+': ____________________ &nbsp; '+E(trT('date'))+': '+E(TR.eth.d||'__________')+'</p><p>'+E(trT('signsup'))+': ____________________</p>'+pb;
+  if(t.sec.includes('plan')){h+=H('s_plan')+'<table><tr><th>#</th><th>'+E(trT('obj'))+'</th><th>'+E(trT('how'))+'</th></tr>'+(TR.plan.length?TR.plan.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+E(p.o)+'</td><td>'+E(p.how)+'</td></tr>').join(''):'<tr><td>1</td><td></td><td></td></tr>')+'</table>'}
+  if(t.sec.includes('postings')){h+=H('s_postings')+'<table><tr><th>'+E(trT('dept2'))+'</th><th>'+E(trT('planned'))+'</th><th>'+E(trT('from'))+'</th><th>'+E(trT('to'))+'</th><th>'+E(trT('done'))+'</th><th>'+E(trT('signsup'))+'</th></tr>'+TR.post.map(p=>'<tr><td>'+E(p.k)+'</td><td>'+E(p.w)+'</td><td>'+E(p.from)+'</td><td>'+E(p.to)+'</td><td>'+E(p.done)+'</td><td></td></tr>').join('')+'</table><p>'+E(trB(t.tsrc))+'</p>'}
+  if(t.sec.includes('leave')){h+=H('s_leave')+'<table><tr><th>'+E(trT('from'))+'</th><th>'+E(trT('to'))+'</th><th>'+E(trT('lv_days'))+'</th><th>'+E(trT('lv_type'))+'</th></tr>'+(TR.leave.length?TR.leave.map(l=>'<tr><td>'+E(l.from)+'</td><td>'+E(l.to)+'</td><td>'+E(l.days)+'</td><td>'+E(l.type)+'</td></tr>').join(''):'<tr><td></td><td></td><td></td><td></td></tr>')+'</table><p>'+E(trT('lv_used'))+': '+trLeaveUsed()+' / 15</p>'}
+  h+=pb+H('s_log');const mb=TR.tpl==='mbbs';
+  h+='<table><tr><th data-w="11">'+E(trT('date'))+'</th><th data-w="11">'+E(trT('tin'))+'–'+E(trT('tout'))+'</th><th data-w="7">'+E(trT('hrs'))+'</th><th data-w="16">'+E(trT('act'))+'</th><th data-w="9">'+E(mb?trT('dept2'):trT('code'))+'</th><th data-w="33">'+E(trT('note'))+'</th><th data-w="13">'+E(trT('supi'))+'</th></tr>'+TR.log.slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))).map(e=>'<tr><td>'+E(e.d)+'</td><td>'+E((e.tin||'')+(e.tout?'–'+e.tout:''))+'</td><td>'+E(e.hrs)+'</td><td>'+E(trActName(e.act))+'</td><td>'+E(mb?e.dept:e.code)+'</td><td>'+E(e.note)+'</td><td>'+E(e.sup)+'</td></tr>').join('')+'<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table><p><b>'+E(trT('totalhrs'))+': '+trTotHrs()+'</b></p>';
+  if(t.sec.includes('skills')){h+=H('s_skills')+'<table><tr><th>'+E(trT('sk'))+'</th><th>'+E(trT('sk_o'))+'</th><th>'+E(trT('sk_a'))+'</th><th>'+E(trT('sk_s'))+'</th><th>'+E(trT('sk_i'))+'</th><th>'+E(trT('sk_rem'))+'</th><th>'+E(trT('supi'))+'</th></tr>'+TR.skills.map(s=>'<tr><td>'+E(s.n)+'</td><td>'+E(s.o)+'</td><td>'+E(s.a)+'</td><td>'+E(s.s)+'</td><td>'+E(s.i)+'</td><td>'+E(s.rem)+'</td><td></td></tr>').join('')+'</table>'}
+  if(t.sec.includes('refl')){h+=pb+H('s_refl');(TR.refl.length?TR.refl:[{}]).forEach((r,i)=>{h+='<h3>'+E(trT('wk'))+' '+(i+1)+'</h3>'+[['learn','r_learn'],['theory','r_theory'],['ethic','r_ethic'],['fb','r_fb'],['goal','r_goal']].map(x=>'<p><b>'+E(trT(x[1]))+':</b> '+E(r[x[0]]||'')+'</p>').join('')})}
+  h+=pb+H('s_cases');TR.cases.forEach((cs,i)=>{const r=TR_REC[cs.rec];if(!r)return;h+='<h3>'+E(trB(r.n))+' '+(i+1)+(cs.code?' · '+E(cs.code):'')+'</h3>'+r.h.map((hh,j)=>'<p><b>'+E(trB(hh))+'</b></p><p>'+E((cs.f||{})[j]||'')+'</p>').join('')+'<p>'+E(trT('signsup'))+': ____________________</p>'});
+  h+=pb+H('s_summary');const tg=trTargets();
+  h+='<table><tr><th>'+E(trT('act'))+'</th><th>'+E(trT('entries'))+'</th><th>'+E(trT('target'))+'</th></tr>'+trActs().map(a=>{const k=trCount(a[0]),g=tg.find(x=>x[0]===a[0]);return(k||g)?'<tr><td>'+E(a[1])+'</td><td>'+k+'</td><td>'+(g?g[1]:'')+'</td></tr>':''}).join('')+(t.recTargets||[]).map(([rk,nn])=>'<tr><td>'+E(trB(TR_REC[rk].n))+'</td><td>'+TR.cases.filter(c=>c.rec===rk).length+'</td><td>'+nn+'</td></tr>').join('')+'<tr><td><b>'+E(trT('totalhrs'))+'</b></td><td><b>'+trTotHrs()+'</b></td><td>'+E(TR.det.hours||'')+'</td></tr></table>'+(t.tsrc&&tg.length?'<p>'+E(trB(t.tsrc))+'</p>':'');
+  h+=pb+H('s_sup');const ev=TR_EVAL[t.ev];
+  const grid=(ttl,cols)=>'<h3>'+E(ttl)+'</h3><table><tr><th></th>'+cols.map(x=>'<th>'+E(x)+'</th>').join('')+'</tr>'+ev.map(x=>'<tr><td>'+E(trB(x))+'</td>'+cols.map(()=>'<td></td>').join('')+'</tr>').join('')+'</table><p>'+(hi?'टिप्पणी':'Comments')+': ______________________________________________</p><p>'+E(trT('signsup'))+': ____________________ &nbsp; '+E(trT('date'))+': __________</p>';
+  if(TR.tpl==='mbbs'){TR.post.forEach((p,i)=>{h+=(i?pb:'')+grid((hi?'फ़ीडबैक फ़ॉर्म: ':'Feedback form: ')+p.k,['A','B','C','D'])+'<p>'+(hi?'A उत्कृष्ट, B अच्छा, C औसत, D और प्रशिक्षण चाहिए। ताकत: _______ सुधार के क्षेत्र: _______':'A Outstanding, B Good, C Average, D Needs further training. Strengths: _______ Areas of improvement: _______')+'</p>'})}
+  else{const cols=hi?['उत्कृष्ट','अच्छा','संतोषजनक','सुधार चाहिए']:['Excellent','Good','Satisfactory','Needs improvement'];h+=grid(hi?'मध्य-प्लेसमेंट मूल्यांकन':'Mid-placement evaluation',cols)+pb+grid(hi?'अंतिम मूल्यांकन':'Final evaluation',cols)}
+  h+=pb+'<h2>'+(hi?'पूर्णता प्रमाणपत्र':'Certificate of completion')+'</h2>'+(TR.tpl==='mbbs'?'<p><i>'+(hi?'संस्थागत सारांश, अनुसूची IV का आधिकारिक प्रमाणपत्र नहीं।':'Institutional summary, not the official Schedule IV certificate.')+'</i></p>':'')+'<p>'+(hi?'प्रमाणित किया जाता है कि '+E(c.name||'________')+' ने '+E(c.org||'________')+' में '+E(c.from||'______')+' से '+E(c.to||'______')+' तक मेरे पर्यवेक्षण में '+trTotHrs()+' घंटे का कार्य पूरा किया।':'This is to certify that '+E(c.name||'________')+' completed '+trTotHrs()+' hours of supervised work at '+E(c.org||'________')+' from '+E(c.from||'______')+' to '+E(c.to||'______')+' under my supervision.')+'</p><p> </p><p>'+E(trT('signsup'))+': ____________________</p><p>'+(hi?'नाम और पद':'Name and designation')+': ____________________ &nbsp; '+E(trT('date'))+': __________</p>';
+  return h}
+async function trDownload(){trSaveNow();showToast('Preparing the Word file…');
+  try{const holder=document.createElement('div');holder.innerHTML=trDocHTML();const blob=await dxBuild(holder,TR.cover.title||'Training record',{single:true});
+    const safe=String((TR.cover.title||'training-record')+' '+(TR.cover.name||'')).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')||'training-record';
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safe+'.docx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    showToast('Downloaded ✓ A Word file (.docx) that also opens in Google Docs and LibreOffice');window._trLastBlob=blob;
+  }catch(e){showToast('Could not make the Word file: '+(e&&e.message||e))}}
+(function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{const d=document.getElementById('trDlg');if(d&&d.open)trRender()}catch(e){}}}})();
+
 /* ============ Home page and stage bar (Version 56) ============
    Home is the first thing a student sees: an identity card on the left, a tile for each of the six
    stages and for the learning tools on the right. The stage bar sits under the header on every page,
@@ -12699,7 +12946,9 @@ const AP_HT={
   ask:'💬 Ask Appuscholar',projects:'📂 My projects',backup:'💾 Backup',settings:'⚙ Settings',help:'❓ Help',
   yourname:'Your name',yourpos:'Your position, institution',edit:'Edit my details',working:'Working on',noproj:'No project yet',stage:'Stage',docs:'Documents',sources:'Sources',lang:'Language',
   resume:'Continue where you left off',lecture:'Lecture',slide:'slide',cont:'Continue ▶',projcont:'Your project',startb:'Start here',startt:'Begin with Step 1, Idea & Feasibility.',go:'Go ▶',
-  medlg:'My details',save:'Save',cancel:'Cancel',nlabel:'Name',plabel:'Position, institution'},
+  medlg:'My details',save:'Save',cancel:'Cancel',nlabel:'Name',plabel:'Position, institution',
+  rlabel:'What are you doing now?',clabel:'Which course?',r_:'Choose',r_ug:'Undergraduate project',r_pg:'Postgraduate dissertation',r_phd:'PhD',r_intern:'Internship',r_trainee:'Clinical trainee',r_teacher:'Teacher or supervisor',c_:'Choose',c_ug:'BA or BSc Psychology',c_pg:'MA or MSc Psychology',c_rci:'RCI M.A. or M.Phil Clinical Psychology',c_pdcp:'Professional Diploma in Clinical Psychology',c_mbbs:'MBBS',c_nursing:'B.Sc. Nursing',c_other:'Other',
+  trec:'🗂 Training record',trec_d:'Logbook, case records, report',h_train:'Your training',p_train:'Your logbook, case records and internship report.',entries:'entries',hours:'hours'},
  hi:{home:'होम',s_idea:'विचार',s_lit:'साहित्य',s_design:'डिज़ाइन और नैतिकता',s_collect:'आँकड़े और विश्लेषण',s_writing:'लेखन',s_review:'समीक्षा और प्रकाशन',
   t_idea:'विचार और व्यवहार्यता',d_idea:'विषय, प्रश्न, क्या हो पाएगा?',t_lit:'साहित्य',d_lit:'शोध-पत्र खोजें, पढ़ें, क्रम दें',t_design:'डिज़ाइन और नैतिकता',d_design:'अध्ययन-डिज़ाइन, सहमति, समिति',
   t_collect:'आँकड़े और विश्लेषण',d_collect:'प्रश्नावली, सांख्यिकी, चार्ट',t_writing:'लेखन',d_writing:'संपादक, संदर्भ, मेरी शैली',t_review:'समीक्षा और प्रकाशन',d_review:'समानता जाँच, स्लाइड, समापन',
@@ -12708,9 +12957,13 @@ const AP_HT={
   ask:'💬 अप्पूस्कॉलर से पूछें',projects:'📂 मेरे प्रोजेक्ट',backup:'💾 बैकअप',settings:'⚙ सेटिंग',help:'❓ सहायता',
   yourname:'आपका नाम',yourpos:'आपका पद, संस्था',edit:'मेरा विवरण बदलें',working:'काम चल रहा है',noproj:'अभी कोई प्रोजेक्ट नहीं',stage:'चरण',docs:'दस्तावेज़',sources:'स्रोत',lang:'भाषा',
   resume:'जहाँ छोड़ा था वहीं से',lecture:'व्याख्यान',slide:'स्लाइड',cont:'जारी रखें ▶',projcont:'आपका प्रोजेक्ट',startb:'यहाँ से शुरू करें',startt:'चरण 1, विचार और व्यवहार्यता से शुरू करें।',go:'चलें ▶',
-  medlg:'मेरा विवरण',save:'सहेजें',cancel:'रद्द करें',nlabel:'नाम',plabel:'पद, संस्था'}};
+  medlg:'मेरा विवरण',save:'सहेजें',cancel:'रद्द करें',nlabel:'नाम',plabel:'पद, संस्था',
+  rlabel:'आप अभी क्या कर रहे हैं?',clabel:'कौन सा पाठ्यक्रम?',r_:'चुनें',r_ug:'स्नातक प्रोजेक्ट',r_pg:'स्नातकोत्तर शोध-प्रबंध',r_phd:'PhD',r_intern:'इंटर्नशिप',r_trainee:'क्लिनिकल प्रशिक्षु',r_teacher:'शिक्षक या पर्यवेक्षक',c_:'चुनें',c_ug:'BA या BSc मनोविज्ञान',c_pg:'MA या MSc मनोविज्ञान',c_rci:'RCI M.A. या M.Phil क्लिनिकल मनोविज्ञान',c_pdcp:'क्लिनिकल मनोविज्ञान में प्रोफ़ेशनल डिप्लोमा',c_mbbs:'MBBS',c_nursing:'B.Sc. नर्सिंग',c_other:'अन्य',
+  trec:'🗂 प्रशिक्षण रिकॉर्ड',trec_d:'लॉगबुक, केस रिकॉर्ड, रिपोर्ट',h_train:'आपका प्रशिक्षण',p_train:'आपकी लॉगबुक, केस रिकॉर्ड और इंटर्नशिप रिपोर्ट।',entries:'प्रविष्टियाँ',hours:'घंटे'}};
 function ht(k){const d=AP_HT[getLang()]||AP_HT.en;return(k in d)?d[k]:AP_HT.en[k]||k}
-function apMe(){try{const o=JSON.parse(LS.get('appu_me')||'{}');return{name:String(o.name||'').slice(0,80),pos:String(o.pos||'').slice(0,120)}}catch(e){return{name:'',pos:''}}}
+function apMe(){try{const o=JSON.parse(LS.get('appu_me')||'{}');return{name:String(o.name||'').slice(0,80),pos:String(o.pos||'').slice(0,120),role:String(o.role||''),course:String(o.course||'')}}catch(e){return{name:'',pos:'',role:'',course:''}}}
+const AP_ROLES=['','ug','pg','phd','intern','trainee','teacher'],AP_COURSES=['','ug','pg','rci','pdcp','mbbs','nursing','other'];
+function apIsTrainee(){const m=apMe();return m.role==='intern'||m.role==='trainee'||['rci','pdcp','mbbs','nursing'].includes(m.course)}
 function apHomeIs(){return document.body.classList.contains('at-home')}
 function apStageOfNow(){const tb=document.querySelector('.tool-tab.active');return tb?TOOL_TO_STAGE[tb.dataset.tool]:null}
 function apStageBarRender(){
@@ -12726,7 +12979,7 @@ function apGoTool(t2){apHomeHide();showTool(t2)}
 function apHomeLectures(){apLibOpen()}
 function apHomeResume(k){try{apLibOpen();apLibPick(k);const p=apLectPos()[k]||0;if(p>0)apLesGo(p)}catch(e){}}
 const AP_HI={idea:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',lit:'<circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/>',design:'<path d="M12 3v18M5 7h14M5 7l-2 6a3 3 0 0 0 4 0L5 7zM19 7l-2 6a3 3 0 0 0 4 0l-2-6z"/>',collect:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',writing:'<path d="M4 20l1-4L17 4l3 3L8 19l-4 1zM14 7l3 3"/>',review:'<path d="M5 12l4 4L19 7"/><rect x="3" y="3" width="18" height="18" rx="3"/>',
- lec:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M10 8l5 3-5 3z"/>',paper:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/>',words:'<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4zM20 5h-6"/>'};
+ lec:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M10 8l5 3-5 3z"/>',paper:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/>',words:'<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4zM20 5h-6"/>',trec:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/>'};
 function apHomeRender(){
   const el=document.getElementById('apHome');if(!el)return;
   const me=apMe(),nm=me.name||ht('yourname'),ini=(me.name||'').trim().split(/\s+/).filter(w=>!/^(dr|prof|mr|mrs|ms)\.?$/i.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'A';
@@ -12745,21 +12998,23 @@ function apHomeRender(){
    +'<button type="button" class="hm-edit" onclick="apMeEdit()">'+escHTML(ht('edit'))+'</button>'
    +'<div class="hm-kv"><span>'+escHTML(ht('working'))+'</span><div>'+escHTML(active?active.name:ht('noproj'))+'</div><span>'+escHTML(ht('stage'))+'</span><div>'+escHTML(stNow?((STAGES.indexOf(stNow)+1)+' · '+stageLabel(stNow)):'-')+'</div>'
    +'<span>'+escHTML(ht('docs'))+'</span><div>'+docs+' &nbsp;·&nbsp; '+escHTML(ht('sources'))+' '+src+'</div><span>'+escHTML(ht('lang'))+'</span><div><a onclick="toggleLang()">'+(lang==='hi'?'हिंदी · English':'English · हिंदी')+'</a></div></div>'+cards+'</div>'
-   +'<div class="hm-main"><h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
+   +'<div class="hm-main">'+apHomeTrain()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
    +'<h3>'+escHTML(ht('h_learn'))+'</h3><p class="hm-hint">'+escHTML(ht('p_learn'))+'</p><div class="hm-grid">'+lt('lec','lectures','lectures_d','apHomeLectures()')+lt('paper','paper','paper_d',"apGoTool('analyse')")+lt('words','words','words_d',"apGoTool('words')")+'</div>'
-   +'<div class="hm-foot"><button type="button" onclick="apGoTool(\'chat\')">'+escHTML(ht('ask'))+'</button><button type="button" onclick="openProjectsDlg()">'+escHTML(ht('projects'))+'</button><button type="button" onclick="backupExport()">'+escHTML(ht('backup'))+'</button><button type="button" onclick="openSettings()">'+escHTML(ht('settings'))+'</button><button type="button" onclick="openHelp()">'+escHTML(ht('help'))+'</button></div></div>';
+   +'<div class="hm-foot"><button type="button" onclick="apGoTool(\'chat\')">'+escHTML(ht('ask'))+'</button>'+(apIsTrainee()?'':'<button type="button" id="hmTrecBtn" onclick="trOpen()">'+escHTML(ht('trec'))+'</button>')+'<button type="button" onclick="openProjectsDlg()">'+escHTML(ht('projects'))+'</button><button type="button" onclick="backupExport()">'+escHTML(ht('backup'))+'</button><button type="button" onclick="openSettings()">'+escHTML(ht('settings'))+'</button><button type="button" onclick="openHelp()">'+escHTML(ht('help'))+'</button></div></div>';
   try{apStageBarRender()}catch(e){}
 }
+function apHomeTrain(){if(!apIsTrainee())return'';let n=0,hr=0;try{const o=trLoad();if(o){n=o.log.length;hr=o.log.reduce((s,e)=>s+(parseFloat(e.hrs)||0),0)}}catch(e){}
+  return'<h3>'+escHTML(ht('h_train'))+'</h3><p class="hm-hint">'+escHTML(ht('p_train'))+'</p><div class="hm-grid"><button type="button" class="hm-tile" id="hmTrecTile" onclick="trOpen()"><span class="hm-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+AP_HI.trec+'</svg></span><span><b>'+escHTML(ht('trec'))+'</b><small>'+escHTML(ht('trec_d'))+' · '+n+' '+escHTML(ht('entries'))+', '+hr+' '+escHTML(ht('hours'))+'</small></span></button></div>'}
 function apMeEdit(){const d=document.getElementById('apMeDlg');if(!d)return;const m=apMe();document.getElementById('apMeName').value=m.name;document.getElementById('apMePos').value=m.pos;
-  document.getElementById('apMeT').textContent=ht('medlg');document.getElementById('apMeNL').textContent=ht('nlabel');document.getElementById('apMePL').textContent=ht('plabel');document.getElementById('apMeSave').textContent=ht('save');document.getElementById('apMeCancel').textContent=ht('cancel');d.showModal()}
-function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementById('apMeName').value.trim().slice(0,80),pos:document.getElementById('apMePos').value.trim().slice(0,120)}));document.getElementById('apMeDlg').close();apHomeRender()}
+  document.getElementById('apMeRL').textContent=ht('rlabel');document.getElementById('apMeCL').textContent=ht('clabel');document.getElementById('apMeRole').innerHTML=AP_ROLES.map(r=>'<option value="'+r+'"'+(m.role===r?' selected':'')+'>'+escHTML(ht('r_'+r))+'</option>').join('');document.getElementById('apMeCourse').innerHTML=AP_COURSES.map(r=>'<option value="'+r+'"'+(m.course===r?' selected':'')+'>'+escHTML(ht('c_'+r))+'</option>').join('');document.getElementById('apMeT').textContent=ht('medlg');document.getElementById('apMeNL').textContent=ht('nlabel');document.getElementById('apMePL').textContent=ht('plabel');document.getElementById('apMeSave').textContent=ht('save');document.getElementById('apMeCancel').textContent=ht('cancel');d.showModal()}
+function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementById('apMeName').value.trim().slice(0,80),pos:document.getElementById('apMePos').value.trim().slice(0,120),role:document.getElementById('apMeRole').value,course:document.getElementById('apMeCourse').value}));document.getElementById('apMeDlg').close();apHomeRender()}
 (function(){apStageBarRender();apHomeRender();window._apHomeLock=0;
   const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{apHomeRender()}catch(e){}}}
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=109;
-const APP_BUILD='2026.10.19c';
+const APP_VERSION=110;
+const APP_BUILD='2026.10.20a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
