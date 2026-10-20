@@ -13226,8 +13226,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=114;
-const APP_BUILD='2026.10.20e';
+const APP_VERSION=115;
+const APP_BUILD='2026.10.20f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -15139,7 +15139,7 @@ function statsRunNow(){
       const strength=Math.abs(r)<0.1?'negligible':Math.abs(r)<0.3?'weak':Math.abs(r)<0.5?'moderate':Math.abs(r)<0.7?'strong':'very strong';
       const fr=x=>noLead(x.toFixed(2));
       const html='<table class="stats-table"><tr><th>N</th><th>rₛ</th><th>95% CI</th><th>df</th><th>p</th></tr>'+
-        '<tr><td>'+sp.n+'</td><td>'+fr(r)+'</td><td>['+fr(sp.lo)+', '+fr(sp.hi)+']</td><td>'+sp.df+'</td><td>'+noLead(sp.p.toFixed(3))+'</td></tr></table>'+
+        '<tr><td>'+sp.n+'</td><td>'+fr(r)+'</td><td>['+fr(sp.lo)+', '+fr(sp.hi)+']</td><td>'+sp.df+'</td><td>'+pCell(sp.p)+'</td></tr></table>'+
         '<p class="desc">Spearman works on ranks, so it fits ordinal scores and relationships that rise or fall steadily without being a straight line.'+(sp.n<10?' With fewer than 10 pairs the p-value is approximate.':'')+'</p>';
       const apa='There was a '+strength+' '+(r>=0?'positive':'negative')+' monotonic association between '+n1name+' and '+n2name+', which '+(sig(sp.p)?'was':'was not')+' statistically significant, rₛ('+sp.df+') = '+fr(r)+', '+fmtP(sp.p)+', 95% CI ['+fr(sp.lo)+', '+fr(sp.hi)+'].';
       statsResultsShow(html,apa);
