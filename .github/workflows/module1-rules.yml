@@ -19,11 +19,15 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm install --no-audit --no-fund
-      - run: npm test 2>&1 | tee test-output.txt
+      - run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.txt
+          grep -q "^# fail 0" test-output.txt
       - if: always()
         run: |
           echo "::notice title=Rules test totals::$(grep -E '^# (tests|pass|fail|skipped)' test-output.txt | tr '\n' ' ')"
           grep -E '^ *not ok' test-output.txt | while read -r l; do echo "::error title=Failed test::$l"; done
+          grep -E -A12 '^ *not ok' test-output.txt | tr '\n' ' ' | cut -c1-3000 | sed 's/^/::warning title=Failure detail::/'
           grep -E '^ *ok [0-9]+' test-output.txt | tr '\n' ' ' | cut -c1-3500 | sed 's/^/::notice title=Passed tests::/'
       - if: always()
         uses: actions/upload-artifact@v4
