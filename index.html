@@ -502,6 +502,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 @media (max-width:1000px){body.at-home #apHome{grid-template-columns:1fr}.hm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.hm-grid{grid-template-columns:1fr}}
 </style>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
@@ -1584,12 +1585,17 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   </div>
 </div></dialog>
 
+<dialog id="acctDlg" style="width:min(640px,96vw);height:min(760px,92vh);padding:0;border-radius:14px"><div style="display:flex;flex-direction:column;height:100%"><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)"><b>Appuscholar account</b><button class="btn btn-ghost" type="button" onclick="acctClose()" aria-label="Close">✕</button></div><iframe id="acctFrame" title="Appuscholar account" style="flex:1;border:0;width:100%"></iframe></div></dialog>
 <dialog id="loginDlg"><div class="dlg-body">
   <h2 data-i18n="login_h2">🔑 Appuscholar Access</h2>
   <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="login_intro">This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.</p>
   <textarea id="loginInput" rows="3" placeholder="Paste your access code here" data-i18n-placeholder="login_placeholder" style="width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;font-size:13px;font-family:monospace;color:var(--ink);background:var(--card)"></textarea>
   <p style="min-height:18px;font-size:12.5px;color:#dc2626;margin:8px 0 0" id="loginMsg"></p>
   <div class="row" style="margin-top:6px"><button class="btn btn-purple" style="flex:1" id="loginSubmit" data-i18n="login_unlock_btn">Unlock</button></div>
+  <div style="margin:14px 0 4px;border-top:1px solid var(--line);padding-top:12px">
+    <p class="desc" style="margin:0 0 6px">Trial students with an email account / ईमेल account वाले trial students:</p>
+    <button class="btn btn-ghost" style="width:100%" id="acctOpenBtn" type="button" onclick="acctOpen()">✉️ Sign in or create account / Sign in करें या account बनाएँ</button>
+  </div>
   <p class="desc support-contact-fallback" style="margin-top:10px" data-i18n="login_note">Don't have a code, or has yours expired? Ask whoever gave you Appuscholar for a new one.</p>
   <div class="support-contact" style="margin-top:10px">
     <p class="desc" data-i18n="login_request_intro">Don't have a code yet?</p>
@@ -13251,8 +13257,8 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
-const APP_VERSION=117;
-const APP_BUILD='2026.10.25b';
+const APP_VERSION=118;
+const APP_BUILD='2026.10.25c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -15535,6 +15541,7 @@ function licenseShowStatus(payload){
 }
 function licensePromptLoop(reason){
   return new Promise(resolve=>{
+    acctGateResolve=resolve;
     const dlg=document.getElementById('loginDlg'),msg=document.getElementById('loginMsg'),input=document.getElementById('loginInput'),btn=document.getElementById('loginSubmit');
     msg.textContent=reason==='expired'?'Your access code has expired. Paste a new one to continue.'
       :reason==='revoked'?'That access code is no longer valid. Paste a new one, or ask for a renewal code.'
@@ -15560,14 +15567,29 @@ function licensePromptLoop(reason){
       btn.disabled=false;
       if(revoked){msg.style.color='#dc2626';msg.textContent='This code is no longer valid. Ask for a new one.';return}
       licenseSave(res.payload,code);
+      acctGateResolve=null;
       dlg.close();
       licenseShowStatus(res.payload);
       resolve(true);
     };
   });
 }
+/* ---- Accounts (Module 1): email sign-in with an invite code, alongside the access code. Version 118. ---- */
+let acctMod=null;
+async function acctBackend(){if(!window.APPUSCHOLAR_FIREBASE_CONFIG)return null;if(!acctMod){acctMod=await import('./backend.js');await acctMod.appuBackend.init(window.APPUSCHOLAR_FIREBASE_CONFIG)}return acctMod.appuBackend}
+async function acctSession(waitMs){try{const b=await Promise.race([acctBackend(),new Promise(r=>setTimeout(()=>r(null),waitMs||6000))]);if(!b)return null;
+  return await new Promise(res=>{let done=false;const t=setTimeout(()=>{if(!done){done=true;res(null)}},waitMs||6000);Promise.resolve(b.onSessionChange(st=>{if(done)return;done=true;clearTimeout(t);res(st)})).catch(()=>{if(!done){done=true;clearTimeout(t);res(null)}})})}catch(e){return null}}
+function acctShowStatus(p){const el=document.getElementById('licenseBadge');if(!el||!p)return;const exp=p.accessExpiresAt&&p.accessExpiresAt.toDate?p.accessExpiresAt.toDate():null,days=exp?Math.ceil((exp-new Date())/86400000):null;
+  el.style.display='inline-block';el.style.cursor='pointer';el.textContent=(p.displayName?p.displayName+' · ':'')+(days!=null?days+'d left':'account');el.title='Account and profile';el.onclick=()=>acctOpen();
+  if(days!=null&&days<=14&&days>=0)showToast('Your access ends in '+days+' day'+(days===1?'':'s'))}
+function acctOpen(){const d=document.getElementById('acctDlg'),f=document.getElementById('acctFrame');if(!d||!f)return;if(!f.getAttribute('src'))f.src='auth.html';if(!d.open)d.showModal()}
+function acctClose(){const d=document.getElementById('acctDlg');if(d&&d.open)d.close()}
+let acctGateResolve=null;
+window.appuAccountReady=async function(){const st=await acctSession(8000);if(!st||st.state!=='ready'){showToast('Your account is not active yet.');return}
+  acctClose();const l=document.getElementById('loginDlg');if(l&&l.open)l.close();acctShowStatus(st.profile);if(acctGateResolve){const r=acctGateResolve;acctGateResolve=null;r(true)}};
 async function licenseGate(){
   const stored=licenseGet();
+  if(!stored){const st=await acctSession(6000);if(st&&st.state==='ready'){acctShowStatus(st.profile);return true}}
   if(stored){
     const result=await licenseVerify(stored.raw);
     if(result.valid){
