@@ -11992,7 +11992,7 @@ function apLibLecture(b){
   h+='<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" id="libPrev" '+(prev?'onclick="apLibPick(\''+escAttr(prev.k)+'\')"':'disabled')+'>◀ '+(hi?'पिछला':'Previous lecture')+'</button><button type="button" class="btn btn-purple" id="libNext" '+(next?'onclick="apLibPick(\''+escAttr(next.k)+'\')"':'disabled')+'>'+(hi?'अगला':'Next lecture')+' ▶</button></div>';
   h+='<p style="font-size:11px;color:var(--muted)">'+(m.fromPaper?(hi?'यह lecture practice paper वाली walk-through का हिस्सा भी है।':'This lecture is also part of the practice-paper walk-through.'):'')+'</p>';
   b.innerHTML=h;apLibMark(m.k);setTimeout(apLesStageStart,0)}
-function apLibPick(k){if(!AP_LIBMAP[k])return;clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();AP.les.lib=k;AP.les.sc=0;AP.les.ask=null;AP.les.cpos=null;apLibRender();const d=document.getElementById('libDlg');if(d){const t=d.querySelector('#libTitle');if(t&&t.scrollIntoView)try{t.scrollIntoView({block:'start'})}catch(e){}}}
+function apLibPick(k){if(!AP_LIBMAP[k])return;clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();AP.les.lib=k;AP.les.sc=0;AP.les.ask=null;AP.les.cpos=null;apLibRender();const d=document.getElementById('libDlg');if(d){const t=d.querySelector('#libTitle');if(t&&t.scrollIntoView)try{t.scrollIntoView({block:'start'})}catch(e){}}AP.thFromLib=1;apThOpen()}
 function apLibBack(){clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();AP.les.lib=null;AP.les.cpos=null;apLibRender()}
 
 /* ---- Voices (Version 54): the browser's own read-aloud. Nothing is sent anywhere. ---- */
@@ -12470,9 +12470,11 @@ function apThQ(d){const th=AP.th,k=apLesCur().k,n=(AP_QUIZ[k]||[]).length;if(!th
 function apThQuizRefresh(){if(AP.th&&AP.th.open&&AP.th.qz){thCueDraw();thDrawer()}}
 function thDrawer(){const d=document.getElementById('thDr');if(!d)return;const th=AP.th,hi=thHi(),L=apLesScenes(),k=AP.les.sc||0,key=apLesCur().k,tab=th.tab||'slides';
   let h='<div class="th-tabs">'+[['slides',hi?'Slides':'Slides'],['quiz',hi?'सवाल':'Quiz'],['voice',hi?'सेटिंग':'Settings']].map(t=>'<button type="button" class="'+(tab===t[0]?'on':'')+'" onclick="apThTab(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>';
+  if(tab==='slides'&&L.some(x=>x.ex))h+='<button type="button" class="th-sl" style="font-weight:700;color:#f2b63c" onclick="apThSimple()">💡 '+(hi?'और आसान बताओ':'Explain it more simply')+'</button>';
   if(tab==='slides')h+=L.map((x,j)=>(x.part?'<p style="margin:8px 0 2px;font-weight:700;color:#f2b63c">'+thEsc(x.part)+'</p>':'')+'<button type="button" class="th-sl'+(j===k?' on':'')+'" onclick="apThGo('+j+',false)">'+(j+1)+'. '+thEsc(x.title||'')+'</button>').join('');
   else if(tab==='quiz'){const Q=AP_QUIZ[key];if(!Q)h+='<p>'+(hi?'इस lecture के सवाल नहीं हैं।':'No questions for this lecture.')+'</p>';else h+='<div class="row" style="display:flex;gap:6px;margin-bottom:6px"><button type="button" onclick="apThQ(-1)">◀</button><button type="button" onclick="apThQ(1)">▶</button><span style="align-self:center">'+((th.qz?th.qz.qi:0)+1)+'/'+Q.length+'</span></div>'+apQuizBody(key)}
   else{const mode=apVoiceMode(),any=apTtsHas('gemini')||apTtsHas('openai'),tn=LS.get('appu_thtone')||'auto';
+    {const cur=fieldName(),opts=FIELD_LIST.slice();if(!opts.includes(cur))opts.push(cur);h+='<label>'+(hi?'मेरा field (examples इसी के हिसाब से)':'My field (examples follow it)')+'</label><select onchange="apThField(this.value)">'+opts.map(f=>'<option value="'+escAttr(f)+'"'+(f===cur?' selected':'')+'>'+escHTML(f.charAt(0).toUpperCase()+f.slice(1))+'</option>').join('')+'</select>'}
     h+='<label>'+(hi?'भाषा':'Language')+'</label><select onchange="apThLang(this.value)"><option value="en"'+(hi?'':' selected')+'>English</option><option value="hi"'+(hi?' selected':'')+'>हिंदी</option></select>';
     h+='<label>'+(hi?'आवाज़':'Voice')+'</label><select onchange="if((this.value===\'1\')!==apVoiceOn())apThVoice()"><option value="1"'+(apVoiceOn()?' selected':'')+'>'+(hi?'चालू':'On')+'</option><option value="0"'+(apVoiceOn()?'':' selected')+'>'+(hi?'बंद':'Off')+'</option></select>';
     h+='<label>'+(hi?'रफ़्तार':'Speed')+'</label><select onchange="apThRate(this.value)">'+[[0.8,hi?'धीमी':'Slow'],[0.9,hi?'सामान्य':'Normal'],[1,hi?'थोड़ी तेज़':'Brisk'],[1.15,hi?'तेज़':'Fast']].map(x=>'<option value="'+x[0]+'"'+(apVoiceRate()===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>';
@@ -12483,6 +12485,8 @@ function thDrawer(){const d=document.getElementById('thDr');if(!d)return;const t
 function thHTML(){const hi=thHi();return'<div class="th-top"><b id="thTitle"></b><button type="button" id="thLangEn" onclick="apThLang(\'en\')">English</button><button type="button" id="thLangHi" onclick="apThLang(\'hi\')">हिंदी</button><button type="button" id="thDrBtn" class="th-lbl" onclick="apThPanel(\'slides\')" aria-label="Slides and quiz">☰ <span id="thDrLbl">Slides</span></button><button type="button" id="thSetBtn" class="th-lbl th-set" onclick="apThPanel(\'voice\')" aria-label="Settings">⚙ <span id="thSetLbl">Settings</span></button><button type="button" id="thFs" onclick="apThFs()" aria-label="Full screen">⛶</button><button type="button" onclick="apThClose()" aria-label="Close theatre">✕</button></div>'+
   '<div class="th-main"><div class="th-box" id="thBox"><div class="th-cv" id="thCv"></div></div><aside class="th-dr" id="thDr" aria-label="Slides, quiz and voice"></aside></div><div class="th-sub" id="thSub" aria-live="polite"></div>'+
   '<div class="th-ctl"><button type="button" id="thPrev" onclick="apThStep(-1)" aria-label="Previous slide">◀</button><button type="button" id="thPlay" onclick="apThPlay()"></button><button type="button" id="thNext" onclick="apThStep(1)" aria-label="Next slide">▶</button><input type="range" id="thSeek" min="0" max="1" value="0" oninput="apThSeek(this.value)" aria-label="Slide"><select aria-label="Speed" onchange="apThRate(this.value)">'+[[0.8,'0.8×'],[0.9,'1×'],[1,'1.1×'],[1.15,'1.3×']].map(x=>'<option value="'+x[0]+'"'+(apVoiceRate()===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select><button type="button" id="thSimBtn" class="th-lbl th-set" style="display:none" onclick="apThSim()"></button><button type="button" id="thSetBtn2" class="th-lbl th-set" onclick="apThPanel(\'voice\')" aria-label="Settings">⚙ <span id="thSetLbl2">Settings</span></button><button type="button" id="thVoice" onclick="apThVoice()" aria-label="Voice on or off"></button></div>'}
+function apThField(v){setField(v);try{const sel=document.getElementById('fieldSel');if(sel&&[...sel.options].some(o=>o.value===v))sel.value=v}catch(e){}const th=AP.th;th.tok++;clearTimeout(th.tm);apVoiceStop();th.play=false;th.speaking=false;AP.les.cpos=null;AP.les.sc=Math.min(AP.les.sc||0,Math.max(0,apLesScenes().length-1));th.si=0;thBuild();thCueDraw();thDrawer()}
+function apThSimple(){const j=apLesScenes().findIndex(x=>x.ex);if(j>=0)apThGo(j,false)}
 function apThPanel(t){const d=document.getElementById('thDr');if(!d)return;const th=AP.th,was=d.classList.contains('open')&&(th.tab||'slides')===t;if(was){d.classList.remove('open');setTimeout(()=>thFit(1),30);return}
   if(t==='voice'){th.tab='voice';th.qz=null}else if(th.tab==='voice')th.tab='slides';d.classList.add('open');thDrawer();setTimeout(()=>thFit(1),30)}
 function apThDrawer(){const d=document.getElementById('thDr');if(!d)return;d.classList.toggle('open');thDrawer();setTimeout(()=>thFit(1),30)}
@@ -12503,7 +12507,7 @@ async function apThOpen(){
   clearInterval(thClk);thClk=setInterval(thClockTick,15000);
   setTimeout(()=>thFit(1),50);setTimeout(thFit,300)}
 function apThClose(){const th=AP.th;if(!th||!th.open)return;apThSimClose();th.open=0;th.play=false;th.tok++;clearTimeout(th.tm);clearTimeout(thFace);clearInterval(thClk);apVoiceStop();try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
-  try{if(thRO)thRO.disconnect()}catch(e){}const d=document.getElementById('apTh');if(d){if(d.open)d.close();d.innerHTML=''}
+  try{if(thRO)thRO.disconnect()}catch(e){}const d=document.getElementById('apTh');if(d){if(d.open)d.close();d.innerHTML=''}if(AP.thFromLib){AP.thFromLib=0;try{apLibBack()}catch(e){}}
   AP.les.cpos=null;try{apLesStageDraw();apQuizDraw()}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&AP.th&&AP.th.open&&AP.th.play)apThPlay()});
 document.addEventListener('keydown',e=>{if(!(AP.th&&AP.th.open))return;if(/INPUT|SELECT|TEXTAREA/.test((e.target||{}).tagName||'')&&e.key!=='Escape')return;
@@ -13318,7 +13322,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.25j';
+const APP_BUILD='2026.10.25k';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
