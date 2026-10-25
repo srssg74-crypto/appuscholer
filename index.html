@@ -13258,7 +13258,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.25d';
+const APP_BUILD='2026.10.25e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -15579,7 +15579,10 @@ let acctMod=null;
 async function acctBackend(){if(!window.APPUSCHOLAR_FIREBASE_CONFIG)return null;if(!acctMod){acctMod=await import('./backend.js');await acctMod.appuBackend.init(window.APPUSCHOLAR_FIREBASE_CONFIG)}return acctMod.appuBackend}
 async function acctSession(waitMs){try{const b=await Promise.race([acctBackend(),new Promise(r=>setTimeout(()=>r(null),waitMs||6000))]);if(!b)return null;
   return await new Promise(res=>{let done=false;const t=setTimeout(()=>{if(!done){done=true;res(null)}},waitMs||6000);Promise.resolve(b.onSessionChange(st=>{if(done)return;done=true;clearTimeout(t);res(st)})).catch(()=>{if(!done){done=true;clearTimeout(t);res(null)}})})}catch(e){return null}}
-function acctShowStatus(p){const el=document.getElementById('licenseBadge');if(!el||!p)return;const exp=p.accessExpiresAt&&p.accessExpiresAt.toDate?p.accessExpiresAt.toDate():null,days=exp?Math.ceil((exp-new Date())/86400000):null;
+function acctFillMe(p){try{if(!p)return;const me=apMe(),nm=String(p.displayName||'').trim().slice(0,80),ins=String(p.institution||'').trim().slice(0,120);let ch=false;
+  if(!me.name&&nm){me.name=nm;ch=true}if(!me.pos&&ins){me.pos=ins;ch=true}
+  if(ch){LS.set('appu_me',JSON.stringify(me));if(typeof apHomeRender==='function')apHomeRender()}}catch(e){}}
+function acctShowStatus(p){const el=document.getElementById('licenseBadge');if(!el||!p)return;acctFillMe(p);const exp=p.accessExpiresAt&&p.accessExpiresAt.toDate?p.accessExpiresAt.toDate():null,days=exp?Math.ceil((exp-new Date())/86400000):null;
   el.style.display='inline-block';el.style.cursor='pointer';el.textContent=(p.displayName?p.displayName+' · ':'')+(days!=null?days+'d left':'account');el.title='Account and profile';el.onclick=()=>acctOpen();
   if(days!=null&&days<=14&&days>=0)showToast('Your access ends in '+days+' day'+(days===1?'':'s'))}
 function acctOpen(){const d=document.getElementById('acctDlg'),f=document.getElementById('acctFrame');if(!d||!f)return;if(!f.getAttribute('src'))f.src='auth.html';if(!d.open)d.showModal()}
