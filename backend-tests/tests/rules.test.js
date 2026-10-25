@@ -45,7 +45,9 @@ test('10b. Owner changing status fails',async()=>{await seedUser();await assertF
 test('10c. Owner changing accessExpiresAt fails',async()=>{await seedUser();await assertFails(updateDoc(doc(context('student1').firestore(),'users/student1'),{accessExpiresAt:future(200)}));});
 test('11. Owner updating displayName succeeds',async()=>{await seedUser();await assertSucceeds(updateDoc(doc(context('student1').firestore(),'users/student1'),{displayName:'New Name'}));});
 test('12. Another user reading my users doc fails',async()=>{await seedUser();await assertFails(getDoc(doc(context('student2').firestore(),'users/student1')));});
-test('13a. Student reading invites fails',async()=>{await seedInvite();await assertFails(getDoc(doc(context('student1').firestore(),'invites/ABCDEFGHJK')));});
+test('13a. Student who has already joined reading an invite fails',async()=>{await seedInvite();await seedUser();await assertFails(getDoc(doc(context('student1').firestore(),'invites/ABCDEFGHJK')));});
+test('13c. Verified new user reading one invite by its code succeeds',async()=>{await seedInvite();await assertSucceeds(getDoc(doc(context('newuser').firestore(),'invites/ABCDEFGHJK')));});
+test('13d. Unverified user reading an invite fails',async()=>{await seedInvite();await assertFails(getDoc(doc(context('newuser',{email_verified:false}).firestore(),'invites/ABCDEFGHJK')));});
 test('13b. Student listing invites fails',async()=>{await seedInvite();await assertFails(getDocs(collection(context('student1').firestore(),'invites')));});
 test('14a. Admin creating an invite succeeds',async()=>{await seedAdmin();const db=context('admin1').firestore();await assertSucceeds(setDoc(doc(db,'invites/BCDEFGHJK2'),inviteData({createdBy:'admin1'})));});
 test('14b. Student creating an invite fails',async()=>{const db=context('student1').firestore();await assertFails(setDoc(doc(db,'invites/BCDEFGHJK2'),inviteData({createdBy:'student1'})));});

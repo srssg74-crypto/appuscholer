@@ -79,7 +79,10 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     match /invites/{code} {
-      allow read, list, delete: if isAdmin();
+      allow list, delete: if isAdmin();
+      // A verified user who has not joined yet may read one invite by its exact code, to learn its access period
+      // while redeeming. Members and unverified users cannot; nobody but an admin can list invites.
+      allow get: if isAdmin() || (signedIn() && request.auth.token.email_verified == true && !exists(userPath(request.auth.uid)));
       allow create: if isAdmin() && validCode(code)
         && exactKeys(request.resource.data,['label','createdBy','createdAt','redeemBy','accessDays','maxUses','usedCount','active'])
         && request.resource.data.label is string && request.resource.data.label.size() >= 1 && request.resource.data.label.size() <= 120
