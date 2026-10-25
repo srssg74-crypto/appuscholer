@@ -49,7 +49,7 @@ B = {
  62: ("Next class: effect size, with Dr Meera", "Thank you!", "अगली class: effect size, Dr Meera के साथ", "धन्यवाद!"),
 }
 PART_HI = {
- "Before class": "Class से पहले", "Tara's study": "Tara की study", "Why chance matters": "संयोग क्यों मायने रखता है",
+ "Before class": "शुरुआत", "Tara's study": "Tara की study", "Why chance matters": "संयोग क्यों मायने रखता है",
  "The null hypothesis and the p-value": "Null hypothesis और p-value", "The two mistakes": "दो ग़लतियाँ",
  "Spread, and how big the effect is": "फैलाव, और असर कितना बड़ा है", "The .05 line and two-tailed tests": ".05 की रेखा और two-tailed test",
  "How the p-value is misused": "p-value का ग़लत इस्तेमाल", "Writing the result": "Result लिखना", "Closing": "समापन",
@@ -68,7 +68,7 @@ slides, part, partH, board, boardH, seenpart = [], None, None, None, None, None
 for blk in re.split(r'(?m)^(?=## Part |### Slide )', md):
     m = re.match(r'## Part \d+: (.+)', blk)
     if m:
-        part = m.group(1).strip(); partH = PART_HI[part]; continue
+        part = m.group(1).strip(); partH = PART_HI[part]; part = {'Before class': 'Opening'}.get(part, part); continue
     m = re.match(r'### Slide (\d+) · (\w+)', blk)
     if not m: continue
     n, who = int(m.group(1)), m.group(2).lower()
