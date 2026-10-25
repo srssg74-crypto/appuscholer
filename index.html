@@ -11999,7 +11999,7 @@ function apLibBack(){clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();
 const AP_GENDER={appu:'f',meera:'f',tara:'f',raj:'m',dev:'m'},AP_PITCH={appu:1.12,meera:1.0,tara:1.1,raj:0.9,dev:1.0};
 let apVoiceSeq=0,apVoiceCur=0;
 function apVoiceOK(){try{return!!(window.speechSynthesis&&window.SpeechSynthesisUtterance)}catch(e){return false}}
-function apVoiceOn(){return LS.get('appu_voice')==='1'}
+function apVoiceOn(){const v=LS.get('appu_voice');return v==null||v===''?true:v==='1'}
 function apVoiceRate(){const r=parseFloat(LS.get('appu_voicerate'));return[0.8,0.9,1,1.15].includes(r)?r:0.9}
 function apVoiceList(lang){let v=[];try{v=(speechSynthesis.getVoices()||[]).slice()}catch(e){}
   const f=lang==='hi'?v.filter(x=>/^hi/i.test(x.lang||'')):v.filter(x=>/^en/i.test(x.lang||''));
@@ -13318,7 +13318,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.25i';
+const APP_BUILD='2026.10.25j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
