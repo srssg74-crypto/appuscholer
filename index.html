@@ -12029,7 +12029,7 @@ function apSpeakDevice(sc,done){
   return true}
 
 /* ---- Natural voice (Version 54): the student's own Gemini or ChatGPT key speaks the slide. Only the slide text is sent. Each slide is kept on this device after the first time. ---- */
-const AP_TTS={gemini:{name:'Gemini',model:'gemini-2.5-flash-preview-tts',voices:{appu:'Leda',meera:'Kore',tara:'Aoede',raj:'Charon',dev:'Puck'}},openai:{name:'ChatGPT',models:['gpt-4o-mini-tts','tts-1'],voices:{appu:'nova',meera:'shimmer',tara:'alloy',raj:'onyx',dev:'echo'}}};
+const AP_TTS={gemini:{name:'Gemini',model:'gemini-2.5-flash-preview-tts',model2:'gemini-3.8-flash-tts',voices:{appu:'Leda',meera:'Kore',tara:'Aoede',raj:'Charon',dev:'Puck'}},openai:{name:'ChatGPT',models:['gpt-4o-mini-tts','tts-1'],voices:{appu:'nova',meera:'shimmer',tara:'alloy',raj:'onyx',dev:'echo'}}};
 const AP_TTS_STYLE={appu:'a bright, curious young woman',meera:'a warm, composed woman professor',tara:'a friendly young woman',raj:'a calm, kind male professor with dry humour',dev:'a cheerful young man'};
 function apTtsHas(p){try{return!!((LS.get('appu_key_'+p)||'').trim()||encBlob(p))}catch(e){return false}}
 function apVoiceMode(){const m=LS.get('appu_voicemode');return AP_TTS[m]&&apTtsHas(m)?m:'device'}
@@ -12052,13 +12052,25 @@ async function apTtsMake(sc){
   const key=await apTtsKey(mode),who=AP_TTS_STYLE[sc.who]||'a teacher';let blob;
   const bad=r=>{const e=new Error('HTTP '+r.status);e.status=r.status;return e};
   if(mode==='gemini'){
+    /* Version 117: Google retires gemini-2.5-flash-preview-tts on 17 Nov 2026. Try gemini-3.8-flash-tts first
+       (Interactions API; the style goes in a separate field, the text is read verbatim), then fall back. */
+    try{
+      const style=who+', natural Indian accent, '+(sc.slow?'slow and deliberate':'calm, clear pace')+(hi?', teaching in Hindi with English technical words kept in English':'')+(sc.vo?'; '+sc.vo:'')+'; pause naturally after questions';
+      const r2=await fetch('https://generativelanguage.googleapis.com/v1beta/interactions',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({model:T.model2,input:[{type:'user_input',content:[{type:'text',text:sc.speak,annotations:[{type:'speech_metadata',style}]}]}],response_format:{type:'audio'},generation_config:{speech_config:[{voice:v}]}})});
+      if(r2.ok){const j2=await r2.json(),au=(j2.steps||[]).filter(x=>x.type==='model_output').flatMap(x=>x.content||[]).filter(x=>x.type==='audio').pop();
+        if(au&&au.data){const bin=atob(au.data);if(bin.slice(0,4)==='RIFF'){const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);blob=new Blob([u8],{type:'audio/wav'})}else blob=apPcmWav(au.data,24000)}}
+      else if(r2.status===401||r2.status===403||r2.status===429)throw bad(r2);
+    }catch(e){if(e&&(e.status===401||e.status===403||e.status===429))throw e}
+  }
+  if(mode==='gemini'&&!blob){
     const pr='Say as '+who+', in a natural Indian accent, clearly and at a '+(sc.slow?'slow, deliberate':'calm')+' pace'+(hi?', teaching in Hindi and keeping the English technical words in English':'')+(sc.vo?'. Delivery: '+sc.vo:'')+'. Pause naturally after questions: ';
     const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+T.model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},
       body:JSON.stringify({contents:[{parts:[{text:pr+sc.speak}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:v}}}}})});
     if(!r.ok)throw bad(r);
     const j=await r.json(),c=((j.candidates||[])[0]||{}).content,part=c&&(c.parts||[]).find(x=>x.inlineData&&x.inlineData.data);if(!part)throw new Error('empty');
     const m=/rate=(\d+)/.exec(part.inlineData.mimeType||'');blob=apPcmWav(part.inlineData.data,m?+m[1]:24000);
-  }else{
+  }else if(mode!=='gemini'){
     for(const model of T.models){
       const body={model,voice:v,input:sc.speak,response_format:'mp3'};if(model==='gpt-4o-mini-tts')body.instructions='Speak as '+who+', in a natural Indian accent, clearly and at a '+(sc.slow?'slow, deliberate':'calm')+' pace'+(hi?', in Hindi with English technical words':'')+'.'+(sc.vo?' Delivery: '+sc.vo+'.':'')+' Pause naturally after questions.';
       const r=await fetch('https://api.openai.com/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(body)});
