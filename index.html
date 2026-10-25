@@ -2914,6 +2914,16 @@ initSidebar();
    roadmap, and a one-click way to jump to the next stage's tool — the "inbuilt guidance" that makes
    the stage sequence visible even though the tab bar itself stays flat (see the plan list for why
    full stage-gated navigation isn't built yet: two of six stages still have no tool at all). */
+/* One study runs through all six stages. Stage 1 holds the research question; later stages read it
+   and fill their own empty boxes from it, never overwriting what the student typed there. */
+function studyIdea(){try{return JSON.parse(LS.get('appu_idea_intake')||'{}')||{}}catch(e){return{}}}
+function studyStripHTML(stage){const hi=getLang()==='hi',d=studyIdea(),q=String(d.topic||'').trim();
+  const lab=hi?'📌 आपकी study:':'📌 Your study:';
+  if(!q)return stage==='idea'?'':'<span class="study-strip" style="flex-basis:100%;font-size:13px">'+lab+' '+(hi?'अभी research question नहीं लिखा।':'no research question yet.')+' <button type="button" class="back-btn" onclick="showTool(\'idea\')">'+(hi?'Stage 1 में लिखें':'Write it in Stage 1')+' →</button></span>';
+  if(stage==='idea')return'';
+  return'<span class="study-strip" style="flex-basis:100%;font-size:13px">'+lab+' <b>'+escHTML(q.length>140?q.slice(0,140)+'…':q)+'</b>'+(d.timeframe?' · '+escHTML(d.timeframe):'')+' <button type="button" class="back-btn" onclick="showTool(\'idea\')">✏️ '+(hi?'बदलें':'Change')+'</button></span>'}
+function studyCarry(tool){const d=studyIdea(),q=String(d.topic||'').trim();if(!q)return;
+  if(tool==='research'){const e=document.getElementById('rsTopic');if(e&&!e.value.trim()){e.value=q;try{rsSpecUpdate()}catch(x){}}}}
 function renderStageGuide(tool){
   const el=document.getElementById('stageGuide');if(!el)return;
   const stage=TOOL_TO_STAGE[tool];
@@ -2926,7 +2936,8 @@ function renderStageGuide(tool){
     ? '<button type="button" class="next-btn" onclick="showTool(\''+nxt.tool+'\')">'+escHTML(t('stage_guide_next'))+' '+escHTML(stageLabel(nxt.stage))+' →</button>'
     : '<span class="next-btn" style="border:none;cursor:default">'+escHTML(t('stage_guide_final'))+'</span>';
   el.style.display='flex';
-  el.innerHTML=html;
+  el.innerHTML=html+studyStripHTML(stage);
+  try{studyCarry(tool)}catch(e){}
 }
 
 function getProjects(){try{return JSON.parse(LS.get('appu_projects')||'[]')}catch(e){return []}}
@@ -6643,7 +6654,10 @@ function protoLoad(){
   const s=designGet('proto');
   ['Bg','Obj','Design','Part','Sample','Proc','Risk','Dmp'].forEach(k=>{
     const el=document.getElementById('proto'+k);if(el)el.value=s[k.toLowerCase()]||'';
-  });
+  });  try{const d=studyIdea(),f=(id,v)=>{const el=document.getElementById(id);if(el&&!el.value.trim()&&v)el.value=v};
+    if(d.topic)f('protoObj','Research question: '+String(d.topic).trim());
+    if(d.resources)f('protoPart','Available (from Stage 1): '+String(d.resources).trim());
+    if(d.timeframe)f('protoProc','Timeframe (from Stage 1): '+String(d.timeframe).trim())}catch(e){}
 }
 function protoRead(){
   const o={};
@@ -13331,7 +13345,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.25m';
+const APP_BUILD='2026.10.25n';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
