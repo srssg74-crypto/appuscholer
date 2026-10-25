@@ -66,6 +66,15 @@ service cloud.firestore {
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['consent']) || (request.resource.data.consent is map && request.resource.data.consent.version is string && request.resource.data.consent.version != resource.data.consent.version && request.resource.data.consent.acceptedAt == request.time && request.resource.data.consent.ageConfirmed18 == true && exactKeys(request.resource.data.consent,['version','acceptedAt','ageConfirmed18'])))
         ) || (isAdmin() && resource.data.status != 'deleting' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','plan','accessExpiresAt']) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) || request.resource.data.status in ['active','suspended']) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']) || request.resource.data.plan is string) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['accessExpiresAt']) || request.resource.data.accessExpiresAt is timestamp));
       allow update: if validTombstone(uid);
+      // Admin erases an account whose access ended more than 90 days ago (privacy notice, 2026-10-v1).
+      // The profile becomes the same blank marker as a self-deletion, so the uid can never redeem again.
+      allow update: if isAdmin()
+        && resource.data.status in ['active','suspended']
+        && resource.data.accessExpiresAt < request.time - duration.value(90, 'd')
+        && exactKeys(request.resource.data, ['status','deletionRequestedAt','schemaVersion'])
+        && request.resource.data.status == 'deleting'
+        && request.resource.data.deletionRequestedAt == request.time
+        && request.resource.data.schemaVersion == 1;
       // Owners never delete their users doc outright; account deletion always leaves the tombstone, so the uid can never redeem again.
       allow delete: if isAdmin();
     }
