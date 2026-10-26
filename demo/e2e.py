@@ -26,6 +26,9 @@ def gemini(route):
     txt = GEMINI['feasib'] if 'feasibility' in body.lower() else (GEMINI['gap'] if 'research gap' in body.lower() else GEMINI['default'])
     route.fulfill(status=200, content_type='application/json', body=json.dumps({'candidates': [{'content': {'parts': [{'text': txt}]}, 'finishReason': 'STOP'}]}))
 
+def fillv(pg, sel, val):
+    pg.evaluate("([s,v])=>{const e=document.querySelector(s);if(!e)throw new Error('missing '+s);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}", [sel, val])
+
 def shot(pg, name):
     SHOT[0] += 1; p = os.path.join(OUT, f'{SHOT[0]:02d}-{name}.png'); pg.screenshot(path=p); return p
 
@@ -102,18 +105,18 @@ def add_refs(pg, keys):
 
 def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs_keys, design, vars_js):
     # ---- project and Stage 1 ----
-    pg.evaluate("openNewProjectDirect()"); pg.fill('#sapName', project); pg.evaluate("saveAsProject()"); pg.wait_for_timeout(600); close_dialogs(pg)
+    pg.evaluate("openNewProjectDirect()"); fillv(pg, '#sapName', project); pg.evaluate("saveAsProject()"); pg.wait_for_timeout(600); close_dialogs(pg)
     pg.evaluate("showTool('idea')"); pg.wait_for_timeout(300)
-    pg.fill('#ideaTopic', S.get('topic1', S['topic'])); pg.fill('#ideaResources', S['resources']); pg.fill('#ideaTimeframe', S['timeframe']); pg.fill('#ideaConstraints', S['constraints'])
+    fillv(pg, '#ideaTopic', S.get('topic1', S['topic'])); fillv(pg, '#ideaResources', S['resources']); fillv(pg, '#ideaTimeframe', S['timeframe']); fillv(pg, '#ideaConstraints', S['constraints'])
     pg.evaluate("ideaAssess()"); pg.wait_for_timeout(2500)
     log('Verdict' in pg.evaluate("aiOut.textContent") or 'test reply' in pg.evaluate("aiOut.textContent"), f'{label} Stage 1: feasibility assessment shown')
     shot(pg, f'{label}-stage1-idea')
-    pg.fill('#ideaTopic', S['topic']); pg.evaluate("ideaSave()")   # edit 1: sharpen the question
+    fillv(pg, '#ideaTopic', S['topic']); pg.evaluate("ideaSave()")   # edit 1: sharpen the question
     log(pg.evaluate("studyIdea().topic") == S['topic'], f'{label} Edit: research question changed and saved')
     # ---- Stage 2: real search, gap, key papers ----
     pg.evaluate("showTool('research')"); pg.wait_for_timeout(300)
     log(pg.evaluate("rsTopic.value") == S['topic'], f'{label} Stage 2: search box filled from Stage 1')
-    pg.fill('#rsTopic', S['search']); pg.evaluate("researchSearch()")
+    fillv(pg, '#rsTopic', S['search']); pg.evaluate("researchSearch()")
     for _ in range(60):
         pg.wait_for_timeout(1000)
         if pg.evaluate("(window.rsResults||[]).length>=3"): break
@@ -121,16 +124,16 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     shot(pg, f'{label}-stage2-search')
     pg.evaluate("[0,1].forEach(i=>{const c=document.getElementById('rsChk'+i);if(c)c.checked=true})")
     pg.evaluate("researchGapFinder()"); pg.wait_for_timeout(2500)
-    pg.evaluate("gapDlgOpen()"); pg.wait_for_timeout(300); pg.fill('#gapText', S.get('gap1', S['gap'])); pg.evaluate("gapSave()"); pg.wait_for_timeout(300)
-    pg.evaluate("gapDlgOpen()"); pg.wait_for_timeout(300); pg.fill('#gapText', S['gap']); pg.evaluate("gapSave()")   # edit 2: rewrite the gap
+    pg.evaluate("gapDlgOpen()"); pg.wait_for_timeout(300); fillv(pg, '#gapText', S.get('gap1', S['gap'])); pg.evaluate("gapSave()"); pg.wait_for_timeout(300)
+    pg.evaluate("gapDlgOpen()"); pg.wait_for_timeout(300); fillv(pg, '#gapText', S['gap']); pg.evaluate("gapSave()")   # edit 2: rewrite the gap
     g = pg.evaluate("studyGet().gap"); log(g and g['text'] == S['gap'] and len(g.get('cids', [])) >= 1, f'{label} Stage 2: research gap and key papers saved, then edited', g)
     # ---- citations by DOI (real Crossref) ----
     cids = add_refs(pg, refs_keys)
     # ---- Stage 3: plan, then edit it ----
     pg.evaluate("showTool('design')"); pg.evaluate("spOpen()"); pg.wait_for_timeout(300)
-    pg.select_option('#spType', design); pg.fill('#spPop', S['pop']); pg.fill('#spN', '1200'); pg.fill('#spSampling', S['sampling']); pg.fill('#spHyp', S['hyp'])
+    fillv(pg, '#spType', design); fillv(pg, '#spPop', S['pop']); fillv(pg, '#spN', '1200'); fillv(pg, '#spSampling', S['sampling']); fillv(pg, '#spHyp', S['hyp'])
     pg.evaluate(vars_js); shot(pg, f'{label}-stage3-plan'); pg.evaluate("spSave()"); pg.wait_for_timeout(300)
-    pg.evaluate("spOpen()"); pg.fill('#spN', '1240' if label == 'A' else '1133'); pg.evaluate("spAddRow()")
+    pg.evaluate("spOpen()"); fillv(pg, '#spN', '1240' if label == 'A' else '1133'); pg.evaluate("spAddRow()")
     pg.evaluate("""l=>{const r=[...document.querySelectorAll('#spVars tbody tr')].pop();r.querySelector('.spName').value=l==='A'?'Residence':'Low birth weight';r.querySelector('.spRole').value='covariate';r.querySelector('.spTypeV').value='category';r.querySelector('.spLevels').value=l==='A'?'Urban, Rural':'Yes, No'}""", label)
     pg.evaluate("spSave()"); log(len(pg.evaluate("studyGet().design.vars")) >= 4, f'{label} Edit: study plan changed (sample size, one more variable)')
     pg.evaluate("document.getElementById('protoDlg').showModal();protoLoad()"); pg.wait_for_timeout(300)
