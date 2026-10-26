@@ -3082,7 +3082,7 @@ function qnOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{};let d=document
    '<p style="margin:10px 0 4px"><b>'+(hi?'Scales (Scale library से, लेखक के शब्दों में)':'Scales (from the Scale library, in the owner\'s words)')+'</b></p>'+
    (scl.length?scl.map(x=>'<label style="display:block;font-size:13px"><input type="checkbox" class="qnScale" value="'+x.id+'"'+(m.scales.indexOf(x.id)>=0?' checked':'')+'> <b>'+escHTML(x.short)+'</b> · '+escHTML(x.name)+' <span class="desc">('+escHTML(x.licence&&x.licence.status||'')+')</span></label>').join(''):'')+
    (m.own.length?'<p style="margin:10px 0 4px"><b>'+(hi?'आपके अपने सवाल':'Your own questions')+'</b></p>'+m.own.map((v,i)=>'<label style="display:block;font-size:13px">'+escHTML(v.name)+' <span class="desc">'+(hi?'(हर पंक्ति में एक सवाल; ख़ाली छोड़ें तो एक ही सवाल बनेगा)':'(one question per line; leave empty for a single question)')+'</span></label><textarea class="qnOwn" data-name="'+escAttr(v.name)+'" rows="2" style="width:100%">'+escHTML((q.own&&q.own[v.name])||'')+'</textarea>').join(''):'')+
-   '<div class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" class="btn btn-purple" onclick="qnSave();qnWord()">⬇ '+(hi?'Word file':'Word file')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnCsv()">⬇ '+(hi?'Data भरने का template (Excel/CSV)':'Data template (Excel/CSV)')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnCodebook()">⬇ Codebook</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnForms()">🌐 '+(hi?'Google Form की विधि':'Google Form steps')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnInsert()">'+(hi?'Document में डालें':'Put in my document')+'</button></div>'+
+   '<div class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" class="btn btn-purple" onclick="qnSave();qnWord()">⬇ '+(hi?'Word file':'Word file')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnCsv()">⬇ '+(hi?'Data भरने का template (Excel/CSV)':'Data template (Excel/CSV)')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnCodebook()">⬇ Codebook</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnForms()">🌐 '+(hi?'Google Form की विधि':'Google Form steps')+'</button><button type="button" class="btn btn-purple" onclick="sfOpen()">🔐 '+(hi?'सुरक्षित form (Google के बिना)':'Secure form (no Google)')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnInsert()">'+(hi?'Document में डालें':'Put in my document')+'</button></div>'+
    '<div id="qnFormsOut" style="display:none;margin-top:10px"></div>'+
    '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button type="button" class="btn btn-ghost" onclick="qnSave();document.getElementById(\'qnDlg\').close()">'+(hi?'सहेजकर बंद करें':'Save and close')+'</button></div>';
   if(!d.open)d.showModal()}
@@ -3583,6 +3583,105 @@ function ideaInboxAdd(){const t=(document.getElementById('inboxIn').value||'').t
 function ideaInboxDel(ts){const hi=studyHi();if(!confirm(hi?'यह idea हटाएँ?':'Delete this idea?'))return;const o=studyGet();o.inbox=(o.inbox||[]).filter(x=>x.ts!==ts);studySet(o);ideaInboxOpen()}
 function ideaInboxUse(ts){const o=studyGet(),x=(o.inbox||[]).find(y=>y.ts===ts);if(!x)return;document.getElementById('inboxDlg').close();showTool('idea');setTimeout(()=>{const e=document.getElementById('ideaTopic');if(e){e.value=x.t;e.dispatchEvent(new Event('input',{bubbles:true}));e.focus()}},250)}
 function ideaInboxHash(){if(location.hash==='#idea'){history.replaceState(null,'',location.pathname+location.search);setTimeout(ideaInboxOpen,600)}}
+
+/* ============ Secure research form (instead of Google Forms) ============
+   The researcher makes a key pair on this device. The public key goes inside the form link; the private
+   key stays here, locked with the researcher's password (PBKDF2 + AES-GCM, the same lock as API keys).
+   Participants' answers are locked in their own browser (form.html) and come back as locked text or files,
+   or are saved locked in this browser in kiosk mode. Nothing is stored on any server. */
+function sfPid(){let p='';try{p=getActiveProjectId()||''}catch(e){}return p||'scratch'}
+function sfKey(){try{return JSON.parse(LS.get('appu_sfkey_'+sfPid())||'null')}catch(e){return null}}
+const _sfB64u=b=>_b64(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const _sfUnb64u=s=>{s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return _unb64(s)};
+let SF_PRIV=null,SF_ROWS=null;
+function sfIdb(){return new Promise((res,rej)=>{const r=indexedDB.open('appuforms',1);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('resp')){const s=db.createObjectStore('resp',{keyPath:'id'});s.createIndex('sid','sid')}};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function sfAll(sid){const db=await sfIdb();return new Promise((res,rej)=>{const out=[];const tx=db.transaction('resp','readonly');const q=tx.objectStore('resp').index('sid').openCursor(IDBKeyRange.only(sid));q.onsuccess=()=>{const c=q.result;if(c){out.push(c.value);c.continue()}else res(out)};q.onerror=()=>rej(q.error)})}
+async function sfPut(rec){const db=await sfIdb();return new Promise((res,rej)=>{const tx=db.transaction('resp','readwrite');tx.objectStore('resp').put(rec);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+async function sfClear(sid){const rows=await sfAll(sid);const db=await sfIdb();return new Promise((res,rej)=>{const tx=db.transaction('resp','readwrite');rows.forEach(r=>tx.objectStore('resp').delete(r.id));tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+async function sfSetup(){const hi=studyHi(),p1=document.getElementById('sfPass1').value,p2=document.getElementById('sfPass2').value;
+  if(p1.length<8){showToast(hi?'Password कम से कम 8 अक्षर का रखें':'Use a password of at least 8 characters');return}
+  if(p1!==p2){showToast(hi?'दोनों password एक जैसे नहीं हैं':'The two passwords do not match');return}
+  const kp=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']);
+  const pub=await crypto.subtle.exportKey('jwk',kp.publicKey);const pk8=await crypto.subtle.exportKey('pkcs8',kp.privateKey);
+  const sid=Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const rec={v:1,sid:sid,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},priv:await lockKey(_b64(pk8),p1),created:new Date().toISOString()};
+  LS.set('appu_sfkey_'+sfPid(),JSON.stringify(rec));SF_PRIV=kp.privateKey;sfKeyBackup();sfRender()}
+function sfKeyBackup(){const k=sfKey();if(!k)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(k)],{type:'text/plain'}));a.download='appuscholar-KEY-'+k.sid+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+async function sfKeyRestore(inp){const hi=studyHi(),f=inp.files&&inp.files[0];inp.value='';if(!f)return;try{const k=JSON.parse(await f.text());if(!k.sid||!k.pub||!k.priv)throw 0;LS.set('appu_sfkey_'+sfPid(),JSON.stringify(k));SF_PRIV=null;showToast(hi?'चाबी वापस आ गई ✓':'Key restored ✓');sfRender()}catch(e){showToast(hi?'यह चाबी की file नहीं है':'This is not a key file')}}
+async function sfUnlock(){const hi=studyHi(),k=sfKey(),p=(document.getElementById('sfPass')||{}).value||'';if(!k)return false;
+  try{const b64=await unlockKeyBlob(k.priv,p);SF_PRIV=await crypto.subtle.importKey('pkcs8',_unb64(b64),{name:'ECDH',namedCurve:'P-256'},false,['deriveBits']);return true}
+  catch(e){showToast(hi?'Password ग़लत है':'Wrong password');return false}}
+function sfDef(){const m=qnModel(),q=m.q,hi=studyHi(),k=sfKey(),items=qnItems();
+  return{v:1,sid:k.sid,pk:k.pub,lang:hi?'hi':'en',t:q.title||(m.o.idea&&m.o.idea.topic?'Study: '+m.o.idea.topic:'Research form'),n:q.intro||'',
+    q:items.map(it=>({c:it.col,s:it.sec,st:it.stem||undefined,q:it.text,r:it.resp}))}}
+async function sfLink(kiosk){const json=new TextEncoder().encode(JSON.stringify(sfDef()));let bytes;
+  try{const cs=new CompressionStream('deflate-raw');const z=new Uint8Array(await new Response(new Blob([json]).stream().pipeThrough(cs)).arrayBuffer());bytes=new Uint8Array(z.length+1);bytes[0]=0x7a;bytes.set(z,1)}
+  catch(e){bytes=new Uint8Array(json.length+1);bytes[0]=0x6a;bytes.set(json,1)}
+  const base=location.href.split('#')[0].split('?')[0].replace(/[^/]*$/,'');return base+'form.html#f='+_sfB64u(bytes)+(kiosk?'&k=1':'')}
+async function sfCopyLink(){const hi=studyHi(),u=await sfLink(false);try{await navigator.clipboard.writeText(u)}catch(e){}
+  const box=document.getElementById('sfLinkOut');if(box){box.style.display='block';box.value=u}
+  showToast(hi?'Link copy हुआ ✓ ('+u.length+' अक्षर)':'Link copied ✓ ('+u.length+' characters)')}
+async function sfShareLink(){const u=await sfLink(false),hi=studyHi();const msg=(hi?'कृपया इस research form को भरें। आपके जवाब आपके फ़ोन पर ही ताले में बंद होकर मुझ तक पहुँचेंगे: ':'Please fill in this research form. Your answers are locked on your phone before they reach me: ')+u;
+  if(navigator.share){try{await navigator.share({text:msg});return}catch(e){if(e&&e.name==='AbortError')return}}
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank')}
+async function sfKiosk(){const u=await sfLink(true);window.open(u,'_blank')}
+async function sfImportText(text){const hi=studyHi(),k=sfKey();if(!k)return 0;const found=String(text).match(/APPU1\.[A-Za-z0-9_-]+/g)||[];let added=0,other=0;
+  const have=new Set((await sfAll(k.sid)).map(r=>r.pkg));
+  for(const pkg of found){let sid='';try{sid=JSON.parse(new TextDecoder().decode(_sfUnb64u(pkg.slice(6)))).sid}catch(e){continue}
+    if(sid!==k.sid){other++;continue}if(have.has(pkg))continue;have.add(pkg);
+    await sfPut({id:'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,8),sid:sid,pkg:pkg,ts:Date.now(),src:'import'});added++}
+  showToast((hi?added+' नए जवाब जुड़े':added+' new answer sets added')+(other?(hi?'; '+other+' किसी दूसरी study के थे':'; '+other+' belonged to another study'):''));sfRender();return added}
+async function sfImportFiles(inp){const fs=[...(inp.files||[])];inp.value='';let all='';for(const f of fs){all+='\n'+await f.text()}await sfImportText(all)}
+async function sfOpenPkg(pkg){const j=JSON.parse(new TextDecoder().decode(_sfUnb64u(pkg.slice(6))));
+  const epk=await crypto.subtle.importKey('raw',_sfUnb64u(j.e),{name:'ECDH',namedCurve:'P-256'},false,[]);
+  const bits=await crypto.subtle.deriveBits({name:'ECDH',public:epk},SF_PRIV,256);
+  const hk=await crypto.subtle.importKey('raw',bits,'HKDF',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:_sfUnb64u(j.s),info:new TextEncoder().encode('appuscholar-form-v1')},hk,{name:'AES-GCM',length:256},false,['decrypt']);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:_sfUnb64u(j.i)},key,_sfUnb64u(j.c))))}
+async function sfDecrypt(){const hi=studyHi(),k=sfKey();if(!SF_PRIV&&!(await sfUnlock()))return null;
+  const recs=await sfAll(k.sid);const rows=[];let bad=0;for(const r of recs){try{rows.push(await sfOpenPkg(r.pkg))}catch(e){bad++}}
+  rows.sort((a,b)=>String(a.ts).localeCompare(String(b.ts)));SF_ROWS=rows;if(bad)showToast(hi?bad+' जवाब खुल नहीं सके (शायद किसी और चाबी के)':bad+' answer sets could not be opened (another key?)');return rows}
+function sfCsvText(rows){const cols=qnItems().map(i=>i.col);const ids=new Set();
+  const lines=[['participant_id'].concat(cols)].concat(rows.map((r,i)=>{let id=(r.pc||'').trim()||('R'+String(i+1).padStart(3,'0'));if(ids.has(id))id+='_'+(i+1);ids.add(id);return[id].concat(cols.map(c=>r.a&&r.a[c]!=null?r.a[c]:''))}));
+  return lines.map(l=>l.map(qnCsvCell).join(',')).join('\n')}
+async function sfPreview(){const hi=studyHi(),rows=await sfDecrypt();if(!rows)return;const box=document.getElementById('sfPrev');if(!box)return;
+  const cols=qnItems().map(i=>i.col).slice(0,6);
+  box.innerHTML='<p class="desc">'+(hi?rows.length+' participants के जवाब खुले (सिर्फ़ इस screen पर, कहीं सहेजे नहीं गए)।':rows.length+' answer sets opened (on this screen only; nothing unlocked is saved).')+'</p>'+
+   '<div style="overflow:auto;max-height:200px"><table style="font-size:12px;border-collapse:collapse"><tr><th>participant</th><th>time</th>'+cols.map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>'+
+   rows.slice(0,30).map((r,i)=>'<tr><td>'+escHTML(r.pc||('R'+(i+1)))+'</td><td>'+escHTML(String(r.ts).slice(0,16))+'</td>'+cols.map(c=>'<td>'+escHTML(r.a[c]==null?'':r.a[c])+'</td>').join('')+'</tr>').join('')+'</table></div>'}
+async function sfToStats(){const hi=studyHi(),rows=SF_ROWS||await sfDecrypt();if(!rows)return;if(!rows.length){showToast(hi?'अभी कोई जवाब नहीं':'No answers yet');return}
+  document.getElementById('sfDlg').close();showTool('stats');setTimeout(()=>{const ta=document.getElementById('statsPaste');ta.value=sfCsvText(rows);try{statsParse()}catch(e){}
+    showToast(hi?rows.length+' participants का data Statistics Lab में आ गया ✓':rows.length+" participants' data loaded into the Statistics Lab ✓")},250)}
+async function sfBackup(){const k=sfKey(),recs=await sfAll(k.sid);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([recs.map(r=>r.pkg).join('\n')],{type:'text/plain'}));
+  a.download='appuscholar-LOCKED-answers-'+k.sid+'-'+new Date().toISOString().slice(0,10)+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);LS.set('appu_sfbak_'+k.sid,String(Date.now()));sfRender()}
+async function sfCsvOut(){const hi=studyHi();if(!confirm(hi?'यह file खुली (बिना ताले की) होगी। इसे WhatsApp, email या Google Drive पर न डालें। सिर्फ़ अपने computer पर विश्लेषण के लिए रखें, और काम के बाद मिटा दें। आगे बढ़ें?':'This file will be UNLOCKED. Do not put it on WhatsApp, email or Google Drive. Keep it on your own computer for analysis only and delete it afterwards. Continue?'))return;
+  const rows=SF_ROWS||await sfDecrypt();if(!rows)return;qnDownload('answers-UNLOCKED.csv','﻿'+sfCsvText(rows)+'\n','text/csv;charset=utf-8')}
+async function sfDeleteAll(){const hi=studyHi(),k=sfKey();const w=prompt(hi?'इस study के सारे जवाब इस device से मिट जाएँगे। पक्का करने के लिए DELETE लिखें:':'All answers of this study will be deleted from this device. Type DELETE to confirm:');if(w!=='DELETE')return;await sfClear(k.sid);SF_ROWS=null;showToast(hi?'मिटा दिए गए':'Deleted');sfRender()}
+function sfOpen(){let d=document.getElementById('sfDlg');if(!d){d=document.createElement('dialog');d.id='sfDlg';d.style.cssText='max-width:720px;width:96vw;padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd)';document.body.appendChild(d)}
+  try{qnSave()}catch(e){}SF_ROWS=null;if(!d.open)d.showModal();sfRender()}
+async function sfRender(){const d=document.getElementById('sfDlg');if(!d)return;const hi=studyHi(),k=sfKey(),L=(en,h)=>hi?h:en;
+  const warn='<details style="margin-top:10px"><summary><b>⚠️ '+L('Keep participants\' data safe (DPDP Act and ethics)','Participants का data सुरक्षित रखें (DPDP Act और ethics)')+'</b></summary><ul style="margin:6px 0 0 18px;font-size:13px">'+
+    (hi?['Participants से नाम, फ़ोन नंबर या पता न माँगें। Participant code (जैसे P-0147) दें; नाम और code की सूची अलग, ताले में रखें।','खुली (UNLOCKED) CSV file को WhatsApp, email या Google Drive पर कभी न डालें।','फ़ोन या laptop खो सकता है: बंद (LOCKED) backup नियमित रूप से निकालें और अलग जगह रखें।','Browser की history या data साफ़ करने पर यहाँ रखे जवाब मिट सकते हैं। इसलिए backup ज़रूरी है।','चाबी (KEY) की file और password, दोनों खो गए तो data कभी नहीं खुलेगा, किसी से भी नहीं।','Data सिर्फ़ उसी काम के लिए रखें जिसकी सहमति ली है, और study ख़त्म होने पर तय तारीख़ को मिटा दें।','Ethics committee को बताएँ: जवाब participant के फ़ोन पर encrypt होते हैं, कोई server उन्हें नहीं रखता, और सिर्फ़ researcher की चाबी से खुलते हैं।','18 साल से कम उम्र के participants हों तो माता-पिता की सहमति अलग से लें; यह form सिर्फ़ 18+ की सहमति माँगता है।']
+     :['Do not ask participants for names, phone numbers or addresses. Give a participant code (e.g. P-0147); keep the list linking names to codes separately and locked.','Never put the UNLOCKED CSV on WhatsApp, email or Google Drive.','Phones and laptops get lost: take a LOCKED backup regularly and keep it in a second place.','Clearing browser history or data can delete the answers stored here, so backups are essential.','If both the KEY file and the password are lost, the data can never be opened, by anyone.','Keep data only for the purpose participants agreed to, and delete it on the planned date after the study.','Tell your ethics committee: answers are encrypted on the participant\'s phone, no server keeps them, and only the researcher\'s key opens them.','For participants under 18, get parental consent separately; this form asks for 18+ consent only.']).map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul></details>';
+  let h='<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">🔐 '+L('Secure research form','सुरक्षित research form')+'</h2><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'sfDlg\').close()">✕</button></div>'+
+   '<p class="desc">'+L('Instead of Google Forms. Answers are locked on the participant\'s phone with your key and stay on your own device. No server stores them.','Google Forms की जगह। जवाब participant के फ़ोन पर आपकी चाबी से ताले में बंद होते हैं और आपके अपने device पर रहते हैं। कोई server उन्हें नहीं रखता।')+'</p>';
+  if(!k){d.innerHTML=h+'<div style="border:1px solid var(--border,#ddd);border-radius:10px;padding:10px"><b>'+L('Step 1: make your key','पहला कदम: अपनी चाबी बनाइए')+'</b><p class="desc">'+L('Choose a password. It opens your participants\' answers. Appuscholar cannot recover it.','एक password चुनिए। इसी से participants के जवाब खुलेंगे। Appuscholar इसे वापस नहीं ला सकता।')+'</p>'+
+    '<input type="password" id="sfPass1" placeholder="'+L('Password (8+ characters)','Password (8+ अक्षर)')+'" style="width:100%;margin-bottom:6px"><input type="password" id="sfPass2" placeholder="'+L('Password again','Password दोबारा')+'" style="width:100%"><div class="row" style="gap:8px;margin-top:8px"><button type="button" class="btn btn-purple" onclick="sfSetup()">'+L('Make my key','चाबी बनाएँ')+'</button>'+
+    '<label class="btn btn-ghost btn-sm" style="cursor:pointer">'+L('I have a key file','मेरे पास चाबी की file है')+'<input type="file" accept=".txt,.json" style="display:none" onchange="sfKeyRestore(this)"></label></div><p class="desc" style="margin-top:6px">'+L('After making the key, a KEY file downloads. Keep it safe, away from this device.','चाबी बनते ही एक KEY file download होगी। उसे इस device से अलग, सुरक्षित जगह रखें।')+'</p></div>'+warn;return}
+  let n=0;try{n=(await sfAll(k.sid)).length}catch(e){}
+  const lastBak=+LS.get('appu_sfbak_'+k.sid)||0,old=n&&(!lastBak||Date.now()-lastBak>3*864e5);
+  h+='<div style="border:1px solid var(--border,#ddd);border-radius:10px;padding:10px;margin-bottom:8px"><b>'+L('Step 2: send the form','दूसरा कदम: form भेजिए')+'</b><p class="desc">'+L('The form is built from your questionnaire. Change the questions there, then make a new link.','Form आपकी questionnaire से बना है। सवाल वहीं बदलें, फिर नया link बनाएँ।')+'</p>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" onclick="sfShareLink()">📤 '+L('Send link (WhatsApp…)','Link भेजें (WhatsApp…)')+'</button><button type="button" class="btn btn-ghost" onclick="sfCopyLink()">🔗 '+L('Copy link','Link copy करें')+'</button><button type="button" class="btn btn-ghost" onclick="sfKiosk()">📱 '+L('Fill on this device (clinic or class)','इसी device पर भरवाएँ (clinic या class)')+'</button></div>'+
+   '<textarea id="sfLinkOut" rows="2" style="display:none;width:100%;margin-top:6px;font-size:11px" readonly></textarea></div>';
+  h+='<div style="border:1px solid var(--border,#ddd);border-radius:10px;padding:10px"><b>'+L('Step 3: collect and open the answers','तीसरा कदम: जवाब इकट्ठे करें और खोलें')+'</b> <span class="desc">('+L(n+' locked answer sets on this device',n+' बंद जवाब इस device पर')+')</span>'+
+   '<p class="desc">'+L('Participants send you a locked text or file (on WhatsApp it is safe to forward). Add them here. Answers filled on this device are already here.','Participants आपको बंद text या file भेजेंगे (WhatsApp पर भेजना सुरक्षित है)। उन्हें यहाँ जोड़िए। इसी device पर भरे जवाब पहले से यहाँ हैं।')+'</p>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn btn-ghost btn-sm" style="cursor:pointer">📂 '+L('Add files','Files जोड़ें')+'<input type="file" multiple accept=".txt,text/plain" style="display:none" onchange="sfImportFiles(this)"></label></div>'+
+   '<textarea id="sfPaste" rows="2" style="width:100%;margin-top:6px" placeholder="'+L('…or paste locked text here (starts with APPU1.)','…या बंद text यहाँ paste करें (APPU1. से शुरू होता है)')+'"></textarea><button type="button" class="btn btn-ghost btn-sm" onclick="sfImportText(document.getElementById(\'sfPaste\').value)">'+L('Add pasted text','Paste किया text जोड़ें')+'</button>'+
+   (old?'<p style="color:#b45309;margin:6px 0">⚠️ '+L('No locked backup in the last 3 days. Take one now.','पिछले 3 दिन में बंद backup नहीं निकाला। अभी निकालिए।')+'</p>':'')+
+   '<div style="margin-top:8px"><input type="password" id="sfPass" placeholder="'+L('Your password, to open the answers','जवाब खोलने के लिए आपका password')+'" style="width:100%"></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" class="btn btn-purple" onclick="sfPreview()">🔓 '+L('Open and preview','खोलें और देखें')+'</button><button type="button" class="btn btn-purple" onclick="sfToStats()">📊 '+L('Send to Statistics Lab','Statistics Lab में भेजें')+'</button>'+
+   '<button type="button" class="btn btn-ghost btn-sm" onclick="sfBackup()">💾 '+L('Locked backup','बंद backup')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="sfKeyBackup()">🔑 '+L('Key file again','चाबी की file फिर से')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="sfCsvOut()">'+L('Unlocked CSV','खुली CSV')+'</button><button type="button" class="btn btn-ghost btn-sm" style="color:#b91c1c" onclick="sfDeleteAll()">'+L('Delete all','सब मिटाएँ')+'</button></div><div id="sfPrev" style="margin-top:8px"></div></div>'+warn;
+  d.innerHTML=h}
 
 function renderStageGuide(tool){
   const el=document.getElementById('stageGuide');if(!el)return;
@@ -14228,7 +14327,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26m';
+const APP_BUILD='2026.10.26n';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}

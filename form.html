@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Research form · Appuscholar</title>
+<style>
+:root{--bg:#f7f5fc;--card:#fff;--ink:#1e1b2e;--muted:#5b5670;--line:#ddd6f3;--brand:#5b21b6;--ok:#047857;--warn:#b45309}
+@media (prefers-color-scheme:dark){:root{--bg:#15121f;--card:#1f1a2e;--ink:#f1eefb;--muted:#b8b0d4;--line:#3a3255;--brand:#c4b5fd;--ok:#6ee7b7;--warn:#fbbf24}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+h1{font-size:1.35rem;margin:.2rem 0 .4rem}h2{font-size:1.05rem;margin:0 0 .5rem;color:var(--brand)}
+.muted{color:var(--muted);font-size:.92rem}.stem{font-style:italic;color:var(--muted);margin:.2rem 0 .6rem}
+.q{margin:14px 0}.q>label.t{display:block;font-weight:600;margin-bottom:6px}
+.opts label{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border:1px solid var(--line);border-radius:10px;margin:5px 0;cursor:pointer}
+.opts input{margin-top:4px}
+input[type=text],input[type=number],textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;font:inherit;background:transparent;color:inherit}
+button{font:inherit;padding:11px 16px;border-radius:10px;border:none;background:var(--brand);color:#fff;cursor:pointer}
+button.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lock{font-size:.85rem;color:var(--ok)}.warn{color:var(--warn)}
+.need{outline:2px solid var(--warn);outline-offset:4px;border-radius:8px}
+#lang{padding:6px 12px;font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<div style="text-align:right"><button id="lang" class="ghost" type="button" onclick="setLang(L==='hi'?'en':'hi')">हिंदी / English</button></div>
+<div id="app"><div class="card"><p class="muted">Loading…</p></div></div>
+</main>
+<script>
+/* Appuscholar secure research form.
+   The form travels inside the link (after #), so no server stores it. Each answer set is locked in this
+   browser with the researcher's public key (ECDH P-256 + HKDF-SHA-256 + AES-GCM). Only the researcher's
+   private key, kept on the researcher's own device under a password, can open it. In kiosk mode (the
+   researcher's own device) the locked answers stay in this browser for the Appuscholar app to collect. */
+let L=(navigator.language||'').toLowerCase().startsWith('hi')?'hi':'en',F=null,KIOSK=false,DONE=null;
+const T={
+ en:{consent:'Consent',agree:'I have read the information above, I am 18 years or older, and I agree to take part.',need:'Please tick the consent box to continue.',submit:'Submit my answers',required:'Please answer the highlighted questions.',lockNote:'Your answers are locked (encrypted) on this device before they leave it. Only the researcher can open them.',
+  doneTitle:'Thank you',doneShare:'Your answers are locked. Please send this locked file to the researcher now:',share:'Send to researcher (WhatsApp, email…)',copy:'Copy the locked answers as text',copied:'Copied. Paste it in a message to the researcher.',dl:'Save the locked file',kioskDone:'Saved on this device. Hand the device back to the researcher.',next:'Next participant',bad:'This form link is incomplete or damaged. Ask the researcher for a new link.',old:'This browser is too old to lock answers safely. Please use an up-to-date Chrome, Edge, Firefox or Safari.',code:'Participant code (given by the researcher, optional)',noname:'Do not write your name anywhere in this form.',choose:'Choose one',num:'Write a number'},
+ hi:{consent:'सहमति',agree:'मैंने ऊपर दी जानकारी पढ़ ली है, मेरी उम्र 18 साल या उससे अधिक है, और मैं इस study में भाग लेने के लिए सहमत हूँ।',need:'आगे बढ़ने के लिए सहमति वाले box पर tick कीजिए।',submit:'मेरे जवाब भेजें',required:'पीले निशान वाले सवालों के जवाब दीजिए।',lockNote:'आपके जवाब इसी device पर ताले (encryption) में बंद होकर ही आगे जाते हैं। उन्हें सिर्फ़ researcher खोल सकते हैं।',
+  doneTitle:'धन्यवाद',doneShare:'आपके जवाब ताले में बंद हैं। यह बंद file अभी researcher को भेज दीजिए:',share:'Researcher को भेजें (WhatsApp, email…)',copy:'बंद जवाब text के रूप में copy करें',copied:'Copy हो गया। इसे researcher को message में paste कर दीजिए।',dl:'बंद file सहेजें',kioskDone:'इसी device पर सहेज लिया गया। Device researcher को लौटा दीजिए।',next:'अगला participant',bad:'यह form link अधूरा या ख़राब है। Researcher से नया link माँगिए।',old:'यह browser जवाबों को सुरक्षित ताला नहीं लगा सकता। नया Chrome, Edge, Firefox या Safari इस्तेमाल कीजिए।',code:'Participant code (researcher ने दिया हो तो, ज़रूरी नहीं)',noname:'इस form में कहीं भी अपना नाम न लिखें।',choose:'एक चुनें',num:'एक संख्या लिखें'}};
+const t=k=>(T[L]||T.en)[k];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const b64u=b=>{let s='';new Uint8Array(b).forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+const unb64u=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0))};
+async function inflate(bytes){const ds=new DecompressionStream('deflate-raw');const out=new Response(new Blob([bytes]).stream().pipeThrough(ds));return new Uint8Array(await out.arrayBuffer())}
+async function readForm(){const m=/[#&]f=([A-Za-z0-9_-]+)/.exec(location.hash);KIOSK=/[#&]k=1/.test(location.hash);if(!m)return null;
+  let raw=unb64u(m[1]);if(raw[0]===0x7a){raw=await inflate(raw.slice(1))}else if(raw[0]===0x6a){raw=raw.slice(1)}else return null;
+  return JSON.parse(new TextDecoder().decode(raw))}
+async function lockAnswers(pubJwk,plain){
+  const rec=await crypto.subtle.importKey('jwk',pubJwk,{name:'ECDH',namedCurve:'P-256'},false,[]);
+  const eph=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({name:'ECDH',public:rec},eph.privateKey,256);
+  const hk=await crypto.subtle.importKey('raw',bits,'HKDF',false,['deriveKey']);
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:salt,info:new TextEncoder().encode('appuscholar-form-v1')},hk,{name:'AES-GCM',length:256},false,['encrypt']);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,new TextEncoder().encode(plain));
+  const epk=await crypto.subtle.exportKey('raw',eph.publicKey);
+  return'APPU1.'+b64u(new TextEncoder().encode(JSON.stringify({v:1,sid:F.sid,e:b64u(epk),s:b64u(salt),i:b64u(iv),c:b64u(ct)})))}
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('appuforms',1);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('resp')){const s=db.createObjectStore('resp',{keyPath:'id'});s.createIndex('sid','sid')}};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function kioskSave(pkg){const db=await idb();await new Promise((res,rej)=>{const tx=db.transaction('resp','readwrite');tx.objectStore('resp').put({id:'k'+Date.now()+Math.random().toString(36).slice(2,8),sid:F.sid,pkg:pkg,ts:Date.now(),src:'kiosk'});tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+function render(){const app=document.getElementById('app');document.documentElement.lang=L;
+  if(!F){app.innerHTML='<div class="card"><p class="warn">'+esc(t('bad'))+'</p></div>';return}
+  if(!(window.crypto&&crypto.subtle&&window.DecompressionStream)){app.innerHTML='<div class="card"><p class="warn">'+esc(t('old'))+'</p></div>';return}
+  if(DONE){renderDone();return}
+  let h='<div class="card"><h1>'+esc(F.t||'Research form')+'</h1><p style="white-space:pre-wrap">'+esc(F.n||'')+'</p><p class="muted">'+esc(t('noname'))+'</p><p class="lock">🔒 '+esc(t('lockNote'))+'</p></div>';
+  h+='<div class="card" id="cbox"><h2>'+esc(t('consent'))+'</h2><label style="display:flex;gap:8px"><input type="checkbox" id="consent"> <span>'+esc(F.cn||t('agree'))+'</span></label></div>';
+  h+='<div class="card"><div class="q"><label class="t" for="pcode">'+esc(t('code'))+'</label><input type="text" id="pcode" maxlength="20" autocomplete="off"></div></div>';
+  let sec=null;h+='<div class="card">';
+  F.q.forEach((q,i)=>{if(q.s!==sec){if(sec!==null)h+='</div><div class="card">';sec=q.s;h+='<h2>'+esc(sec)+'</h2>'+(q.st?'<p class="stem">'+esc(q.st)+'</p>':'')}
+    h+='<div class="q" id="q'+i+'"><label class="t">'+(i+1)+'. '+esc(q.q)+'</label>';
+    if(Array.isArray(q.r))h+='<div class="opts" role="radiogroup">'+q.r.map(o=>'<label><input type="radio" name="a'+i+'" value="'+esc(o)+'"> <span>'+esc(o)+'</span></label>').join('')+'</div>';
+    else if(q.r==='number')h+='<input type="number" inputmode="decimal" id="a'+i+'" placeholder="'+esc(t('num'))+'">';
+    else if(q.r==='scale')h+='<div class="opts">'+[1,2,3,4,5].map(o=>'<label><input type="radio" name="a'+i+'" value="'+o+'"> <span>'+o+'</span></label>').join('')+'</div>';
+    else h+='<textarea id="a'+i+'" rows="2"></textarea>';
+    h+='</div>'});
+  h+='</div><div class="card"><p id="err" class="warn"></p><div class="row"><button type="button" onclick="submitForm()">'+esc(t('submit'))+'</button></div></div>';
+  app.innerHTML=h}
+async function submitForm(){const err=document.getElementById('err');err.textContent='';document.querySelectorAll('.need').forEach(e=>e.classList.remove('need'));
+  if(!document.getElementById('consent').checked){document.getElementById('cbox').classList.add('need');err.textContent=t('need');document.getElementById('cbox').scrollIntoView({behavior:'smooth'});return}
+  const ans={},missing=[];
+  F.q.forEach((q,i)=>{let v='';if(Array.isArray(q.r)||q.r==='scale'){const c=document.querySelector('input[name="a'+i+'"]:checked');v=c?c.value:''}else{const e=document.getElementById('a'+i);v=e?e.value.trim():''}
+    if(v==='')missing.push(i);ans[q.c]=v});
+  if(missing.length&&!F.opt){missing.forEach(i=>document.getElementById('q'+i).classList.add('need'));err.textContent=t('required');document.getElementById('q'+missing[0]).scrollIntoView({behavior:'smooth'});return}
+  const pcode=(document.getElementById('pcode').value||'').trim().slice(0,20);
+  const plain=JSON.stringify({sid:F.sid,pc:pcode,ts:new Date().toISOString(),lang:L,consent:true,a:ans});
+  const pkg=await lockAnswers(F.pk,plain);
+  if(KIOSK){await kioskSave(pkg)}
+  DONE=pkg;render();window.scrollTo(0,0)}
+function renderDone(){const app=document.getElementById('app');
+  if(KIOSK){app.innerHTML='<div class="card"><h1>✅ '+esc(t('doneTitle'))+'</h1><p>'+esc(t('kioskDone'))+'</p><button type="button" onclick="DONE=null;render();window.scrollTo(0,0)">'+esc(t('next'))+'</button></div>';return}
+  app.innerHTML='<div class="card"><h1>✅ '+esc(t('doneTitle'))+'</h1><p>'+esc(t('doneShare'))+'</p><div class="row" style="flex-direction:column;align-items:stretch">'+
+    '<button type="button" onclick="shareFile()">📤 '+esc(t('share'))+'</button>'+
+    '<button type="button" class="ghost" onclick="copyText()">📋 '+esc(t('copy'))+'</button>'+
+    '<button type="button" class="ghost" onclick="saveFile()">💾 '+esc(t('dl'))+'</button></div><p id="msg" class="muted"></p><p class="lock">🔒 '+esc(t('lockNote'))+'</p></div>'}
+function fileName(){return'appuscholar-answers-'+F.sid.slice(0,6)+'-'+Date.now().toString(36)+'.txt'}
+async function shareFile(){const f=new File([DONE],fileName(),{type:'text/plain'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:F.t||'Answers'});return}catch(e){if(e&&e.name==='AbortError')return}}
+  if(navigator.share){try{await navigator.share({text:DONE});return}catch(e){if(e&&e.name==='AbortError')return}}
+  saveFile()}
+async function copyText(){try{await navigator.clipboard.writeText(DONE);document.getElementById('msg').textContent=t('copied')}catch(e){const ta=document.createElement('textarea');ta.value=DONE;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();document.getElementById('msg').textContent=t('copied')}}
+function saveFile(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([DONE],{type:'text/plain'}));a.download=fileName();document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+function setLang(l){L=l;render()}
+readForm().then(f=>{F=f;if(F&&F.lang)L=F.lang;render()}).catch(()=>{F=null;render()});
+</script>
+</body>
+</html>
