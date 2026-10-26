@@ -3211,9 +3211,15 @@ function reviewRun(){const hi=studyHi(),o=studyGet(),d=o.idea||{},ds=o.design||{
   add(!!d.topic,'Stage 1 has a research question.','Stage 1 में research question है।');
   if(d.topic){const kw=d.topic.toLowerCase().match(/[a-z]{5,}/g)||[];const hit=kw.filter(w=>intro.toLowerCase().indexOf(w)>=0).length;add(hit>=Math.min(3,kw.length),'The Introduction states the research question.','Introduction में research question लिखा है।')}
   add(!!(o.gap&&o.gap.text),'A research gap is saved for the study.','Study का रिसर्च गैप सहेजा हुआ है।');
-  vars.filter(v=>v.role==='outcome'||v.role==='predictor').forEach(v=>{const w=v.name.toLowerCase();
-    add(meth.toLowerCase().indexOf(w)>=0,'Methods describe "'+v.name+'".','Methods में "'+v.name+'" का वर्णन है।');
-    add(resu.toLowerCase().indexOf(w)>=0||resu.toLowerCase().indexOf(w.split(' ')[0])>=0,'Results report "'+v.name+'".','Results में "'+v.name+'" का नतीजा है।')});
+  /* A variable counts as named when its full name, its scale, or any real word of it
+     (GAD7_total -> "gad7"/"gad-7", Hb_34w -> "hb") appears in the section. */
+  const vHit=(v,t)=>{t=t.toLowerCase();const nm=v.name.toLowerCase();if(t.indexOf(nm)>=0)return true;
+    if(v.scale&&t.indexOf(String(v.scale).toLowerCase())>=0)return true;
+    const toks=nm.split(/[_\s\-\.]+/).filter(x=>x.length>=2&&/[a-z]/.test(x)&&!/^(total|score|mean|sum|w\d*|wk\d*|\d+w)$/.test(x));
+    return toks.some(x=>{const y=x.replace(/\d+[a-z]?$/,'');return t.indexOf(x)>=0||t.indexOf(x.replace(/([a-z])(\d)/,'$1-$2'))>=0||(y.length>=3&&t.indexOf(y)>=0)})};
+  vars.filter(v=>v.role==='outcome'||v.role==='predictor').forEach(v=>{
+    add(vHit(v,meth),'Methods describe "'+v.name+'".','Methods में "'+v.name+'" का वर्णन है।');
+    add(vHit(v,resu),'Results report "'+v.name+'".','Results में "'+v.name+'" का नतीजा है।')});
   const hyp=String(ds.hyp||'').match(/H\d+/g)||[];hyp.forEach(hh=>add(new RegExp('\\b'+hh+'\\b').test(resu+disc),hh+' is answered in the Results or Discussion.',hh+' का जवाब Results या Discussion में है।'));
   if(ds.n){const ns=(meth+resu).match(/\b[Nn]\s*=\s*([\d,]+)/g)||[];const nums=ns.map(x=>+x.replace(/\D/g,''));add(!nums.length||nums.some(x=>x<=+ds.n),'Reported N fits the planned sample size ('+ds.n+').','बताया गया N योजना के sample size ('+ds.n+') से मेल खाता है।')}
   const st=studySuggestTest();if(st&&st.k){const word={pearson:'correlat',spearman:'spearman',ttestInd:'t(',ttestPaired:'t(',welchAnova:'f(',mregress:'regress',logistic:'odds',chisq:'χ²',rmanova:'f('}[st.k];if(word)add(low.indexOf(word.toLowerCase())>=0,'The planned analysis ('+st.k+') appears in the Results.','योजना वाला analysis ('+st.k+') Results में है।')}
@@ -4863,14 +4869,21 @@ function insertIntoEditor(text,keepSelection,aiTag,runId){
   if(aiTag){html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';actLog('ai');try{aiuNoteInsert()}catch(e){}}
   if(runId){html='<span class="stat-tag" data-run="'+runId+'">'+html+'</span>'}
   let ok=false;
-  try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
+  /* Chrome's insertHTML drops plain <span> wrappers when the caret sits inside
+     an existing paragraph, which lost the AI and stats tags. Tagged inserts go
+     in through a Range so the span always survives. */
+  const tagged=!!(aiTag||runId);
+  if(!tagged){try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}}
   if(!ok){
     const sel=window.getSelection();
     if(sel&&sel.rangeCount){
       const range=sel.getRangeAt(0);range.deleteContents();
       const frag=range.createContextualFragment(html);
+      const last=frag.lastChild;
       range.insertNode(frag);
-      range.collapse(false);
+      if(last){range.setStartAfter(last)}
+      range.collapse(true);
+      sel.removeAllRanges();sel.addRange(range);
     }
   }
   /* Move the caret to right after what was just inserted, and remember that
@@ -6907,8 +6920,24 @@ function downloadLatex(){
    at the top of the panel just reads each blob's `done` flag and links straight into the dialog that
    owns it. Interior copy stays English-only for now, same as the Statistics Lab dialog — only the
    panel's own entry points are translated (see the bilingual-UI comment near I18N above). */
-function designGet(key){try{return JSON.parse(LS.get('appu_design_'+key)||'null')||{}}catch(e){return{}}}
-function designSet(key,obj){LS.set('appu_design_'+key,JSON.stringify(obj))}
+/* Design items belong to the active project. Older data lived under one global key;
+   the first project to open it claims it, so a second project starts clean. */
+function designPid(){try{return getActiveProjectId()||''}catch(e){return''}}
+function designGet(key){
+  const pid=designPid();
+  try{
+    if(pid){
+      const own=LS.get('appu_design_'+key+'__'+pid);
+      if(own)return JSON.parse(own)||{};
+      const g=JSON.parse(LS.get('appu_design_'+key)||'null');
+      if(g&&(!g._pid||g._pid===pid)){if(!g._pid){g._pid=pid;LS.set('appu_design_'+key,JSON.stringify(g))}const c=Object.assign({},g);delete c._pid;return c}
+      return{};
+    }
+    const g=JSON.parse(LS.get('appu_design_'+key)||'null')||{};
+    if(g._pid)return{};
+    return g;
+  }catch(e){return{}}}
+function designSet(key,obj){const pid=designPid();LS.set(pid?'appu_design_'+key+'__'+pid:'appu_design_'+key,JSON.stringify(obj))}
 const DESIGN_ITEMS=[
   {key:'reg',label:'Regulatory-pathway wizard',open:()=>{document.getElementById('regDlg').showModal();regRender()}},
   {key:'proto',label:'Protocol / synopsis',open:()=>{document.getElementById('protoDlg').showModal();protoLoad()}},
@@ -13855,7 +13884,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26f';
+const APP_BUILD='2026.10.26g';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
