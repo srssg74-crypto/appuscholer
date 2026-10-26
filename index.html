@@ -3263,7 +3263,7 @@ function pzKey(){let p='';try{p=getActiveProjectId()||''}catch(e){}return'appu_p
 function pzGet(){try{return JSON.parse(LS.get(pzKey())||'null')}catch(e){return null}}
 function pzStore(){if(!PZ)return true;PZ.ts=Date.now();const ok=LS.set(pzKey(),JSON.stringify(PZ));
   if(!ok)showToast(studyHi()?'Browser में जगह भर गई: poster सिर्फ़ इस tab तक रहेगा। कोई बड़ी तस्वीर हटाइए।':'Browser storage is full: the poster is kept only while this tab is open. Remove a large picture.');return ok}
-function pzClean(h){const d=document.createElement('div');d.innerHTML=String(h||'');d.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(x=>x.remove());
+function pzClean(h){const d=document.createElement('div');d.innerHTML=String(h||'');d.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(x=>x.remove());d.querySelectorAll('u').forEach(u=>u.replaceWith(...u.childNodes));
   d.querySelectorAll('*').forEach(e=>[...e.attributes].forEach(a=>{const n=a.name.toLowerCase();if(n.indexOf('on')===0||(n==='src'&&!/^data:image\//.test(a.value))||n==='href'||n==='style'&&/url\(/i.test(a.value))e.removeAttribute(a.name)}));return d.innerHTML}
 /* Shrink a picture before it is stored: photos as JPEG, logos and graphs keep transparency as PNG. */
 function pzShrink(src,max,png){return new Promise(res=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
@@ -3327,8 +3327,8 @@ function pzRender(root,P,editable){pzEnsureCss();const z=PZ_SIZES[P.size]||PZ_SI
     ((P.logos||[]).length?'<div class="pz-logos">'+P.logos.map(s=>'<img src="'+s+'" style="height:'+(hH*0.62).toFixed(0)+'mm;max-width:'+(hH*1.2).toFixed(0)+'mm">').join('')+'</div>':'')+'</div>';
   h+='<div class="pz-cols" style="grid-template-columns:repeat('+P.cols+',minmax(0,1fr));gap:'+gap+'mm;padding:'+pad+'mm">';
   for(let c=0;c<P.cols;c++){h+='<div class="pz-col" data-col="'+c+'" style="gap:'+gap+'mm">';
-    P.boxes.filter(b=>Math.min(b.col,P.cols-1)===c).forEach(b=>{const ref=/^references$/i.test(b.t);
-      h+='<div class="pz-box'+(editable&&P.sel===b.id?' pz-sel':'')+'" data-id="'+b.id+'" style="background:#'+th[1]+';border-color:#'+th[2]+';border-width:'+(0.7*k).toFixed(2)+'mm;padding:'+(7*k).toFixed(1)+'mm">'+
+    P.boxes.filter(b=>Math.min(b.col,P.cols-1)===c).forEach(b=>{const ref=/^(references|acknowledg|आभार)/i.test(b.t);
+      h+='<div class="pz-box'+(editable&&P.sel===b.id?' pz-sel':'')+'" data-id="'+b.id+'"'+(ref?' data-ref="1"':'')+' style="background:#'+th[1]+';border-color:#'+th[2]+';border-width:'+(0.7*k).toFixed(2)+'mm;padding:'+(7*k).toFixed(1)+'mm">'+
         '<h2 class="pz-bt" data-f="t"'+ce+' style="font-size:'+(14*k).toFixed(1)+'mm;color:#'+th[0]+';margin-bottom:'+(4*k).toFixed(1)+'mm">'+escHTML(b.t||'')+'</h2>'+
         '<div class="pz-bb" data-f="h"'+ce+' style="font-size:'+((ref?5.2:8.6)*k).toFixed(2)+'mm">'+(b.h||'')+'</div>'+
         (b.img?'<img class="pz-img" src="'+b.img+'" style="width:'+(b.iw||90)+'%">':'')+'</div>'});
@@ -3350,7 +3350,7 @@ function pzArrange(){if(!PZ||!PZ.boxes.length)return;const host=document.createE
     for(let k=0;k<=C;k++){best.push(new Array(n+1).fill(Infinity));cut.push(new Array(n+1).fill(0))}best[0][0]=0;
     for(let k=1;k<=C;k++)for(let i=1;i<=n;i++)for(let j=k-1;j<i;j++){const v=Math.max(best[k-1][j],sum(j,i));if(v<best[k][i]){best[k][i]=v;cut[k][i]=j}}
     let i=n;for(let k=C;k>=1;k--){const j=cut[k][i];for(let q=j;q<i;q++)PZ.boxes[q].col=k-1;i=j}
-    if(best[C][n]<=avail||(PZ.txt||1)<=0.62)break;PZ.txt=Math.max(0.6,+((PZ.txt||1)-0.05).toFixed(2))}
+    if(best[C][n]<=avail*0.94||(PZ.txt||1)<=0.62)break;PZ.txt=Math.max(0.6,+((PZ.txt||1)-0.05).toFixed(2))}
   host.remove();const t=document.getElementById('pzTxt');if(t)t.value=PZ.txt}
 function pzPreview(){const wrap=document.getElementById('pzWrap'),root=document.getElementById('pzRoot');if(!wrap||!root||!PZ)return;
   root.style.transform='none';const over=pzRender(root,PZ,true);
@@ -3359,7 +3359,7 @@ function pzPreview(){const wrap=document.getElementById('pzWrap'),root=document.
   wrap.querySelector('.pz-holder').style.width=(pxW*s)+'px';wrap.querySelector('.pz-holder').style.height=(pxH*s)+'px';
   const hi=studyHi(),w=document.getElementById('pzWarn');
   if(w)w.innerHTML=over.length?'⚠️ '+(hi?'Column '+over.join(', ')+' नीचे के किनारे से बाहर जा रहा है। Text छोटा करें, कोई box दूसरे column में ले जाएँ, या text का आकार घटाएँ।':'Column '+over.join(', ')+' runs past the bottom edge. Shorten the text, move a box to another column, or lower the text size.'):'';
-  pzPanelSel()}
+  pzPanelSel();try{pzCheck()}catch(e){}}
 /* Keep what the student typed on the poster itself. */
 function pzSyncFromDom(){const root=document.getElementById('pzRoot');if(!root||!PZ)return;
   const t=root.querySelector('.pz-title');if(t)PZ.title=t.innerText.replace(/\s+/g,' ').trim();
@@ -3390,8 +3390,10 @@ function pzOpen(){const hi=studyHi();
     '<details open style="margin-top:10px"><summary><b>'+L('Add','जोड़ें')+'</b></summary>'+
      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="pzAddBox()">+ '+L('Text box','Text box')+'</button>'+
      '<label class="btn btn-ghost btn-sm" style="cursor:pointer">+ '+L('Picture','तस्वीर')+'<input type="file" accept="image/*" style="display:none" onchange="pzAddPicture(this)"></label>'+
-     '<button type="button" class="btn btn-ghost btn-sm" onclick="pzGraphs()">+ '+L('Graph from my paper','मेरे paper का graph')+'</button></div><div id="pzGraphList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div></details>'+
+     '<button type="button" class="btn btn-ghost btn-sm" onclick="pzGraphs()">+ '+L('Graph from my paper','मेरे paper का graph')+'</button>'+
+     '<button type="button" class="btn btn-ghost btn-sm" onclick="pzAddAck()">+ '+L('Acknowledgements','आभार (Acknowledgements)')+'</button></div><div id="pzGraphList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div></details>'+
     '<div id="pzSelPanel" style="margin-top:10px"></div>'+
+    '<details open style="margin-top:10px"><summary><b>✅ '+L('Poster check','Poster की जाँच')+'</b></summary><div id="pzCheck" style="font-size:13px"></div></details>'+
     '<p id="pzWarn" style="color:#b45309;margin:10px 0 0"></p>'+
     '<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+
      '<button type="button" class="btn btn-purple" onclick="pzSyncFromDom();pzStore();posterDownload()">⬇ '+L('Download PowerPoint (editable)','PowerPoint download करें (edit हो सकता है)')+'</button>'+
@@ -3417,6 +3419,39 @@ function pzAddPerson(){PZ.people.push({name:'',qual:'',role:'Co-author',aff:1});
 function pzLogosRender(){const box=document.getElementById('pzLogos');if(!box)return;box.innerHTML=(PZ.logos||[]).map((s,i)=>'<span style="position:relative"><img src="'+s+'" style="height:40px;border:1px solid #ddd;border-radius:4px"><button type="button" onclick="PZ.logos.splice('+i+',1);pzLogosRender();pzLater()" style="position:absolute;top:-6px;right:-6px;border-radius:50%;border:none;background:#c00;color:#fff;width:18px;height:18px;font-size:11px;cursor:pointer">✕</button></span>').join('')}
 async function pzAddLogo(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;if((PZ.logos||[]).length>=3){showToast(studyHi()?'3 logo तक':'Up to 3 logos');return}
   const s=await pzShrink(await pzReadFile(f),500,true);if(!s)return;PZ.logos=(PZ.logos||[]).concat([s]);pzLogosRender();pzLater()}
+function pzAddAck(){const hi=studyHi();if(PZ.boxes.some(b=>/^acknowledg/i.test(b.t)))return;const b={id:pzNewId(),t:'Acknowledgements',h:'<p>'+(hi?'जैसे: हम सभी प्रतिभागियों, अस्पताल के स्टाफ और विभाग का धन्यवाद करते हैं। Funding: …':'e.g. We thank all participants, the hospital staff and the department. Funding: …')+'</p>',img:null,iw:90,col:PZ.cols-1};PZ.boxes.push(b);PZ.sel=b.id;pzLater()}
+/* Poster check: fixed rules from poster-design guidance (UWA STUDYSmarter "Poster presentations" survival guide:
+   short title, names and affiliation, figures over tables, limited text in bullets, readable from 1.5 m,
+   introduction top left, conclusion bottom right, references small at the bottom, empty space, a border
+   for the printer, a printed draft before the final print). */
+function pzCheck(){const hi=studyHi(),root=document.getElementById('pzRoot'),out=document.getElementById('pzCheck');if(!root||!out||!PZ)return;
+  const res=[];const add=(ok,en,h,enF,hF)=>res.push([ok,ok||!enF?(hi?h:en):(hi?hF:enF)]);
+  const tw=String(PZ.title||'').trim().split(/\s+/).filter(Boolean).length;
+  add(tw<=15,'Title is short ('+tw+' words). Aim for 15 or fewer.','Title छोटा है ('+tw+' शब्द)। 15 या कम रखें।');
+  if(tw>15)res[res.length-1][1]=hi?'Title लंबा है ('+tw+' शब्द)। 15 या कम शब्दों का छोटा, रोचक title रखें; पूरा research question Introduction में है।':'The title is long ('+tw+' words). Use a short, inviting title of 15 words or fewer; the full research question is in the Introduction.';
+  const ppl=(PZ.people||[]).filter(p=>p.name.trim());
+  add(ppl.length>0&&ppl.every(p=>p.qual.trim()),'Every name has a qualification or post.','हर नाम के साथ योग्यता या पद लिखा है।','Add each person\'s name with qualification or post (People, on the left).','बाईं ओर People में हर व्यक्ति का नाम और योग्यता या पद लिखिए।');
+  add(ppl.some(p=>/supervisor/i.test(p.role)&&p.name.trim()),'The supervisor is named.','Supervisor का नाम है।','Add your supervisor\'s name.','अपने supervisor का नाम जोड़िए।');
+  add((PZ.affs||[]).some(a=>a.trim()),'The college or department is given.','College या विभाग लिखा है।','Add your department and college (Affiliations).','Affiliations में अपना विभाग और college लिखिए।');
+  const bb=root.querySelector('.pz-box:not([data-ref]) .pz-bb');const px=bb?parseFloat(getComputedStyle(bb).fontSize):0,pt=Math.round(px*0.75);
+  const minPt=PZ.size[1]==='0'?24:18;
+  add(pt>=minPt,'Main text is '+pt+' pt when printed, readable from 1.5 m.','Print होने पर मुख्य text '+pt+' pt का है, 1.5 मीटर से पढ़ा जा सकता है।');
+  if(pt<minPt)res[res.length-1][1]=hi?'Print होने पर मुख्य text सिर्फ़ '+pt+' pt का है; '+minPt+' pt से कम 1.5 मीटर से नहीं पढ़ा जाता। Text घटाइए, सिर्फ़ ख़ास बातें रखिए।':'Main text prints at only '+pt+' pt; below '+minPt+' pt it cannot be read from 1.5 m. Cut text down to the key points.';
+  const words=PZ.boxes.filter(b=>!/^(references|acknowledg)/i.test(b.t)).reduce((a,b)=>{const d=document.createElement('div');d.innerHTML=b.h||'';return a+(d.innerText||d.textContent||'').split(/\s+/).filter(Boolean).length},0);
+  const maxW=PZ.size[1]==='0'?800:500;
+  add(words<=maxW,'Text is short enough ('+words+' words).','Text सीमित है ('+words+' शब्द)।');
+  if(words>maxW)res[res.length-1][1]=hi?'Poster पर '+words+' शब्द हैं; '+maxW+' से कम रखें। हर box में बस keywords और मुख्य नतीजे।':'The poster has '+words+' words; keep it under '+maxW+'. Keywords and main findings only.';
+  add(PZ.boxes.some(b=>b.img),'At least one graph or picture.','कम से कम एक graph या तस्वीर है।','Add a graph: posters show results as figures rather than tables.','एक graph जोड़िए: poster पर नतीजे table की जगह चित्र से दिखाए जाते हैं।');
+  const order=[];for(let c=0;c<PZ.cols;c++)PZ.boxes.filter(b=>Math.min(b.col,PZ.cols-1)===c).forEach(b=>order.push(b.t.toLowerCase()));
+  add(/introduction|background|परिचय/.test(order[0]||''),'Introduction is at the top left.','Introduction ऊपर बाईं ओर है।','Move the Introduction to the top of the left column; readers start there.','Introduction को बाएँ column में सबसे ऊपर रखिए; पढ़ने वाले वहीं से शुरू करते हैं।');
+  const lastCol=PZ.boxes.filter(b=>Math.min(b.col,PZ.cols-1)===PZ.cols-1).map(b=>b.t.toLowerCase());
+  add(lastCol.some(t=>/conclusion|निष्कर्ष/.test(t)),'Conclusion is in the right-hand column.','Conclusion दाएँ column में है।','Move the Conclusion to the right-hand column, near the bottom.','Conclusion को दाएँ column में नीचे की ओर रखिए।');
+  const refs=PZ.boxes.find(b=>/^references/i.test(b.t));add(!!refs&&order[order.length-1]&&/references|acknowledg/.test(order[order.length-1]),'References sit at the bottom in small text.','References नीचे छोटे अक्षरों में हैं।','Put References last, at the bottom, in small text.','References को सबसे आख़िर में, नीचे, छोटे अक्षरों में रखिए।');
+  let full=0;const H=root.offsetHeight;root.querySelectorAll('.pz-col').forEach(c=>{const l=c.lastElementChild;if(l){const used=(l.offsetTop+l.offsetHeight)/H;full=Math.max(full,used)}});
+  add(full<0.97,'There is some empty space; the poster is not crammed.','Poster में थोड़ी ख़ाली जगह है; ठुँसा हुआ नहीं।','The poster is crammed to the bottom. Cut some text so there is empty space; it makes the poster easier to read.','Poster नीचे तक ठुँसा है। कुछ text घटाइए ताकि ख़ाली जगह रहे; इससे पढ़ना आसान होता है।');
+  out.innerHTML='<ul style="list-style:none;padding:0;margin:6px 0">'+res.map(r=>'<li style="margin:3px 0">'+(r[0]?'✅':'⚠️')+' '+escHTML(r[1])+'</li>').join('')+'</ul>'+
+    '<p class="desc" style="margin:4px 0">'+(hi?'Print से पहले: एक A4 या A3 draft print करके रंग और spelling जाँचें, फिर पूरे आकार में। Printer किनारा काटता है, इसलिए किनारे पर ख़ाली जगह रखी गई है।':'Before printing: print an A4 or A3 draft to check colours and spelling, then the full size. Printers trim the edge, so a border is kept.')+'</p>';
+  return res}
 function pzAddBox(){const hi=studyHi();const b={id:pzNewId(),t:hi?'नया box':'New box',h:'<p>'+(hi?'यहाँ लिखिए…':'Write here…')+'</p>',img:null,iw:90,col:0};PZ.boxes.push(b);PZ.sel=b.id;pzLater()}
 async function pzAddPicture(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;const s=await pzShrink(await pzReadFile(f),1400,false);if(!s)return;pzPutImage(s,studyHi()?'तस्वीर':'Picture')}
 function pzPutImage(src,title){const sel=PZ.boxes.find(b=>b.id===PZ.sel);
@@ -14184,7 +14219,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26k';
+const APP_BUILD='2026.10.26l';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
