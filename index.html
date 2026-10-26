@@ -3340,18 +3340,24 @@ function pzRender(root,P,editable){pzEnsureCss();const z=PZ_SIZES[P.size]||PZ_SI
   return over}
 /* Spread the boxes over the columns in reading order so the columns come out as even as possible,
    measured on the real layout; if the tallest column still runs past the bottom, lower the text size. */
-function pzArrange(){if(!PZ||!PZ.boxes.length)return;const host=document.createElement('div');host.style.cssText='position:fixed;left:-30000px;top:0;visibility:hidden';const root=document.createElement('div');host.appendChild(root);document.body.appendChild(host);
-  const n=PZ.boxes.length,C=Math.min(PZ.cols,n);let tries=0;
-  while(tries++<12){const save=PZ.boxes.map(b=>b.col);PZ.boxes.forEach(b=>b.col=0);pzRender(root,PZ,false);
-    const els=[...root.querySelectorAll('.pz-box')],hs=els.map(e=>e.getBoundingClientRect().height);const col=root.querySelector('.pz-col');
+function pzArrange(){if(!PZ||!PZ.boxes.length)return;const host=document.createElement('div');host.style.cssText='position:fixed;left:-30000px;top:0;pointer-events:none';const root=document.createElement('div');host.appendChild(root);document.body.appendChild(host);
+  const n=PZ.boxes.length,C=Math.min(PZ.cols,n);
+  /* Lay the boxes out in reading order over C columns so the tallest column is as short as possible. */
+  const plan=()=>{PZ.boxes.forEach(b=>b.col=0);pzRender(root,PZ,false);
+    const hs=[...root.querySelectorAll('.pz-box')].map(e=>e.getBoundingClientRect().height);const col=root.querySelector('.pz-col');
     const gap=parseFloat(getComputedStyle(col).rowGap)||0;const avail=root.getBoundingClientRect().bottom-col.getBoundingClientRect().top-8;
-    /* best[k][i]: smallest possible tallest column when the first i boxes fill k columns */
     const sum=(a,b)=>{let t=0;for(let i=a;i<b;i++)t+=hs[i]+(i>a?gap:0);return t};const best=[],cut=[];
     for(let k=0;k<=C;k++){best.push(new Array(n+1).fill(Infinity));cut.push(new Array(n+1).fill(0))}best[0][0]=0;
     for(let k=1;k<=C;k++)for(let i=1;i<=n;i++)for(let j=k-1;j<i;j++){const v=Math.max(best[k-1][j],sum(j,i));if(v<best[k][i]){best[k][i]=v;cut[k][i]=j}}
-    let i=n;for(let k=C;k>=1;k--){const j=cut[k][i];for(let q=j;q<i;q++)PZ.boxes[q].col=k-1;i=j}
-    if(best[C][n]<=avail*0.94||(PZ.txt||1)<=0.62)break;PZ.txt=Math.max(0.6,+((PZ.txt||1)-0.05).toFixed(2))}
-  host.remove();const t=document.getElementById('pzTxt');if(t)t.value=PZ.txt}
+    const cols=new Array(n);let i=n;for(let k=C;k>=1;k--){const j=cut[k][i];for(let q=j;q<i;q++)cols[q]=k-1;i=j}
+    return{fit:best[C][n]<=avail*0.94,cols:cols}};
+  const apply=r=>PZ.boxes.forEach((b,i)=>b.col=r.cols[i]);
+  let r=plan(),tries=0;
+  /* Too full: lower the text size step by step. */
+  while(!r.fit&&(PZ.txt||1)>0.62&&tries++<12){PZ.txt=Math.max(0.6,+((PZ.txt||1)-0.05).toFixed(2));r=plan()}
+  /* Room to spare: raise the text size while it still fits, for easier reading from a distance. */
+  if(r.fit){while((PZ.txt||1)<1.45&&tries++<20){const was=PZ.txt||1;PZ.txt=+(was+0.05).toFixed(2);const r2=plan();if(!r2.fit){PZ.txt=was;break}r=r2}}
+  apply(r);host.remove();const t=document.getElementById('pzTxt');if(t)t.value=PZ.txt}
 function pzPreview(){const wrap=document.getElementById('pzWrap'),root=document.getElementById('pzRoot');if(!wrap||!root||!PZ)return;
   root.style.transform='none';const over=pzRender(root,PZ,true);
   const z=PZ_SIZES[PZ.size]||PZ_SIZES.A0P,pxW=z[0]*96/25.4,pxH=z[1]*96/25.4;
