@@ -175,7 +175,7 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     # ---- edits in the paper: citation style and a deleted citation ----
     pg.evaluate("showTool('cite');citStyle.value='vancouver';citStyleChanged()"); pg.wait_for_timeout(700)
     shot(pg, f'{label}-edit-vancouver')
-    nums = pg.evaluate("[...editor.querySelectorAll('span.cit')].map(s=>s.innerText)"); log(all(re.match(r'^\[\d+\]$', x) for x in nums if x), f'{label} Edit: switched to Vancouver, citations numbered', nums[:8])
+    nums = pg.evaluate("[...editor.querySelectorAll('span.cit')].map(s=>s.innerText)"); log(all(re.match(r'^\[\d+(,\d+)*\]$', x) for x in nums if x), f'{label} Edit: switched to Vancouver, citations numbered', nums[:8])
     pg.evaluate("citStyle.value='apa';citStyleChanged()"); pg.wait_for_timeout(700)
     nbib = pg.evaluate("editor.querySelectorAll('[data-bib=\"i\"]').length"); log(nbib >= 3, f'{label} Edit: back to APA, reference list has {nbib} entries')
     pg.evaluate("""()=>{const sp=[...editor.querySelectorAll('#res0 ~ p span.cit, p span.cit')].pop();if(sp){const pv=sp.previousSibling;if(pv&&pv.nodeType===3)pv.textContent=pv.textContent.replace(/\\s+$/,'');sp.remove();editor.dispatchEvent(new Event('input'))}}""")
@@ -238,7 +238,7 @@ def fig_B(pg, k):
     log(pg.evaluate("editor.querySelectorAll('img').length") >= 1, 'B Figure inserted into Results')
 
 WORDS_A = [['mother_GAD7_total', "the mothers' GAD-7 scores"], ['father_GAD7_total', "the fathers' GAD-7 scores"], ['GAD7_total', 'GAD-7 score'], ['RSES_total', 'self-esteem (RSES)'], ['SWLS_total', 'life satisfaction (SWLS)'], ['hb_16wk', 'haemoglobin at 16 weeks'], ['hb_34wk', 'haemoglobin at 34 weeks'], ['anaemia_34wk', 'anaemia at 34 weeks'], ['between Yes (', 'between women with anaemia ('], [' and No (', ' and women without anaemia (']]
-WORDS_B = [['maternal_hb_34wk', "the mother's haemoglobin at 34 weeks"], ['paracetamol_given', 'paracetamol after MR1'], ['seroconverted', 'seroconversion'], ['infant_sex', 'infant sex'], ['birth_weight_g', 'birth weight (g)']]
+WORDS_B = [['maternal_hb_34wk', "the mother's haemoglobin at 34 weeks"], ['paracetamol_given', 'paracetamol after MR1'], ['seroconverted', 'seroconversion'], ['infant_sex', 'infant sex'], ['birth_weight_g', 'birth weight (g)'], ['between Boy (', 'between boys ('], [' and Girl (', ' and girls (']]
 VARS_A = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
 add('Anxiety','outcome','score','GAD7');add('Life satisfaction','outcome','score','SWLS');add('Self-esteem','predictor','score','RSES');add('Anaemia at 34 weeks','group','yesno','');add('Haemoglobin at 34 weeks','predictor','score','own');add('Parity','covariate','category','','First pregnancy, Second or later');add('Age','covariate','score','own')})()"""
 VARS_B = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
