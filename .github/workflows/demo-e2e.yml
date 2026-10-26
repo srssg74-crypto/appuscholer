@@ -16,7 +16,12 @@ jobs:
       - run: (python -m http.server 8765 >/dev/null 2>&1 &) && sleep 2 && python demo/e2e.py | tee demo/e2e-log.txt
       - name: Publish outputs to the demo/e2e-out branch
         if: always()
+        env:
+          TOKEN: ${{ github.token }}
         run: |
-          mkdir -p /tmp/o && cp -r demo/out /tmp/o/ 2>/dev/null; cp demo/e2e-log.txt /tmp/o/ 2>/dev/null || true
+          set -x
+          mkdir -p /tmp/o && cp -r demo/out /tmp/o/ || true; cp demo/e2e-log.txt /tmp/o/ || true
+          cd /tmp/o && git init -q && git checkout -q -b demo/e2e-out
           git config user.name "appuscholar-demo-bot"; git config user.email "demo@appuscholar.invalid"
-          git checkout --orphan demo/e2e-out && git rm -rq . && cp -r /tmp/o/* . && git add -A && git commit -qm "demo outputs ${GITHUB_SHA}" && git push -f origin demo/e2e-out
+          git add -A && git commit -qm "demo outputs ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" demo/e2e-out
