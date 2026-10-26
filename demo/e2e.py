@@ -139,6 +139,12 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     pg.evaluate("document.getElementById('protoDlg').showModal();protoLoad()"); pg.wait_for_timeout(300)
     pr = pg.evaluate("[protoBg.value,protoObj.value,protoDesign.value,protoPart.value]"); log(all(pr), f'{label} Stage 3: protocol filled from the study', pr[2][:150])
     shot(pg, f'{label}-stage3-protocol'); pg.evaluate("try{protoSave()}catch(e){}"); close_dialogs(pg)
+    # ---- Scale access rule: restricted SWLS has no wording in the app until the student pastes it from the owner's page ----
+    before = pg.evaluate("slHasText(slById('SWLS'))")
+    pg.evaluate("slOpen();slPick('SWLS')"); pg.wait_for_timeout(300)
+    pg.evaluate("()=>{document.getElementById('slPasteTxt').value=[1,2,3,4,5].map(i=>'SWLS statement '+i+' as copied from the owner page').join('\\n');slSaveText('SWLS')}")
+    after = pg.evaluate("slHasText(slById('SWLS'))"); close_dialogs(pg)
+    log((not before) and after, f'{label} Scale access: SWLS wording not shipped; student pastes it from the owner page (kept on device)', f'before {before}, after {after}')
     # ---- Stage 4: questionnaire ----
     pg.evaluate("showTool('stats');qnOpen()"); pg.wait_for_timeout(400); shot(pg, f'{label}-stage4-questionnaire')
     pg.evaluate("qnSave()")
