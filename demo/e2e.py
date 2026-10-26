@@ -144,6 +144,28 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     pg.evaluate("qnSave()")
     save_dl(pg, "qnWord()", f'{label}-questionnaire.docx'); save_dl(pg, "qnCsv()", f'{label}-data-template.csv'); save_dl(pg, "qnCodebook()", f'{label}-codebook.csv')
     log(True, f'{label} Stage 4: questionnaire Word file, data template and codebook downloaded'); close_dialogs(pg)
+    # ---- Stage 4: secure form instead of Google Forms (key, link, two participants, kiosk, unlock) ----
+    pg.evaluate("sfOpen()"); pg.wait_for_timeout(400)
+    pg.evaluate("()=>{document.getElementById('sfPass1').value='demo-pass-2026';document.getElementById('sfPass2').value='demo-pass-2026'}")
+    save_dl(pg, "sfSetup()", f'{label}-secure-form-KEY.txt'); pg.wait_for_timeout(500)
+    link = pg.evaluate("sfLink(false)"); klink = pg.evaluate("sfLink(true)")
+    fill_js = """pc=>{document.getElementById('consent').checked=true;document.getElementById('pcode').value=pc;F.q.forEach((q,i)=>{const rs=[...document.querySelectorAll('input[name="a'+i+'"]')];if(rs.length){rs[(i+pc.length)%rs.length].checked=true}else{const e=document.getElementById('a'+i);if(e)e.value=q.r==='number'?String(20+i):'BA Psychology 2'}})}"""
+    pkgs = []
+    for pc in ['P-001', 'P-002']:
+        pp = pg.context.new_page(); pp.goto(link); pp.wait_for_timeout(700); pp.evaluate(fill_js, pc); pp.evaluate("submitForm()"); pp.wait_for_timeout(700)
+        if pc == 'P-001': pp.screenshot(path=os.path.join(OUT, f'{label}-secure-form-participant-done.png'))
+        pkgs.append(pp.evaluate("DONE")); pp.close()
+    pk = pg.context.new_page(); pk.goto(klink); pk.wait_for_timeout(700); pk.evaluate(fill_js, 'P-003'); pk.evaluate("submitForm()"); pk.wait_for_timeout(700); pk.close()
+    pg.evaluate("t=>sfImportText(t)", '\n'.join(pkgs) + '\n' + pkgs[0]); pg.wait_for_timeout(800)
+    n_locked = pg.evaluate("sfAll(sfKey().sid).then(r=>r.length)")
+    pg.evaluate("sfRender()"); pg.wait_for_timeout(300)
+    pg.evaluate("()=>{document.getElementById('sfPass').value='demo-pass-2026'}"); pg.evaluate("sfPreview()"); pg.wait_for_timeout(900)
+    shot(pg, f'{label}-secure-form-researcher')
+    rows = pg.evaluate("(SF_ROWS||[]).map(r=>r.pc).sort().join(',')")
+    leak = pg.evaluate("()=>JSON.stringify(localStorage).indexOf('BA Psychology')>=0")
+    log(n_locked == 3 and rows == 'P-001,P-002,P-003' and not leak, f'{label} Secure form: 2 answers by link and 1 on this device, locked; duplicate ignored; opened only with the password; nothing unlocked saved', f'{n_locked} locked; opened {rows}; plain text in storage: {leak}')
+    save_dl(pg, "sfBackup()", f'{label}-secure-form-LOCKED-backup.txt')
+    close_dialogs(pg)
     # ---- Stage 5: document and outline ----
     pg.evaluate("p=>{window.prompt=()=>p}", project + ' paper'); pg.evaluate("docNew()"); pg.wait_for_timeout(400)
     pg.evaluate("showTool('cite');citStyle.value='apa';citStyleChanged();draftBuild()"); pg.wait_for_timeout(800)
@@ -235,6 +257,10 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     pg.evaluate("studyDlgOpen()"); pg.wait_for_timeout(300); shot(pg, f'{label}-my-study-plan'); close_dialogs(pg)
     open(os.path.join(OUT, f'{label}-paper.html'), 'w').write('<!doctype html><meta charset=utf-8><title>%s</title><body style="font:16px/1.6 Georgia;max-width:820px;margin:30px auto">' % project + pg.evaluate("editor.innerHTML.replace(/\\u200b/g,'')") + '</body>')
 
+def check_sw(pg):
+    n = pg.evaluate("fetch('sw.js',{cache:'no-store'}).then(r=>r.text()).then(t=>t.length)")
+    log(n > 1000, 'Service worker file is present (offline support)', f'{n} bytes')
+
 def tests_A(pg, files):
     score_scale(pg, 'GAD7', 0); score_scale(pg, 'RSES', 0); score_scale(pg, 'SWLS', 0)
     pg.evaluate("studyUseTest()"); pg.wait_for_timeout(300)
@@ -306,6 +332,7 @@ def main():
         pg.on('pageerror', lambda e: ERRS.append(str(e)[:300]))
         pg.on('dialog', lambda d: d.accept())
         pg.goto(BASE); pg.wait_for_timeout(4000)
+        check_sw(pg)
         D = os.path.join(ROOT, 'demo')
         try:
             study(pg, A, 'A', 'Janani A: anaemia, anxiety and well-being', [(os.path.join(D, 'janani_mothers.csv'), 'Janani mothers'), (os.path.join(D, 'janani_fathers.csv'), 'Janani fathers')], tests_A, fig_A, None,
