@@ -2947,9 +2947,11 @@ const STUDY_DESIGNS=[
  ['pre-post','Pre-post: same people measured twice','Pre-post: वही लोग, दो बार मापे गए'],
  ['experiment','Randomised experiment or trial','Randomised experiment या trial'],
  ['longitudinal','Longitudinal: same people over time','Longitudinal: वही लोग, समय के साथ'],
+ ['cohort','Cohort: follow a group from an exposure to an outcome','Cohort: एक समूह को exposure से outcome तक follow करना'],
+ ['case-control','Case-control: people with and without the outcome, looking back','Case-control: outcome वाले और बिना outcome वाले लोग, पीछे देखकर'],
  ['qualitative','Qualitative: interviews or focus groups','Qualitative: interview या focus group'],
  ['mixed','Mixed methods','Mixed methods']];
-const STUDY_DESIGN_SHORT={survey:'a cross-sectional survey',correlational:'a correlational study',"two-group":'a two-group comparison','multi-group':'a comparison of three or more groups','pre-post':'a pre-post study','experiment':'a randomised experiment',longitudinal:'a longitudinal study',qualitative:'a qualitative study',mixed:'a mixed-methods study'};
+const STUDY_DESIGN_SHORT={cohort:'a cohort study','case-control':'a case-control study',survey:'a cross-sectional survey',correlational:'a correlational study',"two-group":'a two-group comparison','multi-group':'a comparison of three or more groups','pre-post':'a pre-post study','experiment':'a randomised experiment',longitudinal:'a longitudinal study',qualitative:'a qualitative study',mixed:'a mixed-methods study'};
 function studyDesignShort(k,cap){const t=STUDY_DESIGN_SHORT[k]||'';return cap?t.charAt(0).toUpperCase()+t.slice(1):t}
 function studyDesignLabel(k){const d=STUDY_DESIGNS.find(x=>x[0]===k);return d?(studyHi()?d[2]:d[1]):''}
 const STUDY_ROLES=[['outcome','Outcome (DV)','Outcome (DV)'],['predictor','Predictor or IV','Predictor या IV'],['group','Grouping variable','Grouping variable'],['covariate','Covariate / background','Covariate / पृष्ठभूमि']];
@@ -2965,7 +2967,12 @@ function studyStripHTML(stage){const hi=studyHi(),o=studyGet(),d=o.idea||{},q=St
   const marks=tick(s.q,hi?'सवाल':'Question')+tick(s.gap,hi?'रिसर्च गैप':'Research gap')+tick(s.design&&s.vars,hi?'Design':'Design')+tick(s.qn,hi?'Questionnaire':'Questionnaire')+tick(s.data,hi?'Analysis':'Analysis')+tick(s.draft,hi?'Draft':'Draft');
   return'<span class="study-strip" style="flex-basis:100%;font-size:13px">'+lab+' <b>'+escHTML(q.length>120?q.slice(0,120)+'…':q)+'</b> '+open+'<br><span style="font-size:12px">'+marks+'</span></span>'}
 function studyCarry(tool){const o=studyGet(),d=o.idea||{},q=String(d.topic||'').trim();if(!q)return;
-  if(tool==='research'){const e=document.getElementById('rsTopic');if(e&&!e.value.trim()){e.value=q;try{rsSpecUpdate()}catch(x){}}}}
+  if(tool==='research'){const e=document.getElementById('rsTopic');if(!e)return;
+    /* Each project remembers its own search. Coming from another project, the box and the old results are cleared first. */
+    const owner=LS.get('appu_rs_owner')||'';
+    if(owner&&owner!==studyKey()){e.value='';try{rsResults=[];rsResultsOriginal=[];const box=document.getElementById('rsResults');if(box)box.innerHTML=''}catch(x){}}
+    if(!e.value.trim()){e.value=o.search||q;try{rsSpecUpdate()}catch(x){}}
+    LS.set('appu_rs_owner',studyKey())}}
 /* ---- The whole plan, in one dialog ---- */
 function studyDlgOpen(){let d=document.getElementById('studyDlg');
   if(!d){d=document.createElement('dialog');d.id='studyDlg';d.style.padding='18px 20px';d.style.borderRadius='14px';d.style.border='1px solid var(--border,#ddd)';d.style.maxWidth='760px';d.style.width='94vw';d.innerHTML='<div id="studyDlgBody"></div>';document.body.appendChild(d)}
@@ -3166,7 +3173,12 @@ function studyScaleSource(x){if(!x||!x.licence||!x.licence.attribution)return nu
            :{author:m[1],year:m[2],title:m[3],source:rest,type:'Book'};
   const l=citGetLib(),k=citKey(d);let e=l.find(z=>citKey(z)===k)||l.find(z=>z.title===d.title);
   if(!e){l.push(d);citSaveLib(l);e=citGetLib().find(z=>z.title===d.title)}return e}
-function studyCiteSpans(cids){return(cids||[]).map(c=>'<span class="cit" contenteditable="false" data-cid="'+escAttr(c)+'">…</span>').join(' ')}
+/* One citation span for several sources, so APA shows (A, 2020; B, 2021) and Vancouver [1,2]. */
+function studyCiteSpans(cids){cids=(cids||[]).filter(Boolean);return cids.length?'<span class="cit" contenteditable="false" data-cid="'+escAttr(cids.join(','))+'">…</span>':''}
+/* Puts a citation before the sentence's closing full stop. */
+function studyCiteEnd(text,cids){const sp=studyCiteSpans(cids);text=String(text||'').trim();if(!sp)return escHTML(text);const m=text.match(/^([\s\S]*?)([.!?]+)$/);return m?escHTML(m[1])+' '+sp+escHTML(m[2]):escHTML(text)+' '+sp+'.'}
+function studyNum(n){const x=String(n||'').replace(/,/g,'');return /^\d+$/.test(x)?(+x).toLocaleString('en-US'):String(n||'')}
+function studyLow(t){t=String(t||'');return /^[A-Z][a-z]/.test(t)?t[0].toLowerCase()+t.slice(1):t}
 function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},ds=o.design||{},vars=(ds.vars||[]).filter(v=>v.name),me=(typeof apMe==='function')?apMe():{name:''};
   if(!d.topic||!ds.type){showToast(hi?'पहले Stage 1 का सवाल और Stage 3 की योजना भरिए':'Fill the Stage 1 question and the Stage 3 plan first');return}
   if(editor.querySelector('[data-draft]')&&!confirm(hi?'इस document में ढाँचा पहले से है। नीचे एक और जोड़ें?':'This document already has an outline. Add another below?'))return;
@@ -3178,16 +3190,17 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
   const h=[];
   h.push('<h1 data-draft="1">'+escHTML(d.topic.replace(/\?$/,''))+'</h1>');
   h.push('<p>'+escHTML(me.name||'')+(me.pos?', '+escHTML(me.pos):'')+'</p>');
-  h.push('<h2>Abstract</h2><p><b>Background.</b> '+escHTML(g.text||'')+' <b>Aim.</b> '+escHTML(d.topic)+' <b>Methods.</b> '+escHTML(studyDesignShort(ds.type,true))+(ds.n?' with '+escHTML(ds.n)+' participants':'')+(ds.pop?' ('+escHTML(ds.pop)+')':'')+'. <b>Results.</b> '+ph('main result with the test, its value, p and effect size')+' <b>Conclusion.</b> '+ph('one sentence')+'</p>');
+  h.push('<h2>Abstract</h2><p><b>Background.</b> '+escHTML(g.text||'')+' <b>Aim.</b> '+escHTML(d.topic)+' <b>Methods.</b> '+escHTML(studyDesignShort(ds.type,true))+(ds.n?' of '+escHTML(studyNum(ds.n))+' participants':'')+(ds.pop?': '+escHTML(studyLow(ds.pop)):'')+'. <b>Results.</b> '+ph('main result with the test, its value, p and effect size')+' <b>Conclusion.</b> '+ph('one sentence')+'</p>');
   h.push('<h2>1. Introduction</h2><p>'+ph('why the topic matters, with sources')+'</p>');
-  h.push('<p>'+escHTML(g.text||'')+(g.cids&&g.cids.length?' '+studyCiteSpans(g.cids):'')+'</p>');
+  h.push('<p>'+studyCiteEnd(g.text||'',g.cids)+'</p>');
   h.push('<p>The present study asked: '+escHTML(d.topic)+'</p>');
   if(hyp.length)h.push('<p>'+hyp.map(escHTML).join('<br>')+'</p>');
   h.push('<h2>2. Methods</h2><h3>2.1 Design</h3><p>This was '+escHTML(studyDesignShort(ds.type))+'.</p>');
-  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(ds.sampling):'')+(ds.n?'. The planned sample size was '+escHTML(ds.n)+'.':'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
+  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(studyLow(ds.sampling)):'')+(ds.n?'. The planned sample size was '+escHTML(studyNum(ds.n))+'.':'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
   h.push('<h3>2.3 Measures</h3>'+(measures||'<p>'+ph('measures')+'</p>'));
   h.push('<h3>2.4 Procedure and ethics</h3><p>'+ph('ethics committee name and approval number, how consent was taken, where and when data were collected')+'</p>');
-  h.push('<h3>2.5 Analysis</h3><p>'+(st.k?escHTML(st.why)+' ':'')+'Analyses were run in the Appuscholar Statistics Lab. '+ph('alpha level, checks of assumptions, missing data')+'</p>');
+  const tName={ttestInd:'an independent-samples t-test',ttestPaired:'a paired-samples t-test',rmanova:'a repeated-measures ANOVA',chisq:'a chi-square test',welchAnova:"Welch's ANOVA",mregress:'a multiple regression',logistic:'a logistic regression',pearson:'a Pearson correlation',spearman:'a Spearman correlation'}[st&&st.k];
+  h.push('<h3>2.5 Analysis</h3><p>'+(tName?'The main hypothesis was tested with '+tName+'. ':'')+'Analyses were run in the Appuscholar Statistics Lab. '+ph('alpha level, checks of assumptions, missing data')+'</p>');
   h.push('<h2>3. Results</h2><p>'+ph('open the Statistics Lab, run each test, and press Insert to place its APA sentence here')+'</p>');
   h.push('<h2>4. Discussion</h2><p>'+ph('main finding in plain words; compare with the key papers; limitations; what it means for practice')+'</p>');
   h.push('<h2>5. Conclusion</h2><p>'+ph('two or three sentences')+'</p>');
@@ -3206,9 +3219,15 @@ function reviewRun(){const hi=studyHi(),o=studyGet(),d=o.idea||{},ds=o.design||{
   add(!!d.topic,'Stage 1 has a research question.','Stage 1 में research question है।');
   if(d.topic){const kw=d.topic.toLowerCase().match(/[a-z]{5,}/g)||[];const hit=kw.filter(w=>intro.toLowerCase().indexOf(w)>=0).length;add(hit>=Math.min(3,kw.length),'The Introduction states the research question.','Introduction में research question लिखा है।')}
   add(!!(o.gap&&o.gap.text),'A research gap is saved for the study.','Study का रिसर्च गैप सहेजा हुआ है।');
-  vars.filter(v=>v.role==='outcome'||v.role==='predictor').forEach(v=>{const w=v.name.toLowerCase();
-    add(meth.toLowerCase().indexOf(w)>=0,'Methods describe "'+v.name+'".','Methods में "'+v.name+'" का वर्णन है।');
-    add(resu.toLowerCase().indexOf(w)>=0||resu.toLowerCase().indexOf(w.split(' ')[0])>=0,'Results report "'+v.name+'".','Results में "'+v.name+'" का नतीजा है।')});
+  /* A variable counts as named when its full name, its scale, or any real word of it
+     (GAD7_total -> "gad7"/"gad-7", Hb_34w -> "hb") appears in the section. */
+  const vHit=(v,t)=>{t=t.toLowerCase();const nm=v.name.toLowerCase();if(t.indexOf(nm)>=0)return true;
+    if(v.scale&&t.indexOf(String(v.scale).toLowerCase())>=0)return true;
+    const toks=nm.split(/[_\s\-\.]+/).filter(x=>x.length>=2&&/[a-z]/.test(x)&&!/^(total|score|mean|sum|w\d*|wk\d*|\d+w)$/.test(x));
+    return toks.some(x=>{const y=x.replace(/\d+[a-z]?$/,'');return t.indexOf(x)>=0||t.indexOf(x.replace(/([a-z])(\d)/,'$1-$2'))>=0||(y.length>=3&&t.indexOf(y)>=0)})};
+  vars.filter(v=>v.role==='outcome'||v.role==='predictor').forEach(v=>{
+    add(vHit(v,meth),'Methods describe "'+v.name+'".','Methods में "'+v.name+'" का वर्णन है।');
+    add(vHit(v,resu),'Results report "'+v.name+'".','Results में "'+v.name+'" का नतीजा है।')});
   const hyp=String(ds.hyp||'').match(/H\d+/g)||[];hyp.forEach(hh=>add(new RegExp('\\b'+hh+'\\b').test(resu+disc),hh+' is answered in the Results or Discussion.',hh+' का जवाब Results या Discussion में है।'));
   if(ds.n){const ns=(meth+resu).match(/\b[Nn]\s*=\s*([\d,]+)/g)||[];const nums=ns.map(x=>+x.replace(/\D/g,''));add(!nums.length||nums.some(x=>x<=+ds.n),'Reported N fits the planned sample size ('+ds.n+').','बताया गया N योजना के sample size ('+ds.n+') से मेल खाता है।')}
   const st=studySuggestTest();if(st&&st.k){const word={pearson:'correlat',spearman:'spearman',ttestInd:'t(',ttestPaired:'t(',welchAnova:'f(',mregress:'regress',logistic:'odds',chisq:'χ²',rmanova:'f('}[st.k];if(word)add(low.indexOf(word.toLowerCase())>=0,'The planned analysis ('+st.k+') appears in the Results.','योजना वाला analysis ('+st.k+') Results में है।')}
@@ -3226,22 +3245,42 @@ async function posterDownload(){const hi=studyHi();
   const pptx=new PptxGenJS();pptx.defineLayout({name:'A0P',width:33.1,height:46.8});pptx.layout='A0P';
   const sl=pptx.addSlide();sl.background={color:'FFFFFF'};
   const cover=S.find(s=>s.cover)||S[0],me=(typeof apMe==='function')?apMe():{name:'',pos:''};
-  sl.addShape(pptx.ShapeType.rect,{x:0,y:0,w:33.1,h:5.2,fill:{color:'4B2E9E'}});
-  sl.addText(cover.title||'Poster',{x:1,y:0.6,w:31.1,h:2.8,fontSize:80,bold:true,color:'FFFFFF',fontFace:'Arial',valign:'middle'});
-  sl.addText((me.name||'')+(me.pos?' · '+me.pos:''),{x:1,y:3.5,w:31.1,h:1.2,fontSize:40,color:'F2D9FF',fontFace:'Arial'});
-  const want=['Introduction','Methods','Results','Discussion','Conclusion','References'];
-  const pick=n=>S.find(s=>s.title&&new RegExp('\\b'+n,'i').test(s.title));
-  const boxes=want.map(n=>({n:n,s:pick(n)})).filter(b=>b.s);
-  const col=[1,17.05],w=15.05;let y=[6.2,6.2];
-  boxes.forEach((b,i)=>{const c=(b.n==='Results'||b.n==='Discussion'||b.n==='Conclusion'||b.n==='References')?1:0;
-    const lines=(b.s.bullets||[]).slice(0,b.n==='References'?12:10);const imgs=(b.s.images||[]).slice(0,1);
-    const hText=Math.min(16,1.0+lines.reduce((a,l)=>a+Math.ceil(l.length/70)*0.62,0));const hImg=imgs.length?8:0;const h=1.8+hText+hImg;
-    sl.addShape(pptx.ShapeType.rect,{x:col[c],y:y[c],w:w,h:h,fill:{color:'F6F3FD'},line:{color:'C9B8F0',width:2}});
-    sl.addText(b.n,{x:col[c]+0.4,y:y[c]+0.25,w:w-0.8,h:1.2,fontSize:48,bold:true,color:'4B2E9E',fontFace:'Arial'});
-    if(lines.length)sl.addText(lines.map(t=>({text:t,options:{bullet:b.n!=='References',breakLine:true}})),{x:col[c]+0.4,y:y[c]+1.6,w:w-0.8,h:hText,fontSize:b.n==='References'?20:28,color:'222222',fontFace:'Arial',valign:'top'});
-    if(imgs.length)try{sl.addImage({data:imgs[0],x:col[c]+0.8,y:y[c]+1.8+hText,w:w-1.6,h:hImg-0.4,sizing:{type:'contain',w:w-1.6,h:hImg-0.4}})}catch(e){}
-    y[c]+=h+0.6});
-  sl.addText('Made with Appuscholar',{x:1,y:45.6,w:31.1,h:0.8,fontSize:20,color:'888888',fontFace:'Arial',align:'right'});
+  const title=cover.title||'Poster',byline=(cover.sub&&cover.sub.length)?cover.sub.join(' · '):((me.name||'')+(me.pos?' · '+me.pos:''));
+  sl.addShape(pptx.ShapeType.rect,{x:0,y:0,w:33.1,h:5.6,fill:{color:'4B2E9E'}});
+  sl.addText(title,{x:1,y:0.5,w:31.1,h:3.3,fontSize:title.length>110?54:title.length>70?64:80,bold:true,color:'FFFFFF',fontFace:'Arial',valign:'middle',fit:'shrink'});
+  sl.addText(byline,{x:1,y:3.95,w:31.1,h:1.2,fontSize:36,color:'F2D9FF',fontFace:'Arial'});
+  /* Gather each main section with its numbered subsections ("2. Methods" takes 2.1, 2.2 …)
+     and its "(continued)" slides, so no box comes out empty. */
+  const want=['Introduction','Methods?','Results','Discussion','Conclusions?','References'];
+  const label={'Methods?':'Methods','Conclusions?':'Conclusion'};
+  const num=t=>{const m=String(t||'').match(/^(\d+)(\.\d+)*[.)]?\s/);return m?m[1]:null};
+  const strip=t=>String(t||'').replace(/^[\dIVX]+(\.\d+)*[.)]?\s+/,'').replace(/\s*\(continued\)$/,'');
+  const secs=want.map(w=>{const re=new RegExp('^'+w+'\\b','i');let n=null;const out={n:label[w]||w,lines:[],imgs:[]};
+    S.forEach(x=>{if(x.cover)return;const base=x.base||x.title||'',nm=strip(base);
+      const main=re.test(nm),sub=!main&&n&&num(base)===n&&/^\d+\.\d/.test(base);
+      if(main&&!n)n=num(base);
+      if(!main&&!sub)return;
+      const pre=sub&&!/\(continued\)/.test(x.title||'')?nm:'';
+      x.bullets.forEach((t,i)=>{if(/^… and \d+ more/.test(t)||/^(figure|table)\s*\d+[.:]?$/i.test(t))return;out.lines.push({t:(pre&&i===0?pre+'. ':'')+t,sub:!!pre&&i===0})});
+      out.imgs.push(...(x.images||[]))});
+    if(out.n==='References'){const all=[...editor.querySelectorAll('[data-bib="i"]')].map(e=>(e.innerText||'').replace(/\s+/g,' ').trim()).filter(Boolean);if(all.length)out.lines=all.map(t=>({t:t}))}
+    return out}).filter(x=>x.lines.length||x.imgs.length);
+  const W=15.05,col=[1,17.05],top=6.3,bottom=45.2;
+  const boxH=(b,f)=>{const ref=b.n==='References',fs=ref?f*0.62:f;const cpl=W*72/(fs*0.52);const lh=fs*1.22/72;
+    const hT=b.lines.reduce((a,l)=>a+Math.ceil(l.t.length/cpl)*lh+(ref?0.04:0.14),0);const hI=b.imgs.length?Math.min(10,b.imgs.length*8.5):0;return{h:1.9+hT+hI+0.3,hT:hT,hI:hI,fs:fs}};
+  let f=30,split=1,H=[];
+  for(;f>=16;f-=2){H=secs.map(b=>boxH(b,f));let best=null;
+    for(let k=1;k<secs.length;k++){const a=H.slice(0,k).reduce((x,y)=>x+y.h+0.6,0),c=H.slice(k).reduce((x,y)=>x+y.h+0.6,0),m=Math.max(a,c);if(!best||m<best.m)best={k:k,m:m}}
+    if(!best)best={k:secs.length,m:H.reduce((x,y)=>x+y.h+0.6,0)};split=best.k;if(top+best.m<=bottom)break}
+  const y=[top,top];
+  secs.forEach((b,i)=>{const c=i<split?0:1,L=H[i];
+    sl.addShape(pptx.ShapeType.rect,{x:col[c],y:y[c],w:W,h:L.h,fill:{color:'F6F3FD'},line:{color:'C9B8F0',width:2}});
+    sl.addText(b.n,{x:col[c]+0.4,y:y[c]+0.25,w:W-0.8,h:1.3,fontSize:48,bold:true,color:'4B2E9E',fontFace:'Arial'});
+    const ref=b.n==='References';
+    if(b.lines.length)sl.addText(b.lines.map(l=>({text:l.t,options:{bullet:ref?false:true,breakLine:true,paraSpaceAfter:ref?2:6}})),{x:col[c]+0.4,y:y[c]+1.7,w:W-0.8,h:L.hT+0.2,fontSize:Math.round(L.fs),color:'222222',fontFace:'Arial',valign:'top',fit:'shrink'});
+    b.imgs.slice(0,1).forEach(src=>{try{sl.addImage({data:src,x:col[c]+0.8,y:y[c]+1.8+L.hT+0.1,w:W-1.6,h:L.hI-0.3,sizing:{type:'contain',w:W-1.6,h:L.hI-0.3}})}catch(e){}});
+    y[c]+=L.h+0.6});
+  sl.addText('Made with Appuscholar',{x:1,y:45.7,w:31.1,h:0.8,fontSize:20,color:'888888',fontFace:'Arial',align:'right'});
   await pptx.writeFile({fileName:'poster-A0.pptx'});showToast(hi?'Poster (A0) download हुआ ✓':'Poster (A0) downloaded ✓')}
 
 function renderStageGuide(tool){
@@ -4327,10 +4366,16 @@ function t0(k){return t(k)}
 function vzUseLab(){
   const d=window._statsData;
   if(!d){showToast(t('vz_no_lab'));return}
-  document.getElementById('vzPaste').value=[d.headers.join(',')].concat(d.rows.map(r=>r.join(','))).join('\n');
+  const P=document.getElementById('vzPaste');P.value=[d.headers.join(',')].concat(d.rows.map(r=>r.join(','))).join('\n');
+  P.dataset.lab=vzLabSig();
   vzLoad();
 }
-function vzOpen(){document.getElementById('vzDlg').showModal();placeFill('vzWhere');if(window._statsData&&!document.getElementById('vzPaste').value)vzUseLab()}
+/* Which Statistics Lab data the chart maker last copied. When the student loads another file or adds a
+   scored column, the chart maker picks up the new data, unless they pasted their own. */
+function vzLabSig(){const d=window._statsData;return d?d.headers.join('|')+'#'+d.rows.length:''}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='vzPaste')delete e.target.dataset.lab});
+function vzOpen(){document.getElementById('vzDlg').showModal();placeFill('vzWhere');const P=document.getElementById('vzPaste');
+  if(window._statsData&&(!P.value||(P.dataset.lab&&P.dataset.lab!==vzLabSig()))){['vzTitle','vzNote','vzXL','vzYL'].forEach(id=>{const x=document.getElementById(id);if(x)delete x.dataset.touched});vzUseLab()}}
 function vzSync(){
   const ty=document.getElementById('vzType').value;
   const show=(id,on)=>{document.getElementById(id).style.display=on?'':'none'};
@@ -4858,14 +4903,21 @@ function insertIntoEditor(text,keepSelection,aiTag,runId){
   if(aiTag){html='<span class="ai-ins" data-h="'+provHash(text)+'">'+html+'</span>';actLog('ai');try{aiuNoteInsert()}catch(e){}}
   if(runId){html='<span class="stat-tag" data-run="'+runId+'">'+html+'</span>'}
   let ok=false;
-  try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}
+  /* Chrome's insertHTML drops plain <span> wrappers when the caret sits inside
+     an existing paragraph, which lost the AI and stats tags. Tagged inserts go
+     in through a Range so the span always survives. */
+  const tagged=!!(aiTag||runId);
+  if(!tagged){try{ok=document.execCommand('insertHTML',false,html)}catch(e){ok=false}}
   if(!ok){
     const sel=window.getSelection();
     if(sel&&sel.rangeCount){
       const range=sel.getRangeAt(0);range.deleteContents();
       const frag=range.createContextualFragment(html);
+      const last=frag.lastChild;
       range.insertNode(frag);
-      range.collapse(false);
+      if(last){range.setStartAfter(last)}
+      range.collapse(true);
+      sel.removeAllRanges();sel.addRange(range);
     }
   }
   /* Move the caret to right after what was just inserted, and remember that
@@ -5746,6 +5798,7 @@ const SLIDE_MAX_BULLETS=6,SLIDE_BULLET_CHARS=200;
 const SLIDE_SECTION_RE=/^(abstract|introduction|background|review of (the )?literature|literature review|theoretical (background|framework)|aims?|objectives?|research questions?|hypothes[ie]s|method(s|ology)?|materials and methods|participants|sample|design|procedure|measures|instruments?|tools?|data analysis|statistical analysis|ethic(s|al considerations)|results?|findings|discussion|implications|limitations|future (research|directions)|conclusions?|summary|recommendations|references|bibliography|acknowledge?ments?|appendix|appendices|keywords?)\b/i;
 function slideIsHeading(el,t){
   if(!t||t.length>90||/[.:;,]$/.test(t)&&!/^\d/.test(t))return false;
+  if(/^(figure|fig\.|table)\s*\d+[.:]?$/i.test(t.trim()))return false;
   if(/^H[1-6]$/.test(el.tagName))return true;
   if(t.split(/\s+/).length>12)return false;
   if(SLIDE_SECTION_RE.test(t.replace(/^[\dIVX]+(\.\d+)*[.)]?\s+/,'')))return true;
@@ -5755,8 +5808,12 @@ function slideIsHeading(el,t){
   if(bold&&bold.length>=t.length*0.9&&t.length<70)return true;
   return false;
 }
-function slideBullet(t){
+function slideBullet(t,kind){
   t=t.replace(/\s+/g,' ').trim();if(t.length<=SLIDE_BULLET_CHARS)return t;
+  /* A reference or a statistical result is never cut at its first full stop: initials and
+     decimals look like sentence ends, and half a result is worse than a long bullet. */
+  const lim=kind==='ref'?260:(/\b(p\s*[<=>]\s*\.?\d|[tFrχ]²?\s*\(\d|OR\s*=|β\s*=|α\s*=)/.test(t)?700:0);
+  if(lim){if(t.length<=lim)return t;const c=t.slice(0,lim);return c.slice(0,Math.max(c.lastIndexOf(' '),lim-40))+'…'}
   const m=t.match(/^.{25,}?[.!?](?=\s+[A-Z(ऀ-ॿ"“])/);
   let f=m?m[0]:t;
   if(f.length>SLIDE_BULLET_CHARS){f=f.slice(0,SLIDE_BULLET_CHARS);f=f.slice(0,Math.max(f.lastIndexOf(' '),SLIDE_BULLET_CHARS-40))+'…'}
@@ -5794,6 +5851,7 @@ function docToSlideModel(){
   let cur=null,firstTitle=null;
   const push=()=>{if(cur&&(cur.bullets.length||cur.images.length||cur.title))slides.push(cur)};
   blocks.forEach((b,i)=>{
+    if(firstTitle===null&&!slides.length&&!cur&&b.el&&b.el.tagName==='H1'&&b.text.length<=220){firstTitle=b.text.replace(/\s+/g,' ');return}
     if(b.text&&!b.table&&!b.li&&slideIsHeading(b.el,b.text)){
       if(firstTitle===null&&!slides.length&&!(cur&&cur.bullets.length)&&!SLIDE_SECTION_RE.test(b.text.replace(/^[\dIVX]+(\.\d+)*[.)]?\s+/,''))){firstTitle=b.text;return}
       push();cur={title:b.text.replace(/\s+/g,' '),bullets:[],images:[],base:b.text};return;
@@ -5803,14 +5861,16 @@ function docToSlideModel(){
     if(cur.bullets.length>=SLIDE_MAX_BULLETS){
       const t=cur.base||cur.title;push();cur={title:(t?t+' (continued)':null),bullets:[],images:[],base:t};
     }
-    cur.bullets.push(slideBullet(b.text));
+    cur.bullets.push(slideBullet(b.text,/^(\d+\.?\s*)?(references|bibliography|works cited)/i.test(cur.base||'')?'ref':''));
   });
   push();
+  /* Lines between the paper title and the first heading (author, college) go on the cover. */
+  let coverSub=[];if(firstTitle&&slides.length&&slides[0].title===null&&!slides[0].images.length&&slides[0].bullets.length<=3){coverSub=slides.shift().bullets}
   /* References: one slide is enough. */
   for(let i=slides.length-1;i>0;i--){const t=slides[i].base||'';if(/^(\d+\.?\s*)?(references|bibliography)/i.test(t)&&slides[i-1].base===t){slides[i-1].more=(slides[i-1].more||0)+slides[i].bullets.length+(slides[i].more||0);slides.splice(i,1)}}
   slides.forEach(s=>{if(s.more)s.bullets.push('… and '+s.more+' more references')});
   const title=firstTitle||docTitle;
-  if(title&&slides.length)slides.unshift({title:title,bullets:[],images:[],cover:true});
+  if(title&&slides.length)slides.unshift({title:title,bullets:[],images:[],cover:true,sub:coverSub});
   let un=0;slides.forEach(s=>{if(!s.title&&!s.cover){s.title=(title||docTitle||'')+(un++?' (continued)':'')||null}});
   return slides;
 }
@@ -5845,7 +5905,8 @@ function pptxDownload(){
     const slide=pptx.addSlide();
     /* The title slide, and a section heading with no text of its own (e.g. "2. Method" before "2.1 Participants"), become divider slides. */
     if(s.cover||(!s.bullets.length&&!s.images.length)){
-      slide.addText(s.title||'',{x:0.6,y:1.8,w:8.8,h:1.6,fontSize:s.cover?34:30,bold:true,color:'5B21B6',fontFace:'Georgia',align:'center',valign:'middle',fit:'shrink'});
+      slide.addText(s.title||'',{x:0.6,y:1.5,w:8.8,h:1.9,fontSize:s.cover?(s.title.length>90?26:s.title.length>60?30:34):30,bold:true,color:'5B21B6',fontFace:'Georgia',align:'center',valign:'middle',fit:'shrink'});
+      if(s.cover&&s.sub&&s.sub.length)slide.addText(s.sub.join('\n'),{x:0.6,y:3.6,w:8.8,h:1.2,fontSize:16,color:'444444',fontFace:'Georgia',align:'center',valign:'top'});
       return;
     }
     let y=0.4;
@@ -6902,8 +6963,24 @@ function downloadLatex(){
    at the top of the panel just reads each blob's `done` flag and links straight into the dialog that
    owns it. Interior copy stays English-only for now, same as the Statistics Lab dialog — only the
    panel's own entry points are translated (see the bilingual-UI comment near I18N above). */
-function designGet(key){try{return JSON.parse(LS.get('appu_design_'+key)||'null')||{}}catch(e){return{}}}
-function designSet(key,obj){LS.set('appu_design_'+key,JSON.stringify(obj))}
+/* Design items belong to the active project. Older data lived under one global key;
+   the first project to open it claims it, so a second project starts clean. */
+function designPid(){try{return getActiveProjectId()||''}catch(e){return''}}
+function designGet(key){
+  const pid=designPid();
+  try{
+    if(pid){
+      const own=LS.get('appu_design_'+key+'__'+pid);
+      if(own)return JSON.parse(own)||{};
+      const g=JSON.parse(LS.get('appu_design_'+key)||'null');
+      if(g&&(!g._pid||g._pid===pid)){if(!g._pid){g._pid=pid;LS.set('appu_design_'+key,JSON.stringify(g))}const c=Object.assign({},g);delete c._pid;return c}
+      return{};
+    }
+    const g=JSON.parse(LS.get('appu_design_'+key)||'null')||{};
+    if(g._pid)return{};
+    return g;
+  }catch(e){return{}}}
+function designSet(key,obj){const pid=designPid();LS.set(pid?'appu_design_'+key+'__'+pid:'appu_design_'+key,JSON.stringify(obj))}
 const DESIGN_ITEMS=[
   {key:'reg',label:'Regulatory-pathway wizard',open:()=>{document.getElementById('regDlg').showModal();regRender()}},
   {key:'proto',label:'Protocol / synopsis',open:()=>{document.getElementById('protoDlg').showModal();protoLoad()}},
@@ -9721,6 +9798,7 @@ function rsAskUse(){
 }
 async function researchSearch(){
   const q=document.getElementById('rsTopic').value.trim();
+  try{const o=studyGet();if(o.search!==q){o.search=q;LS.set(studyKey(),JSON.stringify(o))}LS.set('appu_rs_owner',studyKey())}catch(e){}
   if(!q){showToast(t('nr_typeq'));return}
   if(q.length>600){document.getElementById('rsStatus').textContent=t('nr_long');return}
   if(!/[\p{L}\p{N}]/u.test(q)){document.getElementById('rsStatus').textContent=t('nr_sym');return}
@@ -13849,7 +13927,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26d';
+const APP_BUILD='2026.10.26j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -13930,6 +14008,18 @@ const SCALES=[
   note:'Free to use without permission or charge for non-commercial purposes, with credit to the authors. Do not use it in anything that is sold.',
   verified:'Item text agreed word for word between two independent web copies (Berkeley GGSC and the TBI Model Systems page). Compare once with the owner\'s page.'},
  screening:false,hindi:null}
+,{id:'GAD7',name:'Generalized Anxiety Disorder 7-item scale',short:'GAD-7',construct:'Anxiety symptoms over the last two weeks',
+ stem:'Over the last 2 weeks, how often have you been bothered by the following problems?',
+ items:['Feeling nervous, anxious or on edge','Not being able to stop or control worrying','Worrying too much about different things','Trouble relaxing','Being so restless that it is hard to sit still','Becoming easily annoyed or irritable','Feeling afraid as if something awful might happen'],
+ labels:['Not at all','Several days','More than half the days','Nearly every day'],
+ codings:[{label:'Not at all = 0 up to Nearly every day = 3',min:0,max:3,dir:'agree-high'}],
+ reverse:[],
+ bands:[{max:4,label:'Minimal'},{max:9,label:'Mild'},{max:14,label:'Moderate'},{max:21,label:'Severe'}],
+ scoring:'Add the seven items. The total runs from 0 to 21. Scores of 5, 10 and 15 mark mild, moderate and severe anxiety symptoms (Spitzer et al., 2006). A score is a screening result, not a diagnosis; a score of 10 or more calls for a clinical assessment.',
+ licence:{status:'Free to reproduce',commercial:true,attribution:'Spitzer, R. L., Kroenke, K., Williams, J. B. W., & Löwe, B. (2006). A brief measure for assessing generalized anxiety disorder: The GAD-7. Archives of Internal Medicine, 166(10), 1092-1097.',source:'https://loinc.org/69737-5',checked:'2026-10-26',
+  note:'The form states: developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues, with an educational grant from Pfizer Inc. No permission required to reproduce, translate, display or distribute.',
+  verified:'Item text, stem and response options agreed between two independent copies (LOINC panel 69737-5 and the Health PEI form). The optional difficulty question is not included.'},
+ screening:true,hindi:null}
 ];
 const SL_PENDING='PHQ-9, GAD-7, PHQ-2, GAD-2, AUDIT, DASS-21, MSPSS, UCLA Loneliness v3, General Self-Efficacy, Mini-IPIP and Grit-S are cleared in the research notes but wait for the owner\'s original file, so the wording is copied exactly. Screening scales (PHQ-9, GAD-7, AUDIT) also need the on-screen help path for self-harm answers before they go in.';
 function slById(id){return SCALES.find(x=>x.id===id)}
@@ -14579,7 +14669,8 @@ function statsInsert(){
       rtSave('appu_statruns',runs);
     }
   }catch(e){rid=''}
-  insertIntoEditor(t,false,false,rid);showToast('Inserted ✓ — Ctrl+Z to undo');
+  /* At the cursor when the student had one in the document, else at the end (as before). */
+  insertIntoEditor(t,!!(savedRange&&editor.contains(savedRange.startContainer)),false,rid);showToast('Inserted ✓ — Ctrl+Z to undo');
   try{const o=studyGet(),a=o.analysis||{tests:[]},sel=document.getElementById('statsTest'),nm=sel&&sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:'';a.ran=true;if(nm&&a.tests.indexOf(nm)<0)a.tests.push(nm);o.analysis=a;studySet(o)}catch(e){}
 }
 async function statsExplain(){
