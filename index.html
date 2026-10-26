@@ -3448,6 +3448,9 @@ function pzCheck(){const hi=studyHi(),root=document.getElementById('pzRoot'),out
   add(lastCol.some(t=>/conclusion|निष्कर्ष/.test(t)),'Conclusion is in the right-hand column.','Conclusion दाएँ column में है।','Move the Conclusion to the right-hand column, near the bottom.','Conclusion को दाएँ column में नीचे की ओर रखिए।');
   const refs=PZ.boxes.find(b=>/^references/i.test(b.t));add(!!refs&&order[order.length-1]&&/references|acknowledg/.test(order[order.length-1]),'References sit at the bottom in small text.','References नीचे छोटे अक्षरों में हैं।','Put References last, at the bottom, in small text.','References को सबसे आख़िर में, नीचे, छोटे अक्षरों में रखिए।');
   let full=0;const H=root.offsetHeight;root.querySelectorAll('.pz-col').forEach(c=>{const l=c.lastElementChild;if(l){const used=(l.offsetTop+l.offsetHeight)/H;full=Math.max(full,used)}});
+  const ends=[...root.querySelectorAll('.pz-col')].map(c=>{const l=c.lastElementChild;return l?(l.offsetTop+l.offsetHeight)/H:0}).filter(x=>x>0);
+  const spread=ends.length>1?Math.max(...ends)-Math.min(...ends):0;
+  add(spread<0.25,'Columns end at a similar height.','सभी column लगभग एक ऊँचाई पर ख़त्म होते हैं।','One column is much shorter than another. Try '+(PZ.cols<3?'3 columns, ':'')+'"Arrange boxes to fit", or move a box across.','एक column दूसरे से बहुत छोटा है। '+(PZ.cols<3?'3 column, ':'')+'"Boxes को अपने आप जमाएँ" आज़माएँ, या कोई box दूसरी ओर खिसकाएँ।');
   add(full<0.97,'There is some empty space; the poster is not crammed.','Poster में थोड़ी ख़ाली जगह है; ठुँसा हुआ नहीं।','The poster is crammed to the bottom. Cut some text so there is empty space; it makes the poster easier to read.','Poster नीचे तक ठुँसा है। कुछ text घटाइए ताकि ख़ाली जगह रहे; इससे पढ़ना आसान होता है।');
   out.innerHTML='<ul style="list-style:none;padding:0;margin:6px 0">'+res.map(r=>'<li style="margin:3px 0">'+(r[0]?'✅':'⚠️')+' '+escHTML(r[1])+'</li>').join('')+'</ul>'+
     '<p class="desc" style="margin:4px 0">'+(hi?'Print से पहले: एक A4 या A3 draft print करके रंग और spelling जाँचें, फिर पूरे आकार में। Printer किनारा काटता है, इसलिए किनारे पर ख़ाली जगह रखी गई है।':'Before printing: print an A4 or A3 draft to check colours and spelling, then the full size. Printers trim the edge, so a border is kept.')+'</p>';
@@ -14219,7 +14222,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26l';
+const APP_BUILD='2026.10.26m';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
