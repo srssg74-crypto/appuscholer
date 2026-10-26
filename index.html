@@ -2965,7 +2965,12 @@ function studyStripHTML(stage){const hi=studyHi(),o=studyGet(),d=o.idea||{},q=St
   const marks=tick(s.q,hi?'सवाल':'Question')+tick(s.gap,hi?'रिसर्च गैप':'Research gap')+tick(s.design&&s.vars,hi?'Design':'Design')+tick(s.qn,hi?'Questionnaire':'Questionnaire')+tick(s.data,hi?'Analysis':'Analysis')+tick(s.draft,hi?'Draft':'Draft');
   return'<span class="study-strip" style="flex-basis:100%;font-size:13px">'+lab+' <b>'+escHTML(q.length>120?q.slice(0,120)+'…':q)+'</b> '+open+'<br><span style="font-size:12px">'+marks+'</span></span>'}
 function studyCarry(tool){const o=studyGet(),d=o.idea||{},q=String(d.topic||'').trim();if(!q)return;
-  if(tool==='research'){const e=document.getElementById('rsTopic');if(e&&!e.value.trim()){e.value=q;try{rsSpecUpdate()}catch(x){}}}}
+  if(tool==='research'){const e=document.getElementById('rsTopic');if(!e)return;
+    /* Each project remembers its own search. Coming from another project, the box and the old results are cleared first. */
+    const owner=LS.get('appu_rs_owner')||'';
+    if(owner&&owner!==studyKey()){e.value='';try{rsResults=[];rsResultsOriginal=[];const box=document.getElementById('rsResults');if(box)box.innerHTML=''}catch(x){}}
+    if(!e.value.trim()){e.value=o.search||q;try{rsSpecUpdate()}catch(x){}}
+    LS.set('appu_rs_owner',studyKey())}}
 /* ---- The whole plan, in one dialog ---- */
 function studyDlgOpen(){let d=document.getElementById('studyDlg');
   if(!d){d=document.createElement('dialog');d.id='studyDlg';d.style.padding='18px 20px';d.style.borderRadius='14px';d.style.border='1px solid var(--border,#ddd)';d.style.maxWidth='760px';d.style.width='94vw';d.innerHTML='<div id="studyDlgBody"></div>';document.body.appendChild(d)}
@@ -9721,6 +9726,7 @@ function rsAskUse(){
 }
 async function researchSearch(){
   const q=document.getElementById('rsTopic').value.trim();
+  try{const o=studyGet();if(o.search!==q){o.search=q;LS.set(studyKey(),JSON.stringify(o))}LS.set('appu_rs_owner',studyKey())}catch(e){}
   if(!q){showToast(t('nr_typeq'));return}
   if(q.length>600){document.getElementById('rsStatus').textContent=t('nr_long');return}
   if(!/[\p{L}\p{N}]/u.test(q)){document.getElementById('rsStatus').textContent=t('nr_sym');return}
@@ -13849,7 +13855,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26e';
+const APP_BUILD='2026.10.26f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
