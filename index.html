@@ -1630,6 +1630,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   </div>
   <div class="fld"><label for="statsPaste">Your data</label>
     <textarea id="statsPaste" rows="5" placeholder="group,score&#10;A,12&#10;A,15&#10;B,9&#10;B,11"></textarea>
+    <div id="sdNote" class="desc" style="margin-top:3px"></div>
   </div>
   <div class="row">
     <button class="btn btn-purple" style="flex:1" onclick="statsParse()">Parse data</button>
@@ -2083,11 +2084,12 @@ var sessionKeys = {};
    pop-out can never overwrite what is being written in the main window. */
 const POPOUT=(/[#&]popout=([a-z]+)/.exec(location.hash)||[])[1]||null;
 const POPOUT_WRITABLE=['appu_citations','appu_retraction_cache'];
+function popoutOk(k){return POPOUT_WRITABLE.some(w=>k===w||String(k).indexOf(w+'__')===0)}
 const LS={
   get(k){try{if(k in sessionKeys)return sessionKeys[k];return localStorage.getItem(k)}catch(e){return (k in sessionKeys)?sessionKeys[k]:null}},
-  set(k,v){if(POPOUT&&POPOUT_WRITABLE.indexOf(k)<0)return true;try{localStorage.setItem(k,v);delete sessionKeys[k];return true}catch(e){sessionKeys[k]=String(v);return false}},
+  set(k,v){if(POPOUT&&!popoutOk(k))return true;try{localStorage.setItem(k,v);delete sessionKeys[k];return true}catch(e){sessionKeys[k]=String(v);return false}},
   setSession(k,v){if(POPOUT)return true;sessionKeys[k]=String(v);try{localStorage.removeItem(k)}catch(e){}return true},
-  rm(k){if(POPOUT&&POPOUT_WRITABLE.indexOf(k)<0)return;delete sessionKeys[k];try{localStorage.removeItem(k)}catch(e){}}
+  rm(k){if(POPOUT&&!popoutOk(k))return;delete sessionKeys[k];try{localStorage.removeItem(k)}catch(e){}}
 };
 
 /* ============ Bilingual UI (batch one) — English + Hindi interface strings ============
@@ -3651,7 +3653,7 @@ async function sfPreview(){const hi=studyHi(),rows=await sfDecrypt();if(!rows)re
    '<div style="overflow:auto;max-height:200px"><table style="font-size:12px;border-collapse:collapse"><tr><th>participant</th><th>time</th>'+cols.map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>'+
    rows.slice(0,30).map((r,i)=>'<tr><td>'+escHTML(r.pc||('R'+(i+1)))+'</td><td>'+escHTML(String(r.ts).slice(0,16))+'</td>'+cols.map(c=>'<td>'+escHTML(r.a[c]==null?'':r.a[c])+'</td>').join('')+'</tr>').join('')+'</table></div>'}
 async function sfToStats(){const hi=studyHi(),rows=SF_ROWS||await sfDecrypt();if(!rows)return;if(!rows.length){showToast(hi?'अभी कोई जवाब नहीं':'No answers yet');return}
-  document.getElementById('sfDlg').close();showTool('stats');setTimeout(()=>{const ta=document.getElementById('statsPaste');ta.value=sfCsvText(rows);try{statsParse()}catch(e){}
+  document.getElementById('sfDlg').close();showTool('stats');setTimeout(()=>{const ta=document.getElementById('statsPaste');ta.value=sfCsvText(rows);window._sfLoading=true;try{statsParse()}catch(e){}finally{window._sfLoading=false}
     showToast(hi?rows.length+' participants का data Statistics Lab में आ गया ✓':rows.length+" participants' data loaded into the Statistics Lab ✓")},250)}
 async function sfBackup(){const k=sfKey(),recs=await sfAll(k.sid);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([recs.map(r=>r.pkg).join('\n')],{type:'text/plain'}));
   a.download='appuscholar-LOCKED-answers-'+k.sid+'-'+new Date().toISOString().slice(0,10)+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);LS.set('appu_sfbak_'+k.sid,String(Date.now()));sfRender()}
@@ -3709,7 +3711,11 @@ function stageLabel(id){return t('stage_'+id)}
 function setActiveProject(id,opts){
   /* A new project starts its study record from what was in the scratch space, if it has none yet. */
   try{if(id&&!LS.get('appu_study_'+id)){const sc=LS.get('appu_study_scratch')||(LS.get('appu_idea_intake')?JSON.stringify({idea:JSON.parse(LS.get('appu_idea_intake'))}):'');if(sc)LS.set('appu_study_'+id,sc)}}catch(e){}
+  const _oldPid=getActiveProjectId()||'';
+  if(_oldPid!==(id||''))studyBeforeSwitch();
+  if(opts&&opts.bringDoc&&id&&_oldPid!==id)studyBring(id);
   LS.set('appu_active_project',id||'');
+  if(_oldPid!==(id||''))studyAfterSwitch();
   try{ideaLoad()}catch(e){}
   const p=getProjects().find(x=>x.id===id);
   if(p&&PACKS[p.pack])setPack(p.pack);
@@ -3783,6 +3789,7 @@ function stageIntroStart(){
 }
 
 function openSaveAsProject(){
+  window._sapFresh=false;
   const existing=getProjects().filter(p=>p.status!=='complete');
   const sel=document.getElementById('sapExisting');
   sel.innerHTML=existing.length?existing.map(p=>'<option value="'+p.id+'">'+escHTML(p.name)+'</option>').join(''):'<option value="">'+escHTML(t('sap_no_open_projects'))+'</option>';
@@ -3800,7 +3807,7 @@ function openSaveAsProject(){
    rather than building a second one, but defaults the stage to Idea & Feasibility — a brand
    new project has no existing work to guess a stage from — and focuses the name field. */
 function openNewProjectDirect(){
-  openSaveAsProject();
+  openSaveAsProject();window._sapFresh=true;
   document.getElementById('sapStage').value='idea';
   document.getElementById('sapName').focus();
 }
@@ -3819,7 +3826,7 @@ function saveAsProject(){
     const p=list.find(x=>x.id===id);
     p.stage=stage;p.updatedAt=Date.now();
     saveProjectsList(list);
-    setActiveProject(id);
+    setActiveProject(id,{bringDoc:true});
     showToast(t('toast_moved_into')+p.name);
   }else{
     const name=(document.getElementById('sapName').value||'').trim();
@@ -3827,7 +3834,7 @@ function saveAsProject(){
     const id='proj_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     list.push({id,name,stage,pack:getPack(),status:'active',createdAt:Date.now(),updatedAt:Date.now()});
     saveProjectsList(list);
-    setActiveProject(id,{skipJump:true});
+    setActiveProject(id,{skipJump:true,bringDoc:!window._sapFresh});
     showToast(t('toast_saved_as')+name);
     document.getElementById('saveAsProjectDlg').close();
     stageIntroShow(stage);
@@ -4046,14 +4053,60 @@ function docsGetRaw(){try{const a=JSON.parse(LS.get('appu_docs')||'[]');return A
 function docsGet(){const a=docsGetRaw();a.forEach(d=>{if(d&&typeof d.body==='string')d.body=imgHydrate(d.body)});return a}
 function docsSet(a){LS.set('appu_docs',JSON.stringify(a.map(d=>d&&typeof d.body==='string'?Object.assign({},d,{body:imgExternalize(d.body)}):d)))}
 function docCurrentId(){return LS.get('appu_doc_current')||''}
+/* ===== One study everywhere =====
+   Every document carries the id of the study (project) it belongs to; documents with no id are
+   "loose" (made before studies, or with no study open). The reference library, qualitative codes,
+   reflections, viva questions and the Stats Lab data are kept per study as well, so switching the
+   study switches all of them together. */
+function docPid(){try{return getActiveProjectId()||''}catch(e){return''}}
+function docsStudy(){const p=docPid();return docsGet().filter(d=>d&&(d.pid||'')===p)}
+function docsLoose(){return docsGet().filter(d=>d&&!d.pid)}
+function docSetCurrent(id){LS.set('appu_doc_current',id);try{const m=JSON.parse(LS.get('appu_doc_cur_map')||'{}')||{};m[docPid()||'_']=id;LS.set('appu_doc_cur_map',JSON.stringify(m))}catch(e){}}
+function docCurFor(){try{return(JSON.parse(LS.get('appu_doc_cur_map')||'{}')||{})[docPid()||'_']||''}catch(e){return''}}
+/* Per-study storage key. A study made before this change gets a copy of the old shared data the
+   first time it asks, so nothing is lost; a study made afterwards starts clean. */
+function pkey(base){const p=docPid();if(!p)return base;const k=base+'__'+p;
+  try{if(LS.get(k)===null){const g=LS.get(base),ts=+LS.get('appu_scope_v1')||0,pr=getProjects().find(x=>x.id===p);if(g!==null&&(!ts||!pr||(pr.createdAt||0)<=ts))LS.set(k,g)}}catch(e){}
+  return k}
+function scopeMigrate(){
+  if(POPOUT||LS.get('appu_scope_v1'))return;
+  try{const docs=docsGetRaw(),projs=getProjects(),act=docPid();let ch=false;
+    if(docs.length&&act){
+      if(projs.length===1&&projs[0].id===act)docs.forEach(d=>{if(d&&!d.pid){d.pid=act;ch=true}});
+      else{const c=docs.find(d=>d&&d.id===docCurrentId());if(c&&!c.pid){c.pid=act;ch=true}}}
+    if(ch)LS.set('appu_docs',JSON.stringify(docs));}catch(e){}
+  LS.set('appu_scope_v1',String(Date.now()));
+}
 function docMigrate(){
-  let docs=docsGet();
+  scopeMigrate();
+  let docs=docsStudy();
   if(!docs.length){
-    docs=[{id:'d'+Date.now(),title:'My first document',body:'',updated:Date.now()}];
-    docsSet(docs);LS.set('appu_doc_current',docs[0].id);
+    const p=getActiveProject(),hi=(typeof studyHi==='function')&&studyHi();
+    const d={id:'d'+Date.now(),title:p?(p.name+(hi?' — मुख्य paper':' — main paper')):'My first document',body:'',updated:Date.now(),main:true};
+    if(p)d.pid=p.id;
+    const all=docsGet();all.push(d);docsSet(all);docSetCurrent(d.id);docs=[d];
   }
-  if(!docs.some(d=>d.id===docCurrentId()))LS.set('appu_doc_current',docs[0].id);
-  return docsGet();
+  if(!docs.some(d=>d.id===docCurrentId())){const w=docCurFor();docSetCurrent(docs.some(d=>d.id===w)?w:docs[0].id)}
+  return docsStudy();
+}
+/* "Save as research project": the open loose document, and whatever was made with no study
+   open (references, codes, Stats Lab data), go into the study instead of being left behind. */
+function studyBring(id){
+  try{const all=docsGetRaw(),c=all.find(d=>d.id===docCurrentId());if(c&&!c.pid){c.pid=id;LS.set('appu_docs',JSON.stringify(all))}}catch(e){}
+  ['appu_citations','appu_qual_codes','appu_reflections','appu_viva','appu_statsname'].forEach(b=>{try{const k=b+'__'+id,g=LS.get(b);if(LS.get(k)===null&&g!==null)LS.set(k,g)}catch(e){}});
+  try{sdGet('').then(v=>{if(v)return sdGet(id).then(w=>{if(!w)return sdPut(id,v).then(()=>{if(docPid()===id)statsLoadMine()})})}).catch(()=>{})}catch(e){}
+}
+/* Called by setActiveProject before and after the study changes. */
+function studyBeforeSwitch(){try{if(editor&&!window._bkRestoring)docSaveBody(getEditorHTML())}catch(e){}}
+function studyAfterSwitch(){
+  try{if(!editor)return}catch(e){return}
+  const docs=docMigrate(),d=docs.find(x=>x.id===docCurrentId());
+  setEditorHTML(d?d.body:'');try{imgHydrateDom()}catch(e){}lastSaved=getEditorHTML();
+  try{upd()}catch(e){}docRenderList();
+  try{citStyleRestore();citRender();citRefreshDoc()}catch(e){}
+  try{updProjectBarStatus()}catch(e){}
+  try{qualRenderTree()}catch(e){}
+  try{statsLoadMine()}catch(e){}
 }
 /* ============ Rich-text editor helpers ============
    Documents used to store plain text (from a <textarea>). The editor is now a
@@ -4083,8 +4136,9 @@ function setEditorHTML(body){editor.innerHTML=bodyToHTML(body)}
 function getEditorText(){return editor.innerText||editor.textContent||''}
 function docIsSource(id){const d=docsGet().find(x=>x.id===(id||docCurrentId()));return !!(d&&d.origin==='source')}
 function docRenderList(){
-  const docs=docsGet(),cur=docCurrentId(),sel=document.getElementById('docSel');
-  sel.innerHTML=docs.map(d=>'<option value="'+escHTML(d.id)+'"'+(d.id===cur?' selected':'')+'>'+(d.origin==='source'?'📄 ':'')+escHTML(d.title||'Untitled')+'</option>').join('');
+  const docs=docsStudy(),cur=docCurrentId(),sel=document.getElementById('docSel'),opt=d=>'<option value="'+escHTML(d.id)+'"'+(d.id===cur?' selected':'')+'>'+(d.main?'📘 ':d.origin==='source'?'📄 ':'')+escHTML(d.title||'Untitled')+'</option>';
+  const loose=docPid()?docsLoose():[],hi=(typeof studyHi==='function')&&studyHi();
+  sel.innerHTML=docs.map(opt).join('')+(loose.length?'<optgroup label="'+escHTML(hi?'किसी study में नहीं (चुनें तो इस study में आ जाएगा)':'Not in any study (choose to add it here)')+'">'+loose.map(opt).join('')+'</optgroup>':'');
   try{docOriginRender();updOriginality()}catch(e){}
 }
 function docOriginRender(){
@@ -4116,8 +4170,15 @@ function docSaveBody(body){
   return ok;
 }
 function docSwitch(id){
+  const tgt=docsGet().find(x=>x.id===id),p=getActiveProject();
+  if(tgt&&(tgt.pid||'')!==docPid()){
+    const hi=(typeof studyHi==='function')&&studyHi();
+    if(tgt.pid||!p){showToast(hi?'यह document दूसरी study का है। पहले वह study खोलें।':'This document belongs to another study. Open that study first.');docRenderList();return}
+    if(!confirm(hi?'"'+(tgt.title||'')+'" अभी किसी study में नहीं है। इसे "'+p.name+'" study में जोड़ दें?':'"'+(tgt.title||'')+'" is not in any study yet. Add it to the study "'+p.name+'"?')){docRenderList();return}
+    const all=docsGetRaw(),x=all.find(z=>z.id===id);if(x){x.pid=p.id;LS.set('appu_docs',JSON.stringify(all))}
+  }
   docSaveBody(getEditorHTML());
-  LS.set('appu_doc_current',id);
+  docSetCurrent(id);
   const d=docsGet().find(x=>x.id===id);
   setEditorHTML(d?d.body:'');
   try{citStyleRestore();citRender();citRefreshDoc()}catch(e){}
@@ -4125,10 +4186,10 @@ function docSwitch(id){
 }
 function docNew(){
   docSaveBody(getEditorHTML());
-  const title=prompt('Name for the new document:','Untitled '+(docsGet().length+1));
+  const title=prompt('Name for the new document:','Untitled '+(docsStudy().length+1));
   if(title===null)return;
-  const docs=docsGet(),d={id:'d'+Date.now(),title:title.trim()||'Untitled',body:'',updated:Date.now()};
-  docs.push(d);docsSet(docs);LS.set('appu_doc_current',d.id);
+  const docs=docsGet(),d={id:'d'+Date.now(),title:title.trim()||'Untitled',body:'',updated:Date.now()};if(docPid())d.pid=docPid();
+  docs.push(d);docsSet(docs);docSetCurrent(d.id);
   editor.innerHTML='';lastSaved='';upd();docRenderList();actLog('doc');showToast('New document created ✓');
 }
 /* ============ Import a previously-written file as a new document ============
@@ -4159,9 +4220,9 @@ async function docImportOne(file,origin){
   }
   docSaveBody(getEditorHTML());
   const title=file.name.replace(/\.[^.]+$/,'').trim()||'Imported document';
-  const docs=docsGet(),d={id:'d'+Date.now()+Math.random().toString(36).slice(2,6),title,body:html,updated:Date.now()};
+  const docs=docsGet(),d={id:'d'+Date.now()+Math.random().toString(36).slice(2,6),title,body:html,updated:Date.now()};if(docPid())d.pid=docPid();
   if(origin==='source'){d.origin='source';d.src=file.name||''}
-  docs.push(d);docsSet(docs);LS.set('appu_doc_current',d.id);
+  docs.push(d);docsSet(docs);docSetCurrent(d.id);
   setEditorHTML(d.body);lastSaved=getEditorHTML();upd();docRenderList();
   return title;
 }
@@ -4216,12 +4277,12 @@ function docRename(){
   docs[i].title=t.trim()||'Untitled';docsSet(docs);docRenderList();updProjectBarStatus();showToast('Renamed ✓');
 }
 function docDelete(){
-  const docs=docsGet();
-  if(docs.length<2){showToast('This is your only document — create another one first');return}
+  const docs=docsStudy();
+  if(docs.length<2){showToast('This is your only document in this study. Create another one first');return}
   const cur=docCurrentId(),d=docs.find(x=>x.id===cur);
   if(!confirm('Delete "'+(d?d.title:'this document')+'" permanently?\n\nA backup copy is kept until you close the browser.'))return;
   sessionKeys['appu_trash']=JSON.stringify(d);
-  const rest=docs.filter(x=>x.id!==cur);docsSet(rest);LS.set('appu_doc_current',rest[0].id);
+  const rest=docs.filter(x=>x.id!==cur);docsSet(docsGet().filter(x=>x.id!==cur));docSetCurrent(rest[0].id);
   docSwitch(rest[0].id);showToast('Deleted — type restoreDeleted() in the console to undo');
 }
 function restoreDeleted(){
@@ -4504,7 +4565,7 @@ function retRender(days,since){
   if(c.ai)bits.push(t('ret_ai').replace('{n}',c.ai));
   lines.push(bits.length?t('ret_did')+' '+bits.join(', ')+'.':t('ret_nolog'));
   parts.push(lines.map(l=>'<p class="desc" style="margin:3px 0">'+escHTML(l)+'</p>').join(''));
-  let last=null;try{const a=JSON.parse(LS.get('appu_reflections')||'[]');last=a[a.length-1]||null}catch(e){}
+  let last=null;try{const a=JSON.parse(LS.get(pkey('appu_reflections'))||'[]');last=a[a.length-1]||null}catch(e){}
   if(last&&last.a1)parts.push('<p class="desc" style="margin:8px 0;border-left:3px solid var(--line);padding-left:8px">'+escHTML(t('ret_last').replace('{d}',new Date(last.t).toLocaleDateString()))+'<br><i>'+escHTML(last.a1)+'</i></p>');
   box.innerHTML=parts.join('');
   ['retQ1','retQ2','retQ3'].forEach(id=>{document.getElementById(id).value=''});
@@ -4513,9 +4574,9 @@ function retSave(){
   const v=id=>document.getElementById(id).value.trim();
   const a1=v('retQ1'),a2=v('retQ2'),a3=v('retQ3');
   if(a1||a2||a3){
-    let a=[];try{a=JSON.parse(LS.get('appu_reflections')||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
+    let a=[];try{a=JSON.parse(LS.get(pkey('appu_reflections'))||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
     a.push({t:Date.now(),a1:a1,a2:a2,a3:a3});if(a.length>30)a=a.slice(-30);
-    LS.set('appu_reflections',JSON.stringify(a));showToast(t('ret_saved'));
+    LS.set(pkey('appu_reflections'),JSON.stringify(a));showToast(t('ret_saved'));
   }
   document.getElementById('returnDlg').close();
 }
@@ -4536,7 +4597,7 @@ function vivaOpen(){
   document.getElementById('vivaQ').textContent='';
   const a=document.getElementById('vivaA');a.value='';a.style.display='none';
   document.getElementById('vivaActs').style.display='none';
-  let n=0;try{n=JSON.parse(LS.get('appu_viva')||'[]').length}catch(e){}
+  let n=0;try{n=JSON.parse(LS.get(pkey('appu_viva'))||'[]').length}catch(e){}
   document.getElementById('vivaCount').textContent=n?t('viva_count').replace('{n}',n):'';
   document.getElementById('vivaDlg').showModal();
 }
@@ -4701,9 +4762,9 @@ function mvDownload(){pdDownload('mock-viva.txt',mvText())}
 function vivaSave(){
   const q=document.getElementById('vivaQ').textContent.trim(),a=document.getElementById('vivaA').value.trim();
   if(!a){showToast(t('viva_empty'));return}
-  let l=[];try{l=JSON.parse(LS.get('appu_viva')||'[]');if(!Array.isArray(l))l=[]}catch(e){l=[]}
+  let l=[];try{l=JSON.parse(LS.get(pkey('appu_viva'))||'[]');if(!Array.isArray(l))l=[]}catch(e){l=[]}
   l.push({t:Date.now(),aud:document.getElementById('vivaAud').value,q:q,a:a});if(l.length>60)l=l.slice(-60);
-  LS.set('appu_viva',JSON.stringify(l));
+  LS.set(pkey('appu_viva'),JSON.stringify(l));
   document.getElementById('vivaA').value='';document.getElementById('vivaA').style.display='none';
   document.getElementById('vivaActs').style.display='none';document.getElementById('vivaQ').textContent='';
   document.getElementById('vivaCount').textContent=t('viva_count').replace('{n}',l.length);
@@ -7707,8 +7768,8 @@ designRenderDash();
    originality tracker above uses). That means tags travel with the document through rename/import/export
    for free, and a cross-document search is just reading every document's stored body and querying it. */
 const QUAL_PALETTE=['#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
-function qualCodesGet(){try{const a=JSON.parse(LS.get('appu_qual_codes')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function qualCodesSet(a){LS.set('appu_qual_codes',JSON.stringify(a))}
+function qualCodesGet(){try{const a=JSON.parse(LS.get(pkey('appu_qual_codes'))||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function qualCodesSet(a){LS.set(pkey('appu_qual_codes'),JSON.stringify(a))}
 function qualNextColor(){return QUAL_PALETTE[qualCodesGet().length%QUAL_PALETTE.length]}
 function qualAddCode(parentId){
   const name=(prompt(parentId?'Name for this sub-code:':'Name for this new code:')||'').trim();
@@ -7749,7 +7810,7 @@ function qualUnwrapCodesEverywhere(ids){
   const cur=docCurrentId(),docs=docsGet();
   let changed=false;
   docs.forEach(d=>{
-    if(d.id===cur)return;
+    if(d.id===cur||(d.pid||'')!==docPid())return;
     const html=qualUnwrapSpansInHTML(d.body||'',ids);
     if(html!==d.body){d.body=html;changed=true}
   });
@@ -7836,12 +7897,12 @@ function qualRenderTree(){
 function qualCounts(){
   const out={},seen={};
   const scan=html=>{const div=document.createElement('div');div.innerHTML=html||'';div.querySelectorAll('.qual-tag[data-qcode]').forEach((sp,i)=>{const k=sp.dataset.qcode+'|'+(sp.dataset.qgroup||Math.random());if(seen[k])return;seen[k]=1;out[sp.dataset.qcode]=(out[sp.dataset.qcode]||0)+1})};
-  try{const cur=docCurrentId();docsGet().forEach(d=>scan(d.id===cur?getEditorHTML():d.body))}catch(e){}
+  try{const cur=docCurrentId();docsStudy().forEach(d=>scan(d.id===cur?getEditorHTML():d.body))}catch(e){}
   return out;
 }
 function qualFindPassages(codeId){
   docSaveBody(getEditorHTML()); // make sure the open document's latest text is in docsGet() before scanning
-  const docs=docsGet(),out=[];
+  const docs=docsStudy(),out=[];
   docs.forEach(d=>{
     const div=document.createElement('div');div.innerHTML=d.body||'';
     const groups=new Map();
@@ -8661,13 +8722,13 @@ async function styleAnalyzeFiles(input){
 }
 
 /* ============ FIX 8: real APA 7th, MLA 9th and Chicago ============ */
-function citGetLib(){try{const a=JSON.parse(LS.get('appu_citations')||'[]');if(!Array.isArray(a))return[];if(citEnsureIds(a)&&!POPOUT)LS.set('appu_citations',JSON.stringify(a));return a}catch(e){return[]}}
+function citGetLib(){try{const a=JSON.parse(LS.get(pkey('appu_citations'))||'[]');if(!Array.isArray(a))return[];if(citEnsureIds(a)&&!POPOUT)LS.set(pkey('appu_citations'),JSON.stringify(a));return a}catch(e){return[]}}
 /* Live citations: every library source carries a fixed id (cid). In-text citations in the document are
    <span class="cit" data-cid="…"> atoms tied to that id, so a style change, a removed source or a moved
    citation updates every citation and the reference list by itself. */
 function citNewId(){return'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function citEnsureIds(l){let ch=false;l.forEach(d=>{if(d&&!d.cid){d.cid=citNewId();ch=true}});return ch}
-function citSaveLib(l){citEnsureIds(l);LS.set('appu_citations',JSON.stringify(l));citRender();try{citRefreshDoc()}catch(e){}}
+function citSaveLib(l){citEnsureIds(l);LS.set(pkey('appu_citations'),JSON.stringify(l));citRender();try{citRefreshDoc()}catch(e){}}
 function citLastName(a){a=(a||'').split(';')[0].trim();if(!a)return'Author';
   if(a.includes(','))return a.split(',')[0].trim();
   const p=a.split(/\s+/);return p[p.length-1]}
@@ -9249,7 +9310,7 @@ function citDel(i){const l=citGetLib(),d=l[i];if(!d)return;
    the live editor, not its last autosave, so a citation typed a second ago already counts. */
 function citPlainDocs(){
   const cur=docCurrentId();
-  return docsGet().map(d=>{
+  return docsStudy().map(d=>{
     const html=(d.id===cur&&typeof editor!=='undefined'&&editor)?getEditorHTML():(d.body||'');
     const div=document.createElement('div');div.innerHTML=bodyToHTML(html);
     const cids=[].map.call(div.querySelectorAll('span.cit[data-cid]'),x=>x.getAttribute('data-cid')||'');
@@ -9354,7 +9415,7 @@ if(popChan&&!POPOUT){
   };
 }
 window.addEventListener('storage',ev=>{
-  if(ev.key==='appu_citations'||ev.key==='appu_retraction_cache'){try{citRender()}catch(e){}try{citRefreshDoc()}catch(e){}}
+  if(String(ev.key||'').indexOf('appu_citations')===0||ev.key==='appu_retraction_cache'){try{citRender()}catch(e){}try{citRefreshDoc()}catch(e){}}
 });
 function popOutTool(){
   const act=document.querySelector('.tool-panel.active');
@@ -11374,7 +11435,7 @@ function rtHash(data){
   return h1.toString(16)+'-'+h2.toString(16)+'-'+str.length;
 }
 function rtDsName(){var el=document.getElementById('statsDsName');var v=(el&&el.value||'').trim();return v||'Untitled data'}
-function rtNameChanged(){try{LS.set('appu_statsname',document.getElementById('statsDsName').value)}catch(e){}}
+function rtNameChanged(){try{LS.set(pkey('appu_statsname'),document.getElementById('statsDsName').value)}catch(e){}}
 function rtLoad(k){try{return JSON.parse(LS.get(k)||'{}')||{}}catch(e){return {}}}
 function rtSave(k,o){try{LS.set(k,JSON.stringify(o))}catch(e){}}
 function rtRegister(data){
@@ -11390,6 +11451,7 @@ function statsParse(){
   if(!data||!data.cols.length){showToast('Paste some data first — one header row, then your rows');return}
   window._statsData=data;
   try{rtRegister(data)}catch(e){}
+  try{if(!window._rtSkip&&!window._sdLoading)sdPut(docPid(),window._sfLoading?{sf:true,ts:Date.now()}:{text:text,ts:Date.now()})}catch(e){}
   try{pdRender(data)}catch(e){}
   const box=document.getElementById('statsCols');
   box.innerHTML='<p class="desc" style="margin-bottom:4px">'+data.rows.length+' rows detected:</p>'+
@@ -14328,7 +14390,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26o';
+const APP_BUILD='2026.10.26p';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -15095,7 +15157,30 @@ function statsResultsShow(html,apa){
     '</div>';
   window._statsAPA=apa;window._statsSummary=html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
 }
-try{document.addEventListener('DOMContentLoaded',function(){var el=document.getElementById('statsDsName');if(el){var v=LS.get('appu_statsname');if(v)el.value=v}})}catch(e){}
+/* ===== Stats Lab data, kept per study on this device (IndexedDB, never sent anywhere) =====
+   Data opened from the secure form is NOT stored unlocked: only a note that it came from there,
+   so the student opens it again with the password. */
+function sdDb(){return window._sdDb||(window._sdDb=new Promise((res,rej)=>{try{const r=indexedDB.open('appu_studydata',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('d'))r.result.createObjectStore('d')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}))}
+async function sdPut(pid,v){if(POPOUT)return;const db=await sdDb();return new Promise((res,rej)=>{const tx=db.transaction('d','readwrite');if(v==null)tx.objectStore('d').delete(pid||'_');else tx.objectStore('d').put(v,pid||'_');tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)})}
+async function sdGet(pid){const db=await sdDb();return new Promise((res,rej)=>{const r=db.transaction('d','readonly').objectStore('d').get(pid||'_');r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error)})}
+function statsClearUI(){
+  const set=(id,f)=>{const el=document.getElementById(id);if(el)f(el)};
+  window._statsData=null;window._tgSaved=null;
+  set('statsPaste',el=>el.value='');set('statsCols',el=>el.innerHTML='');set('statsResults',el=>el.innerHTML='');
+  set('statsTestArea',el=>el.style.display='none');set('pdBox',el=>el.style.display='none');
+  set('statsDsName',el=>el.value=LS.get(pkey('appu_statsname'))||'');set('sdNote',el=>el.innerHTML='');
+}
+async function statsLoadMine(){
+  statsClearUI();const pid=docPid(),hi=(typeof studyHi==='function')&&studyHi();let v=null;try{v=await sdGet(pid)}catch(e){}
+  if(pid!==docPid())return;
+  const note=document.getElementById('sdNote');
+  if(v&&v.text){const ta=document.getElementById('statsPaste');ta.value=v.text;window._sdLoading=true;try{statsParse()}catch(e){}finally{window._sdLoading=false}
+    if(note)note.innerHTML=(hi?'इस study का data इसी device पर रखा है':'This study\'s data is kept on this device only')+' ('+new Date(v.ts).toLocaleDateString()+'). <a href="#" onclick="event.preventDefault();statsForget()">'+(hi?'इस device से हटाएँ':'Remove from this device')+'</a>'}
+  else if(v&&v.sf&&note)note.innerHTML='🔐 '+(hi?'इस study का data सुरक्षित form से आया था। वह यहाँ खुला नहीं रखा जाता। Questionnaire → सुरक्षित form में password डालकर फिर खोलें।':'This study\'s data came from the secure form and is not kept unlocked. Open it again with your password: Questionnaire → Secure form.');
+}
+async function statsForget(){const hi=(typeof studyHi==='function')&&studyHi();if(!confirm(hi?'इस study का Stats Lab data इस device से हटा दें? (आपकी CSV file या secure form के जवाब नहीं मिटेंगे)':'Remove this study\'s Stats Lab data from this device? (Your CSV file and secure-form answers are not touched.)'))return;
+  try{await sdPut(docPid(),null)}catch(e){}statsClearUI();showToast(hi?'हटा दिया ✓':'Removed ✓')}
+try{document.addEventListener('DOMContentLoaded',function(){try{statsLoadMine()}catch(e){}})}catch(e){}
 function statsCopy(){
   const t=window._statsAPA||'';if(!t){showToast('Run a test first');return}
   navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy — select the text instead'));
