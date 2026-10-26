@@ -3221,7 +3221,7 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
 /* ---- Stage 6: does the paper match the plan? Fixed rules, no AI. ---- */
 function reviewRun(){const hi=studyHi(),o=studyGet(),d=o.idea||{},ds=o.design||{},vars=(ds.vars||[]).filter(v=>v.name);
   const txt=(editor.innerText||'').replace(/​/g,''),low=txt.toLowerCase();const res=[];const add=(ok,en,hn)=>res.push([ok,hi?hn:en]);
-  const sec=n=>{const m=txt.match(new RegExp('\\b(?:\\d\\.\\s*)?'+n+'\\b([\\s\\S]*?)(?=\\n\\s*(?:\\d\\.\\s*)?(?:Abstract|Introduction|Methods?|Results|Discussion|Conclusions?|References|Works Cited)\\b|$)','i'));return m?m[1]:''};
+  const sec=n=>{const m=txt.match(new RegExp('(?:^|\\n)[ \\t]*(?:\\d\\.?\\s*)?(?:Materials and )?'+n+'[ \\t]*\\n([\\s\\S]*?)(?=\\n[ \\t]*(?:\\d\\.?\\s*)?(?:Abstract|Introduction|(?:Materials and )?Methods?|Results|Discussion|Conclusions?|References|Works Cited)[ \\t]*\\n|$)','i'));return m?m[1]:''};
   const intro=sec('Introduction'),meth=sec('Methods?'),resu=sec('Results'),disc=sec('Discussion');
   add(!!d.topic,'Stage 1 has a research question.','Stage 1 में research question है।');
   if(d.topic){const kw=d.topic.toLowerCase().match(/[a-z]{5,}/g)||[];const hit=kw.filter(w=>intro.toLowerCase().indexOf(w)>=0).length;add(hit>=Math.min(3,kw.length),'The Introduction states the research question.','Introduction में research question लिखा है।')}
@@ -3229,7 +3229,7 @@ function reviewRun(){const hi=studyHi(),o=studyGet(),d=o.idea||{},ds=o.design||{
   /* A variable counts as named when its full name, its scale, or any real word of it
      (GAD7_total -> "gad7"/"gad-7", Hb_34w -> "hb") appears in the section. */
   const vHit=(v,t)=>{t=t.toLowerCase();const nm=v.name.toLowerCase();if(t.indexOf(nm)>=0)return true;
-    if(v.scale&&t.indexOf(String(v.scale).toLowerCase())>=0)return true;
+    if(v.scale&&t.indexOf(String(v.scale).toLowerCase())>=0)return true;try{const x=SCALES.find(q=>q.id===v.scale);if(x&&x.short&&t.indexOf(x.short.toLowerCase())>=0)return true}catch(e){}
     const toks=nm.split(/[_\s\-\.]+/).filter(x=>x.length>=2&&/[a-z]/.test(x)&&!/^(total|score|mean|sum|w\d*|wk\d*|\d+w)$/.test(x));
     return toks.some(x=>{const y=x.replace(/\d+[a-z]?$/,'');return t.indexOf(x)>=0||t.indexOf(x.replace(/([a-z])(\d)/,'$1-$2'))>=0||(y.length>=3&&t.indexOf(y)>=0)})};
   vars.filter(v=>v.role==='outcome'||v.role==='predictor').forEach(v=>{
