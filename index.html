@@ -3171,7 +3171,12 @@ function studyScaleSource(x){if(!x||!x.licence||!x.licence.attribution)return nu
            :{author:m[1],year:m[2],title:m[3],source:rest,type:'Book'};
   const l=citGetLib(),k=citKey(d);let e=l.find(z=>citKey(z)===k)||l.find(z=>z.title===d.title);
   if(!e){l.push(d);citSaveLib(l);e=citGetLib().find(z=>z.title===d.title)}return e}
-function studyCiteSpans(cids){return(cids||[]).map(c=>'<span class="cit" contenteditable="false" data-cid="'+escAttr(c)+'">…</span>').join(' ')}
+/* One citation span for several sources, so APA shows (A, 2020; B, 2021) and Vancouver [1,2]. */
+function studyCiteSpans(cids){cids=(cids||[]).filter(Boolean);return cids.length?'<span class="cit" contenteditable="false" data-cid="'+escAttr(cids.join(','))+'">…</span>':''}
+/* Puts a citation before the sentence's closing full stop. */
+function studyCiteEnd(text,cids){const sp=studyCiteSpans(cids);text=String(text||'').trim();if(!sp)return escHTML(text);const m=text.match(/^([\s\S]*?)([.!?]+)$/);return m?escHTML(m[1])+' '+sp+escHTML(m[2]):escHTML(text)+' '+sp+'.'}
+function studyNum(n){const x=String(n||'').replace(/,/g,'');return /^\d+$/.test(x)?(+x).toLocaleString('en-US'):String(n||'')}
+function studyLow(t){t=String(t||'');return /^[A-Z][a-z]/.test(t)?t[0].toLowerCase()+t.slice(1):t}
 function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},ds=o.design||{},vars=(ds.vars||[]).filter(v=>v.name),me=(typeof apMe==='function')?apMe():{name:''};
   if(!d.topic||!ds.type){showToast(hi?'पहले Stage 1 का सवाल और Stage 3 की योजना भरिए':'Fill the Stage 1 question and the Stage 3 plan first');return}
   if(editor.querySelector('[data-draft]')&&!confirm(hi?'इस document में ढाँचा पहले से है। नीचे एक और जोड़ें?':'This document already has an outline. Add another below?'))return;
@@ -3183,16 +3188,17 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
   const h=[];
   h.push('<h1 data-draft="1">'+escHTML(d.topic.replace(/\?$/,''))+'</h1>');
   h.push('<p>'+escHTML(me.name||'')+(me.pos?', '+escHTML(me.pos):'')+'</p>');
-  h.push('<h2>Abstract</h2><p><b>Background.</b> '+escHTML(g.text||'')+' <b>Aim.</b> '+escHTML(d.topic)+' <b>Methods.</b> '+escHTML(studyDesignShort(ds.type,true))+(ds.n?' with '+escHTML(ds.n)+' participants':'')+(ds.pop?' ('+escHTML(ds.pop)+')':'')+'. <b>Results.</b> '+ph('main result with the test, its value, p and effect size')+' <b>Conclusion.</b> '+ph('one sentence')+'</p>');
+  h.push('<h2>Abstract</h2><p><b>Background.</b> '+escHTML(g.text||'')+' <b>Aim.</b> '+escHTML(d.topic)+' <b>Methods.</b> '+escHTML(studyDesignShort(ds.type,true))+(ds.n?' of '+escHTML(studyNum(ds.n))+' participants':'')+(ds.pop?': '+escHTML(studyLow(ds.pop)):'')+'. <b>Results.</b> '+ph('main result with the test, its value, p and effect size')+' <b>Conclusion.</b> '+ph('one sentence')+'</p>');
   h.push('<h2>1. Introduction</h2><p>'+ph('why the topic matters, with sources')+'</p>');
-  h.push('<p>'+escHTML(g.text||'')+(g.cids&&g.cids.length?' '+studyCiteSpans(g.cids):'')+'</p>');
+  h.push('<p>'+studyCiteEnd(g.text||'',g.cids)+'</p>');
   h.push('<p>The present study asked: '+escHTML(d.topic)+'</p>');
   if(hyp.length)h.push('<p>'+hyp.map(escHTML).join('<br>')+'</p>');
   h.push('<h2>2. Methods</h2><h3>2.1 Design</h3><p>This was '+escHTML(studyDesignShort(ds.type))+'.</p>');
-  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(ds.sampling):'')+(ds.n?'. The planned sample size was '+escHTML(ds.n)+'.':'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
+  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(studyLow(ds.sampling)):'')+(ds.n?'. The planned sample size was '+escHTML(studyNum(ds.n))+'.':'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
   h.push('<h3>2.3 Measures</h3>'+(measures||'<p>'+ph('measures')+'</p>'));
   h.push('<h3>2.4 Procedure and ethics</h3><p>'+ph('ethics committee name and approval number, how consent was taken, where and when data were collected')+'</p>');
-  h.push('<h3>2.5 Analysis</h3><p>'+(st.k?escHTML(st.why)+' ':'')+'Analyses were run in the Appuscholar Statistics Lab. '+ph('alpha level, checks of assumptions, missing data')+'</p>');
+  const tName={ttestInd:'an independent-samples t-test',ttestPaired:'a paired-samples t-test',rmanova:'a repeated-measures ANOVA',chisq:'a chi-square test',welchAnova:"Welch's ANOVA",mregress:'a multiple regression',logistic:'a logistic regression',pearson:'a Pearson correlation',spearman:'a Spearman correlation'}[st&&st.k];
+  h.push('<h3>2.5 Analysis</h3><p>'+(tName?'The main hypothesis was tested with '+tName+'. ':'')+'Analyses were run in the Appuscholar Statistics Lab. '+ph('alpha level, checks of assumptions, missing data')+'</p>');
   h.push('<h2>3. Results</h2><p>'+ph('open the Statistics Lab, run each test, and press Insert to place its APA sentence here')+'</p>');
   h.push('<h2>4. Discussion</h2><p>'+ph('main finding in plain words; compare with the key papers; limitations; what it means for practice')+'</p>');
   h.push('<h2>5. Conclusion</h2><p>'+ph('two or three sentences')+'</p>');
