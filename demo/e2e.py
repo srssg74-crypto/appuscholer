@@ -12,7 +12,7 @@ BASE = 'http://localhost:8765/index.html'
 LOG = []; ERRS = []; SHOT = [0]
 
 def log(ok, what, info=''):
-    LOG.append({'ok': bool(ok), 'what': what, 'info': str(info)[:400]}); print(('PASS ' if ok else 'FAIL ') + what, str(info)[:200], flush=True)
+    LOG.append({'ok': bool(ok), 'what': what, 'info': str(info)[:3000]}); print(('PASS ' if ok else 'FAIL ') + what, str(info)[:200], flush=True)
 
 GATE = r"""(()=>{const v=crypto.subtle.verify.bind(crypto.subtle);crypto.subtle.verify=async(a,...r)=>(a&&a.name==='ECDSA')?true:v(a,...r);
 const p=btoa(JSON.stringify({exp:'2030-01-01',n:'Demo',id:'d1'})).replace(/=+$/,'');
@@ -119,8 +119,8 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     fillv(pg, '#rsTopic', S['search']); pg.evaluate("researchSearch()")
     for _ in range(60):
         pg.wait_for_timeout(1000)
-        if pg.evaluate("(window.rsResults||[]).length>=3"): break
-    n = pg.evaluate("(window.rsResults||[]).length"); log(n >= 3, f'{label} Stage 2: real paper search (OpenAlex/PubMed)', f'{n} results')
+        if pg.evaluate("(typeof rsResults!=='undefined'?rsResults:[]).length>=3"): break
+    n = pg.evaluate("(typeof rsResults!=='undefined'?rsResults:[]).length"); log(n >= 3, f'{label} Stage 2: real paper search (OpenAlex/PubMed)', f'{n} results')
     shot(pg, f'{label}-stage2-search')
     pg.evaluate("[0,1].forEach(i=>{const c=document.getElementById('rsChk'+i);if(c)c.checked=true})")
     pg.evaluate("researchGapFinder()"); pg.wait_for_timeout(2500)
@@ -250,13 +250,13 @@ def main():
             study(pg, A, 'A', 'Janani A: anaemia, anxiety and well-being', [(os.path.join(D, 'janani_mothers.csv'), 'Janani mothers'), (os.path.join(D, 'janani_fathers.csv'), 'Janani fathers')], tests_A, fig_A, None,
                   ['kassebaum', 'rahman', 'penarosas', 'dennis', 'grigoriadis', 'spitzer', 'diener'], 'survey', VARS_A)
         except Exception as e:
-            log(False, 'Study A crashed', traceback.format_exc()[-800:]); shot(pg, 'A-crash')
+            log(False, 'Study A crashed', traceback.format_exc()[-3000:]); shot(pg, 'A-crash')
         try:
             pg.evaluate("setActiveProject('',{skipJump:true})")
             study(pg, B, 'B', 'Janani B: paracetamol and MR1 response', [(os.path.join(D, 'janani_infants.csv'), 'Janani infants')], tests_B, fig_B, None,
                   ['moss', 'prymula'], 'survey', VARS_B)
         except Exception as e:
-            log(False, 'Study B crashed', traceback.format_exc()[-800:]); shot(pg, 'B-crash')
+            log(False, 'Study B crashed', traceback.format_exc()[-3000:]); shot(pg, 'B-crash')
         try: save_dl(pg, "backupExport()", 'backup.json'); log(True, 'Backup of everything downloaded')
         except Exception as e: log(False, 'Backup', e)
         b.close()
