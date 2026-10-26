@@ -282,7 +282,7 @@ POSTER = {
                   {'name': 'Dr. Meena Sharma', 'qual': 'PhD, Professor of Psychology', 'role': 'Supervisor', 'aff': 1},
                   {'name': 'Dr. R. K. Gupta', 'qual': 'MD (Obstetrics and Gynaecology)', 'role': 'Co-supervisor', 'aff': 2}],
        'affs': ['Department of Psychology, Demo College, Jaipur', 'Department of Obstetrics, Demo Medical College, Jaipur'],
-       'title': 'Anaemia and anxiety in the third trimester: 1,240 women in Jaipur', 'conf': 'Demo National Conference of Psychology, Jaipur, 2026', 'size': 'A0P', 'theme': 'purple', 'cols': 2,
+       'title': 'Anaemia and anxiety in the third trimester: 1,240 women in Jaipur', 'conf': 'Demo National Conference of Psychology, Jaipur, 2026', 'size': 'A0P', 'theme': 'purple', 'cols': 3,
        'concl': 'Anaemic women carried more anxiety in the third trimester; clinics that test haemoglobin can screen them with the GAD-7.',
        'idea': 'Does poor sleep in late pregnancy explain part of the link between anaemia and anxiety?'},
  'B': {'people': [{'name': 'Asha Verma', 'qual': 'MA Psychology (final year)', 'role': 'Student', 'aff': 1},
