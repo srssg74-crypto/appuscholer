@@ -2992,7 +2992,7 @@ function studyDlgRender(){const b=document.getElementById('studyDlgBody');if(!b)
   h+='<div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'studyDlg\').close()">'+(hi?'बंद करें':'Close')+'</button></div>';
   b.innerHTML=h}
 function studyRoleLabel(r){const x=STUDY_ROLES.find(y=>y[0]===r);return x?(studyHi()?x[2]:x[1]):r}
-function studyScaleName(id){if(id==='own')return studyHi()?'अपने सवाल':'own questions';try{const s=SCALES.find(x=>x.id===id);return s?s.short||s.name:id}catch(e){return id}}
+function studyScaleName(id){if(id==='own')return studyHi()?'अपने सवाल':'own questions';if(id==='instr')return studyHi()?'instrument या lab test':'instrument or lab test';try{const s=SCALES.find(x=>x.id===id);return s?s.short||s.name:id}catch(e){return id}}
 /* ---- Stage 2: save the research gap and its key papers ---- */
 function gapDlgOpen(){const hi=studyHi(),o=studyGet(),g=o.gap||{};let d=document.getElementById('gapDlg');
   if(!d){d=document.createElement('dialog');d.id='gapDlg';d.style.padding='18px 20px';d.style.borderRadius='14px';d.style.border='1px solid var(--border,#ddd)';d.style.maxWidth='700px';d.style.width='94vw';document.body.appendChild(d)}
@@ -3019,7 +3019,7 @@ function spOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{},d0=o.idea||{};
   if(!d){d=document.createElement('dialog');d.id='spDlg';d.style.padding='18px 20px';d.style.borderRadius='14px';d.style.border='1px solid var(--border,#ddd)';d.style.maxWidth='860px';d.style.width='96vw';document.body.appendChild(d)}
   const vars=(ds.vars&&ds.vars.length)?ds.vars:[{name:'',role:'outcome',type:'score',scale:''},{name:'',role:'predictor',type:'score',scale:''}];
   const opt=(arr,v)=>arr.map(x=>'<option value="'+x[0]+'"'+(x[0]===v?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('');
-  let scales=[['','—','—'],['own','My own questions','मेरे अपने सवाल']];try{scales=scales.concat(SCALES.map(s=>[s.id,s.short+' – '+s.name,s.short+' – '+s.name]))}catch(e){}
+  let scales=[['','—','—'],['own','My own questions','मेरे अपने सवाल'],['instr','Instrument or lab test (BP machine, analyser, weighing scale)','Instrument या lab test (BP machine, analyser, weighing scale)']];try{scales=scales.concat(SCALES.map(s=>[s.id,s.short+' – '+s.name,s.short+' – '+s.name]))}catch(e){}
   d.innerHTML='<h2 style="margin:0 0 6px">📐 '+(hi?'मेरी study की योजना: design, variables, hypotheses':'My study plan: design, variables, hypotheses')+'</h2>'+
    '<p class="desc">'+(hi?'यहाँ एक बार भरिए। Protocol, questionnaire, सही test और Methods section, सब यहीं से भरेंगे।':'Fill this once. The protocol, the questionnaire, the test chooser and the Methods section all fill from here.')+'</p>'+
    (d0.topic?'<p style="margin:4px 0"><b>'+(hi?'सवाल: ':'Question: ')+'</b>'+escHTML(d0.topic)+'</p>':'')+
@@ -3034,7 +3034,10 @@ function spOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{},d0=o.idea||{};
    '<label style="margin-top:12px;display:block"><b>Hypotheses</b> <span class="desc">'+(hi?'(हर पंक्ति में एक)':'(one per line)')+'</span></label><textarea id="spHyp" rows="3" style="width:100%" placeholder="'+escAttr(hi?'जैसे: H1: exam के हफ़्ते में कम सोने वाले students का anxiety score ज़्यादा होगा।':'e.g. H1: Students who sleep less in exam week will have higher anxiety scores.')+'">'+escHTML(ds.hyp||'')+'</textarea>'+
    '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'spDlg\').close()">'+(hi?'रद्द करें':'Cancel')+'</button><button type="button" class="btn btn-purple" onclick="spSave()">'+(hi?'सहेजें':'Save')+'</button></div>';
   d._opt=opt;d._scales=scales;if(!d.open)d.showModal()}
-function spRowHTML(v,opt,scales){const hi=studyHi();return'<tr><td><input class="spName" style="width:100%" value="'+escAttr(v.name||'')+'" placeholder="'+escAttr(hi?'जैसे: Exam anxiety':'e.g. Exam anxiety')+'"></td><td><select class="spRole">'+opt(STUDY_ROLES,v.role)+'</select></td><td><select class="spTypeV">'+opt(STUDY_TYPES,v.type)+'</select></td><td><select class="spScale" style="max-width:220px">'+scales.map(x=>'<option value="'+x[0]+'"'+(x[0]===(v.scale||'')?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select></td><td><input class="spLevels" style="width:100%" value="'+escAttr(v.levels||'')+'"></td><td><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()" title="Remove">✕</button></td></tr>'}
+function spRowHTML(v,opt,scales){const hi=studyHi();return'<tr><td><input class="spName" style="width:100%" value="'+escAttr(v.name||'')+'" placeholder="'+escAttr(hi?'जैसे: Exam anxiety':'e.g. Exam anxiety')+'" oninput="spGuessInstr(this)"></td><td><select class="spRole">'+opt(STUDY_ROLES,v.role)+'</select></td><td><select class="spTypeV">'+opt(STUDY_TYPES,v.type)+'</select></td><td><select class="spScale" style="max-width:220px">'+scales.map(x=>'<option value="'+x[0]+'"'+(x[0]===(v.scale||'')?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select></td><td><input class="spLevels" style="width:100%" value="'+escAttr(v.levels||'')+'"></td><td><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()" title="Remove">✕</button></td></tr>'}
+/* Hb, blood pressure, weight and the like are read off an instrument or a lab report, so the plan marks them that way. */
+const SP_INSTR_RE=/\b(h(a)?emoglobin|hb|bp|blood pressure|systolic|diastolic|pulse|heart rate|weight|height|bmi|waist|glucose|sugar|hba1c|ferritin|tsh|t3|t4|cholesterol|creatinine|cortisol|antibody|igg|igm|titre|titer|temperature|spo2|oxygen|platelet|wbc|rbc|vitamin|serum|plasma|urine|eeg|ecg|reaction time|grip)\b/i;
+function spGuessInstr(inp){const tr=inp.closest('tr');if(!tr)return;const sc=tr.querySelector('.spScale');if(!sc||sc.value)return;if(SP_INSTR_RE.test(inp.value)){sc.value='instr';const ty=tr.querySelector('.spTypeV');if(ty&&ty.value==='category'&&!/\b(anaemi|anemi|low|high|positive|negative)/i.test(inp.value))ty.value='score'}}
 function spAddRow(){const d=document.getElementById('spDlg');const tb=document.querySelector('#spVars tbody');if(!d||!tb)return;tb.insertAdjacentHTML('beforeend',spRowHTML({role:'covariate',type:'category'},d._opt,d._scales))}
 function spSave(){const hi=studyHi();const vars=[...document.querySelectorAll('#spVars tbody tr')].map(tr=>({name:tr.querySelector('.spName').value.trim(),role:tr.querySelector('.spRole').value,type:tr.querySelector('.spTypeV').value,scale:tr.querySelector('.spScale').value,levels:tr.querySelector('.spLevels').value.trim()})).filter(v=>v.name);
   const ds={type:document.getElementById('spType').value,pop:document.getElementById('spPop').value.trim(),n:document.getElementById('spN').value.trim(),sampling:document.getElementById('spSampling').value.trim(),vars:vars,hyp:document.getElementById('spHyp').value.trim()};
@@ -3054,6 +3057,7 @@ function qnModel(){const o=studyGet(),ds=o.design||{},vars=(ds.vars||[]).filter(
   const bg=[];const own=[];const scales=[];
   (q.demo||['age','gender','course']).forEach(k=>bg.push({k:k}));
   vars.forEach(v=>{
+    if(v.scale==='instr'){bg.push({v:v,instr:true});return}
     if(v.scale&&v.scale!=='own'){if(scales.indexOf(v.scale)<0)scales.push(v.scale);return}
     if(v.type==='category'||v.type==='yesno'||v.role==='group'||v.role==='covariate')bg.push({v:v});
     else own.push(v)});
@@ -3084,7 +3088,7 @@ function qnOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{};let d=document
 function qnSave(){const o=studyGet(),q=o.qn||{};
   const g=id=>{const e=document.getElementById(id);return e?e.value:''};
   q.title=g('qnTitle');q.intro=g('qnIntro');q.demo=[...document.querySelectorAll('.qnDemo')].filter(x=>x.checked).map(x=>x.value);
-  const planScales=((o.design&&o.design.vars)||[]).map(v=>v.scale).filter(s=>s&&s!=='own');
+  const planScales=((o.design&&o.design.vars)||[]).map(v=>v.scale).filter(s=>s&&s!=='own'&&s!=='instr');
   const chosen=[...document.querySelectorAll('.qnScale')].filter(x=>x.checked).map(x=>x.value);
   q.extraScales=chosen.filter(s=>planScales.indexOf(s)<0);q.dropScales=planScales.filter(s=>chosen.indexOf(s)<0);
   q.own={};document.querySelectorAll('.qnOwn').forEach(t=>{q.own[t.dataset.name]=t.value});
@@ -3092,7 +3096,7 @@ function qnSave(){const o=studyGet(),q=o.qn||{};
 /* One list of every question and its data column, used by the Word file, the template and the codebook. */
 function qnItems(){const m=qnModel(),q=m.q,drop=q.dropScales||[],out=[];
   (q.demo||[]).forEach(k=>{const d=QN_DEMO[k];if(d)out.push({sec:'Background',col:qnSlug(k),text:d[0],resp:d[2].indexOf('choice:')===0?d[2].slice(7).split('|'):d[2]})});
-  m.bg.filter(x=>x.v).forEach(x=>{const v=x.v;out.push({sec:'Background',col:qnSlug(v.name),text:v.name,resp:v.type==='yesno'?['Yes','No']:(v.levels?v.levels.split(',').map(s=>s.trim()).filter(Boolean):'text')})});
+  m.bg.filter(x=>x.v).forEach(x=>{const v=x.v;out.push({sec:x.instr?'Measurements (filled in by the researcher)':'Background',col:qnSlug(v.name),text:v.name+(x.instr?' (reading from the instrument or laboratory report)':''),resp:v.type==='yesno'?['Yes','No']:(v.type==='score'?'number':(v.levels?v.levels.split(',').map(s=>s.trim()).filter(Boolean):'text'))})});
   m.own.forEach(v=>{const lines=String((q.own&&q.own[v.name])||'').split('\n').map(s=>s.trim()).filter(Boolean);
     if(!lines.length)out.push({sec:v.name,col:qnSlug(v.name),text:v.name+(v.type==='score'?' (write a number)':''),resp:v.type==='score'?'number':'text'});
     else lines.forEach((l,i)=>out.push({sec:v.name,col:qnSlug(v.name)+'_'+String(i+1).padStart(2,'0'),text:l,resp:'scale'}))});
@@ -3185,7 +3189,7 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
   const ph=t=>'<span class="draft-ph" style="background:#fff4c2">['+escHTML(t)+']</span>';
   const st=studySuggestTest()||{};let scl=[];try{scl=SCALES}catch(e){}
   const measures=vars.map(v=>{const x=v.scale&&v.scale!=='own'?scl.find(s=>s.id===v.scale):null;let cite='';if(x){const e=studyScaleSource(x);if(e)cite=' '+studyCiteSpans([e.cid])}
-    return'<p><b>'+escHTML(v.name)+'.</b> '+(x?escHTML(x.name)+' ('+escHTML(x.short)+', '+x.items.length+' items)'+cite+'. '+escHTML(x.scoring||''):(v.type==='score'?ph('how it was measured: items, response options, scoring, range'):(v.type==='yesno'?'Recorded as yes or no.':'Recorded as: '+escHTML(v.levels||'')+'.')))+'</p>'}).join('');
+    return'<p><b>'+escHTML(v.name)+'.</b> '+(x?escHTML(x.name)+' ('+escHTML(x.short)+', '+x.items.length+' items)'+cite+'. '+escHTML(x.scoring||''):v.scale==='instr'?'Measured with the instrument or laboratory method described in section 2.4.':(v.type==='score'?ph('how it was measured: items, response options, scoring, range'):(v.type==='yesno'?'Recorded as yes or no.':'Recorded as: '+escHTML(v.levels||'')+'.')))+'</p>'}).join('');
   const hyp=String(ds.hyp||'').split('\n').map(s=>s.trim()).filter(Boolean);
   const h=[];
   h.push('<h1 data-draft="1">'+escHTML(d.topic.replace(/\?$/,''))+'</h1>');
@@ -3195,14 +3199,17 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
   h.push('<p>'+studyCiteEnd(g.text||'',g.cids)+'</p>');
   h.push('<p>The present study asked: '+escHTML(d.topic)+'</p>');
   if(hyp.length)h.push('<p>'+hyp.map(escHTML).join('<br>')+'</p>');
-  h.push('<h2>2. Methods</h2><h3>2.1 Design</h3><p>This was '+escHTML(studyDesignShort(ds.type))+'.</p>');
+  const instr=vars.filter(v=>v.scale==='instr');const sn=instr.length?1:0;
+  h.push('<h2>2. '+(instr.length?'Materials and Methods':'Methods')+'</h2><h3>2.1 Design</h3><p>This was '+escHTML(studyDesignShort(ds.type))+'.</p>');
   h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(studyLow(ds.sampling)):'')+(ds.n?'. The planned sample size was '+escHTML(studyNum(ds.n))+'.':'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
   h.push('<h3>2.3 Measures</h3>'+(measures||'<p>'+ph('measures')+'</p>'));
-  h.push('<h3>2.4 Procedure and ethics</h3><p>'+ph('ethics committee name and approval number, how consent was taken, where and when data were collected')+'</p>');
+  if(instr.length)h.push('<h3>2.4 Instruments and laboratory methods</h3>'+instr.map(v=>'<p><b>'+escHTML(v.name)+'.</b> '+ph('instrument or analyser with make and model, method, unit, how and how often it was calibrated, quality control, who took the reading')+'</p>').join(''));
+  h.push('<h3>2.'+(4+sn)+' Procedure and ethics</h3><p>'+ph('ethics committee name and approval number, how consent was taken, where and when data were collected')+'</p>');
   const tName={ttestInd:'an independent-samples t-test',ttestPaired:'a paired-samples t-test',rmanova:'a repeated-measures ANOVA',chisq:'a chi-square test',welchAnova:"Welch's ANOVA",mregress:'a multiple regression',logistic:'a logistic regression',pearson:'a Pearson correlation',spearman:'a Spearman correlation'}[st&&st.k];
-  h.push('<h3>2.5 Analysis</h3><p>'+(tName?'The main hypothesis was tested with '+tName+'. ':'')+'Analyses were run in the Appuscholar Statistics Lab. '+ph('alpha level, checks of assumptions, missing data')+'</p>');
+  h.push('<h3>2.'+(5+sn)+' Analysis</h3><p>'+(tName?'The main hypothesis was tested with '+tName+'. ':'')+'Analyses were run in the Appuscholar Statistics Lab. '+ph('alpha level, checks of assumptions, missing data')+'</p>');
   h.push('<h2>3. Results</h2><p>'+ph('open the Statistics Lab, run each test, and press Insert to place its APA sentence here')+'</p>');
-  h.push('<h2>4. Discussion</h2><p>'+ph('main finding in plain words; compare with the key papers; limitations; what it means for practice')+'</p>');
+  const sc=vars.filter(v=>v.type==='score').length;
+  h.push('<h2>4. Discussion</h2><p>'+ph('main finding in plain words; compare with the key papers; limitations; what it means for practice')+'</p>'+((ds.type==='correlational'||sc>=2)?'<p>'+ph('for each correlation: its direction, its size (r² is the share of variation the two measures have in common), and that a correlation alone does not show which one causes the other')+'</p>':''));
   h.push('<h2>5. Conclusion</h2><p>'+ph('two or three sentences')+'</p>');
   h.push('<p><br></p>');
   placeCaretAtEnd();savedRange=null;
@@ -3231,6 +3238,8 @@ function reviewRun(){const hi=studyHi(),o=studyGet(),d=o.idea||{},ds=o.design||{
   const hyp=String(ds.hyp||'').match(/H\d+/g)||[];hyp.forEach(hh=>add(new RegExp('\\b'+hh+'\\b').test(resu+disc),hh+' is answered in the Results or Discussion.',hh+' का जवाब Results या Discussion में है।'));
   if(ds.n){const ns=(meth+resu).match(/\b[Nn]\s*=\s*([\d,]+)/g)||[];const nums=ns.map(x=>+x.replace(/\D/g,''));add(!nums.length||nums.some(x=>x<=+ds.n),'Reported N fits the planned sample size ('+ds.n+').','बताया गया N योजना के sample size ('+ds.n+') से मेल खाता है।')}
   const st=studySuggestTest();if(st&&st.k){const word={pearson:'correlat',spearman:'spearman',ttestInd:'t(',ttestPaired:'t(',welchAnova:'f(',mregress:'regress',logistic:'odds',chisq:'χ²',rmanova:'f('}[st.k];if(word)add(low.indexOf(word.toLowerCase())>=0,'The planned analysis ('+st.k+') appears in the Results.','योजना वाला analysis ('+st.k+') Results में है।')}
+  if(vars.some(v=>v.scale==='instr'))add(/calibrat/i.test(meth)&&/\b(model|make|analy[sz]er|manufactur|device|machine)\b/i.test(meth),'Methods name each instrument (make, model) and how it was calibrated.','Methods में हर instrument का make, model और calibration लिखा है।');
+  if(/\br\s*\(\d+\)\s*=/.test(resu))add(/r²|r2\b|r-squared|variance|variation|cause|causal|direction/i.test(disc),'The Discussion explains what each correlation means (direction, size, r², not cause).','Discussion में correlation का अर्थ लिखा है (दिशा, आकार, r², cause नहीं)।');
   const tags=editor.querySelectorAll('.stat-tag').length;add(tags>0,'Results come from the Statistics Lab ('+tags+' tagged result'+(tags===1?'':'s')+').','Results Statistics Lab से आए हैं ('+tags+' tagged)।');
   const ph=editor.querySelectorAll('.draft-ph').length+((txt.match(/\[(?:[^\]]{6,})\]/g)||[]).length?0:0);add(!ph,'No yellow [ ] placeholders are left.',ph?ph+' पीले [ ] हिस्से अभी भरने बाक़ी हैं।':'कोई पीला [ ] हिस्सा बाक़ी नहीं।');
   if(!hi&&ph)res[res.length-1][1]=ph+' yellow [ ] placeholder'+(ph===1?' is':'s are')+' still to fill.';
@@ -3251,8 +3260,9 @@ async function posterDownload(){const hi=studyHi();
   sl.addText(byline,{x:1,y:3.95,w:31.1,h:1.2,fontSize:36,color:'F2D9FF',fontFace:'Arial'});
   /* Gather each main section with its numbered subsections ("2. Methods" takes 2.1, 2.2 …)
      and its "(continued)" slides, so no box comes out empty. */
-  const want=['Introduction','Methods?','Results','Discussion','Conclusions?','References'];
-  const label={'Methods?':'Methods','Conclusions?':'Conclusion'};
+  const want=['Introduction','(?:Materials and )?Methods?','Results','Discussion','Conclusions?','References'];
+  const hasMat=S.some(x=>/materials and methods/i.test(x.base||x.title||''));
+  const label={'(?:Materials and )?Methods?':hasMat?'Materials and Methods':'Methods','Conclusions?':'Conclusion'};
   const num=t=>{const m=String(t||'').match(/^(\d+)(\.\d+)*[.)]?\s/);return m?m[1]:null};
   const strip=t=>String(t||'').replace(/^[\dIVX]+(\.\d+)*[.)]?\s+/,'').replace(/\s*\(continued\)$/,'');
   const secs=want.map(w=>{const re=new RegExp('^'+w+'\\b','i');let n=null;const out={n:label[w]||w,lines:[],imgs:[]};
