@@ -3350,7 +3350,7 @@ function pzArrange(){if(!PZ||!PZ.boxes.length)return;const host=document.createE
     for(let k=0;k<=C;k++){best.push(new Array(n+1).fill(Infinity));cut.push(new Array(n+1).fill(0))}best[0][0]=0;
     for(let k=1;k<=C;k++)for(let i=1;i<=n;i++)for(let j=k-1;j<i;j++){const v=Math.max(best[k-1][j],sum(j,i));if(v<best[k][i]){best[k][i]=v;cut[k][i]=j}}
     let i=n;for(let k=C;k>=1;k--){const j=cut[k][i];for(let q=j;q<i;q++)PZ.boxes[q].col=k-1;i=j}
-    if(best[C][n]<=avail||(PZ.txt||1)<=0.62)break;PZ.txt=Math.max(0.6,+((PZ.txt||1)-0.05).toFixed(2))}
+    if(best[C][n]<=avail*0.94||(PZ.txt||1)<=0.62)break;PZ.txt=Math.max(0.6,+((PZ.txt||1)-0.05).toFixed(2))}
   host.remove();const t=document.getElementById('pzTxt');if(t)t.value=PZ.txt}
 function pzPreview(){const wrap=document.getElementById('pzWrap'),root=document.getElementById('pzRoot');if(!wrap||!root||!PZ)return;
   root.style.transform='none';const over=pzRender(root,PZ,true);
