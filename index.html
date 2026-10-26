@@ -2947,9 +2947,11 @@ const STUDY_DESIGNS=[
  ['pre-post','Pre-post: same people measured twice','Pre-post: वही लोग, दो बार मापे गए'],
  ['experiment','Randomised experiment or trial','Randomised experiment या trial'],
  ['longitudinal','Longitudinal: same people over time','Longitudinal: वही लोग, समय के साथ'],
+ ['cohort','Cohort: follow a group from an exposure to an outcome','Cohort: एक समूह को exposure से outcome तक follow करना'],
+ ['case-control','Case-control: people with and without the outcome, looking back','Case-control: outcome वाले और बिना outcome वाले लोग, पीछे देखकर'],
  ['qualitative','Qualitative: interviews or focus groups','Qualitative: interview या focus group'],
  ['mixed','Mixed methods','Mixed methods']];
-const STUDY_DESIGN_SHORT={survey:'a cross-sectional survey',correlational:'a correlational study',"two-group":'a two-group comparison','multi-group':'a comparison of three or more groups','pre-post':'a pre-post study','experiment':'a randomised experiment',longitudinal:'a longitudinal study',qualitative:'a qualitative study',mixed:'a mixed-methods study'};
+const STUDY_DESIGN_SHORT={cohort:'a cohort study','case-control':'a case-control study',survey:'a cross-sectional survey',correlational:'a correlational study',"two-group":'a two-group comparison','multi-group':'a comparison of three or more groups','pre-post':'a pre-post study','experiment':'a randomised experiment',longitudinal:'a longitudinal study',qualitative:'a qualitative study',mixed:'a mixed-methods study'};
 function studyDesignShort(k,cap){const t=STUDY_DESIGN_SHORT[k]||'';return cap?t.charAt(0).toUpperCase()+t.slice(1):t}
 function studyDesignLabel(k){const d=STUDY_DESIGNS.find(x=>x[0]===k);return d?(studyHi()?d[2]:d[1]):''}
 const STUDY_ROLES=[['outcome','Outcome (DV)','Outcome (DV)'],['predictor','Predictor or IV','Predictor या IV'],['group','Grouping variable','Grouping variable'],['covariate','Covariate / background','Covariate / पृष्ठभूमि']];
@@ -5810,7 +5812,7 @@ function slideBullet(t,kind){
   t=t.replace(/\s+/g,' ').trim();if(t.length<=SLIDE_BULLET_CHARS)return t;
   /* A reference or a statistical result is never cut at its first full stop: initials and
      decimals look like sentence ends, and half a result is worse than a long bullet. */
-  const lim=kind==='ref'?260:(/\b(p\s*[<=>]\s*\.?\d|[tFrχ]²?\s*\(\d|OR\s*=|β\s*=|α\s*=)/.test(t)?460:0);
+  const lim=kind==='ref'?260:(/\b(p\s*[<=>]\s*\.?\d|[tFrχ]²?\s*\(\d|OR\s*=|β\s*=|α\s*=)/.test(t)?700:0);
   if(lim){if(t.length<=lim)return t;const c=t.slice(0,lim);return c.slice(0,Math.max(c.lastIndexOf(' '),lim-40))+'…'}
   const m=t.match(/^.{25,}?[.!?](?=\s+[A-Z(ऀ-ॿ"“])/);
   let f=m?m[0]:t;
@@ -13925,7 +13927,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26i';
+const APP_BUILD='2026.10.26j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
