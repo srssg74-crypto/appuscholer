@@ -7424,9 +7424,9 @@ async function dictAI(){
   DICT.busy=false;dictRender();
 }
 function dictFromSelection(){
-  const t=(typeof selText==='function'?selText():'').trim().split(/\s+/)[0]||'';
-  if(!t){showToast(t('wd_selfirst'));return}
-  dictGo(t);
+  const w=(typeof selText==='function'?selText():'').trim().split(/\s+/)[0]||'';
+  if(!w){showToast(t('wd_selfirst'));return}
+  dictGo(w);
 }
 /* ---- word bank ---- */
 function bankGet(){try{const a=JSON.parse(LS.get(BANK_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
@@ -7526,9 +7526,9 @@ function gramVerifyAI(text,edits){
 const GRAM={items:[],checked:0,parts:0,dropped:0,busy:false,text:''};
 function gramText(){return (typeof hasSelection==='function'&&hasSelection())?selText():getEditorText()}
 function gramRunLocal(){
-  const t=gramText();
-  if(t.trim().length<10){showToast(t('wd_need10'));return}
-  GRAM.text=t;GRAM.items=gramLocal(t);GRAM.checked=0;GRAM.parts=0;GRAM.dropped=0;
+  const tx=gramText();
+  if(tx.trim().length<10){showToast(t('wd_need10'));return}
+  GRAM.text=tx;GRAM.items=gramLocal(tx);GRAM.checked=0;GRAM.parts=0;GRAM.dropped=0;
   gramStat(GRAM.items);gramRender();
 }
 function gramStat(items){
@@ -7536,10 +7536,10 @@ function gramStat(items){
 }
 async function gramRunAI(){
   if(GRAM.busy)return;
-  const t=gramText();
-  if(t.trim().length<30){showToast(t('wd_needpara'));return}
-  GRAM.busy=true;GRAM.text=t;gramRender();
-  const chunks=[];let rest=t.slice(0,9000);
+  const tx=gramText();
+  if(tx.trim().length<30){showToast(t('wd_needpara'));return}
+  GRAM.busy=true;GRAM.text=tx;gramRender();
+  const chunks=[];let rest=tx.slice(0,9000);
   while(rest.length){let cut=Math.min(1800,rest.length);if(cut<rest.length){const k=rest.lastIndexOf('. ',cut);if(k>600)cut=k+1}chunks.push(rest.slice(0,cut));rest=rest.slice(cut)}
   const std=gramSpellStd();
   const got=[];let dropped=0,done=0;
@@ -7551,9 +7551,9 @@ async function gramRunAI(){
       const v=gramVerifyAI(ch,j.edits);got.push(...v.ok);dropped+=v.dropped;done++;
     }
   }catch(e){showToast(apiMsg(e))}
-  const local=gramLocal(t);
+  const local=gramLocal(tx);
   const merged=local.slice();
-  got.forEach(g=>{const p=t.indexOf(g.original);if(p>=0&&local.some(l=>p<l.end&&p+g.original.length>l.start))return;merged.push(Object.assign({start:p>=0?p:1e9,end:p>=0?p+g.original.length:1e9},g))});
+  got.forEach(g=>{const p=tx.indexOf(g.original);if(p>=0&&local.some(l=>p<l.end&&p+g.original.length>l.start))return;merged.push(Object.assign({start:p>=0?p:1e9,end:p>=0?p+g.original.length:1e9},g))});
   merged.sort((a,b)=>a.start-b.start);
   GRAM.items=merged;GRAM.checked=done;GRAM.parts=chunks.length;GRAM.dropped=dropped;GRAM.busy=false;
   gramStat(local);gramRender();
@@ -10948,10 +10948,10 @@ function apNotePut(fn){if(!AP.doc)return;const all=apNotes();const n=all[AP.doc.
 function apOk(){if(AP.doc&&(AP.doc.sample||AP.doc.abstractOnly))return true;const c=document.getElementById('apOK');return !!(c&&c.checked)}
 /* ---- intake ---- */
 function apFromPaste(){
-  const t=(document.getElementById('apPaste').value||'').trim();
-  if(!t){showToast(t('ap_t_paste'));return}
-  const first=t.split('\n').map(x=>x.trim()).filter(x=>x.length>8)[0]||'Pasted paper';
-  apLoad(first.slice(0,140),[t],'paste',false);
+  const tx=(document.getElementById('apPaste').value||'').trim();
+  if(!tx){showToast(t('ap_t_paste'));return}
+  const first=tx.split('\n').map(x=>x.trim()).filter(x=>x.length>8)[0]||'Pasted paper';
+  apLoad(first.slice(0,140),[tx],'paste',false);
 }
 async function apFromFile(inp){
   const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
@@ -13373,7 +13373,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.25o';
+const APP_BUILD='2026.10.26a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
