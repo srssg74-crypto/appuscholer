@@ -213,7 +213,9 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     if img:
         import base64; open(os.path.join(OUT, f'{label}-poster-picture.jpg'), 'wb').write(base64.b64decode(img.split(',')[1]))
     log(bool(img), f'{label} Poster as a picture for WhatsApp')
-    save_dl(pg, "posterDownload()", f'{label}-poster-A0.pptx', 120000); log(True, f'{label} Poster (PowerPoint) downloaded from the designer')
+    pp = save_dl(pg, "posterDownload()", f'{label}-poster-A0.pptx', 120000)
+    import zipfile; xml = zipfile.ZipFile(pp).read('ppt/slides/slide1.xml').decode('utf8', 'ignore')
+    log(lay['concl'][:25] in xml and 'Supervisor' in xml, f'{label} Poster PowerPoint holds the edited text and the people', len(xml))
     pg.evaluate("pzClose()")
     # ---- share dialog and idea inbox ----
     pg.evaluate("shareOpen()"); pg.wait_for_timeout(400); shot(pg, f'{label}-share'); 
