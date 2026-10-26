@@ -1,0 +1,22 @@
+name: demo-e2e
+on:
+  push:
+    branches: [demo/e2e]
+permissions:
+  contents: write
+jobs:
+  walk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install playwright==1.48.0 && python -m playwright install --with-deps chromium
+      - run: (python -m http.server 8765 >/dev/null 2>&1 &) && sleep 2 && python demo/e2e.py | tee demo/e2e-log.txt
+      - name: Publish outputs to the demo/e2e-out branch
+        if: always()
+        run: |
+          mkdir -p /tmp/o && cp -r demo/out /tmp/o/ 2>/dev/null; cp demo/e2e-log.txt /tmp/o/ 2>/dev/null || true
+          git config user.name "appuscholar-demo-bot"; git config user.email "demo@appuscholar.invalid"
+          git checkout --orphan demo/e2e-out && git rm -rq . && cp -r /tmp/o/* . && git add -A && git commit -qm "demo outputs ${GITHUB_SHA}" && git push -f origin demo/e2e-out
