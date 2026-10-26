@@ -204,6 +204,8 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     pg.evaluate("pzMove(0,-1)"); pg.evaluate("pzArrange();pzStore();pzPreview()"); pg.wait_for_timeout(500)
     shot(pg, f'{label}-poster-designer')
     warn = pg.evaluate("document.getElementById('pzWarn').innerText")
+    # the student trims the poster text, as poster guides advise (keywords and main findings only)
+    pg.evaluate("""cut=>{PZ.boxes.forEach(b=>{const d=document.createElement('div');d.innerHTML=b.h||'';d.querySelectorAll('li').forEach(li=>{if(cut.some(c=>li.textContent.indexOf(c)===0))li.remove()});b.h=d.innerHTML});PZ.txt=1;pzArrange();pzStore();pzPreview()}""", CUT)
     pzc = pg.evaluate("pzAddAck();pzStore();pzPreview();pzCheck().map(r=>(r[0]?'OK ':'NO ')+r[1])")
     log(all(x.startswith('OK') for x in pzc), f'{label} Poster check (UWA poster guide rules) all pass', '; '.join(x for x in pzc if x.startswith('NO')) or f'{len(pzc)} rules')
     pg.evaluate("pzClose()"); pg.wait_for_timeout(300)
@@ -274,6 +276,7 @@ def fig_B(pg, k):
 
 WORDS_A = [['mother_GAD7_total', "the mothers' GAD-7 scores"], ['father_GAD7_total', "the fathers' GAD-7 scores"], ['GAD7_total', 'GAD-7 score'], ['RSES_total', 'self-esteem (RSES)'], ['SWLS_total', 'life satisfaction (SWLS)'], ['hb_16wk', 'haemoglobin at 16 weeks'], ['hb_34wk', 'haemoglobin at 34 weeks'], ['anaemia_34wk', 'anaemia at 34 weeks'], ['between Yes (', 'between women with anaemia ('], [' and No (', ' and women without anaemia (']]
 WORDS_B = [['maternal_hb_34wk', "the mother's haemoglobin at 34 weeks"], ['paracetamol_given', 'paracetamol after MR1'], ['seroconverted', 'seroconversion'], ['infant_sex', 'infant sex'], ['birth_weight_g', 'birth weight (g)'], ['between Boy (', 'between boys ('], [' and Girl (', ' and girls (']]
+CUT = ['Results for each hypothesis follow', 'Parity.', 'Age.', 'Residence.', 'Anaemia at 34 weeks. Recorded', 'Infant sex. Recorded', 'Low birth weight.', 'A chi-square test of independence showed no significant association between anaemia', 'Distribution of', 'Note.', 'Anxiety is also common in pregnancy.']
 POSTER = {
  'A': {'people': [{'name': 'Asha Verma', 'qual': 'MA Psychology (final year)', 'role': 'Student', 'aff': 1},
                   {'name': 'Dr. Meena Sharma', 'qual': 'PhD, Professor of Psychology', 'role': 'Supervisor', 'aff': 1},
