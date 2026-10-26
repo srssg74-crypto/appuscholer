@@ -261,7 +261,7 @@ def main():
         try:
             pg.evaluate("setActiveProject('',{skipJump:true})")
             study(pg, B, 'B', 'Janani B: paracetamol and MR1 response', [(os.path.join(D, 'janani_infants.csv'), 'Janani infants')], tests_B, fig_B, None,
-                  ['moss', 'prymula'], 'survey', VARS_B)
+                  ['moss', 'prymula'], 'cohort', VARS_B)
         except Exception as e:
             log(False, 'Study B crashed', traceback.format_exc()[-3000:]); shot(pg, 'B-crash')
         try: save_dl(pg, "backupExport()", 'backup.json'); log(True, 'Backup of everything downloaded')
