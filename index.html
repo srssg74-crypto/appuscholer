@@ -501,6 +501,9 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 .hm-foot{display:flex;gap:10px;flex-wrap:wrap}.hm-foot button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 13px;font-size:12.5px;color:var(--muted);cursor:pointer}
 @media (max-width:1000px){body.at-home #apHome{grid-template-columns:1fr}.hm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.hm-grid{grid-template-columns:1fr}}
+#editor span.cit{border-bottom:1px dotted var(--purple-600,#6b3fd1);border-radius:2px;cursor:default}
+#editor span.cit-missing{color:#b91c1c;border-bottom:2px wavy #b91c1c}
+#editor [data-bib]{cursor:default}
 </style>
 <script src="firebase-config.js"></script>
 </head>
@@ -976,6 +979,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
       </details>
 
       <h3 style="margin-top:14px"><span data-i18n="cite_library_h3">🗂 My library</span> <span class="badge" id="citCount">0</span></h3>
+      <p class="desc" id="citDocStatus" style="margin-top:6px;font-weight:600"></p>
       <p class="desc" id="citUsageSummary" style="margin-top:6px;font-weight:600"></p>
       <p class="desc" id="citRetractSummary" style="margin-top:2px"></p>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citRetractionRefresh(true)" data-i18n="cite_retract_btn">🛡 Check for retractions</button></div>
@@ -985,6 +989,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ccOpen()" data-i18n="cc_btn">📚 Cross-check citations and references</button></div>
       <div id="citLib" style="margin-top:8px"><p class="desc" data-i18n="cite_no_sources">No sources yet.</p></div>
       <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()" data-i18n="cite_insertbib_btn">Insert reference list</button></div>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="citLinkPlain()" data-i18n="cite_link_btn" title="Citations typed before live citations, or pasted in, are tied to their library source so they update with the style">🔗 Link citations already in this document</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="psychLoadStarters()" data-i18n="cite_loadclassics_btn">📖 Load classic psychology sources</button></div>
       <div class="row">
         <button class="btn btn-ghost" style="flex:1" onclick="citExport()" data-i18n="cite_export_btn">⬆ Export library</button>
@@ -2191,7 +2196,7 @@ const I18N={
     cite_style_label:'Citation style', cite_type_label:'Source type',
     cite_type_journal:'Journal article', cite_type_book:'Book', cite_type_website:'Website',
     cite_type_chapter:'Book chapter', cite_type_report:'Report', cite_type_thesis:'Thesis or dissertation', cite_type_conf:'Conference paper', cite_container_label:'Book or proceedings title', cite_editors_label:'Editor(s), separate with ;', cite_number_label:'Report number (if any)', cite_degree_label:'Kind of thesis',
-    cite_month_label:'Month (websites)', cite_day_label:'Day', cite_accessed_label:'Accessed on', cite_note_numbered:'Numbered style: the number is the source\'s place in your library. Vancouver, IEEE and AMA number by first appearance in the text, so check the order before you submit.', cite_note_check:'Formats follow the published manuals as best I know them. Check one entry per style against the manual or your journal\'s rules.', cite_num_unsaved:'This source is not in your library yet, so its number is a guess. Add it to the library to fix the number.', cite_bib_fmt:'Reference list inserted ✓', cite_bib_fmt_num:'Reference list inserted, numbered in library order ✓',
+    cite_month_label:'Month (websites)', cite_day_label:'Day', cite_accessed_label:'Accessed on', cite_note_numbered:'Numbered style: sources are numbered in the order they first appear in your text. Citations inserted from here, and the reference list, renumber by themselves when you move or delete text.', cite_note_check:'Formats follow the published manuals as best I know them. Check one entry per style against the manual or your journal\'s rules.', cite_num_unsaved:'This source is not in your library yet, so its number is a guess. Add it to the library to fix the number.', cite_bib_fmt:'Reference list inserted ✓', cite_bib_fmt_num:'Reference list inserted, numbered in library order ✓',
     cite_sourcelang_label:'Source language', cite_sourcelang_en:'English', cite_sourcelang_hi:'Hindi',
     cite_author_label:'Author(s) — separate with ;', cite_year_label:'Year', cite_title_label:'Title',
     cite_source_label:'Journal / Publisher / Institution / Website', cite_vol_label:'Volume', cite_issue_label:'Issue',
@@ -2247,7 +2252,7 @@ const I18N={
     oa_tip_bronze:"Bronze: free on the publisher's site right now, but with no open licence, so the publisher could remove it.",
     cite_usage_summary_fmt:'{c} of {n} sources are cited in your documents. {u} not cited yet.',
     cite_used_in:'Cited in:', cite_not_used:'Not cited in any of your documents yet',
-    cite_insertbib_btn:'Insert reference list', cite_loadclassics_btn:'📖 Load classic psychology sources',
+    cite_insertbib_btn:'Insert or update reference list', cite_link_btn:'🔗 Link citations already in this document', cite_loadclassics_btn:'📖 Load classic psychology sources',
     cite_export_btn:'⬆ Export library', cite_import_btn:'⬇ Import library',
     cite_sharing_note:'🤝 <b>Class sharing:</b> export your library and share the file with classmates — import theirs to build one shared collection. Your documents and writing style stay on your own device.',
     research_panel_desc:"Search OpenAlex and PubMed live, free, no install — pick what's relevant, then draft a literature review or find a research gap, grounded only in the abstracts you found.",
@@ -2432,7 +2437,7 @@ const I18N={
     cite_style_label:'उद्धरण शैली', cite_type_label:'स्रोत प्रकार',
     cite_type_journal:'जर्नल लेख', cite_type_book:'पुस्तक', cite_type_website:'वेबसाइट',
     cite_type_chapter:'पुस्तक अध्याय', cite_type_report:'रिपोर्ट', cite_type_thesis:'शोध-प्रबंध', cite_type_conf:'सम्मेलन शोध-पत्र', cite_container_label:'पुस्तक या कार्यवाही का शीर्षक', cite_editors_label:'संपादक, ; से अलग करें', cite_number_label:'रिपोर्ट संख्या (यदि हो)', cite_degree_label:'शोध-प्रबंध का प्रकार',
-    cite_month_label:'महीना (वेबसाइट)', cite_day_label:'दिन', cite_accessed_label:'देखने की तारीख', cite_note_numbered:'क्रमांक वाली शैली: संख्या आपकी लाइब्रेरी में स्रोत का क्रम है। Vancouver, IEEE और AMA में संख्या पाठ में पहली बार आने के क्रम से तय होती है, इसलिए जमा करने से पहले क्रम जाँच लें।', cite_note_check:'प्रारूप प्रकाशित मैनुअल के अनुसार हैं। हर शैली की एक प्रविष्टि मैनुअल या अपनी पत्रिका के नियमों से मिला लें।', cite_num_unsaved:'यह स्रोत अभी लाइब्रेरी में नहीं है, इसलिए इसकी संख्या अनुमान है। संख्या पक्की करने के लिए इसे लाइब्रेरी में जोड़ें।', cite_bib_fmt:'संदर्भ सूची जोड़ दी गई ✓', cite_bib_fmt_num:'संदर्भ सूची लाइब्रेरी के क्रम में क्रमांक सहित जोड़ी गई ✓',
+    cite_month_label:'महीना (वेबसाइट)', cite_day_label:'दिन', cite_accessed_label:'देखने की तारीख', cite_note_numbered:'क्रमांक वाली शैली: sources को वही नंबर मिलता है, जिस क्रम में वे आपके text में पहली बार आते हैं। यहाँ से डाले गए citations और reference list, text खिसकाने या हटाने पर अपने आप नए नंबर ले लेते हैं।', cite_note_check:'प्रारूप प्रकाशित मैनुअल के अनुसार हैं। हर शैली की एक प्रविष्टि मैनुअल या अपनी पत्रिका के नियमों से मिला लें।', cite_num_unsaved:'यह स्रोत अभी लाइब्रेरी में नहीं है, इसलिए इसकी संख्या अनुमान है। संख्या पक्की करने के लिए इसे लाइब्रेरी में जोड़ें।', cite_bib_fmt:'संदर्भ सूची जोड़ दी गई ✓', cite_bib_fmt_num:'संदर्भ सूची लाइब्रेरी के क्रम में क्रमांक सहित जोड़ी गई ✓',
     cite_sourcelang_label:'स्रोत की भाषा', cite_sourcelang_en:'अंग्रेज़ी', cite_sourcelang_hi:'हिन्दी',
     cite_author_label:'लेखक — ; से अलग करें', cite_year_label:'वर्ष', cite_title_label:'शीर्षक',
     cite_source_label:'जर्नल / प्रकाशक / संस्था / वेबसाइट', cite_vol_label:'खंड', cite_issue_label:'अंक',
@@ -2487,7 +2492,7 @@ const I18N={
     oa_tip_bronze:'Bronze: प्रकाशक की साइट पर अभी निःशुल्क है, पर कोई खुला लाइसेंस नहीं है, इसलिए प्रकाशक इसे हटा सकता है।',
     cite_usage_summary_fmt:'आपके दस्तावेज़ों में {n} में से {c} स्रोत उद्धृत हैं। {u} अभी तक उद्धृत नहीं।',
     cite_used_in:'इनमें उद्धृत:', cite_not_used:'आपके किसी भी दस्तावेज़ में अभी तक उद्धृत नहीं',
-    cite_insertbib_btn:'संदर्भ सूची डालें', cite_loadclassics_btn:'📖 क्लासिक मनोविज्ञान स्रोत लोड करें',
+    cite_insertbib_btn:'Reference list डालें या update करें', cite_link_btn:'🔗 Document में पहले से लिखे citations जोड़ें', cite_loadclassics_btn:'📖 क्लासिक मनोविज्ञान स्रोत लोड करें',
     cite_export_btn:'⬆ लाइब्रेरी निर्यात करें', cite_import_btn:'⬇ लाइब्रेरी आयात करें',
     cite_sharing_note:'🤝 <b>कक्षा में साझा करना:</b> अपनी लाइब्रेरी निर्यात करें और फ़ाइल सहपाठियों के साथ साझा करें — उनकी आयात करें ताकि एक साझा संग्रह बन सके। आपके दस्तावेज़ और लेखन शैली आपके ही डिवाइस पर रहते हैं।',
     research_panel_desc:'OpenAlex और PubMed को लाइव, मुफ़्त, बिना इंस्टॉल खोजें — जो प्रासंगिक हो उसे चुनें, फिर केवल मिले सार (abstracts) के आधार पर साहित्य समीक्षा लिखें या शोध अंतराल खोजें।',
@@ -3357,6 +3362,7 @@ function docSwitch(id){
   LS.set('appu_doc_current',id);
   const d=docsGet().find(x=>x.id===id);
   setEditorHTML(d?d.body:'');
+  try{citStyleRestore();citRender();citRefreshDoc()}catch(e){}
   lastSaved=getEditorHTML();upd();docRenderList();showToast('Opened: '+(d?d.title:'document'));
 }
 function docNew(){
@@ -3498,9 +3504,11 @@ function upd(){
     }
   },400);
 }
+let citRefT=0;
 editor.addEventListener('input',()=>{
   if(editor.innerHTML==='<br>'||editor.innerHTML==='<div><br></div>')editor.innerHTML='';
   upd();
+  clearTimeout(citRefT);citRefT=setTimeout(()=>{try{if(editor.querySelector('span.cit[data-cid],[data-bib]'))citRefreshDoc()}catch(e){}},700);
 });
 
 /* ============ Originality tracker ============
@@ -6432,7 +6440,7 @@ async function downloadDoc(){
   const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-document';
   showToast('Preparing the Word file…');
   try{
-    const holder=document.createElement('div');holder.innerHTML=getEditorHTML();
+    const holder=document.createElement('div');holder.innerHTML=getEditorHTML().replace(/\u200b/g,'');
     const blob=await dxBuild(holder,title);
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safe+'.docx';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -6538,7 +6546,7 @@ function downloadLatex(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
   const title=(cur&&cur.title)||'Untitled';
   const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-document';
-  const wrap=document.createElement('div');wrap.innerHTML=getEditorHTML();
+  const wrap=document.createElement('div');wrap.innerHTML=getEditorHTML().replace(/\u200b/g,'');
   const lines=[];
   _texBlock(wrap,lines);
   const orcid=(LS.get('appu_orcid')||'').trim();
@@ -7852,8 +7860,13 @@ async function styleAnalyzeFiles(input){
 }
 
 /* ============ FIX 8: real APA 7th, MLA 9th and Chicago ============ */
-function citGetLib(){try{const a=JSON.parse(LS.get('appu_citations')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function citSaveLib(l){LS.set('appu_citations',JSON.stringify(l));citRender()}
+function citGetLib(){try{const a=JSON.parse(LS.get('appu_citations')||'[]');if(!Array.isArray(a))return[];if(citEnsureIds(a)&&!POPOUT)LS.set('appu_citations',JSON.stringify(a));return a}catch(e){return[]}}
+/* Live citations: every library source carries a fixed id (cid). In-text citations in the document are
+   <span class="cit" data-cid="…"> atoms tied to that id, so a style change, a removed source or a moved
+   citation updates every citation and the reference list by itself. */
+function citNewId(){return'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function citEnsureIds(l){let ch=false;l.forEach(d=>{if(d&&!d.cid){d.cid=citNewId();ch=true}});return ch}
+function citSaveLib(l){citEnsureIds(l);LS.set('appu_citations',JSON.stringify(l));citRender();try{citRefreshDoc()}catch(e){}}
 function citLastName(a){a=(a||'').split(';')[0].trim();if(!a)return'Author';
   if(a.includes(','))return a.split(',')[0].trim();
   const p=a.split(/\s+/);return p[p.length-1]}
@@ -8295,19 +8308,139 @@ function citNumFor(d){
 /* Puts the in-text citation at the cursor. Numbered styles use the source's library number; AMA
    puts the number in superscript. */
 function citPutIntext(d){
-  const st=document.getElementById('citStyle').value;
-  let n=0,warn=false;
-  if(citIsNumbered(st)){const r=citNumFor(d);n=r.n;warn=!r.saved}
-  const f=citFmt(d,n);
-  if(f.sup&&!POPOUT){insertHTMLBlockIntoEditor('<sup>'+escHTML(String(n))+'</sup>')}
-  else citInsertAtCursor(' '+f.intext);
-  return warn;
+  /* A citation is always tied to a library source, so a source not yet saved is saved first. */
+  const l=citGetLib(),k=citKey(d);let e=l.find(x=>x.cid&&d.cid&&x.cid===d.cid)||l.find(x=>citKey(x)===k);
+  if(!e){e=Object.assign({},d);delete e.cid;l.push(e);citSaveLib(l);e=citGetLib().find(x=>citKey(x)===k)||e}
+  if(POPOUT){try{popChan&&popChan.postMessage({type:'insertCit',cid:e.cid});showToast(t('pop_sent'))}catch(x){showToast(t('pop_nowin'))}return false}
+  citInsertSpan(e.cid);
+  citRefreshDoc();
+  return false;
+}
+/* Puts one live citation at the cursor, inside the sentence, never as a new block. */
+function citInsertSpan(cid){
+  restoreEditorSelection();
+  const sel=window.getSelection();if(!sel.rangeCount)placeCaretAtEnd();
+  let r=sel.getRangeAt(0);
+  if(r.startContainer===editor){const kids=editor.childNodes,prev=kids[r.startOffset-1]||editor.lastChild;
+    if(prev&&prev.nodeType===1&&/^(P|DIV|LI|H[1-6]|BLOCKQUOTE)$/.test(prev.tagName)&&!prev.hasAttribute('data-bib')){r=document.createRange();r.selectNodeContents(prev);r.collapse(false)}}
+  if(r.startContainer.nodeType===1&&r.startContainer.closest&&r.startContainer.closest('span.cit,[data-bib]')){const blk=r.startContainer.closest('span.cit,[data-bib]');r=document.createRange();r.setStartAfter(blk);r.collapse(true)}
+  r.deleteContents();
+  /* Author-date and bracket styles put the citation before the full stop; AMA's superscript goes after it. */
+  const stNow=document.getElementById('citStyle').value;
+  if(r.startContainer.nodeType===1&&r.startOffset>0){const prevN=r.startContainer.childNodes[r.startOffset-1];if(prevN&&prevN.nodeType===3){r=document.createRange();r.setStart(prevN,prevN.nodeValue.length);r.collapse(true)}}
+  try{const st=stNow,tn=r.startContainer;
+    if(st!=='ama'&&tn.nodeType===3&&r.startOffset>0){const before=tn.nodeValue.slice(0,r.startOffset),m=before.match(/([.?!।])(\s*)$/);
+      if(m){r.setStart(tn,r.startOffset-m[0].length);r.collapse(true)}}}catch(e){}
+  const sp=document.createElement('span');sp.className='cit';sp.setAttribute('contenteditable','false');sp.dataset.cid=cid;sp.textContent='…';
+  const after=document.createTextNode('\u200b');
+  r.insertNode(after);r.insertNode(sp);
+  /* No space before an AMA superscript, and none twice. */
+  const pc=r.startContainer.nodeType===3?r.startContainer.nodeValue.slice(0,r.startOffset):'';
+  if(stNow!=='ama'&&!/\s$/.test(pc))r.insertNode(document.createTextNode(' '));
+  const nr=document.createRange();nr.setStart(after,1);nr.collapse(true);sel.removeAllRanges();sel.addRange(nr);savedRange=nr.cloneRange();
+  upd();
+}
+function citSpanHTML(cid){return'<span class="cit" contenteditable="false" data-cid="'+escAttr(cid)+'">…</span>'}
+/* The text inside one citation for the current style. Several sources in one citation are joined the way
+   each style joins them. */
+function citIntextHTML(list,nums,st){
+  const meta=CIT_STYLES[st]||CIT_STYLES.apa;
+  if(meta.numbered){
+    const f0=citFmt(list[0],nums[0]||1,st);const ns=nums.filter(Boolean).sort((a,b)=>a-b).join(',');
+    if(f0.sup)return'<sup>'+escHTML(ns)+'</sup>';
+    if(list.length===1)return escHTML(citFmt(list[0],nums[0]||1,st).intext);
+    return escHTML('['+ns+']');
+  }
+  const parts=list.map(d=>String(citFmt(d,0,st).intext||'').trim());
+  if(parts.length===1)return escHTML(parts[0]);
+  return escHTML('('+parts.map(p=>p.replace(/^\(|\)$/g,'')).join('; ')+')');
+}
+/* Brings every citation and the reference list in the open document in line with the library and the
+   style. Numbered styles number sources by first appearance in the document. Safe to call often: it only
+   writes where the text actually changes. */
+let citRefreshing=false;
+function citRefreshDoc(){
+  if(POPOUT||citRefreshing||typeof editor==='undefined'||!editor)return;
+  citRefreshing=true;
+  try{
+    const st=document.getElementById('citStyle').value,meta=CIT_STYLES[st]||CIT_STYLES.apa;
+    const lib=citGetLib(),by={};lib.forEach(d=>{if(d.cid)by[d.cid]=d});
+    const spans=[...editor.querySelectorAll('span.cit[data-cid]')];
+    const order=[];spans.forEach(sp=>sp.dataset.cid.split(',').forEach(c=>{if(by[c]&&order.indexOf(c)<0)order.push(c)}));
+    const num={};order.forEach((c,i)=>num[c]=i+1);
+    let missing=0,changed=false;const hi=getLang()==='hi';
+    spans.forEach(sp=>{
+      if(sp.getAttribute('contenteditable')!=='false')sp.setAttribute('contenteditable','false');
+      const ids=sp.dataset.cid.split(',').filter(Boolean),ok=ids.filter(c=>by[c]);
+      if(!ok.length){missing++;if(!sp.classList.contains('cit-missing')){sp.classList.add('cit-missing');sp.title=hi?'इस citation का source library में नहीं है':'This citation has no source in the library';changed=true}return}
+      if(sp.classList.contains('cit-missing')){sp.classList.remove('cit-missing');sp.removeAttribute('title');changed=true}
+      const h=citIntextHTML(ok.map(c=>by[c]),ok.map(c=>num[c]||0),st);
+      if(sp.innerHTML!==h){sp.innerHTML=h;changed=true}
+    });
+    const bib=[...editor.querySelectorAll('[data-bib]')];
+    if(bib.length){
+      let items;
+      if(order.length)items=order.map(c=>({d:by[c],n:num[c]}));
+      else items=lib.map((d,i)=>({d:d,n:i+1}));
+      if(!meta.numbered)items.sort((a,b)=>citLastName(a.d.author).localeCompare(citLastName(b.d.author),'en',{sensitivity:'base'}));
+      const html=citBibHTML(items,meta,st);
+      const cur=bib.map(x=>x.outerHTML).join('');
+      if(cur!==html){
+        const tmp=document.createElement('div');tmp.innerHTML=html;
+        const first=bib[0];[...tmp.childNodes].forEach(n=>first.parentNode.insertBefore(n,first));bib.forEach(x=>x.remove());changed=true;
+      }
+    }
+    citDocStatusShow({spans:spans.length,cited:order.length,missing:missing,uncited:spans.length?lib.filter(d=>!num[d.cid]).length:0,lib:lib.length});
+    if(changed){try{upd()}catch(e){}}
+  }finally{citRefreshing=false}
+}
+function citBibHTML(items,meta,st){
+  const head='<p class="ref-head" data-bib="h" contenteditable="false" style="text-align:center;margin:14px 0 8px"><b>'+escHTML(meta.head)+'</b></p>';
+  return head+items.map(x=>'<p class="ref-item" data-bib="i" contenteditable="false" style="padding-left:2em;text-indent:-2em;margin:0 0 6px">'+citFmt(x.d,meta.numbered?x.n:0,st).refHTML+'</p>').join('');
+}
+function citDocStatusShow(o){
+  const el=document.getElementById('citDocStatus');if(!el)return;const hi=getLang()==='hi';
+  if(!o.spans){el.innerHTML='';return}
+  let h=hi?('इस document में: '+o.cited+' source cite किए गए'):('In this document: '+o.cited+' source'+(o.cited===1?'':'s')+' cited');
+  if(o.missing)h+=' · <span style="color:#b91c1c">'+(hi?(o.missing+' citation का source library में नहीं (लाल रंग में)'):(o.missing+' citation'+(o.missing===1?' has':'s have')+' no source in the library (shown in red)'))+'</span>';
+  if(o.uncited)h+=' · '+(hi?(o.uncited+' library source document में cite नहीं हुए'):(o.uncited+' library source'+(o.uncited===1?' is':'s are')+' not cited in this document'));
+  el.innerHTML=h;
+}
+/* Older documents have citations typed as plain text. This ties the ones that exactly match a library
+   source in the current style to that source, so they update from now on. Numbered "[n]" citations are
+   read with the old library-order numbers. */
+function citLinkPlain(quiet){
+  if(POPOUT)return 0;
+  const st=document.getElementById('citStyle').value,meta=CIT_STYLES[st]||CIT_STYLES.apa,lib=citGetLib();if(!lib.length)return 0;
+  const pats=[];
+  if(meta.numbered){lib.forEach((d,i)=>pats.push({re:new RegExp('\\[\\s*'+(i+1)+'\\s*\\]','g'),cid:d.cid}))}
+  else lib.forEach(d=>{const it=String(citFmt(d,0,st).intext||'').trim();if(it.length>3)pats.push({re:new RegExp(it.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),cid:d.cid})});
+  let n=0;
+  const walker=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT,{acceptNode:x=>x.parentElement&&x.parentElement.closest('span.cit,[data-bib],.ref-item,.ref-head')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(tn=>{
+    let txt=tn.nodeValue,hits=[];
+    pats.forEach(p=>{p.re.lastIndex=0;let m;while((m=p.re.exec(txt))){hits.push({a:m.index,b:m.index+m[0].length,cid:p.cid})}});
+    if(!hits.length)return;
+    hits.sort((x,y)=>x.a-y.a);const keep=[];let end=-1;hits.forEach(h=>{if(h.a>=end){keep.push(h);end=h.b}});
+    const frag=document.createDocumentFragment();let pos=0;
+    keep.forEach(h=>{frag.appendChild(document.createTextNode(txt.slice(pos,h.a)));const sp=document.createElement('span');sp.className='cit';sp.setAttribute('contenteditable','false');sp.dataset.cid=h.cid;sp.textContent=txt.slice(h.a,h.b);frag.appendChild(sp);pos=h.b;n++});
+    frag.appendChild(document.createTextNode(txt.slice(pos)));tn.parentNode.replaceChild(frag,tn);
+  });
+  /* A reference list inserted before this version is marked so it updates too. */
+  editor.querySelectorAll('p.ref-head,p.ref-item').forEach(p=>{if(!p.dataset.bib){p.dataset.bib=p.classList.contains('ref-head')?'h':'i';p.setAttribute('contenteditable','false')}});
+  citRefreshDoc();
+  if(!quiet)showToast(getLang()==='hi'?(n+' citations जुड़ गए'):(n+' citation'+(n===1?'':'s')+' linked to the library'));
+  return n;
 }
 function citInsert(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
-  const warn=citPutIntext(d);showToast(warn?t('cite_num_unsaved'):'Citation inserted ✓')}
+  citPutIntext(d);showToast(getLang()==='hi'?'Citation डाला गया और library में save हुआ ✓':'Citation inserted and saved to your library ✓')}
 function citAdd(){const d=citReadForm();if(!d.author||!d.title){showToast('Add author and title first');return}
   const l=citGetLib();l.push(d);citSaveLib(l);actLog('cit');showToast('Saved to library ✓')}
-function citDel(i){citActiveIdx=-1;const l=citGetLib();l.splice(i,1);citSaveLib(l)}
+function citDel(i){const l=citGetLib(),d=l[i];if(!d)return;
+  const n=(typeof editor!=='undefined'&&editor&&d.cid)?editor.querySelectorAll('span.cit[data-cid~="'+d.cid+'"],span.cit[data-cid="'+d.cid+'"]').length:0;
+  if(n&&!confirm(getLang()==='hi'?('यह source खुले document में '+n+' बार cite हुआ है। हटाने पर वे citations लाल दिखेंगे। फिर भी हटाएँ?'):('This source is cited '+n+' time'+(n===1?'':'s')+' in the open document. Those citations will turn red. Remove it anyway?')))return;
+  citActiveIdx=-1;l.splice(i,1);citSaveLib(l)}
 /* Backlinks, scaled down to one student: for each library source, which of their own documents
    cite it. No graph database — a plain-text scan of the documents already in localStorage, matching
    the author's surname followed within ~40 characters by the year, which covers (Smith, 2020),
@@ -8318,8 +8451,10 @@ function citPlainDocs(){
   return docsGet().map(d=>{
     const html=(d.id===cur&&typeof editor!=='undefined'&&editor)?getEditorHTML():(d.body||'');
     const div=document.createElement('div');div.innerHTML=bodyToHTML(html);
+    const cids=[].map.call(div.querySelectorAll('span.cit[data-cid]'),x=>x.getAttribute('data-cid')||'');
+    div.querySelectorAll('span.cit[data-cid],[data-bib]').forEach(x=>x.remove());
     const sups=[].map.call(div.querySelectorAll('sup,span[style*="vertical-align: super"],span[style*="vertical-align:super"]'),x=>x.textContent||'');
-    return{id:d.id,title:d.title||'Untitled',text:(div.textContent||'').replace(/\s+/g,' '),sups:sups};
+    return{id:d.id,title:d.title||'Untitled',text:(div.textContent||'').replace(/\s+/g,' '),sups:sups,cids:cids};
   });
 }
 function citRegex(entry){
@@ -8348,6 +8483,8 @@ function citUsageNumbered(n,docs){
   return out;
 }
 function citUsage(entry,docs,idx){
+  const live=[];if(entry.cid)docs.forEach(d=>{const n=(d.cids||[]).filter(c=>c.split(',').indexOf(entry.cid)>=0).length;if(n)live.push({id:d.id,title:d.title,n})});
+  if(live.length||docs.some(d=>(d.cids||[]).length))return live;
   if(citIsNumbered(document.getElementById('citStyle').value)&&idx>=0)return citUsageNumbered(idx+1,docs);
   const re=citRegex(entry);if(!re)return[];
   const out=[];
@@ -8409,10 +8546,14 @@ if(popChan&&!POPOUT){
       insertIntoEditor(m.text,hasSelection()||!!savedRange);
       showToast('Citation inserted ✓');
     }
+    if(m.type==='insertCit'&&typeof m.cid==='string'){
+      const d=citGetLib().find(x=>x.cid===m.cid);if(!d)return;
+      citInsertSpan(d.cid);citRefreshDoc();showToast('Citation inserted ✓');
+    }
   };
 }
 window.addEventListener('storage',ev=>{
-  if(ev.key==='appu_citations'||ev.key==='appu_retraction_cache'){try{citRender()}catch(e){}}
+  if(ev.key==='appu_citations'||ev.key==='appu_retraction_cache'){try{citRender()}catch(e){}try{citRefreshDoc()}catch(e){}}
 });
 function popOutTool(){
   const act=document.querySelector('.tool-panel.active');
@@ -8610,7 +8751,14 @@ function citTypeChanged(){
   document.querySelectorAll('.cit-only').forEach(el=>{el.style.display=(el.getAttribute('data-for')||'').split(' ').indexOf(k)>=0?'':'none'});
   citRender();
 }
-function citStyleChanged(){citRender();citStyleNoteUpdate()}
+function citStyleChanged(){const sel=document.getElementById('citStyle');
+  /* Old plain citations are read in the style they were written in, before the switch. */
+  try{const prev=citStyleSaved();if(prev&&prev!==sel.value){const v=sel.value;sel.value=prev;citLinkPlain(true);sel.value=v}}catch(e){}
+  citStyleSave(sel.value);citRender();citStyleNoteUpdate();citRefreshDoc()}
+function citStyleMap(){try{return JSON.parse(LS.get('appu_doc_citstyle')||'{}')||{}}catch(e){return{}}}
+function citStyleSaved(){const m=citStyleMap(),id=(typeof docCurrentId==='function')?docCurrentId():'';return m[id]||LS.get('appu_citstyle_last')||''}
+function citStyleSave(v){if(POPOUT)return;const m=citStyleMap(),id=(typeof docCurrentId==='function')?docCurrentId():'';if(id)m[id]=v;LS.set('appu_doc_citstyle',JSON.stringify(m));LS.set('appu_citstyle_last',v)}
+function citStyleRestore(){const sel=document.getElementById('citStyle');if(!sel)return;const v=citStyleSaved();if(v&&[...sel.options].some(o=>o.value===v))sel.value=v;try{citStyleNoteUpdate()}catch(e){}}
 function citStyleNoteUpdate(){
   try{const ty=document.getElementById('citType');if(ty){const k=citKind(ty.value);document.querySelectorAll('.cit-only').forEach(el=>{el.style.display=(el.getAttribute('data-for')||'').split(' ').indexOf(k)>=0?'':'none'})}}catch(e){}
   const el=document.getElementById('citStyleNote'),sel=document.getElementById('citStyle');
@@ -8636,7 +8784,7 @@ function citRender(){
   const nmEl=document.getElementById('citNumMissing');
   if(nmEl){
     let miss=[];
-    if(citIsNumbered(document.getElementById('citStyle').value)){try{miss=citMissingNumbers(docsPlain,l.length)}catch(e){miss=[]}}
+    if(citIsNumbered(document.getElementById('citStyle').value)&&!docsPlain.some(d=>(d.cids||[]).length)){try{miss=citMissingNumbers(docsPlain,l.length)}catch(e){miss=[]}}
     nmEl.textContent=miss.length?t('num_missing_fmt').replace('{n}',miss.map(n=>'['+n+']').join(', ')):'';
   }
   const rcAll=rcCache();
@@ -8675,9 +8823,11 @@ function citInsertBib(){
   const meta=CIT_STYLES[st]||CIT_STYLES.apa,numbered=meta.numbered;
   const items=l.map((d,i)=>({d:d,i:i}));
   if(!numbered)items.sort((a,b)=>citLastName(a.d.author).localeCompare(citLastName(b.d.author),'en',{sensitivity:'base'}));
-  const head='<p class="ref-head" style="text-align:center;margin:14px 0 8px"><b>'+escHTML(meta.head)+'</b></p>';
-  const body=items.map(x=>'<p class="ref-item" style="padding-left:2em;text-indent:-2em;margin:0 0 6px">'+citFmt(x.d,numbered?x.i+1:0).refHTML+'</p>').join('');
-  insertHTMLBlockIntoEditor('<p><br></p>'+head+body);
+  citLinkPlain(true);
+  const old=editor.querySelector('[data-bib]');
+  if(old){citRefreshDoc();try{old.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}showToast(getLang()==='hi'?'Reference list पहले से है, उसे update कर दिया ✓':'The reference list is already in the document; it has been updated ✓');return}
+  insertHTMLBlockIntoEditor('<p><br></p>'+citBibHTML(items.map(x=>({d:x.d,n:x.i+1})),meta,st)+'<p><br></p>');
+  citRefreshDoc();
   showToast(numbered?t('cite_bib_fmt_num'):t('cite_bib_fmt'));
 }
 /* Source-language-aware quote insertion (bilingual batch two). A Hindi source is
@@ -13373,7 +13523,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26a';
+const APP_BUILD='2026.10.26b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -15788,7 +15938,9 @@ function citCheckCaptureHash(){
     editor.classList.toggle('qual-hide',!show);
   })();
   styleInit();
+  try{citStyleRestore()}catch(e){}
   citRender();
+  try{citRefreshDoc()}catch(e){}
   citSetupBookmarklet();
   citCheckCaptureHash();
   refreshProvUI();
