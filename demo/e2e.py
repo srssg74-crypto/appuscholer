@@ -194,7 +194,7 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     # ---- poster designer: people, affiliations, logo, graph, layout, editing, then reopen ----
     pg.evaluate("pzOpen()"); pg.wait_for_timeout(900)
     lay = POSTER[label]
-    pg.evaluate("""L=>{PZ.people=L.people;PZ.affs=L.affs;PZ.conf=L.conf;PZ.size=L.size;PZ.theme=L.theme;PZ.cols=L.cols;
+    pg.evaluate("""L=>{PZ.title=L.title;PZ.people=L.people;PZ.affs=L.affs;PZ.conf=L.conf;PZ.size=L.size;PZ.theme=L.theme;PZ.cols=L.cols;
       const c=document.createElement('canvas');c.width=300;c.height=300;const g=c.getContext('2d');g.fillStyle='#1F4E79';g.beginPath();g.arc(150,150,140,0,7);g.fill();g.fillStyle='#fff';g.font='bold 120px Arial';g.textAlign='center';g.fillText('DC',150,192);
       PZ.logos=[c.toDataURL('image/png')];pzPeopleRender();pzLogosRender();pzArrange();pzStore();pzPreview()}""", lay)
     pg.wait_for_timeout(500)
@@ -204,6 +204,8 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     pg.evaluate("pzMove(0,-1)"); pg.evaluate("pzArrange();pzStore();pzPreview()"); pg.wait_for_timeout(500)
     shot(pg, f'{label}-poster-designer')
     warn = pg.evaluate("document.getElementById('pzWarn').innerText")
+    pzc = pg.evaluate("pzAddAck();pzStore();pzPreview();pzCheck().map(r=>(r[0]?'OK ':'NO ')+r[1])")
+    log(all(x.startswith('OK') for x in pzc), f'{label} Poster check (UWA poster guide rules) all pass', '; '.join(x for x in pzc if x.startswith('NO')) or f'{len(pzc)} rules')
     pg.evaluate("pzClose()"); pg.wait_for_timeout(300)
     pg.evaluate("PZ=null;pzOpen()"); pg.wait_for_timeout(700)
     kept = pg.evaluate("[PZ.people.map(p=>p.name+'|'+p.qual+'|'+p.role).join('; '),PZ.affs.join('; '),PZ.logos.length,PZ.boxes.some(b=>b.h.indexOf(arguments[0])>=0),PZ.size,PZ.cols]".replace('arguments[0]', repr(lay['concl'][:30])))
@@ -277,14 +279,14 @@ POSTER = {
                   {'name': 'Dr. Meena Sharma', 'qual': 'PhD, Professor of Psychology', 'role': 'Supervisor', 'aff': 1},
                   {'name': 'Dr. R. K. Gupta', 'qual': 'MD (Obstetrics and Gynaecology)', 'role': 'Co-supervisor', 'aff': 2}],
        'affs': ['Department of Psychology, Demo College, Jaipur', 'Department of Obstetrics, Demo Medical College, Jaipur'],
-       'conf': 'Demo National Conference of Psychology, Jaipur, 2026', 'size': 'A0P', 'theme': 'purple', 'cols': 2,
+       'title': 'Anaemia and anxiety in the third trimester: 1,240 women in Jaipur', 'conf': 'Demo National Conference of Psychology, Jaipur, 2026', 'size': 'A0P', 'theme': 'purple', 'cols': 2,
        'concl': 'Anaemic women carried more anxiety in the third trimester; clinics that test haemoglobin can screen them with the GAD-7.',
        'idea': 'Does poor sleep in late pregnancy explain part of the link between anaemia and anxiety?'},
  'B': {'people': [{'name': 'Asha Verma', 'qual': 'MA Psychology (final year)', 'role': 'Student', 'aff': 1},
                   {'name': 'Dr. Meena Sharma', 'qual': 'PhD, Professor of Psychology', 'role': 'Supervisor', 'aff': 1},
                   {'name': 'Dr. S. Khan', 'qual': 'MD (Paediatrics)', 'role': 'Co-supervisor', 'aff': 2}],
        'affs': ['Department of Psychology, Demo College, Jaipur', 'Department of Paediatrics, Demo Medical College, Jaipur'],
-       'conf': 'Demo Paediatrics and Behaviour Meet, Jaipur, 2026', 'size': 'A0L', 'theme': 'green', 'cols': 3,
+       'title': 'Paracetamol after the MR vaccine and the infant antibody response', 'conf': 'Demo Paediatrics and Behaviour Meet, Jaipur, 2026', 'size': 'A0L', 'theme': 'green', 'cols': 3,
        'concl': 'Give paracetamol after MR1 for fever only; routine doses went with lower seroconversion.',
        'idea': 'Would a reminder card at the vaccination session reduce routine paracetamol use?'},
 }
