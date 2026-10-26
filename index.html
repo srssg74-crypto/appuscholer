@@ -4344,10 +4344,16 @@ function t0(k){return t(k)}
 function vzUseLab(){
   const d=window._statsData;
   if(!d){showToast(t('vz_no_lab'));return}
-  document.getElementById('vzPaste').value=[d.headers.join(',')].concat(d.rows.map(r=>r.join(','))).join('\n');
+  const P=document.getElementById('vzPaste');P.value=[d.headers.join(',')].concat(d.rows.map(r=>r.join(','))).join('\n');
+  P.dataset.lab=vzLabSig();
   vzLoad();
 }
-function vzOpen(){document.getElementById('vzDlg').showModal();placeFill('vzWhere');if(window._statsData&&!document.getElementById('vzPaste').value)vzUseLab()}
+/* Which Statistics Lab data the chart maker last copied. When the student loads another file or adds a
+   scored column, the chart maker picks up the new data, unless they pasted their own. */
+function vzLabSig(){const d=window._statsData;return d?d.headers.join('|')+'#'+d.rows.length:''}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='vzPaste')delete e.target.dataset.lab});
+function vzOpen(){document.getElementById('vzDlg').showModal();placeFill('vzWhere');const P=document.getElementById('vzPaste');
+  if(window._statsData&&(!P.value||(P.dataset.lab&&P.dataset.lab!==vzLabSig()))){['vzTitle','vzNote','vzXL','vzYL'].forEach(id=>{const x=document.getElementById(id);if(x)delete x.dataset.touched});vzUseLab()}}
 function vzSync(){
   const ty=document.getElementById('vzType').value;
   const show=(id,on)=>{document.getElementById(id).style.display=on?'':'none'};
@@ -13890,7 +13896,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26g';
+const APP_BUILD='2026.10.26h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
