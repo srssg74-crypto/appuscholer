@@ -122,7 +122,7 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
         if pg.evaluate("(typeof rsResults!=='undefined'?rsResults:[]).length>=3"): break
     n = pg.evaluate("(typeof rsResults!=='undefined'?rsResults:[]).length"); log(n >= 3, f'{label} Stage 2: real paper search (OpenAlex/PubMed)', f'{n} results')
     shot(pg, f'{label}-stage2-search')
-    pg.evaluate("[0,1].forEach(i=>{const c=document.getElementById('rsChk'+i);if(c)c.checked=true})")
+    pg.evaluate("(()=>{const R=(typeof rsResults!=='undefined'?rsResults:[]);let ix=R.map((r,i)=>[+(r.year||0),i]).filter(x=>x[0]>=2010).map(x=>x[1]).slice(0,2);if(ix.length<2)ix=[0,1];ix.forEach(i=>{const c=document.getElementById('rsChk'+i);if(c)c.checked=true})})()")   # the student ticks two recent papers
     pg.evaluate("researchGapFinder()"); pg.wait_for_timeout(2500)
     pg.evaluate("gapDlgOpen()"); pg.wait_for_timeout(300); fillv(pg, '#gapText', S.get('gap1', S['gap'])); pg.evaluate("gapSave()"); pg.wait_for_timeout(300)
     pg.evaluate("gapDlgOpen()"); pg.wait_for_timeout(300); fillv(pg, '#gapText', S['gap']); pg.evaluate("gapSave()")   # edit 2: rewrite the gap
@@ -167,13 +167,18 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     k = tests_fn(pg, data_files)
     figure_fn(pg, k)
     close_dialogs(pg)
+    # ---- edit: the student swaps data column names for plain words in the Results ----
+    words = WORDS_A if label == 'A' else WORDS_B
+    nt = pg.evaluate("""w=>{const tw=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT);let n,c=0;while(n=tw.nextNode()){const pe=n.parentElement;if(!pe||!(pe.closest('.stat-tag')||/^(Distribution|Figure)/.test((pe.closest('p,figcaption,div')||pe).textContent.trim())))continue;let t=n.textContent;w.forEach(([a,b])=>{t=t.split(a).join(b)});if(t!==n.textContent){n.textContent=t;c++}}editor.dispatchEvent(new Event('input'));return c}""", words)
+    left = pg.evaluate("w=>{const t=[...editor.querySelectorAll('.stat-tag')].map(x=>x.innerText).join(' ');return w.filter(([a])=>/_/.test(a)&&t.indexOf(a)>=0).map(x=>x[0])}", words)
+    log(nt > 0 and not left and pg.evaluate("editor.querySelectorAll('.stat-tag').length") > 0, f'{label} Edit: column names in Results changed to plain words; results stay tagged', f'{nt} text pieces edited; left: {left}')
     # ---- edits in the paper: citation style and a deleted citation ----
     pg.evaluate("showTool('cite');citStyle.value='vancouver';citStyleChanged()"); pg.wait_for_timeout(700)
     shot(pg, f'{label}-edit-vancouver')
     nums = pg.evaluate("[...editor.querySelectorAll('span.cit')].map(s=>s.innerText)"); log(all(re.match(r'^\[\d+\]$', x) for x in nums if x), f'{label} Edit: switched to Vancouver, citations numbered', nums[:8])
     pg.evaluate("citStyle.value='apa';citStyleChanged()"); pg.wait_for_timeout(700)
     nbib = pg.evaluate("editor.querySelectorAll('[data-bib=\"i\"]').length"); log(nbib >= 3, f'{label} Edit: back to APA, reference list has {nbib} entries')
-    pg.evaluate("""()=>{const sp=[...editor.querySelectorAll('#res0 ~ p span.cit, p span.cit')].pop();if(sp){sp.remove();editor.dispatchEvent(new Event('input'))}}""")
+    pg.evaluate("""()=>{const sp=[...editor.querySelectorAll('#res0 ~ p span.cit, p span.cit')].pop();if(sp){const pv=sp.previousSibling;if(pv&&pv.nodeType===3)pv.textContent=pv.textContent.replace(/\\s+$/,'');sp.remove();editor.dispatchEvent(new Event('input'))}}""")
     pg.wait_for_timeout(1200)
     log(pg.evaluate("editor.querySelectorAll('[data-bib=\"i\"]').length") <= nbib, f'{label} Edit: deleted a citation; reference list updated')
     pg.evaluate("editor.querySelectorAll('#res0').forEach(p=>p.removeAttribute('id'))")
@@ -232,6 +237,8 @@ def fig_B(pg, k):
     pg.wait_for_timeout(800); pg.evaluate("vzInsert()"); pg.wait_for_timeout(1500)
     log(pg.evaluate("editor.querySelectorAll('img').length") >= 1, 'B Figure inserted into Results')
 
+WORDS_A = [['mother_GAD7_total', "the mothers' GAD-7 scores"], ['father_GAD7_total', "the fathers' GAD-7 scores"], ['GAD7_total', 'GAD-7 score'], ['RSES_total', 'self-esteem (RSES)'], ['SWLS_total', 'life satisfaction (SWLS)'], ['hb_16wk', 'haemoglobin at 16 weeks'], ['hb_34wk', 'haemoglobin at 34 weeks'], ['anaemia_34wk', 'anaemia at 34 weeks'], ['between Yes (', 'between women with anaemia ('], [' and No (', ' and women without anaemia (']]
+WORDS_B = [['maternal_hb_34wk', "the mother's haemoglobin at 34 weeks"], ['paracetamol_given', 'paracetamol after MR1'], ['seroconverted', 'seroconversion'], ['infant_sex', 'infant sex'], ['birth_weight_g', 'birth weight (g)']]
 VARS_A = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
 add('Anxiety','outcome','score','GAD7');add('Life satisfaction','outcome','score','SWLS');add('Self-esteem','predictor','score','RSES');add('Anaemia at 34 weeks','group','yesno','');add('Haemoglobin at 34 weeks','predictor','score','own');add('Parity','covariate','category','','First pregnancy, Second or later');add('Age','covariate','score','own')})()"""
 VARS_B = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
