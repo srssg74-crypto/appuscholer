@@ -155,6 +155,8 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     fill_ph(pg, 'alpha level', S['analysis'])
     fill_ph(pg, 'main finding in plain words', cite(''.join(S['discussion']), cids))
     fill_ph(pg, 'two or three sentences', S['conclusion'])
+    log(fill_ph(pg, 'instrument or analyser', S['instruments']), f'{label} Stage 5: instrument, make, model and calibration written in Materials and Methods')
+    if S.get('corr'): log(fill_ph(pg, 'for each correlation', S['corr']), f'{label} Stage 5: Discussion explains what each correlation means')
     fill_ph(pg, 'main result with the test', S['abstract_res']); fill_ph(pg, 'one sentence', S['abstract_con'])
     # measures placeholder for own-question variables
     pg.evaluate("""()=>{editor.querySelectorAll('.draft-ph').forEach(x=>{if(/how it was measured/.test(x.textContent))x.replaceWith(document.createTextNode('Taken from the hospital laboratory report or the antenatal card.'))});editor.dispatchEvent(new Event('input'))}""")
@@ -240,9 +242,9 @@ def fig_B(pg, k):
 WORDS_A = [['mother_GAD7_total', "the mothers' GAD-7 scores"], ['father_GAD7_total', "the fathers' GAD-7 scores"], ['GAD7_total', 'GAD-7 score'], ['RSES_total', 'self-esteem (RSES)'], ['SWLS_total', 'life satisfaction (SWLS)'], ['hb_16wk', 'haemoglobin at 16 weeks'], ['hb_34wk', 'haemoglobin at 34 weeks'], ['anaemia_34wk', 'anaemia at 34 weeks'], ['between Yes (', 'between women with anaemia ('], [' and No (', ' and women without anaemia (']]
 WORDS_B = [['maternal_hb_34wk', "the mother's haemoglobin at 34 weeks"], ['paracetamol_given', 'paracetamol after MR1'], ['seroconverted', 'seroconversion'], ['infant_sex', 'infant sex'], ['birth_weight_g', 'birth weight (g)'], ['between Boy (', 'between boys ('], [' and Girl (', ' and girls (']]
 VARS_A = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
-add('Anxiety','outcome','score','GAD7');add('Life satisfaction','outcome','score','SWLS');add('Self-esteem','predictor','score','RSES');add('Anaemia at 34 weeks','group','yesno','');add('Haemoglobin at 34 weeks','predictor','score','own');add('Parity','covariate','category','','First pregnancy, Second or later');add('Age','covariate','score','own')})()"""
+add('Anxiety','outcome','score','GAD7');add('Life satisfaction','outcome','score','SWLS');add('Self-esteem','predictor','score','RSES');add('Anaemia at 34 weeks','group','yesno','');add('Haemoglobin at 34 weeks','predictor','score','instr');add('Parity','covariate','category','','First pregnancy, Second or later');add('Age','covariate','score','own')})()"""
 VARS_B = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
-add('Seroconversion','outcome','yesno','');add('Paracetamol after MR1','predictor','yesno','');add('Infant sex','group','category','','Boy, Girl');add('Birth weight','covariate','score','own')})()"""
+add('Seroconversion','outcome','yesno','');add('Paracetamol after MR1','predictor','yesno','');add('Infant sex','group','category','','Boy, Girl');add('Birth weight','covariate','score','instr')})()"""
 
 def main():
     with sync_playwright() as p:
