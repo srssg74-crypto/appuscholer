@@ -3477,7 +3477,8 @@ async function posterDownload(){const hi=studyHi();
   if(typeof PptxGenJS==='undefined'){showToast(hi?'Poster बनाने वाला tool load हो रहा है…':'Loading the poster maker…');const ok=await appuLib('PptxGenJS');if(!ok){showToast(hi?'Poster tool load नहीं हुआ। Internet जाँचें।':'The poster maker did not load. Check the internet.');return}}
   if(!PZ){PZ=pzGet()}if(!PZ||!PZ.boxes||!PZ.boxes.length){if(!editor.innerText.trim()){showToast(hi?'पहले document में paper लिखिए':'Write the paper in your document first');return}pzFromPaper();pzStore()}
   const z=PZ_SIZES[PZ.size]||PZ_SIZES.A0P,th=PZ_THEMES[PZ.theme]||PZ_THEMES.purple;
-  const host=document.createElement('div');host.style.cssText='position:fixed;left:-20000px;top:0;visibility:hidden';const root=document.createElement('div');host.appendChild(root);document.body.appendChild(host);
+  /* Off-screen but not hidden: hidden elements report empty innerText, which would leave the PowerPoint without words. */
+  const host=document.createElement('div');host.style.cssText='position:fixed;left:-30000px;top:0;pointer-events:none';const root=document.createElement('div');host.appendChild(root);document.body.appendChild(host);
   pzRender(root,PZ,false);await new Promise(r=>setTimeout(r,60));
   const R0=root.getBoundingClientRect(),inch=px=>px/96;const pos=el=>{const r=el.getBoundingClientRect();return{x:inch(r.left-R0.left),y:inch(r.top-R0.top),w:inch(r.width),h:inch(r.height)}};
   const fpt=el=>parseFloat(getComputedStyle(el).fontSize)*0.75;
