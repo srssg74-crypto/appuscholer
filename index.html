@@ -3103,7 +3103,7 @@ function qnItems(){const m=qnModel(),q=m.q,drop=q.dropScales||[],out=[];
     else lines.forEach((l,i)=>out.push({sec:v.name,col:qnSlug(v.name)+'_'+String(i+1).padStart(2,'0'),text:l,resp:'scale'}))});
   let scl=[];try{scl=SCALES}catch(e){}
   m.scales.filter(id=>drop.indexOf(id)<0).forEach(id=>{const x=scl.find(s=>s.id===id);if(!x)return;const names=slVarNames(x);
-    x.items.forEach((t,i)=>out.push({sec:x.name+' ('+x.short+')',stem:x.stem,col:names[i],text:t,resp:x.labels,credit:x.licence&&x.licence.attribution,scale:x}))});
+    slItems(x).forEach((t,i)=>out.push({sec:x.name+' ('+x.short+')',stem:x.stem,col:names[i],text:t,resp:x.labels,credit:x.licence&&x.licence.attribution,scale:x}))});
   return out}
 function qnHTML(){const m=qnModel(),q=m.q,items=qnItems();let h='<h1>'+escHTML(q.title||'Research questionnaire')+'</h1><p>'+escHTML(q.intro||'').replace(/\n/g,'<br>')+'</p><p>☐ I have read the above and I agree to take part. I am 18 years old or older.</p>';
   let sec='',n=0;
@@ -3614,17 +3614,18 @@ async function sfUnlock(){const hi=studyHi(),k=sfKey(),p=(document.getElementByI
 function sfDef(){const m=qnModel(),q=m.q,hi=studyHi(),k=sfKey(),items=qnItems();
   return{v:1,sid:k.sid,pk:k.pub,lang:hi?'hi':'en',t:q.title||(m.o.idea&&m.o.idea.topic?'Study: '+m.o.idea.topic:'Research form'),n:q.intro||'',
     q:items.map(it=>({c:it.col,s:it.sec,st:it.stem||undefined,q:it.text,r:it.resp}))}}
-async function sfLink(kiosk){const json=new TextEncoder().encode(JSON.stringify(sfDef()));let bytes;
+function sfMissingText(){try{return qnItems().filter(it=>it.scale&&it.scale.hidden&&!slHasText(it.scale)).map(it=>it.scale.short).filter((v,i,a)=>a.indexOf(v)===i)}catch(e){return[]}}
+async function sfLink(kiosk){const miss=sfMissingText();if(miss.length){const hi=studyHi();showToast(hi?miss.join(', ')+' के statements पहले Scale library में paste करें (मालिक के page से)':'First paste the '+miss.join(', ')+' statements in the Scale library (from the owner\'s page)');return null}const json=new TextEncoder().encode(JSON.stringify(sfDef()));let bytes;
   try{const cs=new CompressionStream('deflate-raw');const z=new Uint8Array(await new Response(new Blob([json]).stream().pipeThrough(cs)).arrayBuffer());bytes=new Uint8Array(z.length+1);bytes[0]=0x7a;bytes.set(z,1)}
   catch(e){bytes=new Uint8Array(json.length+1);bytes[0]=0x6a;bytes.set(json,1)}
   const base=location.href.split('#')[0].split('?')[0].replace(/[^/]*$/,'');return base+'form.html#f='+_sfB64u(bytes)+(kiosk?'&k=1':'')}
-async function sfCopyLink(){const hi=studyHi(),u=await sfLink(false);try{await navigator.clipboard.writeText(u)}catch(e){}
+async function sfCopyLink(){const hi=studyHi(),u=await sfLink(false);if(!u)return;try{await navigator.clipboard.writeText(u)}catch(e){}
   const box=document.getElementById('sfLinkOut');if(box){box.style.display='block';box.value=u}
   showToast(hi?'Link copy हुआ ✓ ('+u.length+' अक्षर)':'Link copied ✓ ('+u.length+' characters)')}
-async function sfShareLink(){const u=await sfLink(false),hi=studyHi();const msg=(hi?'कृपया इस research form को भरें। आपके जवाब आपके फ़ोन पर ही ताले में बंद होकर मुझ तक पहुँचेंगे: ':'Please fill in this research form. Your answers are locked on your phone before they reach me: ')+u;
+async function sfShareLink(){const u=await sfLink(false),hi=studyHi();if(!u)return;const msg=(hi?'कृपया इस research form को भरें। आपके जवाब आपके फ़ोन पर ही ताले में बंद होकर मुझ तक पहुँचेंगे: ':'Please fill in this research form. Your answers are locked on your phone before they reach me: ')+u;
   if(navigator.share){try{await navigator.share({text:msg});return}catch(e){if(e&&e.name==='AbortError')return}}
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank')}
-async function sfKiosk(){const u=await sfLink(true);window.open(u,'_blank')}
+async function sfKiosk(){const u=await sfLink(true);if(!u)return;window.open(u,'_blank')}
 async function sfImportText(text){const hi=studyHi(),k=sfKey();if(!k)return 0;const found=String(text).match(/APPU1\.[A-Za-z0-9_-]+/g)||[];let added=0,other=0;
   const have=new Set((await sfAll(k.sid)).map(r=>r.pkg));
   for(const pkg of found){let sid='';try{sid=JSON.parse(new TextDecoder().decode(_sfUnb64u(pkg.slice(6)))).sid}catch(e){continue}
@@ -14327,7 +14328,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.26n';
+const APP_BUILD='2026.10.26o';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -14392,20 +14393,20 @@ const SCALES=[
  codings:[{label:'Strongly agree = 3 down to Strongly disagree = 0 (Rosenberg original)',min:0,max:3,dir:'agree-high'},{label:'Strongly agree = 4 down to Strongly disagree = 1',min:1,max:4,dir:'agree-high'}],
  reverse:[2,5,6,8,9],bands:null,
  scoring:'Add the ten items after reverse-scoring items 2, 5, 6, 8 and 9. Higher totals mean higher self-esteem. The owner gives no official cut-off scores.',
- licence:{status:'Public domain',commercial:true,attribution:'Rosenberg, M. (1965). Society and the adolescent self-image. Princeton University Press.',source:'https://socy.umd.edu/about-us/using-rosenberg-self-esteem-scale',checked:'2026-10-07',
+ licence:{access:'free',status:'Public domain',commercial:true,attribution:'Rosenberg, M. (1965). Society and the adolescent self-image. Princeton University Press.',source:'https://socy.umd.edu/about-us/using-rosenberg-self-esteem-scale',checked:'2026-10-07',
   note:'The University of Maryland states: the scale is in the public domain, may be used without charge and without notifying the Sociology Department, including translations and adaptations, with traditional scholarly attribution.',
   verified:'Item text agreed word for word between two independent web copies. Compare once with the printed scale you cite.'},
  screening:false,hindi:null},
 {id:'SWLS',name:'Satisfaction With Life Scale',short:'SWLS',construct:'Global life satisfaction',
- stem:'Below are five statements that you may agree or disagree with. Using the 1 to 7 scale below, indicate your agreement with each item. Please be open and honest in your responding.',
- items:['In most ways my life is close to my ideal.','The conditions of my life are excellent.','I am satisfied with my life.','So far I have gotten the important things I want in life.','If I could live my life over, I would change almost nothing.'],
+ stem:'Use the instructions from the owner\'s page. Answer each statement from 1 (strongly disagree) to 7 (strongly agree).',
+ items:['','','','',''],hidden:true,
  labels:['Strongly disagree','Disagree','Slightly disagree','Neither agree nor disagree','Slightly agree','Agree','Strongly agree'],
  codings:[{label:'Strongly disagree = 1 up to Strongly agree = 7',min:1,max:7,dir:'agree-high'}],
  reverse:[],
  bands:[{max:9,label:'Extremely dissatisfied'},{max:14,label:'Dissatisfied'},{max:19,label:'Slightly below average'},{max:24,label:'Average'},{max:29,label:'High satisfaction'},{max:35,label:'Very high satisfaction'}],
  scoring:'Add the five items. The total runs from 5 to 35. The bands come from the scale\'s own scoring guide and describe a score. They do not diagnose anything.',
  licence:{status:'Free to use with credit',commercial:false,attribution:'Diener, E., Emmons, R. A., Larsen, R. J., & Griffin, S. (1985). The Satisfaction With Life Scale. Journal of Personality Assessment, 49(1), 71-75.',source:'https://ggsc.berkeley.edu/images/uploads/Satisfaction_With_Life_Scale.pdf',checked:'2026-10-07',
-  note:'Free to use without permission or charge for non-commercial purposes, with credit to the authors. Do not use it in anything that is sold.',
+  note:'Free to use without permission or charge for non-commercial purposes, with credit to the authors. Do not use it in anything that is sold. Appuscholar therefore does not carry the item wording: open the owner\'s page, take the five statements from there, and paste them here once; they stay on your device.',access:'restricted',url:'https://eddiener.com/scales/7',
   verified:'Item text agreed word for word between two independent web copies (Berkeley GGSC and the TBI Model Systems page). Compare once with the owner\'s page.'},
  screening:false,hindi:null}
 ,{id:'GAD7',name:'Generalized Anxiety Disorder 7-item scale',short:'GAD-7',construct:'Anxiety symptoms over the last two weeks',
@@ -14416,22 +14417,65 @@ const SCALES=[
  reverse:[],
  bands:[{max:4,label:'Minimal'},{max:9,label:'Mild'},{max:14,label:'Moderate'},{max:21,label:'Severe'}],
  scoring:'Add the seven items. The total runs from 0 to 21. Scores of 5, 10 and 15 mark mild, moderate and severe anxiety symptoms (Spitzer et al., 2006). A score is a screening result, not a diagnosis; a score of 10 or more calls for a clinical assessment.',
- licence:{status:'Free to reproduce',commercial:true,attribution:'Spitzer, R. L., Kroenke, K., Williams, J. B. W., & Löwe, B. (2006). A brief measure for assessing generalized anxiety disorder: The GAD-7. Archives of Internal Medicine, 166(10), 1092-1097.',source:'https://loinc.org/69737-5',checked:'2026-10-26',
+ licence:{access:'free',status:'Free to reproduce',commercial:true,attribution:'Spitzer, R. L., Kroenke, K., Williams, J. B. W., & Löwe, B. (2006). A brief measure for assessing generalized anxiety disorder: The GAD-7. Archives of Internal Medicine, 166(10), 1092-1097.',source:'https://loinc.org/69737-5',checked:'2026-10-26',
   note:'The form states: developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues, with an educational grant from Pfizer Inc. No permission required to reproduce, translate, display or distribute.',
   verified:'Item text, stem and response options agreed between two independent copies (LOINC panel 69737-5 and the Health PEI form). The optional difficulty question is not included.'},
  screening:true,hindi:null}
 ];
 const SL_PENDING='PHQ-9, GAD-7, PHQ-2, GAD-2, AUDIT, DASS-21, MSPSS, UCLA Loneliness v3, General Self-Efficacy, Mini-IPIP and Grit-S are cleared in the research notes but wait for the owner\'s original file, so the wording is copied exactly. Screening scales (PHQ-9, GAD-7, AUDIT) also need the on-screen help path for self-harm answers before they go in.';
 function slById(id){return SCALES.find(x=>x.id===id)}
+/* Item wording. Free scales carry it. For restricted scales the student pastes the owner's wording once;
+   it is kept on this device only and never shipped with Appuscholar. */
+function slUserItems(id){try{const a=JSON.parse(LS.get('appu_scaletext_'+id)||'null');return Array.isArray(a)?a:null}catch(e){return null}}
+function slItems(x){if(!x.hidden)return x.items;const u=slUserItems(x.id);return x.items.map((_,i)=>(u&&u[i])?u[i]:'['+x.short+' item '+(i+1)+': take the wording from the owner\'s page]')}
+function slHasText(x){if(!x.hidden)return true;const u=slUserItems(x.id);return !!(u&&u.length===x.items.length&&u.every(t=>String(t).trim()))}
+function slSaveText(id){const x=slById(id),hi=studyHi();const lines=(document.getElementById('slPasteTxt').value||'').split('\n').map(t=>t.replace(/^\s*\d+[.)]\s*/,'').trim()).filter(Boolean);
+  if(lines.length!==x.items.length){showToast((hi?x.items.length+' statements चाहिए, '+lines.length+' मिले':'Need '+x.items.length+' statements, found '+lines.length));return}
+  LS.set('appu_scaletext_'+id,JSON.stringify(lines));showToast(hi?'Wording सहेजी गई (सिर्फ़ इस device पर) ✓':'Wording saved (on this device only) ✓');slPick(id)}
+/* Scales the library links to but does not carry. access: free (owner allows reuse; wording to be added once
+   copied exactly from the owner's file), restricted (owner limits use, e.g. non-commercial: link only),
+   paid (buy from the publisher: link only), request (ask the owner: link plus a ready email).
+   Status from owner pages checked 26 Oct 2026; contact addresses and links to be re-confirmed before each use. */
+const SCALE_LINKS=[
+ {short:'PHQ-9',name:'Patient Health Questionnaire-9',construct:'Depression symptoms',access:'free',url:'https://www.phqscreeners.com/',note:'PHQ Screeners: free to use. Wording to be added from the owner\'s file; screening scale needs a self-harm help path.'},
+ {short:'DASS-21',name:'Depression Anxiety Stress Scales (21 items)',construct:'Depression, anxiety, stress',access:'free',url:'http://www2.psy.unsw.edu.au/dass/',note:'Public domain; the scales themselves may not be sold. A Hindi version (Tripathi et al.) is listed on the owner\'s site.'},
+ {short:'K10',name:'Kessler Psychological Distress Scale',construct:'Psychological distress',access:'free',url:'https://www.hcp.med.harvard.edu/ncs/k6_scales.php',note:'Free to use per the official NCS page.'},
+ {short:'Mini-IPIP',name:'Mini International Personality Item Pool',construct:'Big Five personality',access:'free',url:'https://ipip.ori.org/',note:'IPIP items are public domain, including commercial use.'},
+ {short:'WHO-5',name:'WHO-5 Well-Being Index',construct:'Well-being',access:'restricted',url:'https://www.who.int/publications/m/item/WHO-UCN-MSD-MHE-2024.01',note:'WHO licence CC BY-NC-SA 3.0 IGO: non-commercial use with attribution.'},
+ {short:'AUDIT',name:'Alcohol Use Disorders Identification Test',construct:'Alcohol use',access:'restricted',url:'https://www.who.int/publications/i/item/WHO-MSD-MSB-01.6a',note:'WHO non-commercial licence. A Hindi edition was published by NDDTC, AIIMS New Delhi.'},
+ {short:'UCLA-3',name:'UCLA Loneliness Scale, Version 3',construct:'Loneliness',access:'restricted',url:'https://www.google.com/search?q=UCLA+Loneliness+Scale+Version+3+Russell+official',note:'Free for non-profit research only.'},
+ {short:'BFI-2',name:'Big Five Inventory-2',construct:'Big Five personality',access:'restricted',url:'https://www.colby.edu/psych/personality-lab/',note:'Non-commercial research only; download through the lab\'s form.'},
+ {short:'PSQI',name:'Pittsburgh Sleep Quality Index',construct:'Sleep quality',access:'request',url:'https://www.sleep.pitt.edu/instruments/',note:'Request form required; commercial studies pay a fee.'},
+ {short:'PSS-10',name:'Perceived Stress Scale',construct:'Perceived stress',access:'request',url:'https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/index.html',note:'Terms not confirmed on the owner\'s page: ask before use.'},
+ {short:'MSPSS',name:'Multidimensional Scale of Perceived Social Support',construct:'Social support',access:'request',url:'https://www.google.com/search?q=MSPSS+Zimet+scale+permission',note:'Terms not confirmed on an owner page: ask the authors.'},
+ {short:'EPDS',name:'Edinburgh Postnatal Depression Scale',construct:'Perinatal depression',access:'request',url:'https://www.google.com/search?q=Edinburgh+Postnatal+Depression+Scale+Royal+College+of+Psychiatrists+permission',note:'Terms not confirmed on an owner page: ask before use. A Hindi version was validated by Joshi et al. (2020).'},
+ {short:'CD-RISC',name:'Connor-Davidson Resilience Scale',construct:'Resilience',access:'request',url:'http://www.connordavidson-resiliencescale.com/',note:'Licence agreement required.'},
+ {short:'GHQ-12',name:'General Health Questionnaire-12',construct:'Psychological distress',access:'paid',url:'https://www.gl-assessment.co.uk/',note:'Sold by GL Assessment; buy or request through the publisher.'},
+ {short:'BDI-II',name:'Beck Depression Inventory-II',construct:'Depression',access:'paid',url:'https://www.pearsonassessments.com/',note:'Sold by Pearson; buy a licence from the publisher.'}];
+const SL_ACCESS={free:['✅ Free to use','✅ मुफ़्त'],restricted:['🔗 Restricted: link only','🔗 सीमित: सिर्फ़ link'],paid:['💰 Paid: link only','💰 पैसे वाला: सिर्फ़ link'],request:['✉️ Ask permission','✉️ अनुमति माँगें']};
+function slMail(i){const hi=studyHi(),x=SCALE_LINKS[i]||slById(i);const me=(typeof apMe==='function')?apMe():{name:'',pos:''},o=studyGet(),d=o.idea||{},ds=o.design||{};
+  const subj='Request for permission to use the '+x.short+' in a non-commercial student research study';
+  const body=['Dear Sir/Madam,','','I am '+(me.name||'[your name]')+(me.pos?', '+me.pos:'')+'. I am conducting a non-commercial academic study'+(d.topic?' titled "'+d.topic.replace(/\?$/,'')+'"':'')+' under the supervision of [supervisor name, department, institution].','',
+   'I would like permission to use the '+x.name+' ('+x.short+') as follows:','- Purpose: data collection for my thesis/dissertation; no commercial use and no sale.','- Participants: '+(ds.pop||'[who]')+(ds.n?', about '+ds.n+' people':'')+'.','- Format: paper and/or a secure online form; the scale will not be posted publicly.','- Translation: [if needed] I would also like to use or prepare a Hindi version and will share it with you.','',
+   'I will cite the scale as you specify and follow any conditions you set. Please let me know if a fee or a signed agreement is needed.','','Thank you for your time.','','Yours sincerely,',(me.name||'[your name]'),'[email, phone, institution]'].join('\n');
+  let dlg=document.getElementById('slMailDlg');if(!dlg){dlg=document.createElement('dialog');dlg.id='slMailDlg';dlg.style.cssText='max-width:640px;width:94vw;padding:16px;border-radius:14px';document.body.appendChild(dlg)}
+  dlg.innerHTML='<h3 style="margin:0 0 6px">✉️ '+(hi?'अनुमति का email':'Permission email')+': '+escHTML(x.short)+'</h3><p class="desc">'+(hi?'[ ] वाले हिस्से भरें। मालिक का email पता उनकी site पर देखें: ':'Fill the [ ] parts. Find the owner\'s email address on their page: ')+'<a href="'+escAttr(x.url||(x.licence&&x.licence.source)||'#')+'" target="_blank" rel="noopener">'+escHTML(x.url||(x.licence&&x.licence.source)||'')+'</a></p>'+
+   '<label>'+(hi?'Subject':'Subject')+'</label><input id="slMailS" style="width:100%" value="'+escAttr(subj)+'"><label style="display:block;margin-top:6px">'+(hi?'Email':'Email')+'</label><textarea id="slMailB" rows="14" style="width:100%">'+escHTML(body)+'</textarea>'+
+   '<div class="row" style="gap:8px;margin-top:8px"><button type="button" class="btn btn-purple" onclick="location.href=\'mailto:?subject=\'+encodeURIComponent(document.getElementById(\'slMailS\').value)+\'&body=\'+encodeURIComponent(document.getElementById(\'slMailB\').value)">'+(hi?'Email app में खोलें':'Open in my email app')+'</button><button type="button" class="btn btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById(\'slMailS\').value+\'\\n\\n\'+document.getElementById(\'slMailB\').value).then(()=>showToast(\'Copied\'))">'+(hi?'Copy करें':'Copy')+'</button><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'slMailDlg\').close()">'+(hi?'बंद करें':'Close')+'</button></div>'+
+   '<p class="desc" style="margin-top:6px">'+(hi?'अनुमति का जवाब सहेजकर रखें और ethics committee को दिखाएँ।':'Keep the owner\'s reply and show it to your ethics committee.')+'</p>';
+  if(!dlg.open)dlg.showModal()}
 function slOpen(){
   document.getElementById('slView').innerHTML='';
-  document.getElementById('slList').innerHTML=SCALES.map(x=>'<button class="btn btn-ghost" style="margin:3px 6px 3px 0" onclick="slPick(\''+x.id+'\')"><b>'+x.short+'</b> · '+x.construct+'</button>').join('')+'<p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">Not yet in the library: '+SL_PENDING+'</p>';
+  const hi=studyHi(),acc=k=>(SL_ACCESS[k]||['',''])[hi?1:0];
+  document.getElementById('slList').innerHTML=SCALES.map(x=>'<button class="btn btn-ghost" style="margin:3px 6px 3px 0" onclick="slPick(\''+x.id+'\')"><b>'+x.short+'</b> · '+x.construct+' <span style="font-size:11px">'+acc(x.licence.access)+'</span></button>').join('')+
+   '<p style="font-size:13px;margin:12px 0 4px"><b>'+(hi?'और scales (मालिक के page का link)':'More scales (link to the owner\'s page)')+'</b></p><p class="desc" style="margin:0 0 6px">'+(hi?'नियम: मुफ़्त scale पूरा हवाले के साथ; सीमित या पैसे वाला scale सिर्फ़ link से; जहाँ अनुमति चाहिए, वहाँ तैयार email।':'Rule: free scales in full with the reference; restricted or paid scales by link only; where permission is needed, a ready email.')+'</p>'+
+   '<div style="font-size:13px">'+SCALE_LINKS.map((x,i)=>'<div style="border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:4px 0"><b>'+escHTML(x.short)+'</b> · '+escHTML(x.name)+' · '+escHTML(x.construct)+' <span>'+acc(x.access)+'</span><br><span style="color:var(--muted)">'+escHTML(x.note)+'</span><br><a href="'+escAttr(x.url)+'" target="_blank" rel="noopener">'+(hi?'मालिक का page खोलें':'Open the owner\'s page')+'</a>'+(x.access==='request'?' · <a href="#" onclick="slMail('+i+');return false">✉️ '+(hi?'अनुमति का email बनाएँ':'Draft a permission email')+'</a>':'')+'</div>').join('')+'</div>';
   const d=document.getElementById('scaleDlg');if(!d.open)d.showModal();
 }
 function slVarNames(x){const w=Math.max(2,String(x.items.length).length);return x.items.map((_,i)=>x.id+'_'+String(i+1).padStart(w,'0'))}
 function slText(x,withCredit){
   const L=[x.name+' ('+x.short+')','',x.stem,'','Response options: '+x.labels.join(' | '),''];
-  x.items.forEach((t,i)=>L.push((i+1)+'. '+t));
+  slItems(x).forEach((t,i)=>L.push((i+1)+'. '+t));
   if(withCredit!==false)L.push('','Source: '+x.licence.attribution);
   return L.join('\n');
 }
@@ -14442,7 +14486,8 @@ function slPick(id){
    '<h3 style="margin:0 0 6px">'+e(x.name)+' ('+x.short+')</h3>'+
    '<p style="font-size:13.5px;margin:0 0 6px">'+e(x.stem)+'</p>'+
    '<p style="font-size:13px;color:var(--muted);margin:0 0 6px">Response options: '+x.labels.map(e).join(' | ')+'</p>'+
-   '<ol style="font-size:13.5px;line-height:1.6;margin:0 0 8px 18px">'+x.items.map((t,i)=>'<li>'+e(t)+(x.reverse.indexOf(i+1)>=0?' <span style="color:var(--muted);font-size:12px">(reverse-scored)</span>':'')+'</li>').join('')+'</ol>'+
+   (x.hidden?'<div style="border:2px solid #f2a900;border-radius:8px;padding:8px;margin:6px 0;font-size:13px">🔗 '+(studyHi()?'इस scale का इस्तेमाल सीमित है (सिर्फ़ non-commercial), इसलिए Appuscholar इसके शब्द साथ नहीं रखता। ':'Use of this scale is restricted (non-commercial only), so Appuscholar does not carry its wording. ')+'<a href="'+e(lc.url)+'" target="_blank" rel="noopener">'+(studyHi()?'मालिक का page खोलें':'Open the owner\'s page')+'</a>'+(studyHi()?', वहाँ से '+x.items.length+' statements copy करके यहाँ paste करें (हर line में एक)। ये सिर्फ़ आपके device पर रहेंगे।':', copy the '+x.items.length+' statements and paste them here, one per line. They stay on your device only.')+'<textarea id="slPasteTxt" rows="'+x.items.length+'" style="width:100%;margin-top:6px">'+e((slUserItems(x.id)||[]).join('\n'))+'</textarea><button class="btn btn-ghost btn-sm" onclick="slSaveText(\''+x.id+'\')">'+(studyHi()?'सहेजें':'Save')+'</button></div>':'')+
+   '<ol style="font-size:13.5px;line-height:1.6;margin:0 0 8px 18px">'+slItems(x).map((t,i)=>'<li>'+e(t)+(x.reverse.indexOf(i+1)>=0?' <span style="color:var(--muted);font-size:12px">(reverse-scored)</span>':'')+'</li>').join('')+'</ol>'+
    '<p style="font-size:13px"><b>Scoring.</b> '+e(x.scoring)+'</p>'+
    '<div style="font-size:12.5px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0"><b>Licence record.</b> '+e(lc.status)+'. Commercial use: '+(lc.commercial?'allowed':'not allowed')+'. Checked '+e(lc.checked)+'.<br>'+e(lc.note)+'<br>Credit line to print with the scale: '+e(lc.attribution)+'<br>Source: <a href="'+e(lc.source)+'" target="_blank" rel="noopener">'+e(lc.source)+'</a><br><i>'+e(lc.verified)+'</i></div>'+
    '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="slCopy(\''+x.id+'\')">Copy the questionnaire text</button><button class="btn btn-ghost" onclick="slCodebook(\''+x.id+'\')">Download the item list (CSV)</button><button class="btn btn-ghost" onclick="slScoreOpen(\''+x.id+'\')">Score this scale in my data</button></div>'+
@@ -14454,7 +14499,7 @@ function slCopy(id){
 }
 function slCodebook(id){
   const x=slById(id);if(!x)return;const names=slVarNames(x);
-  const rows=x.items.map((t,i)=>[names[i],t,x.reverse.indexOf(i+1)>=0?'yes':'no',x.codings[0].min+' to '+x.codings[0].max,x.short]);
+  const rows=slItems(x).map((t,i)=>[names[i],t,x.reverse.indexOf(i+1)>=0?'yes':'no',x.codings[0].min+' to '+x.codings[0].max,x.short]);
   pdDownload(x.id+'_items.csv',pdCsv(['variable','label','reverse_scored','response_codes','scale'],rows));
 }
 /* pure scorer: mat is rows of item answers (numbers or null); coding {min,max}. */
@@ -14490,7 +14535,7 @@ function slScoreOpen(id){
   document.getElementById('slScoreH').textContent='Score the '+x.short;
   document.getElementById('slScoreIntro').textContent='Match each item to its column. Items that need reverse-scoring are handled for you. Give the data as the raw answers, not already reversed.';
   const names=slVarNames(x),headers=data.headers,pre=x.id.toLowerCase();
-  document.getElementById('slScoreMap').innerHTML=x.items.map((t,i)=>{
+  document.getElementById('slScoreMap').innerHTML=slItems(x).map((t,i)=>{
     let guess=headers.findIndex(h=>h.toLowerCase().replace(/[^a-z0-9]/g,'')===names[i].toLowerCase().replace(/[^a-z0-9]/g,''));
     if(guess<0)guess=headers.findIndex(h=>{const z=h.toLowerCase().replace(/[^a-z0-9]/g,'');return z.indexOf(pre)===0&&parseInt(z.replace(/\D/g,''),10)===i+1});
     return '<div style="display:flex;gap:8px;align-items:center;margin:4px 0;font-size:13px"><span style="flex:1">'+(i+1)+'. '+escHTML(t)+(x.reverse.indexOf(i+1)>=0?' <i style="color:var(--muted)">(reverse)</i>':'')+'</span><select id="slm_'+i+'" style="min-width:140px"><option value="-1">Choose a column</option>'+headers.map((h,k)=>'<option value="'+k+'"'+(k===guess?' selected':'')+'>'+escHTML(h||('Col'+(k+1)))+'</option>').join('')+'</select></div>';
