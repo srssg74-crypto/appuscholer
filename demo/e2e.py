@@ -191,7 +191,36 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     shot(pg, f'{label}-stage6-check')
     pg.evaluate("pptxBuildPreview()"); pg.wait_for_timeout(800)
     save_dl(pg, "pptxDownload()", f'{label}-slides.pptx', 120000); log(True, f'{label} Slides (PowerPoint) downloaded')
-    save_dl(pg, "posterDownload()", f'{label}-poster-A0.pptx', 120000); log(True, f'{label} Poster (A0) downloaded')
+    # ---- poster designer: people, affiliations, logo, graph, layout, editing, then reopen ----
+    pg.evaluate("pzOpen()"); pg.wait_for_timeout(900)
+    lay = POSTER[label]
+    pg.evaluate("""L=>{PZ.people=L.people;PZ.affs=L.affs;PZ.conf=L.conf;PZ.size=L.size;PZ.theme=L.theme;PZ.cols=L.cols;
+      const c=document.createElement('canvas');c.width=300;c.height=300;const g=c.getContext('2d');g.fillStyle='#1F4E79';g.beginPath();g.arc(150,150,140,0,7);g.fill();g.fillStyle='#fff';g.font='bold 120px Arial';g.textAlign='center';g.fillText('DC',150,192);
+      PZ.logos=[c.toDataURL('image/png')];pzPeopleRender();pzLogosRender();pzArrange();pzStore();pzPreview()}""", lay)
+    pg.wait_for_timeout(500)
+    # the student edits the Conclusion box on the poster and moves it
+    pg.evaluate("""t=>{const el=[...document.querySelectorAll('#pzRoot .pz-box')].find(b=>/Conclusion/.test(b.querySelector('.pz-bt').innerText));el.click();const bb=el.querySelector('.pz-bb');bb.innerHTML='<ul><li>'+t+'</li></ul>';bb.dispatchEvent(new Event('input',{bubbles:true}))}""", lay['concl'])
+    pg.wait_for_timeout(700)
+    pg.evaluate("pzMove(0,-1)"); pg.evaluate("pzArrange();pzStore();pzPreview()"); pg.wait_for_timeout(500)
+    shot(pg, f'{label}-poster-designer')
+    warn = pg.evaluate("document.getElementById('pzWarn').innerText")
+    pg.evaluate("pzClose()"); pg.wait_for_timeout(300)
+    pg.evaluate("PZ=null;pzOpen()"); pg.wait_for_timeout(700)
+    kept = pg.evaluate("[PZ.people.map(p=>p.name+'|'+p.qual+'|'+p.role).join('; '),PZ.affs.join('; '),PZ.logos.length,PZ.boxes.some(b=>b.h.indexOf(arguments[0])>=0),PZ.size,PZ.cols]".replace('arguments[0]', repr(lay['concl'][:30])))
+    log(kept[2] == 1 and kept[3] and 'Supervisor' in kept[0], f'{label} Poster designer: people, qualifications, affiliations, logo, layout and edited text kept after reopening', kept)
+    log(not warn, f'{label} Poster designer: every column fits on the page', warn or 'fits')
+    img = pg.evaluate("""async()=>{const b=await pzImage();if(!b)return '';return await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)})}""")
+    if img:
+        import base64; open(os.path.join(OUT, f'{label}-poster-picture.jpg'), 'wb').write(base64.b64decode(img.split(',')[1]))
+    log(bool(img), f'{label} Poster as a picture for WhatsApp')
+    save_dl(pg, "posterDownload()", f'{label}-poster-A0.pptx', 120000); log(True, f'{label} Poster (PowerPoint) downloaded from the designer')
+    pg.evaluate("pzClose()")
+    # ---- share dialog and idea inbox ----
+    pg.evaluate("shareOpen()"); pg.wait_for_timeout(400); shot(pg, f'{label}-share'); 
+    log(pg.evaluate("document.querySelectorAll('#shareDlg img[data-i]').length") >= 1, f'{label} Share: graphs in the paper offered as JPG')
+    pg.evaluate("shareClose()")
+    pg.evaluate("t=>{ideaInboxOpen();document.getElementById('inboxIn').value=t;ideaInboxAdd();document.getElementById('inboxDlg').close()}", lay['idea'])
+    log(pg.evaluate("(studyGet().inbox||[]).length") >= 1, f'{label} Idea inbox: a sudden idea saved in this project')
     save_dl(pg, "downloadDoc()", f'{label}-paper.docx', 120000); log(True, f'{label} Paper downloaded as Word')
     save_dl(pg, "downloadLatex()", f'{label}-paper.tex'); log(True, f'{label} Paper downloaded as LaTeX')
     pg.evaluate("showTool('close')"); pg.wait_for_timeout(300)
@@ -241,6 +270,22 @@ def fig_B(pg, k):
 
 WORDS_A = [['mother_GAD7_total', "the mothers' GAD-7 scores"], ['father_GAD7_total', "the fathers' GAD-7 scores"], ['GAD7_total', 'GAD-7 score'], ['RSES_total', 'self-esteem (RSES)'], ['SWLS_total', 'life satisfaction (SWLS)'], ['hb_16wk', 'haemoglobin at 16 weeks'], ['hb_34wk', 'haemoglobin at 34 weeks'], ['anaemia_34wk', 'anaemia at 34 weeks'], ['between Yes (', 'between women with anaemia ('], [' and No (', ' and women without anaemia (']]
 WORDS_B = [['maternal_hb_34wk', "the mother's haemoglobin at 34 weeks"], ['paracetamol_given', 'paracetamol after MR1'], ['seroconverted', 'seroconversion'], ['infant_sex', 'infant sex'], ['birth_weight_g', 'birth weight (g)'], ['between Boy (', 'between boys ('], [' and Girl (', ' and girls (']]
+POSTER = {
+ 'A': {'people': [{'name': 'Asha Verma', 'qual': 'MA Psychology (final year)', 'role': 'Student', 'aff': 1},
+                  {'name': 'Dr. Meena Sharma', 'qual': 'PhD, Professor of Psychology', 'role': 'Supervisor', 'aff': 1},
+                  {'name': 'Dr. R. K. Gupta', 'qual': 'MD (Obstetrics and Gynaecology)', 'role': 'Co-supervisor', 'aff': 2}],
+       'affs': ['Department of Psychology, Demo College, Jaipur', 'Department of Obstetrics, Demo Medical College, Jaipur'],
+       'conf': 'Demo National Conference of Psychology, Jaipur, 2026', 'size': 'A0P', 'theme': 'purple', 'cols': 2,
+       'concl': 'Anaemic women carried more anxiety in the third trimester; clinics that test haemoglobin can screen them with the GAD-7.',
+       'idea': 'Does poor sleep in late pregnancy explain part of the link between anaemia and anxiety?'},
+ 'B': {'people': [{'name': 'Asha Verma', 'qual': 'MA Psychology (final year)', 'role': 'Student', 'aff': 1},
+                  {'name': 'Dr. Meena Sharma', 'qual': 'PhD, Professor of Psychology', 'role': 'Supervisor', 'aff': 1},
+                  {'name': 'Dr. S. Khan', 'qual': 'MD (Paediatrics)', 'role': 'Co-supervisor', 'aff': 2}],
+       'affs': ['Department of Psychology, Demo College, Jaipur', 'Department of Paediatrics, Demo Medical College, Jaipur'],
+       'conf': 'Demo Paediatrics and Behaviour Meet, Jaipur, 2026', 'size': 'A0L', 'theme': 'green', 'cols': 3,
+       'concl': 'Give paracetamol after MR1 for fever only; routine doses went with lower seroconversion.',
+       'idea': 'Would a reminder card at the vaccination session reduce routine paracetamol use?'},
+}
 VARS_A = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
 add('Anxiety','outcome','score','GAD7');add('Life satisfaction','outcome','score','SWLS');add('Self-esteem','predictor','score','RSES');add('Anaemia at 34 weeks','group','yesno','');add('Haemoglobin at 34 weeks','predictor','score','instr');add('Parity','covariate','category','','First pregnancy, Second or later');add('Age','covariate','score','own')})()"""
 VARS_B = """(()=>{const tb=document.querySelector('#spVars tbody');tb.innerHTML='';const add=(n,r,t,s,l)=>{spAddRow();const row=[...tb.querySelectorAll('tr')].pop();row.querySelector('.spName').value=n;row.querySelector('.spRole').value=r;row.querySelector('.spTypeV').value=t;row.querySelector('.spScale').value=s;row.querySelector('.spLevels').value=l||''};
