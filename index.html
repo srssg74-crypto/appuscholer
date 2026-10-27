@@ -3062,6 +3062,12 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'D2':return logsDone('D2',o);
     case'D3':return logsDone('D3',o);
     case'F3':return logsDone('F3',o);
+    case'A2':return wProblemOk(o);
+    case'B5':return wThemesOk(o);
+    case'B7':return wFrameOk(o);
+    case'C5':return wTransOk(o);
+    case'D6':return wInterpOk(o)&&!wCausalFlags(o).length;
+    case'E8':return !!wGet(o).aiu;
     case'B6':return !!String(g.text||'').trim();
     case'C1':return !!ds.type;
     case'C2':return !!String(ds.pop||'').trim();
@@ -3254,7 +3260,7 @@ function logCsv(key){const d=logDef(key),rows=logRows(studyGet(),key),q=v=>'"'+S
 function logTableHTML(d,o){const hi=studyHi(),rows=logRows(o,d.key),L=a=>hi?a[1]:a[0];
   const cell=(c,r,i)=>{const v=r[c[0]]==null?'':r[c[0]],on='onchange="logCell(\''+d.key+'\','+i+',\''+c[0]+'\',this.value)"';
     if(c[3]==='sel')return'<select '+on+'><option value=""></option>'+c[4].map(x=>'<option'+(x===v?' selected':'')+'>'+escHTML(x)+'</option>').join('')+'</select>';
-    if(c[3]==='text'&&/paper|finding|limit|^c$|reply|why|what|^q$/.test(c[0]))return'<textarea rows="2" '+on+'>'+escHTML(v)+'</textarea>';
+    if(c[3]==='text'&&/paper|finding|limit|^c$|reply|why|what|^q$|^h$|^res$|^mean$|^lim$/.test(c[0]))return'<textarea rows="2" '+on+'>'+escHTML(v)+'</textarea>';
     return'<input type="'+(c[3]==='num'?'number':c[3]==='date'?'date':'text')+'"'+(c[3]==='num'?' min="0"':'')+' value="'+escAttr(v)+'" '+on+'>'};
   let h='<div class="sub-box"><b>'+escHTML(L(d.t))+'</b> <span class="desc">('+rows.length+')</span><p class="desc" style="margin:4px 0">'+escHTML(L(d.note))+'</p>'+
    '<div style="overflow-x:auto"><table class="log-tbl" style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px"><thead><tr>'+d.cols.map(c=>'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--line,#ddd)">'+escHTML(hi?c[2]:c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>'+
@@ -3271,7 +3277,82 @@ function logsDone(id,o){const L=k=>logRows(o,k);
     case'F3':{const s=L('supervisor');return s.length>0&&s.every(r=>r.st==='Done')}}
   return false}
 
-function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
+/* ============ Writing pieces inside the steps (build 2026.10.27d) ============
+   A2 problem statement, B5 theme map (from the B3 matrix), B7 framework diagram, C5 Hindi translation
+   record, D6 interpretation table, E8 AI-use statement. Saved in o.write; D6 rows in o.logs.interp. */
+SUB_LOGS.D6=[{key:'interp',t:['Interpretation table','नतीजों के अर्थ की table'],note:['One row per hypothesis or question. Say what the result means and what this design cannot tell you.','हर hypothesis या सवाल की एक पंक्ति। नतीजे का अर्थ लिखें, और यह भी कि यह design क्या नहीं बता सकता।'],hyp:true,
+  cols:[['h','Hypothesis or question','Hypothesis या सवाल','text'],['res','Result (test, numbers)','नतीजा (test, संख्याएँ)','text'],['size','Size (effect size, CI)','आकार (effect size, CI)','text'],['mean','What it means','इसका अर्थ','text'],['lim','What the design cannot tell','Design क्या नहीं बता सकता','text']]}];
+function wGet(o){return(o||studyGet()).write||{}}
+function wSet(part,val){const o=studyGet();o.write=o.write||{};o.write[part]=val;studySet(o);subRenderSide()}
+function wPatch(part,k,v){const o=studyGet();o.write=o.write||{};o.write[part]=Object.assign({},o.write[part]||{},{[k]:v});studySet(o);subRenderSide()}
+function wRedraw(){const m=document.getElementById('subMain');if(m){const y=m.scrollTop;m.innerHTML=subDetailHTML(SUB_CUR.id,studyGet());m.scrollTop=y}subRenderSide()}
+/* A2: citations in a piece of text, (Author, 2021) or [3] */
+function wCiteCount(t){t=String(t||'');return(t.match(/\([A-Z][^()]{1,80}?,?\s(19|20)\d{2}[a-z]?\)|\[\d+(?:[,–-]\s?\d+)*\]/g)||[]).length}
+function wProblemOk(o){const t=String((wGet(o).A2||{}).text||'').trim();return t.length>=250&&wCiteCount(t)>=2}
+/* B5: themes come from the Theme column of the B3 matrix */
+function wThemes(o){const g={};logRows(o,'matrix').forEach(r=>{const th=String(r.theme||'').trim();if(!th)return;(g[th]=g[th]||[]).push(r)});return g}
+function wThemesOk(o){const g=wThemes(o),k=Object.keys(g),notes=(wGet(o).B5||{}).notes||{};return k.length>0&&k.every(t=>(g[t].length>=2||notes['one:'+t])&&String(notes[t]||'').trim().length>=20)}
+/* B7 */
+function wFrameOk(o){const f=wGet(o).B7||{},c=(f.cons||[]).filter(x=>String(x.name||'').trim());return !!(String(f.theory||'').trim()&&String(f.cite||'').trim()&&c.length>=2&&c.every(x=>x.v))}
+/* C5 */
+const C5_STEPS=[['f1','Forward translation 1','पहला आगे का अनुवाद'],['f2','Forward translation 2','दूसरा आगे का अनुवाद'],['syn','Synthesis of the two','दोनों को मिलाना'],['b1','Back translation 1','पहला वापसी अनुवाद'],['b2','Back translation 2','दूसरा वापसी अनुवाद'],['exp','Expert committee','विशेषज्ञ समिति'],['pre','Pre-test (number of people)','Pre-test (कितने लोग)']];
+function wTransOk(o){const c=wGet(o).C5||{};if(c.mode==='pub')return['scale','src','sample','lic'].every(k=>String(c[k]||'').trim());if(c.mode==='own')return C5_STEPS.every(s=>String((c.steps||{})[s[0]]||'').trim());return false}
+/* D6 */
+const W_CAUSAL=/\b(caus\w*|leads? to|led to|results? in|effect of|impact of|because of|improv\w+|reduc\w+|increas\w+ the)\b/i;
+function wInterpOk(o){const r=logRows(o,'interp');return r.length>0&&r.every(x=>String(x.res||'').trim()&&String(x.mean||'').trim()&&String(x.lim||'').trim())}
+function wCausalFlags(o){const t=((o.design||{}).type)||'';if(t==='experiment')return[];return logRows(o,'interp').map((r,i)=>W_CAUSAL.test(r.mean||'')?i+1:0).filter(Boolean)}
+function wInterpFromHyp(){const o=studyGet(),h=String((o.design||{}).hyp||'').split(/\n+/).map(x=>x.trim()).filter(Boolean),rows=logRows(o,'interp').slice(),have=new Set(rows.map(r=>r.h));
+  h.forEach(x=>{if(!have.has(x))rows.push({h:x})});logSaveRows('interp',rows);wRedraw();showToast(studyHi()?h.length+' hypotheses से पंक्तियाँ बनीं':'Rows made from '+h.length+' hypotheses')}
+function wFrameSVG(o){const f=wGet(o).B7||{},c=(f.cons||[]).filter(x=>String(x.name||'').trim()),vars=((o.design||{}).vars)||[];if(c.length<2)return'';
+  const role=n=>{const v=vars.find(x=>x.name===n);return v?v.role:''},out=c.filter(x=>role(x.v)==='outcome'),ins=c.filter(x=>role(x.v)!=='outcome');if(!out.length||!ins.length)return'';
+  const W=200,H=40,gap=16,hL=ins.length*(H+gap),hR=out.length*(H+gap),Ht=Math.max(hL,hR)+20,e=s=>escHTML(String(s).slice(0,28));
+  let g='<svg viewBox="0 0 560 '+Ht+'" style="width:100%;max-width:560px" role="img" aria-label="framework"><defs><marker id="fwA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
+  const yL=i=>10+i*(H+gap)+(Ht-20-hL)/2,yR=i=>10+i*(H+gap)+(Ht-20-hR)/2;
+  ins.forEach((x,i)=>{out.forEach((_,j)=>{g+='<line x1="'+(10+W)+'" y1="'+(yL(i)+H/2)+'" x2="'+(350)+'" y2="'+(yR(j)+H/2)+'" stroke="currentColor" stroke-width="1.2" marker-end="url(#fwA)"/>'})});
+  ins.forEach((x,i)=>{g+='<rect x="10" y="'+yL(i)+'" width="'+W+'" height="'+H+'" rx="8" fill="none" stroke="currentColor"/><text x="'+(10+W/2)+'" y="'+(yL(i)+H/2+5)+'" text-anchor="middle" font-size="13" fill="currentColor">'+e(x.name)+'</text>'});
+  out.forEach((x,j)=>{g+='<rect x="350" y="'+yR(j)+'" width="'+W+'" height="'+H+'" rx="8" fill="none" stroke="currentColor" stroke-width="2"/><text x="'+(350+W/2)+'" y="'+(yR(j)+H/2+5)+'" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">'+e(x.name)+'</text>'});
+  return g+'</svg>'}
+function wFrameInsert(){const o=studyGet(),f=wGet(o).B7||{},svg=wFrameSVG(o);if(!svg){showToast(studyHi()?'पहले constructs को variables से जोड़ें':'First link the constructs to variables');return}
+  const cap='Figure. Conceptual framework based on '+(f.theory||'')+(f.cite?' ('+f.cite+')':'')+'.';
+  const src=svg.replace('style="width:100%;max-width:560px"','xmlns="http://www.w3.org/2000/svg" width="560" height="'+(/viewBox="0 0 560 (\d+)"/.exec(svg)||[0,200])[1]+'"').replace(/currentColor/g,'#111111').replace('<svg ','<svg font-family="Arial, sans-serif" ');
+  const img=new Image(),w=560,h=+(/viewBox="0 0 560 (\d+)"/.exec(svg)||[0,200])[1];
+  img.onload=()=>{try{const c=document.createElement('canvas');c.width=w*2;c.height=h*2;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.scale(2,2);g.drawImage(img,0,0,w,h);
+    insertHTMLBlockIntoEditor('<figure><img src="'+c.toDataURL('image/png')+'" alt="Conceptual framework" width="'+w+'"><figcaption>'+escHTML(cap)+'</figcaption></figure>');showToast(studyHi()?'Framework का चित्र document में डाला ✓':'Framework diagram inserted into your document ✓')}catch(e){showToast('Could not draw the diagram')}};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src)}
+function wProblemInsert(){const t=String((wGet().A2||{}).text||'').trim();if(!t)return;try{insertHTMLBlockIntoEditor('<h3>Statement of the problem</h3>'+t.split(/\n{2,}/).map(p=>'<p>'+escHTML(p)+'</p>').join(''));showToast(studyHi()?'Document में डाला ✓':'Inserted into your document ✓')}catch(e){}}
+function wExtraHTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>';
+  if(id==='A2'){const t=(w.A2||{}).text||'',n=wCiteCount(t),q=String((o.idea||{}).topic||'').trim();
+    return(q&&!String(t).trim()?'<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+L('You have a research question but no problem statement yet','आपके पास research question है, पर अभी problem statement नहीं')+'</b><p style="margin:6px 0 0">'+L('A question should grow from a problem in the literature, not only from interest in a topic.','सवाल literature में मिली समस्या से निकलना चाहिए, सिर्फ़ विषय में रुचि से नहीं।')+'</p></div>':'')+
+     box(wProblemOk(o),L('Problem statement','समस्या का कथन'),'<p class="desc" style="margin:4px 0">'+L('1–2 paragraphs. Who is affected, where, what is known (with sources) and what is not. At least two citations such as (Sharma, 2021) or [3].','1–2 paragraph। किस पर असर, कहाँ, क्या पता है (स्रोत के साथ) और क्या नहीं। कम से कम दो citations, जैसे (Sharma, 2021) या [3]।')+'</p><textarea rows="7" onchange="wPatch(\'A2\',\'text\',this.value);wRedraw()">'+escHTML(t)+'</textarea><p class="desc" style="margin:4px 0">'+L('Citations found: ','मिले citations: ')+n+' · '+L('Characters: ','अक्षर: ')+String(t).trim().length+'</p>'+(String(t).trim()?'<button type="button" class="btn btn-ghost btn-sm" onclick="wProblemInsert()">📄 '+L('Insert into my document','मेरे document में डालें')+'</button>':''))}
+  if(id==='B5'){const g=wThemes(o),k=Object.keys(g),notes=(w.B5||{}).notes||{};
+    if(!k.length)return box(false,L('Theme map','Themes का नक्शा'),'<p style="margin:6px 0 0">'+L('Write a theme for each paper in the B3 matrix (Theme column). The map builds itself from there.','B3 की matrix में हर paper का theme लिखें (Theme वाला खाना)। नक्शा वहीं से अपने-आप बनेगा।')+' <a href="#" onclick="SUB_CUR.id=\'B3\';subRender();return false">B3 →</a></p>');
+    return box(wThemesOk(o),L('Theme map','Themes का नक्शा'),k.map(th=>{const one=g[th].length<2;return'<div style="border-top:1px solid var(--line,#ddd);margin-top:8px;padding-top:6px"><b>'+escHTML(th)+'</b> <span class="desc">('+g[th].length+' '+L('papers','papers')+')</span><ul style="margin:4px 0 4px 18px">'+g[th].map(r=>'<li>'+escHTML(r.paper||'')+(r.finding?': '+escHTML(r.finding):'')+'</li>').join('')+'</ul>'+
+      (one?'<label style="display:block;font-size:13px;color:#b45309"><input type="checkbox"'+(notes['one:'+th]?' checked':'')+' onchange="wB5Note(\'one:'+escAttr(th).replace(/'/g,'')+'\',this.checked)"> '+L('This theme rests on one study, and I will say so','यह theme एक ही study पर टिका है, और मैं यह लिखूँगा/लिखूँगी')+'</label>':'')+
+      '<label class="desc">'+L('Where the studies agree, where they conflict, and why (20+ characters)','Studies कहाँ सहमत हैं, कहाँ टकराती हैं, और क्यों (20+ अक्षर)')+'</label><textarea rows="2" onchange="wB5Note(\''+escAttr(th).replace(/'/g,'')+'\',this.value)">'+escHTML(notes[th]||'')+'</textarea></div>'}).join(''))}
+  if(id==='B7'){const f=w.B7||{},cons=(f.cons&&f.cons.length?f.cons:[{name:''},{name:''}]),vars=((o.design||{}).vars||[]).filter(v=>v.name);
+    const vopt=sel=>'<option value=""></option>'+vars.map(v=>'<option'+(v.name===sel?' selected':'')+'>'+escHTML(v.name)+'</option>').join('');
+    return box(wFrameOk(o),L('Framework','ढाँचा'),'<label class="desc" style="display:block;margin-top:4px">'+L('Theory or model','Theory या model')+'</label><input type="text" value="'+escAttr(f.theory||'')+'" onchange="wPatch(\'B7\',\'theory\',this.value)" placeholder="'+escAttr(L('e.g. Transactional model of stress','जैसे: Transactional model of stress'))+'">'+
+     '<label class="desc" style="display:block;margin-top:4px">'+L('Citation for the theory','Theory का citation')+'</label><input type="text" value="'+escAttr(f.cite||'')+'" onchange="wPatch(\'B7\',\'cite\',this.value)" placeholder="Lazarus & Folkman, 1984">'+
+     '<p class="desc" style="margin:8px 0 4px">'+L('Constructs, each linked to a variable from your study plan:','Constructs, हर एक आपकी योजना के किसी variable से जुड़ा:')+'</p>'+
+     cons.map((c,i)=>'<div class="row" style="gap:6px;margin:3px 0"><input type="text" style="flex:1" value="'+escAttr(c.name||'')+'" onchange="wB7Con('+i+',\'name\',this.value)" placeholder="'+escAttr(L('Construct','Construct'))+'"><select style="flex:1" onchange="wB7Con('+i+',\'v\',this.value)">'+vopt(c.v)+'</select></div>').join('')+
+     '<button type="button" class="btn btn-ghost btn-sm" onclick="wB7Con('+cons.length+',\'name\',\'\')">+ '+L('Construct','Construct')+'</button>'+
+     (vars.length?'':'<p class="desc" style="color:#b45309">'+L('Add variables in the study plan (Stage C) first.','पहले study plan (Stage C) में variables जोड़ें।')+'</p>')+
+     (wFrameSVG(o)?'<div style="margin-top:10px">'+wFrameSVG(o)+'</div><button type="button" class="btn btn-ghost btn-sm" onclick="wFrameInsert()">📄 '+L('Insert the diagram into my document','चित्र मेरे document में डालें')+'</button>':''))}
+  if(id==='C5'){const c=w.C5||{},inp=(k,lab,ph)=>'<label class="desc" style="display:block;margin-top:4px">'+lab+'</label><input type="text" value="'+escAttr(c[k]||'')+'" placeholder="'+escAttr(ph||'')+'" onchange="wPatch(\'C5\',\''+k+'\',this.value)">';
+    let b='<label style="display:block;margin:6px 0"><input type="radio" name="c5m"'+(c.mode==='pub'?' checked':'')+' onchange="wPatch(\'C5\',\'mode\',\'pub\');wRedraw()"> '+L('I use a published Hindi version','मैं प्रकाशित Hindi version इस्तेमाल करूँगा/करूँगी')+'</label><label style="display:block;margin:6px 0"><input type="radio" name="c5m"'+(c.mode==='own'?' checked':'')+' onchange="wPatch(\'C5\',\'mode\',\'own\');wRedraw()"> '+L('I translate it myself','मैं खुद अनुवाद करूँगा/करूँगी')+'</label>';
+    if(c.mode==='pub')b+=inp('scale',L('Scale and version','Scale और version'),'RSES, 10 items')+inp('src',L('Hindi version: authors, year, journal','Hindi version: लेखक, साल, journal'),'Aachal, Kumar & Bahurupi (2024), Indian J Psychol Med')+inp('sample',L('Who it was tested on (sample)','किन पर जाँचा गया (sample)'),'143 female nursing students, Uttarakhand')+inp('lic',L('Permission or licence for the Hindi wording','Hindi wording की अनुमति या licence'),'CC BY-NC 4.0: non-commercial, with credit')+'<p class="desc" style="margin:6px 0 0">'+L('If two Hindi versions exist, pick one and never mix their items.','अगर दो Hindi versions हैं, तो एक चुनें और उनके items कभी न मिलाएँ।')+'</p>';
+    if(c.mode==='own')b+='<p class="desc" style="margin:4px 0">'+L('Who did each step and when (Beaton et al., 2000).','हर कदम किसने और कब किया (Beaton et al., 2000)।')+'</p>'+C5_STEPS.map(s=>'<label class="desc" style="display:block;margin-top:4px">'+(hi?s[2]:s[1])+'</label><input type="text" value="'+escAttr(((c.steps||{})[s[0]])||'')+'" onchange="wC5Step(\''+s[0]+'\',this.value)">').join('');
+    return box(wTransOk(o),L('Hindi translation record','Hindi अनुवाद का record'),b)}
+  if(id==='D6'){const fl=wCausalFlags(o);let b='<div class="row" style="gap:6px;margin:4px 0"><button type="button" class="btn btn-ghost btn-sm" onclick="wInterpFromHyp()">↧ '+L('Make rows from my hypotheses','मेरी hypotheses से पंक्तियाँ बनाएँ')+'</button></div>';
+    if(fl.length)b+='<p style="color:#b45309;margin:4px 0">⚠️ '+L('Row ','पंक्ति ')+fl.join(', ')+': '+L('the meaning uses cause-and-effect words, but this design shows association, not cause.','अर्थ में कारण-परिणाम वाले शब्द हैं, पर यह design सिर्फ़ संबंध दिखाता है, कारण नहीं।')+'</p>';
+    return box(wInterpOk(o)&&!fl.length,L('Interpretation','अर्थ'),b)}
+  if(id==='E8'){const done=!!w.aiu;return box(done,L('AI-use statement','AI उपयोग का कथन'),'<p style="margin:6px 0 0">'+L('Appuscholar keeps a private log of AI help (date, tool, kind of help, never your text). Build the statement from it, edit it, and insert it where your university or journal asks.','Appuscholar AI की मदद का निजी log रखता है (तारीख, tool, किस तरह की मदद; आपका text कभी नहीं)। उसी से कथन बनाएँ, बदलें, और जहाँ university या journal कहे वहाँ डालें।')+'</p>'+(done?'<p class="desc" style="margin:4px 0">'+L('Inserted on ','डाला गया: ')+new Date(w.aiu).toLocaleDateString()+'</p>':'')+'<button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="document.getElementById(\'subDlg\').close();aiuOpen()">🤖 '+L('Open the AI-use statement','AI उपयोग का कथन खोलें')+'</button>')}
+  return''}
+function wB5Note(k,v){const o=studyGet();o.write=o.write||{};const b=o.write.B5=o.write.B5||{};b.notes=b.notes||{};b.notes[k]=v;studySet(o);subRenderSide()}
+function wB7Con(i,k,v){const o=studyGet();o.write=o.write||{};const f=o.write.B7=o.write.B7||{};f.cons=(f.cons&&f.cons.length?f.cons:[{name:''},{name:''}]).slice();while(f.cons.length<=i)f.cons.push({name:''});f.cons[i]=Object.assign({},f.cons[i],{[k]:v});studySet(o);wRedraw()}
+function wC5Step(k,v){const o=studyGet();o.write=o.write||{};const c=o.write.C5=o.write.C5||{};c.steps=Object.assign({},c.steps||{},{[k]:v});studySet(o);subRenderSide()}
+
+function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=wExtraHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
   if(lg&&!['C3','C4'].includes(id))return lg;
   if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
@@ -7212,7 +7293,7 @@ function aiuCopy(){
 }
 function aiuInsert(){
   const t=document.getElementById('aiuOut').value;if(!t){showToast('Build the statement first');return}
-  insertIntoEditor(t,false);document.getElementById('aiuDlg').close();showToast('Statement inserted at the end of your document ✓');
+  insertIntoEditor(t,false);try{const o=studyGet();o.write=o.write||{};o.write.aiu=Date.now();studySet(o)}catch(e){}document.getElementById('aiuDlg').close();showToast('Statement inserted at the end of your document ✓');
 }
 function aiuDownload(){
   const t=document.getElementById('aiuOut').value;if(!t){showToast('Build the statement first');return}
@@ -14684,7 +14765,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.27c';
+const APP_BUILD='2026.10.27d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
