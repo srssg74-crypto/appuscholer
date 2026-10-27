@@ -57,3 +57,16 @@ with sync_playwright() as p:
     ok(not errs,'no page errors '+json.dumps(errs[:3]))
     b.close()
 print('FAILED %d'%len(fails) if fails else 'ALL PASS')
+# framework picture goes into the document as a PNG image
+with sync_playwright() as p:
+    errors=[]
+    b,pg=new_page(p,errors)
+    J=lambda js: pg.evaluate(js)
+    pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
+    J("const o=studyGet();o.design={type:'correlational',vars:[{name:'Sleep hours',role:'predictor'},{name:'Exam anxiety',role:'outcome'}]};o.write={B7:{theory:'T',cite:'C, 2000',cons:[{name:'Sleep loss',v:'Sleep hours'},{name:'Threat',v:'Exam anxiety'}]}};studySet(o)")
+    J("wFrameInsert()"); pg.wait_for_timeout(800)
+    src=J("(document.querySelector('#editor figure img')||{}).src||''")
+    ok(src.startswith('data:image/png') and len(src)>2000,'framework inserted as a PNG image in the document')
+    ok(not [e for e in errors if e[0]=='pageerror'],'no page errors on insert')
+    b.close()
+print('FAILED %d'%len(fails) if fails else 'ALL PASS (with image check)')
