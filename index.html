@@ -3057,8 +3057,11 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
   try{switch(id){
     case'A1':return !!String(d.topic||'').trim();
     case'A3':return !!String(ds.hyp||'').trim();
-    case'B2':return !!String(o.search||'').trim();
-    case'B3':return citGetLib().length>0;
+    case'B2':return !!String(o.search||'').trim()||logsDone('B2',o);
+    case'B3':return logsDone('B3',o)||citGetLib().length>0;
+    case'D2':return logsDone('D2',o);
+    case'D3':return logsDone('D3',o);
+    case'F3':return logsDone('F3',o);
     case'B6':return !!String(g.text||'').trim();
     case'C1':return !!ds.type;
     case'C2':return !!String(ds.pop||'').trim();
@@ -3215,7 +3218,62 @@ function scaleCheck(o){o=o||studyGet();const v=((o.design||{}).vars)||[],issues=
     if((a==='restricted'||s.hidden)&&slHasText(s))return;
     issues.push(s.short+': '+(a==='restricted'?(hi?'सीमित scale, owner के page से wording डालनी है':'restricted scale, paste the wording from the owner\'s page'):(SL_ACCESS[a]||SL_ACCESS.unknown)[hi?1:0]))});
   return{ok:!issues.length,issues:issues}}
-function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};
+/* ============ Records inside the steps (build 2026.10.27c) ============
+   Search log (B2), source matrix (B3), recruitment and deviation logs (D2), cleaning log (D3) and the
+   supervisor comment tracker (F3). Rows live in the study record (o.logs), never participants' answers:
+   the recruitment log holds counts only, no names. */
+const SUB_LOGS={
+ B2:[{key:'search',t:['Search log','Search log'],note:['One row per search. This is what lets you claim a gap.','हर search की एक पंक्ति। इसी के आधार पर आप gap का दावा कर सकते हैं।'],
+   cols:[['date','Date','तारीख','date'],['db','Database','Database','sel',['PubMed','OpenAlex','Google Scholar','Shodhganga','PsycINFO','ERIC','DOAJ','Cochrane','Other']],['q','Search words (AND/OR)','Search के शब्द (AND/OR)','text'],['lim','Limits (years, language)','सीमा (साल, भाषा)','text'],['hits','Results','नतीजे','num'],['kept','Kept','रखे','num']]}],
+ B3:[{key:'matrix',t:['Source matrix','Papers की matrix'],note:['One row per paper you keep. Fill it while you read.','हर रखे गए paper की एक पंक्ति। पढ़ते-पढ़ते भरें।'],lib:true,
+   cols:[['paper','Paper (author, year)','Paper (लेखक, साल)','text'],['design','Design','Design','text'],['sample','Sample','Sample','text'],['measure','Measures','माप','text'],['finding','Main finding','मुख्य नतीजा','text'],['limit','Limitation','कमी','text'],['theme','Theme','Theme','text']]}],
+ D2:[{key:'recruit',t:['Recruitment log','Recruitment log'],note:['Counts only. Never write participants\' names or phone numbers here.','सिर्फ़ गिनती। यहाँ participants के नाम या फ़ोन नंबर कभी न लिखें।'],
+   cols:[['date','Date','तारीख','date'],['site','Site or channel','जगह या माध्यम','text'],['appr','Approached','पूछा','num'],['agreed','Agreed','माने','num'],['done','Completed','पूरा किया','num'],['left','Withdrew','हटे','num']]},
+   {key:'deviation',t:['Changes from the plan','योजना में बदलाव'],note:['Any change from the approved plan, and whether the ethics committee was told.','स्वीकृत योजना में कोई भी बदलाव, और क्या ethics committee को बताया गया।'],
+   cols:[['date','Date','तारीख','date'],['what','What changed','क्या बदला','text'],['why','Why','क्यों','text'],['told','Committee told?','Committee को बताया?','sel',['Yes','No','Not needed']]]}],
+ D3:[{key:'clean',t:['Cleaning log','Data सफ़ाई का log'],note:['The raw file stays as it is. Every change to the working copy gets a row.','कच्चा file जैसा है वैसा रहे। Working copy में हर बदलाव की एक पंक्ति।'],
+   cols:[['date','Date','तारीख','date'],['step','Step','कदम','sel',['Range check','Duplicate','Missing data','Exclusion','Reverse scoring','Scoring','Recode','Other']],['what','Rows or variables','Rows या variables','text'],['n','How many','कितने','num'],['why','Reason','कारण','text']]}],
+ F3:[{key:'supervisor',t:['Supervisor comments','Supervisor की टिप्पणियाँ'],note:['Close a comment only when the text has changed or you have replied.','टिप्पणी तभी बंद करें जब text बदल गया हो या आपने जवाब दे दिया हो।'],
+   cols:[['date','Date','तारीख','date'],['sec','Section','Section','text'],['c','Comment','टिप्पणी','text'],['reply','My reply','मेरा जवाब','text'],['where','Where changed','कहाँ बदला','text'],['ver','Version','Version','text'],['st','Status','Status','sel',['Open','Done']]]}]};
+function logRows(o,key){return((o.logs||{})[key])||[]}
+function logSaveRows(key,rows){const o=studyGet();o.logs=o.logs||{};o.logs[key]=rows;studySet(o)}
+function logRefresh(){const m=document.getElementById('subMain');if(m)m.innerHTML=subDetailHTML(SUB_CUR.id,studyGet());try{const d=document.getElementById('subDlg');const l=d&&d.querySelector('.sub-list');if(l){const y=l.scrollTop;subRender();const l2=document.getElementById('subDlg').querySelector('.sub-list');if(l2)l2.scrollTop=y}}catch(e){}}
+function logAdd(key){const o=studyGet(),rows=logRows(o,key).slice(),def=logDef(key),r={};def.cols.forEach(c=>{if(c[3]==='date')r[c[0]]=new Date().toISOString().slice(0,10);if(c[3]==='sel'&&c[0]==='st')r[c[0]]='Open'});rows.push(r);logSaveRows(key,rows);logRefresh()}
+function logDel(key,i){const rows=logRows(studyGet(),key).slice();rows.splice(i,1);logSaveRows(key,rows);logRefresh()}
+function logCell(key,i,col,v){const rows=logRows(studyGet(),key).slice();if(!rows[i])return;rows[i]=Object.assign({},rows[i],{[col]:v});logSaveRows(key,rows);subRenderSide()}
+function subRenderSide(){const d=document.getElementById('subDlg');if(!d||!d.open)return;const o=studyGet(),stage=SUB_CUR.stage;
+  d.querySelectorAll('.sub-item').forEach(b=>{const m=/SUB_CUR\.id='([A-F]\d+)'/.exec(b.getAttribute('onclick')||'');if(!m)return;const x=SUBSTAGES.find(y=>y[0]===m[1]);if(x)b.innerHTML=SUB_ICON[subState(x[0],o).s]+' <b>'+x[0]+'</b> '+escHTML(subL(x[2]))});
+  d.querySelectorAll('.sub-tab').forEach((b,i)=>{const s=STAGES[i];if(!s)return;const c=subCount(s,o);b.textContent=SUB_STAGE_LETTER[s]+' · '+stageLabel(s)+' '+c.done+'/'+c.total})}
+function logDef(key){for(const id in SUB_LOGS)for(const d of SUB_LOGS[id])if(d.key===key)return d;return null}
+function logFromLibrary(key){const o=studyGet(),rows=logRows(o,key).slice(),have=new Set(rows.map(r=>r.cid).filter(Boolean));let n=0;
+  citGetLib().forEach(d=>{if(d.cid&&have.has(d.cid))return;rows.push({cid:d.cid,paper:(citLastName(d.author)||'?')+(String(d.author||'').indexOf(',')>=0&&/;|&| and /.test(d.author)?' et al.':'')+' ('+(d.year||'n.d.')+'). '+String(d.title||'').slice(0,90)});n++});
+  logSaveRows(key,rows);logRefresh();showToast(studyHi()?n+' papers library से जोड़े':n+' papers added from the library')}
+function logCsv(key){const d=logDef(key),rows=logRows(studyGet(),key),q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const csv=[d.cols.map(c=>q(c[1])).join(',')].concat(rows.map(r=>d.cols.map(c=>q(r[c[0]])).join(','))).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='appuscholar-'+key+'-log.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function logTableHTML(d,o){const hi=studyHi(),rows=logRows(o,d.key),L=a=>hi?a[1]:a[0];
+  const cell=(c,r,i)=>{const v=r[c[0]]==null?'':r[c[0]],on='onchange="logCell(\''+d.key+'\','+i+',\''+c[0]+'\',this.value)"';
+    if(c[3]==='sel')return'<select '+on+'><option value=""></option>'+c[4].map(x=>'<option'+(x===v?' selected':'')+'>'+escHTML(x)+'</option>').join('')+'</select>';
+    if(c[3]==='text'&&/paper|finding|limit|^c$|reply|why|what|^q$/.test(c[0]))return'<textarea rows="2" '+on+'>'+escHTML(v)+'</textarea>';
+    return'<input type="'+(c[3]==='num'?'number':c[3]==='date'?'date':'text')+'"'+(c[3]==='num'?' min="0"':'')+' value="'+escAttr(v)+'" '+on+'>'};
+  let h='<div class="sub-box"><b>'+escHTML(L(d.t))+'</b> <span class="desc">('+rows.length+')</span><p class="desc" style="margin:4px 0">'+escHTML(L(d.note))+'</p>'+
+   '<div style="overflow-x:auto"><table class="log-tbl" style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px"><thead><tr>'+d.cols.map(c=>'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--line,#ddd)">'+escHTML(hi?c[2]:c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>'+
+   rows.map((r,i)=>'<tr>'+d.cols.map(c=>'<td style="padding:3px;vertical-align:top">'+cell(c,r,i)+'</td>').join('')+'<td><button type="button" class="btn btn-ghost btn-sm" title="'+(hi?'हटाएँ':'Remove')+'" onclick="logDel(\''+d.key+'\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>'+
+   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="logAdd(\''+d.key+'\')">+ '+(hi?'पंक्ति जोड़ें':'Add a row')+'</button>'+(d.lib?'<button type="button" class="btn btn-ghost btn-sm" onclick="logFromLibrary(\''+d.key+'\')">📚 '+(hi?'Library के papers लाएँ':'Bring papers from the library')+'</button>':'')+(rows.length?'<button type="button" class="btn btn-ghost btn-sm" onclick="logCsv(\''+d.key+'\')">⬇ CSV</button>':'')+'</div>';
+  if(d.key==='recruit'&&rows.length){const sum=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);h+='<p class="desc" style="margin:6px 0 0">'+(hi?'कुल: ':'Total: ')+sum('appr')+(hi?' से पूछा, ':' approached, ')+sum('agreed')+(hi?' माने, ':' agreed, ')+sum('done')+(hi?' ने पूरा किया, ':' completed, ')+sum('left')+(hi?' हटे।':' withdrew.')+'</p>'}
+  if(d.key==='supervisor'&&rows.length){const open=rows.filter(r=>(r.st||'Open')!=='Done').length;h+='<p class="desc" style="margin:6px 0 0">'+(open?(hi?open+' टिप्पणियाँ अभी खुली हैं।':open+' comment(s) still open.'):(hi?'सभी टिप्पणियाँ बंद।':'All comments closed.'))+'</p>'}
+  return h+'</div>'}
+function logsDone(id,o){const L=k=>logRows(o,k);
+  switch(id){case'B2':return L('search').some(r=>r.db&&String(r.q||'').trim());
+    case'B3':return L('matrix').some(r=>String(r.paper||'').trim()&&String(r.finding||'').trim());
+    case'D2':return L('recruit').some(r=>+r.done>0);
+    case'D3':return L('clean').some(r=>r.step&&String(r.why||'').trim());
+    case'F3':{const s=L('supervisor');return s.length>0&&s.every(r=>r.st==='Done')}}
+  return false}
+
+function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
+  if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
+  if(lg&&!['C3','C4'].includes(id))return lg;
   if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
   if(id==='C4'){const c=scaleCheck(o);if(!(ds.vars||[]).some(x=>x.scale&&x.scale!=='own'&&x.scale!=='instr'))return'';return'<div class="sub-box" style="border-color:'+(c.ok?'#16a34a':'#b45309')+'"><b>'+(c.ok?'✅ ':'⚠️ ')+(hi?'Scales की अनुमति':'Scale permissions')+'</b><p style="margin:6px 0 0">'+(c.ok?(hi?'चुने गए सभी scales मुफ़्त हैं या उनकी wording owner के page से डाली गई है।':'All chosen scales are free, or their wording was added from the owner\'s page.'):escHTML(c.issues.join('; ')))+'</p></div>'}
   return''}
@@ -14626,7 +14684,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.27b';
+const APP_BUILD='2026.10.27c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
