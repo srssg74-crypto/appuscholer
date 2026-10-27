@@ -3062,8 +3062,8 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'B6':return !!String(g.text||'').trim();
     case'C1':return !!ds.type;
     case'C2':return !!String(ds.pop||'').trim();
-    case'C3':return !!ds.n;
-    case'C4':return v.some(x=>x.role==='outcome');
+    case'C3':return ssComplete(ds);
+    case'C4':return v.some(x=>x.role==='outcome')&&scaleCheck(o).ok;
     case'C6':return !!(o.qn&&o.qn.built);
     case'D4':return !!(o.analysis&&o.analysis.ran);
     case'E1':return !!(o.draft&&o.draft.built);
@@ -3094,6 +3094,7 @@ function subDetailHTML(id,o){const hi=studyHi(),x=SUBSTAGES.find(y=>y[0]===id);i
   h+='<div class="sub-box"><b>'+(hi?'कैसे भरें':'How to fill it')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[3]))+'</p></div>';
   h+='<div class="sub-box"><b>'+(hi?'आगे बढ़ने से पहले जाँच':'Check before moving on')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[4]))+'</p><p class="desc" style="margin:6px 0 0">'+(hi?'स्रोत: ':'Source: ')+escHTML(x[5])+'</p></div>';
   if(id==='C9')return h+ethicsFormHTML(o);
+  try{h+=subExtraHTML(id,o)}catch(e){}
   if(x[6]){const act=x[6].charAt(0)==='@'?x[6].slice(1):"showTool('"+x[6]+"')";h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="document.getElementById(\'subDlg\').close();'+escAttr(act)+'">'+(hi?'इसके tool पर जाएँ →':'Go to the tool for this →')+'</button></div>'}
   h+='<div class="sub-box"><b>'+(hi?'Status':'Status')+'</b>'+(st.auto?'<p class="desc" style="margin:4px 0">'+(hi?'App को आपकी study में यह भरा मिला, इसलिए "पूरा" दिखा रहा है। आप बदल सकते हैं।':'The app found this filled in your study, so it shows Done. You can change it.')+'</p>':'')+
    '<select id="subSel" onchange="subStatusPick(\''+id+'\',this.value)">'+SUB_STATUS.filter(s=>s[0]!=='ap').map(s=>'<option value="'+s[0]+'"'+(s[0]===st.s?' selected':'')+'>'+SUB_ICON[s[0]]+' '+(hi?s[2]:s[1])+'</option>').join('')+'</select>'+
@@ -3179,6 +3180,45 @@ function ethicsWatchHTML(stage){const o=studyGet(),e=ethicsGet(o),s=ethicsState(
   return'<span class="study-strip" style="flex-basis:100%;font-size:13px;border:1px solid #b45309;border-radius:8px;padding:6px 8px">⚠️ '+(hi?'आपने ethics review ज़रूरी नहीं बताया है। इस stage में आने पर: क्या study बदली (participants, सवाल, जोखिम)?':'You declared that ethics review is not needed. On entering this stage: has the study changed (participants, questions, risk)?')+' <button type="button" class="back-btn" onclick="ethicsConfirm(\''+stage+'\',false)">'+(hi?'नहीं बदली':'No change')+'</button> <button type="button" class="back-btn" onclick="ethicsConfirm(\''+stage+'\',true)">'+(hi?'हाँ, बदली है':'Yes, it changed')+'</button></span>'}
 function ethicsConfirm(stage,changed){const o=studyGet(),e=ethicsGet(o);e.und.lastStage=stage;e.checks=(e.checks||[]).concat([{stage:stage,changed:!!changed,at:Date.now()}]).slice(-50);if(changed)e.und.changed=true;o.ethics=e;studySet(o);
   if(changed){showToast(studyHi()?'Data collection रोका गया। जोखिम फिर से देखें और रास्ता चुनें।':'Data collection paused. Review the risks and choose the route again.');subOpen('design','C9')}}
+
+/* ============ Gate C3: no sample size without its basis (build 2026.10.27b) ============
+   A number in the plan counts only with how it was reached: the power-analysis inputs (with where the
+   effect size came from), a pilot rationale, a qualitative adequacy rationale, or a number fixed by the
+   university or supervisor with the reason. CONSORT 2025 16a / SPIRIT 2025 19; Malterud et al. 2016. */
+const SS_BASIS=[['power','Power analysis (from the calculator)','Power analysis (calculator से)'],['pilot','Pilot or feasibility study','Pilot या feasibility study'],['qual','Qualitative: why this many participants is enough','Qualitative: इतने participants क्यों काफ़ी हैं'],['fixed','Fixed by the university, supervisor or available group','University, supervisor या उपलब्ध समूह से तय']];
+function ssComplete(ds){ds=ds||{};if(!ds.n)return false;const ss=ds.ss||{};
+  if(ss.basis==='power')return !!(ss.n&&String(ss.effSrc||'').trim().length>=10&&(+ds.n===+ss.n||+ds.n===+ss.recruit));
+  return !!(ss.basis&&String(ss.why||'').trim().length>=20)}
+function ssBasisHTML(ds){const hi=studyHi(),ss=(ds&&ds.ss)||{};
+  return'<div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:8px 10px;margin-top:8px"><label><b>'+(hi?'Sample size कैसे तय हुआ?':'How was the sample size decided?')+'</b></label><select id="spSsBasis" style="width:100%" onchange="ssBasisNote()"><option value="">—</option>'+SS_BASIS.map(b=>'<option value="'+b[0]+'"'+(b[0]===ss.basis?' selected':'')+'>'+escHTML(hi?b[2]:b[1])+'</option>').join('')+'</select>'+
+   '<div id="spSsPower" class="desc" style="margin-top:4px">'+ssPowerSummary(ss)+'</div>'+
+   '<label class="desc" style="display:block;margin-top:4px">'+(hi?'कारण (pilot, qualitative या तय संख्या के लिए ज़रूरी, 20+ अक्षर)':'Reason (needed for pilot, qualitative or fixed numbers, 20+ characters)')+'</label><textarea id="spSsWhy" rows="2" style="width:100%">'+escHTML(ss.why||'')+'</textarea></div>'}
+function ssPowerSummary(ss){const hi=studyHi();if(!ss||ss.basis!=='power'||!ss.n)return hi?'Power analysis चुनें तो calculator चलाकर "मेरी योजना में डालें" दबाएँ।':'For a power analysis, run the calculator and press "Use in my study plan".';
+  return(hi?'Calculator से: ':'From the calculator: ')+escHTML(ss.sentence||'')+(ss.recruit&&ss.recruit!==ss.n?' '+(hi?'Dropout मिलाकर recruit करें: ':'Recruit, with dropout: ')+ss.recruit+'.':'')+' '+(hi?'Effect size का स्रोत: ':'Effect size source: ')+escHTML(ss.effSrc||'')}
+function ssBasisNote(){}
+function ssReadBasis(old){const b=(document.getElementById('spSsBasis')||{}).value||'',why=((document.getElementById('spSsWhy')||{}).value||'').trim(),prev=(old&&old.ss)||{};
+  if(b==='power')return Object.assign({},prev.basis==='power'?prev:{},{basis:'power',why:why});return{basis:b,why:why}}
+function pwUseHTML(){const hi=studyHi();return'<div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:10px 12px;margin-top:10px"><b>'+(hi?'इसे मेरी study की योजना में डालें':'Use this in my study plan')+'</b><label class="desc" style="display:block;margin-top:4px">'+(hi?'Effect size कहाँ से लिया? (पिछली study, meta-analysis या pilot का नाम और साल; ज़रूरी)':'Where does this effect size come from? (earlier study, meta-analysis or pilot, with author and year; required)')+'</label><input id="pwEffSrc" style="width:100%" placeholder="'+escAttr(hi?'जैसे: Sharma et al. (2021) में r = .30':'e.g. r = .30 in Sharma et al. (2021)')+'"><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="pwUse()">'+(hi?'मेरी योजना में डालें':'Use in my study plan')+'</button></div></div>'}
+function pwUse(){const hi=studyHi(),L=window._pwLast,src=((document.getElementById('pwEffSrc')||{}).value||'').trim();if(!L)return;
+  if(src.length<10){showToast(hi?'पहले लिखें कि effect size कहाँ से लिया':'First write where the effect size comes from');return}
+  const o=studyGet();o.design=o.design||{};o.design.ss=Object.assign({},L,{effSrc:src,at:Date.now()});o.design.n=String(L.recruit||L.n);studySet(o);
+  const sn=document.getElementById('spN');if(sn)sn.value=o.design.n;const sb=document.getElementById('spSsBasis');if(sb)sb.value='power';const sp=document.getElementById('spSsPower');if(sp)sp.innerHTML=ssPowerSummary(o.design.ss);
+  showToast(hi?'Sample size और उसके inputs योजना में सहेजे गए ✓':'Sample size and its inputs saved to the plan ✓');try{document.getElementById('powerDlg').close()}catch(e){}}
+function ssDraftText(ds){const ss=ds.ss||{};if(ss.basis==='power'){let t=ss.sentence||'';if(ss.effSrc)t+=' The effect size was based on '+ss.effSrc.replace(/\.$/,'')+'.';if(ss.drop>0)t+=' Allowing for '+ss.drop+'% dropout, '+ss.recruit+' participants were to be recruited.';return t}
+  return'The sample size was set as follows: '+String(ss.why||'').replace(/\s+/g,' ').trim().replace(/\.?$/,'.')}
+/* ============ Gate C4: a scale with unconfirmed permission is never treated as free ============ */
+function scaleCheck(o){o=o||studyGet();const v=((o.design||{}).vars)||[],issues=[],hi=studyHi();
+  v.forEach(x=>{if(!x.scale||x.scale==='own'||x.scale==='instr')return;let s=null;try{s=slById(x.scale)}catch(e){}
+    if(!s){issues.push((x.name||x.scale)+': '+(hi?'scale का record नहीं मिला, अनुमति पक्की नहीं':'scale not in the catalogue, permission not confirmed'));return}
+    const a=(s.licence||{}).access||'unknown';
+    if(a==='free')return;
+    if((a==='restricted'||s.hidden)&&slHasText(s))return;
+    issues.push(s.short+': '+(a==='restricted'?(hi?'सीमित scale, owner के page से wording डालनी है':'restricted scale, paste the wording from the owner\'s page'):(SL_ACCESS[a]||SL_ACCESS.unknown)[hi?1:0]))});
+  return{ok:!issues.length,issues:issues}}
+function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};
+  if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
+  if(id==='C4'){const c=scaleCheck(o);if(!(ds.vars||[]).some(x=>x.scale&&x.scale!=='own'&&x.scale!=='instr'))return'';return'<div class="sub-box" style="border-color:'+(c.ok?'#16a34a':'#b45309')+'"><b>'+(c.ok?'✅ ':'⚠️ ')+(hi?'Scales की अनुमति':'Scale permissions')+'</b><p style="margin:6px 0 0">'+(c.ok?(hi?'चुने गए सभी scales मुफ़्त हैं या उनकी wording owner के page से डाली गई है।':'All chosen scales are free, or their wording was added from the owner\'s page.'):escHTML(c.issues.join('; ')))+'</p></div>'}
+  return''}
 function ethicsDraftSentence(){const o=studyGet(),e=ethicsGet(o),s=ethicsState(o);if(!s.open)return'';
   const fmt=d=>{try{return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}catch(x){return d}};
   const who=[e.cm.name,e.cm.inst].filter(Boolean).join(', ');
@@ -3222,7 +3262,7 @@ function spOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{},d0=o.idea||{};
    (d0.topic?'<p style="margin:4px 0"><b>'+(hi?'सवाल: ':'Question: ')+'</b>'+escHTML(d0.topic)+'</p>':'')+
    '<label><b>'+(hi?'Study design':'Study design')+'</b></label><select id="spType" style="width:100%"><option value="">—</option>'+opt(STUDY_DESIGNS,ds.type)+'</select>'+
    '<div class="row" style="gap:8px;margin-top:8px"><div style="flex:2"><label><b>'+(hi?'Participants और जगह':'Participants and setting')+'</b></label><input id="spPop" style="width:100%" value="'+escAttr(ds.pop||'')+'" placeholder="'+escAttr(hi?'जैसे: जयपुर के दो colleges के first-year BA, BSc, BCom students':'e.g. first-year BA, BSc, BCom students at two colleges in Jaipur')+'"></div>'+
-   '<div style="flex:1"><label><b>Sample size</b></label><input id="spN" type="number" min="1" style="width:100%" value="'+escAttr(ds.n||'')+'"><button type="button" class="btn btn-ghost btn-sm" style="margin-top:4px" onclick="try{pwOpen()}catch(e){}">'+(hi?'🎯 Power से निकालें':'🎯 Work it out (power)')+'</button></div></div>'+
+   '<div style="flex:1"><label><b>Sample size</b></label><input id="spN" type="number" min="1" style="width:100%" value="'+escAttr(ds.n||'')+'"><button type="button" class="btn btn-ghost btn-sm" style="margin-top:4px" onclick="try{pwOpen()}catch(e){}">'+(hi?'🎯 Power से निकालें':'🎯 Work it out (power)')+'</button></div></div>'+ssBasisHTML(ds)+
    '<label style="margin-top:8px;display:block"><b>'+(hi?'Sampling का तरीक़ा':'Sampling method')+'</b></label><input id="spSampling" style="width:100%" value="'+escAttr(ds.sampling||'')+'" placeholder="'+escAttr(hi?'जैसे: हर college से convenience sample':'e.g. convenience sample from each college')+'">'+
    '<p style="margin:12px 0 4px"><b>'+(hi?'Variables (जो आप मापेंगे)':'Variables (what you will measure)')+'</b></p>'+
    '<table style="width:100%;border-collapse:collapse;font-size:13px" id="spVars"><thead><tr><th style="text-align:left">'+(hi?'नाम':'Name')+'</th><th>'+(hi?'भूमिका':'Role')+'</th><th>'+(hi?'प्रकार':'Type')+'</th><th>'+(hi?'कैसे मापेंगे':'Measured with')+'</th><th>'+(hi?'Categories (कॉमा से)':'Categories (comma)')+'</th><th></th></tr></thead><tbody>'+
@@ -3236,8 +3276,8 @@ function spRowHTML(v,opt,scales){const hi=studyHi();return'<tr><td><input class=
 const SP_INSTR_RE=/\b(h(a)?emoglobin|hb|bp|blood pressure|systolic|diastolic|pulse|heart rate|weight|height|bmi|waist|glucose|sugar|hba1c|ferritin|tsh|t3|t4|cholesterol|creatinine|cortisol|antibody|igg|igm|titre|titer|temperature|spo2|oxygen|platelet|wbc|rbc|vitamin|serum|plasma|urine|eeg|ecg|reaction time|grip)\b/i;
 function spGuessInstr(inp){const tr=inp.closest('tr');if(!tr)return;const sc=tr.querySelector('.spScale');if(!sc||sc.value)return;if(SP_INSTR_RE.test(inp.value)){sc.value='instr';const ty=tr.querySelector('.spTypeV');if(ty&&ty.value==='category'&&!/\b(anaemi|anemi|low|high|positive|negative)/i.test(inp.value))ty.value='score'}}
 function spAddRow(){const d=document.getElementById('spDlg');const tb=document.querySelector('#spVars tbody');if(!d||!tb)return;tb.insertAdjacentHTML('beforeend',spRowHTML({role:'covariate',type:'category'},d._opt,d._scales))}
-function spSave(){const hi=studyHi();const vars=[...document.querySelectorAll('#spVars tbody tr')].map(tr=>({name:tr.querySelector('.spName').value.trim(),role:tr.querySelector('.spRole').value,type:tr.querySelector('.spTypeV').value,scale:tr.querySelector('.spScale').value,levels:tr.querySelector('.spLevels').value.trim()})).filter(v=>v.name);
-  const ds={type:document.getElementById('spType').value,pop:document.getElementById('spPop').value.trim(),n:document.getElementById('spN').value.trim(),sampling:document.getElementById('spSampling').value.trim(),vars:vars,hyp:document.getElementById('spHyp').value.trim()};
+function spSave(){const hi=studyHi(),o0=studyGet();const vars=[...document.querySelectorAll('#spVars tbody tr')].map(tr=>({name:tr.querySelector('.spName').value.trim(),role:tr.querySelector('.spRole').value,type:tr.querySelector('.spTypeV').value,scale:tr.querySelector('.spScale').value,levels:tr.querySelector('.spLevels').value.trim()})).filter(v=>v.name);
+  const ds={type:document.getElementById('spType').value,pop:document.getElementById('spPop').value.trim(),n:document.getElementById('spN').value.trim(),sampling:document.getElementById('spSampling').value.trim(),vars:vars,hyp:document.getElementById('spHyp').value.trim()};try{ds.ss=ssReadBasis(o0.design)}catch(e){}
   if(!ds.type){showToast(hi?'पहले study design चुनिए':'Choose a study design first');return}
   if(!vars.some(v=>v.role==='outcome')){showToast(hi?'कम से कम एक outcome (DV) variable लिखिए':'Add at least one outcome (DV) variable');return}
   studyPatch('design',ds);document.getElementById('spDlg').close();try{designRender&&designRender()}catch(e){}
@@ -3398,7 +3438,7 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
   if(hyp.length)h.push('<p>'+hyp.map(escHTML).join('<br>')+'</p>');
   const instr=vars.filter(v=>v.scale==='instr');const sn=instr.length?1:0;
   h.push('<h2>2. '+(instr.length?'Materials and Methods':'Methods')+'</h2><h3>2.1 Design</h3><p>This was '+escHTML(studyDesignShort(ds.type))+'.</p>');
-  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(studyLow(ds.sampling)):'')+(ds.n?'. The planned sample size was '+escHTML(studyNum(ds.n))+'.':'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
+  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(studyLow(ds.sampling)):'')+(ds.n?'. The planned sample size was '+escHTML(studyNum(ds.n))+'. '+(ssComplete(ds)?escHTML(ssDraftText(ds)):ph('how this sample size was decided: the power-analysis inputs, or the reason for this number')):'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
   h.push('<h3>2.3 Measures</h3>'+(measures||'<p>'+ph('measures')+'</p>'));
   if(instr.length)h.push('<h3>2.4 Instruments and laboratory methods</h3>'+instr.map(v=>'<p><b>'+escHTML(v.name)+'.</b> '+ph('instrument or analyser with make and model, method, unit, how and how often it was calibrated, quality control, who took the reading')+'</p>').join(''));
   h.push('<h3>2.'+(4+sn)+' Procedure and ethics</h3><p>'+(function(){let t='';try{t=ethicsDraftSentence()}catch(e){}return t?escHTML(t)+' '+ph('how consent was taken, where and when data were collected'):ph('ethics committee name and approval number, how consent was taken, where and when data were collected')})()+'</p>');
@@ -14586,7 +14626,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.27a';
+const APP_BUILD='2026.10.27b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -14695,7 +14735,7 @@ function slSaveText(id){const x=slById(id),hi=studyHi();const lines=(document.ge
    paid (buy from the publisher: link only), request (ask the owner: link plus a ready email).
    Status from owner pages checked 26 Oct 2026; contact addresses and links to be re-confirmed before each use. */
 const SCALE_LINKS=[
- {short:'PHQ-9',name:'Patient Health Questionnaire-9',construct:'Depression symptoms',access:'free',url:'https://www.phqscreeners.com/',note:'PHQ Screeners: free to use. Wording to be added from the owner\'s file; screening scale needs a self-harm help path.'},
+ {short:'PHQ-9',name:'Patient Health Questionnaire-9',construct:'Depression symptoms',access:'free',url:'https://www.phqscreeners.com/',note:'Free for research per the PHQ instruction manual (PHQ Screeners); use in a paid product not yet confirmed. Wording to be added from the owner\'s file; a screening scale, not a diagnosis, and item 9 needs a self-harm help path.'},
  {short:'DASS-21',name:'Depression Anxiety Stress Scales (21 items)',construct:'Depression, anxiety, stress',access:'free',url:'http://www2.psy.unsw.edu.au/dass/',note:'Public domain; the scales themselves may not be sold. A Hindi version (Tripathi et al.) is listed on the owner\'s site.'},
  {short:'K10',name:'Kessler Psychological Distress Scale',construct:'Psychological distress',access:'free',url:'https://www.hcp.med.harvard.edu/ncs/k6_scales.php',note:'Free to use per the official NCS page.'},
  {short:'Mini-IPIP',name:'Mini International Personality Item Pool',construct:'Big Five personality',access:'free',url:'https://ipip.ori.org/',note:'IPIP items are public domain, including commercial use.'},
@@ -14704,13 +14744,13 @@ const SCALE_LINKS=[
  {short:'UCLA-3',name:'UCLA Loneliness Scale, Version 3',construct:'Loneliness',access:'restricted',url:'https://www.google.com/search?q=UCLA+Loneliness+Scale+Version+3+Russell+official',note:'Free for non-profit research only.'},
  {short:'BFI-2',name:'Big Five Inventory-2',construct:'Big Five personality',access:'restricted',url:'https://www.colby.edu/psych/personality-lab/',note:'Non-commercial research only; download through the lab\'s form.'},
  {short:'PSQI',name:'Pittsburgh Sleep Quality Index',construct:'Sleep quality',access:'request',url:'https://www.sleep.pitt.edu/instruments/',note:'Request form required; commercial studies pay a fee.'},
- {short:'PSS-10',name:'Perceived Stress Scale',construct:'Perceived stress',access:'request',url:'https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/index.html',note:'Terms not confirmed on the owner\'s page: ask before use.'},
- {short:'MSPSS',name:'Multidimensional Scale of Perceived Social Support',construct:'Social support',access:'request',url:'https://www.google.com/search?q=MSPSS+Zimet+scale+permission',note:'Terms not confirmed on an owner page: ask the authors.'},
- {short:'EPDS',name:'Edinburgh Postnatal Depression Scale',construct:'Perinatal depression',access:'request',url:'https://www.google.com/search?q=Edinburgh+Postnatal+Depression+Scale+Royal+College+of+Psychiatrists+permission',note:'Terms not confirmed on an owner page: ask before use. A Hindi version was validated by Joshi et al. (2020).'},
+ {short:'PSS-10',name:'Perceived Stress Scale',construct:'Perceived stress',access:'request',url:'https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/index.html',note:'Permission requests go through ePROVIDE (Mapi Research Trust); a request is free but is not blanket permission. Translations belong to their translators. Not a diagnostic tool and has no cut-off scores.'},
+ {short:'MSPSS',name:'Multidimensional Scale of Perceived Social Support',construct:'Social support',access:'unknown',url:'https://www.google.com/search?q=MSPSS+Zimet+scale+permission',note:'Terms not confirmed on an owner page: ask the authors.'},
+ {short:'EPDS',name:'Edinburgh Postnatal Depression Scale',construct:'Perinatal depression',access:'unknown',url:'https://www.google.com/search?q=Edinburgh+Postnatal+Depression+Scale+Royal+College+of+Psychiatrists+permission',note:'Terms not confirmed on an owner page: ask before use. A Hindi version was validated by Joshi et al. (2020).'},
  {short:'CD-RISC',name:'Connor-Davidson Resilience Scale',construct:'Resilience',access:'request',url:'http://www.connordavidson-resiliencescale.com/',note:'Licence agreement required.'},
  {short:'GHQ-12',name:'General Health Questionnaire-12',construct:'Psychological distress',access:'paid',url:'https://www.gl-assessment.co.uk/',note:'Sold by GL Assessment; buy or request through the publisher.'},
  {short:'BDI-II',name:'Beck Depression Inventory-II',construct:'Depression',access:'paid',url:'https://www.pearsonassessments.com/',note:'Sold by Pearson; buy a licence from the publisher.'}];
-const SL_ACCESS={free:['✅ Free to use','✅ मुफ़्त'],restricted:['🔗 Restricted: link only','🔗 सीमित: सिर्फ़ link'],paid:['💰 Paid: link only','💰 पैसे वाला: सिर्फ़ link'],request:['✉️ Ask permission','✉️ अनुमति माँगें']};
+const SL_ACCESS={free:['✅ Free to use','✅ मुफ़्त'],restricted:['🔗 Restricted: link only','🔗 सीमित: सिर्फ़ link'],paid:['💰 Paid: link only','💰 पैसे वाला: सिर्फ़ link'],request:['✉️ Ask permission','✉️ अनुमति माँगें'],unknown:['🔍 Permission not confirmed','🔍 अनुमति पक्की नहीं']};
 function slMail(i){const hi=studyHi(),x=SCALE_LINKS[i]||slById(i);const me=(typeof apMe==='function')?apMe():{name:'',pos:''},o=studyGet(),d=o.idea||{},ds=o.design||{};
   const subj='Request for permission to use the '+x.short+' in a non-commercial student research study';
   const body=['Dear Sir/Madam,','','I am '+(me.name||'[your name]')+(me.pos?', '+me.pos:'')+'. I am conducting a non-commercial academic study'+(d.topic?' titled "'+d.topic.replace(/\?$/,'')+'"':'')+' under the supervision of [supervisor name, department, institution].','',
@@ -14727,7 +14767,7 @@ function slOpen(){
   const hi=studyHi(),acc=k=>(SL_ACCESS[k]||['',''])[hi?1:0];
   document.getElementById('slList').innerHTML=SCALES.map(x=>'<button class="btn btn-ghost" style="margin:3px 6px 3px 0" onclick="slPick(\''+x.id+'\')"><b>'+x.short+'</b> · '+x.construct+' <span style="font-size:11px">'+acc(x.licence.access)+'</span></button>').join('')+
    '<p style="font-size:13px;margin:12px 0 4px"><b>'+(hi?'और scales (मालिक के page का link)':'More scales (link to the owner\'s page)')+'</b></p><p class="desc" style="margin:0 0 6px">'+(hi?'नियम: मुफ़्त scale पूरा हवाले के साथ; सीमित या पैसे वाला scale सिर्फ़ link से; जहाँ अनुमति चाहिए, वहाँ तैयार email।':'Rule: free scales in full with the reference; restricted or paid scales by link only; where permission is needed, a ready email.')+'</p>'+
-   '<div style="font-size:13px">'+SCALE_LINKS.map((x,i)=>'<div style="border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:4px 0"><b>'+escHTML(x.short)+'</b> · '+escHTML(x.name)+' · '+escHTML(x.construct)+' <span>'+acc(x.access)+'</span><br><span style="color:var(--muted)">'+escHTML(x.note)+'</span><br><a href="'+escAttr(x.url)+'" target="_blank" rel="noopener">'+(hi?'मालिक का page खोलें':'Open the owner\'s page')+'</a>'+(x.access==='request'?' · <a href="#" onclick="slMail('+i+');return false">✉️ '+(hi?'अनुमति का email बनाएँ':'Draft a permission email')+'</a>':'')+'</div>').join('')+'</div>';
+   '<div style="font-size:13px">'+SCALE_LINKS.map((x,i)=>'<div style="border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:4px 0"><b>'+escHTML(x.short)+'</b> · '+escHTML(x.name)+' · '+escHTML(x.construct)+' <span>'+acc(x.access)+'</span><br><span style="color:var(--muted)">'+escHTML(x.note)+'</span><br><a href="'+escAttr(x.url)+'" target="_blank" rel="noopener">'+(hi?'मालिक का page खोलें':'Open the owner\'s page')+'</a>'+((x.access==='request'||x.access==='unknown')?' · <a href="#" onclick="slMail('+i+');return false">✉️ '+(hi?'अनुमति का email बनाएँ':'Draft a permission email')+'</a>':'')+'</div>').join('')+'</div>';
   const d=document.getElementById('scaleDlg');if(!d.open)d.showModal();
 }
 function slVarNames(x){const w=Math.max(2,String(x.items.length).length);return x.items.map((_,i)=>x.id+'_'+String(i+1).padStart(w,'0'))}
@@ -16889,6 +16929,7 @@ function pwRun(){
     html+='<p class="desc">For a '+tname+' ('+tailTxt+'α = '+f2(alpha)+', '+effTxt(spec.effect)+') the power at this size is '+pf(pw)+'.</p>';
     const rows=[0.8,0.9,0.95].map(q=>{const nn=pwSolveN(spec,q);return nn===null?'':'<tr><td>'+pf(q)+'</td><td>'+(I.per?nn+' per group ('+nn*(t==='anova'?spec.k:2)+' in total)':nn)+'</td></tr>'}).join('');
     html+='<table class="stats-table"><tr><th>Power</th><th>People needed</th></tr>'+rows+'</table>';
+    window._pwLast={basis:'power',test:t,testName:tname,alpha:alpha,tails:spec.tails,effect:spec.effect,power:target,n:total,perGroup:I.per?n:0,drop:drop,recruit:drop>0?(I.per?Math.ceil(n/(1-drop/100))*(t==='anova'?spec.k:2):Math.ceil(n/(1-drop/100))):total};
     sentence='An a priori power analysis for '+pwArt(tname)+' '+tname+' ('+tailTxt+'α = '+f2(alpha)+', '+effTxt(spec.effect)+', power = '+pf(target)+') showed that '+(I.per?n+' participants per group (N = '+total+')':n+' participants')+' were needed.';
     if(drop>0){const gN=I.per?(t==='anova'?spec.k:2):1,recG=Math.ceil(n/(1-drop/100)),rec=recG*gN;html+='<p class="desc">With '+drop+'% expected dropout, recruit about <b>'+(I.per?recG+' per group ('+rec+' in total)':rec)+'</b>, so that at least '+total+' complete cases remain.</p>';sentence+=' Allowing for '+drop+'% dropout, the target was '+rec+' participants'+(I.per?' in total':'')+'.'}
   }else if(mode==='power'){
@@ -16911,6 +16952,7 @@ function pwRun(){
   html+='<p class="desc"><b>For your methods section or ethics form:</b></p><div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:10px 12px;font-size:14px" id="pwSentence">'+sentence+'</div>'+
     '<div class="row" style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'pwSentence\').innerText).then(()=>showToast(\'Copied\'))">Copy sentence</button></div>'+
     '<p class="desc">Power is worked out for one planned test, with the assumptions of that test. A study that plans several tests, a dropout rate you cannot predict, or data that break the assumptions will need a larger sample. A supervisor or statistician should confirm the effect size you chose.</p>';
+  if(mode==='n'&&window._pwLast){window._pwLast.sentence=sentence;html+=pwUseHTML()}else window._pwLast=null;
   out.innerHTML=html;
 }
 
