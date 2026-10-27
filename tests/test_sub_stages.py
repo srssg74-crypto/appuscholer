@@ -1,0 +1,71 @@
+"""Sub-stages, statuses and the ethics gate (C9)."""
+import sys, os, json
+sys.path.insert(0, os.path.dirname(__file__))
+from harness import new_page
+from playwright.sync_api import sync_playwright
+fails=[]
+def ok(c,m):
+    print(('PASS ' if c else 'FAIL ')+m)
+    if not c: fails.append(m)
+with sync_playwright() as p:
+    errors=[]
+    b,pg=new_page(p,errors)
+    J=lambda js: pg.evaluate(js)
+    pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
+    J("window.confirm=()=>true;window.prompt=(a,b)=>b")
+    J("openSaveAsProject();document.getElementById('sapName').value='Sleep study';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
+    pg.wait_for_timeout(300)
+    ok(J("SUBSTAGES.length")==42,'42 sub-stages')
+    ok(J("['idea','lit','design','collect','writing','review'].map(s=>SUBSTAGES.filter(x=>x[1]===s).length).join(',')")=='4,7,10,6,8,7','per-stage counts 4,7,10,6,8,7')
+    J("showTool('idea')"); pg.wait_for_timeout(200)
+    ok(J("!!document.getElementById('subBtn')"),'stage strip shows the steps button')
+    J("subOpen('idea')"); pg.wait_for_timeout(200)
+    ok(J("document.getElementById('subDlg').open && document.querySelectorAll('#subDlg .sub-item').length")==4,'dialog opens with 4 items for stage A')
+    ok(J("document.querySelectorAll('#subDlg .sub-tab').length")==6,'six stage tabs')
+    J("subStatusPick('A2','ip')")
+    ok(J("subState('A2').s")=='ip','A2 set to In progress')
+    J("SUB_CUR.id='A4';subRender();subStatusPick('A4','na')")
+    ok(J("subState('A4').s")!='na','Not applicable refused without a reason')
+    J("subSet('A4',{s:'na',why:'Supervisor already approved feasibility'})")
+    ok(J("subState('A4').s")=='na' and J("subCount('idea').done")==1,'Not applicable with reason counts as done')
+    J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in college students'};studySet(o)")
+    ok(J("subState('A1').auto")==True and J("subState('A1').s")=='dn','A1 auto-detected from the study record')
+    pg.screenshot(path='/tmp/claude-0/-home-claude/d540b351-a2df-5fa6-9a88-226a4c6e6a4f/scratchpad/sub-idea.png')
+    J("document.getElementById('subDlg').close()")
+    # ethics gate
+    ok(J("ethicsState().open")==False,'ethics locked at start')
+    J("sfShareLink()"); pg.wait_for_timeout(300)
+    ok(J("document.getElementById('subDlg').open && SUB_CUR.id")=='C9','secure form share blocked and C9 opened')
+    J("ethicsSet('route','app')")
+    ok(J("ethicsState().open")==False,'approval route locked until details filled')
+    for k,v in [('cm.name','Institutional Ethics Committee'),('cm.inst','XYZ College, Jaipur'),('cm.addr','JLN Marg, Jaipur'),('cm.email','iec@xyz.ac.in'),('lt.no','IEC/2026/41'),('lt.date','2026-10-20')]:
+        J("ethicsSet(%s,%s)"%(json.dumps(k),json.dumps(v)))
+    ok(J("ethicsState().open")==True and J("subState('C9').s")=='ap','approval complete: open, status approved')
+    ok('IEC/2026/41' in J("ethicsDraftSentence()"),'draft ethics sentence uses the letter: '+J("ethicsDraftSentence()"))
+    pg.screenshot(path='/tmp/claude-0/-home-claude/d540b351-a2df-5fa6-9a88-226a4c6e6a4f/scratchpad/sub-c9-approved.png')
+    J("ethicsSet('cm.email','not-an-email')")
+    ok(J("ethicsState().open")==False,'bad email locks again')
+    # route 3
+    J("ethicsSet('route','und');ethicsSet('risk.minor',true)")
+    ok(J("ethicsState().barred")==True and J("ethicsState().open")==False,'undertaking barred with minors')
+    ok(J("document.querySelector('input[name=ethR][onchange*=und]').disabled")==True,'undertaking radio disabled when barred')
+    J("ethicsSet('risk.minor',false);ethicsSet('und.why','Anonymous survey of adult college students on study habits, no sensitive questions');ethicsSet('und.name','Asha Verma');ethicsSet('und.agree',true)")
+    ok(J("ethicsState().open")==True and J("subState('C9').s")=='dn','undertaking complete: open, status done')
+    ok('No change' in J("ethicsWatchHTML('collect')"),'monitoring asks at a new stage')
+    J("ethicsConfirm('collect',false)")
+    ok(J("ethicsWatchHTML('collect')")=='' and J("ethicsState().open")==True,'no change: stays open, not asked again in this stage')
+    J("ethicsConfirm('writing',true)")
+    ok(J("ethicsState().open")==False,'study changed: data collection paused')
+    J("const o=studyGet();o.design={type:'experiment'};studySet(o);ethicsSet('route','und')")
+    ok(J("ethicsState().barred")==True,'experiment design bars the undertaking route')
+    J("ethicsSet('route','none')")
+    ok(J("subState('C9').s")=='na' and J("ethicsGate()")==False,'no human participants: C9 not applicable, secure form stays off')
+    # old ethics record pre-fills the new one in a fresh study
+    J("document.getElementById('subDlg').close();openNewProjectDirect();document.getElementById('sapName').value='Old record';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
+    pg.wait_for_timeout(300)
+    J("designSet('ec',{status:'approved',committee:'IEC Psychology',apprNo:'P/12',apprDate:'2026-09-01',minors:'no'})")
+    ok(J("ethicsGet().route")=='app' and J("ethicsGet().cm.name")=='IEC Psychology','old ethics record pre-fills the gate')
+    errs=[e for e in errors if e[0]=='pageerror']
+    ok(not errs,'no page errors '+json.dumps(errs[:3]))
+    b.close()
+print('FAILED %d'%len(fails) if fails else 'ALL PASS')
