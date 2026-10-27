@@ -3314,7 +3314,11 @@ function wFrameSVG(o){const f=wGet(o).B7||{},c=(f.cons||[]).filter(x=>String(x.n
   return g+'</svg>'}
 function wFrameInsert(){const o=studyGet(),f=wGet(o).B7||{},svg=wFrameSVG(o);if(!svg){showToast(studyHi()?'पहले constructs को variables से जोड़ें':'First link the constructs to variables');return}
   const cap='Figure. Conceptual framework based on '+(f.theory||'')+(f.cite?' ('+f.cite+')':'')+'.';
-  try{insertHTMLBlockIntoEditor('<figure>'+svg.replace('style="width:100%;max-width:560px"','width="560"')+'<figcaption>'+escHTML(cap)+'</figcaption></figure>');showToast(studyHi()?'Framework का चित्र document में डाला ✓':'Framework diagram inserted into your document ✓')}catch(e){}}
+  const src=svg.replace('style="width:100%;max-width:560px"','xmlns="http://www.w3.org/2000/svg" width="560" height="'+(/viewBox="0 0 560 (\d+)"/.exec(svg)||[0,200])[1]+'"').replace(/currentColor/g,'#111111').replace('<svg ','<svg font-family="Arial, sans-serif" ');
+  const img=new Image(),w=560,h=+(/viewBox="0 0 560 (\d+)"/.exec(svg)||[0,200])[1];
+  img.onload=()=>{try{const c=document.createElement('canvas');c.width=w*2;c.height=h*2;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.scale(2,2);g.drawImage(img,0,0,w,h);
+    insertHTMLBlockIntoEditor('<figure><img src="'+c.toDataURL('image/png')+'" alt="Conceptual framework" width="'+w+'"><figcaption>'+escHTML(cap)+'</figcaption></figure>');showToast(studyHi()?'Framework का चित्र document में डाला ✓':'Framework diagram inserted into your document ✓')}catch(e){showToast('Could not draw the diagram')}};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src)}
 function wProblemInsert(){const t=String((wGet().A2||{}).text||'').trim();if(!t)return;try{insertHTMLBlockIntoEditor('<h3>Statement of the problem</h3>'+t.split(/\n{2,}/).map(p=>'<p>'+escHTML(p)+'</p>').join(''));showToast(studyHi()?'Document में डाला ✓':'Inserted into your document ✓')}catch(e){}}
 function wExtraHTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>';
   if(id==='A2'){const t=(w.A2||{}).text||'',n=wCiteCount(t),q=String((o.idea||{}).topic||'').trim();
