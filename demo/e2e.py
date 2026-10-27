@@ -151,6 +151,17 @@ def study(pg, S, label, project, data_files, tests_fn, figure_fn, gap_refs, refs
     pg.evaluate("qnSave()")
     save_dl(pg, "qnWord()", f'{label}-questionnaire.docx'); save_dl(pg, "qnCsv()", f'{label}-data-template.csv'); save_dl(pg, "qnCodebook()", f'{label}-codebook.csv')
     log(True, f'{label} Stage 4: questionnaire Word file, data template and codebook downloaded'); close_dialogs(pg)
+    # ---- Ethics gate (C9): data collection stays locked until the approval letter is recorded ----
+    locked_before = not pg.evaluate("ethicsState().open")
+    pg.evaluate("sfCopyLink()"); pg.wait_for_timeout(400)
+    sent_to_c9 = pg.evaluate("!!(document.getElementById('subDlg')&&document.getElementById('subDlg').open&&SUB_CUR.id==='C9')")
+    pg.evaluate("""()=>{ethicsSet('route','app');ethicsSet('cm.name','Institutional Ethics Committee');ethicsSet('cm.inst','Department of Psychology, Demo College, Jaipur');
+      ethicsSet('cm.addr','JLN Marg, Jaipur 302004');ethicsSet('cm.email','iec@democollege.ac.in');ethicsSet('lt.no','IEC/PSY/2026/%s');ethicsSet('lt.date','2026-10-20')}""" % label)
+    pg.wait_for_timeout(300); shot(pg, f'{label}-ethics-gate-approved')
+    opened = pg.evaluate("ethicsState().open"); st = pg.evaluate("subState('C9').s")
+    pg.evaluate("subOpen('design')"); pg.wait_for_timeout(300); shot(pg, f'{label}-steps-design-stage')
+    cnt = pg.evaluate("subCount('design').done+'/'+subCount('design').total"); close_dialogs(pg)
+    log(locked_before and sent_to_c9 and opened and st == 'ap', f'{label} Ethics gate: form link locked until the approval letter is recorded; then opened', f'design steps done {cnt}')
     # ---- Stage 4: secure form instead of Google Forms (key, link, two participants, kiosk, unlock) ----
     pg.evaluate("sfOpen()"); pg.wait_for_timeout(400)
     pg.evaluate("()=>{document.getElementById('sfPass1').value='demo-pass-2026';document.getElementById('sfPass2').value='demo-pass-2026'}")
