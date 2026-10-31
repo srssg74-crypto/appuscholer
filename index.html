@@ -506,6 +506,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 #editor [data-bib]{cursor:default}
 </style>
 <script src="firebase-config.js"></script>
+<style>#tourOv{display:none;position:fixed;inset:0;z-index:2147483000;pointer-events:none}#tourHole{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(15,10,30,.55);outline:3px solid #a78bfa;transition:all .25s}#tourCard{position:fixed;pointer-events:auto;background:var(--card,#fff);color:var(--ink,#222);border-radius:12px;padding:14px 14px 10px;box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:15px;line-height:1.6;transition:top .25s,left .25s}#tourCard .tour-bar{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted,#666)}.why-line{font-size:12.5px;color:var(--muted,#555);margin:4px 0 2px;line-height:1.5}.why-line a{font-size:12px}.why-line details summary{cursor:pointer;color:var(--purple-600,#6d28d9)}</style>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
@@ -1553,6 +1554,8 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
     <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();openSettings()" data-i18n="welcome_setup_btn">Set up my key</button>
     <button class="btn btn-ghost" onclick="document.getElementById('welcomeDlg').close()" data-i18n="welcome_later_btn">Later</button>
   </div>
+  <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="tourStart()" id="welcomeDemoBtn" data-i18n="demo_btn">▶ Watch a 2-minute demo</button>
+  </div>
 </div></dialog>
 
 <dialog id="helpDlg" class="dlg-wide"><div class="dlg-body">
@@ -1563,6 +1566,8 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
     <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('helpDlg').close();guideOpen()">📖 Open the Guide</button>
     <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();repOpen()">🛠 Report a problem</button>
+  </div>
+  <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" style="flex:1" onclick="tourStart()" id="helpDemoBtn" data-i18n="demo_again_btn">▶ Watch the demo again</button><button class="btn btn-ghost" style="flex:1" onclick="whyOn()" id="helpWhyBtn" data-i18n="why_again_btn">💡 Show the "why we ask" lines again</button>
   </div>
 
   <details open style="margin-top:12px">
@@ -2318,7 +2323,7 @@ const I18N={
     welcome_step3:'Follow the link, create a key, paste it in, press <b>Save Key</b>.',
     welcome_step4:'Start writing. Press <kbd>Tab</kbd> to accept a suggestion.',
     welcome_warn:"Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.",
-    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later',
+    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
     login_h2:'🔑 Appuscholar Access',
     login_intro:"This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.",
     login_placeholder:'Paste your access code here', login_unlock_btn:'Unlock',
@@ -2558,7 +2563,7 @@ const I18N={
     welcome_step3:'लिंक पर जाएं, एक कुंजी बनाएं, उसे पेस्ट करें, <b>कुंजी सहेजें</b> दबाएं।',
     welcome_step4:'लिखना शुरू करें। सुझाव स्वीकार करने के लिए <kbd>Tab</kbd> दबाएं।',
     welcome_warn:'Appuscholar मसौदा तैयार करता है और जांचता है — यह आपकी सोच का काम नहीं करता। हर उद्धरण की जांच करें, और जमा करने से पहले अपनी संस्था की AI सहायता नीति देख लें।',
-    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में',
+    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
     login_h2:'🔑 Appuscholar प्रवेश',
     login_intro:'इस प्रति के लिए एक एक्सेस कोड चाहिए। आपको दिया गया कोड नीचे पेस्ट करें — यह इसी कंप्यूटर पर जांचा जाता है, कुछ भी अपलोड नहीं होता।',
     login_placeholder:'अपना एक्सेस कोड यहाँ पेस्ट करें', login_unlock_btn:'अनलॉक करें',
@@ -2804,6 +2809,7 @@ function showTool(name){
      caught and silently skipped that one time. The Projects section re-renders the guide once it's
      actually defined, so nothing is lost. */
   try{renderStageGuide(name)}catch(e){}
+  try{setTimeout(whyRender,0)}catch(e){}
   /* Re-scan the documents for citations each time the Citation Manager opens, so the
      "cited in" lines never lag behind what was just written. */
   if(name==='cite'){try{citRender()}catch(e){}try{citRetractionRefresh(false)}catch(e){}}
@@ -3552,6 +3558,95 @@ function wExtra3HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
     return box(f2Ok(o),L('Reporting checklist','Reporting checklist'),h)}
   return''}
 function f2Item(k,f,v){const o=studyGet();o.write=o.write||{};const F=o.write.F2=o.write.F2||{};F.items=F.items||{};F.items[k]=Object.assign({},F.items[k]||{},{[f]:v});studySet(o);subRenderSide();if(f==='st')wRedraw()}
+
+/* ============ First-run demo and "why we ask" lines (build 2026.10.28a) ============
+   tourStart(): a short guided demo on one example study (screen time and sleep). It types example
+   answers into the real fields WITHOUT firing their input events, so nothing is saved, and puts the
+   student's own values back at the end. It plays by itself; the student can pause, go back or skip.
+   whyRender(): under key form fields, a line saying why the app asks. Shown in full the first 3 times
+   a field is seen, then folded to a small "Why?" link. */
+const WHY={
+ ideaTopic:['Asked first because every later step reuses it: the paper search, the design, the hypotheses and the title.','सबसे पहले इसलिए, क्योंकि आगे हर कदम इसी को काम में लेता है: papers की खोज, design, hypotheses और title।'],
+ ideaResources:['A good question you cannot carry out does not help you. What you can reach decides the design and the sample.','अच्छा सवाल भी तभी काम का है जब आप उसे कर सकें। आपके पास क्या है, उसी से design और sample तय होते हैं।'],
+ ideaTimeframe:['Time decides how many people you can reach and whether a second measurement is possible.','समय से तय होता है कि कितने लोगों तक पहुँचेंगे और दोबारा माप लेना संभव है या नहीं।'],
+ ideaConstraints:['Limits named now (money, ethics, department rules) save you from redoing the plan later.','अभी बताई गई पाबंदियाँ (पैसा, ethics, department के नियम) बाद में योजना दोबारा बनाने से बचाती हैं।'],
+ rsTopic:['A few search words, not a full sentence. These words go to OpenAlex and PubMed exactly as you write them.','कुछ search शब्द, पूरा वाक्य नहीं। ये शब्द OpenAlex और PubMed तक वैसे ही जाते हैं जैसे आप लिखते हैं।'],
+ rsDesign:['Choosing the kind of study keeps out papers you cannot compare with yours.','Study का प्रकार चुनने से वे papers बाहर रहते हैं जिनकी तुलना आपकी study से नहीं हो सकती।'],
+ spType:['The design decides which statistical test fits and what you may claim: only an experiment can show cause.','Design से तय होता है कि कौन सा test सही है और आप क्या दावा कर सकते हैं: कारण सिर्फ़ experiment दिखा सकता है।'],
+ spPop:['Who exactly takes part decides to whom your result applies.','ठीक-ठीक कौन भाग लेगा, इसी से तय होता है कि आपका नतीजा किन लोगों पर लागू होगा।'],
+ spSampling:['How people are chosen tells the reader how far the result can be stretched.','लोग कैसे चुने गए, इससे पाठक जानता है कि नतीजा कितनी दूर तक फैलाया जा सकता है।'],
+ spN:['The number needs a reason (power, a pilot or a fixed group). Without it, the paper draft shows a gap.','संख्या का कारण चाहिए (power, pilot या तय समूह)। उसके बिना paper के draft में खाली जगह दिखेगी।'],
+ spVars:['Each variable gets a role and a measure, so the questionnaire and the analysis are built from this list.','हर variable की भूमिका और माप लिखा जाता है, ताकि questionnaire और analysis इसी सूची से बनें।'],
+ spHyp:['Hypotheses written before the data are tested as planned. Ideas found later are marked exploratory.','Data से पहले लिखी hypotheses योजना के अनुसार जाँची जाती हैं। बाद में सूझी बातें exploratory लिखी जाती हैं।']};
+const WHY_FULL=3;
+function whyStore(){try{return JSON.parse(LS.get('appu_why')||'{}')||{}}catch(e){return{}}}
+function whySave(s){try{LS.set('appu_why',JSON.stringify(s))}catch(e){}}
+let WHY_SEEN={};
+function whyRender(){const s=whyStore(),hi=studyHi();
+  Object.keys(WHY).forEach(id=>{const el=document.getElementById(id);if(!el)return;
+    let box=document.getElementById('why_'+id);
+    if(s.off){if(box)box.remove();return}
+    if(!el.offsetParent)return;
+    if(!WHY_SEEN[id]){WHY_SEEN[id]=1;s[id]=(s[id]||0)+1}
+    const full=(s[id]||0)<=WHY_FULL,txt=WHY[id][hi?1:0];
+    if(!box){box=document.createElement('div');box.id='why_'+id;box.className='why-line';const fld=el.closest('.fld');(fld||el.parentNode).appendChild(box)}
+    box.innerHTML=full?'<span>💡 <b>'+(hi?'क्यों पूछ रहे हैं: ':'Why we ask: ')+'</b>'+escHTML(txt)+'</span> <a href="#" onclick="whyOff();return false">'+(hi?'ये व्याख्याएँ छिपाएँ':'Hide these explanations')+'</a>'
+      :'<details><summary>ⓘ '+(hi?'क्यों पूछ रहे हैं?':'Why do we ask?')+'</summary>'+escHTML(txt)+'</details>'});
+  whySave(s)}
+function whyOff(){const s=whyStore();s.off=true;whySave(s);whyRender();showToast(studyHi()?'व्याख्याएँ छिपा दीं। Help से फिर चालू कर सकते हैं।':'Explanations hidden. Turn them on again from Help.')}
+function whyOn(){whySave({});WHY_SEEN={};whyRender();showToast(studyHi()?'व्याख्याएँ फिर से चालू':'Explanations are on again')}
+
+const TOUR=[
+ {c:1,en:'This short demo follows one example study: screen time at night and sleep in college students. Nothing you have written is changed. Skip whenever you like.',hi:'यह छोटा demo एक उदाहरण study पर चलता है: college students में रात का screen time और नींद। आपका लिखा कुछ नहीं बदलेगा। जब चाहें skip कर दें।'},
+ {sel:'#stageBar',en:'Research moves through six stages, from the idea to publishing. This bar shows where you are, and any stage opens with one click.',hi:'Research छह stages से गुज़रती है, idea से छपने तक। यह पट्टी बताती है कि आप कहाँ हैं, और कोई भी stage एक click में खुलता है।'},
+ {tool:'idea',sel:'#ideaTopic',type:'Does screen time at night go with poorer sleep in college students?',en:'Stage 1. You write your question in your own words. The app asks this first because the paper search, the design and the hypotheses all reuse it.',hi:'Stage 1. आप अपना सवाल अपने शब्दों में लिखते हैं। App यह सबसे पहले इसलिए पूछता है, क्योंकि papers की खोज, design और hypotheses सब इसी को काम में लेते हैं।'},
+ {tool:'idea',sel:'#ideaResources',type:'About 150 students in my college, Google Forms, my supervisor\'s approval',en:'Next, what you can really reach. A question you cannot carry out is no help, so this decides the design and the number of people.',hi:'फिर, आप असल में किन तक पहुँच सकते हैं। जो सवाल आप कर ही न सकें वह किसी काम का नहीं, इसलिए इसी से design और लोगों की संख्या तय होती है।'},
+ {tool:'idea',sel:'#ideaTimeframe',type:'One semester',en:'And your time. One semester allows one round of data; a follow-up would need longer.',hi:'और आपका समय। एक semester में data का एक दौर हो सकता है; follow-up के लिए ज़्यादा समय चाहिए।'},
+ {tool:'research',sel:'#rsTopic',type:'screen time sleep quality college students',en:'Stage 2. Now we find what is already published. Question 1: the topic in a few search words.',hi:'Stage 2. अब देखते हैं कि पहले से क्या छपा है। सवाल 1: topic, कुछ search शब्दों में।'},
+ {tool:'research',sel:'#rsDesign',en:'Question 2: the kind of study you want to read, for example surveys or trials, so that papers you cannot compare stay out.',hi:'सवाल 2: किस तरह की studies पढ़नी हैं, जैसे survey या trial, ताकि जिनसे तुलना न हो सके वे papers बाहर रहें।'},
+ {tool:'research',sel:'#rsSrcOA',up:1,en:'Question 3: where to search. OpenAlex and PubMed are free. With these three answers the app fetches the papers with their abstracts.',hi:'सवाल 3: कहाँ खोजें। OpenAlex और PubMed मुफ़्त हैं। इन तीन जवाबों से app papers उनके abstracts के साथ ले आता है।'},
+ {tool:'research',sel:'button[onclick="researchSearch()"]',en:'This button runs the search. You tick the relevant papers; they go into your library and into the paper matrix of step B3. (The demo does not press it.)',hi:'यह बटन खोज चलाता है। आप काम के papers पर tick करते हैं; वे आपकी library में और कदम B3 की matrix में चले जाते हैं। (Demo इसे नहीं दबाता।)'},
+ {tool:'research',sel:'#subBtn',en:'Every stage has small steps. This button opens them: how to fill each one, and a check before moving on. You will see 42 steps in all.',hi:'हर stage में छोटे कदम हैं। यह बटन उन्हें खोलता है: हर कदम कैसे भरें, और आगे बढ़ने से पहले की जाँच। कुल 42 कदम हैं।'},
+ {c:1,en:'Before you collect data, the app asks for your ethics approval or exemption letter, and links to share your questionnaire open only after that. The app never reads your participants\' answers.',hi:'Data इकट्ठा करने से पहले app आपकी ethics approval या exemption letter माँगता है, और questionnaire के link उसके बाद ही खुलते हैं। App आपके participants के जवाब कभी नहीं पढ़ता।'},
+ {c:1,end:1,en:'That is the whole road. Start with your own idea. You can watch this demo again from Help.',hi:'यही पूरा रास्ता है। अब अपने idea से शुरू कीजिए। यह demo Help से दोबारा देख सकते हैं।'}];
+let TOUR_I=0,TOUR_T=null,TOUR_PLAY=true,TOUR_SAVE=null,TOUR_TYPE=null;
+function tourStart(){try{LS.set('appu_demo','1')}catch(e){}
+  ['welcomeDlg','helpDlg','stageIntroDlg'].forEach(i=>{try{const d=document.getElementById(i);if(d&&d.open)d.close()}catch(e){}});
+  TOUR_SAVE={tool:LS.get('appu_tool_tab')||'idea',home:(()=>{try{return apHomeIs()}catch(e){return false}})(),vals:{}};
+  TOUR.forEach(s=>{if(s.type){const el=document.querySelector(s.sel);if(el)TOUR_SAVE.vals[s.sel]=el.value}});
+  let ov=document.getElementById('tourOv');
+  if(!ov){ov=document.createElement('div');ov.id='tourOv';ov.innerHTML='<div id="tourHole"></div><div id="tourCard" role="dialog" aria-live="polite"><div id="tourTxt"></div><div class="tour-bar"><span id="tourNum"></span><span style="flex:1"></span><button type="button" class="btn btn-ghost btn-sm" id="tourBack" onclick="tourGo(TOUR_I-1)">‹</button><button type="button" class="btn btn-ghost btn-sm" id="tourPause" onclick="tourPause()"></button><button type="button" class="btn btn-purple btn-sm" id="tourNext" onclick="tourGo(TOUR_I+1)"></button><button type="button" class="btn btn-ghost btn-sm" id="tourSkip" onclick="tourEnd()"></button></div></div>';document.body.appendChild(ov);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('tourOv').style.display==='block')tourEnd()});
+    window.addEventListener('resize',()=>{if(document.getElementById('tourOv').style.display==='block')tourPlace()})}
+  ov.style.display='block';TOUR_PLAY=true;tourGo(0)}
+function tourTarget(s){if(!s.sel)return null;let el=document.querySelector(s.sel);if(el&&s.up)el=el.closest('.row')||el.parentNode;return el&&el.offsetParent?el:null}
+function tourGo(i){if(i<0)i=0;if(i>=TOUR.length)return tourEnd();TOUR_I=i;clearTimeout(TOUR_T);clearInterval(TOUR_TYPE);
+  const s=TOUR[i],hi=studyHi();
+  if(s.tool){try{apHomeHide()}catch(e){}showTool(s.tool)}
+  const el=tourTarget(s);if(el){try{el.scrollIntoView({block:'center'})}catch(e){}}
+  document.getElementById('tourTxt').textContent=s[hi?'hi':'en'];
+  document.getElementById('tourNum').textContent=(i+1)+' / '+TOUR.length;
+  document.getElementById('tourBack').disabled=i===0;
+  document.getElementById('tourNext').textContent=s.end?(hi?'अपने idea से शुरू करें':'Start with my idea'):(hi?'आगे ›':'Next ›');
+  document.getElementById('tourSkip').textContent=hi?'Demo छोड़ें':'Skip demo';document.getElementById('tourSkip').style.display=s.end?'none':'';
+  document.getElementById('tourPause').textContent=TOUR_PLAY?(hi?'⏸ रोकें':'⏸ Pause'):(hi?'▶ चलाएँ':'▶ Play');document.getElementById('tourPause').style.display=s.end?'none':'';
+  setTimeout(tourPlace,60);
+  if(s.type&&el){let k=0;el.value='';TOUR_TYPE=setInterval(()=>{k+=2;el.value=s.type.slice(0,k);if(k>=s.type.length)clearInterval(TOUR_TYPE)},45)}
+  if(TOUR_PLAY&&!s.end){const ms=Math.max(5500,s[hi?'hi':'en'].length*(hi?70:60))+(s.type?s.type.length*23:0);TOUR_T=setTimeout(()=>tourGo(TOUR_I+1),ms)}}
+function tourPlace(){const s=TOUR[TOUR_I],el=tourTarget(s),hole=document.getElementById('tourHole'),card=document.getElementById('tourCard');if(!hole)return;
+  const vw=window.innerWidth,vh=window.innerHeight,cw=Math.min(420,vw-24);card.style.width=cw+'px';
+  if(!el||s.c){hole.style.cssText='left:50%;top:50%;width:0;height:0';card.style.left=((vw-cw)/2)+'px';card.style.top=Math.max(12,vh/2-card.offsetHeight/2)+'px';return}
+  const r=el.getBoundingClientRect(),p=6;hole.style.cssText='left:'+(r.left-p)+'px;top:'+(r.top-p)+'px;width:'+(r.width+2*p)+'px;height:'+(r.height+2*p)+'px';
+  let top=r.bottom+14;if(top+card.offsetHeight>vh-8)top=Math.max(8,r.top-14-card.offsetHeight);
+  card.style.top=top+'px';card.style.left=Math.min(Math.max(12,r.left),vw-cw-12)+'px'}
+function tourPause(){TOUR_PLAY=!TOUR_PLAY;clearTimeout(TOUR_T);tourGo(TOUR_I)}
+function tourEnd(){clearTimeout(TOUR_T);clearInterval(TOUR_TYPE);const ov=document.getElementById('tourOv');if(ov)ov.style.display='none';
+  if(TOUR_SAVE){Object.keys(TOUR_SAVE.vals).forEach(k=>{const el=document.querySelector(k);if(el)el.value=TOUR_SAVE.vals[k]});
+    const last=TOUR_I>=TOUR.length-1;TOUR_SAVE=null;try{apHomeHide()}catch(e){}showTool('idea');try{if(last)document.getElementById('ideaTopic').focus()}catch(e){}}}
+(function(){try{const f=spOpen;spOpen=function(){const r=f.apply(this,arguments);setTimeout(whyRender,60);return r}}catch(e){}})();
+function tourAfterWelcome(){const d=document.getElementById('welcomeDlg');if(!d||d._tour)return;d._tour=1;
+  d.addEventListener('close',()=>{if(LS.get('appu_demo'))return;setTimeout(()=>{const st=document.getElementById('settingsDlg');
+    if(st&&st.open){if(!st._tour){st._tour=1;st.addEventListener('close',()=>{if(!LS.get('appu_demo'))setTimeout(tourStart,350)},{once:true})}}else tourStart()},350)})}
 
 function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
@@ -7046,7 +7141,7 @@ function termsAccept(){
   if(!(a1.checked&&a2.checked)){document.getElementById('termsNeed').style.display='block';(a1.checked?a2:a1).focus();return}
   LS.set('appu_terms',JSON.stringify({v:TERMS_V,at:new Date().toISOString()}));
   document.getElementById('termsDlg').close();
-  if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{document.getElementById('welcomeDlg').showModal()}catch(e){}}
+  if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{tourAfterWelcome();document.getElementById('welcomeDlg').showModal()}catch(e){}}
 }
 function termsBack(){
   document.getElementById('termsUnder').style.display='none';
@@ -14969,7 +15064,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.27f';
+const APP_BUILD='2026.10.28a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -17477,7 +17572,7 @@ function citCheckCaptureHash(){
   upd();
   if(!POPOUT){
     if(!termsAccepted())termsOpen(false);
-    else if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{document.getElementById('welcomeDlg').showModal()}catch(e){}}
+    else if(!LS.get('appu_seen')){LS.set('appu_seen','1');try{tourAfterWelcome();document.getElementById('welcomeDlg').showModal()}catch(e){}}
   }
 })();
 if(POPOUT==='photo'){
