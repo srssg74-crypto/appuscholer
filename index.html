@@ -314,6 +314,15 @@
   .paper-card .btn{padding:5px 9px;font-size:11.5px}
   .paper-check{display:flex;align-items:flex-start;gap:6px}
   .paper-check input{margin-top:4px;width:15px;height:15px;accent-color:#6d28d9;flex:0 0 auto}
+  .bp-chip{display:inline-block;font-size:12px;font-weight:600;padding:0 8px;border:1px solid;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .bp-row{padding:6px 10px;margin:4px 0;border-radius:6px}
+  .bp-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+  .bp-steps{margin-left:auto;font-size:12px}.bp-steps a{margin-left:6px}
+  .bp-guide{font-size:13px;color:#3B3550;margin-top:2px;line-height:1.5}
+  .bp-ch{margin:14px 0 4px}
+  .bp-legend{display:flex;flex-direction:column;gap:2px;margin:8px 0;font-size:13px}
+  .bp-loc{display:inline-block;padding:3px 8px;border-radius:6px;font-size:13px;color:#1E1B2E;text-decoration:none}
+  .bp-tree{max-height:60vh;overflow:auto;padding-right:4px}
   .connected-list{margin-top:8px;padding-left:2px}
   .connected-list .paper-card{margin-bottom:6px}
   #provTabs{padding:8px 18px 0;max-width:1180px;margin:0 auto;position:relative}
@@ -3130,7 +3139,7 @@ function subDetailHTML(id,o){const hi=studyHi(),x=SUBSTAGES.find(y=>y[0]===id);i
   h+='<div class="sub-box"><b>'+(hi?'कैसे भरें':'How to fill it')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[3]))+'</p></div>';
   h+='<div class="sub-box"><b>'+(hi?'आगे बढ़ने से पहले जाँच':'Check before moving on')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[4]))+'</p><p class="desc" style="margin:6px 0 0">'+(hi?'स्रोत: ':'Source: ')+escHTML(x[5])+subSrcAge(x[0])+'</p></div>';
   if(id==='C9')return h+ethicsFormHTML(o);
-  try{h+=subExtraHTML(id,o)}catch(e){}
+  try{h+=subExtraHTML(id,o)}catch(e){}try{h+=bpStepBookHTML(id,o)}catch(e){}
   if(x[6]){const act=x[6].charAt(0)==='@'?x[6].slice(1):"showTool('"+x[6]+"')";h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="document.getElementById(\'subDlg\').close();'+escAttr(act)+'">'+(hi?'इसके tool पर जाएँ →':'Go to the tool for this →')+'</button></div>'}
   h+='<div class="sub-box"><b>'+(hi?'Status':'Status')+'</b>'+(st.auto?'<p class="desc" style="margin:4px 0">'+(hi?'App को आपकी study में यह भरा मिला, इसलिए "पूरा" दिखा रहा है। आप बदल सकते हैं।':'The app found this filled in your study, so it shows Done. You can change it.')+'</p>':'')+
    '<select id="subSel" onchange="subStatusPick(\''+id+'\',this.value)">'+SUB_STATUS.filter(s=>s[0]!=='ap').map(s=>'<option value="'+s[0]+'"'+(s[0]===st.s?' selected':'')+'>'+SUB_ICON[s[0]]+' '+(hi?s[2]:s[1])+'</option>').join('')+'</select>'+
@@ -15610,6 +15619,225 @@ function fdHTML(){const st=fdStore(),hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet()
    '<p class="hm-hint" style="margin-top:6px">'+L('Checked ','जाँचा: ')+new Date(st.at).toLocaleDateString()+(st.words&&st.words.length?' · '+L('words: ','शब्द: ')+escHTML(st.words.join(', ')):'')+' · <a href="#" onclick="fdRefresh(true);return false">'+L('Check now','अभी जाँचें')+'</a></p>'}
 function fdRender(){const b=document.getElementById('fdBox');if(b)b.innerHTML=fdHTML()}
 function fdHomeHTML(){const hi=studyHi();setTimeout(()=>{try{fdRefresh(false)}catch(e){}},50);return'<h3>'+(hi?'इस हफ़्ते आपकी study के लिए':'This week for your study')+'</h3><div id="fdBox">'+fdHTML()+'</div>'}
+/* ============ The book: Appuscholar standard plan (build 2026.11.01a) ============
+   One plan for the whole thesis: chapter › section › sub-section, each with a fixed id that never depends on
+   the heading text. Each node says what goes there, which kind of writing it is (report, interpret, compare,
+   caution, method), which study designs it applies to, and which of the 42 steps feed it. Other plans (UGC,
+   synopsis, APA article) are re-groupings of the same ids, so switching plans never loses text.
+   BP_COVER maps every item of the five reporting checklists, the UGC 2022 documents and the F4 thesis list
+   to a node; tests/test_book_plan.py fails the build if anything is left without a home.
+   Node: {id, t:[en,hi], m:mode, a:[design tags, any match; none = all], s:[steps], g:[guide en, hi], syn:1 in synopsis, k:[kids]} */
+const BP_MODES={
+ report:{t:['Report','रिपोर्ट'],d:['What was found, by you or by another study. No opinion yet.','क्या मिला, आपको या किसी और study को। अभी राय नहीं।'],bg:'#FBF3E4',bd:'#B7791F'},
+ interpret:{t:['Interpret','अर्थ'],d:['What it means for your question. Always after the finding it explains.','आपके सवाल के लिए इसका क्या अर्थ है। हमेशा उस finding के बाद जिसे यह समझाता है।'],bg:'#EAF6EE',bd:'#2F855A'},
+ compare:{t:['Compare','तुलना'],d:['Where earlier studies agree or differ, and why that might be.','पहले की studies कहाँ मिलती हैं या अलग हैं, और ऐसा क्यों हो सकता है।'],bg:'#EAF2FB',bd:'#2B6CB0'},
+ caution:{t:['Caution','सावधानी'],d:['Limits, bias and how far the result can be trusted or carried over.','सीमाएँ, bias, और नतीजे पर कितना भरोसा किया जा सकता है या कहाँ तक लागू होता है।'],bg:'#FBEDEF',bd:'#B83250'},
+ method:{t:['Method','विधि'],d:['What was done or will be done, exactly enough for someone to repeat it.','क्या किया गया या किया जाएगा, इतना ठीक-ठीक कि कोई दोहरा सके।'],bg:'#F1EEFB',bd:'#6D28D9'},
+ front:{t:['Front matter','शुरुआती पन्ने'],d:['Fixed pages your university asks for.','University के माँगे हुए तय पन्ने।'],bg:'#F4F4F6',bd:'#71717A'}};
+/* Design tags: quant, obs (observational), trial (randomised), int (any intervention), qual, mixed, review (B1 systematic or scoping). */
+const BP_DESIGN_TAGS={survey:['quant','obs'],correlational:['quant','obs'],'two-group':['quant','obs'],'multi-group':['quant','obs'],'pre-post':['quant','int'],
+ experiment:['quant','trial','int'],longitudinal:['quant','obs'],cohort:['quant','obs'],'case-control':['quant','obs'],qualitative:['qual'],mixed:['quant','qual','mixed','obs']};
+const BP_STD=[
+ {id:'front',t:['Front matter','शुरुआती पन्ने'],m:'front',k:[
+  {id:'front.title',t:['Title page','शीर्षक पृष्ठ'],m:'front',s:['E7','F4'],syn:1,g:['Title that names the population, the main variables and the design; then degree, your name, supervisor, department, year.','ऐसा title जिसमें population, मुख्य variables और design का नाम हो; फिर degree, आपका नाम, supervisor, department, साल।']},
+  {id:'front.decl',t:["Candidate's declaration",'Candidate का घोषणा-पत्र'],m:'front',s:['F4'],g:['Your signed statement that the work is your own and not submitted elsewhere.','आपका हस्ताक्षरित कथन कि काम आपका अपना है और कहीं और जमा नहीं किया गया।']},
+  {id:'front.cert',t:["Supervisor's certificate",'Supervisor का प्रमाण-पत्र'],m:'front',s:['F4'],g:["The supervisor's certificate of originality, signed and dated.",'Supervisor का मौलिकता प्रमाण-पत्र, हस्ताक्षर और तारीख के साथ।']},
+  {id:'front.plag',t:['Similarity report and undertaking','Similarity report और undertaking'],m:'front',s:['F1','F4'],g:['The plagiarism-software report and your no-plagiarism undertaking (UGC 2022, cl. 11(3)–(4)).','Plagiarism software की report और plagiarism न होने का आपका undertaking (UGC 2022, cl. 11(3)–(4))।']},
+  {id:'front.ack',t:['Acknowledgements','आभार'],m:'front',s:[],g:['Thank people and bodies who helped; name funders here too.','जिन लोगों और संस्थाओं ने मदद की उनका धन्यवाद; funders का नाम भी यहाँ।']},
+  {id:'front.abstract',t:['Abstract','सार'],m:'report',s:['E7'],g:['Aim, design, participants, tools, main results with numbers, and one cautious conclusion. Written last.','उद्देश्य, design, participants, tools, अंकों के साथ मुख्य नतीजे, और एक सावधान निष्कर्ष। सबसे आख़िर में लिखें।']},
+  {id:'front.keywords',t:['Keywords','मुख्य शब्द'],m:'front',s:['E7'],g:['Three to five terms a reader would search for.','तीन से पाँच शब्द जिनसे कोई पाठक खोजेगा।']},
+  {id:'front.contents',t:['Contents and lists','विषय-सूची और सूचियाँ'],m:'front',s:['E1'],g:['Contents, list of tables, list of figures and abbreviations. The app makes these from the book.','विषय-सूची, tables, figures और abbreviations की सूची। App इन्हें किताब से बनाता है।']}]},
+ {id:'intro',t:['Introduction','प्रस्तावना'],m:'report',s:['E2'],syn:1,k:[
+  {id:'intro.background',t:['Background','पृष्ठभूमि'],m:'report',s:['A1','A2','E2'],syn:1,g:['From wide to narrow: the topic in the world, your field, India, then the specific problem. Every claim cited.','चौड़े से संकरे की ओर: दुनिया में विषय, आपका field, भारत, फिर ख़ास समस्या। हर दावे के साथ citation।']},
+  {id:'intro.concepts',t:['Key concepts','मुख्य अवधारणाएँ'],m:'report',s:['C4','E2'],g:['Define each main construct as the literature defines it, with the source.','हर मुख्य construct की परिभाषा, जैसी साहित्य में है, स्रोत के साथ।']},
+  {id:'intro.problem',t:['Statement of the problem','समस्या का कथन'],m:'interpret',s:['A2'],syn:1,g:['One paragraph: what is wrong or unknown, for whom, and what it costs.','एक paragraph: क्या ग़लत या अज्ञात है, किसके लिए, और उसकी क्या क़ीमत है।']},
+  {id:'intro.rationale',t:['Need and rationale','आवश्यकता और औचित्य'],m:'interpret',s:['B6'],syn:1,g:['Why this study now and here: the gap, and what the answer will change.','यह study अभी और यहाँ क्यों: gap, और जवाब से क्या बदलेगा।']},
+  {id:'intro.significance',t:['Significance of the study','अध्ययन का महत्व'],m:'interpret',s:['A2','B6'],g:['Who can use the result: theory, practice, policy. No promises the design cannot keep.','नतीजे का उपयोग कौन कर सकता है: theory, practice, policy। ऐसे वादे नहीं जो design पूरे न कर सके।']},
+  {id:'intro.questions',t:['Research questions','शोध प्रश्न'],m:'method',s:['A3'],syn:1,g:['Each question names the population, the variables and what will be compared or related.','हर प्रश्न में population, variables और किसकी तुलना या संबंध देखा जाएगा, इसका नाम हो।']},
+  {id:'intro.objectives',t:['Objectives','उद्देश्य'],m:'method',s:['A3'],syn:1,g:['Numbered, one per thing the study will find out; each one has data and an analysis behind it.','क्रमांकित, हर उस बात के लिए एक जो study पता करेगी; हर एक के पीछे data और analysis हो।']},
+  {id:'intro.hypotheses',t:['Hypotheses','परिकल्पनाएँ'],m:'method',a:['quant'],s:['A3'],syn:1,g:['Written before the data, one per confirmatory question, with the direction if theory gives one.','Data से पहले लिखी हुई, हर confirmatory प्रश्न के लिए एक, theory दिशा बताए तो दिशा के साथ।']},
+  {id:'intro.opdef',t:['Operational definitions','संक्रियात्मक परिभाषाएँ'],m:'method',a:['quant'],s:['C4'],syn:1,g:['How each variable is measured in this study: the tool and the score that represents it.','इस study में हर variable कैसे मापा गया: tool और उसे दर्शाने वाला score।']},
+  {id:'intro.scope',t:['Scope and delimitations','दायरा और सीमांकन'],m:'caution',s:['A1'],g:['What the study covers and what it leaves out on purpose, with the reason.','Study किसे शामिल करती है और जानबूझकर किसे छोड़ती है, कारण के साथ।']},
+  {id:'intro.chapters',t:['Organisation of the thesis','शोध-प्रबंध की रूपरेखा'],m:'method',s:['E1'],g:['One line per chapter saying what it contains.','हर chapter के लिए एक पंक्ति कि उसमें क्या है।']}]},
+ {id:'lit',t:['Review of literature','साहित्य समीक्षा'],m:'compare',s:['E3'],syn:1,k:[
+  {id:'lit.method',t:['How the literature was found','साहित्य कैसे खोजा गया'],m:'method',s:['B1','B2'],g:['Databases, search words, years and the date of the last search; how papers were chosen.','Databases, खोज के शब्द, साल और आख़िरी खोज की तारीख; papers कैसे चुने गए।'],k:[
+   {id:'lit.reg',t:['Registration and protocol','Registration और protocol'],m:'method',a:['review'],s:['B1'],g:['Where the review was registered (PROSPERO, OSF) and where the protocol can be read; changes made.','Review कहाँ register हुआ (PROSPERO, OSF) और protocol कहाँ पढ़ा जा सकता है; क्या बदलाव हुए।']},
+   {id:'lit.elig',t:['Eligibility criteria','पात्रता के मानदंड'],m:'method',s:['B1','B3'],g:['Which studies count: population, exposure, outcome, design, language, years.','कौन-सी studies गिनी जाएँगी: population, exposure, outcome, design, भाषा, साल।']},
+   {id:'lit.sources',t:['Sources and search','स्रोत और खोज'],m:'method',s:['B2'],g:['Every database and other source, the full search string for at least one, and the last search date.','हर database और दूसरा स्रोत, कम से कम एक की पूरी search string, और आख़िरी खोज की तारीख।']},
+   {id:'lit.select',t:['Selection and data collection','चयन और data संग्रह'],m:'method',s:['B3'],g:['Who screened, how disagreements were settled, and which data items were taken from each study.','किसने screen किया, असहमति कैसे सुलझी, और हर study से कौन-से data items लिए गए।']},
+   {id:'lit.robm',t:['Risk-of-bias method','Risk-of-bias की विधि'],m:'method',s:['B4'],g:['The tool used to judge each study and who applied it.','हर study को परखने का tool और किसने लगाया।']},
+   {id:'lit.synthm',t:['Synthesis method','Synthesis की विधि'],m:'method',s:['B5'],g:['How results were combined: by theme, in a table, or by meta-analysis with its effect measure.','नतीजे कैसे जोड़े गए: theme से, table में, या effect measure के साथ meta-analysis से।']},
+   {id:'lit.certm',t:['Reporting bias and certainty methods','Reporting bias और certainty की विधि'],m:'method',a:['review'],s:['B4'],g:['How missing results and the certainty of the evidence (for example GRADE) were judged.','छूटे हुए नतीजे और evidence की certainty (जैसे GRADE) कैसे आँकी गई।']}]},
+  {id:'lit.flow',t:['Studies found and selected','मिली और चुनी गई studies'],m:'report',s:['B3'],g:['Numbers at each stage with reasons for exclusion; the flow diagram goes here.','हर चरण की संख्या और बाहर करने के कारण; flow diagram यहाँ।']},
+  {id:'lit.studies',t:['Characteristics of the studies','Studies की विशेषताएँ'],m:'report',s:['B3'],g:['A table: author, year, country, sample, design, tools, main finding.','एक table: लेखक, साल, देश, sample, design, tools, मुख्य finding।']},
+  {id:'lit.themes',t:['Review by theme','विषयवार समीक्षा'],m:'compare',s:['B5','E3'],syn:1,g:['One section per theme. Each paragraph opens with a point, brings several studies, and says what they add up to.','हर theme का एक section। हर paragraph एक बात से शुरू हो, कई studies लाए, और बताए कि उनसे क्या निकलता है।']},
+  {id:'lit.quality',t:['Quality of the evidence','Evidence की गुणवत्ता'],m:'caution',s:['B4'],g:['Where the studies are weak: small samples, self-report, no control group, high risk of bias.','Studies कहाँ कमज़ोर हैं: छोटे sample, self-report, control group नहीं, ज़्यादा risk of bias।']},
+  {id:'lit.results',t:['Results of the synthesis','Synthesis के नतीजे'],m:'report',a:['review'],s:['B5'],g:['Pooled or summarised results with precision, and any reporting-bias or certainty judgement.','जोड़े या सारांशित नतीजे precision के साथ, और reporting-bias या certainty का आकलन।']},
+  {id:'lit.synthesis',t:['What is known and what conflicts','क्या ज्ञात है और कहाँ टकराव है'],m:'interpret',s:['B5'],g:['Pull the themes together: what is settled, where results disagree, and why that might be.','Themes को जोड़ें: क्या तय है, नतीजे कहाँ अलग हैं, और ऐसा क्यों हो सकता है।']},
+  {id:'lit.gap',t:['Research gap','शोध अंतराल'],m:'interpret',s:['B6'],syn:1,g:['The gap in one clear statement, named by type (population, method, context, theory), with its sources.','Gap एक साफ़ वाक्य में, उसके प्रकार (population, method, context, theory) के साथ, स्रोतों सहित।']},
+  {id:'lit.framework',t:['Theoretical or conceptual framework','सैद्धांतिक या अवधारणात्मक ढाँचा'],m:'interpret',s:['B7'],syn:1,g:['The theory or model that links your variables, drawn as a diagram and explained in words.','वह theory या model जो आपके variables को जोड़ता है, diagram में और शब्दों में।']}]},
+ {id:'method',t:['Method','विधि'],m:'method',s:['E4'],syn:1,k:[
+  {id:'method.design',t:['Research design','शोध design'],m:'method',s:['C1'],syn:1,g:['Name the design early and say why it fits the question; for a trial, the allocation ratio.','Design का नाम शुरू में और यह सवाल के लिए क्यों ठीक है; trial में allocation ratio भी।']},
+  {id:'method.approach',t:['Approach and paradigm','दृष्टिकोण और paradigm'],m:'method',a:['qual'],s:['C1','D5'],g:['The qualitative approach (for example reflexive thematic analysis) and the paradigm behind it.','Qualitative approach (जैसे reflexive thematic analysis) और उसके पीछे का paradigm।']},
+  {id:'method.reflex',t:['Researcher and reflexivity','शोधकर्ता और reflexivity'],m:'method',a:['qual'],s:['D5'],g:['Who collected the data, their training, relation to participants, and how their views were kept in check.','Data किसने लिया, उनका प्रशिक्षण, participants से संबंध, और उनकी राय पर नज़र कैसे रखी गई।']},
+  {id:'method.setting',t:['Setting and dates','स्थान और तारीखें'],m:'method',s:['C2','D2'],syn:1,g:['Where the study ran and the dates of recruitment and data collection.','Study कहाँ चली, और recruitment और data collection की तारीखें।']},
+  {id:'method.participants',t:['Participants','Participants'],m:'method',s:['C2'],syn:1,k:[
+   {id:'method.population',t:['Population and eligibility','Population और पात्रता'],m:'method',s:['C2'],syn:1,g:['Who could take part: inclusion and exclusion criteria; for a trial, eligibility of sites and of those giving the intervention.','कौन भाग ले सकता था: inclusion और exclusion criteria; trial में sites और intervention देने वालों की पात्रता भी।']},
+   {id:'method.sampling',t:['Sampling and recruitment','Sampling और recruitment'],m:'method',s:['C2'],syn:1,g:['How people were chosen and approached, and by whom.','लोग कैसे चुने गए और उनसे कैसे संपर्क हुआ, और किसने किया।']},
+   {id:'method.size',t:['Sample size','Sample size'],m:'method',s:['C3'],syn:1,g:['The number and how it was reached: test, effect size and its source, power, α, and the dropout allowance.','संख्या और वह कैसे तय हुई: test, effect size और उसका स्रोत, power, α, और dropout की गुंजाइश।']},
+   {id:'method.qsample',t:['Number of participants and saturation','Participants की संख्या और saturation'],m:'method',a:['qual'],s:['C2','D5'],g:['How many took part, why that number, and how saturation or information power was judged.','कितने लोगों ने भाग लिया, यह संख्या क्यों, और saturation या information power कैसे आँकी।']}]},
+  {id:'method.vars',t:['Variables','Variables'],m:'method',a:['quant'],s:['C4'],syn:1,g:['Each outcome, predictor or group, and confounder, with its role.','हर outcome, predictor या group, और confounder, उसकी भूमिका के साथ।']},
+  {id:'method.tools',t:['Tools and measures','उपकरण और माप'],m:'method',s:['C4','C6'],syn:1,g:['For each tool: author, items, scoring, reliability and validity (in India if known), and permission.','हर tool के लिए: लेखक, items, scoring, reliability और validity (भारत में हो तो), और अनुमति।'],k:[
+   {id:'method.translation',t:['Translation and adaptation','अनुवाद और अनुकूलन'],m:'method',s:['C5'],g:['How the Hindi version was made and checked: forward and back translation, expert review, pilot.','Hindi version कैसे बना और जाँचा गया: forward और back translation, expert review, pilot।']},
+   {id:'method.guide',t:['Interview guide','Interview guide'],m:'method',a:['qual'],s:['C6','D1'],g:['The questions and probes, how the guide was piloted, and repeat interviews if any.','सवाल और probes, guide का pilot कैसे हुआ, और दोबारा interview हुए तो।']}]},
+  {id:'method.intervention',t:['Intervention and comparison','Intervention और तुलना'],m:'method',a:['int'],s:['C1'],g:['What each group received, by whom, how often and for how long, in enough detail to repeat.','हर group को क्या मिला, किसने दिया, कितनी बार और कितने समय, इतने विस्तार से कि दोहराया जा सके।']},
+  {id:'method.random',t:['Randomisation and blinding','Randomisation और blinding'],m:'method',a:['trial'],s:['C1'],g:['Who made the random sequence and how, blocking, how allocation was hidden, who enrolled people, and who was blinded and how.','Random sequence किसने और कैसे बनाया, blocking, allocation कैसे छिपाया, लोगों को किसने भर्ती किया, और किसे और कैसे blind रखा।']},
+  {id:'method.outcomes',t:['Outcomes and time points','Outcomes और समय-बिंदु'],m:'method',a:['int'],s:['C4','C7'],g:['Primary and secondary outcomes fixed in advance, when each is measured, and how harms are defined and recorded.','पहले से तय primary और secondary outcomes, हर एक कब मापा गया, और harms कैसे परिभाषित और दर्ज हुए।']},
+  {id:'method.pilot',t:['Pilot study','Pilot study'],m:'method',s:['D1'],g:['What the pilot tested, with how many people, and what changed after it.','Pilot में क्या जाँचा, कितने लोगों के साथ, और उसके बाद क्या बदला।']},
+  {id:'method.procedure',t:['Procedure','प्रक्रिया'],m:'method',s:['D2'],syn:1,g:['Step by step: permissions, consent, how and where data were collected, recording and field notes, time per person, who else was present.','क्रम से: अनुमतियाँ, सहमति, data कैसे और कहाँ लिया, recording और field notes, हर व्यक्ति का समय, और कौन मौजूद था।']},
+  {id:'method.bias',t:['Steps against bias','Bias से बचाव के कदम'],m:'method',s:['C1','C7'],g:['The main sources of bias you expected and what you did about each.','Bias के मुख्य स्रोत जिनकी आपको आशंका थी, और हर एक के लिए आपने क्या किया।']},
+  {id:'method.ethics',t:['Ethical considerations','नैतिक पहलू'],m:'method',s:['C9','C10'],syn:1,g:['Committee name and approval number, consent (and assent for minors), confidentiality, data storage, and what was done if someone was distressed.','Committee का नाम और approval number, सहमति (नाबालिग हों तो assent), गोपनीयता, data कहाँ रखा, और किसी को परेशानी हुई तो क्या किया।']},
+  {id:'method.analysis',t:['Statistical analysis','सांख्यिकीय विश्लेषण'],m:'method',a:['quant'],s:['C7'],syn:1,g:['The test for each hypothesis, how variables were handled, assumptions, missing data, multiple tests, extra or sensitivity analyses, software.','हर hypothesis का test, variables कैसे लिए, assumptions, missing data, कई tests, अतिरिक्त या sensitivity analyses, software।']},
+  {id:'method.qanalysis',t:['Qualitative analysis','Qualitative विश्लेषण'],m:'method',a:['qual'],s:['D5'],syn:1,g:['How data were processed and coded, how many coders, the coding tree, how themes were built, software, and what made the findings trustworthy.','Data कैसे तैयार और code हुआ, कितने coders, coding tree, themes कैसे बने, software, और findings को भरोसेमंद किसने बनाया।']},
+  {id:'method.changes',t:['Changes from the plan','योजना से बदलाव'],m:'caution',s:['D4'],g:['Every change after the study began, with the reason. If none, say so.','Study शुरू होने के बाद का हर बदलाव, कारण के साथ। कोई नहीं हुआ तो यह लिखें।']}]},
+ {id:'results',t:['Results','परिणाम'],m:'report',s:['E5'],k:[
+  {id:'results.flow',t:['Participant flow','Participants का क्रम'],m:'report',s:['D2'],g:['Numbers at each stage, who declined or dropped out and why; the flow diagram; dates; why the study ended.','हर चरण की संख्या, किसने मना किया या छोड़ा और क्यों; flow diagram; तारीखें; study क्यों समाप्त हुई।']},
+  {id:'results.screen',t:['Data screening','Data की जाँच'],m:'report',a:['quant'],s:['D3'],g:['Missing data per variable, outliers, and whether assumptions held.','हर variable में missing data, outliers, और assumptions पूरी हुईं या नहीं।']},
+  {id:'results.desc',t:['Description of the sample','Sample का विवरण'],m:'report',s:['D3','D4'],g:['A table of who took part; for groups, one column per group. For interviews, a short profile without names.','किसने भाग लिया उसकी table; groups हों तो हर group का एक column। Interview में नाम के बिना छोटा परिचय।']},
+  {id:'results.delivery',t:['Intervention as delivered','Intervention जैसा दिया गया'],m:'report',a:['int'],s:['D2'],g:['What was actually delivered, attendance or adherence, and other care each group received.','असल में क्या दिया गया, हाज़िरी या पालन, और हर group को मिली दूसरी देखभाल।']},
+  {id:'results.main',t:['Results for each hypothesis or question','हर hypothesis या प्रश्न के नतीजे'],m:'report',a:['quant'],s:['D4'],g:['In the order of the hypotheses: the test, the statistic, exact p, effect size with its confidence interval, and who was included.','Hypotheses के क्रम में: test, statistic, सटीक p, confidence interval के साथ effect size, और कौन शामिल था।']},
+  {id:'results.other',t:['Other analyses','अन्य विश्लेषण'],m:'report',a:['quant'],s:['D4'],g:['Extra, subgroup or sensitivity analyses, each marked planned or exploratory.','अतिरिक्त, subgroup या sensitivity analyses, हर एक पर planned या exploratory लिखा हो।']},
+  {id:'results.harms',t:['Harms','हानियाँ'],m:'report',a:['int'],s:['D4'],g:['Every harm or side effect in each group, including none.','हर group में हर हानि या side effect, न हो तो भी लिखें।']},
+  {id:'results.themes',t:['Findings by theme','Themes के अनुसार findings'],m:'report',a:['qual'],s:['D5'],g:['Each theme with its meaning and quotations marked by participant code; include cases that do not fit.','हर theme उसके अर्थ के साथ, participant code वाले उद्धरणों सहित; जो cases मेल नहीं खाते वे भी।']},
+  {id:'results.mixed',t:['Bringing the two strands together','दोनों धाराओं को जोड़ना'],m:'interpret',a:['mixed'],s:['D6'],g:['Where the numbers and the interviews agree, differ or explain each other.','अंक और interviews कहाँ मिलते हैं, अलग हैं, या एक-दूसरे को समझाते हैं।']}]},
+ {id:'disc',t:['Discussion','विवेचना'],m:'interpret',s:['E6'],k:[
+  {id:'disc.summary',t:['Main findings in brief','मुख्य findings संक्षेप में'],m:'report',s:['D6','E6'],g:['Restate the key results against the objectives in a few lines; do not repeat the Results chapter.','मुख्य नतीजे उद्देश्यों के सामने कुछ पंक्तियों में; Results chapter न दोहराएँ।']},
+  {id:'disc.interpret',t:['What the findings mean','Findings का अर्थ'],m:'interpret',s:['D6'],g:['Report a finding first, then say what it means for your question. Keep cause words for designs that can show cause.','पहले finding बताएँ, फिर आपके सवाल के लिए उसका अर्थ। कारण वाले शब्द सिर्फ़ उन designs में जो कारण दिखा सकें।']},
+  {id:'disc.compare',t:['Comparison with earlier research','पहले के शोध से तुलना'],m:'compare',s:['D6','B5'],g:['Which studies agree, which differ, and the likely reasons: sample, tools, setting, culture.','कौन-सी studies सहमत हैं, कौन अलग, और संभावित कारण: sample, tools, setting, संस्कृति।']},
+  {id:'disc.theory',t:['Implications for theory','Theory के लिए निहितार्थ'],m:'interpret',s:['B7','D6'],g:['What the results add to or change in the framework from the literature chapter.','साहित्य chapter के framework में नतीजे क्या जोड़ते या बदलते हैं।']},
+  {id:'disc.practice',t:['Implications for practice and policy','Practice और policy के लिए निहितार्थ'],m:'interpret',s:['D6'],g:['Who can act on this and how; weigh benefits against harms for an intervention.','इस पर कौन और कैसे काम कर सकता है; intervention में लाभ और हानि दोनों तौलें।']},
+  {id:'disc.strengths',t:['Strengths','मज़बूतियाँ'],m:'interpret',s:['D6'],g:['What the design and conduct did well, stated plainly.','Design और संचालन ने क्या अच्छा किया, सीधे शब्दों में।']},
+  {id:'disc.limits',t:['Limitations','सीमाएँ'],m:'caution',s:['D6'],g:['Bias, imprecision, multiple tests, measurement, and what each one means for the result.','Bias, imprecision, कई tests, माप, और हर एक का नतीजे पर क्या असर।']},
+  {id:'disc.general',t:['How far the results apply','नतीजे कहाँ तक लागू होते हैं'],m:'caution',s:['D6'],g:['For numbers: to which people and settings. For interviews: what a reader in another setting can carry over.','अंकों के लिए: किन लोगों और settings पर। Interviews के लिए: दूसरी जगह का पाठक क्या ले जा सकता है।']},
+  {id:'disc.future',t:['Suggestions for future research','आगे के शोध के सुझाव'],m:'interpret',s:['D6'],g:['Specific next studies that follow from your results and limitations.','आपके नतीजों और सीमाओं से निकलने वाली ख़ास अगली studies।']}]},
+ {id:'concl',t:['Summary and conclusion','सारांश और निष्कर्ष'],m:'interpret',s:['E6'],k:[
+  {id:'concl.summary',t:['Summary of the study','Study का सारांश'],m:'report',s:['E6'],g:['The whole study in a page: question, method, main results.','पूरी study एक पन्ने में: सवाल, विधि, मुख्य नतीजे।']},
+  {id:'concl.conclusion',t:['Conclusion','निष्कर्ष'],m:'interpret',s:['E6'],g:['The answer to the research question, no stronger than the evidence.','शोध प्रश्न का उत्तर, evidence से ज़्यादा मज़बूत नहीं।']}]},
+ {id:'back',t:['End matter','अंतिम पन्ने'],m:'front',k:[
+  {id:'back.refs',t:['References','संदर्भ सूची'],m:'front',s:['E8'],syn:1,g:['Every cited source and only those, in the chosen style. The app builds this.','हर cited स्रोत और सिर्फ़ वही, चुनी गई style में। App इसे बनाता है।']},
+  {id:'back.ai',t:['AI-use statement','AI उपयोग का कथन'],m:'front',s:['E8'],g:['Which AI tools were used, for what, and how the output was checked.','कौन-से AI tools किस काम में लिए, और उनका output कैसे जाँचा।']},
+  {id:'back.registration',t:['Registration and protocol','Registration और protocol'],m:'front',a:['trial','review'],s:['C8'],g:['Registry, number and date, and where the protocol and analysis plan can be read.','Registry, number और तारीख, और protocol और analysis plan कहाँ पढ़ा जा सकता है।']},
+  {id:'back.funding',t:['Funding and conflicts of interest','Funding और हितों का टकराव'],m:'front',s:['F2'],g:["Every funder and the funder's role; any competing interest, or a statement that there is none.",'हर funder और उसकी भूमिका; कोई competing interest, या यह कथन कि कोई नहीं।']},
+  {id:'back.involve',t:['Public and participant involvement','जनता और participants की भागीदारी'],m:'front',a:['int'],s:['C1'],g:['Whether patients, participants or the public helped shape the study, and how.','क्या मरीज़, participants या जनता ने study बनाने में मदद की, और कैसे।']},
+  {id:'back.data',t:['Data, code and materials','Data, code और सामग्री'],m:'front',s:['F6','F7'],g:['Where the anonymised data, code and materials can be found, or why they cannot be shared.','Anonymised data, code और सामग्री कहाँ मिलेगी, या क्यों साझा नहीं हो सकती।']},
+  {id:'back.appendix',t:['Appendices','परिशिष्ट'],m:'front',k:[
+   {id:'app.tools',t:['Questionnaire and tools','प्रश्नावली और tools'],m:'front',s:['C6'],g:['The questionnaire as given, or the items you may legally reproduce.','प्रश्नावली जैसी दी गई, या वे items जिन्हें छापने की अनुमति है।']},
+   {id:'app.consent',t:['Information sheet and consent form','सूचना-पत्र और सहमति-पत्र'],m:'front',s:['C10'],g:['Blank copies, in each language used.','ख़ाली प्रतियाँ, हर उपयोग की गई भाषा में।']},
+   {id:'app.ethics',t:['Ethics approval','Ethics approval'],m:'front',s:['C9'],g:['A copy of the approval or exemption letter.','Approval या exemption letter की copy।']},
+   {id:'app.permissions',t:['Permissions for scales','Scales की अनुमतियाँ'],m:'front',s:['C4'],g:['Permission letters or the licence of each scale.','हर scale का अनुमति-पत्र या licence।']},
+   {id:'app.search',t:['Search and screening record','खोज और screening का रिकॉर्ड'],m:'front',s:['B2','B3'],g:['The search log with full strings and dates, and the screening record.','पूरी strings और तारीखों के साथ search log, और screening का रिकॉर्ड।']},
+   {id:'app.codebook',t:['Codebook and coding tree','Codebook और coding tree'],m:'front',a:['qual'],s:['D5'],g:['Codes with definitions and the tree of codes and themes.','परिभाषाओं के साथ codes और codes व themes का tree।']},
+   {id:'app.output',t:['Additional tables and output','अतिरिक्त tables और output'],m:'front',s:['D4'],g:['Tables or output too long for the chapters.','Chapters के लिए बहुत लंबी tables या output।']},
+   {id:'app.checklist',t:['Reporting checklist','Reporting checklist'],m:'front',s:['F2'],g:['The filled checklist (STROBE, CONSORT, PRISMA, COREQ or SRQR) with page numbers.','भरी हुई checklist (STROBE, CONSORT, PRISMA, COREQ या SRQR) पन्ना संख्या के साथ।']}]}]},
+ {id:'syn',t:['Synopsis only','सिर्फ़ synopsis में'],m:'method',ed:'syn',k:[
+  {id:'syn.timeline',t:['Timeline','समय-सारणी'],m:'method',s:['C8'],syn:1,ed:'syn',g:['Month by month plan from synopsis to submission; the Gantt chart goes here.','Synopsis से जमा करने तक महीनेवार योजना; Gantt chart यहाँ।']},
+  {id:'syn.outcome',t:['Expected outcome','अपेक्षित परिणाम'],m:'interpret',s:['A3'],syn:1,ed:'syn',g:['What the study is expected to contribute, without claiming the result in advance.','Study से क्या योगदान अपेक्षित है, नतीजा पहले से घोषित किए बिना।']}]}];
+/* Steps that write no part of the book, and why. Every other step must feed at least one node. */
+const BP_NOBOOK={A4:['A go, revise or stop decision kept in the study record.','Study record में रखा गया आगे बढ़ें, बदलें या रुकें का फ़ैसला।'],
+ F3:["The supervisor's review of the book, kept as a record.",'किताब की supervisor समीक्षा, record के रूप में।'],
+ F5:['The viva happens after the book is submitted.','Viva किताब जमा होने के बाद होती है।']};
+/* Every checklist item, UGC document and F4 thesis item → nodes. */
+const BP_COVER={
+ strobe:{'1':['front.title','front.abstract'],'2':['intro.background','intro.rationale'],'3':['intro.objectives','intro.hypotheses'],'4':['method.design'],'5':['method.setting'],'6':['method.population','method.sampling'],'7':['method.vars'],'8':['method.tools'],'9':['method.bias'],'10':['method.size'],'11':['method.analysis'],'12':['method.analysis'],'13':['results.flow'],'14':['results.desc','results.screen'],'15':['results.main'],'16':['results.main'],'17':['results.other'],'18':['disc.summary'],'19':['disc.limits'],'20':['disc.interpret','concl.conclusion'],'21':['disc.general'],'22':['back.funding']},
+ consort:{'1a':['front.title'],'1b':['front.abstract'],'2':['back.registration'],'3':['back.registration'],'4':['back.data'],'5a':['back.funding'],'5b':['back.funding'],'6':['intro.background','intro.rationale'],'7':['intro.objectives'],'8':['back.involve'],'9':['method.design'],'10':['method.changes'],'11':['method.setting'],'12a':['method.population'],'12b':['method.population'],'13':['method.intervention'],'14':['method.outcomes'],'15':['method.outcomes'],'16a':['method.size'],'16b':['method.analysis'],'17a':['method.random'],'17b':['method.random'],'18':['method.random'],'19':['method.random'],'20a':['method.random'],'20b':['method.random'],'21a':['method.analysis'],'21b':['method.analysis','results.main'],'21c':['method.analysis'],'21d':['method.analysis'],'22a':['results.flow'],'22b':['results.flow'],'23a':['method.setting','results.flow'],'23b':['results.flow'],'24a':['results.delivery'],'24b':['results.delivery'],'25':['results.desc'],'26':['results.main'],'27':['results.harms'],'28':['results.other'],'29':['disc.interpret','disc.practice'],'30':['disc.limits','disc.general']},
+ coreq:{'1':['method.reflex'],'2':['method.reflex'],'3':['method.reflex'],'4':['method.reflex'],'5':['method.reflex'],'6':['method.reflex'],'7':['method.reflex'],'8':['method.reflex'],'9':['method.approach'],'10':['method.sampling'],'11':['method.sampling'],'12':['method.qsample'],'13':['results.flow'],'14':['method.setting'],'15':['method.procedure'],'16':['results.desc'],'17':['method.guide'],'18':['method.guide'],'19':['method.procedure'],'20':['method.procedure'],'21':['method.procedure'],'22':['method.qsample'],'23':['method.qanalysis'],'24':['method.qanalysis'],'25':['method.qanalysis','app.codebook'],'26':['method.qanalysis'],'27':['method.qanalysis'],'28':['method.qanalysis'],'29':['results.themes'],'30':['results.themes'],'31':['results.themes'],'32':['results.themes']},
+ srqr:{'1':['front.title'],'2':['front.abstract'],'3':['intro.problem'],'4':['intro.questions','intro.objectives'],'5':['method.approach'],'6':['method.reflex'],'7':['method.setting'],'8':['method.sampling','method.qsample'],'9':['method.ethics'],'10':['method.procedure'],'11':['method.guide','method.procedure'],'12':['results.desc'],'13':['method.qanalysis'],'14':['method.qanalysis'],'15':['method.qanalysis'],'16':['results.themes','disc.interpret'],'17':['results.themes'],'18':['disc.compare','disc.practice','disc.general'],'19':['disc.limits'],'20':['back.funding'],'21':['back.funding']},
+ prisma:{'1':['front.title'],'2':['front.abstract'],'3':['intro.rationale'],'4':['intro.objectives'],'5':['lit.elig'],'6':['lit.sources'],'7':['lit.sources','app.search'],'8':['lit.select'],'9':['lit.select'],'10':['lit.select'],'11':['lit.robm'],'12':['lit.synthm'],'13':['lit.synthm'],'14':['lit.certm'],'15':['lit.certm'],'16':['lit.flow'],'17':['lit.studies'],'18':['lit.quality'],'19':['lit.studies'],'20':['lit.results'],'21':['lit.results'],'22':['lit.results'],'23':['disc.interpret','disc.limits','disc.practice'],'24':['lit.reg'],'25':['back.funding'],'26':['back.funding'],'27':['back.data']},
+ ugc:{rac:'process',racsem:'process',presub:'process',plagsw:['front.plag'],undert:['front.plag','front.decl','front.cert'],inflib:'process'},
+ f4:{decl:['front.decl'],cert:['front.cert'],plag:['front.plag'],eth:['app.ethics'],forms:'process'}};
+/* Which design tags a checklist needs its home nodes to apply to. */
+const BP_COVER_TAG={strobe:'obs',consort:'trial',coreq:'qual',srqr:'qual',prisma:'review'};
+/* Other plans: the same ids grouped and named another way. 'std' is the standard plan itself. */
+const BP_PLANS=[
+ {id:'std',t:['Appuscholar standard thesis','Appuscholar मानक thesis'],src:'Appuscholar, checked against STROBE, CONSORT 2025, PRISMA 2020, COREQ, SRQR and UGC 2022'},
+ {id:'ugc',t:['UGC PhD 2022 thesis','UGC PhD 2022 thesis'],src:'UGC (Minimum Standards and Procedures for Award of PhD Degree) Regulations, 2022',
+  note:['UGC 2022 does not fix chapter names. It requires the documents in the front matter; the chapters follow the standard plan.','UGC 2022 chapters के नाम तय नहीं करता। वह शुरुआती पन्नों के दस्तावेज़ माँगता है; chapters मानक योजना के अनुसार।'],base:'std'},
+ {id:'synopsis',t:['Synopsis (Indian universities, common core)','Synopsis (भारतीय विश्वविद्यालय, साझा ढाँचा)'],src:'Common sections across Indian psychology synopsis formats (Appuscholar check, 27 Oct 2026)',edition:'syn',
+  groups:[['Title','शीर्षक',['front.title']],['Introduction','प्रस्तावना',['intro.background','intro.problem']],['Need and rationale','आवश्यकता और औचित्य',['intro.rationale']],['Review of literature','साहित्य समीक्षा',['lit.themes','lit.framework']],['Research gap','शोध अंतराल',['lit.gap']],['Research questions and objectives','शोध प्रश्न और उद्देश्य',['intro.questions','intro.objectives']],['Hypotheses','परिकल्पनाएँ',['intro.hypotheses','intro.opdef']],['Method','विधि',['method.design','method.setting','method.population','method.sampling','method.size','method.qsample','method.vars','method.tools','method.procedure','method.ethics']],['Plan of analysis','विश्लेषण की योजना',['method.analysis','method.qanalysis']],['Expected outcome','अपेक्षित परिणाम',['syn.outcome']],['Timeline','समय-सारणी',['syn.timeline']],['References','संदर्भ सूची',['back.refs']]]},
+ {id:'apa',t:['APA 7 journal article','APA 7 journal article'],src:'Publication Manual of the American Psychological Association, 7th ed. (2020)',edition:'paper',
+  groups:[['Title page','Title page',['front.title']],['Abstract','Abstract',['front.abstract','front.keywords']],['Introduction','Introduction',['intro.background','intro.problem','lit.themes','lit.synthesis','lit.gap','lit.framework','intro.objectives','intro.hypotheses']],['Method','Method',['method.design','method.approach','method.reflex','method.setting','method.population','method.sampling','method.size','method.qsample','method.vars','method.tools','method.translation','method.guide','method.intervention','method.random','method.outcomes','method.pilot','method.procedure','method.bias','method.ethics','method.analysis','method.qanalysis','method.changes']],['Results','Results',['results.flow','results.screen','results.desc','results.delivery','results.main','results.other','results.harms','results.themes','results.mixed']],['Discussion','Discussion',['disc.summary','disc.interpret','disc.compare','disc.theory','disc.practice','disc.strengths','disc.limits','disc.general','disc.future','concl.conclusion']],['References','References',['back.refs']],['Declarations','Declarations',['back.funding','back.data','back.ai','back.registration']]]}];
+
+function bpWalk(fn,list,depth,parent){(list||BP_STD).forEach(n=>{fn(n,depth||0,parent||null);if(n.k)bpWalk(fn,n.k,(depth||0)+1,n)})}
+const BP_INDEX={};bpWalk((n,d,p)=>{BP_INDEX[n.id]={n:n,d:d,p:p?p.id:''}});
+function bpNode(id){return(BP_INDEX[id]||{}).n||null}
+/* The design tags of a study: from its design, plus 'review' when B1 chose a systematic or scoping review. */
+function bpTags(o){o=o||studyGet();const ds=(o.design||{}).type||'',t=(BP_DESIGN_TAGS[ds]||[]).slice();const b1=(wGet(o).B1||{}).type||'';if(/^(sys|meta|scop)$/.test(b1))t.push('review');return t}
+function bpApplies(n,tags){if(!n.a||!n.a.length)return true;return n.a.some(x=>tags.indexOf(x)>=0)}
+/* The plan for one study: nodes that apply to its design, in standard order. edition 'thesis' drops synopsis-only nodes. */
+function bpTree(o,edition){const tags=bpTags(o),ed=edition||'thesis';
+  const keep=n=>bpApplies(n,tags)&&!(n.ed==='syn'&&ed!=='syn');
+  const walk=list=>list.filter(keep).map(n=>Object.assign({},n,{k:n.k?walk(n.k):undefined}));
+  return walk(BP_STD)}
+function bpStepNodes(step){const out=[];bpWalk(n=>{if((n.s||[]).indexOf(step)>=0)out.push(n.id)});return out}
+function bpModeChip(m){const x=BP_MODES[m]||BP_MODES.front,hi=studyHi();return'<span class="bp-chip" style="background:'+x.bg+';border-color:'+x.bd+';color:#1E1B2E" title="'+escAttr(hi?x.d[1]:x.d[0])+'">'+escHTML(hi?x.t[1]:x.t[0])+'</span>'}
+/* Numbers as a thesis shows them: chapters 1–6, sections 3.2, sub-sections 3.2.3; appendices A, B, C. */
+const BP_CHAPTERS=['intro','lit','method','results','disc','concl'];
+function bpNumbers(tree){const num={};
+  tree.forEach(c=>{const ci=BP_CHAPTERS.indexOf(c.id);
+    if(ci>=0){num[c.id]=String(ci+1);(c.k||[]).forEach((s,i)=>{num[s.id]=(ci+1)+'.'+(i+1);(s.k||[]).forEach((x,j)=>{num[x.id]=(ci+1)+'.'+(i+1)+'.'+(j+1)})})}
+    else(c.k||[]).forEach(s=>{if(s.id==='back.appendix')(s.k||[]).forEach((x,j)=>{num[x.id]=String.fromCharCode(65+j)})})});
+  return num}
+function bpPlanId(o){o=o||studyGet();if(o.bookPlan&&BP_PLANS.some(p=>p.id===o.bookPlan))return o.bookPlan;
+  return({'ugc-phd-2022':'ugc','apa7-article':'apa','in-psych-synopsis':'std'})[o.pack]||'std'}
+function bpPlanSet(id){const o=studyGet();o.bookPlan=id;studySet(o);bpRender()}
+function bpTitle(n){return studyHi()?n.t[1]:n.t[0]}
+/* One line in every step: where this step's work goes in the book. */
+function bpStepBookHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en;
+  if(BP_NOBOOK[id])return'<div class="sub-box bp-step"><b>📖 '+L('The book','किताब')+'</b><p class="desc" style="margin:4px 0 0">'+escHTML(hi?BP_NOBOOK[id][1]:BP_NOBOOK[id][0])+' <a href="#" onclick="bpOpen();return false">'+L('See the book plan','किताब की योजना देखें')+'</a></p></div>';
+  const tree=bpTree(o,'thesis'),num=bpNumbers(tree),tags=bpTags(o),ids=bpStepNodes(id).filter(x=>{const n=bpNode(x);return n&&bpApplies(n,tags)&&n.ed!=='syn'&&!(n.k&&n.k.length)});
+  if(!ids.length)return'';
+  return'<div class="sub-box bp-step"><b>📖 '+L('Goes into the book at','किताब में यहाँ जाता है')+'</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+ids.map(x=>{const n=bpNode(x),m=BP_MODES[n.m]||BP_MODES.front;
+    return'<a href="#" class="bp-loc" onclick="bpOpen(\''+x+'\');return false" style="border-left:4px solid '+m.bd+';background:'+m.bg+'">'+(num[x]?escHTML(num[x])+' ':'')+escHTML(bpTitle(n))+'</a>'}).join('')+'</div></div>'}
+function bpOpen(focus){let d=document.getElementById('bpDlg');if(!d){d=document.createElement('dialog');d.id='bpDlg';d.className='dlg-wide';document.body.appendChild(d)}
+  window._bpFocus=focus||'';bpRender();if(!d.open)d.showModal();
+  if(focus)setTimeout(()=>{const el=d.querySelector('[data-bp="'+focus+'"]');if(el){el.scrollIntoView({block:'center'});el.classList.add('just-inserted');setTimeout(()=>el.classList.remove('just-inserted'),2500)}},60)}
+function bpGoStep(step){try{document.getElementById('bpDlg').close()}catch(e){}const s=SUBSTAGES.find(x=>x[0]===step);if(s)subOpen(s[1],step)}
+function bpRowHTML(n,num,depth){const hi=studyHi(),m=BP_MODES[n.m]||BP_MODES.front,steps=(n.s||[]);
+  return'<div class="bp-row" data-bp="'+n.id+'" style="margin-left:'+(depth*18)+'px;border-left:4px solid '+m.bd+';background:'+m.bg+'">'+
+   '<div class="bp-head"><b>'+(num?escHTML(num)+' ':'')+escHTML(bpTitle(n))+'</b>'+bpModeChip(n.m)+
+   (steps.length?'<span class="bp-steps">'+steps.map(s=>'<a href="#" onclick="bpGoStep(\''+s+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div>'+
+   (n.g?'<div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>':'')+'</div>'}
+function bpRender(){const d=document.getElementById('bpDlg');if(!d)return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),pid=bpPlanId(o),plan=BP_PLANS.find(p=>p.id===pid)||BP_PLANS[0];
+  const ds=(o.design||{}).type||'',tags=bpTags(o),ed=plan.edition||'thesis',tree=bpTree(o,ed),num=bpNumbers(tree);
+  let body='';
+  if(plan.groups){const keepIds={};bpWalk(n=>{keepIds[n.id]=1},tree);
+    body=plan.groups.map((g,gi)=>{const ids=g[2].filter(x=>keepIds[x]);if(!ids.length)return'';
+      return'<h4 class="bp-ch">'+(gi+1)+'. '+escHTML(hi?g[1]:g[0])+'</h4>'+ids.map(x=>bpRowHTML(bpNode(x),'',0)).join('')}).join('')}
+  else{const walk=(list,depth)=>list.map(n=>(depth===0?'<h4 class="bp-ch">'+(num[n.id]?L('Chapter ','अध्याय ')+num[n.id]+': ':'')+escHTML(bpTitle(n))+'</h4>'+(n.k?walk(n.k,1):bpRowHTML(n,num[n.id],0)):bpRowHTML(n,num[n.id],depth-1)+(n.k?walk(n.k,depth+1):''))).join('');
+    body=walk(tree,0)}
+  const legend='<div class="bp-legend">'+['report','interpret','compare','caution','method'].map(k=>'<span>'+bpModeChip(k)+' <span class="desc">'+escHTML(hi?BP_MODES[k].d[1]:BP_MODES[k].d[0])+'</span></span>').join('')+'</div>';
+  const lists=Object.keys(BP_COVER_TAG).filter(k=>tags.indexOf(BP_COVER_TAG[k])>=0).map(k=>(F2_LISTS[k]||{}).t?(F2_LISTS[k].t[0].split(' (')[0]+' ('+F2_LISTS[k].items.length+')'):'').filter(Boolean);
+  d.innerHTML='<div class="dlg-head"><h3 style="margin:0">📖 '+L('The book for your study','आपकी study की किताब')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'dialog\').close()">✕</button></div>'+
+   '<p class="desc" style="margin:6px 0">'+(ds?L('Design: ','Design: ')+escHTML(studyDesignLabel(ds))+(tags.indexOf('review')>=0?' + '+L('systematic or scoping review','systematic या scoping review'):''):L('Choose your design in C1; until then every section is shown.','C1 में अपना design चुनें; तब तक हर section दिखेगा।'))+'</p>'+
+   '<label class="desc">'+L('Plan','योजना')+' <select onchange="bpPlanSet(this.value)">'+BP_PLANS.map(p=>'<option value="'+p.id+'"'+(p.id===pid?' selected':'')+'>'+escHTML(hi?p.t[1]:p.t[0])+'</option>').join('')+'</select></label>'+
+   '<p class="desc" style="margin:4px 0">'+L('Source: ','स्रोत: ')+escHTML(plan.src)+(plan.note?'. '+escHTML(hi?plan.note[1]:plan.note[0]):'')+'</p>'+
+   (lists.length?'<p class="desc" style="margin:4px 0;color:#15803d">✓ '+L('Every item of these checklists has a place in this plan: ','इन checklists के हर item की इस योजना में जगह है: ')+escHTML(lists.join(', '))+'</p>':'')+
+   legend+'<div class="bp-tree">'+body+'</div>'+
+   '<div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="bpInsertOutline()">'+L('Put this outline in a new document','यह ढाँचा नए document में डालें')+'</button></div>'}
+/* Writes the outline as headings that carry the section id, so later steps can find their place. */
+function bpOutlineHTML(o){const hi=studyHi(),pid=bpPlanId(o),plan=BP_PLANS.find(p=>p.id===pid)||BP_PLANS[0],ed=plan.edition||'thesis',tree=bpTree(o,ed),num=bpNumbers(tree),T=n=>escHTML(bpTitle(n)),P='<p><br></p>';
+  if(plan.groups){const keep={};bpWalk(n=>{keep[n.id]=1},tree);
+    return plan.groups.map((g,gi)=>{const ids=g[2].filter(x=>keep[x]&&x!=='front.title');if(!ids.length)return'';
+      return'<h1 data-sec="g'+gi+'">'+(gi+1)+'. '+escHTML(hi?g[1]:g[0])+'</h1>'+(ids.length===1&&bpTitle(bpNode(ids[0]))===(hi?g[1]:g[0])?P:ids.map(x=>'<h2 data-sec="'+x+'">'+T(bpNode(x))+'</h2>'+P).join(''))}).join('')}
+  let h='';tree.forEach(c=>{const ci=BP_CHAPTERS.indexOf(c.id);
+    if(ci>=0){h+='<h1 data-sec="'+c.id+'">'+(hi?'अध्याय ':'Chapter ')+num[c.id]+': '+T(c)+'</h1>';(c.k||[]).forEach(s=>{h+='<h2 data-sec="'+s.id+'">'+num[s.id]+' '+T(s)+'</h2>'+(s.k&&s.k.length?s.k.map(x=>'<h3 data-sec="'+x.id+'">'+num[x.id]+' '+T(x)+'</h3>'+P).join(''):P)})}
+    else(c.k||[]).forEach(s=>{if(/^front\.(title|contents)$/.test(s.id))return;
+      if(s.id==='back.appendix'){h+='<h1 data-sec="'+s.id+'">'+T(s)+'</h1>'+(s.k||[]).map(x=>'<h2 data-sec="'+x.id+'">'+(hi?'परिशिष्ट ':'Appendix ')+num[x.id]+': '+T(x)+'</h2>'+P).join('');return}
+      h+='<h1 data-sec="'+s.id+'">'+T(s)+'</h1>'+P})});
+  return h}
+function bpInsertOutline(){const hi=studyHi(),o=studyGet(),plan=BP_PLANS.find(p=>p.id===bpPlanId(o))||BP_PLANS[0];
+  docCreateWith(hi?plan.t[1]:plan.t[0],bpOutlineHTML(o));
+  try{document.getElementById('bpDlg').close()}catch(e){}showToast(hi?'ढाँचा नए document में डाला ✓':'Outline put in a new document ✓')}
 
 function apHomeRender(){
   const el=document.getElementById('apHome');if(!el)return;
@@ -15645,7 +15873,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.29c';
+const APP_BUILD='2026.11.01a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
