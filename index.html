@@ -3260,7 +3260,7 @@ const SUB_LOGS={
  B2:[{key:'search',t:['Search log','Search log'],note:['One row per search. This is what lets you claim a gap.','हर search की एक पंक्ति। इसी के आधार पर आप gap का दावा कर सकते हैं।'],
    cols:[['date','Date','तारीख','date'],['db','Database','Database','sel',['PubMed','OpenAlex','Google Scholar','Shodhganga','PsycINFO','ERIC','DOAJ','Cochrane','Other']],['q','Search words (AND/OR)','Search के शब्द (AND/OR)','text'],['lim','Limits (years, language)','सीमा (साल, भाषा)','text'],['hits','Results','नतीजे','num'],['kept','Kept','रखे','num']]}],
  B3:[{key:'matrix',t:['Source matrix','Papers की matrix'],note:['One row per paper you keep. Fill it while you read.','हर रखे गए paper की एक पंक्ति। पढ़ते-पढ़ते भरें।'],lib:true,
-   cols:[['paper','Paper (author, year)','Paper (लेखक, साल)','text'],['design','Design','Design','text'],['sample','Sample','Sample','text'],['measure','Measures','माप','text'],['finding','Main finding','मुख्य नतीजा','text'],['limit','Limitation','कमी','text'],['theme','Theme','Theme','text']]}],
+   cols:[['paper','Paper (author, year)','Paper (लेखक, साल)','text'],['design','Design','Design','text'],['sample','Sample','Sample','text'],['measure','Measures','माप','text'],['finding','Main finding','मुख्य नतीजा','text'],['limit','Limitation','कमी','text'],['stance','For my question','मेरे सवाल के लिए','sel',['Supports','Contrasts','Mixed','Background']],['quote','Key line (with page)','मुख्य पंक्ति (page सहित)','text'],['theme','Theme','Theme','text']]}],
  D2:[{key:'recruit',t:['Recruitment log','Recruitment log'],note:['Counts only. Never write participants\' names or phone numbers here.','सिर्फ़ गिनती। यहाँ participants के नाम या फ़ोन नंबर कभी न लिखें।'],
    cols:[['date','Date','तारीख','date'],['site','Site or channel','जगह या माध्यम','text'],['appr','Approached','पूछा','num'],['agreed','Agreed','माने','num'],['done','Completed','पूरा किया','num'],['left','Withdrew','हटे','num']]},
    {key:'deviation',t:['Changes from the plan','योजना में बदलाव'],note:['Any change from the approved plan, and whether the ethics committee was told.','स्वीकृत योजना में कोई भी बदलाव, और क्या ethics committee को बताया गया।'],
@@ -3288,13 +3288,14 @@ function logCsv(key){const d=logDef(key),rows=logRows(studyGet(),key),q=v=>'"'+S
 function logTableHTML(d,o){const hi=studyHi(),rows=logRows(o,d.key),L=a=>hi?a[1]:a[0];
   const cell=(c,r,i)=>{const v=r[c[0]]==null?'':r[c[0]],on='onchange="logCell(\''+d.key+'\','+i+',\''+c[0]+'\',this.value)"';
     if(c[3]==='sel')return'<select '+on+'><option value=""></option>'+c[4].map(x=>'<option'+(x===v?' selected':'')+'>'+escHTML(x)+'</option>').join('')+'</select>';
-    if(c[3]==='text'&&/paper|finding|limit|^c$|reply|why|what|^q$|^h$|^res$|^mean$|^lim$|^str$|^weak$|^dv$/.test(c[0]))return'<textarea rows="2" '+on+'>'+escHTML(v)+'</textarea>';
+    if(c[3]==='text'&&/paper|finding|limit|^c$|reply|why|what|^q$|^h$|^res$|^mean$|^lim$|^str$|^weak$|^dv$|^quote$/.test(c[0]))return'<textarea rows="2" '+on+'>'+escHTML(v)+'</textarea>';
     return'<input type="'+(c[3]==='num'?'number':c[3]==='date'?'date':'text')+'"'+(c[3]==='num'?' min="0"':'')+' value="'+escAttr(v)+'" '+on+'>'};
   let h='<div class="sub-box"><b>'+escHTML(L(d.t))+'</b> <span class="desc">('+rows.length+')</span><p class="desc" style="margin:4px 0">'+escHTML(L(d.note))+'</p>'+
    '<div style="overflow-x:auto"><table class="log-tbl" style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px"><thead><tr>'+d.cols.map(c=>'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--line,#ddd)">'+escHTML(hi?c[2]:c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>'+
    rows.map((r,i)=>'<tr>'+d.cols.map(c=>'<td style="padding:3px;vertical-align:top">'+cell(c,r,i)+'</td>').join('')+'<td><button type="button" class="btn btn-ghost btn-sm" title="'+(hi?'हटाएँ':'Remove')+'" onclick="logDel(\''+d.key+'\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>'+
    '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="logAdd(\''+d.key+'\')">+ '+(hi?'पंक्ति जोड़ें':'Add a row')+'</button>'+(d.lib?'<button type="button" class="btn btn-ghost btn-sm" onclick="logFromLibrary(\''+d.key+'\')">📚 '+(hi?'Library के papers लाएँ':'Bring papers from the library')+'</button>':'')+(rows.length?'<button type="button" class="btn btn-ghost btn-sm" onclick="logCsv(\''+d.key+'\')">⬇ CSV</button>':'')+'</div>';
   if(d.key==='recruit'&&rows.length){const sum=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);h+='<p class="desc" style="margin:6px 0 0">'+(hi?'कुल: ':'Total: ')+sum('appr')+(hi?' से पूछा, ':' approached, ')+sum('agreed')+(hi?' माने, ':' agreed, ')+sum('done')+(hi?' ने पूरा किया, ':' completed, ')+sum('left')+(hi?' हटे।':' withdrew.')+'</p>'}
+  if(d.key==='matrix'&&rows.some(r=>r.stance)){const c=k=>rows.filter(r=>r.stance===k).length;h+='<p class="desc" style="margin:6px 0 0">'+(hi?'समर्थन: ':'Supports: ')+c('Supports')+(hi?', विरोध: ':', contrasts: ')+c('Contrasts')+(hi?', मिला-जुला: ':', mixed: ')+c('Mixed')+'. '+(c('Contrasts')?'':(hi?'कोई विरोधी study नहीं: एक बार उलटे नतीजे वाली studies भी खोजें, वरना review एकतरफ़ा लगेगा।':'No contrasting study yet: search once for studies with the opposite result, or the review will read one-sided.'))+'</p>'}
   if(d.key==='supervisor'&&rows.length){const open=rows.filter(r=>(r.st||'Open')!=='Done').length;h+='<p class="desc" style="margin:6px 0 0">'+(open?(hi?open+' टिप्पणियाँ अभी खुली हैं।':open+' comment(s) still open.'):(hi?'सभी टिप्पणियाँ बंद।':'All comments closed.'))+'</p>'}
   return h+'</div>'}
 function logsDone(id,o){const L=k=>logRows(o,k);
@@ -3527,9 +3528,34 @@ function f2Doc(){const o=studyGet(),f=wGet(o).F2||{},L=F2_LISTS[f.list];if(!L)re
   docCreateWith((hi?'Reporting checklist: ':'Reporting checklist: ')+L.t[0].split(' (')[0],'<h1>'+escHTML(L.t[0].split(' (')[0])+' checklist</h1><p>'+escHTML(L.src)+'. '+(hi?'हर item का पूरा पाठ मूल checklist में है।':'The full wording of each item is in the original checklist.')+'</p><table><thead><tr><th>Item</th><th>'+(hi?'विषय':'Topic')+'</th><th>'+(hi?'स्थिति':'Status')+'</th><th>'+(hi?'कहाँ (page या section)':'Where (page or section)')+'</th></tr></thead><tbody>'+rows+'</tbody></table>');
   try{document.getElementById('subDlg').close()}catch(e){}showToast(hi?'Checklist का document बना':'Checklist document made')}
 
+
+/* Related papers from OpenAlex for the sources in the library (competitor review idea, 31 Oct).
+   A paper that OpenAlex lists as related to several of the student's sources comes first. */
+async function relFind(){const hi=studyHi(),out=document.getElementById('relOut');if(!out)return;
+  const lib=citGetLib(),dois=lib.map(d=>String(d.doi||'').trim().toLowerCase()).filter(d=>/^10\./.test(d)).slice(0,15);
+  if(!dois.length){out.innerHTML='<p class="desc">'+(hi?'Library में DOI वाला कोई paper नहीं।':'No paper with a DOI in your library yet.')+'</p>';return}
+  out.innerHTML='<p class="desc">'+(hi?'OpenAlex से खोज रहे हैं…':'Asking OpenAlex…')+'</p>';
+  const cnt={};let seen=0;
+  for(const d of dois){try{const r=await fetch('https://api.openalex.org/works/doi:'+encodeURIComponent(d)+'?select=related_works');if(!r.ok)continue;const j=await r.json();seen++;(j.related_works||[]).slice(0,10).forEach(u=>{const id=String(u).split('/').pop();cnt[id]=(cnt[id]||0)+1})}catch(e){}}
+  const ids=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,25);
+  if(!ids.length){out.innerHTML='<p class="desc">'+(hi?'कोई related paper नहीं मिला।':'No related papers found.')+'</p>';return}
+  let works=[];try{const r=await fetch('https://api.openalex.org/works?per-page=25&select=id,display_name,publication_year,doi,authorships,primary_location&filter=openalex_id:'+ids.join('|'));if(r.ok)works=(await r.json()).results||[]}catch(e){}
+  const have=new Set(dois);works=works.filter(w=>!(w.doi&&have.has(String(w.doi).replace(/^https?:\/\/doi\.org\//,'').toLowerCase())));
+  works.sort((a,b)=>(cnt[String(b.id).split('/').pop()]||0)-(cnt[String(a.id).split('/').pop()]||0));
+  window._relWorks=works;
+  out.innerHTML='<p class="desc">'+(hi?seen+' sources के आधार पर। जो paper आपके कई sources से जुड़ा है, वह ऊपर है। जोड़ने से पहले abstract पढ़ें।':'Based on '+seen+' of your sources. Papers linked to several of them come first. Read the abstract before you add one.')+'</p>'+
+   works.map((w,i)=>{const n=cnt[String(w.id).split('/').pop()]||1,au=((w.authorships||[])[0]||{}).author||{},src=((w.primary_location||{}).source||{}).display_name||'';
+     return'<div style="border-top:1px solid var(--line,#ddd);padding:6px 0;font-size:13.5px"><b>'+escHTML(w.display_name||'')+'</b><br><span class="desc">'+escHTML((au.display_name||'')+((w.authorships||[]).length>1?' et al.':'')+' · '+(w.publication_year||'')+(src?' · '+src:''))+(n>1?' · '+(hi?n+' sources से जुड़ा':'linked to '+n+' of your sources'):'')+'</span> '+
+       (w.doi?'<a href="'+escAttr(w.doi)+'" target="_blank" rel="noopener">DOI</a> ':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="relAdd('+i+',this)">+ '+(hi?'Library':'Library')+'</button></div>'}).join('')}
+async function relAdd(i,btn){const w=(window._relWorks||[])[i];if(!w)return;const doi=String(w.doi||'').replace(/^https?:\/\/doi\.org\//,'');let rec=null;
+  if(doi){try{rec=await citDoiRecord(doi)}catch(e){}}
+  if(!rec)rec={author:(w.authorships||[]).map(a=>citFlipName((a.author||{}).display_name||'')).join('; '),year:String(w.publication_year||''),title:w.display_name||'',source:((w.primary_location||{}).source||{}).display_name||'',volume:'',issue:'',pages:'',doi:doi,url:'',type:'Journal article',style:'apa',lang:'en'};
+  const n=citLibPush([rec]);if(btn){btn.disabled=true;btn.textContent=n?'✓':(studyHi()?'पहले से है':'already there')}}
+
 function wExtra3HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
    lab=t=>'<label class="desc" style="display:block;margin-top:6px">'+t+'</label>',sel=(opts,v,on)=>'<select onchange="'+on+'"><option value=""></option>'+opts.map(x=>'<option value="'+x[0]+'"'+(v===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>',
    warn=list=>list.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+list.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'';
+  if(id==='B3')return'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
   if(id==='B1'){const b=w.B1||{},n=b.n||{},f=b1Formal(o);
     let h=lab(L('Type of review','Review का प्रकार'))+sel(B1_TYPES,b.type,"wPick('B1','type',this.value)")+
      lab(L('Why this type (for your question, time and team)','यह प्रकार क्यों (आपके सवाल, समय और team के हिसाब से)'))+'<textarea rows="3" onchange="wPatch(\'B1\',\'why\',this.value)">'+escHTML(b.why||'')+'</textarea>';
@@ -15169,7 +15195,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.28c';
+const APP_BUILD='2026.10.28d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
