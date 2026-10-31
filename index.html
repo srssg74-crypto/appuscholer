@@ -15564,6 +15564,53 @@ function apHomeLectures(){apLibOpen()}
 function apHomeResume(k){try{apLibOpen();apLibPick(k);const p=apLectPos()[k]||0;if(p>0)apLesGo(p)}catch(e){}}
 const AP_HI={idea:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',lit:'<circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/>',design:'<path d="M12 3v18M5 7h14M5 7l-2 6a3 3 0 0 0 4 0L5 7zM19 7l-2 6a3 3 0 0 0 4 0l-2-6z"/>',collect:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',writing:'<path d="M4 20l1-4L17 4l3 3L8 19l-4 1zM14 7l3 3"/>',review:'<path d="M5 12l4 4L19 7"/><rect x="3" y="3" width="18" height="18" rx="3"/>',
  lec:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M10 8l5 3-5 3z"/>',paper:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/>',words:'<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4zM20 5h-6"/>',trec:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/>'};
+/* ============ This week for your study (build 2026.10.29c) ============
+   On the home page: new papers on the study's topic (OpenAlex, last 30 days), new papers citing the
+   student's own sources, and any library paper that has been retracted. At most 10 items, refreshed once a
+   week or on request. Only search words and DOIs go to OpenAlex, the same as a normal search. */
+const FD_KEY='appu_feed';
+function fdStore(){try{return JSON.parse(LS.get(pkey(FD_KEY))||'null')}catch(e){return null}}
+function fdSave(v){try{LS.set(pkey(FD_KEY),JSON.stringify(v))}catch(e){}}
+function fdWords(o){o=o||studyGet();const stop=/^(the|and|of|in|on|a|an|to|for|with|among|between|does|do|is|are|how|what|whether|effect|effects|relationship|role|study|students?)$/i;
+  const base=String(((o.idea||{}).topic)||'').replace(/[?.,:;()"']/g,' ').split(/\s+/).filter(w=>w.length>2&&!stop.test(w));
+  const vars=(((o.design||{}).vars)||[]).map(v=>String(v.name||'').trim()).filter(Boolean);
+  const words=[...new Set(vars.join(' ').split(/\s+/).concat(base).map(w=>w.toLowerCase()).filter(w=>w.length>2&&!stop.test(w)))].slice(0,6);return words}
+function fdDate(days){return new Date(Date.now()-days*864e5).toISOString().slice(0,10)}
+function fdItem(w,kind){const au=((w.authorships||[])[0]||{}).author||{},src=((w.primary_location||{}).source||{}).display_name||'';
+  return{kind:kind,id:String(w.id||'').split('/').pop(),title:w.display_name||'',year:w.publication_year||'',date:w.publication_date||'',doi:String(w.doi||'').replace(/^https?:\/\/doi\.org\//,''),who:(au.display_name||'')+((w.authorships||[]).length>1?' et al.':''),src:src}}
+function fdSig(o){return fdWords(o).join(' ')+'|'+citGetLib().map(d=>String(d.doi||'').toLowerCase()).filter(Boolean).sort().join(',')}
+async function fdRefresh(force){const o=studyGet(),st=fdStore(),hi=studyHi();
+  if(fdWords(o).length<2&&!citGetLib().some(d=>d.doi))return;
+  if(!force&&st&&st.at&&st.sig===fdSig(o)&&Date.now()-st.at<7*864e5)return;
+  if(window._fdBusy)return;window._fdBusy=1;const box=document.getElementById('fdBox');if(box)box.innerHTML='<p class="hm-hint">'+(hi?'नई चीज़ें खोज रहे हैं…':'Looking for what is new…')+'</p>';
+  const items=[],words=fdWords(o),lib=citGetLib(),dois=lib.map(d=>String(d.doi||'').trim().toLowerCase()).filter(d=>/^10\./.test(d)).slice(0,40),sel='id,display_name,publication_year,publication_date,doi,authorships,primary_location';
+  try{
+    if(dois.length){const r=await fetch('https://api.openalex.org/works?per-page=50&select=id,doi,display_name,is_retracted&filter=doi:'+dois.map(encodeURIComponent).join('|'));if(r.ok){const res=(await r.json()).results||[];
+      res.filter(w=>w.is_retracted).forEach(w=>items.push({kind:'retr',title:w.display_name,doi:String(w.doi||'').replace(/^https?:\/\/doi\.org\//,'')}));
+      const ids=res.slice(0,15).map(w=>String(w.id).split('/').pop());
+      if(ids.length){const r2=await fetch('https://api.openalex.org/works?per-page=5&sort=publication_date:desc&select='+sel+'&filter=cites:'+ids.join('|')+',from_publication_date:'+fdDate(60));if(r2.ok)((await r2.json()).results||[]).forEach(w=>items.push(fdItem(w,'cites')))}}}
+    if(words.length>=2){const r3=await fetch('https://api.openalex.org/works?per-page=6&select='+sel+'&filter=from_publication_date:'+fdDate(30)+',type:article&search='+encodeURIComponent(words.join(' ')));if(r3.ok)((await r3.json()).results||[]).forEach(w=>items.push(fdItem(w,'new')))}
+  }catch(e){}
+  const have=new Set(dois),seen=new Set(),out=[];items.forEach(x=>{const k=(x.doi||x.title||'').toLowerCase();if(seen.has(k))return;seen.add(k);if(x.kind!=='retr'&&x.doi&&have.has(x.doi.toLowerCase()))return;out.push(x)});
+  const retr=out.filter(x=>x.kind==='retr'),rest=out.filter(x=>x.kind!=='retr').slice(0,10-Math.min(10,retr.length));
+  fdSave({at:Date.now(),sig:fdSig(o),words:words,items:retr.concat(rest),hidden:(st&&st.hidden)||[]});window._fdBusy=0;fdRender()}
+function fdKey(x){return String(x.doi||x.title||'').toLowerCase().replace(/['"\\]/g,'')}
+function fdHide(k){const st=fdStore();if(!st)return;st.hidden=(st.hidden||[]).concat([k]).slice(-200);fdSave(st);fdRender()}
+async function fdAdd(i,btn){const st=fdStore(),x=st&&st.items[i];if(!x)return;let rec=null;if(x.doi){try{rec=await citDoiRecord(x.doi)}catch(e){}}
+  if(!rec)rec={author:citFlipName(String(x.who||'').replace(/ et al\.$/,'')),year:String(x.year||''),title:x.title,source:x.src||'',volume:'',issue:'',pages:'',doi:x.doi||'',url:'',type:'Journal article',style:'apa',lang:'en'};
+  const n=citLibPush([rec]);if(btn){btn.disabled=true;btn.textContent=n?'✓':(studyHi()?'पहले से है':'already there')}}
+function fdHTML(){const st=fdStore(),hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),words=fdWords(o);
+  if(words.length<2&&!citGetLib().some(d=>d.doi))return'<p class="hm-hint">'+L('Write your topic in the Idea step and add papers to your library; new work on your topic will show here.','Idea वाले कदम में अपना विषय लिखें और library में papers जोड़ें; आपके विषय पर नया काम यहाँ दिखेगा।')+'</p>';
+  if(!st)return'<p class="hm-hint">'+L('Not checked yet.','अभी जाँचा नहीं।')+'</p>';
+  const hid=new Set(st.hidden||[]),items=st.items.map((x,i)=>[x,i]).filter(([x])=>!hid.has(fdKey(x)));
+  const tag={retr:L('⚠ Retracted, in your library','⚠ Retract हुआ, आपकी library में'),cites:L('Cites your sources','आपके sources को cite करता है'),new:L('New on your topic','आपके विषय पर नया')};
+  return(items.length?items.map(([x,i])=>'<div style="border-top:1px solid var(--line,#ddd);padding:7px 0;font-size:13.5px'+(x.kind==='retr'?';color:#b91c1c':'')+'"><span class="hm-hint" style="font-size:12px">'+escHTML(tag[x.kind])+'</span><br><b>'+escHTML(x.title)+'</b>'+(x.kind!=='retr'?'<br><span class="hm-hint">'+escHTML([x.who,x.date||x.year,x.src].filter(Boolean).join(' · '))+'</span>':'')+
+    '<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">'+(x.doi?'<a class="btn btn-ghost btn-sm" href="https://doi.org/'+escAttr(x.doi)+'" target="_blank" rel="noopener">'+L('Open','खोलें')+'</a>':'')+(x.kind!=='retr'?'<button type="button" class="btn btn-ghost btn-sm" onclick="fdAdd('+i+',this)">+ Library</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="fdHide(\''+escAttr(fdKey(x))+'\')">'+L('Hide','छिपाएँ')+'</button></div></div>').join('')
+    :'<p class="hm-hint">'+L('Nothing new this week.','इस हफ़्ते कुछ नया नहीं।')+'</p>')+
+   '<p class="hm-hint" style="margin-top:6px">'+L('Checked ','जाँचा: ')+new Date(st.at).toLocaleDateString()+(st.words&&st.words.length?' · '+L('words: ','शब्द: ')+escHTML(st.words.join(', ')):'')+' · <a href="#" onclick="fdRefresh(true);return false">'+L('Check now','अभी जाँचें')+'</a></p>'}
+function fdRender(){const b=document.getElementById('fdBox');if(b)b.innerHTML=fdHTML()}
+function fdHomeHTML(){const hi=studyHi();setTimeout(()=>{try{fdRefresh(false)}catch(e){}},50);return'<h3>'+(hi?'इस हफ़्ते आपकी study के लिए':'This week for your study')+'</h3><div id="fdBox">'+fdHTML()+'</div>'}
+
 function apHomeRender(){
   const el=document.getElementById('apHome');if(!el)return;
   const me=apMe(),nm=me.name||ht('yourname'),ini=(me.name||'').trim().split(/\s+/).filter(w=>!/^(dr|prof|mr|mrs|ms)\.?$/i.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'A';
@@ -15582,7 +15629,7 @@ function apHomeRender(){
    +'<button type="button" class="hm-edit" onclick="apMeEdit()">'+escHTML(ht('edit'))+'</button>'
    +'<div class="hm-kv"><span>'+escHTML(ht('working'))+'</span><div>'+escHTML(active?active.name:ht('noproj'))+'</div><span>'+escHTML(ht('stage'))+'</span><div>'+escHTML(stNow?((STAGES.indexOf(stNow)+1)+' · '+stageLabel(stNow)):'-')+'</div>'
    +'<span>'+escHTML(ht('docs'))+'</span><div>'+docs+' &nbsp;·&nbsp; '+escHTML(ht('sources'))+' '+src+'</div><span>'+escHTML(ht('lang'))+'</span><div><a onclick="toggleLang()">'+(lang==='hi'?'हिंदी · English':'English · हिंदी')+'</a></div></div>'+cards+'</div>'
-   +'<div class="hm-main">'+apHomeTrain()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
+   +'<div class="hm-main">'+apHomeTrain()+fdHomeHTML()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
    +'<h3>'+escHTML(ht('h_learn'))+'</h3><p class="hm-hint">'+escHTML(ht('p_learn'))+'</p><div class="hm-grid">'+lt('lec','lectures','lectures_d','apHomeLectures()')+lt('paper','paper','paper_d',"apGoTool('analyse')")+lt('words','words','words_d',"apGoTool('words')")+'</div>'
    +'<div class="hm-foot"><button type="button" onclick="apGoTool(\'chat\')">'+escHTML(ht('ask'))+'</button>'+(apIsTrainee()?'':'<button type="button" id="hmTrecBtn" onclick="trOpen()">'+escHTML(ht('trec'))+'</button>')+'<button type="button" onclick="openProjectsDlg()">'+escHTML(ht('projects'))+'</button><button type="button" onclick="backupExport()">'+escHTML(ht('backup'))+'</button><button type="button" onclick="openSettings()">'+escHTML(ht('settings'))+'</button><button type="button" onclick="openHelp()">'+escHTML(ht('help'))+'</button></div></div>';
   try{apStageBarRender()}catch(e){}
@@ -15598,7 +15645,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.29b';
+const APP_BUILD='2026.10.29c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
