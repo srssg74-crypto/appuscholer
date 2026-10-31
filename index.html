@@ -149,6 +149,7 @@
     .tool-shell{flex-direction:column}
     .tool-sidebar{position:static;width:100%;flex-basis:auto;max-height:none}
     .tool-sidebar.collapsed{width:100%}
+    .tool-main{align-self:stretch;max-width:100%}
   }
   .stageintro-row{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid var(--line)}
   .stageintro-row:last-child{border-bottom:none}
@@ -1011,7 +1012,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
       <div id="rsSpec" style="margin:-2px 0 8px"><div style="display:flex;align-items:center;gap:8px;font-size:12.5px"><div style="flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden"><div id="rsSpecBar" style="height:100%;width:0;transition:width .2s"></div></div><b id="rsSpecLbl" style="min-width:104px;text-align:right"></b></div><p class="desc" id="rsSpecHint" style="margin:3px 0 0"></p></div>
       <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center;margin:2px 0 6px;font-size:12.5px">
         <button type="button" class="btn btn-ghost" id="rsTermsBtn" onclick="rsSuggestTerms()" data-i18n="rs2_terms">💡 Suggest related terms</button>
-        <label><span data-i18n="rs2_kind">Kind of study</span> <select id="rsDesign" style="padding:5px 8px;border-radius:8px;border:2px solid var(--line);font-size:12.5px"><option value="any" data-i18n="rs2_any">Any</option><option value="rct" data-i18n="rs2_rct">Randomised trial</option><option value="sr" data-i18n="rs2_sr">Systematic review or meta-analysis</option><option value="review" data-i18n="rs2_review">Review article (OpenAlex type; PubMed review)</option><option value="qual" data-i18n="rs2_qual">Qualitative study (words in the title or abstract)</option><option value="survey" data-i18n="rs2_survey">Survey or questionnaire study (words in the title or abstract)</option></select></label>
+        <label style="max-width:100%;min-width:0"><span data-i18n="rs2_kind">Kind of study</span> <select id="rsDesign" style="max-width:min(100%,calc(100vw - 90px));padding:5px 8px;border-radius:8px;border:2px solid var(--line);font-size:12.5px"><option value="any" data-i18n="rs2_any">Any</option><option value="rct" data-i18n="rs2_rct">Randomised trial</option><option value="sr" data-i18n="rs2_sr">Systematic review or meta-analysis</option><option value="review" data-i18n="rs2_review">Review article (OpenAlex type; PubMed review)</option><option value="qual" data-i18n="rs2_qual">Qualitative study (words in the title or abstract)</option><option value="survey" data-i18n="rs2_survey">Survey or questionnaire study (words in the title or abstract)</option></select></label>
       </div>
       <div id="rsTerms"></div>
       <details id="rsNarrow" style="margin:4px 0 8px;font-size:12.5px"><summary style="cursor:pointer;font-weight:700;color:var(--muted)" data-i18n="rs2_narrow">🎯 Narrow my topic</summary>
@@ -1817,7 +1818,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
       </select></div>
   </div>
   <div class="stats-fld-row">
-    <div class="fld" id="pwEffWrap"><label for="pwEffect" id="pwEffLbl">Effect size</label><input type="text" id="pwEffect" inputmode="decimal" value="0.5"></div>
+    <div class="fld" id="pwEffWrap"><label for="pwEffect" id="pwEffLbl">Effect size</label><input type="text" id="pwEffect" inputmode="decimal" value="" placeholder="e.g. 0.5"></div>
     <div class="fld" id="pwNWrap" style="display:none"><label for="pwN" id="pwNLbl">Sample size</label><input type="text" id="pwN" inputmode="numeric" value="30"></div>
     <div class="fld" id="pwPowWrap"><label for="pwPow">Power you want</label><input type="text" id="pwPow" inputmode="decimal" value="0.80"></div>
     <div class="fld"><label for="pwAlpha">Alpha</label><input type="text" id="pwAlpha" inputmode="decimal" value="0.05"></div>
@@ -3112,10 +3113,14 @@ function subRender(){const d=document.getElementById('subDlg');if(!d||!d.open&&!
   const tabs=STAGES.map(s=>{const c=subCount(s,o);return'<button type="button" class="sub-tab'+(s===stage?' on':'')+'" onclick="subOpen(\''+s+'\')">'+SUB_STAGE_LETTER[s]+' · '+escHTML(stageLabel(s))+' '+c.done+'/'+c.total+'</button>'}).join('');
   const list=SUBSTAGES.filter(x=>x[1]===stage).map(x=>{const st=subState(x[0],o);return'<button type="button" class="sub-item'+(x[0]===SUB_CUR.id?' on':'')+'" onclick="SUB_CUR.id=\''+x[0]+'\';subRender()">'+SUB_ICON[st.s]+' <b>'+x[0]+'</b> '+escHTML(subL(x[2]))+'</button>'}).join('');
   d.innerHTML='<div class="sub-wrap"><div class="sub-head"><b style="margin-right:6px">🧭 '+(hi?'Research के कदम':'Research steps')+'</b>'+tabs+'<span style="flex:1"></span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕ '+(hi?'बंद करें':'Close')+'</button></div><div class="sub-body"><div class="sub-list">'+list+'</div><div class="sub-main" id="subMain">'+subDetailHTML(SUB_CUR.id,o)+'</div></div></div>'}
+/* When each step's source was last checked against the original (register v6, TST-018). Review every 12 months. */
+const SUB_SRC_CHECKED={_:'2026-10-27',F2:'2026-10-31',B1:'2026-10-31',B4:'2026-10-31',C7:'2026-10-31',D1:'2026-10-31'};
+function subSrcAge(id,now){const d=SUB_SRC_CHECKED[id]||SUB_SRC_CHECKED._,hi=studyHi(),t=new Date(d+'T00:00:00'),age=((now||Date.now())-t.getTime())/864e5,f=t.toLocaleDateString(hi?'hi-IN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
+  return' · '+(hi?'आख़िरी जाँच: ':'last checked: ')+f+(age>365?' <span style="color:#b45309">⚠️ '+(hi?'एक साल से पुरानी जाँच; नया version देखें':'checked over a year ago; look for a newer version')+'</span>':'')}
 function subDetailHTML(id,o){const hi=studyHi(),x=SUBSTAGES.find(y=>y[0]===id);if(!x)return'';const st=subState(id,o),rec=(o.sub||{})[id]||{};
   let h='<h2 style="margin:0 0 4px">'+x[0]+' · '+escHTML(subL(x[2]))+'</h2>';
   h+='<div class="sub-box"><b>'+(hi?'कैसे भरें':'How to fill it')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[3]))+'</p></div>';
-  h+='<div class="sub-box"><b>'+(hi?'आगे बढ़ने से पहले जाँच':'Check before moving on')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[4]))+'</p><p class="desc" style="margin:6px 0 0">'+(hi?'स्रोत: ':'Source: ')+escHTML(x[5])+'</p></div>';
+  h+='<div class="sub-box"><b>'+(hi?'आगे बढ़ने से पहले जाँच':'Check before moving on')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[4]))+'</p><p class="desc" style="margin:6px 0 0">'+(hi?'स्रोत: ':'Source: ')+escHTML(x[5])+subSrcAge(x[0])+'</p></div>';
   if(id==='C9')return h+ethicsFormHTML(o);
   try{h+=subExtraHTML(id,o)}catch(e){}
   if(x[6]){const act=x[6].charAt(0)==='@'?x[6].slice(1):"showTool('"+x[6]+"')";h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="document.getElementById(\'subDlg\').close();'+escAttr(act)+'">'+(hi?'इसके tool पर जाएँ →':'Go to the tool for this →')+'</button></div>'}
@@ -3169,6 +3174,7 @@ function ethicsFormHTML(o){const hi=studyHi(),L=(en,h)=>hi?h:en,e=ethicsGet(o),s
   if(s.none)h='<div class="sub-box"><b>➖ '+L('No human participants','कोई human participant नहीं')+'</b><p style="margin:6px 0 0">'+L('This step does not apply and the secure form stays off. If you will collect data from people, choose another route.','यह कदम लागू नहीं, और secure form बंद रहेगा। अगर लोगों से data लेना है, तो दूसरा रास्ता चुनें।')+'</p></div>';
   h+='<div class="sub-box"><b>'+L('1. Does the study include any of these?','1. क्या study में इनमें से कुछ है?')+'</b>'+
    chk('risk.minor',e.risk.minor,L('Participants under 18','18 साल से कम उम्र के participants'))+
+   (e.risk.minor?'<p class="desc" style="margin:2px 0 6px;color:#b45309">'+L('Under 18: you need a parent or guardian\'s consent and the young person\'s own assent, in the form your ethics committee approves (ICMR 2017, sections 6.5.3–6.5.4). Recruitment stays locked until the committee\'s letter is recorded.','18 से कम: माता-पिता या अभिभावक की सहमति और बच्चे की अपनी assent चाहिए, उस रूप में जो आपकी ethics committee स्वीकार करे (ICMR 2017, sections 6.5.3–6.5.4)। Committee का letter दर्ज होने तक recruitment बंद रहेगा।')+'</p>':'')+
    chk('risk.mental',e.risk.mental,L('People with a mental illness','मानसिक बीमारी वाले लोग'))+
    chk('risk.trial',e.risk.trial,L('A clinical trial, drug or device','Clinical trial, दवा या device'))+
    chk('risk.interv',e.risk.interv||ethicsInterv(o),L('An intervention: you change something for participants','Intervention: आप participants के लिए कुछ बदलते हैं'),ethicsInterv(o))+
@@ -12090,6 +12096,8 @@ function statsParseText(text){
       if(miss)notes.missing[name]=miss;
       return{name,index:i,type:'numeric',n:real.length};
     }
+    {const bad=[];rows.forEach((r,k)=>{const v=r[i];if(v===undefined||v===''||STATS_NA_RE.test(v))return;if(!STATS_NUM_RE.test(statsNumNorm(v))&&bad.length<6)bad.push([k+2,v])});
+     const nBad=real.filter(v=>!STATS_NUM_RE.test(v)).length;if(real.length>=4&&nBad<=Math.max(2,real.length*0.1)){notes.mixed=notes.mixed||{};notes.mixed[name]={n:nBad,ex:bad}}}
     return{name,index:i,type:'categorical',n:vals.length};
   });
   return{headers,rows,cols,notes};
@@ -12097,6 +12105,7 @@ function statsParseText(text){
 function statsParseNote(d){
   if(!d||!d.notes)return'';
   const n=d.notes,bits=[],mk=Object.keys(n.missing);
+  if(n.mixed)Object.keys(n.mixed).forEach(k=>{const m=n.mixed[k];bits.push('<b>Column '+escHTML(k)+' looks like numbers, but '+m.n+' cell'+(m.n===1?' is':'s are')+' not a number: '+m.ex.map(x=>'\u201c'+escHTML(x[1])+'\u201d (line '+x[0]+')').join(', ')+'.</b> Nothing was removed. Number tests cannot use this column until you correct '+(m.n===1?'that cell':'those cells')+' in your file (or blank '+(m.n===1?'it':'them')+' if the answer is truly missing) and paste the data again.')});
   if(mk.length)bits.push('Treated as missing: '+mk.map(k=>escHTML(k)+' ('+n.missing[k]+')').join(', ')+'. These cells held a code such as NA, N/A or a full stop.');
   if(n.padded)bits.push(n.padded+' row'+(n.padded===1?' was':'s were')+' shorter than the header row; the missing cells at the end were left empty.');
   if(n.dropped)bits.push('<b>'+n.dropped+' row'+(n.dropped===1?' has':'s have')+' more cells than the header row and '+(n.dropped===1?'was':'were')+' left out.</b> A comma inside a value usually causes this; put such values in double quotes.');
@@ -15064,7 +15073,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.28a';
+const APP_BUILD='2026.10.28b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -15311,7 +15320,7 @@ function slScoreRun(){
   const mean=valid.reduce((a,b)=>a+b,0)/valid.length,sd=valid.length>1?Math.sqrt(valid.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(valid.length-1)):0;
   document.getElementById('statsPaste').value=pdCsv(newHeaders,newRows);
   window._pdMsg=null;statsParse();
-  out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'')+(mapped?' '+mapped+' answers written as words were turned into codes ('+escHTML(coding.label)+').':'')+escHTML(unkTxt);
+  out.innerHTML='Added <b>'+escHTML(cT)+'</b>'+(cB?' and <b>'+escHTML(cB)+'</b>':'')+' to your data. Scored '+valid.length+' of '+data.rows.length+' rows (M = '+mean.toFixed(2)+', SD = '+sd.toFixed(2)+')'+(al&&isFinite(al.alpha)?'. Cronbach\'s alpha in your sample: '+al.alpha.toFixed(2).replace(/^(-?)0\./,'$1.'):'')+'.'+(data.rows.length-valid.length?' '+(data.rows.length-valid.length)+' rows were left blank because an answer was missing or outside the allowed codes.':'')+(mapped?' '+mapped+' answers written as words were turned into codes ('+escHTML(coding.label)+').':'')+escHTML(unkTxt)+(cB?'<br><i>'+escHTML(cB)+' uses the published score ranges for this scale. They describe a score; they are not a diagnosis, and they were not set for your population.</i>':'');
 }
 
 /* ============ Reading shelf (item 55, first version) ============
@@ -15658,20 +15667,23 @@ function statsFieldsRender(){
   html+='</div>';
   box.innerHTML=html;
 }
+/* Strict number reading: '12a' or '1O' is not read as 12 (register v6, TST-007). */
+function statsNum(v){const s=String(v==null?'':v).trim();return /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s)?Number(s):NaN}
 function statsColVals(idx,numeric){
   const d=window._statsData;
   const raw=d.rows.map(r=>r[idx]).filter(v=>v!==undefined&&v!=='');
+  window._statsEmpty=Math.max(window._statsEmpty||0,d.rows.length-raw.length);
   if(!numeric)return raw;
-  const out=raw.map(v=>parseFloat(v)).filter(x=>isFinite(x));
+  const out=raw.map(v=>statsNum(v)).filter(x=>isFinite(x));
   window._statsSkipped=(window._statsSkipped||0)+(raw.length-out.length);
   return out;
 }
 function statsGroupBy(dvIdx,ivIdx){
-  const d=window._statsData,groups={};
+  const d=window._statsData,groups={};let em=0;
   d.rows.forEach(r=>{
     const g=r[ivIdx],v=r[dvIdx];
-    if(g===undefined||g===''||v===undefined||v==='')return;
-    const x=parseFloat(v);
+    if(g===undefined||g===''||v===undefined||v===''){em++;window._statsEmptyG=Math.max(window._statsEmptyG||0,em);return}
+    const x=statsNum(v);
     if(!isFinite(x)){window._statsSkipped=(window._statsSkipped||0)+1;return}
     (groups[g]=groups[g]||[]).push(x);
   });
@@ -15820,6 +15832,8 @@ function statsResultsShow(html,apa){
   }
   html+=stkAssumpFor(document.getElementById('statsTest').value);
   try{window._statsRun=rtCapture()}catch(e){window._statsRun=null}
+  {const em=Math.max(window._statsEmpty||0,window._statsEmptyG||0);if(em)html+='<p class="desc"><b>Missing data:</b> '+em+' row'+(em===1?' has':'s have')+' an empty cell in the columns used, so '+(em===1?'it was':'they were')+' left out of this test (complete cases only). Your data file is not changed. Say this in your Methods, and record how you handled missing data in step D3.</p>'}
+  {const ps=[];String(apa).replace(/p (=|<) (\.\d+)/g,(m,op,v)=>{ps.push(parseFloat('0'+v));return m});if(ps.length)html+='<p class="desc">'+(ps.some(x=>x>=0.05)?'A p-value of .05 or above does not show that there is no effect or no difference. It means these data cannot tell the effect apart from chance; the confidence interval shows which effects are still compatible with the data. ':'')+'A p-value is not the chance that a hypothesis is true, and it does not give the size of an effect. Read it together with the effect size and its interval (ASA statement on p-values, 2016).</p>'}
   if(window._statsSkipped)html+='<p class="desc">'+window._statsSkipped+' entr'+(window._statsSkipped===1?'y that is':'ies that are')+' not a number '+(window._statsSkipped===1?'was':'were')+' left out.</p>';
   document.getElementById('statsResults').innerHTML=
     '<h3 style="margin-top:0">Results</h3>'+html+
@@ -16472,7 +16486,8 @@ function statsRun(){
 function statsRunNow(){
   if(!window._statsData){showToast('Parse your data first');return}
   actLog('stat');
-  window._statsSkipped=0;
+  window._statsSkipped=0;window._statsEmpty=0;window._statsEmptyG=0;
+  try{document.getElementById('statsResults').innerHTML=''}catch(e){}
   const key=document.getElementById('statsTest').value;
   const gv=id=>{const el=document.getElementById('sf_'+id);return el?el.value:''};
   const d=window._statsData;
@@ -16527,7 +16542,7 @@ function statsRunNow(){
 
     }else if(key==='ttestPaired'){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[statsNum(p[0]),statsNum(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       if(pairs.length<2){showToast('Need at least 2 complete pairs');return}
       const diffs=pairs.map(p=>p[0]-p[1]),n=diffs.length,md=smean(diffs),sdv=ssd(diffs),df=n-1;
       if(!(sdv>0)){showToast('Every pair has exactly the same difference, so there is no spread and the paired t-test cannot be calculated.');return}
@@ -16587,7 +16602,7 @@ function statsRunNow(){
 
     }else if(key==='regression'){
       const i1=parseInt(gv('iv'),10),i2=parseInt(gv('dv'),10),xName=d.cols[i1].name,yName=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[statsNum(p[0]),statsNum(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       const n=pairs.length;
       if(n<3){showToast('Need at least 3 complete pairs');return}
       const xs=pairs.map(p=>p[0]),ys=pairs.map(p=>p[1]),mx=smean(xs),my=smean(ys);
@@ -16634,7 +16649,7 @@ function statsRunNow(){
 
     }else if(key==='wilcoxon'){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[statsNum(p[0]),statsNum(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       const diffs=pairs.map(p=>p[0]-p[1]).filter(x=>x!==0);
       const n=diffs.length;
       if(n<2){showToast('Need at least 2 non-zero paired differences');return}
@@ -16657,7 +16672,7 @@ function statsRunNow(){
 
     }else if(key==='pearson'){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[parseFloat(p[0]),parseFloat(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p=>p[0]!==undefined&&p[0]!==''&&p[1]!==undefined&&p[1]!=='').map(p=>[statsNum(p[0]),statsNum(p[1])]).filter(p=>{const ok=isFinite(p[0])&&isFinite(p[1]);if(!ok)window._statsSkipped=(window._statsSkipped||0)+1;return ok});
       const n=pairs.length;
       if(n<3){showToast('Need at least 3 complete pairs');return}
       const xs=pairs.map(p=>p[0]),ys=pairs.map(p=>p[1]),mx=smean(xs),my=smean(ys);
@@ -16889,7 +16904,7 @@ function statsRunNow(){
       const yI=parseInt(gv('dv'),10),xI=parseInt(gv('x'),10),wI=parseInt(gv('w'),10);
       if(new Set([yI,xI,wI]).size<3){showToast('Choose three different columns for Y, X and W');return}
       const yN=d.cols[yI].name,xN=d.cols[xI].name,wN=d.cols[wI].name,X0=[],W0=[],Y0=[];let dropped=0;
-      d.rows.forEach(r=>{const a=parseFloat(r[xI]),b=parseFloat(r[wI]),c=parseFloat(r[yI]);if([r[xI],r[wI],r[yI]].some(v=>v===''||v===undefined)||![a,b,c].every(isFinite)){dropped++;return}X0.push(a);W0.push(b);Y0.push(c)});
+      d.rows.forEach(r=>{const a=statsNum(r[xI]),b=statsNum(r[wI]),c=statsNum(r[yI]);if([r[xI],r[wI],r[yI]].some(v=>v===''||v===undefined)||![a,b,c].every(isFinite)){dropped++;return}X0.push(a);W0.push(b);Y0.push(c)});
       window._statsSkipped=(window._statsSkipped||0)+dropped;
       const n=Y0.length;
       if(n<10){showToast('Need at least 10 people with all three values; there are '+n);return}
@@ -16937,7 +16952,7 @@ function statsRunNow(){
       const xI=parseInt(gv('x'),10),mI=parseInt(gv('m'),10),yI=parseInt(gv('dv'),10);
       if(new Set([yI,xI,mI]).size<3){showToast('Choose three different columns for X, M and Y');return}
       const xN=d.cols[xI].name,mN=d.cols[mI].name,yN=d.cols[yI].name,X=[],M=[],Y=[];let dropped=0;
-      d.rows.forEach(r=>{const a=parseFloat(r[xI]),b=parseFloat(r[mI]),c=parseFloat(r[yI]);if([r[xI],r[mI],r[yI]].some(v=>v===''||v===undefined)||![a,b,c].every(isFinite)){dropped++;return}X.push(a);M.push(b);Y.push(c)});
+      d.rows.forEach(r=>{const a=statsNum(r[xI]),b=statsNum(r[mI]),c=statsNum(r[yI]);if([r[xI],r[mI],r[yI]].some(v=>v===''||v===undefined)||![a,b,c].every(isFinite)){dropped++;return}X.push(a);M.push(b);Y.push(c)});
       window._statsSkipped=(window._statsSkipped||0)+dropped;
       const n=Y.length;
       if(n<20){showToast('Need at least 20 people with all three values; there are '+n+'. A bootstrap interval needs more, ideally 100 or more.');return}
@@ -17050,7 +17065,7 @@ function statsRunNow(){
 
     }else if(key==='spearman'){
       const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1name=d.cols[i1].name,n2name=d.cols[i2].name;
-      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p2=>p2[0]!==undefined&&p2[0]!==''&&p2[1]!==undefined&&p2[1]!=='').map(p2=>[parseFloat(p2[0]),parseFloat(p2[1])]).filter(p2=>isFinite(p2[0])&&isFinite(p2[1]));
+      const pairs=d.rows.map(r=>[r[i1],r[i2]]).filter(p2=>p2[0]!==undefined&&p2[0]!==''&&p2[1]!==undefined&&p2[1]!=='').map(p2=>[statsNum(p2[0]),statsNum(p2[1])]).filter(p2=>isFinite(p2[0])&&isFinite(p2[1]));
       if(pairs.length<5){showToast('Need at least 5 complete pairs');return}
       const sp=stkSpearman(pairs.map(p2=>p2[0]),pairs.map(p2=>p2[1])),r=sp.rho;
       if(!isFinite(r)){showToast('One of the variables has the same value in every row, so there is nothing to correlate');return}
@@ -17115,7 +17130,7 @@ function statsRunNow(){
       if(idxs.length<3){showToast('Tick at least 3 columns, one for each time point or condition. For two, use the Wilcoxon signed-rank test.');return}
       if(idxs.length>8){showToast('This test handles up to 8 conditions.');return}
       const names=idxs.map(i=>d.cols[i].name),k=idxs.length,X=[];
-      d.rows.forEach(r=>{const row=idxs.map(i=>(r[i]===''||r[i]===undefined)?NaN:parseFloat(r[i]));if(row.every(isFinite))X.push(row);else window._statsSkipped=(window._statsSkipped||0)+1});
+      d.rows.forEach(r=>{const row=idxs.map(i=>(r[i]===''||r[i]===undefined)?NaN:statsNum(r[i]));if(row.every(isFinite))X.push(row);else window._statsSkipped=(window._statsSkipped||0)+1});
       const n=X.length;
       if(n<3){showToast('Need at least 3 people who have a score in every ticked column.');return}
       const RS=new Array(k).fill(0);let tieSum=0;
@@ -17146,7 +17161,7 @@ function statsRunNow(){
       if(idxs.length<3){showToast('Tick at least 3 columns, one for each time point or condition. For two, use the paired t-test.');return}
       if(idxs.length>8){showToast('This test handles up to 8 conditions.');return}
       const names=idxs.map(i=>d.cols[i].name),k=idxs.length,X=[];
-      d.rows.forEach(r=>{const row=idxs.map(i=>(r[i]===''||r[i]===undefined)?NaN:parseFloat(r[i]));if(row.every(isFinite))X.push(row);else window._statsSkipped=(window._statsSkipped||0)+1});
+      d.rows.forEach(r=>{const row=idxs.map(i=>(r[i]===''||r[i]===undefined)?NaN:statsNum(r[i]));if(row.every(isFinite))X.push(row);else window._statsSkipped=(window._statsSkipped||0)+1});
       const n=X.length;
       if(n<3){showToast('Need at least 3 people who have a score in every ticked column.');return}
       if(n<=k){showToast('Need more people than conditions ('+k+' conditions, '+n+' people with complete scores). Sphericity cannot be checked otherwise.');return}
@@ -17200,7 +17215,7 @@ function statsRunNow(){
       if(idxs.length>8){showToast('This test handles up to 8 conditions.');return}
       const names=idxs.map(i=>d.cols[i].name),k=idxs.length,gName=d.cols[gI].name,X=[],gl=[],gi=[];
       d.rows.forEach(r=>{
-        const lab=String(r[gI]===undefined?'':r[gI]).trim(),row=idxs.map(i=>(r[i]===''||r[i]===undefined)?NaN:parseFloat(r[i]));
+        const lab=String(r[gI]===undefined?'':r[gI]).trim(),row=idxs.map(i=>(r[i]===''||r[i]===undefined)?NaN:statsNum(r[i]));
         if(lab!==''&&row.every(isFinite)){let q=gl.indexOf(lab);if(q<0){gl.push(lab);q=gl.length-1}gi.push(q);X.push(row)}else window._statsSkipped=(window._statsSkipped||0)+1});
       const G=gl.length,n=X.length;
       if(G<2){showToast('The grouping variable needs at least 2 groups among the people with complete scores.');return}
@@ -17279,7 +17294,7 @@ function statsRunNow(){
       }
       const X=[];
       d.rows.forEach(r=>{
-        const row=idxs.map(i=>parseFloat(r[i]));
+        const row=idxs.map(i=>statsNum(r[i]));
         if(row.every(v=>isFinite(v))){revIdx.forEach(j=>{row[j]=lo+hi-row[j]});X.push(row)}
       });
       const dropped=d.rows.length-X.length,k=idxs.length;
@@ -17334,14 +17349,16 @@ function pwTestChange(){
   document.getElementById('pwNLbl').textContent=I.nLbl;
   show('pwEffWrap',mode!=='effect');show('pwNWrap',mode!=='n');show('pwPowWrap',mode!=='power');
   show('pwTailWrap',t==='ind'||t==='paired'||t==='one'||t==='corr');show('pwKWrap',t==='anova');show('pwPWrap',t==='regr');show('pwDfWrap',t==='chisq');show('pwDropWrap',mode==='n');
-  if(document.getElementById('pwEffect').dataset.test!==t){document.getElementById('pwEffect').value=I.def;document.getElementById('pwEffect').dataset.test=t}
+  if(document.getElementById('pwEffect').dataset.test!==t){document.getElementById('pwEffect').value='';document.getElementById('pwEffect').placeholder='e.g. '+I.def+' (write the value from your source)';document.getElementById('pwEffect').dataset.test=t}
   document.getElementById('pwHint').textContent=I.hint+' Cohen\'s benchmarks for '+I.sym+' are '+I.conv.map(x=>String(x).replace(/^0\./,'.')).join(', ')+' (small, medium, large). They are a last resort. Better is the smallest effect you would care about, or an effect taken from earlier studies, kept on the cautious side.';
   document.getElementById('pwOut').innerHTML='';
 }
-function pwOpen(){document.getElementById('powerDlg').showModal();pwTestChange()}
+function pwOpen(){const d=document.getElementById('powerDlg');if(!document.getElementById('pwQual')){const b=document.createElement('div');b.id='pwQual';b.className='sub-box';b.style.cssText='display:none;border-color:#b45309;margin:8px 0';const body=d.querySelector('.dlg-body');const h2=body.querySelector('h2,h3');(h2&&h2.nextSibling)?body.insertBefore(b,h2.nextSibling):body.prepend(b)}d.showModal();pwTestChange();pwQualGuard()}
 function pwArt(w){return /^(one|u)/i.test(w)?'a':/^[aeiou]/i.test(w)?'an':'a'}
 function pwNum(id){const v=parseFloat(String(document.getElementById(id).value).replace(',','.').trim());return v}
+function pwQualGuard(){let q=false;try{q=((studyGet().design||{}).type)==='qualitative'}catch(e){}const el=document.getElementById('pwQual');if(el){el.style.display=q?'':'none';el.innerHTML=q?'<b>Your study plan says this is a qualitative study.</b> A power calculation does not apply to interviews or focus groups. Write how you will judge that you have enough data (for example information power or a stopping rule) in the study plan instead. <a href="#" onclick="document.getElementById(\'powerDlg\').close();spOpen();return false">Open the plan →</a>':''}return q}
 function pwRun(){
+  if(pwQualGuard()){document.getElementById('pwOut').innerHTML='';return}
   const t=document.getElementById('pwTest').value,mode=document.getElementById('pwSolve').value,I=PW_INFO[t],out=document.getElementById('pwOut');
   const err=m=>{out.innerHTML='<p class="desc" style="color:var(--danger,#b91c1c)">'+m+'</p>'};
   const alpha=pwNum('pwAlpha'),tails=parseInt(document.getElementById('pwTails').value,10),drop=Math.max(0,pwNum('pwDrop')||0);
@@ -17357,6 +17374,7 @@ function pwRun(){
   const tname=I.name;let html='',sentence='';
   if(mode==='n'){
     spec.effect=pwNum('pwEffect');const target=pwNum('pwPow');
+    if(!String(document.getElementById('pwEffect').value).trim())return err('Still needed: the effect size you expect ('+I.sym+'). Take it from earlier studies on your question, or use the smallest effect that would matter. The calculator does not fill one in for you.');
     if(!(spec.effect>0))return err('The effect size must be above zero.');
     if(t==='corr'&&spec.effect>=0.99)return err('r must be below 1.');
     if(!(target>=0.5&&target<0.9999))return err('Power must be between .50 and .9999 (usually .80).');
@@ -17372,6 +17390,7 @@ function pwRun(){
     if(drop>0){const gN=I.per?(t==='anova'?spec.k:2):1,recG=Math.ceil(n/(1-drop/100)),rec=recG*gN;html+='<p class="desc">With '+drop+'% expected dropout, recruit about <b>'+(I.per?recG+' per group ('+rec+' in total)':rec)+'</b>, so that at least '+total+' complete cases remain.</p>';sentence+=' Allowing for '+drop+'% dropout, the target was '+rec+' participants'+(I.per?' in total':'')+'.'}
   }else if(mode==='power'){
     spec.effect=pwNum('pwEffect');const n=Math.round(pwNum('pwN'));
+    if(!String(document.getElementById('pwEffect').value).trim())return err('Still needed: the effect size you expect ('+I.sym+').');
     if(!(spec.effect>0))return err('The effect size must be above zero.');
     if(t==='corr'&&spec.effect>=0.99)return err('r must be below 1.');
     if(!(n>=3))return err('Give the sample size (3 or more).');
@@ -17389,6 +17408,7 @@ function pwRun(){
   }
   html+='<p class="desc"><b>For your methods section or ethics form:</b></p><div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:10px 12px;font-size:14px" id="pwSentence">'+sentence+'</div>'+
     '<div class="row" style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'pwSentence\').innerText).then(()=>showToast(\'Copied\'))">Copy sentence</button></div>'+
+    '<p class="desc">Method: '+(t==='corr'?'Fisher z approximation':t==='anova'||t==='regr'?'noncentral F distribution':t==='chisq'?'noncentral χ² distribution':'noncentral t distribution')+', '+(I.per?'equal group sizes':'one sample')+', computed by Appuscholar build '+APP_BUILD+'.'+(mode!=='effect'?' Effect size typed by you: '+effTxt(spec.effect)+'. Say where it comes from.':'')+'</p>'+
     '<p class="desc">Power is worked out for one planned test, with the assumptions of that test. A study that plans several tests, a dropout rate you cannot predict, or data that break the assumptions will need a larger sample. A supervisor or statistician should confirm the effect size you chose.</p>';
   if(mode==='n'&&window._pwLast){window._pwLast.sentence=sentence;html+=pwUseHTML()}else window._pwLast=null;
   out.innerHTML=html;
