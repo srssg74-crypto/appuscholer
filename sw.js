@@ -2,7 +2,7 @@
    Same-origin files: network first, so a new upload reaches online students at once; the saved copy
    is used only when the network fails. Library and font files: saved copy first.
    AI providers, paper search and every other site are never touched. */
-const VER = 'appu-v125-2026.10.27f';
+const VER = 'appu-v126-2026.10.28a';
 const SHELL = ['./', './index.html', './form.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const LIBS = [
   'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
