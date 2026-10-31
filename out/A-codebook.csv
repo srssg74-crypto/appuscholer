@@ -1,0 +1,31 @@
+﻿column,section,question,answers and codes
+age,Background,Age (in completed years),a number
+gender,Background,Gender,Woman = 1; Man = 2; Another gender = 3; Prefer not to say = 4
+course,Background,Course and year,free text
+Anaemia_at_34_weeks,Background,Anaemia at 34 weeks,Yes = 1; No = 2
+Haemoglobin_at_34_weeks,Measurements (filled in by the researcher),Haemoglobin at 34 weeks (reading from the instrument or laboratory report),a number
+Parity,Background,Parity,First pregnancy = 1; Second or later = 2
+Age,Background,Age,a number
+Residence,Background,Residence,Urban = 1; Rural = 2
+GAD7_01,Generalized Anxiety Disorder 7-item scale (GAD-7),"Feeling nervous, anxious or on edge","Not at all; Several days; More than half the days; Nearly every day (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+GAD7_02,Generalized Anxiety Disorder 7-item scale (GAD-7),Not being able to stop or control worrying,"Not at all; Several days; More than half the days; Nearly every day (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+GAD7_03,Generalized Anxiety Disorder 7-item scale (GAD-7),Worrying too much about different things,"Not at all; Several days; More than half the days; Nearly every day (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+GAD7_04,Generalized Anxiety Disorder 7-item scale (GAD-7),Trouble relaxing,"Not at all; Several days; More than half the days; Nearly every day (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+GAD7_05,Generalized Anxiety Disorder 7-item scale (GAD-7),Being so restless that it is hard to sit still,"Not at all; Several days; More than half the days; Nearly every day (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+GAD7_06,Generalized Anxiety Disorder 7-item scale (GAD-7),Becoming easily annoyed or irritable,"Not at all; Several days; More than half the days; Nearly every day (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+GAD7_07,Generalized Anxiety Disorder 7-item scale (GAD-7),Feeling afraid as if something awful might happen,"Not at all; Several days; More than half the days; Nearly every day (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+SWLS_01,Satisfaction With Life Scale (SWLS),SWLS statement 1 as copied from the owner page,"Strongly disagree; Disagree; Slightly disagree; Neither agree nor disagree; Slightly agree; Agree; Strongly agree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+SWLS_02,Satisfaction With Life Scale (SWLS),SWLS statement 2 as copied from the owner page,"Strongly disagree; Disagree; Slightly disagree; Neither agree nor disagree; Slightly agree; Agree; Strongly agree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+SWLS_03,Satisfaction With Life Scale (SWLS),SWLS statement 3 as copied from the owner page,"Strongly disagree; Disagree; Slightly disagree; Neither agree nor disagree; Slightly agree; Agree; Strongly agree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+SWLS_04,Satisfaction With Life Scale (SWLS),SWLS statement 4 as copied from the owner page,"Strongly disagree; Disagree; Slightly disagree; Neither agree nor disagree; Slightly agree; Agree; Strongly agree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+SWLS_05,Satisfaction With Life Scale (SWLS),SWLS statement 5 as copied from the owner page,"Strongly disagree; Disagree; Slightly disagree; Neither agree nor disagree; Slightly agree; Agree; Strongly agree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_01,Rosenberg Self-Esteem Scale (RSES),"On the whole, I am satisfied with myself.","Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_02,Rosenberg Self-Esteem Scale (RSES),"At times, I think I am no good at all.","Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_03,Rosenberg Self-Esteem Scale (RSES),I feel that I have a number of good qualities.,"Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_04,Rosenberg Self-Esteem Scale (RSES),I am able to do things as well as most other people.,"Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_05,Rosenberg Self-Esteem Scale (RSES),I feel I do not have much to be proud of.,"Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_06,Rosenberg Self-Esteem Scale (RSES),I certainly feel useless at times.,"Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_07,Rosenberg Self-Esteem Scale (RSES),"I feel that I'm a person of worth, at least on an equal plane with others.","Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_08,Rosenberg Self-Esteem Scale (RSES),I wish I could have more respect for myself.,"Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_09,Rosenberg Self-Esteem Scale (RSES),"All in all, I am inclined to feel that I am a failure.","Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
+RSES_10,Rosenberg Self-Esteem Scale (RSES),I take a positive attitude toward myself.,"Strongly agree; Agree; Disagree; Strongly disagree (score with the Scale library: Statistics Lab, Scale library, Score this scale)"
