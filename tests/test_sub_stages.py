@@ -28,7 +28,7 @@ with sync_playwright() as p:
     ok(J("subState('A4').s")!='na','Not applicable refused without a reason')
     J("subSet('A4',{s:'na',why:'Supervisor already approved feasibility'})")
     ok(J("subState('A4').s")=='na' and J("subCount('idea').done")==1,'Not applicable with reason counts as done')
-    J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in college students'};studySet(o)")
+    J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in college students'};o.write=Object.assign(o.write||{},{A1:{alt:'Social media and loneliness; dropped because access to schools was uncertain.'}});studySet(o)")
     ok(J("subState('A1').auto")==True and J("subState('A1').s")=='dn','A1 auto-detected from the study record')
     pg.screenshot(path='/tmp/claude-0/-home-claude/d540b351-a2df-5fa6-9a88-226a4c6e6a4f/scratchpad/sub-idea.png')
     J("document.getElementById('subDlg').close()")
