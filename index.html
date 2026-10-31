@@ -690,7 +690,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   </div>
 
   <div id="backupNudge" style="display:none;position:fixed;left:16px;bottom:16px;z-index:70;max-width:360px;background:#2b1553;color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px rgba(30,10,70,.4);font-size:13px;line-height:1.5"><div id="backupNudgeText"></div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" onclick="backupExport()" id="backupNudgeYes" style="border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;background:#fbbf24;color:#3b0764;font-family:inherit"></button><button type="button" onclick="backupSnooze()" id="backupNudgeNo" style="border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 12px;cursor:pointer;background:none;color:#fff;font-family:inherit"></button></div></div>
-<div id="selBubble" role="toolbar" aria-label="Selected text"><button type="button" onclick="selFind()" data-i18n="sel_find">🔎 Find papers</button><button type="button" onclick="selCite()" data-i18n="sel_cite">📚 Cite</button><button type="button" onclick="selImprove()" data-i18n="sel_improve">💜 Improve</button></div>
+<div id="selBubble" role="toolbar" aria-label="Selected text"><button type="button" onclick="selFind()" data-i18n="sel_find">🔎 Find papers</button><button type="button" onclick="selCite()" data-i18n="sel_cite">📚 Cite</button><button type="button" onclick="selImprove()" data-i18n="sel_improve">💜 Improve</button><button type="button" onclick="vidMake()" data-i18n="sel_video">🎬 Explain as a video</button></div>
   <div class="dock-tabs" id="dockTabs" role="tablist" aria-label="Side panel">
     <button type="button" class="dock-tab active" id="dockTabTools" role="tab" onclick="dockShow('tools')">Tools</button>
     <button type="button" class="dock-tab" id="dockTabAi" role="tab" onclick="dockShow('ai')"><span data-i18n="dock_ai_tab">✨ AI suggestion</span><span class="dock-dot" id="dockDot" style="display:none"></span></button>
@@ -2336,7 +2336,7 @@ const I18N={
     welcome_step3:'Follow the link, create a key, paste it in, press <b>Save Key</b>.',
     welcome_step4:'Start writing. Press <kbd>Tab</kbd> to accept a suggestion.',
     welcome_warn:"Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.",
-    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', pack_btn:'📦 University rules (packs)', bk_search_btn:'📖 Find a book by title or author', cite_quote_page:'Page(s) of the quote', imp_rb_btn:'⬇ Import from Zotero or Mendeley (.ris, .bib)', bulk_sum:'📥 Add my own reference list (books, articles, websites)', bulk_desc:'Paste the references you already have, one per line: from your notes, a book\'s bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.', bulk_btn:'Check and add to my library', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
+    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', sel_video:'🎬 Explain as a video', pack_btn:'📦 University rules (packs)', bk_search_btn:'📖 Find a book by title or author', cite_quote_page:'Page(s) of the quote', imp_rb_btn:'⬇ Import from Zotero or Mendeley (.ris, .bib)', bulk_sum:'📥 Add my own reference list (books, articles, websites)', bulk_desc:'Paste the references you already have, one per line: from your notes, a book\'s bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.', bulk_btn:'Check and add to my library', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
     login_h2:'🔑 Appuscholar Access',
     login_intro:"This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.",
     login_placeholder:'Paste your access code here', login_unlock_btn:'Unlock',
@@ -2576,7 +2576,7 @@ const I18N={
     welcome_step3:'लिंक पर जाएं, एक कुंजी बनाएं, उसे पेस्ट करें, <b>कुंजी सहेजें</b> दबाएं।',
     welcome_step4:'लिखना शुरू करें। सुझाव स्वीकार करने के लिए <kbd>Tab</kbd> दबाएं।',
     welcome_warn:'Appuscholar मसौदा तैयार करता है और जांचता है — यह आपकी सोच का काम नहीं करता। हर उद्धरण की जांच करें, और जमा करने से पहले अपनी संस्था की AI सहायता नीति देख लें।',
-    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', pack_btn:'📦 University के नियम (पैकेट)', bk_search_btn:'📖 Title या लेखक से किताब खोजें', cite_quote_page:'Quote का page', imp_rb_btn:'⬇ Zotero या Mendeley से import (.ris, .bib)', bulk_sum:'📥 अपनी references की सूची जोड़ें (किताबें, लेख, websites)', bulk_desc:'जो references आपके पास पहले से हैं, उन्हें चिपकाएँ, हर पंक्ति में एक: अपने notes से, किसी किताब की bibliography से, या पुराने assignment से। हर पंक्ति उसके DOI, ISBN या Crossref में title से मिलाई जाती है। जो नहीं मिलती, वह जैसी लिखी थी वैसी रखी जाती है और ⚠ से चिह्नित होती है, ताकि आप उसे जाँच लें।', bulk_btn:'जाँचकर मेरी library में जोड़ें', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
+    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', sel_video:'🎬 Video से समझें', pack_btn:'📦 University के नियम (पैकेट)', bk_search_btn:'📖 Title या लेखक से किताब खोजें', cite_quote_page:'Quote का page', imp_rb_btn:'⬇ Zotero या Mendeley से import (.ris, .bib)', bulk_sum:'📥 अपनी references की सूची जोड़ें (किताबें, लेख, websites)', bulk_desc:'जो references आपके पास पहले से हैं, उन्हें चिपकाएँ, हर पंक्ति में एक: अपने notes से, किसी किताब की bibliography से, या पुराने assignment से। हर पंक्ति उसके DOI, ISBN या Crossref में title से मिलाई जाती है। जो नहीं मिलती, वह जैसी लिखी थी वैसी रखी जाती है और ⚠ से चिह्नित होती है, ताकि आप उसे जाँच लें।', bulk_btn:'जाँचकर मेरी library में जोड़ें', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
     login_h2:'🔑 Appuscholar प्रवेश',
     login_intro:'इस प्रति के लिए एक एक्सेस कोड चाहिए। आपको दिया गया कोड नीचे पेस्ट करें — यह इसी कंप्यूटर पर जांचा जाता है, कुछ भी अपलोड नहीं होता।',
     login_placeholder:'अपना एक्सेस कोड यहाँ पेस्ट करें', login_unlock_btn:'अनलॉक करें',
@@ -7790,6 +7790,7 @@ async function callAIRaw(prompt,opts){
    the model and the kind of help. The text sent and the answer are never stored. The statement
    generator turns the log into a disclosure the student can paste into coursework or a manuscript. */
 const AIU_KEY='appu_ailog',AIU_RULES=[
+ [/^Turn the passage below into a short classroom explanation/,'a classroom-style explanation of a passage I selected','explain'],
  [/^Continue this writing/,'continuing my draft','text'],
  [/^Improve this text/,'grammar and polish','text'],
  [/^Expand this text/,'expanding my text','text'],
@@ -14222,6 +14223,52 @@ function apLibLecture(b){
   h+='<p style="font-size:11px;color:var(--muted)">'+(m.fromPaper?(hi?'यह lecture practice paper वाली walk-through का हिस्सा भी है।':'This lecture is also part of the practice-paper walk-through.'):'')+'</p>';
   b.innerHTML=h;apLibMark(m.k);setTimeout(apLesStageStart,0)}
 function apLibPick(k){if(!AP_LIBMAP[k])return;clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();AP.les.lib=k;AP.les.sc=0;AP.les.ask=null;AP.les.cpos=null;apLibRender();const d=document.getElementById('libDlg');if(d){const t=d.querySelector('#libTitle');if(t&&t.scrollIntoView)try{t.scrollIntoView({block:'start'})}catch(e){}}AP.thFromLib=1;apThOpen()}
+/* ============ "Explain as a video" (build 2026.10.29b) ============
+   The student selects lines in the document and presses 🎬. The AI turns only those lines into a short
+   classroom scene (6–10 slides, English and Hindi) following the lecture rules; the app checks the result
+   (shape, length, numbers that were not in the selected text), adds its own closing slide, and plays it in
+   the lecture theatre, which speaks with the natural voice when one is set up. Kept on this device. */
+const VID_KEY='appu_myvids';
+function vidList(){try{const a=JSON.parse(LS.get(VID_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function vidRegister(v){if(AP_LIBMAP['lib_'+v.id])return;if(!AP_LIBGROUPS.some(g=>g.g==='mine'))AP_LIBGROUPS.unshift({g:'mine',t:'My explanations',tH:'मेरी व्याख्याएँ'});
+  apLibAdd({id:v.id,group:'mine',title:v.title,titleH:v.titleH||v.title,teacher:'raj',slides:v.slides,quiz:v.quiz||[]})}
+function vidPrompt(src){return'Turn the passage below into a short classroom explanation, played as a scene in a lecture hall. Professor Raj teaches; students Tara, Dev and Appu ask what a real student would ask.\n'+
+'Rules:\n1. Use ONLY what the passage says. Do not add facts, studies, names, dates or numbers that are not in the passage. If the passage is too short or unclear to explain, return {"cannot":"<one sentence why>"}.\n'+
+'2. Every technical term is explained in plain words before it is used, then restated starting "In simple words".\n3. One idea per slide. Short, complete, spoken sentences.\n4. At least one slide where the professor asks the class a question and answers it on the next slide.\n5. One or two slides where a student asks a doubt and the professor answers.\n6. The last slide is a two-line recap.\n'+
+'7. Board text: at most 2 lines, each at most 40 characters.\n8. Hindi: natural spoken Hindi as a teacher in Jaipur speaks, written from the meaning, never word for word. Keep technical terms in English (p-value, sample, test). Use आप for the class and तुम for one student.\n9. Every number you use must appear in the passage exactly.\n'+
+'Return ONLY JSON, no other text: {"title":"<5-8 words>","titleH":"<Hindi>","slides":[{"who":"raj|tara|dev|appu","board":["line1","line2"],"boardH":["line1","line2"],"say":"<English, under 60 words>","sayH":"<Hindi, under 60 words>"}]} with 6 to 10 slides.\n\nPassage:\n"""\n'+src+'\n"""'}
+function vidParse(txt){let s=String(txt||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'');const i=s.indexOf('{'),j=s.lastIndexOf('}');if(i<0||j<i)return null;try{return JSON.parse(s.slice(i,j+1))}catch(e){return null}}
+function vidNums(t){return(String(t||'').match(/\d+(?:[.,]\d+)*/g)||[]).map(x=>x.replace(/,/g,''))}
+function vidCheck(o,src){const out={ok:false,why:'',slides:[],flags:[]};if(!o){out.why='The AI did not return a usable answer.';return out}
+  if(o.cannot){out.why=String(o.cannot).slice(0,200);return out}
+  const raw=Array.isArray(o.slides)?o.slides:[];if(raw.length<4){out.why='Too few slides came back.';return out}
+  const srcNums=new Set(vidNums(src)),cut=(a,n)=>(Array.isArray(a)?a:[a]).filter(Boolean).slice(0,2).map(x=>String(x).replace(/\s+/g,' ').trim().slice(0,n));
+  raw.slice(0,12).forEach((s,i)=>{const who=/^(raj|tara|dev|appu)$/.test(s.who)?s.who:'raj',say=String(s.say||'').trim().slice(0,500),sayH=String(s.sayH||'').trim().slice(0,500);if(!say)return;
+    const bad=vidNums(say+' '+(s.board||[]).join(' ')).filter(n=>!srcNums.has(n)&&!/^[0-9]$/.test(n));if(bad.length)out.flags.push({i:out.slides.length+1,n:bad});
+    const sl={t:'My explanation',tH:'मेरी व्याख्या',who:who,board:cut(s.board,44),boardH:cut(s.boardH&&s.boardH.length?s.boardH:s.board,44),say:say,sayH:sayH||say};
+    if(who==='raj'){sl.a='think';sl.r='point'}else{sl.cast=[who];sl.cm=1;sl.e={[who]:'smile'}}
+    out.slides.push(sl)});
+  if(out.slides.length<4){out.why='Too few usable slides came back.';return out}
+  out.ok=true;return out}
+function vidClosing(){return{t:'Check it',tH:'जाँच लें',who:'raj',board:['Made by AI from your lines','Check it with your source'],boardH:['आपकी पंक्तियों से AI ने बनाया','अपने स्रोत से मिला लें'],
+  say:'This explanation was made by AI from the lines you selected. Read those lines again, and check anything important with the original source or your supervisor before you rely on it.',
+  sayH:'यह व्याख्या AI ने आपकी चुनी हुई पंक्तियों से बनाई है। उन पंक्तियों को फिर से पढ़िए, और कोई भी ज़रूरी बात भरोसा करने से पहले मूल स्रोत या अपने supervisor से मिला लीजिए।',a:'think',r:'point'}}
+async function vidMake(){const hi=getLang()==='hi',src=(typeof selText2==='function'?selText2():'')||String(window.getSelection()||'').replace(/\s+/g,' ').trim();selHide&&selHide();
+  if(src.length<40){showToast(hi?'कम से कम एक-दो पूरी पंक्तियाँ चुनें':'Select at least a sentence or two');return}
+  showToast(hi?'🎬 Video बन रहा है… (आधा मिनट तक)':'🎬 Making your explanation… (up to half a minute)');
+  let res=null,last='';
+  for(let k=0;k<2&&(k===0||(res&&res.ok&&res.flags.length));k++){
+    let txt='';try{txt=await callAI(vidPrompt(src)+(k&&res&&res.flags.length?'\n\nYour last answer used numbers that are not in the passage ('+res.flags.map(f=>f.n.join(', ')).join('; ')+'). Use only numbers from the passage.':''),{temp:0.4,max:4000,noLang:true})}catch(e){showToast(apiMsg(e));return}
+    last=txt;res=vidCheck(vidParse(txt),src)}
+  if(!res.ok){showToast((hi?'Video नहीं बन पाया: ':'Could not make the explanation: ')+res.why);return}
+  const slides=res.slides.concat([vidClosing()]);
+  if(res.flags.length)slides[0].board=['⚠ '+(hi?'कुछ संख्याएँ आपके text में नहीं':'Some numbers are not in your text'),slides[0].board[0]||''];
+  const o=vidParse(last)||{},v={id:'mine-'+Date.now().toString(36),title:String(o.title||src.slice(0,50)).slice(0,80),titleH:String(o.titleH||o.title||src.slice(0,50)).slice(0,80),slides:slides,src:src.slice(0,300),flags:res.flags,at:new Date().toISOString(),build:APP_BUILD};
+  const l=vidList();l.unshift(v);while(l.length>20)l.pop();try{LS.set(VID_KEY,JSON.stringify(l))}catch(e){}
+  vidRegister(v);try{apLibOpen();apLibPick('lib_'+v.id)}catch(e){}
+  if(res.flags.length)showToast(hi?'⚠ इस व्याख्या में कुछ संख्याएँ आपके text में नहीं थीं। उन slides को ध्यान से जाँचें।':'⚠ This explanation used numbers that are not in your text. Check those slides carefully.')}
+function vidDel(id){LS.set(VID_KEY,JSON.stringify(vidList().filter(v=>v.id!==id)))}
+setTimeout(()=>{try{vidList().slice().reverse().forEach(vidRegister)}catch(e){console.warn('vid',e)}},0);
 function apLibBack(){clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();AP.les.lib=null;AP.les.cpos=null;apLibRender()}
 
 /* ---- Voices (Version 54): the browser's own read-aloud. Nothing is sent anywhere. ---- */
@@ -15551,7 +15598,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.29a';
+const APP_BUILD='2026.10.29b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
