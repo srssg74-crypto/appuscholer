@@ -1,0 +1,95 @@
+"""B1 review type, B4 quality notes, C7 analysis plan, D1 pilot, F2 reporting checklists."""
+import sys, os, json
+sys.path.insert(0, os.path.dirname(__file__))
+from harness import new_page
+from playwright.sync_api import sync_playwright
+fails=[]
+def ok(c,m):
+    print(('PASS ' if c else 'FAIL ')+m)
+    if not c: fails.append(m)
+S='/tmp/claude-0/-home-claude/d540b351-a2df-5fa6-9a88-226a4c6e6a4f/scratchpad/'
+with sync_playwright() as p:
+    errors=[]
+    b,pg=new_page(p,errors)
+    J=lambda js: pg.evaluate(js)
+    pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
+    J("window.confirm=()=>true")
+    J("openSaveAsProject();document.getElementById('sapName').value='Five steps';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
+    J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety'};o.design={type:'correlational',pop:'First-year students',vars:[{name:'Sleep hours',role:'predictor'},{name:'Exam anxiety',role:'outcome'}],hyp:'H1: Fewer sleep hours go with higher exam anxiety.\\nH2: The link is stronger in hostel students.'};studySet(o)")
+    for s in ['B1','B4','C7','D1','F2']:
+        ok(J("subState('%s').s"%s)=='ns','%s not started at first'%s)
+    # B1 narrative
+    J("subOpen('lit','B1')"); pg.wait_for_timeout(200)
+    ok(J("!!document.querySelector('#subMain select')"),'B1 form shown')
+    J("wPick('B1','type','narr');wPatch('B1','why','Thesis chapter; one student, six months, broad question.')")
+    ok(J("subState('B1').s")=='dn','B1 done for a narrative review with a reason')
+    # B1 systematic needs protocol and consistent flow
+    J("wPick('B1','type','sys')")
+    ok(J("subState('B1').s")=='ns','B1 systematic needs a protocol')
+    J("wPatch('B1','crit','Adults 18+, any sleep measure, any anxiety scale, English or Hindi.');wPatch('B1','db','PubMed, PsycINFO');wPick('B1','reg','prospero');wPatch('B1','regId','CRD42026000000')")
+    ok(J("subState('B1').s")=='dn','B1 systematic done with criteria, databases, registration')
+    for k,v in [('id',500),('dup',100),('scr',390)]: J("wNestRedraw('B1','n','%s','%s')"%(k,v))
+    ok(J("b1FlowIssues(studyGet()).length")==1 and J("subState('B1').s")=='ns','PRISMA numbers that do not add up are flagged')
+    J("wNestRedraw('B1','n','scr','400')")
+    ok(J("b1FlowIssues(studyGet()).length")==0,'PRISMA numbers fixed')
+    J("wPick('B1','type','scop')")
+    ok('PROSPERO (systematic' not in J("document.getElementById('subMain').innerHTML"),'PROSPERO not offered for a scoping review')
+    J("wPick('B1','type','sys')")
+    # B4
+    J("subOpen('lit','B4')"); pg.wait_for_timeout(200)
+    ok(J("document.querySelectorAll('#subMain .log-tbl').length")==1,'B4 quality table shown')
+    J("logAdd('quality');logCell('quality',0,'paper','Rao (2020)');logCell('quality',0,'str','Large sample');logCell('quality',0,'ret','Checked: not retracted')")
+    ok(J("subState('B4').s")=='ns','B4 systematic needs tool and judgement')
+    J("logCell('quality',0,'tool','JBI checklist');logCell('quality',0,'judge','Some concerns')")
+    ok(J("subState('B4').s")=='dn','B4 done with tool, judgement and retraction check')
+    J("logAdd('quality');logCell('quality',1,'paper','Lee (2019)');logCell('quality',1,'weak','Self-report only');logCell('quality',1,'tool','AXIS');logCell('quality',1,'judge','High risk')")
+    ok(J("subState('B4').s")=='ns','an unchecked retraction keeps B4 open')
+    J("logCell('quality',1,'ret','Retracted')")
+    ok(J("subState('B4').s")=='dn','a retracted paper may stay if it is marked')
+    # C7
+    J("subOpen('design','C7')"); pg.wait_for_timeout(200)
+    J("c7FromHyp()"); pg.wait_for_timeout(100)
+    ok(J("logRows(studyGet(),'aplan').length")==2,'two rows from two hypotheses')
+    ok(J("subState('C7').s")=='ns','C7 not done until each row is complete')
+    for i in [0,1]:
+        J("logCell('aplan',%d,'dv','Exam anxiety (GAD-7)');logCell('aplan',%d,'test','Pearson r');logCell('aplan',%d,'es','r');logCell('aplan',%d,'miss','Complete cases')"%(i,i,i,i))
+    ok(J("subState('C7').s")=='dn','C7 done with one complete main analysis per hypothesis')
+    J("logAdd('aplan');logCell('aplan',2,'h','H1: Fewer sleep hours go with higher exam anxiety.');logCell('aplan',2,'kind','Main')")
+    ok(J("subState('C7').s")=='ns','two main analyses for one hypothesis are flagged')
+    J("logCell('aplan',2,'kind','Exploratory')")
+    ok(J("subState('C7').s")=='dn','second analysis marked exploratory is fine')
+    # D1
+    J("subOpen('collect','D1')"); pg.wait_for_timeout(200)
+    J("wNest('D1','aims','words',true);wPatch('D1','n','8');wPick('D1','keep','merge');wPatch('D1','found','Item 7 unclear; took 14 minutes.');wPatch('D1','changed','Reworded item 7.')")
+    ok(J("subState('D1').s")=='ns','merging pilot data needs the protocol place')
+    J("wPick('D1','keep','sep')")
+    ok(J("subState('D1').s")=='dn','D1 done with aims, size, data plan, findings, changes')
+    J("wPick('D1','none',true)")
+    ok(J("subState('D1').s")=='ns','no pilot needs a reason')
+    J("wPatch('D1','noneWhy','Published Hindi scale used unchanged in the same population.')")
+    ok(J("subState('D1').s")=='dn','no pilot with a reason is done')
+    # F2
+    J("subOpen('review','F2')"); pg.wait_for_timeout(200)
+    ok(J("f2Suggest(studyGet())")=='prisma','PRISMA suggested after a systematic review in B1')
+    ok(J("F2_LISTS.strobe.items.length")==22 and J("F2_LISTS.consort.items.length")==42 and J("F2_LISTS.prisma.items.length")==27,'STROBE 22, CONSORT 2025 30 items (42 rows), PRISMA 27')
+    J("wPick('F2','list','strobe')")
+    ok(J("document.querySelectorAll('#subMain select').length")>=23,'STROBE items listed')
+    J("F2_LISTS.strobe.items.forEach((x,i)=>{f2Item('strobe:'+x[0],'st',i==21?'na':'yes');f2Item('strobe:'+x[0],'where','p. '+(i+1))})")
+    ok(J("subState('F2').s")=='dn','F2 done when every item is reported or not applicable')
+    J("f2Item('strobe:5','where','')")
+    ok(J("subState('F2').s")=='ns','reported item without a place is not enough')
+    J("f2Item('strobe:5','where','Methods')")
+    J("wPick('F2','list','prisma')")
+    ok(J("subState('F2').s")=='ns','switching list starts that list fresh')
+    J("wPick('F2','list','strobe')")
+    ok(J("subState('F2').s")=='dn','STROBE answers kept after switching back')
+    n0=J("docsStudy().length"); J("f2Doc()"); pg.wait_for_timeout(200)
+    ok(J("docsStudy().length")==n0+1 and 'Generalisability' in J("getEditorHTML()"),'checklist made as a document')
+    J("subOpen('review','F2')"); pg.wait_for_timeout(200)
+    pg.screenshot(path=S+'f2.png')
+    J("SUB_CUR.id='B1';subRender()"); pg.wait_for_timeout(200)
+    ok(J("subCount('lit').done")>=2,'stage strip counts the new steps')
+    errs=[e for e in errors if e[0]=='pageerror']
+    ok(not errs,'no page errors '+json.dumps(errs[:3]))
+    b.close()
+print('FAILED %d'%len(fails) if fails else 'ALL PASS')
