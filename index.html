@@ -3068,6 +3068,9 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'C5':return wTransOk(o);
     case'D6':return wInterpOk(o)&&!wCausalFlags(o).length;
     case'E8':return !!wGet(o).aiu;
+    case'C8':return c8Ok(o);
+    case'F4':return f4Ok(o);
+    case'F7':return f7Ok(o);
     case'B6':return !!String(g.text||'').trim();
     case'C1':return !!ds.type;
     case'C2':return !!String(ds.pop||'').trim();
@@ -3352,7 +3355,82 @@ function wB5Note(k,v){const o=studyGet();o.write=o.write||{};const b=o.write.B5=
 function wB7Con(i,k,v){const o=studyGet();o.write=o.write||{};const f=o.write.B7=o.write.B7||{};f.cons=(f.cons&&f.cons.length?f.cons:[{name:''},{name:''}]).slice();while(f.cons.length<=i)f.cons.push({name:''});f.cons[i]=Object.assign({},f.cons[i],{[k]:v});studySet(o);wRedraw()}
 function wC5Step(k,v){const o=studyGet();o.write=o.write||{};const c=o.write.C5=o.write.C5||{};c.steps=Object.assign({},c.steps||{},{[k]:v});studySet(o);subRenderSide()}
 
-function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=wExtraHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
+/* ============ C8 synopsis and protocol, F4 submission, F7 closure (build 2026.10.27e) ============
+   The synopsis follows the common core found across Indian university formats (checked 27 Oct 2026:
+   title, introduction and rationale, review and gap, objectives, hypotheses, method with sample, tools,
+   procedure and statistical analysis, ethics, chapterisation, references; APA). Each piece is made as a
+   separate document in the same study, so the main paper is never overwritten. */
+function docCreateWith(title,html){try{docSaveBody(getEditorHTML())}catch(e){}
+  const all=docsGet(),d={id:'d'+Date.now()+Math.random().toString(36).slice(2,6),title:title,body:'',updated:Date.now()};if(docPid())d.pid=docPid();
+  all.push(d);docsSet(all);docSetCurrent(d.id);setEditorHTML(html);lastSaved='';try{docSaveBody(getEditorHTML());lastSaved=getEditorHTML()}catch(e){}try{upd()}catch(e){}docRenderList();return d.id}
+function synFront(o){return((wGet(o).C8)||{}).front||{}}
+function synBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},ds=o.design||{},w=wGet(o),f=synFront(o);
+  if(!String(d.topic||'').trim()){showToast(hi?'पहले Stage A में research question लिखें':'Write the research question in Stage A first');return}
+  const ph=t=>'<span class="draft-ph" style="background:#fff4c2">['+escHTML(t)+']</span>',P=t=>'<p>'+t+'</p>',e=escHTML;
+  const vars=(ds.vars||[]).filter(v=>v.name),hyp=String(ds.hyp||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  let scl=[];try{scl=SCALES}catch(x){}
+  const th=wThemes(o),notes=((w.B5||{}).notes)||{},prob=String((w.A2||{}).text||'').trim(),gap=String((o.gap||{}).text||'').trim();
+  let st={};try{st=studySuggestTest()||{}}catch(x){}
+  const h=[];
+  h.push('<div data-synopsis="1" style="text-align:center"><h1>'+e(f.title||d.topic)+'</h1><p>Synopsis submitted for the degree of '+(f.degree?e(f.degree):ph('degree, e.g. Ph.D. in Psychology'))+'</p><p>by<br><b>'+(f.student?e(f.student):ph('student name'))+'</b></p><p>Under the supervision of<br><b>'+(f.sup?e(f.sup):ph('supervisor name, designation'))+'</b></p><p>'+(f.dept?e(f.dept):ph('department'))+'<br>'+(f.univ?e(f.univ):ph('university, city'))+'<br>'+(f.year||new Date().getFullYear())+'</p></div>');
+  h.push('<h2>1. Introduction</h2>'+(prob?prob.split(/\n{2,}/).map(p=>P(e(p))).join(''):P(ph('background of the problem, from wide to narrow: the topic, the field, India, the specific problem'))));
+  h.push('<h2>2. Need and rationale of the study</h2>'+P(gap?e(gap):ph('the research gap and what this study adds')));
+  const tk=Object.keys(th);
+  h.push('<h2>3. Review of literature</h2>'+(tk.length?tk.map(t=>'<h3>'+e(t)+'</h3>'+P(e(notes[t]||''))+'<ul>'+th[t].map(r=>'<li>'+e(r.paper||'')+(r.finding?': '+e(r.finding):'')+'</li>').join('')+'</ul>').join(''):P(ph('review organised by theme; fill the B3 matrix and B5 theme map to draft this'))));
+  h.push('<h2>4. Research question and objectives</h2>'+P('<b>Research question.</b> '+e(d.topic))+P(ph('numbered objectives, one per thing the study will find out')));
+  h.push('<h2>5. Hypotheses</h2>'+(hyp.length?'<ol>'+hyp.map(x=>'<li>'+e(x.replace(/^H\d+[:.]\s*/,''))+'</li>').join('')+'</ol>':P(ph('hypotheses, only for confirmatory studies; write "exploratory study, no hypotheses" otherwise'))));
+  h.push('<h2>6. Methodology</h2><h3>6.1 Research design</h3>'+P(ds.type?e(studyDesignShort(ds.type,true))+'.':ph('research design')));
+  h.push('<h3>6.2 Population, sample and sampling</h3>'+P((ds.pop?e(ds.pop)+'. ':ph('population and setting')+' ')+(ds.sampling?'Sampling: '+e(ds.sampling)+'. ':ph('sampling method')+' ')+(ds.n?'Planned sample size: '+e(String(ds.n))+'. '+(ssComplete(ds)?e(ssDraftText(ds)):ph('how the sample size was decided')):ph('sample size and how it was decided'))));
+  h.push('<h3>6.3 Variables and tools</h3>'+(vars.length?'<ul>'+vars.map(v=>{const x=v.scale&&v.scale!=='own'&&v.scale!=='instr'?scl.find(s=>s.id===v.scale):null;return'<li><b>'+e(v.name)+'</b> ('+e(studyRoleLabel(v.role))+'): '+(x?e(x.name+' ('+x.short+')'):v.scale==='instr'?'instrument or laboratory method (brand, model, calibration to be stated)':v.scale==='own'?'questions developed for this study':ph('tool'))+'</li>'}).join('')+'</ul>':P(ph('variables and the tools that measure them'))));
+  h.push('<h3>6.4 Procedure</h3>'+P(ph('step by step: permissions, consent, how and where data will be collected, time per participant')));
+  h.push('<h3>6.5 Statistical analysis</h3>'+P((st&&st.name?'The main analysis planned is '+e(st.name)+'. ':'')+ph('tests for each hypothesis, effect sizes, software')));
+  let eth='';try{eth=ethicsDraftSentence()}catch(x){}
+  h.push('<h2>7. Ethical considerations</h2>'+P((eth?e(eth)+' ':'')+ph('informed consent, confidentiality, voluntary participation, right to withdraw, data storage')));
+  h.push('<h2>8. Tentative chapterisation</h2><ol><li>Introduction</li><li>Review of Literature</li><li>Methodology</li><li>Results</li><li>Discussion</li><li>Summary and Conclusion</li></ol>');
+  h.push('<h2>9. Time plan</h2>'+P(ph('months for review, tool preparation, ethics approval, data collection, analysis, writing')));
+  h.push('<h2>References</h2>'+P(ph('APA 7th edition; insert the reference list from the Citation Manager')));
+  const id=docCreateWith('Synopsis: '+String(f.title||d.topic).slice(0,60),h.join(''));
+  const o2=studyGet();o2.write=o2.write||{};o2.write.C8=Object.assign({},o2.write.C8||{},{syn:id,synAt:Date.now()});studySet(o2);
+  try{document.getElementById('subDlg').close()}catch(x){}
+  showToast(hi?'Synopsis नए document में बना। पीले [ ] वाली जगहें भरें ✓':'Synopsis made in a new document. Fill the yellow [ ] gaps ✓')}
+function protoBuildDoc(){const hi=studyHi();try{protoOpen()}catch(e){try{document.getElementById('protoDlg').showModal();protoLoad()}catch(x){}}
+  try{document.getElementById('subDlg').close()}catch(e){}}
+/* F4: thesis checklist and journal choice */
+const F4_THESIS=[['decl','Candidate\'s declaration','Candidate का declaration'],['cert','Supervisor\'s certificate of originality','Supervisor का originality certificate'],['plag','No-plagiarism undertaking and similarity report (UGC PhD Regulations 2022, cl. 11(3)–(4))','Plagiarism न होने का undertaking और similarity report (UGC PhD Regulations 2022, cl. 11(3)–(4))'],['eth','Copy of the ethics approval or exemption','Ethics approval या exemption की copy'],['forms','University forms and fees','University के forms और fees']];
+const F4_JOURNAL=[['idx','Indexing checked on the database itself (Scopus, Web of Science), not on the journal\'s website','Indexing database पर ही जाँची (Scopus, Web of Science), journal की website पर नहीं'],['doaj','For open access: listed in DOAJ','Open access हो तो: DOAJ में दर्ज'],['peer','Peer review process described','Peer review की प्रक्रिया लिखी है'],['fee','Fees stated before submission','Fees पहले से बताई गई है'],['board','Editorial board names can be verified','Editorial board के नाम जाँचे जा सकते हैं'],['tcs','Think.Check.Submit. checklist done','Think.Check.Submit. checklist पूरी'],['care','Not relying on the archived UGC-CARE list','पुरानी UGC-CARE list पर भरोसा नहीं किया']];
+SUB_LOGS.F4=[{key:'submit',t:['Submissions','जमा किए गए'],note:['Each submission to the university or a journal, and what came back.','University या journal को हर submission, और क्या जवाब आया।'],
+  cols:[['date','Date','तारीख','date'],['to','Submitted to','किसे','text'],['ver','Version','Version','text'],['st','Decision','फ़ैसला','sel',['Submitted','Revise','Accepted','Rejected','Awarded']],['note','Notes','Notes','text']]},
+ {key:'reviewer',t:['Answers to reviewers','Reviewers को जवाब'],note:['Point by point: the comment, your answer, and where the text changed.','बिंदुवार: टिप्पणी, आपका जवाब, और text कहाँ बदला।'],
+  cols:[['c','Reviewer comment','Reviewer की टिप्पणी','text'],['reply','My answer','मेरा जवाब','text'],['where','Where changed','कहाँ बदला','text']]}];
+function f4Tick(group,k,v){const o=studyGet();o.write=o.write||{};const f=o.write.F4=o.write.F4||{};f[group]=Object.assign({},f[group]||{},{[k]:v});studySet(o);subRenderSide()}
+function f4Ok(o){const f=wGet(o).F4||{},rows=logRows(o,'submit'),all=(g,list)=>list.every(x=>(f[g]||{})[x[0]]);
+  return rows.some(r=>r.st&&String(r.to||'').trim())&&(all('thesis',F4_THESIS)||all('journal',F4_JOURNAL))}
+/* F7: closure */
+function f7Ok(o){const c=wGet(o).F7||{};return !!(c.keep&&c.src&&String(c.where||'').trim()&&(c.closed||c.noEc))}
+function c8Ok(o){const c=wGet(o).C8||{};return !!(c.syn||c.proto)}
+function wExtra2HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>';
+  if(id==='C8'){const c=w.C8||{},f=c.front||{},inp=(k,lab,ph)=>'<label class="desc" style="display:block;margin-top:4px">'+lab+'</label><input type="text" value="'+escAttr(f[k]||'')+'" placeholder="'+escAttr(ph||'')+'" onchange="c8Front(\''+k+'\',this.value)">';
+    return box(c8Ok(o),L('Synopsis or protocol','Synopsis या protocol'),'<p class="desc" style="margin:4px 0">'+L('A synopsis is what most Indian universities ask for at registration (common sections, APA). A protocol is the fuller plan an ethics committee or a trial registry needs. Both are made as new documents in this study; your main paper is not touched.','Synopsis ज़्यादातर Indian universities registration पर माँगती हैं (साझा sections, APA)। Protocol वह पूरी योजना है जो ethics committee या trial registry को चाहिए। दोनों इस study में नए documents के रूप में बनते हैं; आपका मुख्य paper नहीं छुआ जाता।')+'</p>'+
+     inp('title',L('Title (if different from the question)','Title (अगर सवाल से अलग हो)'))+inp('degree',L('Degree','Degree'),'Ph.D. in Psychology')+inp('student',L('Student name','Student का नाम'))+inp('sup',L('Supervisor (name, designation)','Supervisor (नाम, पद)'))+inp('dept',L('Department','Department'))+inp('univ',L('University, city','University, शहर'))+
+     '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="synBuild()">📄 '+L('Make the synopsis','Synopsis बनाएँ')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="protoBuildDoc()">📋 '+L('Protocol for the ethics committee','Ethics committee के लिए protocol')+'</button></div>'+
+     (c.syn?'<p class="desc" style="margin:6px 0 0">'+L('Synopsis made on ','Synopsis बना: ')+new Date(c.synAt).toLocaleDateString()+'. '+L('Fill the yellow [ ] gaps before you submit.','जमा करने से पहले पीली [ ] जगहें भरें।')+'</p>':''))}
+  if(id==='F4'){const f=w.F4||{},ck=(g,list)=>list.map(x=>'<label style="display:block;margin:3px 0;font-size:14px"><input type="checkbox"'+((f[g]||{})[x[0]]?' checked':'')+' onchange="f4Tick(\''+g+'\',\''+x[0]+'\',this.checked)"> '+escHTML(hi?x[2]:x[1])+'</label>').join('');
+    return box(f4Ok(o),L('Submission','जमा करना'),'<p style="margin:8px 0 2px"><b>'+L('Thesis to the university','University को thesis')+'</b></p>'+ck('thesis',F4_THESIS)+'<p style="margin:10px 0 2px"><b>'+L('Choosing a journal','Journal चुनना')+'</b> <span class="desc">'+L('(UGC suggestive parameters, 2025; Think.Check.Submit.)','(UGC के सुझाए मानदंड, 2025; Think.Check.Submit.)')+'</span></p>'+ck('journal',F4_JOURNAL)+'<p class="desc" style="margin:6px 0 0">'+L('Done when one list is complete and a submission is recorded below.','एक list पूरी हो और नीचे एक submission दर्ज हो, तब पूरा।')+'</p>')}
+  if(id==='F7'){const c=w.F7||{},s=k=>escAttr(c[k]||''),ch=(k,v)=>'onchange="f7Set(\''+k+'\','+v+')"';const e=ethicsState(o);
+    return box(f7Ok(o),L('Closure record','समापन का record'),
+     '<label class="desc" style="display:block;margin-top:4px">'+L('How long the data is kept','Data कितने समय रखा जाएगा')+'</label><input type="text" value="'+s('keep')+'" placeholder="'+escAttr(L('e.g. 5 years after the award','जैसे: degree के 5 साल बाद तक'))+'" '+ch('keep','this.value')+'>'+
+     '<label class="desc" style="display:block;margin-top:4px">'+L('Where this period comes from','यह अवधि कहाँ से तय हुई')+'</label><select '+ch('src','this.value')+'><option value=""></option>'+[['consent','The consent form','Consent form'],['ec','The ethics committee\'s conditions','Ethics committee की शर्तें'],['univ','The university\'s rule','University का नियम']].map(x=>'<option value="'+x[0]+'"'+(c.src===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>'+
+     '<label class="desc" style="display:block;margin-top:4px">'+L('Where the data and the key are stored','Data और key कहाँ रखे हैं')+'</label><input type="text" value="'+s('where')+'" '+ch('where','this.value')+'>'+
+     '<label class="desc" style="display:block;margin-top:4px">'+L('Date planned for deletion','मिटाने की तय तारीख')+'</label><input type="date" value="'+s('del')+'" '+ch('del','this.value')+'>'+
+     '<label class="desc" style="display:block;margin-top:4px">'+L('Closure report sent to the ethics committee on','Ethics committee को समापन रिपोर्ट भेजी')+'</label><input type="date" value="'+s('closed')+'" '+ch('closed','this.value')+'>'+
+     ((e.route==='und'||e.route==='none')?'<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox"'+(c.noEc?' checked':'')+' '+ch('noEc','this.checked')+'> '+L('No ethics committee was involved in this study','इस study में कोई ethics committee शामिल नहीं थी')+'</label>':'')+
+     '<label class="desc" style="display:block;margin-top:4px">'+L('Null or unexpected result: share it with the archive?','Null या अनपेक्षित नतीजा: archive में देंगे?')+'</label><select '+ch('nullArch','this.value')+'><option value=""></option>'+[['yes','Yes','हाँ'],['no','No','नहीं'],['na','Not a null result','Null result नहीं']].map(x=>'<option value="'+x[0]+'"'+(c.nullArch===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>')}
+  return''}
+function c8Front(k,v){const o=studyGet();o.write=o.write||{};const c=o.write.C8=o.write.C8||{};c.front=Object.assign({},c.front||{},{[k]:v});studySet(o)}
+function c8MarkProto(){const o=studyGet();o.write=o.write||{};o.write.C8=Object.assign({},o.write.C8||{},{proto:Date.now()});studySet(o)}
+function f7Set(k,v){const o=studyGet();o.write=o.write||{};o.write.F7=Object.assign({},o.write.F7||{},{[k]:v});studySet(o);subRenderSide();const m=document.getElementById('subMain');if(m&&(k==='src'))return}
+
+function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
   if(lg&&!['C3','C4'].includes(id))return lg;
   if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
@@ -7918,7 +7996,8 @@ function protoSave(){
 function protoGenerate(){
   const o=protoRead();
   if(!Object.values(o).some(v=>v)){showToast('Fill in at least one section first');return}
-  const doc='# Research protocol / synopsis\n\n'
+  let eth='';try{eth=ethicsDraftSentence()}catch(e){}
+  const doc='# Research protocol\n\n'
     +'## Background & rationale\n'+(o.bg||'[not filled in]')+'\n\n'
     +'## Objectives & hypotheses\n'+(o.obj||'[not filled in]')+'\n\n'
     +'## Design\n'+(o.design||'[not filled in]')+'\n\n'
@@ -7927,11 +8006,13 @@ function protoGenerate(){
     +'## Procedures\n'+(o.proc||'[not filled in]')+'\n\n'
     +'## Risks & benefits\n'+(o.risk||'[not filled in]')+'\n\n'
     +'## Data management plan\n'+(o.dmp||'[not filled in]')+'\n\n'
+    +'## Ethics review and consent\n'+(eth||'[ethics committee, reference number, date; how consent will be taken]')+'\n\n'
     +'## References\n[add citations from the Citation Manager]\n';
   protoSave();
+  try{let t='';try{t=String((studyGet().idea||{}).topic||'').slice(0,60)}catch(e){}docCreateWith('Protocol'+(t?': '+t:''),'');c8MarkProto()}catch(e){}
   insertIntoEditor(doc,false);
   document.getElementById('protoDlg').close();
-  showToast('Protocol inserted into your document ✓');
+  showToast('Protocol made in a new document in this study ✓');
 }
 
 const EC_DOCS=['Protocol / synopsis','Informed consent form','Participant information sheet','Principal investigator CV',"EC application form (your institution's own)",'Insurance / indemnity (if the study carries more than minimal risk)','Data management plan','Recruitment materials (posters, ads, scripts)'];
@@ -14765,7 +14846,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.27d';
+const APP_BUILD='2026.10.27e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
