@@ -3274,7 +3274,7 @@ function logSaveRows(key,rows){const o=studyGet();o.logs=o.logs||{};o.logs[key]=
 function logRefresh(){const m=document.getElementById('subMain');if(m)m.innerHTML=subDetailHTML(SUB_CUR.id,studyGet());try{const d=document.getElementById('subDlg');const l=d&&d.querySelector('.sub-list');if(l){const y=l.scrollTop;subRender();const l2=document.getElementById('subDlg').querySelector('.sub-list');if(l2)l2.scrollTop=y}}catch(e){}}
 function logAdd(key){const o=studyGet(),rows=logRows(o,key).slice(),def=logDef(key),r={};def.cols.forEach(c=>{if(c[3]==='date')r[c[0]]=new Date().toISOString().slice(0,10);if(c[3]==='sel'&&c[0]==='st')r[c[0]]='Open'});rows.push(r);logSaveRows(key,rows);logRefresh()}
 function logDel(key,i){const rows=logRows(studyGet(),key).slice();rows.splice(i,1);logSaveRows(key,rows);logRefresh()}
-function logCell(key,i,col,v){const rows=logRows(studyGet(),key).slice();if(!rows[i])return;rows[i]=Object.assign({},rows[i],{[col]:v});logSaveRows(key,rows);subRenderSide()}
+function logCell(key,i,col,v){const rows=logRows(studyGet(),key).slice();if(!rows[i])return;rows[i]=Object.assign({},rows[i],{[col]:v});logSaveRows(key,rows);subRenderSide();if(key==='recruit'&&/^(appr|agreed|done|left)$/.test(col))try{wRedraw()}catch(e){}}
 function subRenderSide(){const d=document.getElementById('subDlg');if(!d||!d.open)return;const o=studyGet(),stage=SUB_CUR.stage;
   d.querySelectorAll('.sub-item').forEach(b=>{const m=/SUB_CUR\.id='([A-F]\d+)'/.exec(b.getAttribute('onclick')||'');if(!m)return;const x=SUBSTAGES.find(y=>y[0]===m[1]);if(x)b.innerHTML=SUB_ICON[subState(x[0],o).s]+' <b>'+x[0]+'</b> '+escHTML(subL(x[2]))});
   d.querySelectorAll('.sub-tab').forEach((b,i)=>{const s=STAGES[i];if(!s)return;const c=subCount(s,o);b.textContent=SUB_STAGE_LETTER[s]+' · '+stageLabel(s)+' '+c.done+'/'+c.total})}
@@ -3439,7 +3439,7 @@ function wExtra2HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
     return box(c8Ok(o),L('Synopsis or protocol','Synopsis या protocol'),'<p class="desc" style="margin:4px 0">'+L('A synopsis is what most Indian universities ask for at registration (common sections, APA). A protocol is the fuller plan an ethics committee or a trial registry needs. Both are made as new documents in this study; your main paper is not touched.','Synopsis ज़्यादातर Indian universities registration पर माँगती हैं (साझा sections, APA)। Protocol वह पूरी योजना है जो ethics committee या trial registry को चाहिए। दोनों इस study में नए documents के रूप में बनते हैं; आपका मुख्य paper नहीं छुआ जाता।')+'</p>'+
      inp('title',L('Title (if different from the question)','Title (अगर सवाल से अलग हो)'))+inp('degree',L('Degree','Degree'),'Ph.D. in Psychology')+inp('student',L('Student name','Student का नाम'))+inp('sup',L('Supervisor (name, designation)','Supervisor (नाम, पद)'))+inp('dept',L('Department','Department'))+inp('univ',L('University, city','University, शहर'))+
      '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="synBuild()">📄 '+L('Make the synopsis','Synopsis बनाएँ')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="protoBuildDoc()">📋 '+L('Protocol for the ethics committee','Ethics committee के लिए protocol')+'</button></div>'+
-     (c.syn?'<p class="desc" style="margin:6px 0 0">'+L('Synopsis made on ','Synopsis बना: ')+new Date(c.synAt).toLocaleDateString()+'. '+L('Fill the yellow [ ] gaps before you submit.','जमा करने से पहले पीली [ ] जगहें भरें।')+'</p>':''))}
+     dgPlanHTML(o)+(c.syn?'<p class="desc" style="margin:6px 0 0">'+L('Synopsis made on ','Synopsis बना: ')+new Date(c.synAt).toLocaleDateString()+'. '+L('Fill the yellow [ ] gaps before you submit.','जमा करने से पहले पीली [ ] जगहें भरें।')+'</p>':''))}
   if(id==='F4'){const f=w.F4||{},ck=(g,list)=>list.map(x=>'<label style="display:block;margin:3px 0;font-size:14px"><input type="checkbox"'+((f[g]||{})[x[0]]?' checked':'')+' onchange="f4Tick(\''+g+'\',\''+x[0]+'\',this.checked)"> '+escHTML(hi?x[2]:x[1])+'</label>').join('');
     return box(f4Ok(o),L('Submission','जमा करना'),'<p style="margin:8px 0 2px"><b>'+L('Thesis to the university','University को thesis')+'</b></p>'+ck('thesis',F4_THESIS)+'<p style="margin:10px 0 2px"><b>'+L('Choosing a journal','Journal चुनना')+'</b> <span class="desc">'+L('(UGC suggestive parameters, 2025; Think.Check.Submit.)','(UGC के सुझाए मानदंड, 2025; Think.Check.Submit.)')+'</span></p>'+ck('journal',F4_JOURNAL)+'<p class="desc" style="margin:6px 0 0">'+L('Done when one list is complete and a submission is recorded below.','एक list पूरी हो और नीचे एक submission दर्ज हो, तब पूरा।')+'</p>')}
   if(id==='F7'){const c=w.F7||{},s=k=>escAttr(c[k]||''),ch=(k,v)=>'onchange="f7Set(\''+k+'\','+v+')"';const e=ethicsState(o);
@@ -3552,9 +3552,73 @@ async function relAdd(i,btn){const w=(window._relWorks||[])[i];if(!w)return;cons
   if(!rec)rec={author:(w.authorships||[]).map(a=>citFlipName((a.author||{}).display_name||'')).join('; '),year:String(w.publication_year||''),title:w.display_name||'',source:((w.primary_location||{}).source||{}).display_name||'',volume:'',issue:'',pages:'',doi:doi,url:'',type:'Journal article',style:'apa',lang:'en'};
   const n=citLibPush([rec]);if(btn){btn.disabled=true;btn.textContent=n?'✓':(studyHi()?'पहले से है':'already there')}}
 
+/* ============ Diagrams drawn from the study record (build 2026.10.28e) ============
+   Our own code. PRISMA 2020 flow (databases only) from the B1 numbers, and the participant flow from
+   the D2 recruitment log. Each is shown in the step and can go into the document as a PNG with a caption,
+   because Word export does not keep inline SVG. */
+function dgEsc(s){return escHTML(String(s==null?'':s))}
+function dgWrap(t,max){const w=String(t).split(/\s+/),out=[];let cur='';w.forEach(x=>{if((cur+' '+x).trim().length>max){if(cur)out.push(cur);cur=x}else cur=(cur+' '+x).trim()});if(cur)out.push(cur);return out}
+function dgBox(x,y,w,lines,o){o=o||{};const lh=16,h=Math.max(o.minH||0,lines.length*lh+16);
+  return{h:h,svg:'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="'+(o.fill||'#ffffff')+'" stroke="#333" stroke-width="1"/>'+
+    lines.map((l,i)=>'<text x="'+(x+w/2)+'" y="'+(y+14+lh*i+(h-lines.length*lh-16)/2+6)+'" text-anchor="middle" font-size="12.5"'+(o.bold&&i===0?' font-weight="700"':'')+' fill="#111">'+dgEsc(l)+'</text>').join('')}}
+function dgArrow(x1,y1,x2,y2){return'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#333" stroke-width="1.2" marker-end="url(#dgA)"/>'}
+function dgStage_unused(x,y,h,label){return'<rect x="'+x+'" y="'+y+'" width="26" height="'+h+'" rx="4" fill="#dbe7f6" stroke="#9db6d8"/><text transform="translate('+(x+17)+','+(y+h/2)+') rotate(-90)" text-anchor="middle" font-size="12" font-weight="700" fill="#1f3b63">'+dgEsc(label)+'</text>'}
+function dgFrame(W,H,body){return'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:'+W+'px" font-family="Arial, sans-serif"><defs><marker id="dgA" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#333"/></marker></defs>'+body+'</svg>'}
+/* A column of main boxes with an optional side box per row. rows: [{stage, main:[lines], side:[lines]|null}] */
+function dgFlow(rows,W){W=W||620;const X=20,MW=320,SX=390,SW=W-SX-10,gap=30,band=24;let y=6,body='',bands='';
+  rows.forEach((r,i)=>{if(r.stage){bands+='<rect x="4" y="'+y+'" width="'+(W-8)+'" height="'+(band-4)+'" rx="4" fill="#dbe7f6"/><text x="12" y="'+(y+15)+'" font-size="12" font-weight="700" fill="#1f3b63">'+dgEsc(r.stage)+'</text>';y+=band}
+    const m=dgBox(X,y,MW,r.main,{bold:true}),s=r.side?dgBox(SX,y,SW,r.side,{fill:'#f6f6f6'}):null,hh=Math.max(m.h,s?s.h:0);
+    const m2=dgBox(X,y,MW,r.main,{bold:true,minH:hh}),s2=r.side?dgBox(SX,y,SW,r.side,{fill:'#f6f6f6',minH:hh}):null;
+    body+=m2.svg+(s2?s2.svg+dgArrow(X+MW,y+hh/2,SX-2,y+hh/2):'');
+    if(i<rows.length-1){const nb=rows[i+1].stage?band:0;body+=dgArrow(X+MW/2,y+hh,X+MW/2,y+hh+gap+nb-2)}
+    y+=hh+gap});
+  const H=y-gap+8;return{svg:dgFrame(W,H,bands+body),w:W,h:H}}
+function dgInsert(d,cap,alt){if(!d)return;const src=d.svg.replace('style="width:100%;max-width:'+d.w+'px"','xmlns="http://www.w3.org/2000/svg" width="'+d.w+'" height="'+d.h+'"');
+  const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=d.w*2;c.height=d.h*2;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.scale(2,2);g.drawImage(img,0,0,d.w,d.h);
+    insertHTMLBlockIntoEditor('<figure><img src="'+c.toDataURL('image/png')+'" alt="'+escAttr(alt)+'" width="'+d.w+'"><figcaption>'+escHTML(cap)+'</figcaption></figure>');showToast(studyHi()?'चित्र document में डाला ✓':'Diagram inserted into your document ✓')}catch(e){showToast('Could not draw the diagram')}};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src)}
+/* PRISMA 2020 flow, records from databases only. Numbers from B1. */
+function dgPrisma(o){const b=wGet(o).B1||{},n=b.n||{},v=k=>(n[k]===''||n[k]==null)?null:+n[k];
+  if(['id','dup','scr','exT','ft','exF','inc'].some(k=>v(k)==null)||b1FlowIssues(o).length)return null;
+  const why=String(b.exWhy||'').split(/\n|;/).map(x=>x.trim()).filter(Boolean).slice(0,6);
+  return dgFlow([
+    {stage:'Identification',main:['Records identified from','databases (n = '+v('id')+')'],side:['Duplicate records removed','(n = '+v('dup')+')']},
+    {stage:'Screening',main:['Records screened','(n = '+v('scr')+')'],side:['Records excluded','(n = '+v('exT')+')']},
+    {main:['Full-text reports assessed','for eligibility (n = '+v('ft')+')'],side:['Reports excluded (n = '+v('exF')+')'].concat(why.reduce((a,x)=>a.concat(dgWrap(x,30)),[]).slice(0,7))},
+    {stage:'Included',main:['Studies included in review','(n = '+v('inc')+')'],side:null}])}
+function dgPrismaInsert(){const d=dgPrisma(studyGet());if(!d){showToast(studyHi()?'पहले सभी संख्याएँ भरें और उन्हें आपस में मिलाएँ':'Fill all the numbers first and make them add up');return}
+  dgInsert(d,'Figure. PRISMA 2020 flow diagram of study selection (Page et al., 2021).','PRISMA flow diagram')}
+/* Participant flow from the D2 recruitment log. */
+function dgPart(o){const rows=logRows(o,'recruit');if(!rows.length)return null;const s=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);
+  const ap=s('appr'),ag=s('agreed'),dn=s('done'),lf=s('left');if(!(ap>0&&ag>0)||ag>ap||dn>ag)return null;
+  return dgFlow([
+    {stage:'Recruitment',main:['People approached','(n = '+ap+')'],side:['Did not agree','(n = '+(ap-ag)+')']},
+    {main:['Agreed to take part','(n = '+ag+')'],side:['Did not finish','(n = '+(ag-dn)+')'].concat(lf?['of whom withdrew: '+lf]:[])},
+    {stage:'Analysed',main:['Completed and analysed','(n = '+dn+')'],side:null}])}
+function dgPartInsert(){const d=dgPart(studyGet());if(!d){showToast(studyHi()?'Recruitment log में संख्याएँ भरें (पूछा ≥ माने ≥ पूरा किया)':'Fill the recruitment log (approached ≥ agreed ≥ completed)');return}
+  dgInsert(d,'Figure. Flow of participants through the study.','Participant flow diagram')}
+
+
+/* Work plan (Gantt) for the synopsis: start month and length of each of the six stages, typed by the student. */
+const DG_STAGE_EN={idea:'Idea and feasibility',lit:'Literature review',design:'Design and ethics',collect:'Data collection and analysis',writing:'Writing',review:'Review and submission'};
+function dgPlanRows(o){const p=((wGet(o).C8||{}).plan)||{};return STAGES.map(s=>({s:s,a:+((p[s]||{}).a)||0,d:+((p[s]||{}).d)||0})).filter(r=>r.a>0&&r.d>0)}
+function dgGantt(o){const rows=dgPlanRows(o);if(rows.length<2)return null;const end=Math.max(...rows.map(r=>r.a+r.d-1));if(end>60)return null;
+  const LW=200,cw=Math.max(14,Math.min(36,Math.floor(420/end))),W=LW+cw*end+20,rh=26,H=34+rows.length*rh+10;let b='';
+  for(let m=1;m<=end;m++){const x=LW+(m-1)*cw;b+='<rect x="'+x+'" y="26" width="'+cw+'" height="'+(rows.length*rh)+'" fill="'+(m%2?'#fafafa':'#f0f0f0')+'"/>';if(end<=24||m%3===1)b+='<text x="'+(x+cw/2)+'" y="20" text-anchor="middle" font-size="10.5" fill="#333">'+m+'</text>'}
+  b+='<text x="'+LW+'" y="9" font-size="10" fill="#555">Month</text>';
+  rows.forEach((r,i)=>{const y=26+i*rh;b+='<text x="6" y="'+(y+17)+'" font-size="12" fill="#111">'+dgEsc(DG_STAGE_EN[r.s]||r.s)+'</text><rect x="'+(LW+(r.a-1)*cw+1)+'" y="'+(y+5)+'" width="'+(r.d*cw-2)+'" height="'+(rh-10)+'" rx="3" fill="#4b6fa8"/>'});
+  return{svg:dgFrame(W,H,b),w:W,h:H}}
+function dgPlanSet(s,k,v){const o=studyGet();o.write=o.write||{};const c=o.write.C8=o.write.C8||{};c.plan=c.plan||{};c.plan[s]=Object.assign({},c.plan[s]||{},{[k]:v});studySet(o);wRedraw()}
+function dgGanttInsert(){const d=dgGantt(studyGet());if(!d){showToast(studyHi()?'कम से कम दो stages के महीने भरें':'Fill the months for at least two stages');return}dgInsert(d,'Figure. Work plan of the study (months from registration).','Work plan chart')}
+function dgPlanHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,p=((wGet(o).C8||{}).plan)||{},d=dgGantt(o);
+  return'<p style="margin:12px 0 2px"><b>'+L('Work plan (time chart)','काम की योजना (समय-सारणी)')+'</b> <span class="desc">'+L('Month 1 is the month you register.','Month 1 = registration का महीना।')+'</span></p><table style="font-size:13px;border-collapse:collapse"><tr><th style="text-align:left;padding:3px">'+L('Stage','Stage')+'</th><th style="padding:3px">'+L('Starts in month','किस महीने से')+'</th><th style="padding:3px">'+L('Lasts (months)','कितने महीने')+'</th></tr>'+
+   STAGES.map(s=>'<tr><td style="padding:3px">'+escHTML(stageLabel(s))+'</td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).a||'')+'" onchange="dgPlanSet(\''+s+'\',\'a\',this.value)"></td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).d||'')+'" onchange="dgPlanSet(\''+s+'\',\'d\',this.value)"></td></tr>').join('')+'</table>'+
+   (d?'<div style="margin-top:8px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff;overflow-x:auto">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="dgGanttInsert()">📊 '+L('Put the time chart in my document','समय-सारणी document में डालें')+'</button></div>':'')}
+
 function wExtra3HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
    lab=t=>'<label class="desc" style="display:block;margin-top:6px">'+t+'</label>',sel=(opts,v,on)=>'<select onchange="'+on+'"><option value=""></option>'+opts.map(x=>'<option value="'+x[0]+'"'+(v===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>',
    warn=list=>list.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+list.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'';
+  if(id==='D2'){const d=dgPart(o);return'<div class="sub-box"><b>'+L('Participant flow diagram','Participants का flow diagram')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPartInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from the recruitment log below once it has people approached, agreed and completed.','नीचे के recruitment log में पूछे, माने और पूरा करने वालों की संख्या आते ही यहाँ बनेगा।')+'</p>')+'</div>'}
   if(id==='B3')return'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
   if(id==='B1'){const b=w.B1||{},n=b.n||{},f=b1Formal(o);
     let h=lab(L('Type of review','Review का प्रकार'))+sel(B1_TYPES,b.type,"wPick('B1','type',this.value)")+
@@ -3567,7 +3631,9 @@ function wExtra3HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
       (b.reg&&b.reg!=='none'?lab(L('Registration number or link','Registration number या link'))+'<input type="text" value="'+escAttr(b.regId||'')+'" onchange="wPatch(\'B1\',\'regId\',this.value)">':'')+
       (b.type==='scop'?'<p class="desc" style="margin:4px 0 0">'+L('PROSPERO does not take scoping reviews; OSF does.','PROSPERO scoping review नहीं लेता; OSF लेता है।')+'</p>':'')+
       '<p style="margin:10px 0 2px"><b>'+L('PRISMA flow numbers','PRISMA flow की संख्याएँ')+'</b> <span class="desc">'+L('(fill as you screen)','(छाँटते-छाँटते भरें)')+'</span></p>'+
-      B1_FLOW.map(x=>'<div class="row" style="gap:6px;align-items:center;margin:2px 0"><input type="number" min="0" style="width:90px" value="'+escAttr(n[x[0]]==null?'':n[x[0]])+'" onchange="wNestRedraw(\'B1\',\'n\',\''+x[0]+'\',this.value)"> <span style="font-size:14px">'+escHTML(hi?x[2]:x[1])+'</span></div>').join('')+warn(b1FlowIssues(o))}
+      B1_FLOW.map(x=>'<div class="row" style="gap:6px;align-items:center;margin:2px 0"><input type="number" min="0" style="width:90px" value="'+escAttr(n[x[0]]==null?'':n[x[0]])+'" onchange="wNestRedraw(\'B1\',\'n\',\''+x[0]+'\',this.value)"> <span style="font-size:14px">'+escHTML(hi?x[2]:x[1])+'</span></div>').join('')+warn(b1FlowIssues(o))+
+      lab(L('Reasons full texts were excluded, one per line with its number (e.g. Wrong population: 12)','पूरे text के बाद बाहर करने के कारण, हर पंक्ति में एक, संख्या सहित (जैसे Wrong population: 12)'))+'<textarea rows="3" onchange="wPick(\'B1\',\'exWhy\',this.value)">'+escHTML(b.exWhy||'')+'</textarea>'+
+      (()=>{const d=dgPrisma(o);return d?'<div style="margin-top:8px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPrismaInsert()">📊 '+L('Put the PRISMA flow diagram in my document','PRISMA flow diagram document में डालें')+'</button></div>':'<p class="desc" style="margin:6px 0 0">'+L('The PRISMA flow diagram appears here once all seven numbers are filled and add up.','सातों संख्याएँ भरने और आपस में मिलने पर PRISMA flow diagram यहाँ दिखेगा।')+'</p>'})()}
     return box(b1Ok(o),L('Review type','Review का प्रकार'),h)}
   if(id==='B4'){const is=b4Issues(o),rows=logRows(o,'quality');
     return box(b4Ok(o),L('Quality check','गुणवत्ता की जाँच'),'<p class="desc" style="margin:4px 0">'+L('RoB 2 is for randomised trials, ROBINS-I for non-randomised studies of interventions, JBI or AXIS for cross-sectional studies, CASP for qualitative studies, MMAT for mixed methods. A retracted paper is never cited without saying so.','RoB 2 randomised trials के लिए, ROBINS-I बिना randomisation वाले intervention studies के लिए, JBI या AXIS cross-sectional के लिए, CASP qualitative के लिए, MMAT mixed methods के लिए। Retracted paper बिना बताए cite नहीं।')+'</p>'+(rows.length?warn(is):''))}
@@ -15195,7 +15261,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.28d';
+const APP_BUILD='2026.10.28e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
