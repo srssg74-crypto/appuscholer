@@ -3069,9 +3069,7 @@ function subStatusLabel(k){const x=SUB_STATUS.find(y=>y[0]===k);return x?(studyH
 function subPosterSaved(){try{const p=getActiveProjectId()||'';return !!LS.get('appu_poster_'+(p||'scratch'))||!!LS.get('appu_poster_'+p)}catch(e){return false}}
 /* What the app can already see in the study record. A hint only: the student's own status wins. */
 function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars||[];
-  try{switch(id){
-    case'A1':return !!String(d.topic||'').trim();
-    case'A3':return !!String(ds.hyp||'').trim();
+  try{if(LS_IDS.indexOf(id)>=0)return lsOk(id,o);switch(id){
     case'B2':return !!String(o.search||'').trim()||logsDone('B2',o);
     case'B3':return logsDone('B3',o)||citGetLib().length>0;
     case'D2':return logsDone('D2',o);
@@ -3092,11 +3090,8 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'D1':return d1Ok(o);
     case'F2':return f2Ok(o);
     case'B6':return !!String(g.text||'').trim();
-    case'C1':return !!ds.type;
-    case'C2':return !!String(ds.pop||'').trim();
     case'C3':return ssComplete(ds);
     case'C4':return v.some(x=>x.role==='outcome')&&scaleCheck(o).ok;
-    case'C6':return !!(o.qn&&o.qn.built);
     case'D4':return resD4Ok(o);
     case'D5':return d5Ok(o);
     case'E1':return !!(o.draft&&o.draft.built);
@@ -3721,7 +3716,68 @@ function d5HTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o).D5||{},is=d5Is
    (is.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+is.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')+
    '<div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="d5Insert()">📄 '+L('Draft the Findings section','Findings का draft बनाएँ')+'</button></div></div>'}
 
-function wExtra3HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
+/* ============ Clear "done" rules for the steps that used older tools (build 2026.10.28h) ============
+   A1, A3, A4, C1, C2, C6, C10, E2–E7 and F5. Each rule lists what is still missing, so the step page says
+   exactly what to do. Writing steps read the study's documents by their headings. Saved in o.write.<id>. */
+function lsWords(t){return(String(t||'').match(/[\p{L}\p{N}]+/gu)||[]).length}
+/* Text under the first heading that matches re, in any document of the study, up to the next heading of the same or a higher level. */
+function lsSection(re){let best=null;
+  let cur='',curHTML='';try{cur=docCurrentId();curHTML=getEditorHTML()}catch(e){}
+  (typeof docsStudy==='function'?docsStudy():[]).forEach(d=>{if(best)return;const div=document.createElement('div');div.innerHTML=(d.id===cur?curHTML:d.body)||'';
+    const hs=[...div.querySelectorAll('h1,h2,h3,h4')];const h=hs.find(x=>re.test(x.textContent||''));if(!h)return;
+    const lv=+h.tagName[1];let n=h.nextElementSibling,txt='',html='',cites=0;
+    while(n&&!(/^H[1-4]$/.test(n.tagName)&&+n.tagName[1]<=lv)){txt+=' '+(n.textContent||'');html+=n.outerHTML;cites+=n.querySelectorAll?n.querySelectorAll('span.cit').length:0;n=n.nextElementSibling}
+    cites+=(txt.match(/\([A-Z][^()]{1,60},\s(19|20)\d{2}[a-z]?\)/g)||[]).length;
+    best={doc:d.title,text:txt.trim(),words:lsWords(txt),cites:cites,html:html}});
+  return best}
+const LS_SEC={E2:/^\s*(\d+[.)]?\s*)?(chapter\s*\w+\s*[:.-]?\s*)?introduction|प्रस्तावना|परिचय/i,E3:/review of (the )?literature|literature review|साहित्य/i,E4:/method/i,E5:/^\s*(\d+[.)]?\s*)?(chapter\s*\w+\s*[:.-]?\s*)?(results|findings)|परिणाम/i,E6:/discussion|विवेचना|चर्चा/i,E7:/^\s*abstract|सार/i};
+function lsStatTokens(apa){return String(apa||'').match(/(?:t|F|r|rₛ|χ²|U|W|H|b)\s*\([^)]*\)\s*=\s*-?[\d.]+|(?:U|W|H)\s*=\s*-?[\d.]+/g)||[]}
+const A4_ITEMS=[['acc','Access to participants','Participants तक पहुँच'],['time','Time','समय'],['skill','Your skills','आपका कौशल'],['sup','Supervision','Supervisor का साथ'],['cost','Cost','खर्च'],['equip','Equipment or software','उपकरण या software'],['eth','Ethics risk','Ethics का जोखिम']];
+function lsIssues(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),d=o.idea||{},ds=o.design||{},out=[],need=(c,en,x)=>{if(!c)out.push(L(en,x))};
+  switch(id){
+  case'A1':{const a=w.A1||{};need(String(d.topic||'').trim().length>=15,'write your topic in the Idea tool (15+ characters)','Idea tool में अपना विषय लिखें (15+ अक्षर)');need(String(a.alt||'').trim().length>=20,'note the other topics you considered and why you chose this one','जिन और विषयों पर सोचा, वे और यह क्यों चुना, लिखें');break}
+  case'A3':{const a=w.A3||{};need(String(a.aim||'').trim().length>=20,'one aim (20+ characters)','एक aim (20+ अक्षर)');need(String(a.q||'').trim().length>=15,'the research question','research question');need(String(ds.hyp||'').trim()||a.noHyp,'hypotheses in the study plan, or tick that the study is exploratory','study plan में hypotheses, या tick करें कि study exploratory है');break}
+  case'A4':{const a=w.A4||{},r=a.r||{};const n=A4_ITEMS.filter(x=>!r[x[0]]).length;if(n)out.push(L(n+' item(s) not rated',n+' बातें आँकी नहीं गईं'));need(a.dec,'choose go, revise or stop','आगे, बदलें या रुकें चुनें');need(String(a.why||'').trim().length>=20,'write why (20+ characters)','कारण लिखें (20+ अक्षर)');if(a.dec==='revise')out.push(L('you chose to revise: change the plan, then rate again and choose go','आपने बदलना चुना: योजना बदलें, फिर आँककर "आगे" चुनें'));if(a.dec==='stop')out.push(L('you chose to stop: start a new idea, or talk to your supervisor','आपने रुकना चुना: नया idea शुरू करें या supervisor से बात करें'));break}
+  case'C1':need(ds.type,'choose the design in the study plan','study plan में design चुनें');break;
+  case'C2':{const a=w.C2||{};need(String(ds.pop||'').trim().length>=10,'the population in the study plan','study plan में population');need(String(ds.sampling||'').trim(),'the sampling method in the study plan','study plan में sampling का तरीका');need(String(a.incl||'').trim().length>=10,'inclusion rules','शामिल करने के नियम');need(String(a.excl||'').trim().length>=10,'exclusion rules','बाहर रखने के नियम');need(String(a.rec||'').trim().length>=10,'how you will recruit','recruit कैसे करेंगे');break}
+  case'C6':need(o.qn&&o.qn.built,'build the questionnaire from your plan','अपनी योजना से questionnaire बनाएँ');break;
+  case'C10':{const s=(typeof designGet==='function'?designGet('ec'):{})||{},a=w.C10||{},minor=!!((o.ethics||{}).risk||{}).minor||s.minors==='yes';
+    need(s.consentAt,'make the consent form (Design & Ethics, consent)','consent form बनाएँ (Design & Ethics में consent)');need(String(s.risks||'').trim(),'risks and discomforts in the consent form','consent form में जोखिम और असुविधा');need(String(s.contact||'').trim().length>=10,'a contact for questions or distress','सवाल या परेशानी के लिए संपर्क');
+    if(minor)need(a.assent,'an assent form in simple words for participants under 18, plus parent or guardian consent','18 से कम उम्र वालों के लिए सरल शब्दों में assent form, और माता-पिता की सहमति');break}
+  case'E2':case'E3':case'E4':case'E5':case'E6':case'E7':{const sec=lsSection(LS_SEC[id]),nm={E2:'Introduction',E3:'Review of literature',E4:'Methods',E5:'Results',E6:'Discussion',E7:'Abstract'}[id];
+    if(!sec){out.push(L('no heading "'+nm+'" found in your documents','आपके documents में "'+nm+'" शीर्षक नहीं मिला'));break}
+    const min={E2:200,E3:400,E4:200,E5:60,E6:200,E7:100}[id];if(sec.words<min)out.push(L(nm+': '+sec.words+' words, at least '+min+' expected',nm+': '+sec.words+' शब्द, कम से कम '+min+' चाहिए'));
+    if(id==='E2'&&!/\b(aim|objective|research question|purpose)|उद्देश्य/i.test(sec.text.slice(-600)))out.push(L('end the Introduction on your aim and questions','Introduction का अंत aim और सवालों पर करें'));
+    if(id==='E3'&&sec.cites<5)out.push(L('the literature chapter cites '+sec.cites+' source(s); bring evidence from several','साहित्य chapter में '+sec.cites+' स्रोत; कई स्रोतों से सबूत दें'));
+    if(id==='E4'){if(!/ethic|consent|नैतिक|सहमति/i.test(sec.text))out.push(L('Methods: say how ethics approval and consent were handled','Methods: ethics approval और consent के बारे में लिखें'));if(!/analys|विश्लेषण/i.test(sec.text))out.push(L('Methods: describe the analysis','Methods: analysis का वर्णन करें'))}
+    if(id==='E5'){resPlanMain(o).forEach(p=>{const r=resFor(o,String(p.h).trim()).slice(-1)[0];if(!r)return;const tk=lsStatTokens(r.apa);if(tk.length&&!tk.some(t=>sec.text.indexOf(t)>=0))out.push(L('the result for "'+String(p.h).slice(0,40)+'" is not in the Results text as it was run ('+tk[0]+')','"'+String(p.h).slice(0,40)+'" का नतीजा Results में वैसा नहीं जैसा चला था ('+tk[0]+')'))})}
+    if(id==='E6'&&!/limitation|सीमा|कमी/i.test(sec.text))out.push(L('name the limitations','कमियाँ (limitations) लिखें'));
+    if(id==='E7'){if(sec.words>350)out.push(L('Abstract: '+sec.words+' words; most formats allow 250–300','Abstract: '+sec.words+' शब्द; ज़्यादातर formats 250–300 तक'));
+      const all=(sec.html+' '+sec.text);if(!/keywords?\s*[:：]/i.test(all)&&!/keywords?/i.test((lsSection(/keywords?/i)||{}).text||'')&&!/keywords?\s*[:：]/i.test(String((lsSection(/^\s*abstract/i)||{}).text)))out.push(L('add a Keywords line','Keywords की पंक्ति जोड़ें'));
+      const res=lsSection(LS_SEC.E5);if(res){const nums=(sec.text.match(/\b(?:p\s*[=<]\s*\.?\d+|[Nn]\s*=\s*\d+|[dgr]\s*=\s*-?\.?\d+(?:\.\d+)?)/g)||[]).map(x=>x.replace(/\s+/g,''));const rt=res.text.replace(/\s+/g,'');nums.forEach(x=>{if(rt.indexOf(x)<0)out.push(L('the abstract has '+x+', which is not in the Results','abstract में '+x+' है, जो Results में नहीं'))})}}
+    break}
+  case'F5':{let n=0;try{n=JSON.parse(LS.get(pkey('appu_viva'))||'[]').length}catch(e){}if(n<5)out.push(L('answer at least 5 practice questions in the viva tool ('+n+' so far)','viva tool में कम से कम 5 अभ्यास सवालों के जवाब दें (अभी '+n+')'));break}
+  }
+  return out}
+function lsOk(id,o){return !lsIssues(id,o).length}
+function lsSet(id,k,v){const o=studyGet();o.write=o.write||{};o.write[id]=Object.assign({},o.write[id]||{},{[k]:v});studySet(o);subRenderSide();if(/^(dec|noHyp|assent)$/.test(k)||id==='A4')wRedraw()}
+function lsHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues(id,o),a=w[id]||{},ta=(k,lab)=>'<label class="desc" style="display:block;margin-top:6px">'+lab+'</label><textarea rows="2" onchange="lsSet(\''+id+'\',\''+k+'\',this.value)">'+escHTML(a[k]||'')+'</textarea>';
+  let body='';
+  if(id==='A1')body=ta('alt',L('Other topics you considered, and why you chose this one','और कौन-से विषय सोचे, और यही क्यों चुना'));
+  if(id==='A3')body=ta('aim',L('Aim (one sentence)','Aim (एक वाक्य)'))+ta('q',L('Research question','Research question'))+'<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox"'+(a.noHyp?' checked':'')+' onchange="lsSet(\'A3\',\'noHyp\',this.checked)"> '+L('This study is exploratory or qualitative, so it has no hypotheses','यह study exploratory या qualitative है, इसलिए hypotheses नहीं')+'</label>';
+  if(id==='A4'){const r=a.r||{};body='<table style="font-size:13.5px;border-collapse:collapse;margin-top:6px">'+A4_ITEMS.map(x=>'<tr><td style="padding:3px 8px 3px 0">'+escHTML(hi?x[2]:x[1])+'</td><td>'+[['ok',L('Fine','ठीक')],['risk',L('A risk','जोखिम')],['no',L('Not possible','संभव नहीं')]].map(v=>'<label style="margin-right:8px;font-size:13px"><input type="radio" name="a4_'+x[0]+'"'+(r[x[0]]===v[0]?' checked':'')+' onchange="(function(){const o=studyGet();o.write=o.write||{};const A=o.write.A4=o.write.A4||{};A.r=Object.assign({},A.r||{},{\''+x[0]+'\':\''+v[0]+'\'});studySet(o);subRenderSide()})()"> '+v[1]+'</label>').join('')+'</td></tr>').join('')+'</table>'+
+    '<label class="desc" style="display:block;margin-top:6px">'+L('Decision','फ़ैसला')+'</label><select onchange="lsSet(\'A4\',\'dec\',this.value)"><option value=""></option>'+[['go',L('Go ahead','आगे बढ़ें')],['revise',L('Revise the plan','योजना बदलें')],['stop',L('Stop','रुकें')]].map(v=>'<option value="'+v[0]+'"'+(a.dec===v[0]?' selected':'')+'>'+v[1]+'</option>').join('')+'</select>'+ta('why',L('Why','कारण'))+
+    (Object.values(r).some(v=>v==='no')&&a.dec==='go'?'<p class="desc" style="color:#b45309;margin:4px 0 0">'+L('One item is marked "not possible" but the decision is go. Say in the reason how you will get past it.','एक बात "संभव नहीं" है पर फ़ैसला "आगे" है। कारण में बताएँ कि उसे कैसे पार करेंगे।')+'</p>':'')}
+  if(id==='C2')body=ta('incl',L('Who can take part (inclusion rules)','कौन भाग ले सकता है (शामिल करने के नियम)'))+ta('excl',L('Who cannot (exclusion rules)','कौन नहीं (बाहर रखने के नियम)'))+ta('rec',L('How you will recruit (where, through whom)','Recruit कैसे करेंगे (कहाँ, किसके ज़रिए)'));
+  if(id==='C10'){const minor=!!((o.ethics||{}).risk||{}).minor;body='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();showTool(\'design\')">📝 '+L('Open Design & Ethics (consent form)','Design & Ethics खोलें (consent form)')+'</button></div>'+(minor?'<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox"'+(a.assent?' checked':'')+' onchange="lsSet(\'C10\',\'assent\',this.checked)"> '+L('I have an assent form in simple words for participants under 18, and a consent form for the parent or guardian','मेरे पास 18 से कम उम्र वालों के लिए सरल शब्दों में assent form और माता-पिता के लिए consent form है')+'</label>':'')}
+  if(id==='F5')body='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();vivaOpen()">🎤 '+L('Open viva practice','Viva अभ्यास खोलें')+'</button></div>';
+  if(/^E[2-7]$/.test(id)){const sec=lsSection(LS_SEC[id]);body='<p class="desc" style="margin:4px 0">'+(sec?L('Found in "'+sec.doc+'": '+sec.words+' words.','"'+sec.doc+'" में मिला: '+sec.words+' शब्द।'):L('The app looks for this heading in your documents.','App इस शीर्षक को आपके documents में ढूँढ़ता है।'))+'</p>'}
+  const ok=!is.length;
+  return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ '+L('Done','पूरा'):L('Still needed','अभी बाकी'))+'</b>'+(is.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+is.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')+body+'</div>'}
+const LS_IDS=['A1','A3','A4','C1','C2','C6','C10','E2','E3','E4','E5','E6','E7','F5'];
+
+function wExtra3HTML(id,o){
+  if(LS_IDS.indexOf(id)>=0)return lsHTML(id,o);const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
    lab=t=>'<label class="desc" style="display:block;margin-top:6px">'+t+'</label>',sel=(opts,v,on)=>'<select onchange="'+on+'"><option value=""></option>'+opts.map(x=>'<option value="'+x[0]+'"'+(v===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>',
    warn=list=>list.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+list.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'';
   if(id==='D2'){const d=dgPart(o);return'<div class="sub-box"><b>'+L('Participant flow diagram','Participants का flow diagram')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPartInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from the recruitment log below once it has people approached, agreed and completed.','नीचे के recruitment log में पूछे, माने और पूरा करने वालों की संख्या आते ही यहाँ बनेगा।')+'</p>')+'</div>'}
@@ -8535,6 +8591,7 @@ function ecGenerateConsent(){
     +'I have read and understood the above, had the chance to ask questions, and agree to take part in this study.\n\n'
     +'Participant signature: ______________________  Date: __________\n\n'
     +'Researcher signature: ______________________  Date: __________\n';
+  try{const s2=designGet('ec');s2.consentAt=Date.now();designSet('ec',s2)}catch(e){}
   insertIntoEditor(doc,false);
   document.getElementById('ecDlg').close();
   showToast('Consent form inserted into your document ✓');
@@ -15369,7 +15426,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.28g';
+const APP_BUILD='2026.10.28h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
