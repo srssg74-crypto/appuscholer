@@ -88,7 +88,7 @@ with sync_playwright() as p:
     J("const o=studyGet();o.write={};o.design={type:'experiment'};studySet(o)")
     a=J("f2Suggest(studyGet())"); J("const o=studyGet();o.design={type:'cohort'};studySet(o)"); bb=J("f2Suggest(studyGet())")
     J("const o=studyGet();o.write={B1:{type:'sys'}};studySet(o)"); c=J("f2Suggest(studyGet())")
-    rec('TST-017', (a,bb,c)==('consort','strobe','prisma'), 'Trial → CONSORT 2025, cohort → STROBE, systematic review → PRISMA 2020; qualitative → named other list (COREQ, SRQR)')
+    rec('TST-017', (a,bb,c)==('consort','strobe','prisma'), 'Trial → CONSORT 2025, cohort → STROBE, systematic review → PRISMA 2020; qualitative → COREQ')
     # TST-018
     old=J("subSrcAge('A1',new Date('2028-01-01').getTime())"); now=J("subSrcAge('A1')")
     rec('TST-018', 'last checked' in now and 'over a year' in old and 'over a year' not in now, 'Each step shows the date its source was last checked; a warning appears after 12 months')
