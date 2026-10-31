@@ -1580,7 +1580,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
     <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('helpDlg').close();guideOpen()">📖 Open the Guide</button>
     <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();repOpen()">🛠 Report a problem</button>
   </div>
-  <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" style="flex:1" onclick="tourStart()" id="helpDemoBtn" data-i18n="demo_again_btn">▶ Watch the demo again</button><button class="btn btn-ghost" style="flex:1" onclick="whyOn()" id="helpWhyBtn" data-i18n="why_again_btn">💡 Show the "why we ask" lines again</button>
+  <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" style="flex:1" onclick="tourStart()" id="helpDemoBtn" data-i18n="demo_again_btn">▶ Watch the demo again</button><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();packOpen()" id="helpPackBtn" data-i18n="pack_btn">📦 University rules (packs)</button><button class="btn btn-ghost" style="flex:1" onclick="whyOn()" id="helpWhyBtn" data-i18n="why_again_btn">💡 Show the "why we ask" lines again</button>
   </div>
 
   <details open style="margin-top:12px">
@@ -2336,7 +2336,7 @@ const I18N={
     welcome_step3:'Follow the link, create a key, paste it in, press <b>Save Key</b>.',
     welcome_step4:'Start writing. Press <kbd>Tab</kbd> to accept a suggestion.',
     welcome_warn:"Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.",
-    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', bk_search_btn:'📖 Find a book by title or author', cite_quote_page:'Page(s) of the quote', imp_rb_btn:'⬇ Import from Zotero or Mendeley (.ris, .bib)', bulk_sum:'📥 Add my own reference list (books, articles, websites)', bulk_desc:'Paste the references you already have, one per line: from your notes, a book\'s bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.', bulk_btn:'Check and add to my library', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
+    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', pack_btn:'📦 University rules (packs)', bk_search_btn:'📖 Find a book by title or author', cite_quote_page:'Page(s) of the quote', imp_rb_btn:'⬇ Import from Zotero or Mendeley (.ris, .bib)', bulk_sum:'📥 Add my own reference list (books, articles, websites)', bulk_desc:'Paste the references you already have, one per line: from your notes, a book\'s bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.', bulk_btn:'Check and add to my library', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
     login_h2:'🔑 Appuscholar Access',
     login_intro:"This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.",
     login_placeholder:'Paste your access code here', login_unlock_btn:'Unlock',
@@ -2576,7 +2576,7 @@ const I18N={
     welcome_step3:'लिंक पर जाएं, एक कुंजी बनाएं, उसे पेस्ट करें, <b>कुंजी सहेजें</b> दबाएं।',
     welcome_step4:'लिखना शुरू करें। सुझाव स्वीकार करने के लिए <kbd>Tab</kbd> दबाएं।',
     welcome_warn:'Appuscholar मसौदा तैयार करता है और जांचता है — यह आपकी सोच का काम नहीं करता। हर उद्धरण की जांच करें, और जमा करने से पहले अपनी संस्था की AI सहायता नीति देख लें।',
-    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', bk_search_btn:'📖 Title या लेखक से किताब खोजें', cite_quote_page:'Quote का page', imp_rb_btn:'⬇ Zotero या Mendeley से import (.ris, .bib)', bulk_sum:'📥 अपनी references की सूची जोड़ें (किताबें, लेख, websites)', bulk_desc:'जो references आपके पास पहले से हैं, उन्हें चिपकाएँ, हर पंक्ति में एक: अपने notes से, किसी किताब की bibliography से, या पुराने assignment से। हर पंक्ति उसके DOI, ISBN या Crossref में title से मिलाई जाती है। जो नहीं मिलती, वह जैसी लिखी थी वैसी रखी जाती है और ⚠ से चिह्नित होती है, ताकि आप उसे जाँच लें।', bulk_btn:'जाँचकर मेरी library में जोड़ें', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
+    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', pack_btn:'📦 University के नियम (पैकेट)', bk_search_btn:'📖 Title या लेखक से किताब खोजें', cite_quote_page:'Quote का page', imp_rb_btn:'⬇ Zotero या Mendeley से import (.ris, .bib)', bulk_sum:'📥 अपनी references की सूची जोड़ें (किताबें, लेख, websites)', bulk_desc:'जो references आपके पास पहले से हैं, उन्हें चिपकाएँ, हर पंक्ति में एक: अपने notes से, किसी किताब की bibliography से, या पुराने assignment से। हर पंक्ति उसके DOI, ISBN या Crossref में title से मिलाई जाती है। जो नहीं मिलती, वह जैसी लिखी थी वैसी रखी जाती है और ⚠ से चिह्नित होती है, ताकि आप उसे जाँच लें।', bulk_btn:'जाँचकर मेरी library में जोड़ें', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
     login_h2:'🔑 Appuscholar प्रवेश',
     login_intro:'इस प्रति के लिए एक एक्सेस कोड चाहिए। आपको दिया गया कोड नीचे पेस्ट करें — यह इसी कंप्यूटर पर जांचा जाता है, कुछ भी अपलोड नहीं होता।',
     login_placeholder:'अपना एक्सेस कोड यहाँ पेस्ट करें', login_unlock_btn:'अनलॉक करें',
@@ -3086,7 +3086,7 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'D6':return wInterpOk(o)&&!wCausalFlags(o).length;
     case'E8':return !!wGet(o).aiu;
     case'C8':return c8Ok(o);
-    case'F4':return f4Ok(o);
+    case'F4':return f4Ok(o)&&packF4Ok(o);
     case'F7':return f7Ok(o);
     case'B1':return b1Ok(o);
     case'B4':return b4Ok(o);
@@ -3098,7 +3098,7 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'C4':return v.some(x=>x.role==='outcome')&&scaleCheck(o).ok;
     case'D4':return resD4Ok(o);
     case'D5':return d5Ok(o);
-    case'E1':return !!(o.draft&&o.draft.built);
+    case'E1':{const pk=packE1Ok(o);return pk===null?!!(o.draft&&o.draft.built):pk}
     case'F6':return subPosterSaved();
   }}catch(e){}return false}
 function subState(id,o){o=o||studyGet();
@@ -3756,7 +3756,7 @@ function lsIssues(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),d=o.idea|
     if(id==='E4'){if(!/ethic|consent|नैतिक|सहमति/i.test(sec.text))out.push(L('Methods: say how ethics approval and consent were handled','Methods: ethics approval और consent के बारे में लिखें'));if(!/analys|विश्लेषण/i.test(sec.text))out.push(L('Methods: describe the analysis','Methods: analysis का वर्णन करें'))}
     if(id==='E5'){resPlanMain(o).forEach(p=>{const r=resFor(o,String(p.h).trim()).slice(-1)[0];if(!r)return;const tk=lsStatTokens(r.apa);if(tk.length&&!tk.some(t=>sec.text.indexOf(t)>=0))out.push(L('the result for "'+String(p.h).slice(0,40)+'" is not in the Results text as it was run ('+tk[0]+')','"'+String(p.h).slice(0,40)+'" का नतीजा Results में वैसा नहीं जैसा चला था ('+tk[0]+')'))})}
     if(id==='E6'&&!/limitation|सीमा|कमी/i.test(sec.text))out.push(L('name the limitations','कमियाँ (limitations) लिखें'));
-    if(id==='E7'){if(sec.words>350)out.push(L('Abstract: '+sec.words+' words; most formats allow 250–300','Abstract: '+sec.words+' शब्द; ज़्यादातर formats 250–300 तक'));
+    if(id==='E7'){const pk=packGet(o),mx=pk&&pk.abstractMax?pk.abstractMax:350;if(sec.words>mx)out.push(pk&&pk.abstractMax?L('Abstract: '+sec.words+' words; your pack allows '+mx,'Abstract: '+sec.words+' शब्द; आपका पैकेट '+mx+' तक देता है'):L('Abstract: '+sec.words+' words; most formats allow 250–300','Abstract: '+sec.words+' शब्द; ज़्यादातर formats 250–300 तक'));
       const all=(sec.html+' '+sec.text);if(!/keywords?\s*[:：]/i.test(all)&&!/keywords?/i.test((lsSection(/keywords?/i)||{}).text||'')&&!/keywords?\s*[:：]/i.test(String((lsSection(/^\s*abstract/i)||{}).text)))out.push(L('add a Keywords line','Keywords की पंक्ति जोड़ें'));
       const res=lsSection(LS_SEC.E5);if(res){const nums=(sec.text.match(/\b(?:p\s*[=<]\s*\.?\d+|[Nn]\s*=\s*\d+|[dgr]\s*=\s*-?\.?\d+(?:\.\d+)?)/g)||[]).map(x=>x.replace(/\s+/g,''));const rt=res.text.replace(/\s+/g,'');nums.forEach(x=>{if(rt.indexOf(x)<0)out.push(L('the abstract has '+x+', which is not in the Results','abstract में '+x+' है, जो Results में नहीं'))})}}
     break}
@@ -3780,8 +3780,81 @@ function lsHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues
   return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ '+L('Done','पूरा'):L('Still needed','अभी बाकी'))+'</b>'+(is.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+is.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')+body+'</div>'}
 const LS_IDS=['A1','A3','A4','C1','C2','C6','C10','E2','E3','E4','E5','E6','E7','F5'];
 
+/* ============ Rule packs (build 2026.10.29a) ============
+   A pack holds one institution's or one format's rules as plain fields: citation style, synopsis
+   sections, thesis chapters, abstract word limit, documents to submit. No free text in a pack is ever sent
+   to an AI or run as an instruction; it is only shown and compared. Built-in packs carry their source
+   and the date they were checked. A pack made or imported by a person is marked "not checked by
+   Appuscholar" until it is. The active pack is chosen per study (o.pack). */
+const PACKS_BUILTIN=[
+ {id:'ugc-phd-2022',name:'UGC PhD Regulations 2022 (India)',ver:'1',checked:'2026-10-27',verified:true,
+  src:'UGC (Minimum Standards and Procedures for Award of PhD Degree) Regulations, 2022',
+  note:'National minimum rules. Your university\'s ordinance can add more; make a pack from it.',
+  style:'apa',abstractMax:0,
+  synopsis:[],chapters:[],
+  docs:[['rac','Topic reviewed and finalised by the Research Advisory Committee or equivalent body','cl. 10(1)(i)'],['racsem','RAC presentation of progress every semester','cl. 10(2)'],['presub','Pre-submission presentation before the RAC','cl. 11(2)'],['plagsw','Thesis checked with plagiarism-detection software','cl. 11(3)'],['undert','Scholar\'s no-plagiarism undertaking and supervisor\'s originality certificate','cl. 11(4)'],['inflib','Electronic copy to INFLIBNET after evaluation, before the award','cl. 17']]},
+ {id:'apa7-article',name:'APA 7 journal article (IMRaD)',ver:'1',checked:'2026-10-29',verified:true,
+  src:'Publication Manual of the American Psychological Association, 7th ed. (2020)',
+  note:'Abstract up to 250 words unless the journal says otherwise; 3–5 keywords.',
+  style:'apa',abstractMax:250,
+  synopsis:[],chapters:['Abstract','Introduction','Method','Results','Discussion','References'],docs:[]},
+ {id:'in-psych-synopsis',name:'Indian psychology synopsis (common core)',ver:'1',checked:'2026-10-27',verified:true,
+  src:'Common sections found across Indian university psychology synopsis formats (Appuscholar check, 27 Oct 2026)',
+  note:'The core most universities share. Your own university may order or name them differently; check its format.',
+  style:'apa',abstractMax:0,
+  synopsis:['Title','Introduction','Rationale','Review of literature','Research gap','Objectives','Hypotheses','Method','Sample','Tools','Procedure','Statistical analysis','References'],
+  chapters:['Introduction','Review of literature','Method','Results','Discussion','Summary and conclusion','References','Appendices'],docs:[]}];
+function packsCustom(){try{const a=JSON.parse(LS.get('appu_packs')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function packsAll(){return PACKS_BUILTIN.concat(packsCustom())}
+function packGet(o){o=o||studyGet();const id=o.pack;return id?packsAll().find(p=>p.id===id)||null:null}
+function packClean(p){const s=(v,n)=>String(v==null?'':v).replace(/[<>]/g,'').slice(0,n||200),arr=(a,n)=>(Array.isArray(a)?a:[]).slice(0,40).map(x=>s(x,n||120)).filter(Boolean);
+  return{id:'c-'+s(p.id||Date.now(),40).replace(/[^\w-]/g,''),name:s(p.name,120)||'My university',ver:s(p.ver,20)||'1',checked:'',verified:false,src:s(p.src,300),note:s(p.note,300),
+    style:/^(apa|apa6|mla|chicago|harvard|vancouver|ieee|ama)$/.test(p.style)?p.style:'apa',abstractMax:Math.max(0,Math.min(1000,parseInt(p.abstractMax,10)||0)),
+    synopsis:arr(p.synopsis),chapters:arr(p.chapters),docs:(Array.isArray(p.docs)?p.docs:[]).slice(0,30).map((d,i)=>Array.isArray(d)?['d'+i,s(d[1]||d[0],200),s(d[2]||'',60)]:['d'+i,s(d,200),'']).filter(d=>d[1])}}
+function packUse(id){const o=studyGet();o.pack=id||'';studySet(o);const p=packGet(o);
+  if(p&&p.style){const sel=document.getElementById('citStyle');if(sel&&sel.value!==p.style){sel.value=p.style;try{citStyleChanged()}catch(e){}}}
+  showToast(studyHi()?(p?'"'+p.name+'" इस study पर लागू':'कोई pack नहीं'):(p?'"'+p.name+'" applied to this study':'No pack in use'));packRender();try{subRenderSide()}catch(e){}}
+function packHeadingsFound(list){return list.map(h=>{const re=new RegExp('^\\s*(\\d+(\\.\\d+)*[.)]?\\s*)?'+h.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s+'),'i');return[h,!!lsSection(re)]})}
+function packSave(){const g=id=>(document.getElementById(id)||{}).value||'',lines=id=>g(id).split('\n').map(x=>x.trim()).filter(Boolean),hi=studyHi();
+  const p=packClean({id:Date.now().toString(36),name:g('pkName'),src:g('pkSrc'),note:'',style:g('pkStyle'),abstractMax:g('pkAbs'),synopsis:lines('pkSyn'),chapters:lines('pkCh'),docs:lines('pkDocs').map(x=>['',x,''])});
+  if(!p.src){showToast(hi?'स्रोत लिखें: ordinance का नाम, साल या link':'Write the source: the ordinance name, year or link');return}
+  const l=packsCustom();l.push(p);LS.set('appu_packs',JSON.stringify(l));packUse(p.id)}
+function packExport(id){const p=packsAll().find(x=>x.id===id);if(!p)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(Object.assign({appuscholarPack:1},p),null,1)],{type:'application/json'}));a.download='appuscholar-pack-'+p.id+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function packImport(input){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader(),hi=studyHi();r.onload=()=>{try{const j=JSON.parse(r.result);if(!j||!j.appuscholarPack)throw 0;const p=packClean(j);const l=packsCustom().filter(x=>x.id!==p.id);l.push(p);LS.set('appu_packs',JSON.stringify(l));packUse(p.id);showToast(hi?'Pack जोड़ा गया (Appuscholar से जाँचा नहीं गया)':'Pack added (not checked by Appuscholar)')}catch(e){showToast(hi?'यह Appuscholar pack file नहीं है':'This is not an Appuscholar pack file')}input.value=''};r.readAsText(f)}
+function packDel(id){const l=packsCustom().filter(x=>x.id!==id);LS.set('appu_packs',JSON.stringify(l));const o=studyGet();if(o.pack===id){o.pack='';studySet(o)}packRender()}
+function packOpen(){let d=document.getElementById('packDlg');if(!d){d=document.createElement('dialog');d.id='packDlg';d.className='dlg-wide';document.body.appendChild(d)}packRender();if(!d.open)d.showModal()}
+function packRender(){const d=document.getElementById('packDlg');if(!d)return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),cur=packGet(o);
+  const row=p=>'<div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:8px 10px;margin:6px 0'+(cur&&cur.id===p.id?';border-color:#16a34a':'')+'"><b>'+escHTML(p.name)+'</b> '+(p.verified?'<span class="desc">✓ '+L('checked ','जाँचा: ')+escHTML(p.checked)+'</span>':'<span style="color:#b45309;font-size:12px">⚠ '+L('not checked by Appuscholar','Appuscholar से जाँचा नहीं गया')+'</span>')+
+    '<br><span class="desc">'+L('Source: ','स्रोत: ')+escHTML(p.src)+(p.note?'. '+escHTML(p.note):'')+'</span><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">'+(cur&&cur.id===p.id?'<button type="button" class="btn btn-ghost btn-sm" onclick="packUse(\'\')">'+L('Stop using','हटाएँ')+'</button>':'<button type="button" class="btn btn-purple btn-sm" onclick="packUse(\''+p.id+'\')">'+L('Use for this study','इस study पर लागू करें')+'</button>')+
+    '<button type="button" class="btn btn-ghost btn-sm" onclick="packExport(\''+p.id+'\')">⬆ '+L('Share as a file','File के रूप में दें')+'</button>'+(p.verified?'':'<button type="button" class="btn btn-ghost btn-sm" onclick="packDel(\''+p.id+'\')">✕</button>')+'</div></div>';
+  d.innerHTML='<div class="dlg-body"><h2>📦 '+L('Rule packs','नियमों के पैकेट')+'</h2><p class="desc">'+L('A pack sets the citation style, the synopsis sections, the thesis chapters, the abstract limit and the documents to submit for this study. The steps then check your work against it.','पैकेट इस study के लिए citation style, synopsis के sections, thesis के chapters, abstract की सीमा और जमा करने वाले documents तय करता है। फिर कदम आपके काम को उसी से जाँचते हैं।')+'</p>'+
+   packsAll().map(row).join('')+
+   '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">'+L('Make a pack from your university\'s ordinance','अपनी university के ordinance से पैकेट बनाएँ')+'</summary>'+
+   '<p class="desc">'+L('Copy only what the ordinance or the department\'s format says. A supervisor can make one pack and share the file with all students.','सिर्फ़ वही लिखें जो ordinance या department के format में है। Supervisor एक पैकेट बनाकर file सब students को दे सकते हैं।')+'</p>'+
+   '<label class="desc">'+L('Name','नाम')+'</label><input id="pkName" type="text" placeholder="University of Rajasthan, PhD Psychology">'+
+   '<label class="desc">'+L('Source (ordinance name and year, or link)','स्रोत (ordinance का नाम और साल, या link)')+'</label><input id="pkSrc" type="text">'+
+   '<label class="desc">'+L('Citation style','Citation style')+'</label><select id="pkStyle">'+['apa','apa6','mla','chicago','harvard','vancouver','ieee','ama'].map(s=>'<option>'+s+'</option>').join('')+'</select>'+
+   '<label class="desc">'+L('Abstract word limit (0 if none)','Abstract की शब्द-सीमा (न हो तो 0)')+'</label><input id="pkAbs" type="number" min="0" value="0" style="max-width:120px">'+
+   '<label class="desc">'+L('Synopsis sections, one per line, in order','Synopsis के sections, हर पंक्ति में एक, क्रम से')+'</label><textarea id="pkSyn" rows="4"></textarea>'+
+   '<label class="desc">'+L('Thesis chapters, one per line','Thesis के chapters, हर पंक्ति में एक')+'</label><textarea id="pkCh" rows="4"></textarea>'+
+   '<label class="desc">'+L('Documents to submit, one per line','जमा करने वाले documents, हर पंक्ति में एक')+'</label><textarea id="pkDocs" rows="3"></textarea>'+
+   '<div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="packSave()">'+L('Save and use','सहेजें और लागू करें')+'</button></div></details>'+
+   '<div class="row" style="margin-top:10px;gap:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'packFile\').click()">⬇ '+L('Add a pack file from your supervisor','Supervisor से मिली पैकेट file जोड़ें')+'</button><input type="file" id="packFile" accept=".json" style="display:none" onchange="packImport(this)"><span style="flex:1"></span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'packDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>'}
+/* What the steps show from the active pack. */
+function packStepHTML(id,o){const p=packGet(o),hi=studyHi(),L=(en,x)=>hi?x:en;
+  const head='<div class="sub-box"><b>📦 '+(p?escHTML(p.name):L('No rule pack','कोई पैकेट नहीं'))+'</b>'+(p&&!p.verified?' <span style="color:#b45309;font-size:12px">⚠ '+L('not checked by Appuscholar','Appuscholar से जाँचा नहीं गया')+'</span>':'');
+  const btn='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="packOpen()">📦 '+L(p?'Change the pack':'Choose your university\'s rules',p?'पैकेट बदलें':'अपनी university के नियम चुनें')+'</button></div>';
+  const chk=(list,t)=>list.length?'<p style="margin:6px 0 2px">'+t+'</p>'+packHeadingsFound(list).map(x=>'<div style="font-size:13.5px">'+(x[1]?'✅':'⬜')+' '+escHTML(x[0])+'</div>').join(''):'';
+  if(id==='C8')return head+(p?chk(p.synopsis,L('Synopsis sections in your documents:','आपके documents में synopsis के sections:')):'<p class="desc" style="margin:4px 0">'+L('Choose your university\'s pack to check the synopsis sections against its format.','Synopsis के sections उसके format से मिलाने के लिए अपनी university का पैकेट चुनें।')+'</p>')+btn+'</div>';
+  if(id==='E1')return head+(p?chk(p.chapters,L('Chapters in your documents:','आपके documents में chapters:')):'<p class="desc" style="margin:4px 0">'+L('Choose a pack to check the chapters against your format.','Chapters अपने format से मिलाने के लिए पैकेट चुनें।')+'</p>')+btn+'</div>';
+  if(id==='F4'&&p&&p.docs.length){const f=((wGet(o).F4||{}).pack)||{};return head+'<p style="margin:6px 0 2px">'+L('Also required by this pack:','इस पैकेट के अनुसार यह भी ज़रूरी:')+'</p>'+p.docs.map(d=>'<label style="display:block;margin:3px 0;font-size:14px"><input type="checkbox"'+(f[d[0]]?' checked':'')+' onchange="f4Tick(\'pack\',\''+d[0]+'\',this.checked)"> '+escHTML(d[1])+(d[2]?' <span class="desc">('+escHTML(d[2])+')</span>':'')+'</label>').join('')+'</div>'}
+  return''}
+function packE1Ok(o){const p=packGet(o);if(!p||!p.chapters.length)return null;return packHeadingsFound(p.chapters).every(x=>x[1])}
+function packF4Ok(o){const p=packGet(o);if(!p||!p.docs.length)return true;const f=((wGet(o).F4||{}).pack)||{};return p.docs.every(d=>f[d[0]])}
+
 function wExtra3HTML(id,o){
-  if(LS_IDS.indexOf(id)>=0)return lsHTML(id,o);const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
+  if(LS_IDS.indexOf(id)>=0)return lsHTML(id,o);
+  if(id==='C8'||id==='E1'||id==='F4')return packStepHTML(id,o);const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
    lab=t=>'<label class="desc" style="display:block;margin-top:6px">'+t+'</label>',sel=(opts,v,on)=>'<select onchange="'+on+'"><option value=""></option>'+opts.map(x=>'<option value="'+x[0]+'"'+(v===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>',
    warn=list=>list.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+list.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'';
   if(id==='D2'){const d=dgPart(o);return'<div class="sub-box"><b>'+L('Participant flow diagram','Participants का flow diagram')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPartInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from the recruitment log below once it has people approached, agreed and completed.','नीचे के recruitment log में पूछे, माने और पूरा करने वालों की संख्या आते ही यहाँ बनेगा।')+'</p>')+'</div>'}
@@ -15478,7 +15551,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.28i';
+const APP_BUILD='2026.10.29a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
