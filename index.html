@@ -949,6 +949,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
         <div class="fld" style="flex:1"><label for="citDay" data-i18n="cite_day_label">Day</label><input type="text" id="citDay" inputmode="numeric" maxlength="2" placeholder="5"></div>
         <div class="fld" style="flex:2"><label for="citAccessed" data-i18n="cite_accessed_label">Accessed on</label><input type="date" id="citAccessed"></div>
       </div>
+      <div id="citWebSlot"></div>
       <div class="fld cit-only" data-for="chapter conf"><label for="citContainer" data-i18n="cite_container_label">Book or proceedings title</label><input type="text" id="citContainer" placeholder="e.g. Handbook of child psychology"></div>
       <div class="fld cit-only" data-for="chapter"><label for="citEditors" data-i18n="cite_editors_label">Editor(s), separate with ;</label><input type="text" id="citEditors" placeholder="Damon, William; Lerner, Richard M."></div>
       <div class="fld cit-only" data-for="report"><label for="citNumber" data-i18n="cite_number_label">Report number (if any)</label><input type="text" id="citNumber" placeholder="e.g. 14"></div>
@@ -981,6 +982,13 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
           <a id="citBookmarklet" href="#" class="btn btn-gold" style="display:inline-block;text-decoration:none" onclick="return false" draggable="true" data-i18n="cite_bookmarklet_btn">🔖 Capture to Appuscholar</a>
         </p>
         <p class="desc" data-i18n="cite_bookmarklet_note">Drag — don't click — the button above onto your bookmarks bar. It only reads standard citation tags already on the page (the same ones Zotero and Mendeley use); it can't read pages that don't publish them, like most news sites.</p>
+      </details>
+      <details style="margin-top:10px" id="citBulkBox">
+        <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="bulk_sum">📥 Add my own reference list (books, articles, websites)</summary>
+        <p class="desc" style="margin-top:8px" data-i18n="bulk_desc">Paste the references you already have, one per line: from your notes, a book's bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.</p>
+        <textarea id="citBulk" rows="5" placeholder="Bandura, A. (1977). Social learning theory. Prentice Hall.&#10;ISBN 978-0-13-816744-8&#10;10.1037/h0043158"></textarea>
+        <div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple" style="flex:1" onclick="citBulkAdd()" data-i18n="bulk_btn">Check and add to my library</button></div>
+        <p class="desc" id="citBulkOut" style="margin-top:6px"></p>
       </details>
 
       <h3 style="margin-top:14px"><span data-i18n="cite_library_h3">🗂 My library</span> <span class="badge" id="citCount">0</span></h3>
@@ -2324,7 +2332,7 @@ const I18N={
     welcome_step3:'Follow the link, create a key, paste it in, press <b>Save Key</b>.',
     welcome_step4:'Start writing. Press <kbd>Tab</kbd> to accept a suggestion.',
     welcome_warn:"Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.",
-    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
+    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', bulk_sum:'📥 Add my own reference list (books, articles, websites)', bulk_desc:'Paste the references you already have, one per line: from your notes, a book\'s bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.', bulk_btn:'Check and add to my library', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
     login_h2:'🔑 Appuscholar Access',
     login_intro:"This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.",
     login_placeholder:'Paste your access code here', login_unlock_btn:'Unlock',
@@ -2564,7 +2572,7 @@ const I18N={
     welcome_step3:'लिंक पर जाएं, एक कुंजी बनाएं, उसे पेस्ट करें, <b>कुंजी सहेजें</b> दबाएं।',
     welcome_step4:'लिखना शुरू करें। सुझाव स्वीकार करने के लिए <kbd>Tab</kbd> दबाएं।',
     welcome_warn:'Appuscholar मसौदा तैयार करता है और जांचता है — यह आपकी सोच का काम नहीं करता। हर उद्धरण की जांच करें, और जमा करने से पहले अपनी संस्था की AI सहायता नीति देख लें।',
-    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
+    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', bulk_sum:'📥 अपनी references की सूची जोड़ें (किताबें, लेख, websites)', bulk_desc:'जो references आपके पास पहले से हैं, उन्हें चिपकाएँ, हर पंक्ति में एक: अपने notes से, किसी किताब की bibliography से, या पुराने assignment से। हर पंक्ति उसके DOI, ISBN या Crossref में title से मिलाई जाती है। जो नहीं मिलती, वह जैसी लिखी थी वैसी रखी जाती है और ⚠ से चिह्नित होती है, ताकि आप उसे जाँच लें।', bulk_btn:'जाँचकर मेरी library में जोड़ें', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
     login_h2:'🔑 Appuscholar प्रवेश',
     login_intro:'इस प्रति के लिए एक एक्सेस कोड चाहिए। आपको दिया गया कोड नीचे पेस्ट करें — यह इसी कंप्यूटर पर जांचा जाता है, कुछ भी अपलोड नहीं होता।',
     login_placeholder:'अपना एक्सेस कोड यहाँ पेस्ट करें', login_unlock_btn:'अनलॉक करें',
@@ -9825,10 +9833,11 @@ function citReadForm(){
          volume:v('citVol'),issue:v('citIssue'),pages:v('citPages'),doi:v('citDOI'),url:v('citURL'),
          month:v('citMonth'),day:v('citDay'),accessed:v('citAccessed'),
          container:v('citContainer'),editors:v('citEditors'),number:v('citNumber'),degree:v('citDegree'),
-         type:v('citType'),style:v('citStyle'),lang:v('citSourceLang')||'en'};
+         type:v('citType'),style:v('citStyle'),lang:v('citSourceLang')||'en',
+         wc:citKind(v('citType'))==='web'?{who:v('citWc_who'),when:v('citWc_when'),ev:v('citWc_ev'),why:v('citWc_why')}:undefined};
 }
 function citClearForm(){
-  ['citAuthor','citYear','citTitle','citSource','citVol','citIssue','citPages','citDOI','citURL','citQuoteText','citMonth','citDay','citAccessed','citContainer','citEditors','citNumber','citDegree']
+  ['citAuthor','citYear','citTitle','citSource','citVol','citIssue','citPages','citDOI','citURL','citQuoteText','citMonth','citDay','citAccessed','citContainer','citEditors','citNumber','citDegree','citWc_who','citWc_when','citWc_ev','citWc_why']
     .forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   const langSel=document.getElementById('citSourceLang');if(langSel)langSel.value='en';
   showToast('Form cleared');
@@ -10289,6 +10298,7 @@ function citMissingNumbers(docs,libLen){
 }
 function citTypeChanged(){
   const ty=document.getElementById('citType');if(!ty)return;
+  {const sl=document.getElementById('citWebSlot');if(sl&&sl.dataset.lang!==getLang()){sl.innerHTML=citWebCheckHTML();sl.dataset.lang=getLang()}}
   const k=citKind(ty.value);
   document.querySelectorAll('.cit-only').forEach(el=>{el.style.display=(el.getAttribute('data-for')||'').split(' ').indexOf(k)>=0?'':'none'});
   citRender();
@@ -10349,7 +10359,7 @@ function citRender(){
       : '<div class="desc" style="margin-top:4px;opacity:.75">'+escHTML(t('cite_not_used'))+'</div>';
     const retrLine=(retrStatus[i]&&retrStatus[i].r)?'<div class="retr-warn">⚠ '+escHTML(t('retr_lib_warn'))+'</div>':'';
     return'<div class="cit-item'+(i===citActiveIdx?' cit-active':'')+'" id="citItem'+i+'"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
-      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b><br>'+f.refHTML+usedLine+retrLine+rcLine(d,rcAll[citKey(d)])+
+      '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b>'+(d.unverified?' <span title="'+escAttr(d.typed||'')+'" style="color:#b45309;font-size:12px">⚠ '+(getLang()==='hi'?'जैसा लिखा था वैसा रखा: लेखक, साल और title जाँचें':'kept as you typed it: check author, year and title')+'</span>':'')+(d.wc&&(d.wc.who==='none'||d.wc.ev==='none'||d.wc.why==='sell')?' <span style="color:#b45309;font-size:12px">⚠ '+(getLang()==='hi'?'कमज़ोर website':'weak website')+'</span>':'')+'<br>'+f.refHTML+usedLine+retrLine+rcLine(d,rcAll[citKey(d)])+
       '<div class="row" style="margin-top:6px">'+
       '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.sup?'¹ ('+f.num+')':f.intext)+'</button>'+
       '</div></div>';
@@ -10442,9 +10452,95 @@ function citTitleOverlap(q,found){
 }
 /* FIX 9: real metadata from Crossref instead of an invented citation.
    Accepts a DOI, a doi.org or PubMed link, a PubMed ID, a pasted full reference, or just a title. */
+/* ============ Books, websites and the student's own reference list (build 2026.10.28c) ============
+   Books: ISBN lookup (Open Library, then Google Books). Websites: a four-question check stored with the
+   source, a "save a copy" link to the Wayback Machine, and the capture button now records a web page as a
+   website and lists the research papers it links to, so the student can cite the originals.
+   Own list: paste a reference list; each line is matched by DOI, ISBN or title, and anything not found is
+   kept exactly as typed and marked for checking. */
+function citIsbn(s){s=String(s||'');if(/10\.\d{4,9}\//.test(s))return'';
+  const m=s.replace(/[‐-―]/g,'-').match(/(?:ISBN(?:-1[03])?:?\s*)?\b((?:97[89][-\s]?)?\d[\d\-\s]{7,15}[\dXx])\b/);if(!m)return'';
+  const d=m[1].replace(/[^\dXx]/g,'').toUpperCase();
+  if(d.length===10){let s1=0;for(let i=0;i<10;i++){const v=d[i]==='X'?10:+d[i];if(isNaN(v))return'';s1+=v*(10-i)}return s1%11===0?d:''}
+  if(d.length===13&&/^97[89]\d{10}$/.test(d)){let s2=0;for(let i=0;i<13;i++)s2+=(+d[i])*(i%2?3:1);return s2%10===0?d:''}
+  return''}
+function citFlipName(n){n=String(n||'').trim();if(!n||n.indexOf(',')>=0)return n;const p=n.split(/\s+/);if(p.length<2)return n;const last=p.pop();return last+', '+p.join(' ')}
+async function citIsbnRecord(isbn){
+  try{const r=await fetch('https://openlibrary.org/api/books?bibkeys=ISBN:'+isbn+'&format=json&jscmd=data');
+    if(r.ok){const b=(await r.json())['ISBN:'+isbn];if(b&&b.title)return{author:(b.authors||[]).map(a=>citFlipName(a.name)).join('; '),year:((String(b.publish_date||'').match(/\d{4}/)||[''])[0]),title:b.title+(b.subtitle?': '+b.subtitle:''),source:((b.publishers||[])[0]||{}).name||'',type:'Book',isbn:isbn,via:'Open Library'}}}catch(e){}
+  try{const r=await fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:'+isbn);
+    if(r.ok){const it=(((await r.json()).items)||[])[0];const v=it&&it.volumeInfo;if(v&&v.title)return{author:(v.authors||[]).map(citFlipName).join('; '),year:((String(v.publishedDate||'').match(/\d{4}/)||[''])[0]),title:v.title+(v.subtitle?': '+v.subtitle:''),source:v.publisher||'',type:'Book',isbn:isbn,via:'Google Books'}}}catch(e){}
+  return null}
+async function citIsbnFill(isbn){const hi=getLang()==='hi';showToast(hi?'ISBN से किताब खोज रहे हैं…':'Looking up the book by ISBN…');
+  const b=await citIsbnRecord(isbn);if(!b){showToast(hi?'इस ISBN की किताब नहीं मिली। जानकारी किताब के शुरुआती पन्नों से भरें।':'No book found for this ISBN. Fill it in from the book\'s title page.');return}
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v==null?'':String(v)};
+  set('citAuthor',b.author);set('citYear',b.year);set('citTitle',b.title);set('citSource',b.source);set('citDOI','');set('citVol','');set('citIssue','');set('citPages','');
+  document.getElementById('citType').value='Book';citTypeChanged();citRender();
+  showToast((hi?'किताब भरी गई (':'Book filled in (')+b.via+(hi?')। Edition और प्रकाशक का नाम किताब से मिला लें।':'). Check the edition and publisher against the book itself.'))}
+/* A Crossref work as a library record. */
+function citCrRecord(it){const ctype=String(it.type||''),dp=((it.issued||{})['date-parts']||[[]])[0]||[];
+  const isCh=(ctype==='book-chapter'||ctype==='book-section'||ctype==='reference-entry'),isConf=ctype==='proceedings-article',isRep=ctype==='report',isThesis=ctype==='dissertation',isBook=(ctype==='book'||ctype==='monograph'||ctype==='edited-book');
+  const ctr=citCrPlain((it['container-title']||[''])[0]),pubr=citCrPlain(it.publisher||'');
+  return{author:citCrNames(it.author),year:String(dp[0]||''),title:citCrTitle(it),source:(isCh||isConf)?pubr:(isBook||isRep||isThesis)?(pubr||ctr):ctr,container:(isCh||isConf)?ctr:'',editors:citCrNames(it.editor),
+    volume:it.volume||'',issue:it.issue||'',pages:it.page||(it['article-number']?'Article '+it['article-number']:''),doi:it.DOI||'',url:'',
+    type:isCh?'Book chapter':isConf?'Conference paper':isRep?'Report':isThesis?'Thesis':isBook?'Book':'Journal article',style:(document.getElementById('citStyle')||{}).value||'apa',lang:'en'}}
+async function citDoiRecord(doi){const r=await fetch('https://api.crossref.org/works/'+encodeURIComponent(doi));if(!r.ok)return null;return citCrRecord((await r.json()).message)}
+function citLibHas(rec){const l=citGetLib(),k=citKey(rec);return l.some(e=>citKey(e)===k||(rec.doi&&e.doi&&e.doi.toLowerCase()===rec.doi.toLowerCase()))}
+function citLibPush(recs){const l=citGetLib();let n=0;recs.forEach(r=>{if(r&&!citLibHas(r)){l.push(r);n++}});if(n)citSaveLib(l);return n}
+/* Website check: the four questions a reader asks of any page before trusting it. */
+const CIT_WC=[['who',['Who wrote it?','किसने लिखा?'],[['person','A named expert','नामित विशेषज्ञ'],['org','A known organisation','जानी-मानी संस्था'],['none','No author shown','लेखक नहीं दिखा']]],
+ ['when',['When was it written or updated?','कब लिखा या बदला गया?'],[['new','In the last 3 years','पिछले 3 साल में'],['old','Older','उससे पुराना'],['none','No date shown','तारीख नहीं दिखी']]],
+ ['ev',['Does it show its evidence?','क्या सबूत दिखाता है?'],[['links','Cites research with links','Research को link के साथ cite करता है'],['vague','Mentions research, no links','Research का ज़िक्र, link नहीं'],['none','No evidence','कोई सबूत नहीं']]],
+ ['why',['Why does the page exist?','Page किसलिए है?'],[['inform','To inform','जानकारी देने'],['sell','To sell or promote','बेचने या प्रचार के लिए'],['opinion','Opinion','राय']]]];
+function citWebCheckHTML(){const hi=getLang()==='hi',L=(en,h)=>hi?h:en;
+  return'<div class="fld cit-only" data-for="web" id="citWebBox" style="border:1px solid var(--line);border-radius:10px;padding:8px 10px"><b style="font-size:13px">'+L('Check this website before you cite it','Cite करने से पहले website जाँचें')+'</b>'+
+   CIT_WC.map(q=>'<label class="desc" style="display:block;margin-top:6px">'+escHTML(hi?q[1][1]:q[1][0])+'</label><select id="citWc_'+q[0]+'" onchange="citWebAdvice()"><option value=""></option>'+q[2].map(o=>'<option value="'+o[0]+'">'+escHTML(hi?o[2]:o[1])+'</option>').join('')+'</select>').join('')+
+   '<p class="desc" id="citWebAdv" style="margin:6px 0 0"></p>'+
+   '<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="citWayback()">🗄 '+L('Save a copy of the page (Internet Archive)','Page की copy सुरक्षित करें (Internet Archive)')+'</button></div>'+
+   '<p class="desc" style="margin:4px 0 0">'+L('Web pages change or vanish. A saved copy lets your examiner see what you read.','Web pages बदल जाते हैं या हट जाते हैं। सुरक्षित copy से examiner वही देख सकेगा जो आपने पढ़ा।')+'</p></div>'}
+function citWebAdvice(){const hi=getLang()==='hi',v=k=>(document.getElementById('citWc_'+k)||{}).value||'',el=document.getElementById('citWebAdv');if(!el)return;const out=[];
+  if(v('ev')==='links')out.push(hi?'यह page research को cite करता है। किसी नतीजे या आँकड़े के लिए मूल study को cite करें, page को नहीं। Page को सिर्फ़ उसकी अपनी बात (नीति, बयान, उसके अपने आँकड़े) के लिए cite करें।':'This page cites research. For a finding or a number, cite the original study, not the page. Cite the page only for what it says itself (a policy, a statement, figures it publishes).');
+  if(v('who')==='none'||v('ev')==='none'||v('why')==='sell')out.push(hi?'यह page शोध के सबूत के रूप में कमज़ोर है। इसका दावा किसी peer-reviewed स्रोत से मिलाएँ।':'This page is weak as evidence for research. Check its claim against a peer-reviewed source.');
+  if(v('when')==='none')out.push(hi?'तारीख न हो तो reference में (n.d.) लिखा जाता है, और देखने की तारीख ज़रूर भरें।':'With no date, the reference shows (n.d.); fill in the date you accessed it.');
+  el.textContent=out.join(' ')}
+function citWayback(){const u=(document.getElementById('citURL')||{}).value||'';if(!/^https?:\/\//i.test(u.trim())){showToast(getLang()==='hi'?'पहले page का link भरें':'Put the page link in first');return}
+  window.open('https://web.archive.org/save/'+u.trim(),'_blank','noopener')}
+/* The student's own reference list, pasted. */
+function citParseRef(line){const s=line.replace(/\s+/g,' ').trim();
+  const m=s.match(/^(.+?)\s*\(((?:19|20)\d{2}[a-z]?|n\.d\.)\)\.?\s*(.+?)[.?!]\s+(.+?)\.?$/);if(!m)return{author:'',year:'',title:s,source:'',type:'Journal article'};
+  const au=m[1].replace(/,?\s*&\s*/g,'; ').replace(/\.,\s(?=[A-Zऀ-ॿ][^,]{0,40},)/g,'.; ').replace(/,\s*$/,'');
+  const rest=m[4],jm=rest.match(/^(.+?),\s*(\d+)\s*(?:\((\d+[\-–]?\d*)\))?,\s*([\dA-Za-z–\-]+)/);
+  return jm?{author:au,year:m[2],title:m[3],source:jm[1],volume:jm[2],issue:jm[3]||'',pages:jm[4],type:'Journal article'}:{author:au,year:m[2],title:m[3],source:rest.replace(/https?:\/\/\S+/,'').replace(/[.\s]+$/,''),type:'Book'}}
+async function citBulkAdd(){const ta=document.getElementById('citBulk'),out=document.getElementById('citBulkOut'),hi=getLang()==='hi';if(!ta)return;
+  const lines=ta.value.split(/\n+/).map(x=>x.trim()).filter(x=>x.length>8).slice(0,60);if(!lines.length){showToast(hi?'पहले references चिपकाएँ, हर पंक्ति में एक':'Paste your references first, one per line');return}
+  const st={doi:0,isbn:0,match:0,typed:0,dup:0},recs=[];out.textContent=(hi?'जाँच रहे हैं… ':'Checking… ')+'0/'+lines.length;
+  for(let i=0;i<lines.length;i++){const line=lines[i];let rec=null;
+    try{const doi=citExtractDoi(line);if(doi){rec=await citDoiRecord(doi);if(rec)st.doi++}
+      if(!rec){const isbn=citIsbn(line);if(isbn){rec=await citIsbnRecord(isbn);if(rec){delete rec.via;st.isbn++}}}
+      if(!rec){const p=citParseRef(line);
+        if(p.title&&p.title.length>12){const r=await fetch('https://api.crossref.org/works?rows=1&query.bibliographic='+encodeURIComponent(line.slice(0,300)));
+          if(r.ok){const it=(((await r.json()).message||{}).items||[])[0];if(it&&citTitleOverlap(p.title,citCrTitle(it))>=0.8&&(!p.year||String(((it.issued||{})['date-parts']||[[]])[0][0])===p.year.slice(0,4))){rec=citCrRecord(it);st.match++}}}
+        if(!rec){rec=Object.assign({volume:'',issue:'',pages:'',doi:'',url:'',style:(document.getElementById('citStyle')||{}).value||'apa',lang:/[ऀ-ॿ]/.test(line)?'hi':'en'},p,{typed:line,unverified:true});st.typed++}}
+    }catch(e){const p=citParseRef(line);rec=Object.assign({volume:'',issue:'',pages:'',doi:'',url:'',style:'apa',lang:'en'},p,{typed:line,unverified:true});st.typed++}
+    if(rec){rec.style=rec.style||((document.getElementById('citStyle')||{}).value||'apa');if(citLibHas(rec)||recs.some(r=>citKey(r)===citKey(rec)))st.dup++;else recs.push(rec)}
+    out.textContent=(hi?'जाँच रहे हैं… ':'Checking… ')+(i+1)+'/'+lines.length}
+  const n=citLibPush(recs);
+  out.textContent=hi?(n+' जोड़े: '+st.doi+' DOI से, '+st.isbn+' ISBN से, '+st.match+' Crossref में title से मिले, '+st.typed+' जैसे लिखे थे वैसे रखे (इन्हें library में ⚠ से पहचानें और जाँचें)।'+(st.dup?' '+st.dup+' पहले से थे।':'')):
+    (n+' added: '+st.doi+' by DOI, '+st.isbn+' by ISBN, '+st.match+' matched in Crossref by title, '+st.typed+' kept as you typed them (marked ⚠ in the library; check them).'+(st.dup?' '+st.dup+' were already there.':''));
+  if(n)ta.value=''}
+/* Capture from a web page: website record plus the research it links to. */
+async function citCaptureWeb(d){const hi=getLang()==='hi',today=new Date().toISOString().slice(0,10),dt=String(d.date||'');
+  const rec={author:d.author||d.site||'',year:(dt.match(/^\d{4}/)||[''])[0],month:dt.length>=7?String(+dt.slice(5,7)):'',day:dt.length>=10?String(+dt.slice(8,10)):'',title:d.title,source:d.site||'',url:d.url||'',accessed:today,volume:'',issue:'',pages:'',doi:'',type:'Website',style:'apa',lang:/[ऀ-ॿ]/.test(d.title||'')?'hi':'en'};
+  let added=citLibPush([rec]);
+  const dois=(d.dois||[]).slice(0,25);
+  if(dois.length&&confirm(hi?('यह page '+dois.length+' research papers से link करता है। उन्हें भी library में जोड़ें, ताकि आप मूल studies को cite कर सकें?'):('This page links to '+dois.length+' research paper'+(dois.length>1?'s':'')+'. Add them to your library too, so you can cite the original studies?'))){
+    const recs=[];for(const x of dois){try{const r=await citDoiRecord(x);if(r)recs.push(r)}catch(e){}}added+=citLibPush(recs)}
+  showToast(hi?(added+' source library में जोड़े ✓'):(added+' source'+(added===1?'':'s')+' added to your library ✓'))}
+
 async function citLookup(){
   const val=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
   const raw=[val('citDOI'),val('citURL'),val('citTitle')];
+  {const isb=raw.map(citIsbn).find(Boolean);if(isb&&!raw.some(x=>citExtractDoi(x)))return citIsbnFill(isb)}
   let doi='',pmid='',query='';
   for(const x of raw){if(!doi){doi=citExtractDoi(x)}if(!pmid){pmid=citExtractPmid(x)}}
   if(!doi&&!pmid)query=raw.find(x=>x&&!/^https?:\/\/\S+$/.test(x))||'';
@@ -15073,7 +15169,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.28b';
+const APP_BUILD='2026.10.28c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -17529,7 +17625,9 @@ function citSetupBookmarklet(){
     "(function(){",
     "function m(n){var e=document.querySelector('meta[name=\"'+n+'\"]');return e?e.getAttribute('content'):''}",
     "var as=Array.prototype.slice.call(document.querySelectorAll('meta[name=\"citation_author\"]')).map(function(e){return e.getAttribute('content')}).join('; ');",
+    "function g(n){var e=document.querySelector('meta[property=\"'+n+'\"]');return e?e.getAttribute('content'):''}",
     "var d={title:m('citation_title')||document.title,author:as,year:(m('citation_publication_date')||m('citation_date')||m('citation_year')||'').slice(0,4),source:m('citation_journal_title')||m('citation_conference_title')||'',doi:m('citation_doi')||'',url:location.href};",
+    "if(!m('citation_title')){d.kind='web';d.title=g('og:title')||document.title;d.author=m('author')||g('article:author')||'';d.site=g('og:site_name')||location.hostname.replace(/^www\\./,'');d.date=g('article:modified_time')||g('article:published_time')||m('date')||'';var t=(document.body.innerText||'')+' '+Array.prototype.map.call(document.querySelectorAll('a[href]'),function(a){return a.href}).join(' ');var r=t.match(/10\\.\\d{4,9}\\/[^\\s\"<>#?]+/g)||[];var u={};d.dois=[];r.forEach(function(x){x=x.replace(/[.,;)\\]]+$/,'');if(!u[x.toLowerCase()]&&d.dois.length<25){u[x.toLowerCase()]=1;d.dois.push(x)}})}",
     "if(!d.title){alert('No citation info found on this page \\u2014 this works best on a journal article, PubMed, or arXiv page.');return}",
     "var p=btoa(unescape(encodeURIComponent(JSON.stringify(d))));",
     "window.open('"+appUrl+"#capture='+encodeURIComponent(p),'_blank');",
@@ -17549,6 +17647,7 @@ function citCheckCaptureHash(){
     const json=decodeURIComponent(escape(atob(decodeURIComponent(raw))));
     const d=JSON.parse(json);
     if(!d||!d.title)return;
+    if(d.kind==='web'){if(!confirm((getLang()==='hi'?'यह website library में जोड़ें?':'Add this website to your citation library?')+'\n\n"'+d.title+'"\n'+(d.site||'')))return;citCaptureWeb(d);return}
     if(!confirm('Add this to your citation library?\n\n"'+d.title+'"\n'+(d.author||'(no author found)')+(d.year?' ('+d.year+')':'')))return;
     const rec={author:d.author||'',year:d.year||'',title:d.title,source:d.source||'',volume:'',issue:'',pages:'',doi:d.doi||'',url:d.doi?'':(d.url||''),type:'Journal article',style:'apa'};
     const l=citGetLib();
