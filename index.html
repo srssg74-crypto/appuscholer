@@ -3097,7 +3097,7 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'C3':return ssComplete(ds);
     case'C4':return v.some(x=>x.role==='outcome')&&scaleCheck(o).ok;
     case'C6':return !!(o.qn&&o.qn.built);
-    case'D4':return !!(o.analysis&&o.analysis.ran);
+    case'D4':return resD4Ok(o);
     case'E1':return !!(o.draft&&o.draft.built);
     case'F6':return subPosterSaved();
   }}catch(e){}return false}
@@ -3372,7 +3372,8 @@ function wExtraHTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok
     if(c.mode==='pub')b+=inp('scale',L('Scale and version','Scale और version'),'RSES, 10 items')+inp('src',L('Hindi version: authors, year, journal','Hindi version: लेखक, साल, journal'),'Aachal, Kumar & Bahurupi (2024), Indian J Psychol Med')+inp('sample',L('Who it was tested on (sample)','किन पर जाँचा गया (sample)'),'143 female nursing students, Uttarakhand')+inp('lic',L('Permission or licence for the Hindi wording','Hindi wording की अनुमति या licence'),'CC BY-NC 4.0: non-commercial, with credit')+'<p class="desc" style="margin:6px 0 0">'+L('If two Hindi versions exist, pick one and never mix their items.','अगर दो Hindi versions हैं, तो एक चुनें और उनके items कभी न मिलाएँ।')+'</p>';
     if(c.mode==='own')b+='<p class="desc" style="margin:4px 0">'+L('Who did each step and when (Beaton et al., 2000).','हर कदम किसने और कब किया (Beaton et al., 2000)।')+'</p>'+C5_STEPS.map(s=>'<label class="desc" style="display:block;margin-top:4px">'+(hi?s[2]:s[1])+'</label><input type="text" value="'+escAttr(((c.steps||{})[s[0]])||'')+'" onchange="wC5Step(\''+s[0]+'\',this.value)">').join('');
     return box(wTransOk(o),L('Hindi translation record','Hindi अनुवाद का record'),b)}
-  if(id==='D6'){const fl=wCausalFlags(o);let b='<div class="row" style="gap:6px;margin:4px 0"><button type="button" class="btn btn-ghost btn-sm" onclick="wInterpFromHyp()">↧ '+L('Make rows from my hypotheses','मेरी hypotheses से पंक्तियाँ बनाएँ')+'</button></div>';
+  if(id==='D6'){const fl=wCausalFlags(o);let b='<div class="row" style="gap:6px;margin:4px 0;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" onclick="wInterpFromHyp()">↧ '+L('Make rows from my hypotheses','मेरी hypotheses से पंक्तियाँ बनाएँ')+'</button>'+(resList(o).length?'<button type="button" class="btn btn-ghost btn-sm" onclick="resFillInterp()">↧ '+L('Fill results from my recorded analyses','दर्ज analyses से नतीजे भरें')+'</button>':'')+'</div>'+
+      '<div class="row" style="gap:6px;margin:4px 0;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="resInsert(\'res\')">📄 '+L('Draft the Results section','Results का draft बनाएँ')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="resInsert(\'disc\')">📄 '+L('Start the Discussion','Discussion की शुरुआत बनाएँ')+'</button></div>';
     if(fl.length)b+='<p style="color:#b45309;margin:4px 0">⚠️ '+L('Row ','पंक्ति ')+fl.join(', ')+': '+L('the meaning uses cause-and-effect words, but this design shows association, not cause.','अर्थ में कारण-परिणाम वाले शब्द हैं, पर यह design सिर्फ़ संबंध दिखाता है, कारण नहीं।')+'</p>';
     return box(wInterpOk(o)&&!fl.length,L('Interpretation','अर्थ'),b)}
   if(id==='E8'){const done=!!w.aiu;return box(done,L('AI-use statement','AI उपयोग का कथन'),'<p style="margin:6px 0 0">'+L('Appuscholar keeps a private log of AI help (date, tool, kind of help, never your text). Build the statement from it, edit it, and insert it where your university or journal asks.','Appuscholar AI की मदद का निजी log रखता है (तारीख, tool, किस तरह की मदद; आपका text कभी नहीं)। उसी से कथन बनाएँ, बदलें, और जहाँ university या journal कहे वहाँ डालें।')+'</p>'+(done?'<p class="desc" style="margin:4px 0">'+L('Inserted on ','डाला गया: ')+new Date(w.aiu).toLocaleDateString()+'</p>':'')+'<button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="document.getElementById(\'subDlg\').close();aiuOpen()">🤖 '+L('Open the AI-use statement','AI उपयोग का कथन खोलें')+'</button>')}
@@ -3615,10 +3616,64 @@ function dgPlanHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,p=((wGet(o).C8||{}).
    STAGES.map(s=>'<tr><td style="padding:3px">'+escHTML(stageLabel(s))+'</td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).a||'')+'" onchange="dgPlanSet(\''+s+'\',\'a\',this.value)"></td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).d||'')+'" onchange="dgPlanSet(\''+s+'\',\'d\',this.value)"></td></tr>').join('')+'</table>'+
    (d?'<div style="margin-top:8px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff;overflow-x:auto">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="dgGanttInsert()">📊 '+L('Put the time chart in my document','समय-सारणी document में डालें')+'</button></div>':'')}
 
+/* ============ Plan → test → meaning → Results (build 2026.10.28f) ============
+   A Stats Lab result is recorded against a hypothesis of the C7 plan. A test other than the planned one is
+   a deviation and needs a reason; a result for no planned hypothesis is exploratory. D4 is done when every
+   main analysis has a recorded result; D6 and the Results draft are filled from these records.
+   Each record keeps the build and the time (register v6, TST-020). Stored in o.results. */
+const RES_KEYMAP={ttestInd:'Welch t-test (two groups)',ttestPaired:'Paired t-test',welchAnova:'Welch ANOVA (3+ groups)',rmanova:'Repeated-measures ANOVA',mannwhitney:'Mann-Whitney U',wilcoxon:'Wilcoxon signed-rank',kruskal:'Kruskal-Wallis',chisq:'Chi-square',pearson:'Pearson r',spearman:'Spearman rho',regression:'Linear regression',mregress:'Linear regression',logistic:'Logistic regression'};
+function resList(o){return((o||studyGet()).results)||[]}
+function resPlanMain(o){return logRows(o,'aplan').filter(r=>r.kind==='Main'&&String(r.h||'').trim())}
+function resFor(o,h){return resList(o).filter(r=>r.h===h&&r.kind!=='expl')}
+function resLinkHTML(){const o=studyGet(),plan=logRows(o,'aplan').filter(r=>String(r.h||'').trim()),hi=studyHi(),L=(en,x)=>hi?x:en;if(!window._statsAPA)return'';
+  const key=(document.getElementById('statsTest')||{}).value||'';
+  return'<div class="sub-box" id="resLink" style="margin-top:10px"><b>'+L('Record this result in my study','यह नतीजा मेरी study में दर्ज करें')+'</b>'+
+   (plan.length?'<label class="desc" style="display:block;margin-top:6px">'+L('Which part of your analysis plan (step C7) is this?','यह आपकी analysis योजना (कदम C7) का कौन-सा हिस्सा है?')+'</label><select id="resH" onchange="resCheck()"><option value=""></option>'+plan.map((r,i)=>'<option value="'+i+'">'+escHTML((r.kind==='Main'?'':'['+L('exploratory','exploratory')+'] ')+String(r.h).slice(0,90))+'</option>').join('')+'<option value="x">'+escHTML(L('Not in my plan: exploratory','योजना में नहीं: exploratory'))+'</option></select>'
+     :'<p class="desc" style="margin:4px 0">'+L('Your analysis plan (step C7) is empty, so this result will be recorded as exploratory. Write the plan before you test your hypotheses.','आपकी analysis योजना (कदम C7) ख़ाली है, इसलिए यह नतीजा exploratory दर्ज होगा। Hypotheses जाँचने से पहले योजना लिखें।')+'</p>')+
+   '<div id="resDev" style="display:none;margin-top:6px"><p style="color:#b45309;margin:0" id="resDevTxt"></p><label class="desc" style="display:block;margin-top:4px">'+L('Why the test changed (for example: data were not normal)','Test क्यों बदला (जैसे: data normal नहीं था)')+'</label><textarea id="resWhy" rows="2"></textarea></div>'+
+   '<div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="resRecord()">✓ '+L('Record','दर्ज करें')+'</button></div><p class="desc" id="resMsg" style="margin:4px 0 0"></p></div>'}
+function resCheck(){const o=studyGet(),plan=logRows(o,'aplan').filter(r=>String(r.h||'').trim()),v=(document.getElementById('resH')||{}).value,key=(document.getElementById('statsTest')||{}).value||'',hi=studyHi(),box=document.getElementById('resDev');if(!box)return;
+  const r=(v!==''&&v!=='x')?plan[+v]:null,ran=RES_KEYMAP[key]||key;
+  if(r&&r.kind==='Main'&&r.test&&r.test!==ran){box.style.display='';document.getElementById('resDevTxt').textContent=(hi?'योजना में test था: ':'The plan named: ')+r.test+(hi?'; चलाया गया: ':'; this result is: ')+ran+'. '+(hi?'यह योजना से हटना है; कारण लिखें, यह Results में दिखेगा।':'That is a deviation from the plan. Write why; it will show in your Results.')}else box.style.display='none'}
+function resRecord(){const o=studyGet(),plan=logRows(o,'aplan').filter(r=>String(r.h||'').trim()),v=(document.getElementById('resH')||{}).value,key=(document.getElementById('statsTest')||{}).value||'',hi=studyHi(),msg=document.getElementById('resMsg');
+  if(plan.length&&v===''){msg.textContent=hi?'पहले चुनें कि यह किस hypothesis का नतीजा है':'Choose which hypothesis this result is for';return}
+  const r=(v!==''&&v!=='x')?plan[+v]:null,ran=RES_KEYMAP[key]||key,dev=!!(r&&r.kind==='Main'&&r.test&&r.test!==ran),why=String((document.getElementById('resWhy')||{}).value||'').trim();
+  if(dev&&why.length<10){msg.textContent=hi?'Test बदलने का कारण लिखें (कम से कम 10 अक्षर)':'Write why the test changed (10 characters or more)';return}
+  const sel=document.getElementById('statsTest'),lab=sel&&sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:key;
+  const rec={h:r?String(r.h).trim():'',kind:!r?'expl':r.kind==='Main'?(dev?'dev':'main'):'expl',planned:r?(r.test||''):'',ran:key,ranLabel:lab,apa:window._statsAPA,why:dev?why:'',ds:window._statsDsName||'',build:APP_BUILD,at:new Date().toISOString()};
+  o.results=resList(o).filter(x=>!(x.h&&x.h===rec.h&&rec.kind!=='expl'&&x.kind!=='expl')).concat([rec]);o.analysis=Object.assign({tests:[]},o.analysis||{},{ran:true});studySet(o);
+  msg.textContent=hi?('दर्ज हुआ'+(rec.kind==='expl'?' (exploratory)':rec.kind==='dev'?' (योजना से हटकर, कारण सहित)':'')+' ✓'):('Recorded'+(rec.kind==='expl'?' as exploratory':rec.kind==='dev'?' as a deviation, with its reason':'')+' ✓');try{subRenderSide()}catch(e){}}
+function resD4Ok(o){const m=resPlanMain(o);if(!m.length)return !!(o.analysis&&o.analysis.ran);return m.every(r=>resFor(o,String(r.h).trim()).length)}
+function resEffect(apa){const m=String(apa||'').match(/\b(d|g|r|rₛ|ηp²|η²|ω²|R²|V|OR)\s*=\s*-?[\d.]+(,\s*95% CI(?: of the difference)? \[[^\]]+\])?/);return m?m[0]:''}
+function resFillInterp(){const o=studyGet(),rows=logRows(o,'interp').slice(),hi=studyHi();let n=0;
+  resPlanMain(o).forEach(p=>{const h=String(p.h).trim(),r=resFor(o,h).slice(-1)[0];if(!r)return;let row=rows.find(x=>String(x.h||'').trim()===h);if(!row){row={h:h};rows.push(row)}
+    row.res=r.apa+(r.kind==='dev'?' [Deviation from plan: '+r.why+']':'');if(!String(row.size||'').trim())row.size=resEffect(r.apa);n++});
+  logSaveRows('interp',rows);wRedraw();showToast(hi?n+' पंक्तियों में नतीजे भरे':'Results filled into '+n+' row(s)')}
+function resD4HTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,m=resPlanMain(o),ex=resList(o).filter(r=>r.kind==='expl');
+  if(!m.length)return'<div class="sub-box"><b>'+L('Results against the plan','योजना के सामने नतीजे')+'</b><p class="desc" style="margin:4px 0">'+L('Write the analysis plan in step C7 first; each result is then recorded against it from the Statistics Lab.','पहले कदम C7 में analysis योजना लिखें; फिर हर नतीजा Statistics Lab से उसके सामने दर्ज होगा।')+'</p></div>';
+  return'<div class="sub-box" style="border-color:'+(resD4Ok(o)?'#16a34a':'var(--line,#ddd)')+'"><b>'+(resD4Ok(o)?'✅ ':'')+L('Results against the plan','योजना के सामने नतीजे')+'</b><table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:6px">'+
+   m.map(p=>{const r=resFor(o,String(p.h).trim()).slice(-1)[0];return'<tr><td style="padding:3px;vertical-align:top">'+escHTML(String(p.h).slice(0,80))+'</td><td style="padding:3px;vertical-align:top">'+escHTML(p.test||'')+'</td><td style="padding:3px;vertical-align:top">'+(r?(r.kind==='dev'?'⚠️ '+escHTML(L('Changed to ','बदलकर ')+r.ranLabel+': '+r.why):'✅ '+escHTML(L('Recorded ','दर्ज ')+new Date(r.at).toLocaleDateString())):'⬜ '+L('Not yet','अभी नहीं'))+'</td></tr>'}).join('')+'</table>'+
+   (ex.length?'<p class="desc" style="margin:6px 0 0">'+L(ex.length+' exploratory result(s) recorded; they go under their own heading in the Results.',ex.length+' exploratory नतीजे दर्ज; Results में ये अलग शीर्षक के नीचे जाएँगे।')+'</p>':'')+
+   '<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();showTool(\'stats\')">📊 '+L('Open the Statistics Lab','Statistics Lab खोलें')+'</button></div></div>'}
+/* Results and the start of the Discussion, from the records and the D6 table. */
+function resResultsHTML(o){const m=resPlanMain(o),ex=resList(o).filter(r=>r.kind==='expl'),ip=logRows(o,'interp');let h='<h2>Results</h2>';
+  if(!m.length&&!ex.length)return'';
+  m.forEach((p,i)=>{const r=resFor(o,String(p.h).trim()).slice(-1)[0];h+='<h3>'+escHTML(String(p.h).trim())+'</h3>';
+    if(!r){h+='<p>[No result recorded yet for this hypothesis.]</p>';return}
+    h+='<p>'+escHTML(r.apa)+'</p>';if(r.kind==='dev')h+='<p>The analysis plan named '+escHTML(r.planned)+'; '+escHTML(r.ranLabel)+' was used instead because '+escHTML(r.why.replace(/^[A-Z]/,c=>c.toLowerCase()).replace(/\.$/,''))+'.</p>'});
+  if(ex.length){h+='<h3>Exploratory analyses</h3><p>The following analyses were not part of the analysis plan and should be read as exploratory.</p>'+ex.map(r=>'<p>'+escHTML(r.apa)+'</p>').join('')}
+  return h}
+function resDiscussionHTML(o){const ip=logRows(o,'interp').filter(r=>String(r.mean||'').trim());if(!ip.length)return'';
+  return'<h2>Discussion</h2>'+ip.map(r=>'<p>'+escHTML(String(r.mean).trim())+'</p>').join('')+'<h3>Limitations</h3><ul>'+ip.filter(r=>String(r.lim||'').trim()).map(r=>'<li>'+escHTML(String(r.lim).trim())+'</li>').join('')+'</ul><p>[Compare each finding with the studies in your literature review (step B3), then write what the findings mean for practice and for further research.]</p>'}
+function resInsert(which){const o=studyGet(),html=which==='disc'?resDiscussionHTML(o):resResultsHTML(o),hi=studyHi();
+  if(!html){showToast(which==='disc'?(hi?'पहले D6 की table में अर्थ लिखें':'Write the meanings in the D6 table first'):(hi?'पहले नतीजे दर्ज करें':'Record results first'));return}
+  try{document.getElementById('subDlg').close()}catch(e){}insertHTMLBlockIntoEditor(html);showToast(hi?'Document में डाला ✓ (जाँचकर अपने शब्दों में सुधारें)':'Inserted ✓ Check it and put it in your own words')}
+
 function wExtra3HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
    lab=t=>'<label class="desc" style="display:block;margin-top:6px">'+t+'</label>',sel=(opts,v,on)=>'<select onchange="'+on+'"><option value=""></option>'+opts.map(x=>'<option value="'+x[0]+'"'+(v===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>',
    warn=list=>list.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+list.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'';
   if(id==='D2'){const d=dgPart(o);return'<div class="sub-box"><b>'+L('Participant flow diagram','Participants का flow diagram')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPartInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from the recruitment log below once it has people approached, agreed and completed.','नीचे के recruitment log में पूछे, माने और पूरा करने वालों की संख्या आते ही यहाँ बनेगा।')+'</p>')+'</div>'}
+  if(id==='D4')return resD4HTML(o);
   if(id==='B3')return'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
   if(id==='B1'){const b=w.B1||{},n=b.n||{},f=b1Formal(o);
     let h=lab(L('Type of review','Review का प्रकार'))+sel(B1_TYPES,b.type,"wPick('B1','type',this.value)")+
@@ -15261,7 +15316,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.10.28e';
+const APP_BUILD='2026.10.28f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -16032,6 +16087,7 @@ function statsResultsShow(html,apa){
     '<button class="btn btn-ghost" style="flex:1" onclick="statsExplain()">💡 Explain in plain language</button>'+
     '</div>';
   window._statsAPA=apa;window._statsSummary=html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  try{document.getElementById('statsResults').insertAdjacentHTML('beforeend',resLinkHTML())}catch(e){}
 }
 /* ===== Stats Lab data, kept per study on this device (IndexedDB, never sent anywhere) =====
    Data opened from the secure form is NOT stored unlocked: only a note that it came from there,
