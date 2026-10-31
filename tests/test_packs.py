@@ -1,0 +1,52 @@
+"""Rule packs: built-in packs, applying one, step checks against it, making, sharing and importing a pack."""
+import sys, os, json
+sys.path.insert(0, os.path.dirname(__file__))
+from harness import new_page
+from playwright.sync_api import sync_playwright
+fails=[]
+def ok(c,m):
+    print(('PASS ' if c else 'FAIL ')+m)
+    if not c: fails.append(m)
+W=lambda n:' '.join(['word']*n)
+with sync_playwright() as p:
+    errors=[]
+    b,pg=new_page(p,errors)
+    J=lambda js: pg.evaluate(js)
+    pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
+    J("window.confirm=()=>true")
+    J("openSaveAsProject();document.getElementById('sapName').value='Packs';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
+    J("packOpen()")
+    t=J("document.getElementById('packDlg').innerText")
+    ok('UGC PhD Regulations 2022' in t and 'APA 7 journal article' in t and 'checked' in t,'built-in packs listed with their check date')
+    J("packUse('apa7-article')")
+    ok(J("studyGet().pack")=='apa7-article' and J("document.getElementById('citStyle').value")=='apa','pack applied to the study and sets the citation style')
+    J("document.getElementById('packDlg').close();setEditorHTML(%s);docSaveBody(getEditorHTML())"%json.dumps('<h1>Abstract</h1><p>'+W(300)+'</p><p>Keywords: a, b</p><h1>Introduction</h1><p>x</p><h1>Method</h1><p>x</p>'))
+    ok(J("subState('E1').s")!='dn','E1 not done while Results, Discussion and References are missing')
+    J("subOpen('writing','E1')"); t=J("document.getElementById('subMain').innerText")
+    ok('⬜ Results' in t and '✅ Introduction' in t,'E1 shows which chapters of the pack are present')
+    ok(any('allows 250' in x for x in J("lsIssues('E7',studyGet())")),'abstract checked against the pack limit of 250 words')
+    J("setEditorHTML(getEditorHTML()+'<h1>Results</h1><p>x</p><h1>Discussion</h1><p>x</p><h1>References</h1><p>x</p>');docSaveBody(getEditorHTML())")
+    ok(J("subState('E1').s")=='dn','E1 done when every chapter of the pack is present')
+    J("document.getElementById('subDlg').close();packUse('ugc-phd-2022')")
+    J("subOpen('review','F4')"); t=J("document.getElementById('subMain').innerText")
+    ok('cl. 11(2)' in t and 'INFLIBNET' in t,'F4 shows the UGC 2022 items with their clause numbers')
+    for k in ['decl','cert','plag','eth','forms']: J("f4Tick('thesis','%s',true)"%k)
+    J("logAdd('submit');logCell('submit',0,'to','University');logCell('submit',0,'st','Submitted')")
+    ok(J("subState('F4').s")!='dn','F4 waits for the pack items')
+    for k in ['rac','racsem','presub','plagsw','undert','inflib']: J("f4Tick('pack','%s',true)"%k)
+    ok(J("subState('F4').s")=='dn','F4 done with the pack items ticked')
+    J("document.getElementById('subDlg').close();packOpen()")
+    J("document.querySelector('#packDlg details').open=true;document.getElementById('pkName').value='Demo University PhD Psychology';document.getElementById('pkSrc').value='Ordinance 2023, PhD';document.getElementById('pkStyle').value='harvard';document.getElementById('pkSyn').value='Title\\nIntroduction\\nObjectives<script>x</script>';document.getElementById('pkCh').value='Introduction\\nReview of literature';document.getElementById('pkDocs').value='Five bound copies';packSave()")
+    pk=J("packGet()")
+    ok(pk and pk['name']=='Demo University PhD Psychology' and pk['verified']==False and pk['style']=='harvard' and '<' not in ''.join(pk['synopsis']),'own pack saved, marked not checked, angle brackets stripped')
+    ok('not checked by Appuscholar' in J("document.getElementById('packDlg').innerText"),'unchecked pack is labelled')
+    data=J("JSON.stringify(Object.assign({appuscholarPack:1},packGet()))")
+    J("localStorage.setItem('appu_packs','[]');const o=studyGet();o.pack='';studySet(o)")
+    J("packImport({files:[new File([%s],'p.json')],value:''})"%json.dumps(data)); pg.wait_for_timeout(300)
+    ok(J("packGet()&&packGet().name")=='Demo University PhD Psychology','pack shared as a file and imported by a student')
+    J("packImport({files:[new File(['{\"name\":\"x\"}'],'bad.json')],value:''})"); pg.wait_for_timeout(300)
+    ok(J("packsCustom().length")==1,'a file that is not a pack is refused')
+    errs=[e for e in errors if e[0]=='pageerror']
+    ok(not errs,'no page errors '+json.dumps(errs[:3]))
+    b.close()
+print('FAILED %d'%len(fails) if fails else 'ALL PASS')
