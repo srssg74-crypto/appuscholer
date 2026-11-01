@@ -1,0 +1,87 @@
+"""First-hour fixes: synopsis gaps and Home card, template picker, stage buttons on phones, AI answer
+reveal, touch wording, Save Key near the key box, and the test and effect-size helper (build 2026.11.02b)."""
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+from harness import new_page
+from playwright.sync_api import sync_playwright
+fails=[]
+def ok(c,m):
+    print(('PASS ' if c else 'FAIL ')+m)
+    if not c: fails.append(m)
+with sync_playwright() as p:
+    errors=[]
+    b,pg=new_page(p,errors)
+    J=lambda js: pg.evaluate(js)
+    pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
+    J("window.confirm=()=>true")
+    J("LS.set('appu_me',JSON.stringify({name:'Asha',pos:'',role:'student',course:'pg'}))")
+    ok(J("synDegree()")=='M.A./M.Sc. in Psychology','degree comes from My details')
+    J("openSaveAsProject();document.getElementById('sapName').value='Sleep';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
+    ok(J("synGaps(studyGet())")==-1,'no synopsis yet gives -1')
+    J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety'};o.design={type:'correlational',n:'80'};studySet(o)")
+    J("apHomeShow()"); pg.wait_for_timeout(200)
+    t=J("document.getElementById('apHome').innerText")
+    ok('Make my synopsis' in t,'Home offers Make my synopsis')
+    J("synBuild()"); pg.wait_for_timeout(500)
+    ok(J("apHomeIs()")==False,'after building, the editor is shown, not Home')
+    g=J("synGaps(studyGet())")
+    ok(g>0,'synopsis has yellow gaps %s'%g)
+    ok('M.A./M.Sc. in Psychology' in J("getEditorHTML()"),'degree filled from profile')
+    J("apHomeShow()"); pg.wait_for_timeout(200)
+    t=J("document.getElementById('apHome').innerText")
+    ok('Open my synopsis' in t and ('%d gap'%g) in t,'Home shows gaps left')
+    J("synOpen()"); pg.wait_for_timeout(300)
+    J("synNextGap()"); pg.wait_for_timeout(300)
+    ok(J("!!(getSelection().anchorNode&&getSelection().anchorNode.parentElement&&getSelection().anchorNode.parentElement.closest('.draft-ph'))") or J("getSelection().toString().length>0"),'next gap selects a yellow gap')
+    # template picker
+    J("insertScaffold()")
+    ok(J("document.getElementById('scafDlg').open")==True,'template picker is a dialog, not a prompt')
+    ok('Synopsis' in J("document.getElementById('scafDlg').innerText"),'picker offers the synopsis first')
+    J("document.getElementById('scafDlg').close()")
+    # new project dialog wording
+    J("openNewProjectDirect()")
+    ok('Start a new research project' in J("document.querySelector('#saveAsProjectDlg h2').textContent"),'new project dialog has a plain title')
+    J("document.getElementById('saveAsProjectDlg').close();openSaveAsProject()")
+    ok('Start a new' not in J("document.querySelector('#saveAsProjectDlg h2').textContent"),'save-as dialog keeps its own title')
+    J("document.getElementById('saveAsProjectDlg').close()")
+    # Save key near the key box
+    ok(J("(()=>{const k=document.getElementById('keyIn'),b=[...document.querySelectorAll('#settingsDlg button')].find(x=>/saveKey/.test(x.getAttribute('onclick')||''));return !!(k.compareDocumentPosition(b)&4)&&b.closest('.row').previousElementSibling.id==='keyModeHint'})()"),'Save Key sits right under the key box')
+    # power helper
+    J("pwOpen()"); pg.wait_for_timeout(200)
+    J("document.getElementById('pwGuide').open=true;pwGuidePick('ind')")
+    ok(J("document.getElementById('pwTest').value")=='ind','question picks the test')
+    J("document.getElementById('pgM1').value='20';document.getElementById('pgS1').value='5';document.getElementById('pgM2').value='17.5';document.getElementById('pgS2').value='5';pwGuideCalc()")
+    ok(J("document.getElementById('pwEffect').value")=='0.50','d from means and SDs goes into the calculator')
+    ok(abs(J("pwEffectFrom({t:'2.5',df:'100'}).v")-0.5)<1e-9,'d from t and df')
+    ok(abs(J("pwEffectFrom({r2:'0.13'}).v")-0.13/0.87)<1e-9,'f² from R²')
+    J("pwGuidePick('corr');['pgM1','pgS1','pgM2','pgS2'].forEach(i=>document.getElementById(i).value='');document.getElementById('pgT').value='2.5';document.getElementById('pgDf').value='100';pwGuideCalc()")
+    ok('does not match' in J("document.getElementById('pgOut').textContent"),'a d for a correlation is refused with a reason')
+    J("document.getElementById('powerDlg').close()")
+    # Hindi words
+    J("toggleLang()")
+    ok(J("PW_Q.length")==6,'six question types')
+    J("toggleLang()")
+    b.close()
+    # phone with touch
+    b=p.chromium.launch()
+    ctx=b.new_context(viewport={'width':390,'height':800},has_touch=True,is_mobile=True,service_workers='block')
+    from harness import route_cdn, GATE_BYPASS
+    ctx.route(lambda url: not url.startswith('http://localhost'), route_cdn); ctx.add_init_script(GATE_BYPASS)
+    pg=ctx.new_page(); errs2=[]; pg.on('pageerror',lambda e: errs2.append(str(e)))
+    J=lambda js: pg.evaluate(js)
+    pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
+    ok(J("isTouch()")==True,'phone is a touch screen')
+    ok('Tap Accept' in J("document.getElementById('aiPaneDesc').textContent"),'AI pane explains Accept, not Tab, on touch')
+    J("showToast('Ready — press Tab in the editor to insert')")
+    ok('tap Accept' in J("document.getElementById('toast').textContent"),'toast says tap Accept on touch')
+    J("window.scrollTo(0,0);window._lastTap=Date.now();setSug('An answer from the AI')"); pg.wait_for_timeout(900)
+    top=J("document.getElementById('aiPane').getBoundingClientRect().top")
+    ok(-5<top<700,'AI answer scrolled into view on a phone (%s)'%top)
+    J("window.scrollTo(0,0)"); pg.wait_for_timeout(300)
+    J("apGoStage('design')"); pg.wait_for_timeout(900)
+    top=J("document.querySelector('.tool-panel.active').getBoundingClientRect().top")
+    ok(-5<top<300,'stage button on a phone brings the tool panel into view (%s)'%top)
+    ok(not errs2,'no page errors on phone %s'%errs2[:2])
+    b.close()
+    ok(not [e for e in errors if e[0]=='pageerror'],'no page errors %s'%errors[:2])
+print('FAILED' if fails else 'ALL PASS', len(fails))
