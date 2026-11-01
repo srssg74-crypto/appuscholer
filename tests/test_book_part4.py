@@ -18,16 +18,23 @@ with sync_playwright() as p:
     J("openSaveAsProject();document.getElementById('sapName').value='Book4';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
     J("const o=studyGet();o.design=Object.assign(o.design||{},{type:'survey',n:'99',ss:{basis:'power',n:84,recruit:99,alpha:.05,power:.8,effect:0.62,drop:15,effSrc:'a pilot study of 32 students',at:1,sentence:'84 participants were needed.'}});studySet(o)")
     J("bpInsertOutline()")
+    J("""const h=editor.querySelector('[data-sec="results.main"]');const t=document.createElement('div');
+      t.innerHTML=capBlocksHTML('table','Anxiety scores by "group"')+'<table><tr><td>a</td></tr></table>'+capBlocksHTML('figure','Anxiety across exam weeks')+'<p>fig</p>';
+      let after=h;[...t.childNodes].forEach(n=>{after.after(n);after=n});renumberCaptions();docSaveBody(getEditorHTML())""")
     # Word: contents and page numbers
     z=zipfile.ZipFile(io.BytesIO(base64.b64decode(J(B64,{'toc':True,'tocTitle':'Contents'}))))
     names=z.namelist(); doc=z.read('word/document.xml').decode(); ftr=z.read('word/footer1.xml').decode() if 'word/footer1.xml' in names else ''
     ok('TOC \\o "1-3"' in doc and '>Contents<' in doc and 'Chapter 3: Method' in doc,'the book exports with a contents field listing the chapters')
     ok('PAGE' in ftr and 'footerReference' in doc,'every page has a page number in the footer')
     ok('updateFields' in z.read('word/settings.xml').decode(),'Word is asked to fill in the contents page numbers on opening')
+    ok('TOC \\f t' in doc and '>List of tables<' in doc and 'TC &quot;Table 1 Anxiety scores by \'group\'&quot; \\f t' in doc.replace('"','&quot;') or ('TC "Table 1 Anxiety scores by' in doc),'the book has a list of tables built from the captions')
+    ok('TOC \\f f' in doc and '>List of figures<' in doc and '\\f f \\l 1' in doc,'the book has a list of figures')
+    ok(doc.index('>Contents<')<doc.index('>List of tables<')<doc.index('>List of figures<')<doc.rfind('Chapter 1'),'the lists come after the contents, before chapter 1')
     ct=z.read('[Content_Types].xml').decode()
     ok('footer1.xml' in ct and 'settings.xml' in ct,'the package lists the new parts')
     z2=zipfile.ZipFile(io.BytesIO(base64.b64decode(J(B64,None))))
     ok('TOC' not in z2.read('word/document.xml').decode() and 'word/footer1.xml' in z2.namelist(),'an ordinary document gets page numbers but no contents page')
+    ok(' TC ' in z2.read('word/document.xml').decode(),'caption entries are kept in an ordinary export too, so a later contents update finds them')
     # step checks read the book by section id
     J("const h=editor.querySelector('h1[data-sec=\"method\"]');h.textContent='Chapter 3: Procedure of the study';const p=editor.querySelector('[data-sec=\"method.design\"]').nextElementSibling;p.textContent='A cross-sectional survey design was used with second-year students in two colleges of Jaipur during the 2026 session.';docSaveBody(getEditorHTML())")
     r=J("({book:(lsSecFor('E4')||{}).words||0,old:!!lsSection(LS_SEC.E4)})")
