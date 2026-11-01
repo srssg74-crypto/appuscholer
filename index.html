@@ -314,6 +314,12 @@
   .paper-card .btn{padding:5px 9px;font-size:11.5px}
   .paper-check{display:flex;align-items:flex-start;gap:6px}
   .paper-check input{margin-top:4px;width:15px;height:15px;accent-color:#6d28d9;flex:0 0 auto}
+  .bb-outline{border:1px solid var(--line,#ddd);border-radius:8px;padding:8px 10px;margin:6px 0;max-height:220px;overflow:auto;background:var(--card,#fff)}
+  .bb-list{margin-top:4px}
+  .bb-row{display:flex;justify-content:space-between;gap:8px;padding:3px 4px;border-radius:4px;text-decoration:none;color:inherit;font-size:13px}
+  .bb-row:hover{background:#f1eefb}
+  .bb-w{font-size:11px;color:#5E5873;white-space:nowrap}.bb-empty{color:#b45309}
+  .bb-guide{border-left:4px solid #6D28D9;padding:6px 10px;border-radius:6px;margin:6px 0;font-size:13px}
   .bp-chip{display:inline-block;font-size:12px;font-weight:600;padding:0 8px;border:1px solid;border-radius:999px;margin-left:6px;vertical-align:1px}
   .bp-row{padding:6px 10px;margin:4px 0;border-radius:6px}
   .bp-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
@@ -575,6 +581,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
         <button class="icon-btn" onclick="docRename()" title="Rename this document" aria-label="Rename this document"><svg class="ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
         <button class="icon-btn icon-del" onclick="docDelete()" data-i18n-title="doc_delete_title" title="Delete this document" aria-label="Delete this document"><svg class="ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
         <button class="icon-btn" onclick="document.getElementById('docImportInput').click()" data-i18n="doc_import_btn" data-i18n-title="doc_import_title" title="Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor">📂 Import</button>
+        <button class="icon-btn" onclick="bbOutlineToggle()" title="The book of this study: chapters like PDF bookmarks">📖 Book</button>
         <button class="icon-btn" id="docOriginBtn" onclick="docOriginToggle()"></button>
         <input type="file" id="docImportInput" accept=".docx,.pdf,.txt,.md,.html,.htm" style="display:none" onchange="docImportFiles(this.files);this.value=''">
       </div>
@@ -3604,9 +3611,9 @@ function dgFlow(rows,W){W=W||620;const X=20,MW=320,SX=390,SW=W-SX-10,gap=30,band
     if(i<rows.length-1){const nb=rows[i+1].stage?band:0;body+=dgArrow(X+MW/2,y+hh,X+MW/2,y+hh+gap+nb-2)}
     y+=hh+gap});
   const H=y-gap+8;return{svg:dgFrame(W,H,bands+body),w:W,h:H}}
-function dgInsert(d,cap,alt){if(!d)return;const src=d.svg.replace('style="width:100%;max-width:'+d.w+'px"','xmlns="http://www.w3.org/2000/svg" width="'+d.w+'" height="'+d.h+'"');
+function dgInsert(d,cap,alt,sec,key){if(!d)return;const src=d.svg.replace('style="width:100%;max-width:'+d.w+'px"','xmlns="http://www.w3.org/2000/svg" width="'+d.w+'" height="'+d.h+'"');
   const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=d.w*2;c.height=d.h*2;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.scale(2,2);g.drawImage(img,0,0,d.w,d.h);
-    insertHTMLBlockIntoEditor('<figure><img src="'+c.toDataURL('image/png')+'" alt="'+escAttr(alt)+'" width="'+d.w+'"><figcaption>'+escHTML(cap)+'</figcaption></figure>');showToast(studyHi()?'चित्र document में डाला ✓':'Diagram inserted into your document ✓')}catch(e){showToast('Could not draw the diagram')}};
+    const fig='<figure><img src="'+c.toDataURL('image/png')+'" alt="'+escAttr(alt)+'" width="'+d.w+'"><figcaption>'+escHTML(cap)+'</figcaption></figure>';if(bbPut(fig,sec,key))return;insertHTMLBlockIntoEditor(fig);showToast(studyHi()?'चित्र document में डाला ✓':'Diagram inserted into your document ✓')}catch(e){showToast('Could not draw the diagram')}};
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src)}
 /* PRISMA 2020 flow (Page et al. 2021). Numbers from B1. A number not filled yet shows as "n = ?" so the gap stays
    visible; numbers that do not add up give no diagram. Blank registers, automation, other removals and not-retrieved count as 0. */
@@ -3627,7 +3634,7 @@ function dgPrisma(o){const b=wGet(o).B1||{},n=b.n||{},v=k=>(n[k]===''||n[k]==nul
     {main:['Reports assessed for eligibility','(n = '+q('oFt')+')'],side:['Reports excluded','(n = '+z('oExF')+')','Included studies are counted above']});
   const d=dgFlow(rows);d.missing=dgPrismaMissing(o);return d}
 function dgPrismaInsert(){const d=dgPrisma(studyGet());if(!d){showToast(studyHi()?'पहले संख्याएँ भरें और उन्हें आपस में मिलाएँ':'Fill the numbers first and make them add up');return}if(d.missing.length)showToast(studyHi()?'⚠ Diagram में अभी n = ? है; जमा करने से पहले भरें':'⚠ The diagram still has n = ?; fill it before you submit');
-  dgInsert(d,'Figure. PRISMA 2020 flow diagram of study selection (Page et al., 2021).','PRISMA flow diagram')}
+  dgInsert(d,'Figure. PRISMA 2020 flow diagram of study selection (Page et al., 2021).','PRISMA flow diagram','lit.flow','prisma')}
 /* Participant flow from the D2 recruitment log. */
 function dgPart(o){const rows=logRows(o,'recruit');if(!rows.length)return null;const s=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);
   const ap=s('appr'),ag=s('agreed'),dn=s('done'),lf=s('left');if(!(ap>0&&ag>0)||ag>ap||dn>ag)return null;
@@ -3636,7 +3643,7 @@ function dgPart(o){const rows=logRows(o,'recruit');if(!rows.length)return null;c
     {main:['Agreed to take part','(n = '+ag+')'],side:['Did not finish','(n = '+(ag-dn)+')'].concat(lf?['of whom withdrew: '+lf]:[])},
     {stage:'Analysed',main:['Completed and analysed','(n = '+dn+')'],side:null}])}
 function dgPartInsert(){const d=dgPart(studyGet());if(!d){showToast(studyHi()?'Recruitment log में संख्याएँ भरें (पूछा ≥ माने ≥ पूरा किया)':'Fill the recruitment log (approached ≥ agreed ≥ completed)');return}
-  dgInsert(d,'Figure. Flow of participants through the study.','Participant flow diagram')}
+  dgInsert(d,'Figure. Flow of participants through the study.','Participant flow diagram','results.flow','partflow')}
 
 
 /* Work plan (Gantt) for the synopsis: start month and length of each of the six stages, typed by the student. */
@@ -3649,7 +3656,7 @@ function dgGantt(o){const rows=dgPlanRows(o);if(rows.length<2)return null;const 
   rows.forEach((r,i)=>{const y=26+i*rh;b+='<text x="6" y="'+(y+17)+'" font-size="12" fill="#111">'+dgEsc(DG_STAGE_EN[r.s]||r.s)+'</text><rect x="'+(LW+(r.a-1)*cw+1)+'" y="'+(y+5)+'" width="'+(r.d*cw-2)+'" height="'+(rh-10)+'" rx="3" fill="#4b6fa8"/>'});
   return{svg:dgFrame(W,H,b),w:W,h:H}}
 function dgPlanSet(s,k,v){const o=studyGet();o.write=o.write||{};const c=o.write.C8=o.write.C8||{};c.plan=c.plan||{};c.plan[s]=Object.assign({},c.plan[s]||{},{[k]:v});studySet(o);wRedraw()}
-function dgGanttInsert(){const d=dgGantt(studyGet());if(!d){showToast(studyHi()?'कम से कम दो stages के महीने भरें':'Fill the months for at least two stages');return}dgInsert(d,'Figure. Work plan of the study (months from registration).','Work plan chart')}
+function dgGanttInsert(){const d=dgGantt(studyGet());if(!d){showToast(studyHi()?'कम से कम दो stages के महीने भरें':'Fill the months for at least two stages');return}dgInsert(d,'Figure. Work plan of the study (months from registration).','Work plan chart','syn.timeline','gantt')}
 function dgPlanHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,p=((wGet(o).C8||{}).plan)||{},d=dgGantt(o);
   return'<p style="margin:12px 0 2px"><b>'+L('Work plan (time chart)','काम की योजना (समय-सारणी)')+'</b> <span class="desc">'+L('Month 1 is the month you register.','Month 1 = registration का महीना।')+'</span></p><table style="font-size:13px;border-collapse:collapse"><tr><th style="text-align:left;padding:3px">'+L('Stage','Stage')+'</th><th style="padding:3px">'+L('Starts in month','किस महीने से')+'</th><th style="padding:3px">'+L('Lasts (months)','कितने महीने')+'</th></tr>'+
    STAGES.map(s=>'<tr><td style="padding:3px">'+escHTML(stageLabel(s))+'</td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).a||'')+'" onchange="dgPlanSet(\''+s+'\',\'a\',this.value)"></td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).d||'')+'" onchange="dgPlanSet(\''+s+'\',\'d\',this.value)"></td></tr>').join('')+'</table>'+
@@ -3706,7 +3713,7 @@ function resDiscussionHTML(o){const ip=logRows(o,'interp').filter(r=>String(r.me
   return'<h2>Discussion</h2>'+ip.map(r=>'<p>'+escHTML(String(r.mean).trim())+'</p>').join('')+'<h3>Limitations</h3><ul>'+ip.filter(r=>String(r.lim||'').trim()).map(r=>'<li>'+escHTML(String(r.lim).trim())+'</li>').join('')+'</ul><p>[Compare each finding with the studies in your literature review (step B3), then write what the findings mean for practice and for further research.]</p>'}
 function resInsert(which){const o=studyGet(),html=which==='disc'?resDiscussionHTML(o):resResultsHTML(o),hi=studyHi();
   if(!html){showToast(which==='disc'?(hi?'पहले D6 की table में अर्थ लिखें':'Write the meanings in the D6 table first'):(hi?'पहले नतीजे दर्ज करें':'Record results first'));return}
-  try{document.getElementById('subDlg').close()}catch(e){}insertHTMLBlockIntoEditor(html);showToast(hi?'Document में डाला ✓ (जाँचकर अपने शब्दों में सुधारें)':'Inserted ✓ Check it and put it in your own words')}
+  try{document.getElementById('subDlg').close()}catch(e){}if(bbPut(html,which==='disc'?'disc.interpret':'results.main','res-'+which))return;insertHTMLBlockIntoEditor(html);showToast(hi?'Document में डाला ✓ (जाँचकर अपने शब्दों में सुधारें)':'Inserted ✓ Check it and put it in your own words')}
 
 /* ============ D5 qualitative analysis record (build 2026.10.28g) ============
    Approach, the six phases of thematic analysis (Braun & Clarke, 2006), themes with their codes and
@@ -3738,7 +3745,7 @@ function d5FromCodes(){const codes=qualCodesGet(),top=codes.filter(c=>!c.parentI
 function d5FindingsHTML(o){const th=logRows(o,'themes').filter(r=>String(r.name||'').trim()),w=wGet(o).D5||{},ap=(D5_APPROACH.find(a=>a[0]===w.ap)||['','',''])[1];if(!th.length)return'';
   return'<h2>Findings</h2><p>'+escHTML(ap?'Analysis followed '+ap.replace(/ \(.*\)$/,'').toLowerCase()+'. ':'')+th.length+' themes were developed: '+escHTML(th.map(r=>r.name.trim()).join('; '))+'.</p>'+
    th.map(r=>'<h3>'+escHTML(r.name.trim())+'</h3><p>'+escHTML(String(r.def||'').trim())+'</p>'+(String(r.quote||'').trim()?'<blockquote>'+escHTML(String(r.quote).trim())+(String(r.who||'').trim()?' ('+escHTML(String(r.who).trim())+')':'')+'</blockquote>':'')+'<p>[Explain how this quote shows the theme, and how the theme answers your question.]</p>').join('')}
-function d5Insert(){const html=d5FindingsHTML(studyGet()),hi=studyHi();if(!html){showToast(hi?'पहले themes लिखें':'Write your themes first');return}try{document.getElementById('subDlg').close()}catch(e){}insertHTMLBlockIntoEditor(html);showToast(hi?'Findings document में डाला ✓':'Findings inserted ✓')}
+function d5Insert(){const html=d5FindingsHTML(studyGet()),hi=studyHi();if(!html){showToast(hi?'पहले themes लिखें':'Write your themes first');return}try{document.getElementById('subDlg').close()}catch(e){}if(bbPut(html,'results.themes','d5'))return;insertHTMLBlockIntoEditor(html);showToast(hi?'Findings document में डाला ✓':'Findings inserted ✓')}
 function d5HTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o).D5||{},is=d5Issues(o),codes=qualCodesGet(),cnt=qualCounts(),np=Object.values(cnt).reduce((a,b)=>a+b,0);
   return'<div class="sub-box" style="border-color:'+(!is.length?'#16a34a':'var(--line,#ddd)')+'"><b>'+(!is.length?'✅ ':'')+L('Qualitative analysis record','Qualitative analysis का record')+'</b>'+
    '<p class="desc" style="margin:4px 0">'+L('If your study has no qualitative part, set this step to "Not applicable" with a reason.','अगर आपकी study में qualitative हिस्सा नहीं है, तो इस कदम को कारण के साथ "लागू नहीं" करें।')+'</p>'+
@@ -5219,6 +5226,8 @@ function docSaveBody(body){
   if(ok&&typeof captureWritingSample==='function'){try{captureWritingSample(docs[i].id,docs[i].title,body)}catch(e){}}
   return ok;
 }
+/* book part 2: refresh outline and guide after a document switch */
+setTimeout(()=>{try{const f=docSwitch;window.docSwitch=docSwitch=function(id){f(id);try{bbOutlineRender();bbGuideUpdate()}catch(e){}}}catch(e){}},0);
 function docSwitch(id){
   const tgt=docsGet().find(x=>x.id===id),p=getActiveProject();
   if(tgt&&(tgt.pid||'')!==docPid()){
@@ -15872,8 +15881,111 @@ function bpOutlineHTML(o){const hi=studyHi(),pid=bpPlanId(o),plan=BP_PLANS.find(
       h+='<h1 data-sec="'+s.id+'">'+T(s)+'</h1>'+P})});
   return h}
 function bpInsertOutline(){const hi=studyHi(),o=studyGet(),plan=BP_PLANS.find(p=>p.id===bpPlanId(o))||BP_PLANS[0];
-  docCreateWith(hi?plan.t[1]:plan.t[0],bpOutlineHTML(o));
+  if(!plan.groups&&bbBookId(o)){try{document.getElementById('bpDlg').close()}catch(e){}docSwitch(bbBookId(o));const ol=document.getElementById('bbOutline');if(ol&&ol.style.display==='none')bbOutlineToggle();else bbOutlineRender();showToast(hi?'इस study की किताब पहले से है; उसे खोला। जो sections नहीं हैं वे 📖 Book में दिखेंगे।':'This study already has a book; it is open now. Missing sections show under 📖 Book.');return}
+  const nid=docCreateWith(hi?plan.t[1]:plan.t[0],bpOutlineHTML(o));if(!plan.groups){const o2=studyGet();o2.bookDoc=nid;studySet(o2)}try{bbOutlineRender();bbGuideUpdate()}catch(e){}
   try{document.getElementById('bpDlg').close()}catch(e){}showToast(hi?'ढाँचा नए document में डाला ✓':'Outline put in a new document ✓')}
+/* ============ The book, part 2 (build 2026.11.01d) ============
+   One book per study (o.bookDoc), an outline like PDF bookmarks, a guide card that follows the cursor, and
+   placement: a step's draft shows "Will go to: 4.4 …" and lands at the end of that section, inside a
+   <div data-slot> so a later draft from the same step can replace it instead of piling up. */
+function bbBookId(o){o=o||studyGet();const id=o.bookDoc;if(!id)return'';return(typeof docsStudy==='function'?docsStudy():[]).some(d=>d.id===id)?id:''}
+function bbIsBook(){const b=bbBookId();return !!b&&docCurrentId()===b}
+function bbFlat(o){const out=[];bpWalk((n,d)=>{out.push({n:n,d:d})},bpTree(o,'thesis'));return out}
+function bbTitleText(n,num){const ch=BP_CHAPTERS.indexOf(n.id)>=0,hi=studyHi();return ch?(hi?'अध्याय ':'Chapter ')+num[n.id]+': '+bpTitle(n):(num[n.id]&&/^[\d.]+$/.test(num[n.id])?num[n.id]+' ':'')+bpTitle(n)}
+function bbLevel(id,o){
+  /* chapters and front/back pages are h1; sections h2; sub-sections h3 */
+  const tree=bpTree(o,'thesis');if(tree.some(c=>c.id===id))return 1;const par=tree.find(c=>(c.k||[]).some(s=>s.id===id));if(par)return BP_CHAPTERS.indexOf(par.id)>=0?2:1;return 3}
+/* The block range of a section: its heading and everything up to the next heading of the same or higher level. */
+function bbRange(h){const lv=+h.tagName[1],out=[];let n=h.nextElementSibling;while(n&&!(/^H[1-6]$/.test(n.tagName)&&+n.tagName[1]<=lv)){out.push(n);n=n.nextElementSibling}return out}
+function bbOwn(h){const out=[];let n=h.nextElementSibling;while(n&&!/^H[1-6]$/.test(n.tagName)){out.push(n);n=n.nextElementSibling}return out}
+/* Adds a missing section heading in plan order and returns it. */
+function bbAddSection(id){const o=studyGet(),flat=bbFlat(o),i=flat.findIndex(x=>x.n.id===id);if(i<0)return null;const num=bpNumbers(bpTree(o,'thesis')),n=flat[i].n;
+  const h=document.createElement('h'+bbLevel(id,o));h.setAttribute('data-sec',id);h.textContent=bbTitleText(n,num);const p=document.createElement('p');p.innerHTML='<br>';
+  let anchor=null,mode='end';
+  for(let j=i-1;j>=0;j--){const prev=editor.querySelector('[data-sec="'+flat[j].n.id+'"]');if(!prev)continue;
+    const isAnc=bbIsAncestor(flat[j].n.id,id);
+    if(isAnc){const own=bbOwn(prev);anchor=own.length?own[own.length-1]:prev;mode='after'}
+    else{const r=bbRange(prev);anchor=r.length?r[r.length-1]:prev;mode='after'}
+    break}
+  if(!anchor){const first=editor.querySelector('[data-sec]');if(first){editor.insertBefore(p,first);editor.insertBefore(h,p);return h}editor.appendChild(h);editor.appendChild(p);return h}
+  anchor.after(h);h.after(p);return h}
+function bbIsAncestor(a,b){let x=BP_INDEX[b];while(x&&x.p){if(x.p===a)return true;x=BP_INDEX[x.p]}return false}
+/* Rewrites the numbers at the start of section headings after a section was added or the design changed. */
+function bbRenumber(){const o=studyGet(),num=bpNumbers(bpTree(o,'thesis'));
+  editor.querySelectorAll('[data-sec]').forEach(h=>{const n=bpNode(h.getAttribute('data-sec'));if(!n||!/^H[1-6]$/.test(h.tagName))return;
+    const t=h.textContent,m=t.match(/^(?:(?:Chapter|अध्याय)\s+\d+:\s*|[\d.]+\s+)/);if(!m)return;
+    const want=bbTitleText(n,num),wm=want.match(/^(?:(?:Chapter|अध्याय)\s+\d+:\s*|[\d.]+\s+)/);if(wm&&m[0]!==wm[0])h.textContent=wm[0]+t.slice(m[0].length)})}
+/* ---- placement ---- */
+function bbPut(html,sec,key,label){const book=bbBookId();if(!book||!sec)return false;
+  window._bbPend={html:html,key:key||'',label:label||''};
+  let d=document.getElementById('bbPlaceDlg');if(!d){d=document.createElement('dialog');d.id='bbPlaceDlg';d.style.cssText='padding:16px 18px;max-width:520px;width:92vw;border-radius:12px';document.body.appendChild(d)}
+  const o=studyGet(),hi=studyHi(),L=(en,x)=>hi?x:en,num=bpNumbers(bpTree(o,'thesis')),flat=bbFlat(o).filter(x=>(!(x.n.k&&x.n.k.length)||BP_CHAPTERS.indexOf(x.n.id)<0)&&['front','back','syn'].indexOf(x.n.id)<0);
+  if(!flat.some(x=>x.n.id===sec))sec=flat.length?flat[0].n.id:sec;
+  d.innerHTML='<div class="dlg-head"><h3 style="margin:0">📖 '+L('Put it in your book','अपनी किताब में डालें')+'</h3></div>'+
+   '<p style="margin:8px 0 4px">'+L('Will go to:','यहाँ जाएगा:')+'</p><select id="bbPlaceSel" style="width:100%" onchange="bbPlaceInfo()">'+flat.map(x=>'<option value="'+x.n.id+'"'+(x.n.id===sec?' selected':'')+'>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</option>').join('')+'</select>'+
+   '<div id="bbPlaceInfo" class="desc" style="margin:6px 0"></div>'+
+   '<div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="bbPlaceGo()">'+L('Put it there','वहीं डालें')+'</button>'+
+   '<button type="button" class="btn btn-ghost btn-sm" onclick="bbPlaceCursor()">'+L('At my cursor instead','मेरे cursor पर डालें')+'</button>'+
+   '<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bbPlaceDlg\').close()">'+L('Cancel','रद्द करें')+'</button></div>';
+  bbPlaceInfo();if(!d.open)d.showModal();return true}
+function bbSlotIn(sec,key){if(!key)return null;const h=editor.querySelector('[data-sec="'+sec+'"]');if(!h)return null;return bbRange(h).find(x=>x.getAttribute&&x.getAttribute('data-slot')===key)||null}
+function bbPlaceInfo(){const sel=document.getElementById('bbPlaceSel'),box=document.getElementById('bbPlaceInfo');if(!sel||!box)return;const hi=studyHi(),L=(en,x)=>hi?x:en,n=bpNode(sel.value),m=BP_MODES[n.m]||BP_MODES.front,p=window._bbPend||{};
+  let has=false;if(bbIsBook())has=!!bbSlotIn(sel.value,p.key);else{const d=docsGet().find(x=>x.id===bbBookId());if(d&&p.key){const div=document.createElement('div');div.innerHTML=d.body||'';const h=div.querySelector('[data-sec="'+sel.value+'"]');has=!!(h&&bbRange(h).some(x=>x.getAttribute&&x.getAttribute('data-slot')===p.key))}}
+  box.innerHTML='<div style="border-left:4px solid '+m.bd+';background:'+m.bg+';padding:6px 8px;border-radius:6px">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'+
+   (has?'<label style="display:block;margin-top:6px"><input type="radio" name="bbRep" value="rep" checked> '+L('Replace the earlier draft from this step','इस कदम का पिछला draft बदल दें')+'</label><label style="display:block"><input type="radio" name="bbRep" value="keep"> '+L('Keep both','दोनों रखें')+'</label>':'')}
+function bbPlaceCursor(){const p=window._bbPend;try{document.getElementById('bbPlaceDlg').close()}catch(e){}if(p)insertHTMLBlockIntoEditor(p.html);showToast(studyHi()?'Cursor पर डाला ✓':'Put at your cursor ✓')}
+function bbPlaceGo(){const p=window._bbPend,sel=document.getElementById('bbPlaceSel');if(!p||!sel)return;const sec=sel.value,rep=(document.querySelector('input[name="bbRep"]:checked')||{}).value!=='keep';
+  try{document.getElementById('bbPlaceDlg').close()}catch(e){}
+  bbPlace(sec,p.html,p.key,rep)}
+function bbPlace(sec,html,key,replace){const hi=studyHi(),book=bbBookId();if(!book)return false;
+  if(docCurrentId()!==book)docSwitch(book);
+  let h=editor.querySelector('[data-sec="'+sec+'"]');if(!h){h=bbAddSection(sec);bbRenumber()}if(!h)return false;
+  const wrap=document.createElement('div');if(key)wrap.setAttribute('data-slot',key);wrap.className='bb-slot';wrap.innerHTML=html;
+  const old=replace?bbSlotIn(sec,key):null;
+  if(old)old.replaceWith(wrap);
+  else{const r=bbRange(h);let last=r.length?r[r.length-1]:h;
+    /* a section with sub-sections: the draft goes before the first sub-heading */
+    const sub=r.find(x=>/^H[1-6]$/.test(x.tagName));if(sub){const own=bbOwn(h);last=own.length?own[own.length-1]:h}
+    if(last!==h&&last.tagName==='P'&&!last.textContent.trim()&&!last.querySelector('img'))last.replaceWith(wrap);else last.after(wrap)}
+  try{wrap.scrollIntoView({block:'center',behavior:'smooth'});wrap.classList.add('just-inserted');setTimeout(()=>wrap.classList.remove('just-inserted'),2500)}catch(e){}
+  try{docSaveBody(getEditorHTML());upd()}catch(e){}
+  const num=bpNumbers(bpTree(studyGet(),'thesis')),n=bpNode(sec);
+  showToast((hi?'किताब में डाला: ':'Put in your book: ')+(num[sec]?num[sec]+' ':'')+(n?bpTitle(n):''));bbOutlineRender();return true}
+/* ---- outline, like PDF bookmarks ---- */
+function bbOutlineToggle(){const d=document.getElementById('bbOutline');if(!d)return;const on=d.style.display==='none';d.style.display=on?'block':'none';try{LS.set('appu_bb_out',on?'1':'')}catch(e){}if(on)bbOutlineRender()}
+function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!box||box.style.display==='none')return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),book=bbBookId();
+  if(!book){const cur=docCurrentId(),hasSec=!!editor.querySelector('[data-sec]');
+    box.innerHTML='<b>📖 '+L('The book','किताब')+'</b><p class="desc" style="margin:4px 0">'+L('This study has no book yet. The book is one document with every chapter of your plan.','इस study की अभी कोई किताब नहीं। किताब एक document है जिसमें आपकी योजना का हर chapter है।')+'</p><div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="bpInsertOutline()">'+L('Make the book','किताब बनाएँ')+'</button>'+(hasSec&&cur?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbUseCurrent()">'+L('Use this document as the book','यही document किताब बनाएँ')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="bpOpen()">'+L('See the plan','योजना देखें')+'</button></div>';return}
+  const isB=bbIsBook();let div=editor;if(!isB){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}
+  const hs=[...div.querySelectorAll('h1,h2,h3')],num=bpNumbers(bpTree(o,'thesis')),present={};
+  const rows=hs.map(h=>{const sec=h.getAttribute('data-sec')||'';if(sec)present[sec]=1;const own=bbOwn(h),words=own.reduce((a,x)=>a+lsWords(x.textContent||''),0),lv=+h.tagName[1];
+    return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\''+escAttr(sec)+'\','+hs.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+(lv>1||!(bpNode(sec)&&bpNode(sec).k)?'<span class="bb-w'+(words?'':' bb-empty')+'">'+(words?words:L('empty','खाली'))+'</span>':'')+'</a>'}).join('');
+  const missing=bbFlat(o).filter(x=>!present[x.n.id]&&!(x.n.ed==='syn')&&!/^front\.(title|contents)$/.test(x.n.id)&&x.n.id!=='front'&&x.n.id!=='back');
+  box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></div>'+
+   (isB?'':'<button type="button" class="btn btn-purple btn-sm" style="margin:6px 0" onclick="docSwitch(\''+book+'\');bbOutlineRender()">'+L('Open the book','किताब खोलें')+'</button>')+
+   '<div class="bb-list">'+rows+'</div>'+
+   (missing.length?'<p class="desc" style="margin:8px 0 2px;color:#b45309">'+L('In your plan but not in the book:','योजना में है, किताब में नहीं:')+'</p>'+missing.slice(0,12).map(x=>'<div class="row" style="gap:6px;align-items:center;font-size:13px"><span>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</span>'+(isB?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbAddMissing(\''+x.n.id+'\')">+ '+L('Add','जोड़ें')+'</button>':'')+'</div>').join('')+(missing.length>12?'<p class="desc">+'+(missing.length-12)+'</p>':''):'')}
+function bbAddMissing(id){if(!bbIsBook())return;const h=bbAddSection(id);bbRenumber();try{docSaveBody(getEditorHTML());upd()}catch(e){}if(h)try{h.scrollIntoView({block:'center'})}catch(e){}bbOutlineRender()}
+function bbUseCurrent(){const o=studyGet();o.bookDoc=docCurrentId();studySet(o);showToast(studyHi()?'यही document अब इस study की किताब है ✓':'This document is now the book of this study ✓');bbOutlineRender();bbGuideUpdate()}
+function bbGo(sec,idx){const book=bbBookId();if(book&&docCurrentId()!==book)docSwitch(book);
+  const h=(sec&&editor.querySelector('[data-sec="'+sec+'"]'))||editor.querySelectorAll('h1,h2,h3')[idx];if(!h)return;
+  try{h.scrollIntoView({block:'start',behavior:'smooth'});const r=document.createRange();r.selectNodeContents(h);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r);editor.focus()}catch(e){}bbGuideUpdate()}
+/* ---- guide card that follows the cursor ---- */
+let _bbGT=0;function bbGuideSchedule(){clearTimeout(_bbGT);_bbGT=setTimeout(bbGuideUpdate,120)}
+function bbCaretSection(){const s=getSelection();if(!s||!s.rangeCount)return null;let n=s.getRangeAt(0).startContainer;if(!editor.contains(n))return null;
+  while(n&&n.parentNode!==editor)n=n.parentNode;if(!n)return null;
+  let x=n;while(x){if(x.nodeType===1&&/^H[1-6]$/.test(x.tagName)&&x.getAttribute('data-sec'))return x.getAttribute('data-sec');x=x.previousSibling}return null}
+function bbGuideUpdate(){const g=document.getElementById('bbGuide');if(!g)return;if(!bbIsBook()){g.style.display='none';return}
+  const sec=bbCaretSection(),n=sec&&bpNode(sec);if(!n||!n.g){g.style.display='none';return}
+  const hi=studyHi(),m=BP_MODES[n.m]||BP_MODES.front,num=bpNumbers(bpTree(studyGet(),'thesis'));
+  g.style.display='block';g.style.borderLeftColor=m.bd;g.style.background=m.bg;
+  g.innerHTML='<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap"><b>'+escHTML((num[sec]?num[sec]+' ':'')+bpTitle(n))+'</b>'+bpModeChip(n.m)+((n.s||[]).length?'<span class="bp-steps">'+n.s.map(s=>'<a href="#" onclick="bpGoStep(\''+s+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div><div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'}
+function bbInit(){if(typeof editor==='undefined'||!editor||document.getElementById('bbGuide'))return;
+  const g=document.createElement('div');g.id='bbGuide';g.className='bb-guide';g.style.display='none';editor.parentNode.insertBefore(g,editor);
+  const ol=document.createElement('div');ol.id='bbOutline';ol.className='bb-outline';let on='';try{on=LS.get('appu_bb_out')||''}catch(e){}ol.style.display=on?'block':'none';editor.parentNode.insertBefore(ol,g);
+  document.addEventListener('selectionchange',bbGuideSchedule);editor.addEventListener('input',()=>{clearTimeout(window._bbOT);window._bbOT=setTimeout(bbOutlineRender,800)});
+  bbOutlineRender()}
+setTimeout(()=>{try{bbInit()}catch(e){}},0);
 
 function apHomeRender(){
   const el=document.getElementById('apHome');if(!el)return;
@@ -15909,7 +16021,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.01c';
+const APP_BUILD='2026.11.01d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
