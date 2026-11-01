@@ -314,6 +314,8 @@
   .paper-card .btn{padding:5px 9px;font-size:11.5px}
   .paper-check{display:flex;align-items:flex-start;gap:6px}
   .paper-check input{margin-top:4px;width:15px;height:15px;accent-color:#6d28d9;flex:0 0 auto}
+  .bb-f{background:#EEF2FF;border-bottom:1px dotted #6D28D9;padding:0 2px;border-radius:3px;cursor:pointer}
+  .bb-f-new{background:#FEF3C7}
   .bb-outline{border:1px solid var(--line,#ddd);border-radius:8px;padding:8px 10px;margin:6px 0;max-height:220px;overflow:auto;background:var(--card,#fff)}
   .bb-list{margin-top:4px}
   .bb-row{display:flex;justify-content:space-between;gap:8px;padding:3px 4px;border-radius:4px;text-decoration:none;color:inherit;font-size:13px}
@@ -4037,7 +4039,7 @@ function tourAfterWelcome(){const d=document.getElementById('welcomeDlg');if(!d|
 function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
   if(lg&&!['C3','C4'].includes(id))return lg;
-  if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
+  if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px">'+(ok?'<button type="button" class="btn btn-purple btn-sm" onclick="bbSampleToBook()">📖 '+(hi?'किताब में डालें (संख्याएँ जुड़ी रहेंगी)':'Put it in my book (numbers stay linked)')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
   if(id==='C4'){const c=scaleCheck(o);if(!(ds.vars||[]).some(x=>x.scale&&x.scale!=='own'&&x.scale!=='instr'))return'';return'<div class="sub-box" style="border-color:'+(c.ok?'#16a34a':'#b45309')+'"><b>'+(c.ok?'✅ ':'⚠️ ')+(hi?'Scales की अनुमति':'Scale permissions')+'</b><p style="margin:6px 0 0">'+(c.ok?(hi?'चुने गए सभी scales मुफ़्त हैं या उनकी wording owner के page से डाली गई है।':'All chosen scales are free, or their wording was added from the owner\'s page.'):escHTML(c.issues.join('; ')))+'</p></div>'}
   return''}
 function ethicsDraftSentence(){const o=studyGet(),e=ethicsGet(o),s=ethicsState(o);if(!s.open)return'';
@@ -5227,7 +5229,7 @@ function docSaveBody(body){
   return ok;
 }
 /* book part 2: refresh outline and guide after a document switch */
-setTimeout(()=>{try{const f=docSwitch;window.docSwitch=docSwitch=function(id){f(id);try{bbOutlineRender();bbGuideUpdate()}catch(e){}}}catch(e){}},0);
+setTimeout(()=>{try{const f=docSwitch;window.docSwitch=docSwitch=function(id){f(id);try{bbOutlineRender();bbGuideUpdate();bbFieldsRefresh()}catch(e){}}}catch(e){}},0);
 function docSwitch(id){
   const tgt=docsGet().find(x=>x.id===id),p=getActiveProject();
   if(tgt&&(tgt.pid||'')!==docPid()){
@@ -15961,7 +15963,9 @@ function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!bo
   const rows=hs.map(h=>{const sec=h.getAttribute('data-sec')||'';if(sec)present[sec]=1;const own=bbOwn(h),words=own.reduce((a,x)=>a+lsWords(x.textContent||''),0),lv=+h.tagName[1];
     return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\''+escAttr(sec)+'\','+hs.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+(lv>1||!(bpNode(sec)&&bpNode(sec).k)?'<span class="bb-w'+(words?'':' bb-empty')+'">'+(words?words:L('empty','खाली'))+'</span>':'')+'</a>'}).join('');
   const missing=bbFlat(o).filter(x=>!present[x.n.id]&&!(x.n.ed==='syn')&&!/^front\.(title|contents)$/.test(x.n.id)&&x.n.id!=='front'&&x.n.id!=='back');
-  box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></div>'+
+  const flds=isB?BB_FIELDS.filter(f=>bbFieldVal(f[0],o)):[];
+  box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><span><a href="#" class="desc" onclick="bbCheckOpen();return false">✓ '+L('Check the book','किताब जाँचें')+'</a> · <a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></span></div>'+
+   (flds.length?'<div class="desc" style="margin:4px 0">'+L('Linked number at the cursor:','Cursor पर जुड़ी हुई संख्या:')+' '+flds.map(f=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(hi?f[1][1]:f[1][0])+'" onmousedown="event.preventDefault()" onclick="bbFieldInsert(\''+f[0]+'\')">'+escHTML((hi?f[1][1]:f[1][0]).split(' (')[0])+' = '+escHTML(bbFieldVal(f[0],o))+'</button>').join(' ')+'</div>':'')+
    (isB?'':'<button type="button" class="btn btn-purple btn-sm" style="margin:6px 0" onclick="docSwitch(\''+book+'\');bbOutlineRender()">'+L('Open the book','किताब खोलें')+'</button>')+
    '<div class="bb-list">'+rows+'</div>'+
    (missing.length?'<p class="desc" style="margin:8px 0 2px;color:#b45309">'+L('In your plan but not in the book:','योजना में है, किताब में नहीं:')+'</p>'+missing.slice(0,12).map(x=>'<div class="row" style="gap:6px;align-items:center;font-size:13px"><span>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</span>'+(isB?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbAddMissing(\''+x.n.id+'\')">+ '+L('Add','जोड़ें')+'</button>':'')+'</div>').join('')+(missing.length>12?'<p class="desc">+'+(missing.length-12)+'</p>':''):'')}
@@ -15981,11 +15985,84 @@ function bbGuideUpdate(){const g=document.getElementById('bbGuide');if(!g)return
   g.style.display='block';g.style.borderLeftColor=m.bd;g.style.background=m.bg;
   g.innerHTML='<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap"><b>'+escHTML((num[sec]?num[sec]+' ':'')+bpTitle(n))+'</b>'+bpModeChip(n.m)+((n.s||[]).length?'<span class="bp-steps">'+n.s.map(s=>'<a href="#" onclick="bpGoStep(\''+s+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div><div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'}
 function bbInit(){if(typeof editor==='undefined'||!editor||document.getElementById('bbGuide'))return;
+  editor.addEventListener('click',e=>{const sp=e.target&&e.target.closest&&e.target.closest('span.bb-f');if(!sp)return;const hi=studyHi(),v=sp.textContent,old=sp.getAttribute('data-old');
+    if(confirm(hi?('यह संख्या ('+v+') study record से जुड़ी है। इसे यहाँ सादा text बनाकर '+(old?'पुरानी संख्या '+old:v)+' रखें?'):('This number ('+v+') is linked to the study record. Keep '+(old?'the old value '+old:v)+' here as plain text and stop linking?')))bbFieldUnlink(sp)});
   const g=document.createElement('div');g.id='bbGuide';g.className='bb-guide';g.style.display='none';editor.parentNode.insertBefore(g,editor);
   const ol=document.createElement('div');ol.id='bbOutline';ol.className='bb-outline';let on='';try{on=LS.get('appu_bb_out')||''}catch(e){}ol.style.display=on?'block':'none';editor.parentNode.insertBefore(ol,g);
   document.addEventListener('selectionchange',bbGuideSchedule);editor.addEventListener('input',()=>{clearTimeout(window._bbOT);window._bbOT=setTimeout(bbOutlineRender,800)});
   bbOutlineRender()}
 setTimeout(()=>{try{bbInit()}catch(e){}},0);
+/* ============ The book, part 3 (build 2026.11.01e): linked numbers and the book check ============
+   A linked number is a small span (data-f) that shows a value from the study record: the planned and
+   recruited sample size, and the numbers who agreed and completed from the D2 log. When the record changes,
+   every place that shows it changes, the places are highlighted and listed, and any one place can be
+   unlinked to keep its old value. The book check lists what still needs work before export. */
+const BB_FIELDS=[
+ ['n.planned',['Planned sample size (complete cases)','योजना का sample size (पूरे मामले)'],o=>{const ds=o.design||{},ss=ds.ss||{};return ss.n||ds.n||''}],
+ ['n.recruit',['Number to recruit','भर्ती करने की संख्या'],o=>{const ds=o.design||{},ss=ds.ss||{};return ss.recruit||ds.n||''}],
+ ['n.agreed',['Number who agreed (D2 log)','जिन्होंने सहमति दी (D2 log)'],o=>{const r=logRows(o,'recruit');return r.length?r.reduce((a,x)=>a+(+x.agreed||0),0):''}],
+ ['n.done',['Number who completed (D2 log)','जिन्होंने पूरा किया (D2 log)'],o=>{const r=logRows(o,'recruit');return r.length?r.reduce((a,x)=>a+(+x.done||0),0):''}]];
+function bbFieldVal(k,o){const f=BB_FIELDS.find(x=>x[0]===k);if(!f)return'';try{const v=f[2](o||studyGet());return v===''||v==null?'':String(v)}catch(e){return''}}
+function bbFieldHTML(k,o){const v=bbFieldVal(k,o);return'<span class="bb-f" data-f="'+k+'" contenteditable="false" title="'+escAttr(studyHi()?'जुड़ी हुई संख्या: study record से आती है':'Linked number: it comes from the study record')+'">'+escHTML(v||'?')+'</span>'}
+/* The sample-size paragraph for 3.x Sample size, with its numbers linked. */
+function bbSampleHTML(o){o=o||studyGet();const ds=o.design||{},ss=ds.ss||{};if(!ssComplete(ds))return'';let t=escHTML(ssDraftText(ds));
+  const swap=(val,k)=>{if(!val)return;const re=new RegExp('(^|[^\\d.])('+String(val).replace('.','\\.')+')(?![\\d.])');t=t.replace(re,(m,a)=>a+bbFieldHTML(k,o))};
+  if(ss.recruit&&ss.recruit!==ss.n)swap(ss.recruit,'n.recruit');swap(ss.n||ds.n,'n.planned');
+  return'<p data-ssat="'+(ss.at||'')+'">'+t+'</p>'}
+function bbSampleToBook(){const html=bbSampleHTML();if(!html){showToast(studyHi()?'पहले sample size और उसका आधार पूरा करें':'Complete the sample size and how it was decided first');return}
+  try{document.getElementById('subDlg').close()}catch(e){}if(!bbPut(html,'method.size','ss'))insertHTMLBlockIntoEditor(html)}
+/* Refresh every linked number in the open book; returns the list of changes. */
+function bbFieldsRefresh(quiet){if(!bbIsBook())return[];const o=studyGet(),ch=[];
+  editor.querySelectorAll('span.bb-f[data-f]').forEach(sp=>{const v=bbFieldVal(sp.getAttribute('data-f'),o)||'?';if(sp.textContent!==v){ch.push({k:sp.getAttribute('data-f'),from:sp.textContent,to:v});sp.setAttribute('data-old',sp.textContent);sp.textContent=v;sp.classList.add('bb-f-new')}});
+  if(ch.length){try{docSaveBody(getEditorHTML());upd()}catch(e){}
+    if(!quiet){const hi=studyHi(),u=[...new Set(ch.map(c=>c.from+' → '+c.to))].join(', ');showToast((hi?'किताब में '+ch.length+' जगह संख्या बदली: ':ch.length+' linked number'+(ch.length===1?'':'s')+' updated in the book: ')+u)}}
+  window._bbLastChanges=ch;return ch}
+/* Keep the old value at one place: the span becomes plain text. */
+function bbFieldUnlink(sp){if(!sp)return;const t=document.createTextNode(sp.getAttribute('data-old')||sp.textContent);sp.replaceWith(t);try{docSaveBody(getEditorHTML());upd()}catch(e){}}
+function bbFieldInsert(k){if(!bbIsBook()){showToast(studyHi()?'पहले किताब खोलें':'Open the book first');return}insertHTMLAtCursorSafe(bbFieldHTML(k))}
+function insertHTMLAtCursorSafe(html){editor.focus();if(savedRange)restoreEditorSelection();const s=getSelection();if(!s.rangeCount||!editor.contains(s.anchorNode))placeCaretAtEnd();
+  const r=getSelection().getRangeAt(0);r.deleteContents();const f=r.createContextualFragment(html+'​');const last=f.lastChild;r.insertNode(f);if(last){r.setStartAfter(last);r.collapse(true);const s2=getSelection();s2.removeAllRanges();s2.addRange(r)}try{docSaveBody(getEditorHTML());upd()}catch(e){}}
+/* ---- the book check ---- */
+function bbCheck(){const o=studyGet(),hi=studyHi(),L=(en,x)=>hi?x:en,out=[],book=bbBookId();if(!book)return[{sev:'stop',msg:L('This study has no book yet.','इस study की अभी कोई किताब नहीं।')}];
+  let div=editor;if(!bbIsBook()){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}
+  const num=bpNumbers(bpTree(o,'thesis')),T=id=>{const n=bpNode(id);return(num[id]?num[id]+' ':'')+(n?bpTitle(n):id)},present={};
+  div.querySelectorAll('[data-sec]').forEach(h=>present[h.getAttribute('data-sec')]=h);
+  /* 1 sections of the plan missing, 2 sections still empty */
+  const flat=bbFlat(o).filter(x=>x.n.ed!=='syn'&&!/^front\.(title|contents)$/.test(x.n.id)&&['front','back'].indexOf(x.n.id)<0);
+  flat.filter(x=>!present[x.n.id]).forEach(x=>out.push({sev:'fix',sec:x.n.id,msg:L('Missing from the book: ','किताब में नहीं: ')+T(x.n.id)}));
+  flat.filter(x=>present[x.n.id]&&!(x.n.k&&x.n.k.length)).forEach(x=>{const h=present[x.n.id],w=bbOwn(h).reduce((a,y)=>a+lsWords(y.textContent||''),0);if(!w)out.push({sev:'todo',sec:x.n.id,msg:L('Still empty: ','अभी खाली: ')+T(x.n.id)})});
+  /* 3 citations */
+  const miss=div.querySelectorAll('span.cit.cit-missing').length;if(miss)out.push({sev:'fix',msg:L(miss+' citation'+(miss===1?' has':'s have')+' no source in the library',miss+' citation का source library में नहीं')});
+  const cids=new Set();div.querySelectorAll('span.cit[data-cid]').forEach(s=>s.getAttribute('data-cid').split(',').forEach(c=>cids.add(c)));
+  const unc=citGetLib().filter(d=>d.cid&&!cids.has(d.cid)).length;if(cids.size&&unc)out.push({sev:'info',msg:L(unc+' library source'+(unc===1?' is':'s are')+' not cited in the book; the reference list shows only cited ones',unc+' library source किताब में cite नहीं हुए; reference list में सिर्फ़ cite हुए आते हैं')});
+  if(cids.size&&!div.querySelector('[data-bib]'))out.push({sev:'fix',sec:'back.refs',msg:L('No reference list in the book yet (Citation Manager → Insert bibliography)','किताब में अभी reference list नहीं (Citation Manager → bibliography डालें)')});
+  /* 4 "see Table 5" that does not exist */
+  const caps={table:div.querySelectorAll('p[data-cap="table"]').length,figure:div.querySelectorAll('p[data-cap]:not([data-cap="table"])').length};
+  const txt=div.innerText||div.textContent||'';
+  [...new Set((txt.match(/\b(Table|Figure|तालिका|चित्र)\s+(\d+)/g)||[]))].forEach(m=>{const k=/Table|तालिका/.test(m)?'table':'figure',n=+m.replace(/\D/g,'');if(n>caps[k])out.push({sev:'fix',msg:L('"'+m+'" is mentioned but the book has only '+caps[k]+' '+k+(caps[k]===1?'':'s'),'"'+m+'" का ज़िक्र है पर किताब में सिर्फ़ '+caps[k]+' '+k)})});
+  /* 5 numbers of participants */
+  const nAg=+bbFieldVal('n.agreed',o)||0,nDone=+bbFieldVal('n.done',o)||0,nRec=+bbFieldVal('n.recruit',o)||0;
+  if(nDone&&nAg&&nDone>nAg)out.push({sev:'fix',msg:L('D2 log: more completed ('+nDone+') than agreed ('+nAg+')','D2 log: सहमति ('+nAg+') से ज़्यादा ने पूरा किया ('+nDone+')')});
+  const abs=present['front.abstract'];if(abs&&nDone){const at=bbOwn(abs).map(x=>x.textContent).join(' '),ns=[...at.matchAll(/\b[Nn]\s*=\s*(\d+)|(\d+)\s+(participants|students|respondents|प्रतिभागी|छात्र)/g)].map(m=>+(m[1]||m[2]));
+    ns.filter(v=>v!==nDone&&v!==nAg&&v!==nRec&&v!==(+bbFieldVal('n.planned',o)||0)).forEach(v=>out.push({sev:'fix',sec:'front.abstract',msg:L('The abstract says '+v+' participants; the D2 log says '+nDone+' completed','Abstract में '+v+' participants लिखे हैं; D2 log में '+nDone+' ने पूरा किया')}))}
+  /* 6 linked numbers with no value, and a sample-size paragraph from an older calculation */
+  div.querySelectorAll('span.bb-f').forEach(sp=>{if(!bbFieldVal(sp.getAttribute('data-f'),o))out.push({sev:'fix',msg:L('A linked number has no value yet: ','जुड़ी हुई संख्या में अभी मान नहीं: ')+sp.getAttribute('data-f')})});
+  const ssat=String(((o.design||{}).ss||{}).at||''),sp=div.querySelector('[data-slot="ss"] p[data-ssat]');if(sp&&ssat&&sp.getAttribute('data-ssat')!==ssat)out.push({sev:'fix',sec:'method.size',msg:L('The sample-size paragraph was written from an earlier calculation. Put the new one from C3.','Sample size वाला paragraph पुरानी गणना से लिखा था। C3 से नया डालें।')});
+  /* 7 Method still in the future tense after data collection */
+  if(nDone){const m=present['method'],secs=['method.procedure','method.sampling','method.setting'].map(id=>present[id]).filter(Boolean);
+    secs.forEach(h=>{const t=bbOwn(h).map(x=>x.textContent).join(' ');if(/\b(will be|will collect|will recruit|will use)\b|किया जाएगा|ली जाएगी|लिए जाएँगे/i.test(t))out.push({sev:'fix',sec:h.getAttribute('data-sec'),msg:L('Still in the future tense although data were collected: ','Data आ जाने के बाद भी भविष्य काल में: ')+T(h.getAttribute('data-sec'))})})}
+  /* 8 pages the pack requires */
+  if(o.pack==='ugc-phd-2022')['front.decl','front.cert','front.plag'].forEach(id=>{const h=present[id];const w=h?bbOwn(h).reduce((a,y)=>a+lsWords(y.textContent||''),0):0;if(!w)out.push({sev:'fix',sec:id,msg:L('UGC 2022 needs this page: ','UGC 2022 को यह पन्ना चाहिए: ')+T(id)})});
+  return out}
+function bbCheckOpen(){let d=document.getElementById('bbCheckDlg');if(!d){d=document.createElement('dialog');d.id='bbCheckDlg';d.className='dlg-wide';d.style.cssText='padding:16px 18px;max-width:640px;width:94vw;border-radius:12px';document.body.appendChild(d)}
+  const hi=studyHi(),L=(en,x)=>hi?x:en,is=bbCheck(),order={stop:0,fix:1,todo:2,info:3},col={stop:'#b91c1c',fix:'#b45309',todo:'#5E5873',info:'#2B6CB0'},lab={stop:L('Stop','रुकें'),fix:L('Fix','ठीक करें'),todo:L('To write','लिखना है'),info:L('Note','ध्यान दें')};
+  is.sort((a,b)=>order[a.sev]-order[b.sev]);
+  d.innerHTML='<div class="dlg-head"><h3 style="margin:0">✓ '+L('Check the book','किताब की जाँच')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'dialog\').close()">✕</button></div>'+
+   (is.length?'<p class="desc" style="margin:6px 0">'+L(is.filter(x=>x.sev==='fix'||x.sev==='stop').length+' to fix, '+is.filter(x=>x.sev==='todo').length+' still to write','ठीक करने को '+is.filter(x=>x.sev==='fix'||x.sev==='stop').length+', लिखने को '+is.filter(x=>x.sev==='todo').length)+'</p><div style="max-height:60vh;overflow:auto">'+is.map(x=>'<div class="row" style="gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid var(--line,#eee)"><span style="font-size:12px;font-weight:600;color:'+col[x.sev]+';min-width:62px">'+lab[x.sev]+'</span><span style="flex:1;font-size:13.5px">'+escHTML(x.msg)+'</span>'+(x.sec?'<a href="#" style="font-size:13px" onclick="document.getElementById(\'bbCheckDlg\').close();'+(bbIsBook()&&!document.querySelector('[data-sec="'+x.sec+'"]')?'bbAddMissing(\''+x.sec+'\')':'bbGo(\''+x.sec+'\')')+';return false">'+L('Go','जाएँ')+'</a>':'')+'</div>').join('')+'</div>'
+   :'<p style="color:#15803d;margin:8px 0">✓ '+L('Nothing to fix.','ठीक करने को कुछ नहीं।')+'</p>');
+  if(!d.open)d.showModal()}
+/* refresh linked numbers whenever the study record changes and the book is open */
+setTimeout(()=>{try{const f=studySet;window.studySet=studySet=function(o){f(o);clearTimeout(window._bbFT);window._bbFT=setTimeout(()=>{try{bbFieldsRefresh()}catch(e){}},300)}}catch(e){}},0);
 
 function apHomeRender(){
   const el=document.getElementById('apHome');if(!el)return;
@@ -16021,7 +16098,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.01d';
+const APP_BUILD='2026.11.01e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
