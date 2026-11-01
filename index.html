@@ -3765,6 +3765,14 @@ function d5HTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o).D5||{},is=d5Is
    exactly what to do. Writing steps read the study's documents by their headings. Saved in o.write.<id>. */
 function lsWords(t){return(String(t||'').match(/[\p{L}\p{N}]+/gu)||[]).length}
 /* Text under the first heading that matches re, in any document of the study, up to the next heading of the same or a higher level. */
+/* E2–E7 read their chapter from the book by section id when the study has a book, so a renamed heading is still found. */
+const LS_SECID={E2:'intro',E3:'lit',E4:'method',E5:'results',E6:'disc',E7:'front.abstract'};
+function lsSecFor(id){const sec=LS_SECID[id],book=(typeof bbBookId==='function')?bbBookId():'';
+  if(sec&&book){let div;try{if(bbIsBook())div=editor;else{div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}}catch(e){div=null}
+    const h=div&&div.querySelector('[data-sec="'+sec+'"]');
+    if(h){const r=bbRange(h),txt=r.map(x=>x.textContent||'').join(' '),html=r.map(x=>x.outerHTML).join('');let cites=r.reduce((a,x)=>a+(x.querySelectorAll?x.querySelectorAll('span.cit').length:0),0);cites+=(txt.match(/\([A-Z][^()]{1,60},\s(19|20)\d{2}[a-z]?\)/g)||[]).length;
+      const d=docsGet().find(x=>x.id===book);return{doc:d?d.title:'',text:txt.trim(),words:lsWords(txt),cites:cites,html:html}}}
+  return lsSection(LS_SEC[id])}
 function lsSection(re){let best=null;
   let cur='',curHTML='';try{cur=docCurrentId();curHTML=getEditorHTML()}catch(e){}
   (typeof docsStudy==='function'?docsStudy():[]).forEach(d=>{if(best)return;const div=document.createElement('div');div.innerHTML=(d.id===cur?curHTML:d.body)||'';
@@ -3788,7 +3796,7 @@ function lsIssues(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),d=o.idea|
   case'C10':{const s=(typeof designGet==='function'?designGet('ec'):{})||{},a=w.C10||{},minor=!!((o.ethics||{}).risk||{}).minor||s.minors==='yes';
     need(s.consentAt,'make the consent form (Design & Ethics, consent)','consent form बनाएँ (Design & Ethics में consent)');need(String(s.risks||'').trim(),'risks and discomforts in the consent form','consent form में जोखिम और असुविधा');need(String(s.contact||'').trim().length>=10,'a contact for questions or distress','सवाल या परेशानी के लिए संपर्क');
     if(minor)need(a.assent,'an assent form in simple words for participants under 18, plus parent or guardian consent','18 से कम उम्र वालों के लिए सरल शब्दों में assent form, और माता-पिता की सहमति');break}
-  case'E2':case'E3':case'E4':case'E5':case'E6':case'E7':{const sec=lsSection(LS_SEC[id]),nm={E2:'Introduction',E3:'Review of literature',E4:'Methods',E5:'Results',E6:'Discussion',E7:'Abstract'}[id];
+  case'E2':case'E3':case'E4':case'E5':case'E6':case'E7':{const sec=lsSecFor(id),nm={E2:'Introduction',E3:'Review of literature',E4:'Methods',E5:'Results',E6:'Discussion',E7:'Abstract'}[id];
     if(!sec){out.push(L('no heading "'+nm+'" found in your documents','आपके documents में "'+nm+'" शीर्षक नहीं मिला'));break}
     const min={E2:200,E3:400,E4:200,E5:60,E6:200,E7:100}[id];if(sec.words<min)out.push(L(nm+': '+sec.words+' words, at least '+min+' expected',nm+': '+sec.words+' शब्द, कम से कम '+min+' चाहिए'));
     if(id==='E2'&&!/\b(aim|objective|research question|purpose)|उद्देश्य/i.test(sec.text.slice(-600)))out.push(L('end the Introduction on your aim and questions','Introduction का अंत aim और सवालों पर करें'));
@@ -3798,7 +3806,7 @@ function lsIssues(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),d=o.idea|
     if(id==='E6'&&!/limitation|सीमा|कमी/i.test(sec.text))out.push(L('name the limitations','कमियाँ (limitations) लिखें'));
     if(id==='E7'){const pk=packGet(o),mx=pk&&pk.abstractMax?pk.abstractMax:350;if(sec.words>mx)out.push(pk&&pk.abstractMax?L('Abstract: '+sec.words+' words; your pack allows '+mx,'Abstract: '+sec.words+' शब्द; आपका पैकेट '+mx+' तक देता है'):L('Abstract: '+sec.words+' words; most formats allow 250–300','Abstract: '+sec.words+' शब्द; ज़्यादातर formats 250–300 तक'));
       const all=(sec.html+' '+sec.text);if(!/keywords?\s*[:：]/i.test(all)&&!/keywords?/i.test((lsSection(/keywords?/i)||{}).text||'')&&!/keywords?\s*[:：]/i.test(String((lsSection(/^\s*abstract/i)||{}).text)))out.push(L('add a Keywords line','Keywords की पंक्ति जोड़ें'));
-      const res=lsSection(LS_SEC.E5);if(res){const nums=(sec.text.match(/\b(?:p\s*[=<]\s*\.?\d+|[Nn]\s*=\s*\d+|[dgr]\s*=\s*-?\.?\d+(?:\.\d+)?)/g)||[]).map(x=>x.replace(/\s+/g,''));const rt=res.text.replace(/\s+/g,'');nums.forEach(x=>{if(rt.indexOf(x)<0)out.push(L('the abstract has '+x+', which is not in the Results','abstract में '+x+' है, जो Results में नहीं'))})}}
+      const res=lsSecFor('E5');if(res){const nums=(sec.text.match(/\b(?:p\s*[=<]\s*\.?\d+|[Nn]\s*=\s*\d+|[dgr]\s*=\s*-?\.?\d+(?:\.\d+)?)/g)||[]).map(x=>x.replace(/\s+/g,''));const rt=res.text.replace(/\s+/g,'');nums.forEach(x=>{if(rt.indexOf(x)<0)out.push(L('the abstract has '+x+', which is not in the Results','abstract में '+x+' है, जो Results में नहीं'))})}}
     break}
   case'F5':{let n=0;try{n=JSON.parse(LS.get(pkey('appu_viva'))||'[]').length}catch(e){}if(n<5)out.push(L('answer at least 5 practice questions in the viva tool ('+n+' so far)','viva tool में कम से कम 5 अभ्यास सवालों के जवाब दें (अभी '+n+')'));break}
   }
@@ -3815,7 +3823,7 @@ function lsHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues
   if(id==='C2')body=ta('incl',L('Who can take part (inclusion rules)','कौन भाग ले सकता है (शामिल करने के नियम)'))+ta('excl',L('Who cannot (exclusion rules)','कौन नहीं (बाहर रखने के नियम)'))+ta('rec',L('How you will recruit (where, through whom)','Recruit कैसे करेंगे (कहाँ, किसके ज़रिए)'));
   if(id==='C10'){const minor=!!((o.ethics||{}).risk||{}).minor;body='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();showTool(\'design\')">📝 '+L('Open Design & Ethics (consent form)','Design & Ethics खोलें (consent form)')+'</button></div>'+(minor?'<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox"'+(a.assent?' checked':'')+' onchange="lsSet(\'C10\',\'assent\',this.checked)"> '+L('I have an assent form in simple words for participants under 18, and a consent form for the parent or guardian','मेरे पास 18 से कम उम्र वालों के लिए सरल शब्दों में assent form और माता-पिता के लिए consent form है')+'</label>':'')}
   if(id==='F5')body='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();vivaOpen()">🎤 '+L('Open viva practice','Viva अभ्यास खोलें')+'</button></div>';
-  if(/^E[2-7]$/.test(id)){const sec=lsSection(LS_SEC[id]);body='<p class="desc" style="margin:4px 0">'+(sec?L('Found in "'+sec.doc+'": '+sec.words+' words.','"'+sec.doc+'" में मिला: '+sec.words+' शब्द।'):L('The app looks for this heading in your documents.','App इस शीर्षक को आपके documents में ढूँढ़ता है।'))+'</p>'}
+  if(/^E[2-7]$/.test(id)){const sec=lsSecFor(id);body='<p class="desc" style="margin:4px 0">'+(sec?L('Found in "'+sec.doc+'": '+sec.words+' words.','"'+sec.doc+'" में मिला: '+sec.words+' शब्द।'):L('The app looks for this heading in your documents.','App इस शीर्षक को आपके documents में ढूँढ़ता है।'))+'</p>'}
   const ok=!is.length;
   return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ '+L('Done','पूरा'):L('Still needed','अभी बाकी'))+'</b>'+(is.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+is.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')+body+'</div>'}
 const LS_IDS=['A1','A3','A4','C1','C2','C6','C10','E2','E3','E4','E5','E6','E7','F5'];
@@ -8309,8 +8317,14 @@ async function dxBuild(root,title,opts){
   for(const c of Array.from(root.childNodes)){if(isBlock(c)){await flushLoose();await block(c)}else loose.appendChild(c.cloneNode(true))}
   await flushLoose();
   const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
-  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+W+'><w:body>'+(P.join('')||'<w:p/>')+
-    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  const fld=(ins,shown)=>'<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> '+ins+' </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>'+shown+'<w:r><w:fldChar w:fldCharType="end"/></w:r>';
+  let toc='';if(opts&&opts.toc){const hs=[...root.querySelectorAll('h1,h2,h3')].map(h=>({lv:+h.tagName[1],t:(h.textContent||'').trim()})).filter(x=>x.t);
+    toc='<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr>'+textRun(opts.tocTitle||'Contents',{})+'</w:p>'+
+      '<w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> TOC \\o "1-3" \\h \\z \\u </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r></w:p>'+
+      hs.map(h=>'<w:p><w:pPr><w:ind w:left="'+((h.lv-1)*360)+'"/></w:pPr>'+textRun(h.t,{})+'</w:p>').join('')+
+      '<w:p><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p><w:p><w:r><w:br w:type="page"/></w:r></w:p>'}
+  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+W+'><w:body>'+toc+(P.join('')||'<w:p/>')+
+    '<w:sectPr><w:footerReference w:type="default" r:id="rIdFtr"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
   const font='<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Nirmala UI"/>';
   const hd=(id,name,lv,extra)=>'<w:style w:type="paragraph" w:styleId="'+id+'"><w:name w:val="'+name+'"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/>'+extra[0]+'<w:outlineLvl w:val="'+lv+'"/></w:pPr><w:rPr><w:b/><w:bCs/>'+extra[1]+'</w:rPr></w:style>';
   const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+
@@ -8326,15 +8340,19 @@ async function dxBuild(root,title,opts){
   const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
     '<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
     '<Relationship Id="rIdNum" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>'+
+    '<Relationship Id="rIdFtr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>'+
+    '<Relationship Id="rIdSet" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>'+
     media.map(m=>'<Relationship Id="'+m.rid+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/'+m.name+'"/>').join('')+'</Relationships>';
+  const footer='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr '+W+'><w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'+fld('PAGE','<w:r><w:t>1</w:t></w:r>')+'</w:p></w:ftr>';
+  const settings='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+(opts&&opts.toc?'<w:updateFields w:val="true"/>':'')+'</w:settings>';
   const now=new Date().toISOString().replace(/\.\d+Z$/,'Z');
   const core='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+dxEsc(title)+'</dc:title><dcterms:created xsi:type="dcterms:W3CDTF">'+now+'</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">'+now+'</dcterms:modified></cp:coreProperties>';
   const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/>'+
-    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>';
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/></Types>';
   const root_rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>';
   const e=s=>new TextEncoder().encode(s);
   return dxZip([{name:'[Content_Types].xml',data:e(ct)},{name:'_rels/.rels',data:e(root_rels)},{name:'docProps/core.xml',data:e(core)},
-    {name:'word/document.xml',data:e(doc)},{name:'word/styles.xml',data:e(styles)},{name:'word/numbering.xml',data:e(numbering)},{name:'word/_rels/document.xml.rels',data:e(rels)}]
+    {name:'word/document.xml',data:e(doc)},{name:'word/styles.xml',data:e(styles)},{name:'word/numbering.xml',data:e(numbering)},{name:'word/footer1.xml',data:e(footer)},{name:'word/settings.xml',data:e(settings)},{name:'word/_rels/document.xml.rels',data:e(rels)}]
     .concat(media.map(m=>({name:'word/media/'+m.name,data:m.bytes}))));
 }
 async function downloadDoc(){
@@ -8344,7 +8362,7 @@ async function downloadDoc(){
   showToast('Preparing the Word file…');
   try{
     const holder=document.createElement('div');holder.innerHTML=getEditorHTML().replace(/\u200b/g,'');
-    const blob=await dxBuild(holder,title);
+    const isBook=(typeof bbIsBook==='function')&&bbIsBook();const blob=await dxBuild(holder,title,isBook?{toc:true,tocTitle:(studyHi()?'विषय-सूची':'Contents')}:undefined);
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safe+'.docx';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     showToast('Downloaded ✓ A Word file (.docx) that also opens in Google Docs and LibreOffice');
@@ -15979,11 +15997,22 @@ let _bbGT=0;function bbGuideSchedule(){clearTimeout(_bbGT);_bbGT=setTimeout(bbGu
 function bbCaretSection(){const s=getSelection();if(!s||!s.rangeCount)return null;let n=s.getRangeAt(0).startContainer;if(!editor.contains(n))return null;
   while(n&&n.parentNode!==editor)n=n.parentNode;if(!n)return null;
   let x=n;while(x){if(x.nodeType===1&&/^H[1-6]$/.test(x.tagName)&&x.getAttribute('data-sec'))return x.getAttribute('data-sec');x=x.previousSibling}return null}
+/* Rough reading of a paragraph's kind of writing, for advice only. */
+const BB_CUES={interpret:/\b(suggests?|this means|which means|means that|indicates?|implies|may reflect|could be|because|this shows|so that|explains?)\b|अर्थ|मतलब|संकेत|दर्शाता|इसलिए|क्योंकि|हो सकता/i,
+ compare:/\b(consistent with|in line with|similar to|unlike|contrary to|differs? from|agrees? with|earlier stud|previous stud|replicat)\b|अनुरूप|के समान|के विपरीत|पहले की|पिछली स्टडी|मेल खाता/i,
+ caution:/\b(limitation|limited|cannot|may not|bias|generali[sz]|caution|small sample|self-report)\b|सीमा|सावधानी|पूर्वाग्रह|नहीं कह सकते/i};
+function bbModeOf(t){t=String(t||'');if(lsWords(t)<12)return'';if(BB_CUES.caution.test(t))return'caution';if(BB_CUES.compare.test(t))return'compare';if(BB_CUES.interpret.test(t))return'interpret';return'report'}
+function bbBalance(sec){const h=editor.querySelector('[data-sec="'+sec+'"]');if(!h)return null;const c={report:0,interpret:0,compare:0,caution:0};
+  bbOwn(h).forEach(x=>{if(x.tagName==='P'||x.tagName==='DIV'){const m=bbModeOf(x.textContent);if(m)c[m]++}});return c}
 function bbGuideUpdate(){const g=document.getElementById('bbGuide');if(!g)return;if(!bbIsBook()){g.style.display='none';return}
   const sec=bbCaretSection(),n=sec&&bpNode(sec);if(!n||!n.g){g.style.display='none';return}
   const hi=studyHi(),m=BP_MODES[n.m]||BP_MODES.front,num=bpNumbers(bpTree(studyGet(),'thesis'));
   g.style.display='block';g.style.borderLeftColor=m.bd;g.style.background=m.bg;
-  g.innerHTML='<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap"><b>'+escHTML((num[sec]?num[sec]+' ':'')+bpTitle(n))+'</b>'+bpModeChip(n.m)+((n.s||[]).length?'<span class="bp-steps">'+n.s.map(s=>'<a href="#" onclick="bpGoStep(\''+s+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div><div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'}
+  g.innerHTML='<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap"><b>'+escHTML((num[sec]?num[sec]+' ':'')+bpTitle(n))+'</b>'+bpModeChip(n.m)+((n.s||[]).length?'<span class="bp-steps">'+n.s.map(s=>'<a href="#" onclick="bpGoStep(\''+s+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div><div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'+bbBalanceHTML(sec,n)}
+function bbBalanceHTML(sec,n){if(!/^(disc\.|lit\.(themes|synthesis|gap)|results\.mixed|concl\.)/.test(sec))return'';const c=bbBalance(sec);if(!c)return'';const tot=c.report+c.interpret+c.compare+c.caution;if(!tot)return'';const hi=studyHi(),L=(en,x)=>hi?x:en,M=k=>(hi?BP_MODES[k].t[1]:BP_MODES[k].t[0]);
+  let tip='';if(c.report>=2&&c.interpret+c.compare===0)tip=L('Mostly reporting. After each finding, say what it means for your question.','ज़्यादातर रिपोर्ट। हर finding के बाद बताइए कि आपके सवाल के लिए उसका क्या अर्थ है।');
+  else if(c.interpret>=2&&c.report===0&&/^disc\./.test(sec))tip=L('Meaning without the finding it rests on. State the finding first.','अर्थ तो है पर वह finding नहीं जिस पर वह टिका है। पहले finding बताइए।');
+  return'<div class="desc" style="margin-top:4px">'+L('In this section, by paragraph: ','इस section में, paragraph के हिसाब से: ')+['report','interpret','compare','caution'].map(k=>M(k)+' '+c[k]).join(' · ')+(tip?'<br><b>'+escHTML(tip)+'</b>':'')+' <span style="opacity:.7">'+L('(a rough reading, advice only)','(मोटा अनुमान, सिर्फ़ सलाह)')+'</span></div>'}
 function bbInit(){if(typeof editor==='undefined'||!editor||document.getElementById('bbGuide'))return;
   editor.addEventListener('click',e=>{const sp=e.target&&e.target.closest&&e.target.closest('span.bb-f');if(!sp)return;const hi=studyHi(),v=sp.textContent,old=sp.getAttribute('data-old');
     if(confirm(hi?('यह संख्या ('+v+') study record से जुड़ी है। इसे यहाँ सादा text बनाकर '+(old?'पुरानी संख्या '+old:v)+' रखें?'):('This number ('+v+') is linked to the study record. Keep '+(old?'the old value '+old:v)+' here as plain text and stop linking?')))bbFieldUnlink(sp)});
@@ -16000,6 +16029,9 @@ setTimeout(()=>{try{bbInit()}catch(e){}},0);
 const BB_FIELDS=[
  ['n.planned',['Planned sample size (complete cases)','योजना का sample size (पूरे मामले)'],o=>{const ds=o.design||{},ss=ds.ss||{};return ss.n||ds.n||''}],
  ['n.recruit',['Number to recruit','भर्ती करने की संख्या'],o=>{const ds=o.design||{},ss=ds.ss||{};return ss.recruit||ds.n||''}],
+ ['alpha',['Significance level α (C3)','Significance level α (C3)'],o=>{const a=((o.design||{}).ss||{}).alpha;return a?String(a).replace(/^0\./,'.'):''}],
+ ['power',['Power (C3)','Power (C3)'],o=>{const p=((o.design||{}).ss||{}).power;return p?Math.round(p*100)+'%':''}],
+ ['effect',['Expected effect size (C3)','अपेक्षित effect size (C3)'],o=>{const e=((o.design||{}).ss||{}).effect;return e!=null&&e!==''?String(e):''}],
  ['n.agreed',['Number who agreed (D2 log)','जिन्होंने सहमति दी (D2 log)'],o=>{const r=logRows(o,'recruit');return r.length?r.reduce((a,x)=>a+(+x.agreed||0),0):''}],
  ['n.done',['Number who completed (D2 log)','जिन्होंने पूरा किया (D2 log)'],o=>{const r=logRows(o,'recruit');return r.length?r.reduce((a,x)=>a+(+x.done||0),0):''}]];
 function bbFieldVal(k,o){const f=BB_FIELDS.find(x=>x[0]===k);if(!f)return'';try{const v=f[2](o||studyGet());return v===''||v==null?'':String(v)}catch(e){return''}}
@@ -16098,7 +16130,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.01e';
+const APP_BUILD='2026.11.01f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
