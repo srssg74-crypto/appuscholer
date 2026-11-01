@@ -314,6 +314,9 @@
   .paper-card .btn{padding:5px 9px;font-size:11.5px}
   .paper-check{display:flex;align-items:flex-start;gap:6px}
   .paper-check input{margin-top:4px;width:15px;height:15px;accent-color:#6d28d9;flex:0 0 auto}
+  .xr{color:var(--accent-ink,#5b21b6);border-bottom:1px solid currentColor;cursor:pointer;border-radius:2px}.xr-broken{color:#b91c1c;background:#fde2e2}
+  p[data-cap].xr-flash{outline:3px solid var(--gold-bright,#f0ad3f);outline-offset:3px;transition:outline-color 1s}
+  .nfy{margin-top:12px;border:1px solid var(--line,#e5e5e5);border-left:4px solid var(--gold-bright,#f0ad3f);border-radius:12px;padding:10px 12px;background:var(--card,#fff);font-size:13px}.nfy b{display:block;margin-bottom:2px;color:var(--accent-ink,#5b21b6)}.nfy p{margin:0 0 6px;color:var(--ink)}.nfy-b{display:flex;gap:6px;flex-wrap:wrap}
   .bb-f{background:#EEF2FF;border-bottom:1px dotted #6D28D9;padding:0 2px;border-radius:3px;cursor:pointer}
   .bb-f-new{background:#FEF3C7}
   .bb-outline{border:1px solid var(--line,#ddd);border-radius:8px;padding:8px 10px;margin:6px 0;max-height:220px;overflow:auto;background:var(--card,#fff)}
@@ -6815,12 +6818,13 @@ function capBlocksHTML(kind,title,note){
 }
 function capNoteHTML(note){return note?'<p data-cap-note="1"><em>Note.</em> '+vzEsc(note)+'</p>':''}
 function renumberCaptions(toast){
-  let f=0,tb=0;
+  let f=0,tb=0;try{capEnsureIds()}catch(e){}
   editor.querySelectorAll('p[data-cap]').forEach(p=>{
     const k=p.getAttribute('data-cap'),n=(k==='table')?++tb:++f;
     let st=p.querySelector('strong');if(!st){st=document.createElement('strong');p.insertBefore(st,p.firstChild)}
-    st.textContent=(k==='table'?'Table ':'Figure ')+n;
+    const lab=(k==='table'?'Table ':'Figure ')+n;if(st.textContent!==lab)st.textContent=lab;
   });
+  try{xrSync()}catch(e){}
   if(toast){showToast(t('cap_renum_done').replace('{f}',f).replace('{t}',tb));upd()}
   return{f:f,t:tb};
 }
@@ -16098,6 +16102,8 @@ function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!bo
   const flds=isB?BB_FIELDS.filter(f=>bbFieldVal(f[0],o)):[];
   box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><span><a href="#" class="desc" onclick="bbCheckOpen();return false">✓ '+L('Check the book','किताब जाँचें')+'</a> · <a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></span></div>'+
    (flds.length?'<div class="desc" style="margin:4px 0">'+L('Linked number at the cursor:','Cursor पर जुड़ी हुई संख्या:')+' '+flds.map(f=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(hi?f[1][1]:f[1][0])+'" onmousedown="event.preventDefault()" onclick="bbFieldInsert(\''+f[0]+'\')">'+escHTML((hi?f[1][1]:f[1][0]).split(' (')[0])+' = '+escHTML(bbFieldVal(f[0],o))+'</button>').join(' ')+'</div>':'')+
+   (isB&&xrCaps().length?'<div class="desc" style="margin:4px 0">'+L('Refer to a table or figure at the cursor:','Cursor पर table या figure का हवाला:')+' '+xrCaps().map(c=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(xrTitle(c))+'" onmousedown="event.preventDefault()" onclick="xrInsert(\''+c.getAttribute('data-capid')+'\')">'+escHTML(xrLabel(c))+'</button>').join(' ')+'</div>':'')+
+   nfyHTML(o)+
    (isB?'':'<button type="button" class="btn btn-purple btn-sm" style="margin:6px 0" onclick="docSwitch(\''+book+'\');bbOutlineRender()">'+L('Open the book','किताब खोलें')+'</button>')+
    '<div class="bb-list">'+rows+'</div>'+
    (missing.length?'<p class="desc" style="margin:8px 0 2px;color:#b45309">'+L('In your plan but not in the book:','योजना में है, किताब में नहीं:')+'</p>'+missing.slice(0,12).map(x=>'<div class="row" style="gap:6px;align-items:center;font-size:13px"><span>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</span>'+(isB?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbAddMissing(\''+x.n.id+'\')">+ '+L('Add','जोड़ें')+'</button>':'')+'</div>').join('')+(missing.length>12?'<p class="desc">+'+(missing.length-12)+'</p>':''):'')}
@@ -16199,14 +16205,76 @@ function bbCheck(){const o=studyGet(),hi=studyHi(),L=(en,x)=>hi?x:en,out=[],book
     secs.forEach(h=>{const t=bbOwn(h).map(x=>x.textContent).join(' ');if(/\b(will be|will collect|will recruit|will use)\b|किया जाएगा|ली जाएगी|लिए जाएँगे/i.test(t))out.push({sev:'fix',sec:h.getAttribute('data-sec'),msg:L('Still in the future tense although data were collected: ','Data आ जाने के बाद भी भविष्य काल में: ')+T(h.getAttribute('data-sec'))})})}
   /* 8 pages the pack requires */
   if(o.pack==='ugc-phd-2022')['front.decl','front.cert','front.plag'].forEach(id=>{const h=present[id];const w=h?bbOwn(h).reduce((a,y)=>a+lsWords(y.textContent||''),0):0;if(!w)out.push({sev:'fix',sec:id,msg:L('UGC 2022 needs this page: ','UGC 2022 को यह पन्ना चाहिए: ')+T(id)})});
+  /* 9 cross-references */
+  try{xrCheck(div).forEach(x=>out.push(x))}catch(e){}
   return out}
 function bbCheckOpen(){let d=document.getElementById('bbCheckDlg');if(!d){d=document.createElement('dialog');d.id='bbCheckDlg';d.className='dlg-wide';d.style.cssText='padding:16px 18px;max-width:640px;width:94vw;border-radius:12px';document.body.appendChild(d)}
   const hi=studyHi(),L=(en,x)=>hi?x:en,is=bbCheck(),order={stop:0,fix:1,todo:2,info:3},col={stop:'#b91c1c',fix:'#b45309',todo:'#5E5873',info:'#2B6CB0'},lab={stop:L('Stop','रुकें'),fix:L('Fix','ठीक करें'),todo:L('To write','लिखना है'),info:L('Note','ध्यान दें')};
   is.sort((a,b)=>order[a.sev]-order[b.sev]);
   d.innerHTML='<div class="dlg-head"><h3 style="margin:0">✓ '+L('Check the book','किताब की जाँच')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'dialog\').close()">✕</button></div>'+
-   (is.length?'<p class="desc" style="margin:6px 0">'+L(is.filter(x=>x.sev==='fix'||x.sev==='stop').length+' to fix, '+is.filter(x=>x.sev==='todo').length+' still to write','ठीक करने को '+is.filter(x=>x.sev==='fix'||x.sev==='stop').length+', लिखने को '+is.filter(x=>x.sev==='todo').length)+'</p><div style="max-height:60vh;overflow:auto">'+is.map(x=>'<div class="row" style="gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid var(--line,#eee)"><span style="font-size:12px;font-weight:600;color:'+col[x.sev]+';min-width:62px">'+lab[x.sev]+'</span><span style="flex:1;font-size:13.5px">'+escHTML(x.msg)+'</span>'+(x.sec?'<a href="#" style="font-size:13px" onclick="document.getElementById(\'bbCheckDlg\').close();'+(bbIsBook()&&!document.querySelector('[data-sec="'+x.sec+'"]')?'bbAddMissing(\''+x.sec+'\')':'bbGo(\''+x.sec+'\')')+';return false">'+L('Go','जाएँ')+'</a>':'')+'</div>').join('')+'</div>'
+   (is.length?'<p class="desc" style="margin:6px 0">'+L(is.filter(x=>x.sev==='fix'||x.sev==='stop').length+' to fix, '+is.filter(x=>x.sev==='todo').length+' still to write','ठीक करने को '+is.filter(x=>x.sev==='fix'||x.sev==='stop').length+', लिखने को '+is.filter(x=>x.sev==='todo').length)+'</p><div style="max-height:60vh;overflow:auto">'+is.map(x=>'<div class="row" style="gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid var(--line,#eee)"><span style="font-size:12px;font-weight:600;color:'+col[x.sev]+';min-width:62px">'+lab[x.sev]+'</span><span style="flex:1;font-size:13.5px">'+escHTML(x.msg)+'</span>'+(x.act?'<a href="#" style="font-size:13px;margin-right:8px" onclick="'+escAttr(x.act.fn)+';return false">'+escHTML(x.act.label)+'</a>':'')+(x.sec?'<a href="#" style="font-size:13px" onclick="document.getElementById(\'bbCheckDlg\').close();'+(bbIsBook()&&!document.querySelector('[data-sec="'+x.sec+'"]')?'bbAddMissing(\''+x.sec+'\')':'bbGo(\''+x.sec+'\')')+';return false">'+L('Go','जाएँ')+'</a>':'')+'</div>').join('')+'</div>'
    :'<p style="color:#15803d;margin:8px 0">✓ '+L('Nothing to fix.','ठीक करने को कुछ नहीं।')+'</p>');
   if(!d.open)d.showModal()}
+/* ============ Live cross-references and "Next for you" (build 2026.11.01h) ============
+   Cross-references: a "Table 2" or "Figure 1" in the text is a live link to its caption (span.xr, by the caption's
+   fixed id). When tables or figures move, are added or are deleted, the numbers in the text follow the captions;
+   a link whose caption was deleted shows "Table ?" and the book check lists it. Clicking a link goes to the caption.
+   Next for you: one suggestion that reads both views of the study, the steps and the book. First a finished step
+   whose book section is still empty, otherwise the next unfinished step and the book section it feeds. */
+function capEnsureIds(root){(root||editor).querySelectorAll('p[data-cap]').forEach(p=>{if(!p.getAttribute('data-capid'))p.setAttribute('data-capid','cap'+Date.now().toString(36)+Math.random().toString(36).slice(2,6))})}
+function xrLabel(cap){const st=cap&&cap.querySelector('strong');return st?st.textContent.trim():''}
+function xrTitle(cap){const n=cap&&cap.nextElementSibling;return n&&n.hasAttribute&&n.hasAttribute('data-cap-title')?n.textContent.trim():''}
+function xrSync(root){root=root||editor;let ch=0;root.querySelectorAll('span.xr[data-xr]').forEach(sp=>{const cap=root.querySelector('p[data-capid="'+sp.getAttribute('data-xr')+'"]');
+  const t=cap?xrLabel(cap):((sp.getAttribute('data-k')==='table'?'Table':'Figure')+' ?');if(sp.textContent!==t){sp.textContent=t;ch++}sp.classList.toggle('xr-broken',!cap);if(sp.getAttribute('contenteditable')!=='false')sp.setAttribute('contenteditable','false')});return ch}
+function xrHTML(cap){return'<span class="xr" contenteditable="false" data-xr="'+escAttr(cap.getAttribute('data-capid'))+'" data-k="'+(cap.getAttribute('data-cap')==='table'?'table':'figure')+'">'+escHTML(xrLabel(cap))+'</span>'}
+function xrInsert(capid){const cap=editor.querySelector('p[data-capid="'+capid+'"]');if(!cap){showToast(studyHi()?'यह caption अब नहीं मिला':'That caption is no longer there');return}insertHTMLAtCursorSafe(xrHTML(cap))}
+function xrGo(capid){const cap=editor.querySelector('p[data-capid="'+capid+'"]');if(!cap){showToast(studyHi()?'इस reference का caption हटाया जा चुका है':'The caption of this reference was deleted');return}
+  try{cap.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}cap.classList.add('xr-flash');setTimeout(()=>cap.classList.remove('xr-flash'),1600)}
+function xrCaps(root){root=root||editor;capEnsureIds(root);return[...root.querySelectorAll('p[data-cap]')]}
+/* Turn plain "Table 2" / "Figure 1" in the text into live links, when that caption exists. */
+function xrLinkPlain(){renumberCaptions();const caps={};xrCaps().forEach(c=>{caps[xrLabel(c)]=c});let n=0;
+  const walk=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT,{acceptNode:t=>{const p=t.parentElement;if(!p||p.closest('p[data-cap],p[data-cap-title],span.xr,span.cit,span.bb-f,h1,h2,h3,h4'))return NodeFilter.FILTER_REJECT;return /\b(Table|Figure)\s+\d+\b/.test(t.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}});
+  const nodes=[];while(walk.nextNode())nodes.push(walk.currentNode);
+  nodes.forEach(t=>{const parts=t.nodeValue.split(/(\b(?:Table|Figure)\s+\d+\b)/);if(!parts.some(p=>caps[p.replace(/\s+/,' ')]))return;const f=document.createDocumentFragment();
+    parts.forEach(p=>{const c=caps[p.replace(/\s+/,' ')];if(c){const s=document.createElement('span');s.innerHTML=xrHTML(c);f.appendChild(s.firstChild);n++}else if(p)f.appendChild(document.createTextNode(p))});t.replaceWith(f)});
+  try{docSaveBody(getEditorHTML());upd()}catch(e){}showToast(studyHi()?n+' जगह Table/Figure अब जीवित link है':n+' mention'+(n===1?'':'s')+' turned into live links');try{if(document.getElementById('bbCheckDlg').open)bbCheckOpen()}catch(e){}return n}
+function xrCheck(div){const hi=studyHi(),L=(en,x)=>hi?x:en,out=[];capEnsureIds(div);xrSync(div);
+  const br=div.querySelectorAll('span.xr.xr-broken').length;if(br)out.push({sev:'fix',msg:L(br+' cross-reference'+(br===1?' points':'s point')+' to a table or figure that was deleted (shown as "Table ?" or "Figure ?")',br+' cross-reference ऐसी table या figure की ओर इशारा करते हैं जो हटा दी गई ("Table ?" या "Figure ?" दिखता है)')});
+  const used=new Set([...div.querySelectorAll('span.xr[data-xr]')].map(s=>s.getAttribute('data-xr')));
+  const plain=(()=>{const c=div.cloneNode(true);c.querySelectorAll('p[data-cap],p[data-cap-title],span.xr').forEach(x=>x.remove());return c.textContent||''})();
+  let plainLinked=0;
+  div.querySelectorAll('p[data-cap]').forEach(cap=>{const lab=xrLabel(cap),re=new RegExp('\\b'+lab.replace(/\s+/,'\\s+')+'\\b');
+    if(used.has(cap.getAttribute('data-capid')))return;if(re.test(plain)){plainLinked++;return}
+    out.push({sev:'info',msg:L(lab+(xrTitle(cap)?' ('+xrTitle(cap).slice(0,50)+')':'')+' is never mentioned in the text. APA asks that every table and figure is referred to in the text.',lab+(xrTitle(cap)?' ('+xrTitle(cap).slice(0,50)+')':'')+' का text में कहीं ज़िक्र नहीं। APA के अनुसार हर table और figure का ज़िक्र text में होना चाहिए।')})});
+  if(plainLinked)out.push({sev:'info',msg:L(plainLinked+' table or figure mention'+(plainLinked===1?' is':'s are')+' plain text and will not follow a renumbering.',plainLinked+' table या figure का ज़िक्र साधारण text में है, नंबर बदलने पर साथ नहीं बदलेगा।'),act:{fn:'xrLinkPlain()',label:L('Make them live links','इन्हें जीवित link बनाएँ')}});
+  return out}
+setTimeout(()=>{try{
+  editor.addEventListener('click',e=>{const s=e.target&&e.target.closest&&e.target.closest('span.xr[data-xr]');if(s){e.preventDefault();xrGo(s.getAttribute('data-xr'))}});
+  let tm=0;editor.addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(()=>{try{if(editor.querySelector('span.xr,p[data-cap]')){const before=getEditorHTML();renumberCaptions();if(getEditorHTML()!==before){docSaveBody(getEditorHTML())}}}catch(e){}},500)});
+}catch(e){}},0);
+/* ---- Next for you ---- */
+function nfyPick(o){o=o||studyGet();const book=bbBookId(o);let div=null;if(book){div=document.createElement('div');const d=bbIsBook()?{body:getEditorHTML()}:docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}
+  const present={};if(div)div.querySelectorAll('[data-sec]').forEach(h=>present[h.getAttribute('data-sec')]=h);
+  const flat=bbFlat(o).filter(x=>x.n.ed!=='syn'&&!(x.n.k&&x.n.k.length)&&!/^front\.(title|contents)$/.test(x.n.id));
+  const feeds=id=>flat.filter(x=>(x.n.s||[]).indexOf(id)>=0).map(x=>x.n);
+  const empty=n=>{const h=present[n.id];if(!h)return true;return !bbOwn(h).reduce((a,y)=>a+lsWords(y.textContent||''),0)};
+  if(div)for(const x of SUBSTAGES){const st=subState(x[0],o).s;if(st!=='dn')continue;const sec=feeds(x[0]).find(empty);if(sec)return{kind:'fill',step:x,sec:sec}}
+  const nx=SUBSTAGES.find(x=>['ip','ns'].indexOf(subState(x[0],o).s)>=0);
+  if(nx)return{kind:'step',step:nx,sec:feeds(nx[0])[0]||null,st:subState(nx[0],o).s};
+  const wait=SUBSTAGES.find(x=>['ar','bl'].indexOf(subState(x[0],o).s)>=0);if(wait)return{kind:'wait',step:wait,sec:feeds(wait[0])[0]||null,st:subState(wait[0],o).s};
+  return{kind:'done'}}
+function nfyHTML(o){o=o||studyGet();const hi=studyHi(),L=(en,x)=>hi?x:en,p=nfyPick(o),num=bpNumbers(bpTree(o,'thesis')),book=bbBookId(o);
+  const T=n=>(num[n.id]?num[n.id]+' ':'')+bpTitle(n),S=x=>x[0]+' '+subL(x[2]);
+  const bStep=x=>'<button type="button" class="btn btn-ghost btn-sm" onclick="subOpen(\''+x[1]+'\',\''+x[0]+'\')">'+L('Open step ','कदम खोलें: ')+x[0]+'</button>';
+  const bSec=n=>book&&n?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbGo(\''+n.id+'\')">'+L('Go to ','जाएँ: ')+escHTML(num[n.id]||bpTitle(n))+'</button>':'';
+  let txt='',btn='';
+  if(p.kind==='fill'){txt=L('Step '+S(p.step)+' is done, but its place in the book, '+T(p.sec)+', is still empty. Put the step\'s draft there.','कदम '+S(p.step)+' पूरा है, पर किताब में उसकी जगह, '+T(p.sec)+', अभी खाली है। कदम का draft वहाँ डालें।');btn=bSec(p.sec)+bStep(p.step)}
+  else if(p.kind==='step'){txt=L((p.st==='ip'?'Carry on with ':'Next: ')+S(p.step)+'.'+(p.sec?' It feeds '+T(p.sec)+' in your book.':''),(p.st==='ip'?'जारी रखें: ':'अगला: ')+S(p.step)+'।'+(p.sec?' यह आपकी किताब में '+T(p.sec)+' भरता है।':''));btn=bStep(p.step)+bSec(p.sec)}
+  else if(p.kind==='wait'){txt=L('Every open step is waiting on someone. The first: '+S(p.step)+'.','हर खुला कदम किसी और के इंतज़ार में है। पहला: '+S(p.step)+'।');btn=bStep(p.step)}
+  else{txt=L('Every step is done or marked as not needed. Run the book check before you submit.','हर कदम पूरा है या "लागू नहीं" लिखा है। जमा करने से पहले किताब की जाँच चलाएँ।');btn=book?'<button type="button" class="btn btn-ghost btn-sm" onclick="docSwitch(\''+book+'\');bbCheckOpen()">✓ '+L('Check the book','किताब जाँचें')+'</button>':''}
+  if(!book&&p.kind!=='done')btn+='<button type="button" class="btn btn-ghost btn-sm" onclick="bpInsertOutline()">📖 '+L('Make the book','किताब बनाएँ')+'</button>';
+  return'<div class="nfy"><b>'+L('Next for you','आपके लिए अगला')+'</b><p>'+escHTML(txt)+'</p><div class="nfy-b">'+btn+'</div></div>'}
+
 /* refresh linked numbers whenever the study record changes and the book is open */
 setTimeout(()=>{try{const f=studySet;window.studySet=studySet=function(o){f(o);clearTimeout(window._bbFT);window._bbFT=setTimeout(()=>{try{bbFieldsRefresh()}catch(e){}},300)}}catch(e){}},0);
 
@@ -16218,6 +16286,7 @@ function apHomeRender(){
   const stNow=active?active.stage:null,pk=(function(){try{return PACKS[getPack()].label}catch(e){return ''}})();
   let cards='';
   if(active)cards+='<div class="hm-resume"><b>'+escHTML(ht('projcont'))+'</b>'+escHTML(active.name)+' · '+escHTML(stageLabel(active.stage))+'<br><button type="button" onclick="apGoStage(\''+active.stage+'\')">'+escHTML(ht('go'))+'</button></div>';
+  if(active)try{cards+=nfyHTML()}catch(e){}
   const lk=LS.get('appu_lastlec');
   if(lk&&typeof AP_LIBMAP!=='undefined'&&AP_LIBMAP[lk]){const m=AP_LIBMAP[lk],pos=(apLectPos()[lk]||0)+1;
     cards+='<div class="hm-resume"><b>'+escHTML(ht('resume'))+'</b>'+escHTML(ht('lecture'))+': '+escHTML(lang==='hi'?(m.titleH||m.title):m.title)+', '+escHTML(ht('slide'))+' '+pos+'<br><button type="button" onclick="apHomeResume(\''+lk+'\')">'+escHTML(ht('cont'))+'</button></div>'}
@@ -16244,7 +16313,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.01g';
+const APP_BUILD='2026.11.01h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
