@@ -2981,8 +2981,9 @@ const STUDY_DESIGNS=[
  ['cohort','Cohort: follow a group from an exposure to an outcome','Cohort: एक समूह को exposure से outcome तक follow करना'],
  ['case-control','Case-control: people with and without the outcome, looking back','Case-control: outcome वाले और बिना outcome वाले लोग, पीछे देखकर'],
  ['qualitative','Qualitative: interviews or focus groups','Qualitative: interview या focus group'],
- ['mixed','Mixed methods','Mixed methods']];
-const STUDY_DESIGN_SHORT={cohort:'a cohort study','case-control':'a case-control study',survey:'a cross-sectional survey',correlational:'a correlational study',"two-group":'a two-group comparison','multi-group':'a comparison of three or more groups','pre-post':'a pre-post study','experiment':'a randomised experiment',longitudinal:'a longitudinal study',qualitative:'a qualitative study',mixed:'a mixed-methods study'};
+ ['mixed','Mixed methods','Mixed methods'],
+ ['review','Systematic or scoping review (the whole study is a review)','Systematic या scoping review (पूरी study ही review है)']];
+const STUDY_DESIGN_SHORT={review:'a systematic review',cohort:'a cohort study','case-control':'a case-control study',survey:'a cross-sectional survey',correlational:'a correlational study',"two-group":'a two-group comparison','multi-group':'a comparison of three or more groups','pre-post':'a pre-post study','experiment':'a randomised experiment',longitudinal:'a longitudinal study',qualitative:'a qualitative study',mixed:'a mixed-methods study'};
 function studyDesignShort(k,cap){const t=STUDY_DESIGN_SHORT[k]||'';return cap?t.charAt(0).toUpperCase()+t.slice(1):t}
 function studyDesignLabel(k){const d=STUDY_DESIGNS.find(x=>x[0]===k);return d?(studyHi()?d[2]:d[1]):''}
 const STUDY_ROLES=[['outcome','Outcome (DV)','Outcome (DV)'],['predictor','Predictor or IV','Predictor या IV'],['group','Grouping variable','Grouping variable'],['covariate','Covariate / background','Covariate / पृष्ठभूमि']];
@@ -15657,7 +15658,7 @@ const BP_MODES={
  method:{t:['Method','विधि'],d:['What was done or will be done, exactly enough for someone to repeat it.','क्या किया गया या किया जाएगा, इतना ठीक-ठीक कि कोई दोहरा सके।'],bg:'#F1EEFB',bd:'#6D28D9'},
  front:{t:['Front matter','शुरुआती पन्ने'],d:['Fixed pages your university asks for.','University के माँगे हुए तय पन्ने।'],bg:'#F4F4F6',bd:'#71717A'}};
 /* Design tags: quant, obs (observational), trial (randomised), int (any intervention), qual, mixed, review (B1 systematic or scoping). */
-const BP_DESIGN_TAGS={survey:['quant','obs'],correlational:['quant','obs'],'two-group':['quant','obs'],'multi-group':['quant','obs'],'pre-post':['quant','int'],
+const BP_DESIGN_TAGS={review:['review','revonly'],survey:['quant','obs'],correlational:['quant','obs'],'two-group':['quant','obs'],'multi-group':['quant','obs'],'pre-post':['quant','int'],
  experiment:['quant','trial','int'],longitudinal:['quant','obs'],cohort:['quant','obs'],'case-control':['quant','obs'],qualitative:['qual'],mixed:['quant','qual','mixed','obs']};
 const BP_STD=[
  {id:'front',t:['Front matter','शुरुआती पन्ने'],m:'front',k:[
@@ -15796,19 +15797,32 @@ function bpNode(id){return(BP_INDEX[id]||{}).n||null}
 function bpTags(o){o=o||studyGet();const ds=(o.design||{}).type||'',t=(BP_DESIGN_TAGS[ds]||[]).slice();const b1=(wGet(o).B1||{}).type||'';if(/^(sys|meta|scop)$/.test(b1))t.push('review');return t}
 function bpApplies(n,tags){if(!n.a||!n.a.length)return true;return n.a.some(x=>tags.indexOf(x)>=0)}
 /* The plan for one study: nodes that apply to its design, in standard order. edition 'thesis' drops synopsis-only nodes. */
+/* When the whole study is a review, the review's own methods become the Method chapter and its synthesis
+   becomes Results; there are no participants, tools or procedure (PRISMA 2020 order). */
+const BP_REVIEW=[['front',null],['intro',['intro.background','intro.problem','intro.rationale','intro.significance','intro.questions','intro.objectives','intro.scope','intro.chapters']],
+ ['method',['method.design','lit.reg','lit.elig','lit.sources','lit.select','lit.robm','lit.synthm','lit.certm','method.ethics','method.changes']],
+ ['results',['lit.flow','lit.studies','lit.quality','lit.results','lit.synthesis']],['disc',null],['concl',null],['back',null],['syn',null]];
 function bpTree(o,edition){const tags=bpTags(o),ed=edition||'thesis';
   const keep=n=>bpApplies(n,tags)&&!(n.ed==='syn'&&ed!=='syn');
   const walk=list=>list.filter(keep).map(n=>Object.assign({},n,{k:n.k?walk(n.k):undefined}));
-  return walk(BP_STD)}
+  if(tags.indexOf('revonly')<0)return walk(BP_STD);
+  return BP_REVIEW.map(([cid,ids])=>{const c=bpNode(cid);if(!keep(c))return null;
+    return ids?Object.assign({},c,{k:ids.map(bpNode).filter(keep).map(n=>Object.assign({},n,{k:undefined}))}):walk([c])[0]}).filter(Boolean)}
 function bpStepNodes(step){const out=[];bpWalk(n=>{if((n.s||[]).indexOf(step)>=0)out.push(n.id)});return out}
 function bpModeChip(m){const x=BP_MODES[m]||BP_MODES.front,hi=studyHi();return'<span class="bp-chip" style="background:'+x.bg+';border-color:'+x.bd+';color:#1E1B2E" title="'+escAttr(hi?x.d[1]:x.d[0])+'">'+escHTML(hi?x.t[1]:x.t[0])+'</span>'}
 /* Numbers as a thesis shows them: chapters 1–6, sections 3.2, sub-sections 3.2.3; appendices A, B, C. */
 const BP_CHAPTERS=['intro','lit','method','results','disc','concl'];
 function bpNumbers(tree){const num={};
-  tree.forEach(c=>{const ci=BP_CHAPTERS.indexOf(c.id);
+  let ch=0;tree.forEach(c=>{const ci=BP_CHAPTERS.indexOf(c.id)>=0?ch++:-1;
     if(ci>=0){num[c.id]=String(ci+1);(c.k||[]).forEach((s,i)=>{num[s.id]=(ci+1)+'.'+(i+1);(s.k||[]).forEach((x,j)=>{num[x.id]=(ci+1)+'.'+(i+1)+'.'+(j+1)})})}
     else(c.k||[]).forEach(s=>{if(s.id==='back.appendix')(s.k||[]).forEach((x,j)=>{num[x.id]=String.fromCharCode(65+j)})})});
   return num}
+/* Synopsis and article plans for a study that is itself a review: the review's methods and synthesis take
+   the place of participants, tools and results. */
+const BP_REV_GROUPS={
+ synopsis:[['Title','शीर्षक',['front.title']],['Introduction','प्रस्तावना',['intro.background','intro.problem']],['Need and rationale','आवश्यकता और औचित्य',['intro.rationale']],['Review questions and objectives','Review के प्रश्न और उद्देश्य',['intro.questions','intro.objectives']],['Protocol and registration','Protocol और registration',['lit.reg']],['Eligibility criteria','पात्रता के मानदंड',['lit.elig']],['Sources and search','स्रोत और खोज',['lit.sources']],['Selection and data collection','चयन और data संग्रह',['lit.select']],['Risk of bias and certainty','Risk of bias और certainty',['lit.robm','lit.certm']],['Synthesis plan','Synthesis की योजना',['lit.synthm']],['Expected outcome','अपेक्षित परिणाम',['syn.outcome']],['Timeline','समय-सारणी',['syn.timeline']],['References','संदर्भ सूची',['back.refs']]],
+ apa:[['Title page','Title page',['front.title']],['Abstract','Abstract',['front.abstract','front.keywords']],['Introduction','Introduction',['intro.background','intro.problem','intro.rationale','intro.objectives']],['Method','Method',['method.design','lit.reg','lit.elig','lit.sources','lit.select','lit.robm','lit.synthm','lit.certm','method.changes']],['Results','Results',['lit.flow','lit.studies','lit.quality','lit.results','lit.synthesis']],['Discussion','Discussion',['disc.summary','disc.interpret','disc.compare','disc.theory','disc.practice','disc.strengths','disc.limits','disc.general','disc.future','concl.conclusion']],['References','References',['back.refs']],['Declarations','Declarations',['back.funding','back.data','back.ai','back.registration']]]};
+function bpGroups(plan,o){return(bpTags(o).indexOf('revonly')>=0&&BP_REV_GROUPS[plan.id])||plan.groups}
 function bpPlanId(o){o=o||studyGet();if(o.bookPlan&&BP_PLANS.some(p=>p.id===o.bookPlan))return o.bookPlan;
   return({'ugc-phd-2022':'ugc','apa7-article':'apa','in-psych-synopsis':'std'})[o.pack]||'std'}
 function bpPlanSet(id){const o=studyGet();o.bookPlan=id;studySet(o);bpRender()}
@@ -15816,7 +15830,7 @@ function bpTitle(n){return studyHi()?n.t[1]:n.t[0]}
 /* One line in every step: where this step's work goes in the book. */
 function bpStepBookHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en;
   if(BP_NOBOOK[id])return'<div class="sub-box bp-step"><b>📖 '+L('The book','किताब')+'</b><p class="desc" style="margin:4px 0 0">'+escHTML(hi?BP_NOBOOK[id][1]:BP_NOBOOK[id][0])+' <a href="#" onclick="bpOpen();return false">'+L('See the book plan','किताब की योजना देखें')+'</a></p></div>';
-  const tree=bpTree(o,'thesis'),num=bpNumbers(tree),tags=bpTags(o),ids=bpStepNodes(id).filter(x=>{const n=bpNode(x);return n&&bpApplies(n,tags)&&n.ed!=='syn'&&!(n.k&&n.k.length)});
+  const tree=bpTree(o,'thesis'),num=bpNumbers(tree),inTree={};bpWalk(n=>{if(!(n.k&&n.k.length))inTree[n.id]=1},tree);const ids=bpStepNodes(id).filter(x=>inTree[x]);
   if(!ids.length)return'';
   return'<div class="sub-box bp-step"><b>📖 '+L('Goes into the book at','किताब में यहाँ जाता है')+'</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+ids.map(x=>{const n=bpNode(x),m=BP_MODES[n.m]||BP_MODES.front;
     return'<a href="#" class="bp-loc" onclick="bpOpen(\''+x+'\');return false" style="border-left:4px solid '+m.bd+';background:'+m.bg+'">'+(num[x]?escHTML(num[x])+' ':'')+escHTML(bpTitle(n))+'</a>'}).join('')+'</div></div>'}
@@ -15833,7 +15847,7 @@ function bpRender(){const d=document.getElementById('bpDlg');if(!d)return;const 
   const ds=(o.design||{}).type||'',tags=bpTags(o),ed=plan.edition||'thesis',tree=bpTree(o,ed),num=bpNumbers(tree);
   let body='';
   if(plan.groups){const keepIds={};bpWalk(n=>{keepIds[n.id]=1},tree);
-    body=plan.groups.map((g,gi)=>{const ids=g[2].filter(x=>keepIds[x]);if(!ids.length)return'';
+    body=bpGroups(plan,o).map((g,gi)=>{const ids=g[2].filter(x=>keepIds[x]);if(!ids.length)return'';
       return'<h4 class="bp-ch">'+(gi+1)+'. '+escHTML(hi?g[1]:g[0])+'</h4>'+ids.map(x=>bpRowHTML(bpNode(x),'',0)).join('')}).join('')}
   else{const walk=(list,depth)=>list.map(n=>(depth===0?'<h4 class="bp-ch">'+(num[n.id]?L('Chapter ','अध्याय ')+num[n.id]+': ':'')+escHTML(bpTitle(n))+'</h4>'+(n.k?walk(n.k,1):bpRowHTML(n,num[n.id],0)):bpRowHTML(n,num[n.id],depth-1)+(n.k?walk(n.k,depth+1):''))).join('');
     body=walk(tree,0)}
@@ -15849,7 +15863,7 @@ function bpRender(){const d=document.getElementById('bpDlg');if(!d)return;const 
 /* Writes the outline as headings that carry the section id, so later steps can find their place. */
 function bpOutlineHTML(o){const hi=studyHi(),pid=bpPlanId(o),plan=BP_PLANS.find(p=>p.id===pid)||BP_PLANS[0],ed=plan.edition||'thesis',tree=bpTree(o,ed),num=bpNumbers(tree),T=n=>escHTML(bpTitle(n)),P='<p><br></p>';
   if(plan.groups){const keep={};bpWalk(n=>{keep[n.id]=1},tree);
-    return plan.groups.map((g,gi)=>{const ids=g[2].filter(x=>keep[x]&&x!=='front.title');if(!ids.length)return'';
+    return bpGroups(plan,o).map((g,gi)=>{const ids=g[2].filter(x=>keep[x]&&x!=='front.title');if(!ids.length)return'';
       return'<h1 data-sec="g'+gi+'">'+(gi+1)+'. '+escHTML(hi?g[1]:g[0])+'</h1>'+(ids.length===1&&bpTitle(bpNode(ids[0]))===(hi?g[1]:g[0])?P:ids.map(x=>'<h2 data-sec="'+x+'">'+T(bpNode(x))+'</h2>'+P).join(''))}).join('')}
   let h='';tree.forEach(c=>{const ci=BP_CHAPTERS.indexOf(c.id);
     if(ci>=0){h+='<h1 data-sec="'+c.id+'">'+(hi?'अध्याय ':'Chapter ')+num[c.id]+': '+T(c)+'</h1>';(c.k||[]).forEach(s=>{h+='<h2 data-sec="'+s.id+'">'+num[s.id]+' '+T(s)+'</h2>'+(s.k&&s.k.length?s.k.map(x=>'<h3 data-sec="'+x.id+'">'+num[x.id]+' '+T(x)+'</h3>'+P).join(''):P)})}
@@ -15895,7 +15909,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.01b';
+const APP_BUILD='2026.11.01c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
