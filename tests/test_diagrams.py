@@ -16,7 +16,7 @@ with sync_playwright() as p:
     J("window.confirm=()=>true")
     J("openSaveAsProject();document.getElementById('sapName').value='Diagrams';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
     J("subOpen('lit','B1');wPick('B1','type','sys')")
-    ok('appears here once all seven numbers' in J("document.getElementById('subMain').innerText"),'no diagram before the numbers')
+    ok('appears here once the first number' in J("document.getElementById('subMain').innerText"),'no diagram before the numbers')
     for k,v in [('id',512),('dup',112),('scr',400),('exT',340),('ft',60),('exF',45),('inc',15)]: J("wNestRedraw('B1','n','%s','%d')"%(k,v))
     J("wPick('B1','exWhy','Wrong population: 20\\nNo outcome measure: 15\\nNot peer reviewed: 10')"); pg.wait_for_timeout(200)
     svg=J("(document.querySelector('#subMain svg')||{}).outerHTML||''")

@@ -3471,12 +3471,24 @@ function f7Set(k,v){const o=studyGet();o.write=o.write||{};o.write.F7=Object.ass
    D1 pilot record, F2 reporting checklists (STROBE, CONSORT 2025, PRISMA 2020). Saved in o.write and o.logs. */
 const B1_TYPES=[['narr','Narrative or critical review (most theses)','Narrative या critical review (ज़्यादातर thesis)'],['scop','Scoping review (PRISMA-ScR)','Scoping review (PRISMA-ScR)'],['sys','Systematic review (PRISMA 2020)','Systematic review (PRISMA 2020)'],['meta','Systematic review with meta-analysis (PRISMA 2020)','Meta-analysis के साथ systematic review (PRISMA 2020)']];
 const B1_REG=[['prospero','PROSPERO (systematic reviews only)','PROSPERO (सिर्फ़ systematic review)'],['osf','OSF Registries','OSF Registries'],['other','Other registry or journal','कोई और registry या journal'],['none','Not registered (say why in the reason)','Registered नहीं (कारण ऊपर लिखें)']];
-const B1_FLOW=[['id','Records found in all databases','सभी databases में मिले records'],['dup','Duplicates removed','हटाए गए duplicates'],['scr','Screened by title and abstract','Title और abstract से छाँटे'],['exT','Excluded at title and abstract','Title और abstract पर बाहर'],['ft','Full texts assessed','पूरे text पढ़े'],['exF','Full texts excluded (with reasons)','पूरे text के बाद बाहर (कारण सहित)'],['inc','Studies included','शामिल studies']];
+/* PRISMA 2020 flow fields (Page et al. 2021, template for new reviews with databases, registers and other sources).
+   g: i identification, s screening, n included, o other methods. r: required for the step to be done. */
+const B1_FLOW=[['id','Records from databases','Databases से records','i',1],['reg','Records from registers (0 if none)','Registers से records (न हों तो 0)','i'],
+ ['dup','Duplicates removed before screening','Screening से पहले हटाए गए duplicates','i',1],['auto','Marked ineligible by automation tools','Automation tools ने अयोग्य बताए','i'],['oth','Removed for other reasons','दूसरे कारणों से हटाए','i'],
+ ['scr','Records screened (title and abstract)','छाँटे गए records (title और abstract)','s',1],['exT','Records excluded at title and abstract','Title और abstract पर बाहर','s',1],
+ ['sought','Reports sought for retrieval','पूरा text माँगे गए reports','s'],['notRet','Reports not retrieved','जो reports नहीं मिले','s'],
+ ['ft','Reports assessed for eligibility (full text)','पात्रता के लिए पढ़े गए reports (पूरा text)','s',1],['exF','Reports excluded (with reasons below)','बाहर किए गए reports (कारण नीचे)','s',1],
+ ['inc','Studies included in the review','Review में शामिल studies','n',1],['repInc','Reports of included studies','शामिल studies के reports','n'],
+ ['oId','Other methods: records from websites, organisations, citation searching','दूसरे तरीके: websites, संस्थाओं, citation searching से records','o'],['oSought','Other methods: reports sought','दूसरे तरीके: माँगे गए reports','o'],
+ ['oNotRet','Other methods: reports not retrieved','दूसरे तरीके: जो reports नहीं मिले','o'],['oFt','Other methods: reports assessed','दूसरे तरीके: पढ़े गए reports','o'],['oExF','Other methods: reports excluded','दूसरे तरीके: बाहर किए गए reports','o']];
 function b1Formal(o){const t=(wGet(o).B1||{}).type;return t==='scop'||t==='sys'||t==='meta'}
-function b1FlowIssues(o){const n=(wGet(o).B1||{}).n||{},v=k=>(n[k]===''||n[k]==null)?null:+n[k],hi=studyHi(),out=[];
-  if(v('id')!=null&&v('dup')!=null&&v('scr')!=null&&v('id')-v('dup')!==v('scr'))out.push(hi?'Screened = मिले − duplicates होना चाहिए ('+(v('id')-v('dup'))+')':'Screened should equal found − duplicates ('+(v('id')-v('dup'))+')');
-  if(v('scr')!=null&&v('exT')!=null&&v('ft')!=null&&v('scr')-v('exT')!==v('ft'))out.push(hi?'पूरे text = छाँटे − बाहर होना चाहिए ('+(v('scr')-v('exT'))+')':'Full texts should equal screened − excluded ('+(v('scr')-v('exT'))+')');
-  if(v('ft')!=null&&v('exF')!=null&&v('inc')!=null&&v('ft')-v('exF')!==v('inc'))out.push(hi?'शामिल = पूरे text − बाहर होना चाहिए ('+(v('ft')-v('exF'))+')':'Included should equal full texts − excluded ('+(v('ft')-v('exF'))+')');
+function b1FlowIssues(o){const n=(wGet(o).B1||{}).n||{},v=k=>(n[k]===''||n[k]==null)?null:+n[k],z=k=>v(k)==null?0:v(k),hi=studyHi(),out=[],L=(en,x)=>hi?x:en;
+  if(v('id')!=null&&v('dup')!=null&&v('scr')!=null){const e=v('id')+z('reg')-v('dup')-z('auto')-z('oth');if(e!==v('scr'))out.push(L('Screened should equal found − duplicates and other removals (','Screened = मिले − duplicates और दूसरे हटाए गए होना चाहिए (')+e+')')}
+  if(v('scr')!=null&&v('exT')!=null&&v('sought')!=null&&v('scr')-v('exT')!==v('sought'))out.push(L('Reports sought should equal screened − excluded (','माँगे गए reports = छाँटे − बाहर होना चाहिए (')+(v('scr')-v('exT'))+')');
+  if(v('scr')!=null&&v('exT')!=null&&v('ft')!=null){const e=(v('sought')!=null?v('sought'):v('scr')-v('exT'))-z('notRet');if(e!==v('ft'))out.push(L('Full texts should equal screened − excluded − not retrieved (','पढ़े गए reports = छाँटे − बाहर − नहीं मिले होना चाहिए (')+e+')')}
+  if(v('oSought')!=null&&v('oFt')!=null&&v('oSought')-z('oNotRet')!==v('oFt'))out.push(L('Other methods: assessed should equal sought − not retrieved (','दूसरे तरीके: पढ़े गए = माँगे गए − नहीं मिले होना चाहिए (')+(v('oSought')-z('oNotRet'))+')');
+  if(v('ft')!=null&&v('exF')!=null&&v('inc')!=null){const e=v('ft')-v('exF')+(v('oFt')!=null?v('oFt')-z('oExF'):0);if(e!==v('inc'))out.push(L('Included should equal full texts − excluded'+(v('oFt')!=null?', plus the other-methods studies':'')+' (','शामिल = पढ़े गए − बाहर'+(v('oFt')!=null?', और दूसरे तरीकों की studies':'')+' होना चाहिए (')+e+')')}
+  if(v('repInc')!=null&&v('inc')!=null&&v('repInc')<v('inc'))out.push(L('Reports of included studies cannot be fewer than the studies','शामिल studies के reports, studies से कम नहीं हो सकते'));
   return out}
 function b1Ok(o){const b=wGet(o).B1||{};if(!b.type||String(b.why||'').trim().length<30)return false;if(!b1Formal(o))return true;
   return String(b.crit||'').trim().length>=30&&!!String(b.db||'').trim()&&!!b.reg&&(b.reg==='none'||!!String(b.regId||'').trim())&&!b1FlowIssues(o).length}
@@ -3595,16 +3607,25 @@ function dgInsert(d,cap,alt){if(!d)return;const src=d.svg.replace('style="width:
   const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=d.w*2;c.height=d.h*2;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.scale(2,2);g.drawImage(img,0,0,d.w,d.h);
     insertHTMLBlockIntoEditor('<figure><img src="'+c.toDataURL('image/png')+'" alt="'+escAttr(alt)+'" width="'+d.w+'"><figcaption>'+escHTML(cap)+'</figcaption></figure>');showToast(studyHi()?'चित्र document में डाला ✓':'Diagram inserted into your document ✓')}catch(e){showToast('Could not draw the diagram')}};
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src)}
-/* PRISMA 2020 flow, records from databases only. Numbers from B1. */
-function dgPrisma(o){const b=wGet(o).B1||{},n=b.n||{},v=k=>(n[k]===''||n[k]==null)?null:+n[k];
-  if(['id','dup','scr','exT','ft','exF','inc'].some(k=>v(k)==null)||b1FlowIssues(o).length)return null;
-  const why=String(b.exWhy||'').split(/\n|;/).map(x=>x.trim()).filter(Boolean).slice(0,6);
-  return dgFlow([
-    {stage:'Identification',main:['Records identified from','databases (n = '+v('id')+')'],side:['Duplicate records removed','(n = '+v('dup')+')']},
-    {stage:'Screening',main:['Records screened','(n = '+v('scr')+')'],side:['Records excluded','(n = '+v('exT')+')']},
-    {main:['Full-text reports assessed','for eligibility (n = '+v('ft')+')'],side:['Reports excluded (n = '+v('exF')+')'].concat(why.reduce((a,x)=>a.concat(dgWrap(x,30)),[]).slice(0,7))},
-    {stage:'Included',main:['Studies included in review','(n = '+v('inc')+')'],side:null}])}
-function dgPrismaInsert(){const d=dgPrisma(studyGet());if(!d){showToast(studyHi()?'पहले सभी संख्याएँ भरें और उन्हें आपस में मिलाएँ':'Fill all the numbers first and make them add up');return}
+/* PRISMA 2020 flow (Page et al. 2021). Numbers from B1. A number not filled yet shows as "n = ?" so the gap stays
+   visible; numbers that do not add up give no diagram. Blank registers, automation, other removals and not-retrieved count as 0. */
+function dgPrismaMissing(o){const n=(wGet(o).B1||{}).n||{};return B1_FLOW.filter(x=>x[4]&&(n[x[0]]===''||n[x[0]]==null)).map(x=>x[0]).concat(n.repInc===''||n.repInc==null?['repInc']:[])}
+function dgPrisma(o){const b=wGet(o).B1||{},n=b.n||{},v=k=>(n[k]===''||n[k]==null)?null:+n[k],z=k=>v(k)==null?0:v(k),q=k=>v(k)==null?'?':String(v(k));
+  if(v('id')==null||b1FlowIssues(o).length)return null;
+  const why=String(b.exWhy||'').split(/\n|;/).map(x=>x.trim()).filter(Boolean).slice(0,6),R=a=>a.reduce((x,y)=>x.concat(dgWrap(y,30)),[]);
+  const sought=v('sought')!=null?String(v('sought')):(v('scr')!=null&&v('exT')!=null?String(v('scr')-v('exT')):'?');
+  const rows=[
+    {stage:'Identification',main:['Records identified from:','Databases (n = '+q('id')+')','Registers (n = '+z('reg')+')'],side:['Records removed before screening:','Duplicate records (n = '+q('dup')+')'].concat(R(['Marked ineligible by automation tools (n = '+z('auto')+')','Removed for other reasons (n = '+z('oth')+')']))},
+    {stage:'Screening',main:['Records screened','(n = '+q('scr')+')'],side:['Records excluded','(n = '+q('exT')+')']},
+    {main:['Reports sought for retrieval','(n = '+sought+')'],side:['Reports not retrieved','(n = '+z('notRet')+')']},
+    {main:['Reports assessed for eligibility','(n = '+q('ft')+')'],side:['Reports excluded (n = '+q('exF')+')'].concat(R(why).slice(0,7))},
+    {stage:'Included',main:['Studies included in review (n = '+q('inc')+')','Reports of included studies (n = '+q('repInc')+')'],side:null}];
+  if(v('oId')!=null)rows.push(
+    {stage:'Identification of studies via other methods',main:['Records identified from websites,','organisations, citation searching (n = '+v('oId')+')'],side:null},
+    {main:['Reports sought for retrieval','(n = '+q('oSought')+')'],side:['Reports not retrieved','(n = '+z('oNotRet')+')']},
+    {main:['Reports assessed for eligibility','(n = '+q('oFt')+')'],side:['Reports excluded','(n = '+z('oExF')+')','Included studies are counted above']});
+  const d=dgFlow(rows);d.missing=dgPrismaMissing(o);return d}
+function dgPrismaInsert(){const d=dgPrisma(studyGet());if(!d){showToast(studyHi()?'पहले संख्याएँ भरें और उन्हें आपस में मिलाएँ':'Fill the numbers first and make them add up');return}if(d.missing.length)showToast(studyHi()?'⚠ Diagram में अभी n = ? है; जमा करने से पहले भरें':'⚠ The diagram still has n = ?; fill it before you submit');
   dgInsert(d,'Figure. PRISMA 2020 flow diagram of study selection (Page et al., 2021).','PRISMA flow diagram')}
 /* Participant flow from the D2 recruitment log. */
 function dgPart(o){const rows=logRows(o,'recruit');if(!rows.length)return null;const s=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);
@@ -3881,9 +3902,10 @@ function wExtra3HTML(id,o){
       (b.reg&&b.reg!=='none'?lab(L('Registration number or link','Registration number या link'))+'<input type="text" value="'+escAttr(b.regId||'')+'" onchange="wPatch(\'B1\',\'regId\',this.value)">':'')+
       (b.type==='scop'?'<p class="desc" style="margin:4px 0 0">'+L('PROSPERO does not take scoping reviews; OSF does.','PROSPERO scoping review नहीं लेता; OSF लेता है।')+'</p>':'')+
       '<p style="margin:10px 0 2px"><b>'+L('PRISMA flow numbers','PRISMA flow की संख्याएँ')+'</b> <span class="desc">'+L('(fill as you screen)','(छाँटते-छाँटते भरें)')+'</span></p>'+
-      B1_FLOW.map(x=>'<div class="row" style="gap:6px;align-items:center;margin:2px 0"><input type="number" min="0" style="width:90px" value="'+escAttr(n[x[0]]==null?'':n[x[0]])+'" onchange="wNestRedraw(\'B1\',\'n\',\''+x[0]+'\',this.value)"> <span style="font-size:14px">'+escHTML(hi?x[2]:x[1])+'</span></div>').join('')+warn(b1FlowIssues(o))+
+      (()=>{const f=x=>'<div class="row" style="gap:6px;align-items:center;margin:2px 0"><input type="number" min="0" style="width:90px" value="'+escAttr(n[x[0]]==null?'':n[x[0]])+'" onchange="wNestRedraw(\'B1\',\'n\',\''+x[0]+'\',this.value)"> <span style="font-size:14px">'+escHTML(hi?x[2]:x[1])+(x[4]?'':' <span class="desc">'+L('(if any)','(हो तो)')+'</span>')+'</span></div>',g=(k,t)=>'<p class="desc" style="margin:6px 0 0;font-weight:600">'+t+'</p>'+B1_FLOW.filter(x=>x[3]===k).map(f).join('');
+        return g('i',L('Identification','पहचान'))+g('s',L('Screening','छँटाई'))+g('n',L('Included','शामिल'))+'<details'+(n.oId!=null&&n.oId!==''?' open':'')+' style="margin-top:4px"><summary class="desc">'+L('Studies found by other methods (websites, organisations, reference lists)','दूसरे तरीकों से मिली studies (websites, संस्थाएँ, reference lists)')+'</summary>'+B1_FLOW.filter(x=>x[3]==='o').map(f).join('')+'</details>'})()+warn(b1FlowIssues(o))+
       lab(L('Reasons full texts were excluded, one per line with its number (e.g. Wrong population: 12)','पूरे text के बाद बाहर करने के कारण, हर पंक्ति में एक, संख्या सहित (जैसे Wrong population: 12)'))+'<textarea rows="3" onchange="wPick(\'B1\',\'exWhy\',this.value)">'+escHTML(b.exWhy||'')+'</textarea>'+
-      (()=>{const d=dgPrisma(o);return d?'<div style="margin-top:8px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPrismaInsert()">📊 '+L('Put the PRISMA flow diagram in my document','PRISMA flow diagram document में डालें')+'</button></div>':'<p class="desc" style="margin:6px 0 0">'+L('The PRISMA flow diagram appears here once all seven numbers are filled and add up.','सातों संख्याएँ भरने और आपस में मिलने पर PRISMA flow diagram यहाँ दिखेगा।')+'</p>'})()}
+      (()=>{const d=dgPrisma(o);return d?(d.missing.length?'<p style="margin:6px 0 0;color:#b45309">⚠ '+L('Numbers still shown as n = ? must be filled before you submit.','जो संख्याएँ अभी n = ? दिख रही हैं, जमा करने से पहले भरें।')+'</p>':'')+'<div style="margin-top:8px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPrismaInsert()">📊 '+L('Put the PRISMA flow diagram in my document','PRISMA flow diagram document में डालें')+'</button></div>':'<p class="desc" style="margin:6px 0 0">'+L('The PRISMA flow diagram appears here once the first number is filled and the numbers add up. Numbers not filled yet show as n = ?.','पहली संख्या भरने और संख्याएँ आपस में मिलने पर PRISMA flow diagram यहाँ दिखेगा। जो संख्या अभी नहीं भरी, वह n = ? दिखेगी।')+'</p>'})()}
     return box(b1Ok(o),L('Review type','Review का प्रकार'),h)}
   if(id==='B4'){const is=b4Issues(o),rows=logRows(o,'quality');
     return box(b4Ok(o),L('Quality check','गुणवत्ता की जाँच'),'<p class="desc" style="margin:4px 0">'+L('RoB 2 is for randomised trials, ROBINS-I for non-randomised studies of interventions, JBI or AXIS for cross-sectional studies, CASP for qualitative studies, MMAT for mixed methods. A retracted paper is never cited without saying so.','RoB 2 randomised trials के लिए, ROBINS-I बिना randomisation वाले intervention studies के लिए, JBI या AXIS cross-sectional के लिए, CASP qualitative के लिए, MMAT mixed methods के लिए। Retracted paper बिना बताए cite नहीं।')+'</p>'+(rows.length?warn(is):''))}
@@ -15873,7 +15895,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.01a';
+const APP_BUILD='2026.11.01b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
