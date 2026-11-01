@@ -1,0 +1,70 @@
+[
+ [
+  true,
+  "Stage 1 has a research question."
+ ],
+ [
+  true,
+  "The Introduction states the research question."
+ ],
+ [
+  true,
+  "A research gap is saved for the study."
+ ],
+ [
+  true,
+  "Methods describe \"Seroconversion\"."
+ ],
+ [
+  true,
+  "Results report \"Seroconversion\"."
+ ],
+ [
+  true,
+  "Methods describe \"Paracetamol after MR1\"."
+ ],
+ [
+  true,
+  "Results report \"Paracetamol after MR1\"."
+ ],
+ [
+  true,
+  "H1 is answered in the Results or Discussion."
+ ],
+ [
+  true,
+  "H2 is answered in the Results or Discussion."
+ ],
+ [
+  true,
+  "Reported N fits the planned sample size (1133)."
+ ],
+ [
+  true,
+  "The planned analysis (logistic) appears in the Results."
+ ],
+ [
+  true,
+  "Methods name each instrument (make, model) and how it was calibrated."
+ ],
+ [
+  true,
+  "The Discussion explains what each correlation means (direction, size, r², not cause)."
+ ],
+ [
+  true,
+  "Results come from the Statistics Lab (5 tagged results)."
+ ],
+ [
+  false,
+  "1 yellow [ ] placeholder is still to fill."
+ ],
+ [
+  true,
+  "Every citation has a source in the library."
+ ],
+ [
+  true,
+  "The paper has a reference list."
+ ]
+]

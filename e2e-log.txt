@@ -1,0 +1,100 @@
+PASS Service worker file is present (offline support) 3711 bytes
+PASS A Stage 1: feasibility assessment shown 
+PASS A Edit: research question changed and saved 
+PASS A Stage 2: search box filled from Stage 1 
+PASS A Stage 2: real paper search (OpenAlex/PubMed) 11 results
+PASS A Stage 2: research gap and key papers saved, then edited {'text': 'A search of OpenAlex and PubMed for 2010 to 2025 found studies of anaemia and of anxiety in pregnancy, but none in Rajasthan that measured haemoglobin and validated anxiety, self-esteem and 
+PASS Crossref DOI lookup: kassebaum A systematic analysis of global anemia burden from 1990 to 2010
+PASS Crossref DOI lookup: rahman Maternal anemia and risk of adverse birth and health outcomes in low- and middle-income countries: systematic review and meta-analysis
+PASS Crossref DOI lookup: penarosas Daily oral iron supplementation during pregnancy
+PASS Crossref DOI lookup: dennis Prevalence of antenatal and postnatal anxiety: Systematic review and meta-analysis
+PASS Crossref DOI lookup: grigoriadis Maternal Anxiety During Pregnancy and the Association With Adverse Perinatal Outcomes: Systematic Review and Meta-Analysis
+PASS Crossref DOI lookup: spitzer A Brief Measure for Assessing Generalized Anxiety Disorder: The GAD-7
+PASS Crossref DOI lookup: diener The Satisfaction With Life Scale
+PASS A Edit: study plan changed (sample size, one more variable) 
+PASS A Sample-size gate: number needed its basis; done after the reason was written dn
+PASS A Stage 3: protocol filled from the study A cross-sectional survey. Variables: Anxiety (Outcome (DV), GAD-7); Life satisfaction (Outcome (DV), SWLS); Self-esteem (Predictor or IV, RSES); Anaem
+PASS A Scale access: SWLS wording not shipped; student pastes it from the owner page (kept on device) before False, after True
+PASS A Stage 4: questionnaire Word file, data template and codebook downloaded 
+PASS A Ethics gate: form link locked until the approval letter is recorded; then opened design steps done 5/10
+PASS A Secure form: 2 answers by link and 1 on this device, locked; duplicate ignored; opened only with the password; nothing unlocked saved 3 locked; opened P-001,P-002,P-003; plain text in storage: False
+PASS A Stage 5: paper outline built from the study 
+PASS A Stage 5: instrument, make, model and calibration written in Materials and Methods 
+PASS A Stage 5: Discussion explains what each correlation means 
+PASS Data loaded: Janani mothers 1240 rows
+PASS A Statistics Lab suggests a test from the plan 📌 From your study plan: Means of two groups: independent-samples t-test. Use this test: Independent-samples t-test
+🧮 Your data has the RSES columns. Score the RSES first
+🧮 Your data has the SWLS colum
+PASS Scale scored: GAD7 Added GAD7_total and GAD7_band to your data. Scored 1240 of 1240 rows (M = 6.14, SD = 4.73). Cronbach's alpha in your sample: .89.
+GAD7_band uses the published score ranges for this scale. They descri
+PASS Scale scored: RSES Added RSES_total to your data. Scored 1240 of 1240 rows (M = 18.70, SD = 5.66). Cronbach's alpha in your sample: .88.
+PASS Scale scored: SWLS Added SWLS_total and SWLS_band to your data. Scored 1240 of 1240 rows (M = 23.15, SD = 4.79). Cronbach's alpha in your sample: .87.
+SWLS_band uses the published score ranges for this scale. They descr
+PASS Statistics Lab: ttestInd An independent-samples Welch t-test showed that GAD7_total differed significantly between Yes (M = 7.26, SD = 5.12) and No (M = 5.33, SD = 4.24), t(986.89) = 7.03, p < .001, g = 0.42, 95% CI of the di
+PASS Statistics Lab: pearson There was a moderate positive correlation between RSES_total and SWLS_total, which was statistically significant, r(1238) = .45, p < .001, 95% CI [.40, .49].
+PASS Statistics Lab: pearson There was a moderate negative correlation between GAD7_total and SWLS_total, which was statistically significant, r(1238) = -.35, p < .001, 95% CI [-.39, -.30].
+PASS Statistics Lab: ttestPaired A paired-samples t-test showed a significant difference between hb_16wk and hb_34wk (M diff = -0.39, SD = 0.64), t(1239) = -21.50, p < .001, 95% CI [-0.43, -0.36], d = -0.61.
+PASS Statistics Lab: mregress A multiple linear regression with age, hb_34wk, parity: First pregnancy (vs Second or later) as predictors of GAD7_total was significant, F(3, 1236) = 11.24, p < .001, R² = .03, adjusted R² = .02. Ind
+PASS Statistics Lab: alpha Internal consistency was α = .89, 95% CI [.88, .90], and McDonald's ω = .89, 95% CI [.88, .90] (k = 7 items, N = 1240).
+PASS Statistics Lab: chisq A chi-square test of independence showed no significant association between anaemia_34wk and parity, χ²(1, N = 1240) = 3.29, p = .070, Cramér's V = 0.05.
+PASS Data loaded: Janani fathers 612 rows
+PASS Statistics Lab: ttestPaired A paired-samples t-test showed a significant difference between mother_GAD7_total and father_GAD7_total (M diff = 1.58, SD = 4.82), t(611) = 8.12, p < .001, 95% CI [1.20, 1.97], d = 0.33.
+PASS Data loaded: Janani mothers 1240 rows
+PASS Scale scored: GAD7 Added GAD7_total and GAD7_band to your data. Scored 1240 of 1240 rows (M = 6.14, SD = 4.73). Cronbach's alpha in your sample: .89.
+GAD7_band uses the published score ranges for this scale. They descri
+PASS A Figure inserted into Results 
+PASS A Edit: column names in Results changed to plain words; results stay tagged 8 text pieces edited; left: []
+PASS A Edit: switched to Vancouver, citations numbered ['[1]', '[2]', '[3]', '[4]', '[5]', '[6,7]', '[8]', '[8]']
+PASS A Edit: back to APA, reference list has 10 entries 
+PASS A Edit: deleted a citation; reference list updated 
+PASS A Stage 6: paper checked against the plan 21 of 22 pass: 1 yellow [ ] placeholder is still to fill.
+PASS A Slides (PowerPoint) downloaded 
+PASS A Poster check (UWA poster guide rules) all pass 12 rules
+PASS A Poster designer: people, qualifications, affiliations, logo, layout and edited text kept after reopening ['Asha Verma|MA Psychology (final year)|Student; Dr. Meena Sharma|PhD, Professor of Psychology|Supervisor; Dr. R. K. Gupta|MD (Obstetrics and Gynaecology)|Co-supervisor', 'Department of Psychology, De
+PASS A Poster designer: every column fits on the page fits
+PASS A Poster as a picture for WhatsApp 
+PASS A Poster PowerPoint holds the edited text and the people 43204
+PASS A Share: graphs in the paper offered as JPG 
+PASS A Idea inbox: a sudden idea saved in this project 
+PASS A Paper downloaded as Word 
+PASS A Paper downloaded as LaTeX 
+PASS B Stage 1: feasibility assessment shown 
+PASS B Edit: research question changed and saved 
+PASS B Stage 2: search box filled from Stage 1 
+PASS B Stage 2: real paper search (OpenAlex/PubMed) 11 results
+PASS B Stage 2: research gap and key papers saved, then edited {'text': 'Trials in Europe found lower antibody responses when infants were given paracetamol at vaccination, but a search of OpenAlex and PubMed for 2009 to 2025 found no Indian study of measles anti
+PASS Crossref DOI lookup: moss Measles
+PASS Crossref DOI lookup: prymula Effect of prophylactic paracetamol administration at time of vaccination on febrile reactions and antibody responses in children: two open-label, randomised controlled trials
+PASS B Edit: study plan changed (sample size, one more variable) 
+PASS B Sample-size gate: number needed its basis; done after the reason was written dn
+PASS B Stage 3: protocol filled from the study A cohort study. Variables: Seroconversion (Outcome (DV)); Paracetamol after MR1 (Predictor or IV); Infant sex (Grouping variable); Birth weight (Covar
+PASS B Stage 4: questionnaire Word file, data template and codebook downloaded 
+PASS B Ethics gate: form link locked until the approval letter is recorded; then opened design steps done 5/10
+PASS B Secure form: 2 answers by link and 1 on this device, locked; duplicate ignored; opened only with the password; nothing unlocked saved 3 locked; opened P-001,P-002,P-003; plain text in storage: False
+PASS B Stage 5: paper outline built from the study 
+PASS B Stage 5: instrument, make, model and calibration written in Materials and Methods 
+PASS Data loaded: Janani infants 1198 rows
+PASS B Statistics Lab suggests a test from the plan 📌 From your study plan: The outcome is yes/no, so logistic regression. Use this test: Logistic regression (yes/no outcome)
+PASS Statistics Lab: chisq A chi-square test of independence showed a significant association between paracetamol_given and seroconverted, χ²(1, N = 1133) = 11.42, p < .001, Cramér's V = 0.10.
+PASS Statistics Lab: chisq A chi-square test of independence showed no significant association between infant_sex and seroconverted, χ²(1, N = 1133) = 0.05, p = .827, Cramér's V = 0.01.
+PASS Statistics Lab: logistic A logistic regression with birth_weight_g, infant_sex: Girl (vs Boy), paracetamol_given: Yes (vs No) as predictors of seroconverted (Yes versus No) was significant, χ²(3, N = 1133) = 10.72, p = .013, 
+PASS Statistics Lab: pearson There was a moderate positive correlation between maternal_hb_34wk and birth_weight_g, which was statistically significant, r(1196) = .31, p < .001, 95% CI [.26, .36].
+PASS Statistics Lab: ttestInd An independent-samples Welch t-test showed that birth_weight_g differed significantly between Boy (M = 2955.67, SD = 404.24) and Girl (M = 2840.56, SD = 415.40), t(1183.18) = 4.85, p < .001, g = 0.28,
+PASS B Figure inserted into Results 
+PASS B Edit: column names in Results changed to plain words; results stay tagged 6 text pieces edited; left: []
+PASS B Edit: switched to Vancouver, citations numbered ['[1]', '[2]', '[3,4]', '[2]', '[1]']
+PASS B Edit: back to APA, reference list has 4 entries 
+PASS B Edit: deleted a citation; reference list updated 
+PASS B Stage 6: paper checked against the plan 16 of 17 pass: 1 yellow [ ] placeholder is still to fill.
+PASS B Slides (PowerPoint) downloaded 
+PASS B Poster check (UWA poster guide rules) all pass 12 rules
+PASS B Poster designer: people, qualifications, affiliations, logo, layout and edited text kept after reopening ['Asha Verma|MA Psychology (final year)|Student; Dr. Meena Sharma|PhD, Professor of Psychology|Supervisor; Dr. S. Khan|MD (Paediatrics)|Co-supervisor', 'Department of Psychology, Demo College, Jaipur;
+PASS B Poster designer: every column fits on the page fits
+PASS B Poster as a picture for WhatsApp 
+PASS B Poster PowerPoint holds the edited text and the people 37278
+PASS B Share: graphs in the paper offered as JPG 
+PASS B Idea inbox: a sudden idea saved in this project 
+PASS B Paper downloaded as Word 
+PASS B Paper downloaded as LaTeX 
+PASS Backup of everything downloaded 
+PASSED 94 FAILED 0 PAGE ERRORS 0

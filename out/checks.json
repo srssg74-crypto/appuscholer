@@ -1,0 +1,475 @@
+{
+ "checks": [
+  {
+   "ok": true,
+   "what": "Service worker file is present (offline support)",
+   "info": "3711 bytes"
+  },
+  {
+   "ok": true,
+   "what": "A Stage 1: feasibility assessment shown",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Edit: research question changed and saved",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Stage 2: search box filled from Stage 1",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Stage 2: real paper search (OpenAlex/PubMed)",
+   "info": "11 results"
+  },
+  {
+   "ok": true,
+   "what": "A Stage 2: research gap and key papers saved, then edited",
+   "info": "{'text': 'A search of OpenAlex and PubMed for 2010 to 2025 found studies of anaemia and of anxiety in pregnancy, but none in Rajasthan that measured haemoglobin and validated anxiety, self-esteem and life-satisfaction scales in the same women in the third trimester.', 'cids': ['cmvy8vxbfiou0y', 'cmvy8vxbjndvvh'], 'saved': 1793562639583}"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: kassebaum",
+   "info": "A systematic analysis of global anemia burden from 1990 to 2010"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: rahman",
+   "info": "Maternal anemia and risk of adverse birth and health outcomes in low- and middle-income countries: systematic review and meta-analysis"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: penarosas",
+   "info": "Daily oral iron supplementation during pregnancy"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: dennis",
+   "info": "Prevalence of antenatal and postnatal anxiety: Systematic review and meta-analysis"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: grigoriadis",
+   "info": "Maternal Anxiety During Pregnancy and the Association With Adverse Perinatal Outcomes: Systematic Review and Meta-Analysis"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: spitzer",
+   "info": "A Brief Measure for Assessing Generalized Anxiety Disorder: The GAD-7"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: diener",
+   "info": "The Satisfaction With Life Scale"
+  },
+  {
+   "ok": true,
+   "what": "A Edit: study plan changed (sample size, one more variable)",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Sample-size gate: number needed its basis; done after the reason was written",
+   "info": "dn"
+  },
+  {
+   "ok": true,
+   "what": "A Stage 3: protocol filled from the study",
+   "info": "A cross-sectional survey. Variables: Anxiety (Outcome (DV), GAD-7); Life satisfaction (Outcome (DV), SWLS); Self-esteem (Predictor or IV, RSES); Anaem"
+  },
+  {
+   "ok": true,
+   "what": "A Scale access: SWLS wording not shipped; student pastes it from the owner page (kept on device)",
+   "info": "before False, after True"
+  },
+  {
+   "ok": true,
+   "what": "A Stage 4: questionnaire Word file, data template and codebook downloaded",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Ethics gate: form link locked until the approval letter is recorded; then opened",
+   "info": "design steps done 5/10"
+  },
+  {
+   "ok": true,
+   "what": "A Secure form: 2 answers by link and 1 on this device, locked; duplicate ignored; opened only with the password; nothing unlocked saved",
+   "info": "3 locked; opened P-001,P-002,P-003; plain text in storage: False"
+  },
+  {
+   "ok": true,
+   "what": "A Stage 5: paper outline built from the study",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Stage 5: instrument, make, model and calibration written in Materials and Methods",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Stage 5: Discussion explains what each correlation means",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "Data loaded: Janani mothers",
+   "info": "1240 rows"
+  },
+  {
+   "ok": true,
+   "what": "A Statistics Lab suggests a test from the plan",
+   "info": "📌 From your study plan: Means of two groups: independent-samples t-test. Use this test: Independent-samples t-test\n🧮 Your data has the RSES columns. Score the RSES first\n🧮 Your data has the SWLS colum"
+  },
+  {
+   "ok": true,
+   "what": "Scale scored: GAD7",
+   "info": "Added GAD7_total and GAD7_band to your data. Scored 1240 of 1240 rows (M = 6.14, SD = 4.73). Cronbach's alpha in your sample: .89.\nGAD7_band uses the published score ranges for this scale. They descri"
+  },
+  {
+   "ok": true,
+   "what": "Scale scored: RSES",
+   "info": "Added RSES_total to your data. Scored 1240 of 1240 rows (M = 18.70, SD = 5.66). Cronbach's alpha in your sample: .88."
+  },
+  {
+   "ok": true,
+   "what": "Scale scored: SWLS",
+   "info": "Added SWLS_total and SWLS_band to your data. Scored 1240 of 1240 rows (M = 23.15, SD = 4.79). Cronbach's alpha in your sample: .87.\nSWLS_band uses the published score ranges for this scale. They descr"
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: ttestInd",
+   "info": "An independent-samples Welch t-test showed that GAD7_total differed significantly between Yes (M = 7.26, SD = 5.12) and No (M = 5.33, SD = 4.24), t(986.89) = 7.03, p < .001, g = 0.42, 95% CI of the difference [1.39, 2.47"
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: pearson",
+   "info": "There was a moderate positive correlation between RSES_total and SWLS_total, which was statistically significant, r(1238) = .45, p < .001, 95% CI [.40, .49]."
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: pearson",
+   "info": "There was a moderate negative correlation between GAD7_total and SWLS_total, which was statistically significant, r(1238) = -.35, p < .001, 95% CI [-.39, -.30]."
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: ttestPaired",
+   "info": "A paired-samples t-test showed a significant difference between hb_16wk and hb_34wk (M diff = -0.39, SD = 0.64), t(1239) = -21.50, p < .001, 95% CI [-0.43, -0.36], d = -0.61."
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: mregress",
+   "info": "A multiple linear regression with age, hb_34wk, parity: First pregnancy (vs Second or later) as predictors of GAD7_total was significant, F(3, 1236) = 11.24, p < .001, R² = .03, adjusted R² = .02. Individual predictors: "
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: alpha",
+   "info": "Internal consistency was α = .89, 95% CI [.88, .90], and McDonald's ω = .89, 95% CI [.88, .90] (k = 7 items, N = 1240)."
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: chisq",
+   "info": "A chi-square test of independence showed no significant association between anaemia_34wk and parity, χ²(1, N = 1240) = 3.29, p = .070, Cramér's V = 0.05."
+  },
+  {
+   "ok": true,
+   "what": "Data loaded: Janani fathers",
+   "info": "612 rows"
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: ttestPaired",
+   "info": "A paired-samples t-test showed a significant difference between mother_GAD7_total and father_GAD7_total (M diff = 1.58, SD = 4.82), t(611) = 8.12, p < .001, 95% CI [1.20, 1.97], d = 0.33."
+  },
+  {
+   "ok": true,
+   "what": "Data loaded: Janani mothers",
+   "info": "1240 rows"
+  },
+  {
+   "ok": true,
+   "what": "Scale scored: GAD7",
+   "info": "Added GAD7_total and GAD7_band to your data. Scored 1240 of 1240 rows (M = 6.14, SD = 4.73). Cronbach's alpha in your sample: .89.\nGAD7_band uses the published score ranges for this scale. They descri"
+  },
+  {
+   "ok": true,
+   "what": "A Figure inserted into Results",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Edit: column names in Results changed to plain words; results stay tagged",
+   "info": "8 text pieces edited; left: []"
+  },
+  {
+   "ok": true,
+   "what": "A Edit: switched to Vancouver, citations numbered",
+   "info": "['[1]', '[2]', '[3]', '[4]', '[5]', '[6,7]', '[8]', '[8]']"
+  },
+  {
+   "ok": true,
+   "what": "A Edit: back to APA, reference list has 10 entries",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Edit: deleted a citation; reference list updated",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Stage 6: paper checked against the plan",
+   "info": "21 of 22 pass: 1 yellow [ ] placeholder is still to fill."
+  },
+  {
+   "ok": true,
+   "what": "A Slides (PowerPoint) downloaded",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Poster check (UWA poster guide rules) all pass",
+   "info": "12 rules"
+  },
+  {
+   "ok": true,
+   "what": "A Poster designer: people, qualifications, affiliations, logo, layout and edited text kept after reopening",
+   "info": "['Asha Verma|MA Psychology (final year)|Student; Dr. Meena Sharma|PhD, Professor of Psychology|Supervisor; Dr. R. K. Gupta|MD (Obstetrics and Gynaecology)|Co-supervisor', 'Department of Psychology, Demo College, Jaipur; Department of Obstetrics, Demo Medical College, Jaipur', 1, True, 'A0P', 3]"
+  },
+  {
+   "ok": true,
+   "what": "A Poster designer: every column fits on the page",
+   "info": "fits"
+  },
+  {
+   "ok": true,
+   "what": "A Poster as a picture for WhatsApp",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Poster PowerPoint holds the edited text and the people",
+   "info": "43204"
+  },
+  {
+   "ok": true,
+   "what": "A Share: graphs in the paper offered as JPG",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Idea inbox: a sudden idea saved in this project",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Paper downloaded as Word",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "A Paper downloaded as LaTeX",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Stage 1: feasibility assessment shown",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Edit: research question changed and saved",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Stage 2: search box filled from Stage 1",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Stage 2: real paper search (OpenAlex/PubMed)",
+   "info": "11 results"
+  },
+  {
+   "ok": true,
+   "what": "B Stage 2: research gap and key papers saved, then edited",
+   "info": "{'text': 'Trials in Europe found lower antibody responses when infants were given paracetamol at vaccination, but a search of OpenAlex and PubMed for 2009 to 2025 found no Indian study of measles antibody response after paracetamol given at home.', 'cids': ['cmvy8z7748u47v', 'cmvy8z777ccgmi'], 'saved': 1793562792356}"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: moss",
+   "info": "Measles"
+  },
+  {
+   "ok": true,
+   "what": "Crossref DOI lookup: prymula",
+   "info": "Effect of prophylactic paracetamol administration at time of vaccination on febrile reactions and antibody responses in children: two open-label, randomised controlled trials"
+  },
+  {
+   "ok": true,
+   "what": "B Edit: study plan changed (sample size, one more variable)",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Sample-size gate: number needed its basis; done after the reason was written",
+   "info": "dn"
+  },
+  {
+   "ok": true,
+   "what": "B Stage 3: protocol filled from the study",
+   "info": "A cohort study. Variables: Seroconversion (Outcome (DV)); Paracetamol after MR1 (Predictor or IV); Infant sex (Grouping variable); Birth weight (Covar"
+  },
+  {
+   "ok": true,
+   "what": "B Stage 4: questionnaire Word file, data template and codebook downloaded",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Ethics gate: form link locked until the approval letter is recorded; then opened",
+   "info": "design steps done 5/10"
+  },
+  {
+   "ok": true,
+   "what": "B Secure form: 2 answers by link and 1 on this device, locked; duplicate ignored; opened only with the password; nothing unlocked saved",
+   "info": "3 locked; opened P-001,P-002,P-003; plain text in storage: False"
+  },
+  {
+   "ok": true,
+   "what": "B Stage 5: paper outline built from the study",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Stage 5: instrument, make, model and calibration written in Materials and Methods",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "Data loaded: Janani infants",
+   "info": "1198 rows"
+  },
+  {
+   "ok": true,
+   "what": "B Statistics Lab suggests a test from the plan",
+   "info": "📌 From your study plan: The outcome is yes/no, so logistic regression. Use this test: Logistic regression (yes/no outcome)"
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: chisq",
+   "info": "A chi-square test of independence showed a significant association between paracetamol_given and seroconverted, χ²(1, N = 1133) = 11.42, p < .001, Cramér's V = 0.10."
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: chisq",
+   "info": "A chi-square test of independence showed no significant association between infant_sex and seroconverted, χ²(1, N = 1133) = 0.05, p = .827, Cramér's V = 0.01."
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: logistic",
+   "info": "A logistic regression with birth_weight_g, infant_sex: Girl (vs Boy), paracetamol_given: Yes (vs No) as predictors of seroconverted (Yes versus No) was significant, χ²(3, N = 1133) = 10.72, p = .013, Nagelkerke R² = .021"
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: pearson",
+   "info": "There was a moderate positive correlation between maternal_hb_34wk and birth_weight_g, which was statistically significant, r(1196) = .31, p < .001, 95% CI [.26, .36]."
+  },
+  {
+   "ok": true,
+   "what": "Statistics Lab: ttestInd",
+   "info": "An independent-samples Welch t-test showed that birth_weight_g differed significantly between Boy (M = 2955.67, SD = 404.24) and Girl (M = 2840.56, SD = 415.40), t(1183.18) = 4.85, p < .001, g = 0.28, 95% CI of the diffe"
+  },
+  {
+   "ok": true,
+   "what": "B Figure inserted into Results",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Edit: column names in Results changed to plain words; results stay tagged",
+   "info": "6 text pieces edited; left: []"
+  },
+  {
+   "ok": true,
+   "what": "B Edit: switched to Vancouver, citations numbered",
+   "info": "['[1]', '[2]', '[3,4]', '[2]', '[1]']"
+  },
+  {
+   "ok": true,
+   "what": "B Edit: back to APA, reference list has 4 entries",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Edit: deleted a citation; reference list updated",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Stage 6: paper checked against the plan",
+   "info": "16 of 17 pass: 1 yellow [ ] placeholder is still to fill."
+  },
+  {
+   "ok": true,
+   "what": "B Slides (PowerPoint) downloaded",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Poster check (UWA poster guide rules) all pass",
+   "info": "12 rules"
+  },
+  {
+   "ok": true,
+   "what": "B Poster designer: people, qualifications, affiliations, logo, layout and edited text kept after reopening",
+   "info": "['Asha Verma|MA Psychology (final year)|Student; Dr. Meena Sharma|PhD, Professor of Psychology|Supervisor; Dr. S. Khan|MD (Paediatrics)|Co-supervisor', 'Department of Psychology, Demo College, Jaipur; Department of Paediatrics, Demo Medical College, Jaipur', 1, True, 'A0L', 3]"
+  },
+  {
+   "ok": true,
+   "what": "B Poster designer: every column fits on the page",
+   "info": "fits"
+  },
+  {
+   "ok": true,
+   "what": "B Poster as a picture for WhatsApp",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Poster PowerPoint holds the edited text and the people",
+   "info": "37278"
+  },
+  {
+   "ok": true,
+   "what": "B Share: graphs in the paper offered as JPG",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Idea inbox: a sudden idea saved in this project",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Paper downloaded as Word",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "B Paper downloaded as LaTeX",
+   "info": ""
+  },
+  {
+   "ok": true,
+   "what": "Backup of everything downloaded",
+   "info": ""
+  }
+ ],
+ "page_errors": []
+}

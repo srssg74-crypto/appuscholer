@@ -1,0 +1,90 @@
+[
+ [
+  true,
+  "Stage 1 has a research question."
+ ],
+ [
+  true,
+  "The Introduction states the research question."
+ ],
+ [
+  true,
+  "A research gap is saved for the study."
+ ],
+ [
+  true,
+  "Methods describe \"Anxiety\"."
+ ],
+ [
+  true,
+  "Results report \"Anxiety\"."
+ ],
+ [
+  true,
+  "Methods describe \"Life satisfaction\"."
+ ],
+ [
+  true,
+  "Results report \"Life satisfaction\"."
+ ],
+ [
+  true,
+  "Methods describe \"Self-esteem\"."
+ ],
+ [
+  true,
+  "Results report \"Self-esteem\"."
+ ],
+ [
+  true,
+  "Methods describe \"Haemoglobin at 34 weeks\"."
+ ],
+ [
+  true,
+  "Results report \"Haemoglobin at 34 weeks\"."
+ ],
+ [
+  true,
+  "H1 is answered in the Results or Discussion."
+ ],
+ [
+  true,
+  "H2 is answered in the Results or Discussion."
+ ],
+ [
+  true,
+  "H3 is answered in the Results or Discussion."
+ ],
+ [
+  true,
+  "Reported N fits the planned sample size (1240)."
+ ],
+ [
+  true,
+  "The planned analysis (ttestInd) appears in the Results."
+ ],
+ [
+  true,
+  "Methods name each instrument (make, model) and how it was calibrated."
+ ],
+ [
+  true,
+  "The Discussion explains what each correlation means (direction, size, r², not cause)."
+ ],
+ [
+  true,
+  "Results come from the Statistics Lab (8 tagged results)."
+ ],
+ [
+  false,
+  "1 yellow [ ] placeholder is still to fill."
+ ],
+ [
+  true,
+  "Every citation has a source in the library."
+ ],
+ [
+  true,
+  "The paper has a reference list."
+ ]
+]
