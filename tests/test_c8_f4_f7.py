@@ -27,7 +27,10 @@ with sync_playwright() as p:
         ok(sec in html,'synopsis has '+sec)
     ok('Fewer sleep hours go with higher exam anxiety' in html and 'GAD-7' in html,'hypothesis and tool carried over')
     ok('All first-year students in two sections' in html,'sample-size basis carried over')
-    ok(J("subState('C8').s")=='dn','C8 done after the synopsis')
+    ok(J("subState('C8').s")!='dn' and J("synGaps(studyGet())")>0,'C8 not done while yellow gaps remain')
+    J("editor.querySelectorAll('.draft-ph').forEach(x=>x.replaceWith(document.createTextNode('filled')));docSaveBody(getEditorHTML())")
+    ok(J("synGaps(studyGet())")==0,'gap count reaches zero after filling')
+    ok(J("subState('C8').s")=='dn','C8 done once the synopsis gaps are filled')
     ok('My main paper text' in J("docsStudy().find(d=>!/^Synopsis/.test(d.title)).body"),'main paper untouched')
     pg.screenshot(path=S+'synopsis.png')
     # protocol goes to its own document too
