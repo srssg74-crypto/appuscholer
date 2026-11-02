@@ -33,7 +33,11 @@ with sync_playwright() as p:
     J("subOpen('idea','A3')"); pg.wait_for_timeout(200)
     loc=pg.locator("#subMain textarea[onchange*=\"'aim'\"],#subMain textarea[oninput*=\"'aim'\"]").first
     loc.fill('To examine sleep and exam anxiety in first-year students'); loc.dispatch_event('change'); pg.wait_for_timeout(100)
-    ok(J("!!document.querySelector('#subMain .fs-tick.on')") or 'Saved' in J("document.getElementById('subMain').innerText"),'a step box shows Saved')
+    ok(J("document.querySelectorAll('#subMain .fs-go').length")>=2,'step boxes have the save arrow too')
+    ok('one aim' not in J("document.querySelector('#subMain .ls-head').innerText"),'Still needed updates as soon as the box saves')
+    q=pg.locator("#subMain textarea[onchange*=\"'q'\"],#subMain textarea[oninput*=\"'q'\"]").first
+    q.fill('Is shorter sleep linked with higher exam anxiety?'); pg.locator("#subMain .fs-wrap:has(textarea[onchange*=\"'q'\"]) .fs-go, #subMain .fs-wrap:has(textarea[oninput*=\"'q'\"]) .fs-go").first.click(); pg.wait_for_timeout(200)
+    ok(J("((studyGet().write||{}).A3||{}).q")=='Is shorter sleep linked with higher exam anxiety?','the arrow in a step box saves it')
     J("document.getElementById('subDlg').close()")
     # the tool panel grows while a box is filled and returns afterwards
     pg.click('#ideaTimeframe'); pg.wait_for_timeout(300)
