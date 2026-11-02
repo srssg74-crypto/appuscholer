@@ -391,6 +391,15 @@ with sync_playwright() as p:
     ok(J("resList(studyGet()).some(r=>/r\\(\\d+\\) = -\\.[45]/.test(r.apa))"), 'H1 correlation recovers after cleaning (r about -.5)')
     ok('Spitzer' in txt and 'Welch' in txt, 'Word book carries the references and the results')
     ok(not [e for e in errors if e[0]=='pageerror'], 'no page errors')
+    # a talk from the same study
+    m=J("(()=>{const m=tkModel(studyGet(),15);return{t:m.slides.map(x=>x.role||(x.cover?'cover':'')),titles:m.slides.map(x=>x.title),big:m.slides.filter(x=>x.big).map(x=>x.big),warn:m.warn}})()")
+    print('TALK', m['t'], m['titles'][:9], m['big'])
+    ok(m['t'][0]=='cover' and 'question' in m['t'][:4],'the talk puts the research question on its own slide by slide 3 or 4')
+    ok(m['t'].count('result')==2 and all(b.startswith(('r','g','d')) for b in m['big']),'one slide per recorded result, with its effect size shown large')
+    main=[r for r in m['t'] if r not in ('appendix',)]
+    ok(main[-1]=='refs' and main[-2]=='conclusion','conclusions are the last main slide, before the references')
+    ok('Both findings support the hypotheses'==[x for x,r in zip(m['titles'],m['t']) if r=='conclusion'][0],'the conclusion title states the takeaway')
+    ok('appendix' in m['t'],'likely questions are ready in an appendix')
     print('auto sections', J("editor.querySelectorAll('.bb-slot').length"))
     json.dump({'fails': fails, 'obs': obs}, open(OUT + 'journey1.json', 'w'))
     print('FAILED' if fails else 'ALL PASS', len(fails))
