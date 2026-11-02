@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
 <style>
   :root{
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
@@ -573,6 +573,55 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 </style>
 <script src="firebase-config.js"></script>
 <style>#tourOv{display:none;position:fixed;inset:0;z-index:2147483000;pointer-events:none}#tourHole{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(15,10,30,.55);outline:3px solid #a78bfa;transition:all .25s}#tourCard{position:fixed;pointer-events:auto;background:var(--card,#fff);color:var(--ink,#222);border-radius:12px;padding:14px 14px 10px;box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:15px;line-height:1.6;transition:top .25s,left .25s}#tourCard .tour-bar{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted,#666)}.why-line{font-size:12.5px;color:var(--muted,#555);margin:4px 0 2px;line-height:1.5}.why-line a{font-size:12px}.why-line details summary{cursor:pointer;color:var(--purple-600,#6d28d9)}</style>
+<style id="design-2026-11">
+/* ============ Design pass 1 (build 2026.11.02e) ============
+   From the approved direction of 1 Nov 2026: IBM Plex Sans with Noto Sans Devanagari, a calmer page,
+   control borders at 3:1 contrast (#A9A3BA), dividers stay light, radii 6 / 10 / 999, type sizes
+   12 / 13 / 14 / 16 / 20 / 24, line height 1.6 (1.8 for Hindi), visible keyboard focus.
+   Everything here is in one block so it can be taken out in one step. */
+:root{--ctl-line:#A9A3BA;--r-s:6px;--r-m:10px;--r-pill:999px;--font-ui:"IBM Plex Sans","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif}
+:root[data-theme="dark"]{--ctl-line:#6f6690}
+body{font-family:var(--font-ui);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+:lang(hi) body,html[lang="hi"] body{line-height:1.8}
+button,input,select,textarea{font-family:inherit}
+body::before{background:radial-gradient(1200px 820px at 100% 0%, var(--blob-a), transparent 72%),radial-gradient(1100px 780px at 0% 100%, var(--blob-b), transparent 72%);opacity:.55}
+/* controls: one thin, readable border */
+.btn{border-radius:var(--r-s);font-weight:600;letter-spacing:0}
+.btn-ghost,.tool-tab,.stage-guide .next-btn,.stage-guide .back-btn,.dock-tabs .pop-btn{border-width:1px;border-color:var(--ctl-line)}
+.btn-ghost:hover,.tool-tab:hover{border-color:var(--purple-600);background:var(--soft)}
+input[type=text],input[type=number],input[type=email],input[type=date],input[type=password],textarea,select,.fld input,.fld select,.fld textarea,.fmtbar select,.docbar select,.find-replace-bar input[type=text]{border:1px solid var(--ctl-line);border-radius:var(--r-s)}
+input[type=text]:focus,textarea:focus,select:focus,.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--purple-600);box-shadow:0 0 0 3px rgba(109,40,217,.15);outline:none}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+.card{border-radius:var(--r-m)}
+dialog{border-radius:var(--r-m)!important;border:1px solid var(--line);box-shadow:0 24px 64px -12px rgba(var(--shadow-ink),.35)}
+dialog::backdrop{background:rgba(23,16,40,.45)}
+.sub-box{border-radius:var(--r-m)}
+/* type scale */
+h1{font-size:24px}h2{font-size:20px}h3{font-size:16px}
+.desc{font-size:13px;line-height:1.55}
+.tool-tab{font-size:13px;font-weight:600}
+/* touch targets on phones */
+@media (pointer:coarse){.btn,.tool-tab{min-height:44px}.btn-sm{min-height:40px}.btn kbd{display:none}}
+/* headings in the app use the interface font; Fraunces stays for the logo */
+.card-head h2,.panel h3,.dlg-body h2{font-family:var(--font-ui);font-weight:600;letter-spacing:0}
+@media (max-width:700px){
+  /* phone: the first screen shows the document, not a wall of buttons */
+  .project-bar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px}
+  .project-bar::-webkit-scrollbar{display:none}
+  .project-bar .btn{white-space:nowrap;flex:0 0 auto}
+  .project-bar .spacer{display:none}
+  .project-bar>span,#projectBarLabel{flex:0 0 auto!important;width:auto!important;white-space:nowrap!important;max-width:75vw;overflow:hidden;text-overflow:ellipsis}
+  body.at-home #projectBarLabel{display:none!important}
+  #docPane .card-head{flex-wrap:wrap;gap:6px}
+  #docPane .card-head h2{font-size:18px}
+  #provBadge,#docPane .card-head [onclick="downloadLatex()"]{display:none}
+  .docbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .docbar::-webkit-scrollbar{display:none}
+  .docbar>*{flex:0 0 auto}
+  .docbar select{min-width:170px}
+}
+#docPane .card-head .btn{padding:6px 11px;font-size:13px}
+</style>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
@@ -5040,6 +5089,8 @@ function saveAsProject(){
     setActiveProject(id,{skipJump:true,bringDoc:!window._sapFresh});
     showToast(t('toast_saved_as')+name);
     document.getElementById('saveAsProjectDlg').close();
+    /* a fresh project opens the tool of its own stage, so the stage bar and the panel agree */
+    if(window._sapFresh){try{const tl=STAGE_FIRST_TOOL[stage];if(tl){window._apHomeLock=0;showTool(tl)}}catch(e){}}
     stageIntroShow(stage);
     return;
   }
@@ -16666,7 +16717,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02d';
+const APP_BUILD='2026.11.02e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
