@@ -3437,7 +3437,11 @@ const SUB_LOGS={
  F3:[{key:'supervisor',t:['Supervisor comments','Supervisor की टिप्पणियाँ'],note:['Close a comment only when the text has changed or you have replied.','टिप्पणी तभी बंद करें जब text बदल गया हो या आपने जवाब दे दिया हो।'],
    cols:[['date','Date','तारीख','date'],['sec','Section','Section','text'],['c','Comment','टिप्पणी','text'],['reply','My reply','मेरा जवाब','text'],['where','Where changed','कहाँ बदला','text'],['ver','Version','Version','text'],['st','Status','Status','sel',['Open','Done']]]}]};
 function logRows(o,key){return((o.logs||{})[key])||[]}
-function logSaveRows(key,rows){const o=studyGet();o.logs=o.logs||{};o.logs[key]=rows;studySet(o)}
+/* Every log row carries when the app first saw it (_t) and when it last changed (_m). The student's
+   typed date stays as typed; the receipt uses these to say when a plan really was written. */
+function logSaveRows(key,rows){const o=studyGet();o.logs=o.logs||{};const old=(o.logs[key])||[],now=Date.now(),strip=r=>{const c=Object.assign({},r);delete c._t;delete c._m;return JSON.stringify(c)};
+  rows=rows.map((r,i)=>{r=Object.assign({},r);const prev=old[i];if(!r._t)r._t=(prev&&prev._t&&strip(prev)===strip(r))?prev._t:(prev&&prev._t?prev._t:now);if(!prev||strip(prev)!==strip(r))r._m=now;else r._m=prev._m||r._t;return r});
+  o.logs[key]=rows;studySet(o)}
 function logRefresh(){const m=document.getElementById('subMain');if(m)m.innerHTML=subDetailHTML(SUB_CUR.id,studyGet());try{const d=document.getElementById('subDlg');const l=d&&d.querySelector('.sub-list');if(l){const y=l.scrollTop;subRender();const l2=document.getElementById('subDlg').querySelector('.sub-list');if(l2)l2.scrollTop=y}}catch(e){}}
 function logAdd(key){const o=studyGet(),rows=logRows(o,key).slice(),def=logDef(key),r={};def.cols.forEach(c=>{if(c[3]==='date')r[c[0]]=new Date().toISOString().slice(0,10);if(c[3]==='sel'&&c[0]==='st')r[c[0]]='Open'});rows.push(r);logSaveRows(key,rows);logRefresh()}
 function logDel(key,i){const rows=logRows(studyGet(),key).slice();rows.splice(i,1);logSaveRows(key,rows);logRefresh()}
@@ -3638,6 +3642,7 @@ function wExtra2HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
      row('retr',L('No retracted paper cited without saying so','कोई retracted paper बिना बताए cite नहीं'),"showTool('cite');try{citRetractionRefresh(true)}catch(e){}",L('Check','जाँचें'))+
      row('nums',L('Numbers in the text match the data and tables','Text की संख्याएँ data और tables से मेल खाती हैं'),'ncOpen()',L('Check','जाँचें'))+
      row('ai',L('AI-inserted text marked and rewritten in your words','AI से डाला गया text चिह्नित और अपने शब्दों में लिखा'),'toggleAiHighlight()',L('Show','दिखाएँ'))+
+     '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple btn-sm" onclick="prOpen()">🧾 '+L('Make my process receipt','मेरे काम की रसीद बनाएँ')+'</button></div>'+
      '<p class="desc" style="margin:6px 0 0">'+L('A detector score alone is never proof of misconduct. Your university\'s own similarity report (UGC 2018) is the one that counts.','अकेला detector score कभी गड़बड़ी का सबूत नहीं। आपकी university की अपनी similarity report (UGC 2018) ही मानी जाती है।')+'</p>')}
   if(id==='F4'){const f=w.F4||{},ck=(g,list)=>list.map(x=>'<label style="display:block;margin:3px 0;font-size:14px"><input type="checkbox"'+((f[g]||{})[x[0]]?' checked':'')+' onchange="f4Tick(\''+g+'\',\''+x[0]+'\',this.checked)"> '+escHTML(hi?x[2]:x[1])+'</label>').join('');
     return box(f4Ok(o),L('Submission','जमा करना'),'<p style="margin:8px 0 2px"><b>'+L('Thesis to the university','University को thesis')+'</b></p>'+ck('thesis',F4_THESIS)+'<p style="margin:10px 0 2px"><b>'+L('Choosing a journal','Journal चुनना')+'</b> <span class="desc">'+L('(UGC suggestive parameters, 2025; Think.Check.Submit.)','(UGC के सुझाए मानदंड, 2025; Think.Check.Submit.)')+'</span></p>'+ck('journal',F4_JOURNAL)+'<p class="desc" style="margin:6px 0 0">'+L('Done when one list is complete and a submission is recorded below.','एक list पूरी हो और नीचे एक submission दर्ज हो, तब पूरा।')+'</p>')}
@@ -13121,7 +13126,7 @@ function rtRegister(data){
   if(window._rtSkip){window._statsHash=null;return}
   var name=rtDsName(),h=rtHash(data),sets=rtLoad('appu_statsets'),old=sets[name];
   window._statsHash=h;window._statsDsName=name;
-  if(!old||old.hash!==h)sets[name]={hash:h,ts:Date.now(),n:data.rows.length};
+  if(!old||old.hash!==h)sets[name]={hash:h,ts:Date.now(),n:data.rows.length,first:(old&&(old.first||old.ts))||Date.now()};
   rtSave('appu_statsets',sets);
 }
 function statsParse(){
@@ -16603,6 +16608,65 @@ function bbFillFromSteps(){const hi=studyHi(),o=studyGet();let book=bbBookId(o);
     wrap.setAttribute('data-gen',bbHash(wrap.textContent));put++});
   try{bbRenumber()}catch(e){}try{docSaveBody(getEditorHTML());upd()}catch(e){}try{bbOutlineRender()}catch(e){}
   showToast(hi?put+' sections में आपके steps से draft डाला'+(kept?'; '+kept+' जिन्हें आपने बदला था, वैसे ही रहे':'')+' ✓':'Drafts from your steps put in '+put+' sections'+(kept?'; '+kept+' you had edited were left as they are':'')+' ✓')}
+/* ============ Process receipt (build 2026.11.02i) ============
+   Evidence of the student's own process, built only from records the app already keeps: when the plan
+   was fixed, when the data was first loaded, the ethics letter date, every cleaning change with its
+   reason, every deviation from the plan, and how much of the text came from AI and how much of that was
+   rewritten. A SHA-256 fingerprint of the receipt's text sits at the bottom; the downloaded file can
+   check its own fingerprint, so a later edit to a date shows. It shows editing of the file, not forgery
+   by someone who rebuilds the fingerprint, and it says so. No AI, no key, no server. */
+function prD(t){if(!t)return'';const d=typeof t==='number'?new Date(t):new Date(String(t).length===10?t+'T00:00:00':t);return isNaN(d)?String(t):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+function prT(t){if(!t)return 0;const d=typeof t==='number'?t:Date.parse(String(t).length===10?t+'T00:00:00':t);return isNaN(d)?0:d}
+function prData(o){o=o||studyGet();const w=wGet(o),p=getActiveProject()||{},me=(function(){try{return apMe()}catch(e){return{}}})(),ev=[],chk=[];
+  const add=(t,what,src)=>{if(prT(t))ev.push({t:prT(t),what:what,src:src})};
+  add(p.createdAt,'Study started in Appuscholar','project');
+  add((o.idea||{}).savedAt,'Topic and question written: '+String((o.idea||{}).topic||'').slice(0,90),'A1');
+  logRows(o,'search').forEach(r=>add(r.date,'Literature search logged in '+(r.db||'a database')+(r.hits?' ('+r.hits+' records, '+(r.kept||'?')+' kept)':''),'B2'));
+  const plan=logRows(o,'aplan').filter(r=>r.kind==='Main'&&String(r.h||'').trim()),pdates=plan.map(r=>r._m||r._t||prT(r.date)).filter(Boolean),pt=pdates.length?Math.max(...pdates):0,typed=plan.map(r=>prT(r.date)).filter(Boolean),tt=typed.length?Math.min(...typed):0;
+  if(pt)add(pt,(tt&&Math.abs(tt-pt)>2*864e5?'[typed date '+prD(tt)+'] ':'')+'Analysis plan fixed for '+plan.length+' hypothes'+(plan.length===1?'is':'es')+' ('+plan.map(r=>String(r.h).replace(/:.*/,'').slice(0,6)+': '+(r.test||'?')).join('; ')+')','C7');
+  const e=ethicsGet(o),et=prT((e.lt||{}).date);if(et)add(et,'Ethics approval letter '+((e.lt||{}).no||'')+' from '+((e.cm||{}).name||'the committee'),'C9');
+  const sets=rtLoad('appu_statsets'),dsn=Object.keys(sets),dt=dsn.length?Math.min(...dsn.map(k=>sets[k].first||sets[k].ts||Infinity)):0;
+  dsn.forEach(k=>add(sets[k].first||sets[k].ts,'Data "'+k+'" first loaded ('+(sets[k].n||'?')+' rows)','D2'));
+  logRows(o,'clean').forEach(r=>add(r.date,'Cleaning: '+(r.step||'')+', '+(r.what||'')+(r.n?' ('+r.n+')':'')+(r.why?'. Reason: '+r.why:''),'D3'));
+  resList(o).forEach(r=>add(r.at,(r.kind==='expl'?'Exploratory result recorded':r.kind==='dev'?'Result recorded with a change from the plan':'Planned result recorded')+(r.h?' for '+String(r.h).replace(/:.*/,'').slice(0,6):'')+': '+(r.ranLabel||r.ran||'')+(r.kind==='dev'?'. Reason: '+r.why:''),'D4'));
+  SUBSTAGES.forEach(x=>{const r=(o.sub||{})[x[0]];if(r&&r.s==='dn'&&r.at)add(r.at,'Step '+x[0]+' '+x[2][0]+' marked done','steps')});
+  ev.sort((a,b)=>a.t-b.t);
+  /* checks */
+  if(plan.length&&dt)chk.push(pt&&pt<=dt?['ok','The analysis plan ('+prD(pt)+') was written before the data was first loaded ('+prD(dt)+').']:['warn','The analysis plan is dated '+prD(pt)+', after the data was first loaded ('+prD(dt)+'). Its results should be reported as exploratory.']);
+  else if(plan.length)chk.push(['info','The analysis plan was fixed on '+prD(pt)+'; no data has been loaded yet.']);
+  if(et&&dt)chk.push(et<=dt?['ok','The ethics approval ('+prD(et)+') came before the data was first loaded ('+prD(dt)+').']:['warn','The ethics approval is dated '+prD(et)+', after the data was first loaded ('+prD(dt)+').']);
+  const dev=resList(o).filter(r=>r.kind==='dev'),ex=resList(o).filter(r=>r.kind==='expl');
+  if(resList(o).length)chk.push([dev.length?'info':'ok',dev.length?dev.length+' result'+(dev.length===1?'':'s')+' changed from the plan, each with a written reason.':'Every planned result used the planned test.']);
+  if(ex.length)chk.push(['info',ex.length+' exploratory result'+(ex.length===1?' is':'s are')+' marked as exploratory.']);
+  const cl=logRows(o,'clean');if(cl.length)chk.push(['ok',cl.length+' change'+(cl.length===1?'':'s')+' to the working data, each logged with a reason; the original file was kept.']);
+  /* writing */
+  let T=0,A=0,kept=0,edited=0;const docs=[];try{const cur=docCurrentId();docsStudy().forEach(d=>{if(d.origin==='source')return;const c=provCountDoc(d.id===cur?getEditorHTML():(d.body||''));if(c.typed+c.ai<20)return;T+=c.typed;A+=c.ai;kept+=c.kept;edited+=c.edited;docs.push({t:d.title||'Untitled',w:c.typed+c.ai,ai:c.ai})})}catch(x){}
+  const kinds={};try{aiuLog().forEach(a=>{kinds[a.g||a.k||'other']=(kinds[a.g||a.k||'other']||0)+1})}catch(x){}
+  return{title:String((synFront(o).title)||(o.idea||{}).topic||p.name||'Study'),name:me.name||synFront(o).student||'',made:Date.now(),build:APP_BUILD,ev:ev,chk:chk,words:{own:T,ai:A,kept:kept,edited:edited,docs:docs},kinds:kinds}}
+function prText(d){const L=[];L.push('PROCESS RECEIPT','Study: '+d.title,'Student: '+(d.name||'[name]'),'Made: '+prD(d.made)+' with Appuscholar build '+d.build,'','CHECKS');d.chk.forEach(c=>L.push((c[0]==='ok'?'[ok] ':c[0]==='warn'?'[!] ':'[i] ')+c[1]));
+  L.push('','TIMELINE');d.ev.forEach(e=>L.push(prD(e.t)+' | '+e.src+' | '+e.what));
+  const w=d.words;L.push('','WRITING','Words not inserted by AI: '+w.own,'Words inside AI-inserted passages: '+w.ai,'AI passages left unchanged: '+w.kept+'; rewritten: '+w.edited);w.docs.forEach(x=>L.push('- '+x.t+': '+x.w+' words, '+x.ai+' inside AI passages'));
+  L.push('','AI HELP LOG (kinds, counts): '+(Object.keys(d.kinds).length?Object.keys(d.kinds).map(k=>k+' '+d.kinds[k]).join(', '):'none recorded'));return L.join('\n')}
+async function prHash(t){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return''}}
+function prBodyHTML(d,hash){const E=escHTML,ico={ok:'✓',warn:'!',info:'i'},col={ok:'#15803d',warn:'#b45309',info:'#475569'},w=d.words,tot=w.own+w.ai;
+  return'<h1 style="margin:0 0 4px;font-size:22px">Process receipt</h1><p style="margin:0;color:#555">'+E(d.title)+'<br>'+E(d.name||'[name]')+' · made '+E(prD(d.made))+' · Appuscholar '+E(d.build)+'</p>'+
+   '<h2 style="font-size:16px;margin:16px 0 6px">Checks</h2>'+(d.chk.length?d.chk.map(c=>'<p style="margin:4px 0;color:'+col[c[0]]+'"><b>'+ico[c[0]]+'</b> '+E(c[1])+'</p>').join(''):'<p style="color:#555">Nothing to check yet: no plan or data recorded.</p>')+
+   '<h2 style="font-size:16px;margin:16px 0 6px">Writing</h2><p style="margin:4px 0">'+(tot?E(w.own+' of '+tot+' words ('+Math.round(100*w.own/tot)+'%) were not inserted by AI; '+w.ai+' sit inside AI-inserted passages, of which '+w.edited+' passage'+(w.edited===1?' was':'s were')+' rewritten and '+w.kept+' left unchanged.'):'No writing yet.')+'</p>'+
+   (w.docs.length?'<table style="border-collapse:collapse;font-size:13px;margin:6px 0">'+w.docs.map(x=>'<tr><td style="padding:2px 12px 2px 0">'+E(x.t)+'</td><td style="padding:2px 12px 2px 0;text-align:right">'+x.w+' words</td><td style="text-align:right">'+(x.w?Math.round(100*x.ai/x.w):0)+'% in AI passages</td></tr>').join('')+'</table>':'')+
+   '<p style="margin:4px 0;font-size:13px;color:#555">AI help log: '+E(Object.keys(d.kinds).length?Object.keys(d.kinds).map(k=>k+' × '+d.kinds[k]).join(', '):'none recorded')+'. The log keeps the date, tool and kind of help, never the text.</p>'+
+   '<h2 style="font-size:16px;margin:16px 0 6px">Timeline</h2><table style="border-collapse:collapse;font-size:13px">'+d.ev.map(e=>'<tr><td style="padding:3px 10px 3px 0;white-space:nowrap;vertical-align:top">'+E(prD(e.t))+'</td><td style="padding:3px 10px 3px 0;vertical-align:top;color:#6d28d9">'+E(e.src)+'</td><td style="padding:3px 0">'+E(e.what)+'</td></tr>').join('')+'</table>'+
+   '<p style="margin:18px 0 0;font-size:12px;color:#555">Fingerprint (SHA-256 of this receipt\'s text): <code style="word-break:break-all">'+E(hash)+'</code><br>Every entry comes from records Appuscholar kept while the work was done. The fingerprint shows whether this file was edited after it was made; it cannot stop someone who rebuilds the whole file. It is evidence of process to discuss with a supervisor, not a certificate.</p>'}
+async function prOpen(){const hi=studyHi(),d=prData(),txt=prText(d),h=await prHash(txt);window._pr={d:d,txt:txt,h:h};
+  let g=document.getElementById('prDlg');if(!g){g=document.createElement('dialog');g.id='prDlg';g.className='dlg-wide';g.style.cssText='max-width:820px;width:96vw;padding:18px 22px';document.body.appendChild(g)}
+  g.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>'+(hi?'आपके काम की रसीद':'Your process receipt')+'</b><span><button type="button" class="btn btn-purple btn-sm" onclick="prDownload()">⬇ '+(hi?'File download करें':'Download file')+'</button> <button type="button" class="btn btn-ghost btn-sm" onclick="prPrint()">'+(hi?'Print / PDF':'Print / PDF')+'</button> <button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'dialog\').close()">✕</button></span></div>'+
+   '<p class="desc" style="margin:6px 0 10px">'+(hi?'यह app के अपने records से बनी है। Supervisor को दिखाएँ कि plan, data और लिखना किस क्रम में हुए। AI detector के जवाब में यह आपका सबूत है।':'Built from the app\'s own records. Show your supervisor the order in which the plan, the data and the writing happened. It is your evidence when an AI detector questions your work.')+'</p>'+
+   '<div style="border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:#fff;color:#111">'+prBodyHTML(d,h)+'</div>';
+  if(!g.open)g.showModal()}
+function prFileHTML(){const p=window._pr;if(!p)return'';const data=JSON.stringify(p.txt).replace(/</g,'\\u003c');
+  return'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Process receipt</title><style>body{font:14px/1.6 Georgia,serif;max-width:780px;margin:24px auto;padding:0 16px;color:#111}#t{white-space:pre-wrap;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;border:1px solid #ddd;border-radius:8px;padding:14px 16px}#v{margin:12px 0;padding:8px 10px;border-radius:8px;font:13px system-ui}</style></head><body>'+
+   '<div id="v">Checking the fingerprint…</div><pre id="t"></pre><p style="font:12px system-ui;color:#555">Fingerprint (SHA-256): <code style="word-break:break-all">'+p.h+'</code><br>Every entry comes from records Appuscholar kept while the work was done. The text above is drawn from the same data the fingerprint covers, so an edit to any line shows. It cannot stop someone who rebuilds the whole file; it is evidence of process to discuss with a supervisor, not a certificate.</p><noscript>Open this file in a browser with JavaScript on to see the receipt.</noscript><script>var T='+data+',H="'+p.h+'";document.getElementById("t").textContent=T;crypto.subtle.digest("SHA-256",new TextEncoder().encode(T)).then(function(b){var h=Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("");var v=document.getElementById("v");if(h===H){v.textContent="Fingerprint matches: this receipt has not been edited since it was made.";v.style.background="#dcfce7"}else{v.textContent="Fingerprint does not match: this receipt was changed after it was made.";v.style.background="#fee2e2"}})<\/script></body></html>'}
+function prDownload(){const h=prFileHTML();if(!h)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'text/html'}));a.download='process-receipt-'+new Date().toISOString().slice(0,10)+'.html';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);showToast(studyHi()?'रसीद download हुई ✓':'Receipt downloaded ✓')}
+function prPrint(){const h=prFileHTML();if(!h)return;const w=window.open('','_blank');if(!w){showToast('Allow pop-ups to print');return}w.document.open();w.document.write(h.replace('</body>','<script>setTimeout(function(){window.print()},600)<\/script></body>'));w.document.close()}
 /* ============ Study health (build 2026.11.02h) ============
    One place that says what needs a look, each with the one button that fixes it. Checks that already
    existed in separate tools (book check, stale results, retractions, synopsis gaps) are pulled together
@@ -16654,7 +16718,7 @@ function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!bo
     return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\''+escAttr(sec)+'\','+hs.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+(lv>1||!(bpNode(sec)&&bpNode(sec).k)?'<span class="bb-w'+(words?'':' bb-empty')+'">'+(words?words:L('empty','खाली'))+'</span>':'')+'</a>'}).join('');
   const missing=bbFlat(o).filter(x=>!present[x.n.id]&&!(x.n.ed==='syn')&&!/^front\.(title|contents)$/.test(x.n.id)&&x.n.id!=='front'&&x.n.id!=='back');
   const flds=isB?BB_FIELDS.filter(f=>bbFieldVal(f[0],o)):[];
-  box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><span><a href="#" class="desc" onclick="bbFillFromSteps();return false">↧ '+L('Fill from my steps','मेरे steps से भरें')+'</a> · <a href="#" class="desc" onclick="bbCheckOpen();return false">✓ '+L('Check the book','किताब जाँचें')+'</a> · <a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></span></div>'+
+  box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><span><a href="#" class="desc" onclick="bbFillFromSteps();return false">↧ '+L('Fill from my steps','मेरे steps से भरें')+'</a> · <a href="#" class="desc" onclick="prOpen();return false">🧾 '+L('Process receipt','काम की रसीद')+'</a> · <a href="#" class="desc" onclick="bbCheckOpen();return false">✓ '+L('Check the book','किताब जाँचें')+'</a> · <a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></span></div>'+
    (flds.length?'<div class="desc" style="margin:4px 0">'+L('Linked number at the cursor:','Cursor पर जुड़ी हुई संख्या:')+' '+flds.map(f=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(hi?f[1][1]:f[1][0])+'" onmousedown="event.preventDefault()" onclick="bbFieldInsert(\''+f[0]+'\')">'+escHTML((hi?f[1][1]:f[1][0]).split(' (')[0])+' = '+escHTML(bbFieldVal(f[0],o))+'</button>').join(' ')+'</div>':'')+
    (isB&&xrCaps().length?'<div class="desc" style="margin:4px 0">'+L('Refer to a table or figure at the cursor:','Cursor पर table या figure का हवाला:')+' '+xrCaps().map(c=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(xrTitle(c))+'" onmousedown="event.preventDefault()" onclick="xrInsert(\''+c.getAttribute('data-capid')+'\')">'+escHTML(xrLabel(c))+'</button>').join(' ')+'</div>':'')+
    hlHTML(o)+nfyHTML(o)+
@@ -16874,7 +16938,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02h';
+const APP_BUILD='2026.11.02i';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
