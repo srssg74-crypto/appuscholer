@@ -680,6 +680,24 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 .tk-app{opacity:.8;border-style:dashed}
 .tk-refs{font-size:12px}
 </style>
+<style id="ssCss">#ssDlg{display:none;position:fixed;inset:0;z-index:2000;background:#111;flex-direction:column;outline:none}
+#ssDlg .ss-stage{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;min-height:0}
+.ss-slide{background:#fff;color:#1a1a1a;width:min(96vw,calc((100vh - 70px)*16/9));aspect-ratio:16/9;border-radius:6px;padding:4.5% 5.5%;box-sizing:border-box;display:flex;flex-direction:column;font-family:Calibri,"IBM Plex Sans","Noto Sans Devanagari",Arial,sans-serif;font-size:clamp(12px,2.1vw,30px);overflow:hidden}
+.ss-slide h2{font-size:1.4em;color:#1F4E79;margin:0 0 .6em;line-height:1.2;font-weight:700}
+.ss-slide .ss-body{flex:1;display:flex;gap:4%;align-items:flex-start;min-height:0}
+.ss-slide ul{margin:0;padding-left:1.1em;line-height:1.45;flex:1}.ss-slide li{margin:0 0 .45em}
+.ss-big{font-size:2.3em;font-weight:700;color:#2E75B6;min-width:30%;line-height:1.1}
+.ss-gap{background:#fff4c2;color:#7c2d12}
+.ss-refs{font-size:.62em}
+.ss-table{border-collapse:collapse;width:100%;font-size:.6em}.ss-table th{background:#1F4E79;color:#fff;text-align:left;padding:.35em .5em}.ss-table td{border-top:1px solid #ccc;padding:.35em .5em;vertical-align:top}
+.ss-slide img{max-width:45%;max-height:100%;object-fit:contain}
+.ss-foot{font-size:.55em;color:#666;margin-top:.4em}
+.ss-slide.is-cover{justify-content:center}.ss-cover h1{font-size:1.9em;color:#1F4E79;margin:0 0 .6em;line-height:1.15}.ss-cover p{color:#444;font-size:.85em}
+.ss-slide.is-app h2::after{content:"  · appendix";font-size:.5em;color:#888;font-weight:400}
+.ss-bar{display:flex;gap:8px;align-items:center;padding:8px 12px;color:#ddd;font:14px system-ui}
+.ss-bar button{background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+.ss-bar .ss-sp{flex:1}.ss-clock{opacity:.7;margin-left:6px}
+</style>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
@@ -1298,10 +1316,13 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
       <p class="desc" data-i18n="slides_panel_desc">Uses your Heading 1 / Heading 2 styles as slide breaks — the text under each heading becomes bullet points, and any picture becomes its own slide. Add headings in the formatting bar above if you haven't yet.</p>
       <div class="row" style="gap:8px;align-items:center"><button class="btn btn-purple" style="flex:1" onclick="tkBuild()">🎤 A talk from my study</button><select id="tkMins" title="Length of the talk" style="width:auto"><option value="10">10 min</option><option value="15" selected>15 min</option><option value="20">20 min</option></select></div>
       <p class="desc" style="margin:4px 0 8px">Built from your steps and recorded results: titles that state each finding, the question on its own slide, one result per slide, conclusions last, and likely questions in an appendix.</p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="jcPick()">📰 Journal club from paper(s)</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="pptxBuildPreview()" data-i18n="slides_generate_btn">Generate slide preview</button></div>
       <div id="pptxPreview" style="margin-top:12px"></div>
-      <div class="row" id="pptxDownloadRow" style="margin-top:10px;display:none">
+      <div class="row" id="pptxDownloadRow" style="margin-top:10px;display:none;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-purple" style="flex:1" onclick="ssOpen()">▶ Present here</button>
         <button class="btn btn-gold" style="flex:1" onclick="pptxDownload()" data-i18n="slides_download_btn">⬇ Download as PowerPoint (.pptx)</button>
+        <button class="btn btn-ghost" onclick="if(!_pptxSlideModel)return;ssOpen();ssPrint()">PDF</button>
       </div>
     </div></section>
   </div>
@@ -7751,6 +7772,79 @@ function docToSlideModel(){
   let un=0;slides.forEach(s=>{if(!s.title&&!s.cover){s.title=(title||docTitle||'')+(un++?' (continued)':'')||null}});
   return slides;
 }
+/* ============ Present from the website, and a journal club deck (build 2026.11.02l) ============
+   Any deck the app builds (from the document, from the study, or a journal club) can be shown full
+   screen right here: arrow keys, space, swipe, F for full screen, a clock, and Print / PDF with one slide
+   per page. The journal club deck is built from the student's own reading notes on one or more papers in
+   the library: the B3 matrix (design, sample, finding, limitation, key line), the B4 quality notes
+   (strengths, weaknesses, tool, judgement) and the retraction check. Nothing is written by AI; what the
+   student has not noted yet shows as a gap to fill. */
+let SS={i:0,t0:0,tick:0};
+function ssSlideHTML(x,i,n){const E=escHTML;
+  if(x.cover)return'<div class="ss-cover"><h1>'+E(x.title||'')+'</h1>'+(x.sub&&x.sub.length?'<p>'+x.sub.map(E).join('<br>')+'</p>':'')+'</div>';
+  let b='<h2>'+E(x.title||'')+'</h2><div class="ss-body">';
+  if(x.big)b+='<div class="ss-big">'+E(x.big)+'</div>';
+  if(x.table)b+='<table class="ss-table">'+x.table.map((r,k)=>'<tr>'+r.map(c=>k?'<td>'+E(c)+'</td>':'<th>'+E(c)+'</th>').join('')+'</tr>').join('')+'</table>';
+  if(x.refs&&x.refs.length)b+='<ul class="ss-refs">'+x.refs.map(r=>'<li>'+E(r)+'</li>').join('')+'</ul>';
+  else if(x.bullets&&x.bullets.length)b+='<ul>'+x.bullets.map(t=>'<li>'+E(t).replace(/\[([^\]]+)\]/g,'<span class="ss-gap">[$1]</span>')+'</li>').join('')+'</ul>';
+  (x.images||[]).slice(0,1).forEach(src=>{b+='<img src="'+src+'" alt="">'});
+  b+='</div>';if(x.foot)b+='<div class="ss-foot">'+E(x.foot)+'</div>';
+  return b}
+function ssOpen(){const m=_pptxSlideModel;const hi=studyHi();if(!m||!m.length){showToast(hi?'पहले slides बनाएँ':'Make the slides first');return}
+  let d=document.getElementById('ssDlg');if(!d){d=document.createElement('div');d.id='ssDlg';d.tabIndex=-1;document.body.appendChild(d);
+    d.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();ssGo(1)}else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();ssGo(-1)}else if(e.key==='Home')ssShow(0);else if(e.key==='End')ssShow(_pptxSlideModel.length-1);else if(e.key==='Escape')ssClose();else if(e.key==='f'||e.key==='F')ssFull()});
+    let x0=null;d.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});d.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)ssGo(dx<0?1:-1);x0=null})}
+  d.innerHTML='<div class="ss-stage"><div class="ss-slide" id="ssSlide"></div></div><div class="ss-bar"><button type="button" onclick="ssGo(-1)" aria-label="Previous">‹</button><span id="ssNum"></span><button type="button" onclick="ssGo(1)" aria-label="Next">›</button><span id="ssClock" class="ss-clock"></span><span class="ss-sp"></span><button type="button" onclick="ssFull()">'+(hi?'पूरी screen':'Full screen')+' (F)</button><button type="button" onclick="ssPrint()">Print / PDF</button><button type="button" onclick="ssClose()">✕ Esc</button></div>';
+  d.style.display='flex';SS.t0=Date.now();clearInterval(SS.tick);SS.tick=setInterval(ssClock,1000);ssShow(0);d.focus()}
+function ssShow(i){const m=_pptxSlideModel;SS.i=Math.max(0,Math.min(m.length-1,i));const x=m[SS.i];document.getElementById('ssSlide').className='ss-slide'+(x.cover?' is-cover':'')+(x.role==='appendix'?' is-app':'');document.getElementById('ssSlide').innerHTML=ssSlideHTML(x,SS.i,m.length);document.getElementById('ssNum').textContent=(SS.i+1)+' / '+m.length;ssClock()}
+function ssGo(k){ssShow(SS.i+k)}
+function ssClock(){const el=document.getElementById('ssClock');if(!el)return;const s=Math.floor((Date.now()-SS.t0)/1000);el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function ssFull(){const d=document.getElementById('ssDlg');try{document.fullscreenElement?document.exitFullscreen():d.requestFullscreen()}catch(e){}}
+function ssClose(){const d=document.getElementById('ssDlg');if(!d)return;clearInterval(SS.tick);try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}d.style.display='none'}
+function ssPrint(){const m=_pptxSlideModel;if(!m||!m.length)return;const w=window.open('','_blank');if(!w){showToast('Allow pop-ups to print');return}
+  const css=document.getElementById('ssCss')?document.getElementById('ssCss').textContent:'';
+  w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Slides</title><style>'+css+'@page{size:A4 landscape;margin:0}body{margin:0}.ss-slide{width:297mm;height:209mm;box-shadow:none;border-radius:0;page-break-after:always;margin:0}</style></head><body>'+m.map((x,i)=>'<div class="ss-slide'+(x.cover?' is-cover':'')+'">'+ssSlideHTML(x,i,m.length)+'</div>').join('')+'<script>setTimeout(function(){window.print()},600)<\/script></body></html>');w.document.close()}
+/* ---- journal club ---- */
+function jcPick(){const hi=studyHi(),L=(en,x)=>hi?x:en,lib=(function(){try{return citGetLib()}catch(e){return[]}})();
+  let d=document.getElementById('jcDlg');if(!d){d=document.createElement('dialog');d.id='jcDlg';d.style.cssText='max-width:640px;width:94vw;padding:16px 20px';document.body.appendChild(d)}
+  if(!lib.length){d.innerHTML='<p>'+L('Add the paper(s) to your Citation library first (search, or type the reference), then come back.','पहले paper(s) Citation library में जोड़ें (search से या reference लिखकर), फिर लौटें।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'dialog\').close()">OK</button>';d.showModal();return}
+  d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">'+L('Journal club: choose the paper(s)','Journal club: paper(s) चुनें')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'dialog\').close()">✕</button></div>'+
+   '<p class="desc">'+L('Slides come from your own reading notes in the B3 matrix and B4 quality notes. Fill those first for a stronger deck; what is missing shows as a yellow gap.','Slides आपके अपने reading notes (B3 matrix और B4 quality notes) से बनती हैं। पहले वे भरें; जो नहीं भरा, वह पीली जगह के रूप में दिखेगा।')+'</p>'+
+   '<div style="max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px 10px">'+lib.map((x,i)=>'<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:13.5px"><input type="checkbox" class="jcChk" value="'+i+'"> <span>'+escHTML((citLastName(x.author)||'?')+' ('+(x.year||'n.d.')+'). '+String(x.title||'').slice(0,120))+'</span></label>').join('')+'</div>'+
+   '<div class="row" style="margin-top:10px;gap:8px"><button type="button" class="btn btn-purple" onclick="jcBuild()">'+L('Make the journal club slides','Journal club slides बनाएँ')+'</button></div>';
+  d.showModal()}
+function jcNotesFor(o,x){const key=(citLastName(x.author)||'').toLowerCase(),yr=String(x.year||''),t=String(x.title||'').slice(0,40).toLowerCase(),m=r=>{const p=String(r.paper||'').toLowerCase();return(x.cid&&r.cid===x.cid)||(p.indexOf(key)>=0&&p.indexOf(yr)>=0)||(t&&p.indexOf(t.slice(0,25))>=0)};
+  return{mx:logRows(o,'matrix').find(m)||{},q:logRows(o,'quality').find(m)||{}}}
+function jcQuestions(ps){const out=[],all=ps.map(p=>String(p.mx.design||'').toLowerCase()).join(' ');
+  if(/cross|survey|correl/.test(all))out.push('Can a one-time survey tell us which came first? What would?');
+  if(/rct|random|trial|experiment/.test(all))out.push('Were the groups alike at the start, and who dropped out?');
+  if(ps.some(p=>{const n=+(String(p.mx.sample||'').match(/\d+/)||[0])[0];return n&&n<100}))out.push('Is the sample large enough for the size of effect they report?');
+  if(/self|questionnaire|scale|report/.test(ps.map(p=>p.mx.measure||'').join(' ').toLowerCase()))out.push('How might self-report have shaped the answers?');
+  out.push('Would this hold for students like ours in Rajasthan? What would differ?');
+  if(ps.length>1)out.push('Where do these studies disagree, and what might explain it?');
+  return out.slice(0,4)}
+function jcBuild(){const hi=studyHi(),o=studyGet(),lib=citGetLib(),idx=[...document.querySelectorAll('.jcChk:checked')].map(c=>+c.value);
+  if(!idx.length){showToast(hi?'कम से कम एक paper चुनें':'Choose at least one paper');return}
+  const me=(function(){try{return apMe()}catch(e){return{}}})(),retr=(function(){try{return retrCacheGet()}catch(e){return{}}})();
+  const ps=idx.map(i=>{const x=lib[i],n=jcNotesFor(o,x),c=retr[retrNormDoi(x.doi)];return{x:x,mx:n.mx,q:n.q,lab:(citLastName(x.author)||'?')+(/;| and |&/.test(String(x.author||''))?' et al.':'')+' ('+(x.year||'n.d.')+')',retr:c?(c.r?'retracted':'checked'):'not checked'}});
+  const g=(v,what)=>String(v||'').trim()||'['+what+']',S=[],one=ps.length===1;
+  S.push({cover:true,title:'Journal club: '+(one?String(ps[0].x.title||''):ps.length+' studies on '+(String((o.idea||{}).topic||'').trim()||'one question')),sub:[me.name||'',new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})].filter(Boolean)});
+  if(!one)S.push({title:'The '+ps.length+' studies at a glance',table:[['Study','Design','Sample','Main finding','Our verdict']].concat(ps.map(p=>[p.lab,g(p.mx.design,'design'),g(p.mx.sample,'sample'),tkShort(g(p.mx.finding,'finding'),70),g(p.q.judge,'verdict')]))});
+  ps.forEach(p=>{const L1=p.lab;
+    S.push({title:one?'Why this paper: '+tkShort(g(p.mx.finding,'its main finding'),90):L1+': '+tkShort(g(p.mx.finding,'main finding'),90),bullets:[(one?'':'')+'Design: '+g(p.mx.design,'design')+'; sample: '+g(p.mx.sample,'sample'),'Measures: '+g(p.mx.measure,'measures'),p.mx.quote?'In their words: '+tkShort(p.mx.quote,140):'[a key line from the paper, with its page]'],foot:L1});
+    const tr=p.retr==='retracted'?'⚠ Marked as retracted: say so before discussing it':p.retr==='checked'?'Retraction check: not retracted':'[run the retraction check]';
+    S.push({title:'How far to trust '+(one?'it':L1)+': '+g(p.q.judge,'your verdict'),bullets:['Strength: '+g(p.q.str,'strength'),'Weakness: '+g(p.q.weak||p.mx.limit,'weakness'),'Appraised with: '+g(p.q.tool,'tool, e.g. JBI, AXIS, CASP'),tr],foot:L1})});
+  const ths=[...new Set(ps.map(p=>p.mx.theme).filter(Boolean))],notes=((wGet(o).B5||{}).notes)||{};
+  if(!one)S.push({title:'Taken together',bullets:ths.map(t=>t+': '+tkShort(notes[t]||'[where they agree and conflict]',110)).concat(ths.length?[]:['[where the studies agree, where they conflict, and why]'])});
+  S.push({title:'What it means for '+(String((o.idea||{}).topic||'').trim()?'our question':'practice'),bullets:ps.map(p=>p.lab+': '+(p.mx.stance?p.mx.stance.toLowerCase()+' our question':'[supports, contrasts or background?]'))});
+  S.push({title:'Questions for the group',bullets:jcQuestions(ps)});
+  S.push({title:'References',refs:ps.map(p=>{const t=document.createElement('div');t.innerHTML=citFmt(p.x,0,'apa').refHTML;return t.textContent})});
+  _pptxSlideModel=S.map(x=>Object.assign({images:[],bullets:[]},x,{talk:true}));
+  try{document.getElementById('jcDlg').close()}catch(e){}
+  showTool('slides');const box=document.getElementById('pptxPreview'),gaps=JSON.stringify(S).split('[').length-1;
+  box.innerHTML=(gaps?'<div class="tk-warn">'+(hi?gaps+' पीली जगहें: इन्हें B3 matrix और B4 quality notes में भरें, फिर दोबारा बनाएँ।':gaps+' yellow gaps: fill them in the B3 matrix and B4 quality notes, then make the slides again.')+'</div>':'')+
+   S.map((x,i)=>'<div class="slide-card"><div class="slide-num">Slide '+(i+1)+'</div><h4>'+escHTML(x.title||'')+'</h4>'+(x.table?'<table class="ss-table" style="font-size:12px">'+x.table.map((r,k)=>'<tr>'+r.map(c=>(k?'<td>':'<th>')+escHTML(c)+(k?'</td>':'</th>')).join('')+'</tr>').join('')+'</table>':'')+((x.bullets||[]).length?'<ul>'+x.bullets.map(b=>'<li>'+escHTML(b).replace(/\[([^\]]+)\]/g,'<span class="ss-gap">[$1]</span>')+'</li>').join('')+'</ul>':'')+(x.refs?'<ul class="tk-refs">'+x.refs.map(r=>'<li>'+escHTML(r)+'</li>').join('')+'</ul>':'')+'</div>').join('');
+  document.getElementById('pptxDownloadRow').style.display='flex';try{box.scrollIntoView({block:'start'})}catch(e){}}
 /* ============ A talk from my study (build 2026.11.02k) ============
    Rules from academic presentation practice, as set out in the MIT-licensed academic-pptx skill
    (github.com/Gabberflast/academic-pptx-skill): action titles that state the takeaway (read alone they
@@ -7845,7 +7939,8 @@ function pptxDownload(){
       let y=1.45;
       if(s.big){sl.addText(s.big,{x:0.5,y:y,w:3.6,h:1.6,fontSize:40,bold:true,color:ACC,fontFace:F,valign:'middle'});}
       const bx=s.big?4.3:0.5,bw=s.big?5.2:9;
-      if(s.refs&&s.refs.length)sl.addText(s.refs.map(r=>({text:r,options:{breakLine:true,paraSpaceAfter:4,indentLevel:0}})),{x:0.5,y:y,w:9,h:3.8,fontSize:12,color:INK,fontFace:F,valign:'top',fit:'shrink'});
+      if(s.table&&s.table.length){sl.addTable(s.table.map((r,k)=>r.map(c=>({text:String(c),options:k?{fontSize:13,color:INK,fontFace:F}:{fontSize:13,bold:true,color:'FFFFFF',fill:{color:NAVY},fontFace:F}}))),{x:0.5,y:y,w:9,colW:[1.6,1.5,1.5,2.8,1.6],border:{type:'solid',pt:0.5,color:'BBBBBB'},autoPage:false});}
+      else if(s.refs&&s.refs.length)sl.addText(s.refs.map(r=>({text:r,options:{breakLine:true,paraSpaceAfter:4,indentLevel:0}})),{x:0.5,y:y,w:9,h:3.8,fontSize:12,color:INK,fontFace:F,valign:'top',fit:'shrink'});
       else if(s.bullets&&s.bullets.length)sl.addText(s.bullets.map(b=>({text:b,options:{bullet:true,breakLine:true,paraSpaceAfter:8}})),{x:bx,y:y,w:bw,h:3.6,fontSize:20,color:INK,fontFace:F,valign:'top',fit:'shrink'});
       if(s.foot)sl.addText(s.foot,{x:0.5,y:5.1,w:9,h:0.35,fontSize:12,color:'666666',fontFace:F});
       if(s.role==='appendix')sl.addText('Appendix',{x:8.3,y:5.1,w:1.2,h:0.35,fontSize:11,color:'888888',fontFace:F,align:'right'});});
@@ -17075,7 +17170,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02k';
+const APP_BUILD='2026.11.02l';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
