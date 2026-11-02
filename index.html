@@ -621,6 +621,29 @@ h1{font-size:24px}h2{font-size:20px}h3{font-size:16px}
   .docbar select{min-width:170px}
 }
 #docPane .card-head .btn{padding:6px 11px;font-size:13px}
+/* nothing in a side panel may push it sideways */
+main .tool-main,.tool-panel,.tool-panel .panel,#subMain{overflow-x:hidden;min-width:0}
+.tool-panel .panel,#subMain{overflow-wrap:anywhere}
+.tool-panel textarea,.tool-panel input,.tool-panel select,.tool-panel img,.tool-panel svg,.tool-panel canvas{max-width:100%}
+.tool-panel pre,.tool-panel code{white-space:pre-wrap}
+.tool-panel table{display:block;max-width:100%;overflow-x:auto}
+/* save feedback: a round arrow inside the box */
+.fs-wrap{position:relative}
+.fs-wrap textarea,.fs-wrap input{padding-right:48px!important}
+.fs-go{position:absolute;right:8px;bottom:8px;width:32px;height:32px;border-radius:999px;border:none;background:var(--purple-600);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(var(--shadow-ink),.25);transition:background .15s,transform .1s}
+.fs-one .fs-go{top:50%;bottom:auto;transform:translateY(-50%)}
+.fs-go:hover{background:var(--purple-700)}
+.fs-go:active{transform:scale(.94)}.fs-one .fs-go:active{transform:translateY(-50%) scale(.94)}
+.fs-go .fs-ok{display:none}.fs-go.done{background:#15803d}.fs-go.done .fs-ok{display:block}.fs-go.done svg:first-child{display:none}
+.fs-lab{display:flex!important;justify-content:space-between;align-items:baseline;gap:8px}
+.fs-msg{font-size:12px;font-weight:500;color:#15803d;white-space:nowrap}
+.fs-tick{display:inline-block;font-size:12px;color:#15803d;margin:2px 0 0 4px;opacity:0;transition:opacity .2s}
+.fs-tick.on{opacity:1}
+/* first step for a new student: the AI key button pulses until a key is saved */
+@keyframes aiNudge{0%,100%{box-shadow:0 0 0 0 rgba(240,173,63,.85)}70%{box-shadow:0 0 0 10px rgba(240,173,63,0)}}
+body.no-ai-key #aiKeyBtn{animation:aiNudge 1.6s ease-out infinite;outline:2px solid #fff;outline-offset:1px}
+body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:999px}
+@media (prefers-reduced-motion:reduce){body.no-ai-key #aiKeyBtn,body.no-ai-key #provTabs{animation:none;box-shadow:0 0 0 4px rgba(240,173,63,.6)}}
 </style>
 </head>
 <body>
@@ -646,7 +669,7 @@ h1{font-size:24px}h2{font-size:20px}h3{font-size:16px}
   <button class="btn btn-ghost" onclick="toggleLang()" id="langBtn" title="Interface language">हि</button>
   <button class="btn btn-ghost" onclick="toggleTheme()" id="themeBtn" data-i18n-title="theme_btn_title" title="Light / dark">🌙</button>
   <button class="btn btn-ghost" onclick="openHelp()" data-i18n="help_btn">❓ Help</button>
-  <button class="btn btn-gold" onclick="PROV_ORDER.some(provHasKey)?openSettings():keyWizOpen()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
+  <button class="btn btn-gold" id="aiKeyBtn" onclick="PROV_ORDER.some(provHasKey)?openSettings():keyWizOpen()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
 </header>
 <div class="stagebar" id="stageBar" role="navigation" aria-label="Research stages"></div>
 <div class="subbar">
@@ -7892,7 +7915,11 @@ function toggleProvMenu(e){
   bar.querySelectorAll('.ptab').forEach(b=>b.onclick=()=>switchProv(b.dataset.p));
   setTimeout(()=>document.addEventListener('click',closeProvMenuOnOutsideClick),0);
 }
-function refreshProvUI(){closeProvMenu();renderProvTabs();updProvBadge()}
+function refreshProvUI(){closeProvMenu();renderProvTabs();updProvBadge();keyNudge()}
+/* Until some AI key is saved, the AI key button pulses: it is the first thing a new student must do. */
+function keyNudge(){let has=false;try{has=PROV_ORDER.some(provHasKey)}catch(e){}document.body.classList.toggle('no-ai-key',!has);
+  const b=document.getElementById('aiKeyBtn');if(b)b.title=has?'':(studyHi()?'पहला कदम: मुफ़्त AI चालू करें':'First step: turn on free AI')}
+setTimeout(()=>{try{keyNudge()}catch(e){}},0);
 function switchProv(p){
   closeProvMenu();
   if(provHasKey(p)){LS.set('appu_provider',p);refreshProvUI();showToast('Now using '+PROVIDERS[p].name+' ✓ Your next AI request goes to '+PROVIDERS[p].short+'.')}
@@ -12146,11 +12173,41 @@ function ideaLoad(){
   let d={};try{d=studyIdea()}catch(e){d={}}
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||''};
   set('ideaTopic',d.topic);set('ideaResources',d.resources);set('ideaTimeframe',d.timeframe);set('ideaConstraints',d.constraints);
+  try{fsIdeaInit();fsIdeaShow()}catch(e){}
 }
+/* ============ Saved, and seen to be saved (build 2026.11.02f) ============
+   Boxes save as the student types; a student could not see that. Each box in the Idea tool gets a
+   small "Save →" button (Enter does the same, Shift+Enter makes a new line) and a "✓ Saved 10:46"
+   line. Every other box in the tools, the steps and the study plan shows "✓ Saved" when it changes. */
+function fsTime(t){try{return new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
+function fsMsgOf(el){const w=el.closest('.fs-wrap');if(w&&w._msg)return w._msg;return null}
+function fsMark(el,msg){if(!el||!el.parentNode)return;const own=fsMsgOf(el);
+  if(own){own.textContent=msg||('✓ '+(studyHi()?'सहेजा गया':'Saved')+' '+fsTime(Date.now()));const b=el.closest('.fs-wrap').querySelector('.fs-go');if(b){b.classList.add('done');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('done'),1400)}return}
+  let m=el.nextElementSibling&&el.nextElementSibling.classList&&el.nextElementSibling.classList.contains('fs-tick')?el.nextElementSibling:null;
+  if(!m){m=document.createElement('span');m.className='fs-tick';el.insertAdjacentElement('afterend',m)}
+  m.textContent=msg||('✓ '+(studyHi()?'सहेजा गया':'Saved')+' '+fsTime(Date.now()));m.classList.add('on');clearTimeout(m._t);m._t=setTimeout(()=>m.classList.remove('on'),2500)}
+/* A round arrow inside the box, like a send button; the saved time sits on the label line. */
+function fsAddSave(id,fn){const el=document.getElementById(id);if(!el||el._fs)return;el._fs=1;const hi=studyHi();
+  const w=document.createElement('div');w.className='fs-wrap'+(el.tagName==='INPUT'?' fs-one':'');el.parentNode.insertBefore(w,el);w.appendChild(el);
+  const b=document.createElement('button');b.type='button';b.className='fs-go';b.title=hi?'सहेजें (Enter)':'Save (Enter)';b.setAttribute('aria-label',b.title);
+  b.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg><svg class="fs-ok" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  w.appendChild(b);
+  const lab=(el.closest('.fld')||{}).querySelector?el.closest('.fld').querySelector('label'):null,m=document.createElement('span');m.className='fs-msg';if(lab){lab.classList.add('fs-lab');lab.appendChild(m)}else w.insertAdjacentElement('afterend',m);w._msg=m;
+  const go=()=>{try{fn()}catch(e){}fsMark(el);el.blur()};
+  b.onclick=go;
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();go()}})}
+function fsIdeaInit(){['ideaTopic','ideaResources','ideaTimeframe','ideaConstraints'].forEach(id=>fsAddSave(id,ideaSave));fsIdeaShow()}
+function fsIdeaShow(){let at=0;try{at=(studyGet().idea||{}).savedAt||0}catch(e){}const hi=studyHi();
+  ['ideaTopic','ideaResources','ideaTimeframe','ideaConstraints'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const m=fsMsgOf(el);if(!m)return;
+    m.textContent=(el.value.trim()&&at)?'✓ '+(hi?'सहेजा गया ':'Saved ')+new Date(at).toLocaleDateString([],{day:'numeric',month:'short'})+' '+fsTime(at):''})}
+document.addEventListener('change',e=>{const el=e.target;if(!el||!el.matches||!el.matches('textarea,input[type=text],input[type=number],input[type=date],input[type=email],select'))return;
+  if(el.closest('.fs-wrap')||el._fs||/^(docSel|blockSel|statsTest|provSel)$/.test(el.id))return;
+  if(!el.closest('.tool-main,#subDlg,#spDlg,#qnDlg,#gapDlg,#ecDlg,#apMeDlg,#settingsDlg'))return;
+  if(el.closest('#statsFields,.fmtbar'))return;fsMark(el)},true);
 function ideaSave(){
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
   const o={topic:v('ideaTopic'),resources:v('ideaResources'),timeframe:v('ideaTimeframe'),constraints:v('ideaConstraints')};
-  try{const st=studyGet();st.idea=o;st.updated=Date.now();LS.set(studyKey(),JSON.stringify(st))}catch(e){}
+  try{const st=studyGet();st.idea=Object.assign({},st.idea||{},o,{savedAt:Date.now()});st.updated=Date.now();LS.set(studyKey(),JSON.stringify(st))}catch(e){}
   try{if(!getActiveProjectId())LS.set('appu_idea_intake',JSON.stringify(o))}catch(e){}
 }
 async function ideaAssess(){
@@ -16717,7 +16774,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02e';
+const APP_BUILD='2026.11.02f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
