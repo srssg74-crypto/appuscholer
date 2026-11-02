@@ -35,6 +35,13 @@ with sync_playwright() as p:
     loc.fill('To examine sleep and exam anxiety in first-year students'); loc.dispatch_event('change'); pg.wait_for_timeout(100)
     ok(J("!!document.querySelector('#subMain .fs-tick.on')") or 'Saved' in J("document.getElementById('subMain').innerText"),'a step box shows Saved')
     J("document.getElementById('subDlg').close()")
+    # the tool panel grows while a box is filled and returns afterwards
+    pg.click('#ideaTimeframe'); pg.wait_for_timeout(300)
+    ok(J("document.body.classList.contains('tool-big')") and J("document.querySelector('.tool-main').getBoundingClientRect().width")>500,'clicking into a box makes the tool panel bigger')
+    pg.mouse.click(300,450); pg.wait_for_timeout(200)
+    ok(not J("document.body.classList.contains('tool-big')"),'a click back in the document puts it back')
+    J("tbToggle()"); pg.keyboard.press('Escape'); pg.wait_for_timeout(100)
+    ok(not J("document.body.classList.contains('tool-big')"),'Esc puts it back too')
     J("LS.set('appu_key_gemini','AIza'+'x'.repeat(35));refreshProvUI()")
     ok(not J("document.body.classList.contains('no-ai-key')"),'with a key saved the button stops pulsing')
     b.close()
