@@ -20,12 +20,12 @@ with sync_playwright() as p:
     ok('Identification' in t and 'Reports sought for retrieval' in t and 'Records from registers' in t,'B1 asks for every PRISMA 2020 number, grouped')
     set_=lambda k,v: J("wNestRedraw('B1','n','%s','%s')"%(k,v))
     set_('id',480); set_('reg',20); set_('dup',90); set_('auto',10)
-    svg=J("(document.querySelector('#subMain svg')||{}).outerHTML||''")
+    svg=J("([...document.querySelectorAll('#subMain svg')].find(s=>!s.closest('.fs-go'))||{}).outerHTML||''")
     ok('Databases (n = 480)' in svg and 'Registers (n = 20)' in svg and 'automation tools (n = 10)' in svg,'identification shows databases, registers and removals')
     ok('(n = ?)' in svg and 'must be filled' in J("document.getElementById('subMain').innerText"),'numbers not filled yet show as n = ? with a warning')
     set_('scr',400); set_('exT',330); set_('sought',70); set_('notRet',5); set_('ft',65); set_('exF',50); set_('inc',15); set_('repInc',17)
     ok(J("b1FlowIssues(studyGet())")==[],'numbers with registers, automation and not-retrieved add up')
-    svg=J("(document.querySelector('#subMain svg')||{}).outerHTML||''")
+    svg=J("([...document.querySelectorAll('#subMain svg')].find(s=>!s.closest('.fs-go'))||{}).outerHTML||''")
     for x in ['Reports sought for retrieval','Reports not retrieved','(n = 5)','Reports assessed for eligibility','Reports of included studies (n = 17)']:
         ok(x in svg,'diagram shows '+x)
     ok('(n = ?)' not in svg,'no n = ? once everything is filled')
@@ -38,7 +38,7 @@ with sync_playwright() as p:
     ok(any('other-methods' in x for x in J("b1FlowIssues(studyGet())")),'included must add the other-methods studies')
     set_('inc',18); set_('repInc',20)
     ok(J("b1FlowIssues(studyGet())")==[],'15 + 3 other-methods studies = 18 included')
-    svg=J("(document.querySelector('#subMain svg')||{}).outerHTML||''")
+    svg=J("([...document.querySelectorAll('#subMain svg')].find(s=>!s.closest('.fs-go'))||{}).outerHTML||''")
     ok('via other methods' in svg and 'citation searching (n = 30)' in svg,'other-methods part is drawn')
     real=[e for e in errors if 'favicon' not in e[1]]
     ok(not real,'no page errors %s'%real[:3])

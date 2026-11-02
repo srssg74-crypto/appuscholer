@@ -655,6 +655,13 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 @keyframes tbIn{from{opacity:.4;transform:translateX(16px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){body.tool-big main .tool-main{animation:none}}
 #subMain textarea,#subMain input[type=text],#subMain input[type=number],#subMain input[type=email]{padding:8px 10px;font-size:14px;line-height:1.5}
+/* study health */
+.hl-card{border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);padding:10px 12px;margin:8px 0}
+.hl-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.hl-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.hl-row:first-of-type{border-top:none}
+.hl-msg{flex:1;min-width:0}
+.hl-row .btn{flex:0 0 auto;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -5486,6 +5493,7 @@ function docSwitch(id){
   setEditorHTML(d?d.body:'');
   try{citStyleRestore();citRender();citRefreshDoc()}catch(e){}
   lastSaved=getEditorHTML();upd();docRenderList();showToast('Opened: '+(d?d.title:'document'));
+  try{setTimeout(hlAutoBook,80)}catch(e){}
 }
 function docNew(){
   docSaveBody(getEditorHTML());
@@ -16595,6 +16603,46 @@ function bbFillFromSteps(){const hi=studyHi(),o=studyGet();let book=bbBookId(o);
     wrap.setAttribute('data-gen',bbHash(wrap.textContent));put++});
   try{bbRenumber()}catch(e){}try{docSaveBody(getEditorHTML());upd()}catch(e){}try{bbOutlineRender()}catch(e){}
   showToast(hi?put+' sections में आपके steps से draft डाला'+(kept?'; '+kept+' जिन्हें आपने बदला था, वैसे ही रहे':'')+' ✓':'Drafts from your steps put in '+put+' sections'+(kept?'; '+kept+' you had edited were left as they are':'')+' ✓')}
+/* ============ Study health (build 2026.11.02h) ============
+   One place that says what needs a look, each with the one button that fixes it. Checks that already
+   existed in separate tools (book check, stale results, retractions, synopsis gaps) are pulled together
+   here, plus three that guard against this app's own weak points: work kept only in this browser
+   (backup age), a step marked done that the app's own check disagrees with, and no AI key.
+   Housekeeping that cannot hurt runs by itself: opening the book refreshes untouched drafts. */
+function hlBookDiv(o){const book=bbBookId(o);if(!book)return null;const div=document.createElement('div');const d=bbIsBook()?{body:getEditorHTML()}:docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||'';return div}
+function hlItems(o){o=o||studyGet();const hi=studyHi(),L=(en,x)=>hi?x:en,out=[],add=(sev,msg,lab,act)=>out.push({sev:sev,msg:msg,lab:lab,act:act});
+  if(!getActiveProjectId())return out;
+  /* 1 work kept only here */
+  let docs=0;try{docs=docsGet().filter(d=>String(d.body||'').replace(/<[^>]+>/g,'').trim().length>40).length}catch(e){}
+  const bl=backupLast(),age=bl?Math.floor((Date.now()-bl)/864e5):-1;
+  if(docs&&(age<0||age>=7))add('fix',age<0?L('Your work is kept only in this browser and has never been backed up.','आपका काम सिर्फ़ इसी browser में है और इसका कभी backup नहीं लिया गया।'):L('Last backup was '+age+' days ago. Your work is kept only in this browser.','पिछला backup '+age+' दिन पहले लिया था। आपका काम सिर्फ़ इसी browser में है।'),L('Download backup','Backup download करें'),'backupExport()');
+  /* 2 no AI key */
+  let key=false;try{key=PROV_ORDER.some(provHasKey)}catch(e){}
+  if(!key)add('info',L('AI is not turned on yet.','AI अभी चालू नहीं है।'),L('Turn on free AI','मुफ़्त AI चालू करें'),'keyWizOpen()');
+  /* 3 steps marked done that the app's own check disagrees with */
+  SUBSTAGES.forEach(x=>{const id=x[0],r=(o.sub||{})[id];if(!r||r.s!=='dn'||id==='C9')return;let auto=null;try{auto=subAuto(id,o)}catch(e){}if(auto!==false)return;
+    let why='';try{if(LS_IDS.indexOf(id)>=0){const is=lsIssues(id,o);if(!is.length)return;why=is[0]}}catch(e){}
+    add('fix',L(id+' is marked done, but the app still finds it incomplete'+(why?': '+why:'')+'.',id+' पूरा लिखा है, पर app को अभी कमी दिखती है'+(why?': '+why:'')+'।'),L('Open '+id,id+' खोलें'),"subOpen('"+x[1]+"','"+id+"')")});
+  /* 4 synopsis gaps */
+  const g=synGaps(o);if(g>0)add('todo',L(g+' yellow gap'+(g===1?'':'s')+' left in the synopsis.','Synopsis में '+g+' पीली जगहें बाक़ी।'),L('Next gap','अगली जगह'),'synOpen();setTimeout(synNextGap,400)');
+  /* 5 results written from data that has changed since */
+  const div=hlBookDiv(o);
+  if(div){const runs=rtLoad('appu_statruns'),sets=rtLoad('appu_statsets');let st=0;div.querySelectorAll('.stat-tag[data-run]').forEach(el=>{const r=runs[el.getAttribute('data-run')];if(r&&sets[r.ds]&&sets[r.ds].hash!==r.hash)st++});
+    if(st)add('fix',L(st+' result'+(st===1?' in the book was':'s in the book were')+' worked out on data that has changed since.','किताब के '+st+' नतीजे ऐसे data से निकले थे जो बाद में बदल गया।'),L('Run them again','दोबारा चलाएँ'),"docSwitch(bbBookId());rtOpen()")}
+  /* 6 retracted sources in the library */
+  try{const c=retrCacheGet(),n=citGetLib().filter(d=>{const k=retrNormDoi(d.doi);return k&&c[k]&&c[k].r}).length;if(n)add('fix',L(n+' source'+(n===1?' in your library is':'s in your library are')+' marked as retracted.',n+' source retracted लिखे गए हैं।'),L('Show','दिखाएँ'),"showTool('cite')")}catch(e){}
+  /* 7 the book check's own fixes */
+  if(div){let f=[];try{f=bbCheck().filter(x=>x.sev==='fix')}catch(e){}if(f.length)add('fix',L(f.length+' thing'+(f.length===1?'':'s')+' to fix in the book, first: ','किताब में '+f.length+' चीज़ें ठीक करनी हैं, पहली: ')+f[0].msg.replace(/<[^>]+>/g,''),L('Check the book','किताब जाँचें'),"docSwitch(bbBookId());bbCheckOpen()")}
+  const rank={fix:0,todo:1,info:2};return out.sort((a,b)=>rank[a.sev]-rank[b.sev])}
+function hlHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,it=hlItems(o);if(!getActiveProjectId())return'';
+  const ico={fix:'⚠️',todo:'🟡',info:'ℹ️'};
+  return'<div class="hl-card"><div class="hl-head"><b>'+L('Study health','Study की सेहत')+'</b><span class="desc">'+(it.length?L(it.length+' need'+(it.length===1?'s':'')+' a look',it.length+' पर नज़र डालें'):L('Nothing needs a look ✓','सब ठीक ✓'))+'</span></div>'+
+   it.slice(0,6).map(x=>'<div class="hl-row"><span aria-hidden="true">'+ico[x.sev]+'</span><span class="hl-msg">'+escHTML(x.msg)+'</span><button type="button" class="btn btn-ghost btn-sm" onclick="'+escAttr(x.act)+'">'+escHTML(x.lab)+'</button></div>').join('')+
+   (it.length>6?'<p class="desc" style="margin:4px 0 0">+'+(it.length-6)+'</p>':'')+'</div>'}
+/* Opening the book refreshes the drafts the student has not touched (edited ones are kept). */
+function hlAutoBook(){try{const b=bbBookId();if(!b||docCurrentId()!==b||window._hlAutoAt&&Date.now()-window._hlAutoAt<60000)return;window._hlAutoAt=Date.now();
+  const before=getEditorHTML();const t=window.showToast;window.showToast=()=>{};try{bbFillFromSteps()}finally{window.showToast=t}
+  if(getEditorHTML()!==before)showToast(studyHi()?'किताब के अनछुए drafts आपके steps से ताज़ा किए ✓':'Untouched drafts in the book refreshed from your steps ✓')}catch(e){}}
 /* ---- outline, like PDF bookmarks ---- */
 function bbOutlineToggle(){const d=document.getElementById('bbOutline');if(!d)return;const on=d.style.display==='none';d.style.display=on?'block':'none';try{LS.set('appu_bb_out',on?'1':'')}catch(e){}if(on)bbOutlineRender()}
 function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!box||box.style.display==='none')return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),book=bbBookId();
@@ -16609,7 +16657,7 @@ function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!bo
   box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><span><a href="#" class="desc" onclick="bbFillFromSteps();return false">↧ '+L('Fill from my steps','मेरे steps से भरें')+'</a> · <a href="#" class="desc" onclick="bbCheckOpen();return false">✓ '+L('Check the book','किताब जाँचें')+'</a> · <a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></span></div>'+
    (flds.length?'<div class="desc" style="margin:4px 0">'+L('Linked number at the cursor:','Cursor पर जुड़ी हुई संख्या:')+' '+flds.map(f=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(hi?f[1][1]:f[1][0])+'" onmousedown="event.preventDefault()" onclick="bbFieldInsert(\''+f[0]+'\')">'+escHTML((hi?f[1][1]:f[1][0]).split(' (')[0])+' = '+escHTML(bbFieldVal(f[0],o))+'</button>').join(' ')+'</div>':'')+
    (isB&&xrCaps().length?'<div class="desc" style="margin:4px 0">'+L('Refer to a table or figure at the cursor:','Cursor पर table या figure का हवाला:')+' '+xrCaps().map(c=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(xrTitle(c))+'" onmousedown="event.preventDefault()" onclick="xrInsert(\''+c.getAttribute('data-capid')+'\')">'+escHTML(xrLabel(c))+'</button>').join(' ')+'</div>':'')+
-   nfyHTML(o)+
+   hlHTML(o)+nfyHTML(o)+
    (isB?'':'<button type="button" class="btn btn-purple btn-sm" style="margin:6px 0" onclick="docSwitch(\''+book+'\');bbOutlineRender()">'+L('Open the book','किताब खोलें')+'</button>')+
    '<div class="bb-list">'+rows+'</div>'+
    (missing.length?'<p class="desc" style="margin:8px 0 2px;color:#b45309">'+L('In your plan but not in the book:','योजना में है, किताब में नहीं:')+'</p>'+missing.slice(0,12).map(x=>'<div class="row" style="gap:6px;align-items:center;font-size:13px"><span>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</span>'+(isB?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbAddMissing(\''+x.n.id+'\')">+ '+L('Add','जोड़ें')+'</button>':'')+'</div>').join('')+(missing.length>12?'<p class="desc">+'+(missing.length-12)+'</p>':''):'')}
@@ -16804,7 +16852,7 @@ function apHomeRender(){
    +'<button type="button" class="hm-edit" onclick="apMeEdit()">'+escHTML(ht('edit'))+'</button>'
    +'<div class="hm-kv"><span>'+escHTML(ht('working'))+'</span><div>'+escHTML(active?active.name:ht('noproj'))+'</div><span>'+escHTML(ht('stage'))+'</span><div>'+escHTML(stNow?((STAGES.indexOf(stNow)+1)+' · '+stageLabel(stNow)):'-')+'</div>'
    +'<span>'+escHTML(ht('docs'))+'</span><div>'+docs+' &nbsp;·&nbsp; '+escHTML(ht('sources'))+' '+src+'</div><span>'+escHTML(ht('lang'))+'</span><div><a onclick="toggleLang()">'+(lang==='hi'?'हिंदी · English':'English · हिंदी')+'</a></div></div>'+cards+'</div>'
-   +'<div class="hm-main">'+apHomeTrain()+fdHomeHTML()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
+   +'<div class="hm-main">'+(active?(function(){try{return hlHTML()}catch(e){return''}})():'')+apHomeTrain()+fdHomeHTML()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
    +'<h3>'+escHTML(ht('h_learn'))+'</h3><p class="hm-hint">'+escHTML(ht('p_learn'))+'</p><div class="hm-grid">'+lt('lec','lectures','lectures_d','apHomeLectures()')+lt('paper','paper','paper_d',"apGoTool('analyse')")+lt('words','words','words_d',"apGoTool('words')")+'</div>'
    +'<div class="hm-foot"><button type="button" onclick="apGoTool(\'chat\')">'+escHTML(ht('ask'))+'</button>'+(apIsTrainee()?'':'<button type="button" id="hmTrecBtn" onclick="trOpen()">'+escHTML(ht('trec'))+'</button>')+'<button type="button" onclick="openProjectsDlg()">'+escHTML(ht('projects'))+'</button><button type="button" onclick="backupExport()">'+escHTML(ht('backup'))+'</button><button type="button" onclick="openSettings()">'+escHTML(ht('settings'))+'</button><button type="button" onclick="openHelp()">'+escHTML(ht('help'))+'</button></div></div>';
   try{apStageBarRender()}catch(e){}
@@ -16826,7 +16874,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02g';
+const APP_BUILD='2026.11.02h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
