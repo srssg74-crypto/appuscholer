@@ -672,6 +672,13 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 /* result buttons wrap instead of squeezing their words letter by letter */
 .paper-card .row{flex-wrap:wrap;gap:6px}
 .paper-card .row .btn{flex:0 0 auto;white-space:nowrap;padding:6px 10px;font-size:12.5px}
+/* a talk from my study */
+.tk-ghost{border:1px solid var(--line);border-radius:var(--r-m);padding:8px 12px;margin:0 0 10px;background:var(--card);font-size:13px}
+.tk-ghost ol{margin:6px 0 0 18px;padding:0}
+.tk-warn{border-left:3px solid #b45309;background:#fff7ed;color:#7c2d12;padding:6px 10px;margin:0 0 10px;font-size:12.5px;border-radius:0 6px 6px 0}
+.tk-big{font-size:28px;font-weight:700;color:#2E75B6;margin:4px 0}
+.tk-app{opacity:.8;border-style:dashed}
+.tk-refs{font-size:12px}
 </style>
 </head>
 <body>
@@ -1289,7 +1296,9 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
       <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pzOpen()" data-i18n="study_poster_btn">🖼 Design my conference poster</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="shareOpen()" data-i18n="share_btn">📤 Send paper, graphs or poster on WhatsApp or email</button></div>
       <p class="desc" data-i18n="slides_panel_desc">Uses your Heading 1 / Heading 2 styles as slide breaks — the text under each heading becomes bullet points, and any picture becomes its own slide. Add headings in the formatting bar above if you haven't yet.</p>
-      <div class="row"><button class="btn btn-purple" style="flex:1" onclick="pptxBuildPreview()" data-i18n="slides_generate_btn">Generate slide preview</button></div>
+      <div class="row" style="gap:8px;align-items:center"><button class="btn btn-purple" style="flex:1" onclick="tkBuild()">🎤 A talk from my study</button><select id="tkMins" title="Length of the talk" style="width:auto"><option value="10">10 min</option><option value="15" selected>15 min</option><option value="20">20 min</option></select></div>
+      <p class="desc" style="margin:4px 0 8px">Built from your steps and recorded results: titles that state each finding, the question on its own slide, one result per slide, conclusions last, and likely questions in an appendix.</p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="pptxBuildPreview()" data-i18n="slides_generate_btn">Generate slide preview</button></div>
       <div id="pptxPreview" style="margin-top:12px"></div>
       <div class="row" id="pptxDownloadRow" style="margin-top:10px;display:none">
         <button class="btn btn-gold" style="flex:1" onclick="pptxDownload()" data-i18n="slides_download_btn">⬇ Download as PowerPoint (.pptx)</button>
@@ -7742,6 +7751,66 @@ function docToSlideModel(){
   let un=0;slides.forEach(s=>{if(!s.title&&!s.cover){s.title=(title||docTitle||'')+(un++?' (continued)':'')||null}});
   return slides;
 }
+/* ============ A talk from my study (build 2026.11.02k) ============
+   Rules from academic presentation practice, as set out in the MIT-licensed academic-pptx skill
+   (github.com/Gabberflast/academic-pptx-skill): action titles that state the takeaway (read alone they
+   tell the argument: the "ghost deck"), the research question on its own slide by slide 3, one finding
+   per results slide with its number shown large, at most ~40 words of body text, 20 pt body text, one
+   sans-serif font, white slides, citations at the foot, a references slide, conclusions as the last main
+   slide (no "Thank you"), and likely questions ready in an appendix. Built from the study record, so the
+   numbers are the recorded ones. */
+function tkP(apa){const m=String(apa||'').match(/p\s*([<=>])\s*(\.\d+|0?\.\d+|1(?:\.0+)?)/);if(!m)return null;const v=parseFloat(m[2].charAt(0)==='.'?'0'+m[2]:m[2]);return{op:m[1],v:v,sig:m[1]==='<'?v<=0.05:v<0.05}}
+function tkShort(t,n){t=String(t||'').replace(/\s+/g,' ').trim();if(t.length<=n)return t;const c=t.slice(0,n);const k=Math.max(c.lastIndexOf('. '),c.lastIndexOf('; '),c.lastIndexOf(', '));return(k>n*0.5?c.slice(0,k):c.replace(/\s+\S*$/,''))+'…'}
+function tkFirstSentence(t){const m=String(t||'').replace(/\s+/g,' ').match(/^.*?[.!?](?=\s|$)/);return m?m[0]:String(t||'')}
+function tkModel(o,mins){o=o||studyGet();const w=wGet(o),d=o.idea||{},ds=o.design||{},f=synFront(o),me=(function(){try{return apMe()}catch(e){return{}}})(),S=[];
+  const hyp=String(ds.hyp||'').split('\n').map(x=>x.trim()).filter(Boolean),strip=h=>h.replace(/^H\d+[:.]\s*/,'').replace(/\.$/,'');
+  let scl=[];try{scl=SCALES}catch(e){}
+  const cites=new Set(),cite=t=>{(String(t||'').match(/\([A-Z][^()]*?\d{4}[a-z]?\)/g)||[]).forEach(c=>cites.add(c))};
+  /* 1 title */
+  S.push({cover:true,title:String(f.title||d.topic||'My study').replace(/\?$/,'?'),sub:[me.name||f.student||'',[f.dept,f.univ].filter(Boolean).join(', '),new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'})].filter(Boolean)});
+  /* 2 why it matters: situation and complication */
+  const prob=String((w.A2||{}).text||'').trim(),gap=String((o.gap||{}).text||'').trim();
+  if(prob||gap){cite(prob);cite(gap);S.push({title:gap?tkShort(tkFirstSentence(gap).replace(/^[A-Za-z ]+gap:\s*/i,'').replace(/^./,c=>c.toUpperCase()),110):tkShort(tkFirstSentence(prob),110),bullets:[prob?tkShort(tkFirstSentence(prob),120):'',gap&&prob?tkShort(gap,140):''].filter(Boolean),foot:[...cites].slice(0,3).join('; '),role:'why'})}
+  /* 3 the question on its own slide */
+  S.push({title:tkShort(String((w.A3||{}).q||d.topic||'').trim(),120)||'Research question',bullets:hyp.map(h=>tkShort(h,90)),role:'question'});
+  /* 4 method */
+  const vars=(ds.vars||[]).filter(v=>v.name),meas=vars.map(v=>{const x=v.scale&&scl.find(z=>z.id===v.scale);return x?v.name+': '+x.short:null}).filter(Boolean);
+  const rc=logRows(o,'recruit'),done=rc.reduce((a,r)=>a+(+r.done||0),0);
+  S.push({title:tkShort((ds.type?studyDesignShort(ds.type,true):'A study')+' of '+(done||ds.n||'[n]')+' '+(ds.pop?ds.pop.replace(/^./,c=>c.toLowerCase()):'participants'),120),bullets:[ds.sampling?tkShort('Sampling: '+ds.sampling,90):'',meas.length?'Measures: '+meas.join('; '):'',(logRows(o,'aplan').filter(r=>r.kind==='Main'&&r.test).map(r=>String(r.h).replace(/:.*/,'').slice(0,6)+': '+r.test).join('; '))].filter(Boolean),role:'method'});
+  /* 5 one slide per recorded main result */
+  const plan=resPlanMain(o),findings=[];
+  plan.forEach(pl=>{const h=String(pl.h).trim(),r=resFor(o,h).slice(-1)[0];if(!r)return;const pv=tkP(r.apa),eff=resEffect(r.apa)||'',lab=h.replace(/:.*/,'').slice(0,6);
+    const t=pv&&pv.sig?strip(h):'No clear support for '+lab+': '+strip(h).replace(/^./,c=>c.toLowerCase());
+    findings.push({lab:lab,sig:!!(pv&&pv.sig),text:t});
+    S.push({title:tkShort(t,110),big:(eff.split(',')[0]||'').trim(),bullets:[tkShort(r.apa,190)].concat(r.kind==='dev'?['Changed from the plan: '+tkShort(r.why,80)]:[]),role:'result'})});
+  /* 6 what it means, with the main limitation */
+  const ip=logRows(o,'interp').filter(x=>String(x.mean||'').trim());
+  if(ip.length)S.push({title:tkShort(tkFirstSentence(ip[0].mean),110),bullets:ip.slice(1).map(x=>tkShort(x.mean,90)).concat(ip.filter(x=>String(x.lim||'').trim()).slice(0,2).map(x=>'Limitation: '+tkShort(x.lim,80))),role:'meaning'});
+  /* 7 conclusions: the last main slide, stays up during questions */
+  const yes=findings.filter(x=>x.sig).map(x=>x.lab),no=findings.filter(x=>!x.sig).map(x=>x.lab);
+  const ctitle=!findings.length?'What this study shows':!no.length?(findings.length===1?'The finding supports '+yes[0]:findings.length===2?'Both findings support the hypotheses':'All '+findings.length+' findings support the hypotheses'):!yes.length?'The data do not support the hypotheses':'The data support '+yes.join(' and ')+', not '+no.join(' or ');
+  S.push({title:ctitle,bullets:findings.map(x=>tkShort(x.lab+': '+x.text.replace(/^No clear support for [^:]+: /,'not supported, '),90)).concat(['Questions and feedback welcome'+(me.name?', '+me.name:'')]),role:'conclusion'});
+  /* 8 references */
+  let lib=[];try{lib=citGetLib()}catch(e){}
+  if(lib.length){const it=lib.map((x,i)=>({d:x,n:i+1})).sort((a,b)=>citLastName(a.d.author).localeCompare(citLastName(b.d.author)));S.push({title:'References',refs:it.slice(0,10).map(x=>{const t=document.createElement('div');t.innerHTML=citFmt(x.d,0,'apa').refHTML;return t.textContent}),role:'refs'})}
+  /* 9 appendix: questions an examiner is likely to ask, answered from the record */
+  const app=[],ss=ds.ss||{};
+  if(ssComplete(ds))app.push({title:'Appendix A: How the sample size was decided',bullets:[tkShort(ssDraftText(ds),220)]});
+  const cl=logRows(o,'clean');if(cl.length)app.push({title:'Appendix B: What was changed in the data, and why',bullets:cl.slice(0,5).map(r=>tkShort((r.step||'')+': '+(r.what||'')+(r.why?'. '+r.why:''),110))});
+  const dev=resList(o).filter(r=>r.kind==='dev');if(dev.length)app.push({title:'Appendix C: Changes from the analysis plan',bullets:dev.map(r=>tkShort(r.planned+' → '+r.ranLabel+': '+r.why,110))});
+  app.forEach(a=>{a.role='appendix';S.push(a)});
+  /* time budget: about one slide a minute for the main part */
+  const main=S.filter(x=>x.role!=='appendix'&&x.role!=='refs'&&!x.cover).length,warn=[];
+  if(mins&&main>mins)warn.push('About '+main+' main slides for '+mins+' minutes: move one result to the appendix or speak to the key one.');
+  S.forEach((x,i)=>{const wds=(x.bullets||[]).join(' ').split(/\s+/).filter(Boolean).length;if(x.role!=='refs'&&x.role!=='appendix'&&wds>40)warn.push('Slide '+(i+1)+' has '+wds+' words of text; aim for 40 or fewer.')});
+  return{slides:S,warn:warn}}
+function tkBuild(){const hi=studyHi(),mins=+((document.getElementById('tkMins')||{}).value||15),m=tkModel(studyGet(),mins),box=document.getElementById('pptxPreview');
+  if(!getActiveProjectId()){box.innerHTML='<p class="desc">'+(hi?'पहले एक study खोलें।':'Open a study first.')+'</p>';return}
+  _pptxSlideModel=m.slides.map(x=>Object.assign({images:[],bullets:[]},x,{talk:true}));
+  let h='<div class="tk-ghost"><b>'+(hi?'सिर्फ़ titles पढ़ें: क्या पूरी बात समझ आती है?':'Read only the titles: do they tell the whole argument?')+'</b><ol>'+m.slides.filter(x=>x.role!=='appendix').map(x=>'<li>'+escHTML(x.title||'')+'</li>').join('')+'</ol></div>';
+  if(m.warn.length)h+='<div class="tk-warn">'+m.warn.map(escHTML).join('<br>')+'</div>';
+  m.slides.forEach((x,i)=>{h+='<div class="slide-card'+(x.role==='appendix'?' tk-app':'')+'"><div class="slide-num">Slide '+(i+1)+(x.role==='appendix'?' · appendix':'')+'</div><h4>'+escHTML(x.title||'')+'</h4>'+(x.big?'<div class="tk-big">'+escHTML(x.big)+'</div>':'')+((x.bullets||[]).length?'<ul>'+x.bullets.map(b=>'<li>'+escHTML(b)+'</li>').join('')+'</ul>':'')+(x.refs?'<ul class="tk-refs">'+x.refs.map(r=>'<li>'+escHTML(r)+'</li>').join('')+'</ul>':'')+(x.sub?'<p class="desc">'+x.sub.map(escHTML).join('<br>')+'</p>':'')+(x.foot?'<p class="desc" style="font-size:11px">'+escHTML(x.foot)+'</p>':'')+'</div>'});
+  box.innerHTML=h;document.getElementById('pptxDownloadRow').style.display='flex'}
 function pptxBuildPreview(){
   const slides=docToSlideModel();
   _pptxSlideModel=slides;
@@ -7769,6 +7838,18 @@ function pptxDownload(){
   if(!slides.length){showToast('Generate the preview first');return}
   const pptx=new PptxGenJS();
   pptx.defineSlideMaster({title:'APPU',background:{color:'FFFFFF'}});
+  if(slides[0]&&slides[0].talk){const NAVY='1F4E79',ACC='2E75B6',INK='1A1A1A',F='Calibri';pptx.layout='LAYOUT_16x9';
+    slides.forEach(s=>{const sl=pptx.addSlide();sl.background={color:'FFFFFF'};
+      if(s.cover){sl.addText(s.title||'',{x:0.6,y:1.2,w:8.8,h:1.8,fontSize:(s.title||'').length>80?28:32,bold:true,color:NAVY,fontFace:F,align:'left',valign:'bottom',fit:'shrink'});if(s.sub&&s.sub.length)sl.addText(s.sub.join('\n'),{x:0.6,y:3.2,w:8.8,h:1.4,fontSize:18,color:'444444',fontFace:F,valign:'top'});return}
+      sl.addText(s.title||'',{x:0.5,y:0.3,w:9,h:1.0,fontSize:26,bold:true,color:NAVY,fontFace:F,valign:'top',fit:'shrink'});
+      let y=1.45;
+      if(s.big){sl.addText(s.big,{x:0.5,y:y,w:3.6,h:1.6,fontSize:40,bold:true,color:ACC,fontFace:F,valign:'middle'});}
+      const bx=s.big?4.3:0.5,bw=s.big?5.2:9;
+      if(s.refs&&s.refs.length)sl.addText(s.refs.map(r=>({text:r,options:{breakLine:true,paraSpaceAfter:4,indentLevel:0}})),{x:0.5,y:y,w:9,h:3.8,fontSize:12,color:INK,fontFace:F,valign:'top',fit:'shrink'});
+      else if(s.bullets&&s.bullets.length)sl.addText(s.bullets.map(b=>({text:b,options:{bullet:true,breakLine:true,paraSpaceAfter:8}})),{x:bx,y:y,w:bw,h:3.6,fontSize:20,color:INK,fontFace:F,valign:'top',fit:'shrink'});
+      if(s.foot)sl.addText(s.foot,{x:0.5,y:5.1,w:9,h:0.35,fontSize:12,color:'666666',fontFace:F});
+      if(s.role==='appendix')sl.addText('Appendix',{x:8.3,y:5.1,w:1.2,h:0.35,fontSize:11,color:'888888',fontFace:F,align:'right'});});
+    const tt=(slides[0].title||'talk').replace(/[^\w\- ]+/g,'').trim().slice(0,60)||'appuscholar-talk';pptx.writeFile({fileName:tt+'.pptx'});showToast('Download starting ✓');return}
   slides.forEach(s=>{
     const slide=pptx.addSlide();
     /* The title slide, and a section heading with no text of its own (e.g. "2. Method" before "2.1 Participants"), become divider slides. */
@@ -16994,7 +17075,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02j';
+const APP_BUILD='2026.11.02k';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
