@@ -662,6 +662,16 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 .hl-row:first-of-type{border-top:none}
 .hl-msg{flex:1;min-width:0}
 .hl-row .btn{flex:0 0 auto;white-space:nowrap}
+/* the sentence that answers the question, and the journal badge */
+.rs-ans{margin:6px 0;padding:7px 10px;border-left:3px solid var(--purple-600);background:var(--soft);border-radius:0 6px 6px 0;font-size:13px;line-height:1.55}
+.rs-ans mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
+.rs-ans-k{display:block;font-size:11.5px;font-weight:600;color:var(--accent-ink);margin-bottom:2px}
+.rs-ans-miss{display:block;font-size:12px;color:#b45309;margin-top:3px}
+.j-badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid var(--ctl-line);color:var(--muted);vertical-align:1px;white-space:nowrap}
+.j-badge.j-strong{border-color:#15803d;color:#15803d}.j-badge.j-weak{border-color:#b45309;color:#b45309}
+/* result buttons wrap instead of squeezing their words letter by letter */
+.paper-card .row{flex-wrap:wrap;gap:6px}
+.paper-card .row .btn{flex:0 0 auto;white-space:nowrap;padding:6px 10px;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -10931,11 +10941,20 @@ editor.addEventListener('input',selHide);
 editor.addEventListener('scroll',selHide);
 window.addEventListener('scroll',selHide,true);
 selBubble&&selBubble.addEventListener('mousedown',e=>e.preventDefault());
-function selFind(){
-  const q=selText2().slice(0,200);selHide();
-  if(!q)return;
+async function selFind(){
+  const raw=selText2().slice(0,600);selHide();
+  if(!raw)return;
   showTool('research');
-  const box=document.getElementById('rsTopic');if(box)box.value=q;
+  const box=document.getElementById('rsTopic'),hi=studyHi(),cites=rsCitesIn(raw);
+  /* a cited study first: show the paper the sentence points to */
+  if(cites.length){const st=document.getElementById('rsStatus');if(st)st.textContent=hi?'Cite किया गया paper ढूँढ रहे हैं…':'Looking up the cited paper…';
+    try{const found=[];for(const c of cites.slice(0,3)){const ws=await rsLookupCite(c,raw);if(ws[0])found.push(ws[0])}
+      if(found.length){if(box)box.value=raw.replace(/\([^)]*\d{4}[^)]*\)/g,' ').replace(/\s+/g,' ').trim().slice(0,200);
+        const ids=found.map(w=>String(w.id).split('/').pop());const r=await fetch(oaUrl('https://api.openalex.org/works?per-page=10&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url,open_access,is_retracted,biblio,type&filter=openalex_id:'+ids.join('|')));
+        if(r.ok){const j=await r.json();rsResultsOriginal=(j.results||[]).map(w=>rsFromOA(w));rsApplySort();if(st)st.textContent=(hi?'आपके चुने वाक्य में cite किए गए paper: ':'The paper'+(rsResultsOriginal.length===1?'':'s')+' cited in your sentence: ')+rsResultsOriginal.length+'. '+(hi?'उसी विषय पर और papers के लिए Search दबाएँ।':'Press Search for more papers on the same point.');return}}}catch(e){}}
+  /* otherwise search the sentence's key words, not the whole sentence */
+  const kw=rsQParts(raw).map(x=>x.w).slice(0,8).join(' ');
+  if(box)box.value=kw||raw.slice(0,200);
   try{researchSearch()}catch(e){}
 }
 function selCite(){
@@ -11514,15 +11533,11 @@ function rsOaStatus(oa){
   if(s==='diamond')return'gold';
   return(s==='gold'||s==='green'||s==='hybrid'||s==='bronze')?s:'';
 }
-async function rsFetchOpenAlex(q,extra){
-  const url=oaUrl('https://api.openalex.org/works?search='+encodeURIComponent(q)+(extra&&extra.filter?'&filter='+extra.filter:'')+
-    '&per-page='+((extra&&extra.per)||8)+'&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url,open_access,is_retracted,biblio,type');
-  const r=await fetch(url);
-  if(!r.ok)throw oaHttpError(r);
-  const j=await r.json();
-  return(j.results||[]).map(w=>{
+/* One OpenAlex work as a search result (shared by the search and by Find papers from a selection). */
+function rsFromOA(w){
     const authors=(w.authorships||[]).map(a=>a.author&&a.author.display_name).filter(Boolean);
     const venue=(w.primary_location&&w.primary_location.source&&w.primary_location.source.display_name)||'';
+    const vsrc=(w.primary_location&&w.primary_location.source)||{};
     const doi=(w.doi||'').replace(/^https?:\/\/doi\.org\//i,'');
     const bb=w.biblio||{};
     return{
@@ -11532,7 +11547,7 @@ async function rsFetchOpenAlex(q,extra){
       /* Version 89: the full list, so a reference added from a search names every author (APA lists up to 20). */
       authorList:authors,authorFmt:'given-first',workType:w.type||'',
       volume:bb.volume||'',issue:bb.issue||'',pages:bb.first_page?(bb.first_page+(bb.last_page&&bb.last_page!==bb.first_page?'–'+bb.last_page:'')):'',
-      year:String(w.publication_year||''),venue,
+      year:String(w.publication_year||''),venue,venueId:String(vsrc.id||'').split('/').pop(),venueDoaj:vsrc.is_in_doaj===true,venueType:vsrc.type||'',
       abstract:rsReconstructAbstract(w.abstract_inverted_index),
       citationCount:w.cited_by_count||0,doi,
       url:w.doi||('https://openalex.org/'+(w.id||'').split('/').pop()),
@@ -11542,7 +11557,14 @@ async function rsFetchOpenAlex(q,extra){
       oaStatus:rsOaStatus(w.open_access),
       oaUrl:(w.open_access&&w.open_access.is_oa&&/^https?:\/\//i.test(w.open_access.oa_url||''))?w.open_access.oa_url:''
     };
-  });
+}
+async function rsFetchOpenAlex(q,extra){
+  const url=oaUrl('https://api.openalex.org/works?search='+encodeURIComponent(q)+(extra&&extra.filter?'&filter='+extra.filter:'')+
+    '&per-page='+((extra&&extra.per)||8)+'&select=id,display_name,authorships,publication_year,primary_location,abstract_inverted_index,cited_by_count,doi,referenced_works,cited_by_api_url,open_access,is_retracted,biblio,type');
+  const r=await fetch(url);
+  if(!r.ok)throw oaHttpError(r);
+  const j=await r.json();
+  return(j.results||[]).map(rsFromOA);
 }
 /* PubMed abstracts come from efetch as XML. A failure here only means the result has no abstract. */
 async function rsPubmedAbstracts(ids){
@@ -11971,6 +11993,39 @@ function rsApplySort(keepActions){
   }
   if(keepActions===true)rsToggleActions();else document.getElementById('rsActions').style.display='none';
 }
+/* ============ The sentence that answers you, and the journal behind it (build 2026.11.02j) ============
+   Under each result, the abstract's own sentence that covers most parts of the student's question,
+   with the matched words marked and the parts it does not cover listed. It is quoted, never written by
+   AI, so it cannot be invented. Beside the journal, a badge from OpenAlex's free journal data (h-index,
+   DOAJ) and a reminder to check indexing on Scopus or Web of Science itself (UGC 2025 advice). */
+const RS_IRREG={slept:'sleep',felt:'feel',children:'child',women:'woman',men:'man',fewer:'few',better:'good',worse:'bad',taught:'teach',thought:'think'};
+const RS_FILLER=new Set('well known also may might however thus therefore often commonly generally usually widely studies study research shown found show shows reported report suggest suggests evidence according previous recent recently'.split(' '));
+function rsStem(w){w=String(w).toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g,'');w=RS_IRREG[w]||w;w=w.replace(/(ies)$/,'y').replace(/(ing|ed|es|s)$/,'');return w.length>5?w.slice(0,5):w}
+function rsQParts(q){const seen=new Set(),out=[];String(q||'').replace(/\([^)]*\d{4}[^)]*\)/g,' ').split(/[^A-Za-z0-9\u0900-\u097f-]+/).forEach(w=>{const lw=w.toLowerCase();if(lw.length<3||RS_STOP.has(lw)||RS_FILLER.has(lw)||/^\d+$/.test(lw))return;const st=rsStem(lw);if(seen.has(st))return;seen.add(st);out.push({w:lw,st:st})});return out.slice(0,10)}
+function rsAnswer(p,q){const parts=rsQParts(q);if(!parts.length||!p.abstract)return null;
+  const sents=String(p.abstract).replace(/\s+/g,' ').split(/(?<=[.!?])\s+(?=[A-Z(])/).filter(x=>x.length>30);let best=null;
+  sents.forEach((x,i)=>{const toks=new Set(x.split(/[^A-Za-z0-9\u0900-\u097f]+/).map(rsStem));const hit=parts.filter(pt=>toks.has(pt.st));const sc=hit.length+(/\b(found|showed|associated|predict|related|higher|lower|significant|no difference|results?)\b/i.test(x)?0.5:0)-(i===0?0.2:0);if(!best||sc>best.sc)best={x:x,hit:hit,sc:sc}});
+  if(!best||!best.hit.length)return null;return{x:best.x,hit:best.hit,miss:parts.filter(pt=>best.hit.indexOf(pt)<0)}}
+function rsAnswerHTML(p){const q=(document.getElementById('rsTopic')||{}).value||'',a=rsAnswer(p,q);if(!a)return'';const hi=studyHi();
+  let html=escHTML(a.x);a.hit.forEach(pt=>{html=html.replace(new RegExp('\\b('+pt.st.replace(/[^a-z0-9]/g,'')+'[a-z]*)','gi'),'<mark>$1</mark>')});
+  return'<div class="rs-ans"><span class="rs-ans-k">'+(hi?'आपके सवाल से मिलता वाक्य':'Where it meets your question')+'</span>“'+html+'”'+(a.miss.length?'<span class="rs-ans-miss">'+(hi?'इसमें नहीं: ':'Not covered here: ')+escHTML(a.miss.map(m=>m.w).join(', '))+'</span>':'')+'</div>'}
+const RS_JKEY='appu_journal_cache',RS_JTTL=30*864e5;
+function rsJCache(){try{return JSON.parse(LS.get(RS_JKEY)||'{}')||{}}catch(e){return{}}}
+function rsJBadge(p,i){if(!p.venueId)return'';const c=rsJCache()[p.venueId],hi=studyHi();
+  if(!c)return'<span class="j-badge" id="rsJ'+i+'">'+(p.venueDoaj?'DOAJ':'…')+'</span>';
+  const bits=[];if(c.h)bits.push('h '+c.h);if(c.doaj)bits.push('DOAJ');if(c.m)bits.push(c.m.toFixed(1)+' cites/paper');
+  const tip=(hi?'OpenAlex के मुफ़्त आँकड़े: h-index, DOAJ में है या नहीं, और 2 साल में औसत citations। Indexing ख़ुद Scopus या Web of Science पर जाँचें।':'OpenAlex\'s free data: h-index, listed in DOAJ or not, and mean citations over two years. Check indexing yourself on Scopus or Web of Science.');
+  return'<span class="j-badge'+(c.h>=50?' j-strong':c.h&&c.h<10?' j-weak':'')+'" id="rsJ'+i+'" title="'+escAttr(tip)+'">'+escHTML(bits.join(' · ')||(hi?'जानकारी कम':'little data'))+'</span>'}
+async function rsJFetch(){const c=rsJCache(),now=Date.now(),need=[...new Set(rsResults.map(p=>p.venueId).filter(id=>id&&(!c[id]||now-c[id].t>RS_JTTL)))].slice(0,50);if(!need.length)return;
+  try{const r=await fetch(oaUrl('https://api.openalex.org/sources?per-page=50&select=id,summary_stats,is_in_doaj,works_count&filter=openalex_id:'+need.join('|')));if(!r.ok)return;const j=await r.json();
+    (j.results||[]).forEach(x=>{const id=String(x.id).split('/').pop(),st=x.summary_stats||{};c[id]={h:st.h_index||0,m:st['2yr_mean_citedness']||0,doaj:x.is_in_doaj===true,n:x.works_count||0,t:now}});
+    LS.set(RS_JKEY,JSON.stringify(c));rsResults.forEach((p,i)=>{const el=document.getElementById('rsJ'+i);if(el&&p.venueId)el.outerHTML=rsJBadge(p,i)})}catch(e){}}
+/* Find papers from a selected sentence. A cited study, such as (Sharma, 2021) or Kumar and Singh (2019),
+   is looked up by its author and year; other text is cut to its key words instead of searched whole. */
+function rsCitesIn(t){const out=[],re=/([A-Z][A-Za-z'’-]+)(?:\s+(?:et al\.?|(?:and|&)\s+[A-Z][A-Za-z'’-]+))?,?\s*\(?((?:19|20)\d{2})[a-z]?\)?/g;let m;while((m=re.exec(t))){if(!/^(The|This|In|A|An|And|But|For|From|We|It|Of|On|At)$/.test(m[1]))out.push({a:m[1],y:m[2]})}return out}
+async function rsLookupCite(c,ctx){const q=[c.a].concat(rsQParts(ctx).slice(0,4).map(x=>x.w)).join(' ');
+  const r=await fetch(oaUrl('https://api.openalex.org/works?per-page=10&search='+encodeURIComponent(q)+'&filter=publication_year:'+c.y+'&select=id,display_name,authorships,publication_year,primary_location,doi'));if(!r.ok)return[];const j=await r.json();
+  return(j.results||[]).filter(w=>(w.authorships||[]).some(a=>String((a.author||{}).display_name||'').toLowerCase().indexOf(c.a.toLowerCase())>=0))}
 function rsRenderResults(){
   const box=document.getElementById('rsResults');
   if(!rsResults.length){box.innerHTML='';return}
@@ -11979,12 +12034,12 @@ function rsRenderResults(){
   const cards=rsResults.map((p,i)=>
     '<div class="paper-card">'+
       '<div class="paper-check"><input type="checkbox" id="rsChk'+i+'" onchange="rsToggleActions()">'+
-      '<div style="flex:1"><h4>'+escHTML(p.title)+'</h4>'+rsRelHTML(p)+rsQuickHTML(p)+
+      '<div style="flex:1"><h4>'+escHTML(p.title)+'</h4>'+rsRelHTML(p)+rsAnswerHTML(p)+rsQuickHTML(p)+
       '<div class="meta"><span class="src-tag">'+escHTML(p.source)+'</span>'+
         (p.retracted?'<span class="retr-badge" title="'+escAttr(t('retr_tip'))+'">⚠ '+escHTML(t('retr_badge'))+'</span>':'')+
         (p.oaStatus?'<span class="oa-badge oa-'+p.oaStatus+'" title="'+escAttr(t('oa_tip_'+p.oaStatus))+'">'+escHTML(t('oa_badge_fmt').replace('{type}',p.oaStatus))+'</span>':'')+
         escHTML(p.authors)+
-        (p.year?' · '+escHTML(p.year):'')+(p.venue?' · '+escHTML(p.venue):'')+
+        (p.year?' · '+escHTML(p.year):'')+(p.venue?' · '+escHTML(p.venue)+' '+rsJBadge(p,i):'')+
         (p.citationCount?' · '+p.citationCount+' citations':'')+'</div>'+
       (p.abstract?'<div class="abs" id="rsAbs'+i+'">'+escHTML(p.abstract)+'</div>'+
         '<a href="#" onclick="event.preventDefault();document.getElementById(\'rsAbs'+i+'\').classList.toggle(\'open\')" style="font-size:11.5px">Show more / less</a>':'')+
@@ -12002,6 +12057,7 @@ function rsRenderResults(){
   box.innerHTML=fold>0?cards.slice(0,fold).join('')+'<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:13px">'+(cards.length-fold)+' probably not relevant (fit 0 or 1). Nothing is deleted.</summary>'+cards.slice(fold).join('')+'</details>':cards.join('');
   if(wasOpen&&box.querySelector('details'))box.querySelector('details').open=true;
   rsResults.forEach((p,i)=>{if(keep.has(p)){const el=document.getElementById('rsChk'+i);if(el)el.checked=true}});
+  try{rsJFetch()}catch(e){}
 }
 function rsAnalyse(i){
   const p=rsResults[i];if(!p)return;
@@ -16938,7 +16994,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02i';
+const APP_BUILD='2026.11.02j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
