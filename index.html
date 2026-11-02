@@ -597,7 +597,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   <button class="btn btn-ghost" onclick="toggleLang()" id="langBtn" title="Interface language">हि</button>
   <button class="btn btn-ghost" onclick="toggleTheme()" id="themeBtn" data-i18n-title="theme_btn_title" title="Light / dark">🌙</button>
   <button class="btn btn-ghost" onclick="openHelp()" data-i18n="help_btn">❓ Help</button>
-  <button class="btn btn-gold" onclick="openSettings()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
+  <button class="btn btn-gold" onclick="PROV_ORDER.some(provHasKey)?openSettings():keyWizOpen()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
 </header>
 <div class="stagebar" id="stageBar" role="navigation" aria-label="Research stages"></div>
 <div class="subbar">
@@ -1635,7 +1635,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
   </ol>
   <p class="warn" data-i18n="welcome_warn">Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.</p>
   <div class="row" style="margin-top:14px">
-    <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();openSettings()" data-i18n="welcome_setup_btn">Set up my key</button>
+    <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('welcomeDlg').close();keyWizOpen()" data-i18n="welcome_setup_btn">Set up my key</button>
     <button class="btn btn-ghost" onclick="document.getElementById('welcomeDlg').close()" data-i18n="welcome_later_btn">Later</button>
   </div>
   <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="tourStart()" id="welcomeDemoBtn" data-i18n="demo_btn">▶ Watch a 2-minute demo</button>
@@ -2404,12 +2404,12 @@ const I18N={
     settings_warn:'⚠ Because this app runs as a local file, every HTML file on your computer shares one storage area. A key saved with <b>Remember on this computer</b> can be read by any other HTML file you open. The passphrase option encrypts it so those files see only scrambled text.',
     welcome_h2:'💜 Welcome to Appuscholar',
     welcome_intro:'A writing and research assistant, with psychology research support built in. Everything you write stays on this computer.',
-    welcome_step1:'Click <b>⚙ AI Provider / Key</b> at the top right.',
-    welcome_step2:'Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.',
-    welcome_step3:'Follow the link, create a key, paste it in, press <b>Save Key</b>.',
+    welcome_step1:'Press <b>Turn on free AI</b> below.',
+    welcome_step2:'Sign in to Google once and copy your free key.',
+    welcome_step3:'Come back to this tab. Appuscholar recognises the key, tests it and saves it.',
     welcome_step4:'Start writing. Press <kbd>Tab</kbd> to accept a suggestion.',
     welcome_warn:"Appuscholar drafts and checks — it does not do your thinking. Verify every citation, and check your institution's policy on AI assistance before you submit.",
-    welcome_setup_btn:'Set up my key', welcome_later_btn:'Later', sel_video:'🎬 Explain as a video', pack_btn:'📦 University rules (packs)', bk_search_btn:'📖 Find a book by title or author', cite_quote_page:'Page(s) of the quote', imp_rb_btn:'⬇ Import from Zotero or Mendeley (.ris, .bib)', bulk_sum:'📥 Add my own reference list (books, articles, websites)', bulk_desc:'Paste the references you already have, one per line: from your notes, a book\'s bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.', bulk_btn:'Check and add to my library', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
+    welcome_setup_btn:'Turn on free AI', welcome_later_btn:'Later', sel_video:'🎬 Explain as a video', pack_btn:'📦 University rules (packs)', bk_search_btn:'📖 Find a book by title or author', cite_quote_page:'Page(s) of the quote', imp_rb_btn:'⬇ Import from Zotero or Mendeley (.ris, .bib)', bulk_sum:'📥 Add my own reference list (books, articles, websites)', bulk_desc:'Paste the references you already have, one per line: from your notes, a book\'s bibliography, or an old assignment. Each line is matched by its DOI, its ISBN, or its title in Crossref. Anything not found is kept exactly as you typed it and marked ⚠ so you check it.', bulk_btn:'Check and add to my library', demo_btn:'▶ Watch a 2-minute demo', demo_again_btn:'▶ Watch the demo again', why_again_btn:'💡 Show the "why we ask" lines again',
     login_h2:'🔑 Appuscholar Access',
     login_intro:"This copy needs an access code. Paste the code you were given below — it's checked on this computer, nothing is uploaded.",
     login_placeholder:'Paste your access code here', login_unlock_btn:'Unlock',
@@ -2645,12 +2645,12 @@ const I18N={
     settings_warn:'⚠ चूंकि यह ऐप एक लोकल फ़ाइल के रूप में चलता है, आपके कंप्यूटर पर हर HTML फ़ाइल एक ही स्टोरेज क्षेत्र साझा करती है। <b>इस कंप्यूटर पर याद रखें</b> के साथ सहेजी गई कुंजी किसी भी अन्य HTML फ़ाइल द्वारा पढ़ी जा सकती है जिसे आप खोलते हैं। पासफ़्रेज़ विकल्प इसे एन्क्रिप्ट करता है ताकि वे फ़ाइलें केवल अस्पष्ट टेक्स्ट देखें।',
     welcome_h2:'💜 Appuscholar में आपका स्वागत है',
     welcome_intro:'एक लेखन और शोध सहायक, जिसमें मनोविज्ञान शोध के लिए सहायता पहले से शामिल है। आप जो भी लिखते हैं वह इसी कंप्यूटर पर रहता है।',
-    welcome_step1:'ऊपर दाईं ओर <b>⚙ AI प्रदाता / कुंजी</b> पर क्लिक करें।',
-    welcome_step2:'<b>Google Gemini</b> या <b>Groq</b> चुनें — दोनों में मुफ़्त स्तर है।',
-    welcome_step3:'लिंक पर जाएं, एक कुंजी बनाएं, उसे पेस्ट करें, <b>कुंजी सहेजें</b> दबाएं।',
+    welcome_step1:'नीचे <b>मुफ़्त AI चालू करें</b> दबाएँ।',
+    welcome_step2:'एक बार Google में sign in करके अपनी मुफ़्त key copy करें।',
+    welcome_step3:'इस tab पर लौटें। Appuscholar key पहचानकर, जाँचकर सहेज लेगा।',
     welcome_step4:'लिखना शुरू करें। सुझाव स्वीकार करने के लिए <kbd>Tab</kbd> दबाएं।',
     welcome_warn:'Appuscholar मसौदा तैयार करता है और जांचता है — यह आपकी सोच का काम नहीं करता। हर उद्धरण की जांच करें, और जमा करने से पहले अपनी संस्था की AI सहायता नीति देख लें।',
-    welcome_setup_btn:'मेरी कुंजी सेट करें', welcome_later_btn:'बाद में', sel_video:'🎬 Video से समझें', pack_btn:'📦 University के नियम (पैकेट)', bk_search_btn:'📖 Title या लेखक से किताब खोजें', cite_quote_page:'Quote का page', imp_rb_btn:'⬇ Zotero या Mendeley से import (.ris, .bib)', bulk_sum:'📥 अपनी references की सूची जोड़ें (किताबें, लेख, websites)', bulk_desc:'जो references आपके पास पहले से हैं, उन्हें चिपकाएँ, हर पंक्ति में एक: अपने notes से, किसी किताब की bibliography से, या पुराने assignment से। हर पंक्ति उसके DOI, ISBN या Crossref में title से मिलाई जाती है। जो नहीं मिलती, वह जैसी लिखी थी वैसी रखी जाती है और ⚠ से चिह्नित होती है, ताकि आप उसे जाँच लें।', bulk_btn:'जाँचकर मेरी library में जोड़ें', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
+    welcome_setup_btn:'मुफ़्त AI चालू करें', welcome_later_btn:'बाद में', sel_video:'🎬 Video से समझें', pack_btn:'📦 University के नियम (पैकेट)', bk_search_btn:'📖 Title या लेखक से किताब खोजें', cite_quote_page:'Quote का page', imp_rb_btn:'⬇ Zotero या Mendeley से import (.ris, .bib)', bulk_sum:'📥 अपनी references की सूची जोड़ें (किताबें, लेख, websites)', bulk_desc:'जो references आपके पास पहले से हैं, उन्हें चिपकाएँ, हर पंक्ति में एक: अपने notes से, किसी किताब की bibliography से, या पुराने assignment से। हर पंक्ति उसके DOI, ISBN या Crossref में title से मिलाई जाती है। जो नहीं मिलती, वह जैसी लिखी थी वैसी रखी जाती है और ⚠ से चिह्नित होती है, ताकि आप उसे जाँच लें।', bulk_btn:'जाँचकर मेरी library में जोड़ें', demo_btn:'▶ 2 मिनट का demo देखें', demo_again_btn:'▶ Demo फिर से देखें', why_again_btn:'💡 "क्यों पूछ रहे हैं" वाली पंक्तियाँ फिर दिखाएँ',
     login_h2:'🔑 Appuscholar प्रवेश',
     login_intro:'इस प्रति के लिए एक एक्सेस कोड चाहिए। आपको दिया गया कोड नीचे पेस्ट करें — यह इसी कंप्यूटर पर जांचा जाता है, कुछ भी अपलोड नहीं होता।',
     login_placeholder:'अपना एक्सेस कोड यहाँ पेस्ट करें', login_unlock_btn:'अनलॉक करें',
@@ -7697,6 +7697,35 @@ async function lockKey(text,pass){
   const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,_enc.encode(text));
   return _b64(salt)+'.'+_b64(iv)+'.'+_b64(ct);
 }
+/* ============ Free AI in two minutes (build 2026.11.02d) ============
+   Google does not let an app make a key for someone else, so the student signs in once herself.
+   Everything after that is done here: the key is recognised from its first letters when it is pasted
+   (or read from the clipboard after one tap), tested with a one-word request, and saved. */
+function keyGuessProv(k){k=String(k||'').trim();if(/^AIza[\w-]{30,}$/.test(k))return'gemini';if(/^gsk_\w{20,}$/.test(k))return'groq';if(/^sk-or-/.test(k))return'openrouter';if(/^sk-ant-/.test(k))return'claude';if(/^sk-[a-f0-9]{32}$/.test(k))return'deepseek';if(/^sk-/.test(k))return'openai';return''}
+function keyWizOpen(){const hi=studyHi(),L=(en,x)=>hi?x:en;let d=document.getElementById('keyWizDlg');
+  if(!d){d=document.createElement('dialog');d.id='keyWizDlg';d.style.cssText='max-width:520px;width:94vw;padding:18px 20px;border-radius:14px';document.body.appendChild(d)}
+  const st=(n,t,b)=>'<div style="display:flex;gap:12px;margin:12px 0"><div style="flex:0 0 28px;height:28px;border-radius:999px;background:var(--purple,#6d28d9);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">'+n+'</div><div style="flex:1"><b>'+t+'</b>'+b+'</div></div>';
+  d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;font-size:22px">✨ '+L('Turn on free AI','मुफ़्त AI चालू करें')+'</h2><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'dialog\').close()">✕</button></div>'+
+   '<p class="desc" style="margin:6px 0">'+L('About two minutes. You need a Google account; Google asks you to be 18 or older.','लगभग दो मिनट। Google account चाहिए; Google की शर्त है कि आपकी उम्र 18 या ज़्यादा हो।')+'</p>'+
+   st(1,L('Get your free key from Google','Google से अपनी मुफ़्त key लें'),'<p class="desc" style="margin:4px 0">'+L('Sign in, press <b>Create API key</b>, then <b>Copy</b>. Come back to this tab.','Sign in करें, <b>Create API key</b> दबाएँ, फिर <b>Copy</b>। इस tab पर लौट आएँ।')+'</p><button type="button" class="btn btn-purple btn-sm" onclick="window.open(\'https://aistudio.google.com/apikey\',\'_blank\',\'noopener\')">'+L('Open Google AI Studio','Google AI Studio खोलें')+' ↗</button> <button type="button" class="btn btn-ghost btn-sm" onclick="window.open(\'https://console.groq.com/keys\',\'_blank\',\'noopener\')">'+L('or Groq, also free','या Groq, यह भी मुफ़्त')+' ↗</button><p class="desc" style="margin:4px 0 0">'+L('Any key works here: Gemini, Groq, OpenRouter, DeepSeek, ChatGPT or Claude. The app knows which one it is.','यहाँ कोई भी key चलेगी: Gemini, Groq, OpenRouter, DeepSeek, ChatGPT या Claude। App ख़ुद पहचान लेगा।')+'</p>')+
+   st(2,L('Bring the key here','Key यहाँ लाएँ'),'<div class="row" style="gap:6px;margin-top:6px"><input id="kwIn" type="text" autocomplete="off" spellcheck="false" style="flex:1;min-width:0" placeholder="'+escAttr(L('Paste the key (starts with AIza)','Key paste करें (AIza से शुरू)'))+'" oninput="keyWizCheck()"><button type="button" class="btn btn-ghost btn-sm" onclick="keyWizPaste()">📋 '+L('Paste','Paste')+'</button></div><p class="desc" id="kwWho" style="margin:4px 0 0"></p>')+
+   st(3,L('Test and save','जाँचें और सहेजें'),'<div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple" id="kwGo" style="flex:1" onclick="keyWizSave()" disabled>'+L('Test and save','जाँचें और सहेजें')+'</button></div><p id="kwOut" style="margin:6px 0 0;font-weight:600"></p>')+
+   '<p class="desc" style="margin:10px 0 0">'+L('The key is kept in this browser only and sent only to that company. On Google\'s free tier your text may be used to improve Google\'s products and read by its reviewers, so never paste participants\' names or answers into any AI tool.','Key सिर्फ़ इसी browser में रहती है और सिर्फ़ उसी company को जाती है। Google के free tier में आपका text Google के products सुधारने में लिया जा सकता है और उसके लोग उसे पढ़ सकते हैं, इसलिए participants के नाम या जवाब किसी AI tool में कभी न डालें।')+'</p>'+
+   '<p class="desc" style="margin:6px 0 0"><a href="#" onclick="document.getElementById(\'keyWizDlg\').close();openSettings();return false">'+L('Another provider (Groq, OpenRouter, paid ones), or lock the key with a passphrase on a shared computer →','दूसरा provider (Groq, OpenRouter, paid), या shared computer पर key को passphrase से lock करें →')+'</a></p>';
+  if(!d.open)d.showModal();setTimeout(()=>{try{document.getElementById('kwIn').focus()}catch(e){}},50)}
+function keyWizCheck(){const hi=studyHi(),k=(document.getElementById('kwIn').value||'').trim(),p=keyGuessProv(k),who=document.getElementById('kwWho'),go=document.getElementById('kwGo');
+  go.disabled=!p;who.style.color=p?'#15803d':(k?'#b45309':'');
+  who.textContent=p?(hi?'✓ यह '+PROVIDERS[p].name+' की key लगती है।':'✓ This looks like a '+PROVIDERS[p].name+' key.'):(k?(hi?'यह key पहचान में नहीं आई। पूरी key copy करें; Google की key AIza से शुरू होती है।':'This does not look like a key yet. Copy the whole key; a Google key starts with AIza.'):'');return p}
+async function keyWizPaste(){const hi=studyHi();try{const t=(await navigator.clipboard.readText()||'').trim();document.getElementById('kwIn').value=t;if(keyWizCheck())keyWizSave()}catch(e){showToast(hi?'Browser ने clipboard नहीं पढ़ने दिया; box में दबाकर Paste करें':'The browser did not allow reading the clipboard; long-press or right-click the box and paste')}}
+async function keyWizSave(){const hi=studyHi(),k=(document.getElementById('kwIn').value||'').trim(),p=keyGuessProv(k),out=document.getElementById('kwOut'),go=document.getElementById('kwGo');if(!p)return;
+  out.style.color='';out.textContent=hi?'जाँच रहे हैं…':'Testing…';go.disabled=true;window._aiOv={prov:p,key:k};
+  try{await callAIOnce('Reply with the single word OK.',{noLang:true,max:20,temp:0});window._aiOv=null;
+    LS.rm('appu_enc_'+p);LS.set('appu_key_'+p,k);LS.set('appu_provider',p);try{refreshProvUI()}catch(e){}
+    out.style.color='#15803d';out.textContent=hi?'✓ AI चालू है ('+PROVIDERS[p].short+')।':'✓ AI is on ('+PROVIDERS[p].short+').';
+    showToast(hi?'AI चालू ✓':'AI is on ✓');setTimeout(()=>{try{document.getElementById('keyWizDlg').close()}catch(e){}},1200)}
+  catch(e){window._aiOv=null;go.disabled=false;out.style.color='#b91c1c';const m=String((e&&e.message)||'')+' '+apiMsg(e);out.textContent='✗ '+(/\b(400|401|403)\b|API key|PERMISSION|INVALID/i.test(m)?(hi?'Google ने यह key नहीं मानी। AI Studio से पूरी key फिर से copy करें।':'Google did not accept this key. Copy the whole key again from AI Studio.'):/fetch|network|Failed/i.test(m)?(hi?'Internet नहीं मिला। Connection देखकर फिर दबाएँ।':'No internet connection. Check it and press again.'):apiMsg(e))}}
+/* Any AI button pressed without a key opens the short wizard, unless a provider other than Gemini was chosen. */
+function keyNeeded(){const p=getProv();if(p==='gemini'||!p)keyWizOpen();else openSettings()}
 async function unlockKeyBlob(blob,pass){
   const bits=String(blob).split('.');
   if(bits.length!==3)throw new Error('bad blob');
@@ -7709,7 +7738,7 @@ async function ensureKey(){
   const p=getProv();
   if(getKey())return true;
   const blob=encBlob(p);
-  if(!blob){openSettings();throw new Error('key')}
+  if(!blob){keyNeeded();throw new Error('key')}
   const pass=prompt('Passphrase to unlock your '+PROVIDERS[p].short+' key:');
   if(pass===null||pass==='')throw new Error('key');
   let plain;
@@ -8002,7 +8031,7 @@ async function callAIRaw(prompt,opts){
   if(!o.noLang)prompt=prompt+contentLangInstruction();
   await ensureKey();
   const prov=getProv(),key=getKey();
-  if(!key){openSettings();throw new Error('key')}
+  if(!key){keyNeeded();throw new Error('key')}
 
   if(prov==='gemini'){
     const tries=[PROVIDERS.gemini.model].concat(PROVIDERS.gemini.fallbacks||[]);
@@ -16637,7 +16666,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02c';
+const APP_BUILD='2026.11.02d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
