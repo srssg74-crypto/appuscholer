@@ -644,6 +644,16 @@ main .tool-main,.tool-panel,.tool-panel .panel,#subMain{overflow-x:hidden;min-wi
 body.no-ai-key #aiKeyBtn{animation:aiNudge 1.6s ease-out infinite;outline:2px solid #fff;outline-offset:1px}
 body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:999px}
 @media (prefers-reduced-motion:reduce){body.no-ai-key #aiKeyBtn,body.no-ai-key #provTabs{animation:none;box-shadow:0 0 0 4px rgba(240,173,63,.6)}}
+/* the tool panel grows over the document while a box in it is being filled */
+#tbBar{display:none}
+@media(min-width:1100px){
+  body.tool-big main .tool-main{position:fixed;top:var(--tb-top);right:var(--tb-right);width:var(--tb-w);height:var(--tb-h);z-index:60;background:var(--bg);border-radius:var(--r-m);box-shadow:0 24px 60px -10px rgba(var(--shadow-ink),.38),0 0 0 1px var(--line);padding:0 0 12px;animation:tbIn .16s ease-out}
+  body.tool-big #tbBar{display:flex;position:sticky;top:0;z-index:2;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  body.tool-big main .tool-main>.tool-panel{margin:10px 12px 0}
+  body.tool-big #tbBtn{background:var(--purple-600);color:#fff;border-color:var(--purple-600)}
+}
+@keyframes tbIn{from{opacity:.4;transform:translateX(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){body.tool-big main .tool-main{animation:none}}
 </style>
 </head>
 <body>
@@ -832,6 +842,7 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
   <div class="dock-tabs" id="dockTabs" role="tablist" aria-label="Side panel">
     <button type="button" class="dock-tab active" id="dockTabTools" role="tab" onclick="dockShow('tools')">Tools</button>
     <button type="button" class="dock-tab" id="dockTabAi" role="tab" onclick="dockShow('ai')"><span data-i18n="dock_ai_tab">✨ AI suggestion</span><span class="dock-dot" id="dockDot" style="display:none"></span></button>
+    <button type="button" class="pop-btn" id="tbBtn" onclick="tbToggle()" title="Make the tool panel bigger while you fill it">⤢</button>
     <button type="button" class="pop-btn" id="popBtn" onclick="popOutTool()" data-i18n="pop_btn" data-i18n-title="pop_btn_title" title="Open this tool in its own window, for a second screen">⧉ Pop out</button>
   </div>
 
@@ -12175,6 +12186,25 @@ function ideaLoad(){
   set('ideaTopic',d.topic);set('ideaResources',d.resources);set('ideaTimeframe',d.timeframe);set('ideaConstraints',d.constraints);
   try{fsIdeaInit();fsIdeaShow()}catch(e){}
 }
+/* ============ The tool panel grows while you fill it (build 2026.11.02g) ============
+   Beside the document the tool panel is narrow. When the student clicks into a box in it, the panel
+   grows over the document's right side (same top, same bottom, right edge fixed) so the boxes are
+   comfortable; a click back in the document, Esc, or "Back to my document" puts it back. */
+function tbOn(){return document.body.classList.contains('tool-big')}
+function tbOpen(){if(!dockOn()||tbOn())return;const m=document.querySelector('main .tool-main');if(!m||getComputedStyle(m).display==='none')return;
+  const r=m.getBoundingClientRect(),dt=document.getElementById('dockTabs'),tr=dt?dt.getBoundingClientRect():r,W=Math.min(780,Math.max(r.width,innerWidth*.58));
+  m.style.setProperty('--tb-top',Math.round(tr.top)+'px');m.style.setProperty('--tb-h',Math.round(r.bottom-tr.top)+'px');m.style.setProperty('--tb-right',Math.round(innerWidth-r.right)+'px');m.style.setProperty('--tb-w',Math.round(W)+'px');
+  let bar=document.getElementById('tbBar');if(!bar){bar=document.createElement('div');bar.id='tbBar';m.prepend(bar)}
+  const hi=studyHi();bar.innerHTML='<span>'+(hi?'भरते समय बड़ा किया गया':'Made bigger while you fill it')+'</span><button type="button" class="btn btn-ghost btn-sm" onclick="tbClose()">↙ '+(hi?'मेरे document पर लौटें':'Back to my document')+'</button>';
+  document.body.classList.add('tool-big')}
+function tbClose(){if(!tbOn())return;document.body.classList.remove('tool-big');try{const a=document.activeElement;if(a&&a.closest&&a.closest('.tool-main'))a.blur()}catch(e){}}
+function tbToggle(){tbOn()?tbClose():(window._tbManual=true,tbOpen())}
+document.addEventListener('focusin',e=>{const t=e.target;if(!t||!t.closest)return;
+  if(t.closest('main .tool-main')){if(t.matches('textarea,input[type=text],input[type=number],input[type=date],input[type=email],select'))tbOpen();return}
+  if(tbOn()&&(t.closest('#editor,.doc-pane,.tool-sidebar')))tbClose()},true);
+document.addEventListener('mousedown',e=>{if(!tbOn())return;const t=e.target;if(t&&t.closest&&(t.closest('main .tool-main')||t.closest('dialog')||t.closest('#dockTabs')||t.closest('#toast')))return;tbClose()},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&tbOn()&&!document.querySelector('dialog[open]'))tbClose()});
+window.addEventListener('resize',()=>{if(tbOn())tbClose()});
 /* ============ Saved, and seen to be saved (build 2026.11.02f) ============
    Boxes save as the student types; a student could not see that. Each box in the Idea tool gets a
    small "Save →" button (Enter does the same, Shift+Enter makes a new line) and a "✓ Saved 10:46"
@@ -16774,7 +16804,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02f';
+const APP_BUILD='2026.11.02g';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
