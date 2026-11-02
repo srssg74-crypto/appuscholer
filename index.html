@@ -654,6 +654,14 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 }
 @keyframes tbIn{from{opacity:.4;transform:translateX(16px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){body.tool-big main .tool-main{animation:none}}
+#subMain textarea,#subMain input[type=text],#subMain input[type=number],#subMain input[type=email]{padding:8px 10px;font-size:14px;line-height:1.5}
+/* study health */
+.hl-card{border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);padding:10px 12px;margin:8px 0}
+.hl-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.hl-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.hl-row:first-of-type{border-top:none}
+.hl-msg{flex:1;min-width:0}
+.hl-row .btn{flex:0 0 auto;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -3473,7 +3481,7 @@ SUB_LOGS.D6=[{key:'interp',t:['Interpretation table','नतीजों के 
 function wGet(o){return(o||studyGet()).write||{}}
 function wSet(part,val){const o=studyGet();o.write=o.write||{};o.write[part]=val;studySet(o);subRenderSide()}
 function wPatch(part,k,v){const o=studyGet();o.write=o.write||{};o.write[part]=Object.assign({},o.write[part]||{},{[k]:v});studySet(o);subRenderSide()}
-function wRedraw(){const m=document.getElementById('subMain');if(m){const y=m.scrollTop;m.innerHTML=subDetailHTML(SUB_CUR.id,studyGet());m.scrollTop=y}subRenderSide()}
+function wRedraw(){const m=document.getElementById('subMain');if(m){const y=m.scrollTop;m.innerHTML=subDetailHTML(SUB_CUR.id,studyGet());m.scrollTop=y;try{fsAuto(m)}catch(e){}}subRenderSide()}
 /* A2: citations in a piece of text, (Author, 2021) or [3] */
 function wCiteCount(t){t=String(t||'');return(t.match(/\([A-Z][^()]{1,80}?,?\s(19|20)\d{2}[a-z]?\)|\[\d+(?:[,–-]\s?\d+)*\]/g)||[]).length}
 function wProblemOk(o){const t=String((wGet(o).A2||{}).text||'').trim();return t.length>=250&&wCiteCount(t)>=2}
@@ -4002,7 +4010,7 @@ function lsIssues(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),d=o.idea|
   }
   return out}
 function lsOk(id,o){return !lsIssues(id,o).length}
-function lsSet(id,k,v){const o=studyGet();o.write=o.write||{};o.write[id]=Object.assign({},o.write[id]||{},{[k]:v});studySet(o);subRenderSide();if(/^(dec|noHyp|assent)$/.test(k)||id==='A4')wRedraw()}
+function lsSet(id,k,v){const o=studyGet();o.write=o.write||{};o.write[id]=Object.assign({},o.write[id]||{},{[k]:v});studySet(o);subRenderSide();lsHeadRefresh(id);if(/^(dec|noHyp|assent)$/.test(k)||id==='A4')wRedraw()}
 function lsHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues(id,o),a=w[id]||{},ta=(k,lab)=>'<label class="desc" style="display:block;margin-top:6px">'+lab+'</label><textarea rows="2" onchange="lsSet(\''+id+'\',\''+k+'\',this.value)">'+escHTML(a[k]||'')+'</textarea>';
   let body='';
   if(id==='A1')body=ta('alt',L('Other topics you considered, and why you chose this one','और कौन-से विषय सोचे, और यही क्यों चुना'));
@@ -4015,7 +4023,10 @@ function lsHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues
   if(id==='F5')body='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();vivaOpen()">🎤 '+L('Open viva practice','Viva अभ्यास खोलें')+'</button></div>';
   if(/^E[2-7]$/.test(id)){const sec=lsSecFor(id);body='<p class="desc" style="margin:4px 0">'+(sec?L('Found in "'+sec.doc+'": '+sec.words+' words.','"'+sec.doc+'" में मिला: '+sec.words+' शब्द।'):L('The app looks for this heading in your documents.','App इस शीर्षक को आपके documents में ढूँढ़ता है।'))+'</p>'}
   const ok=!is.length;
-  return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ '+L('Done','पूरा'):L('Still needed','अभी बाकी'))+'</b>'+(is.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+is.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')+body+'</div>'}
+  return'<div class="sub-box ls-box" data-ls="'+id+'" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><div class="ls-head">'+lsHeadHTML(is)+'</div>'+body+'</div>'}
+function lsHeadHTML(is){const hi=studyHi(),L=(en,x)=>hi?x:en,ok=!is.length;return'<b>'+(ok?'✅ '+L('Done','पूरा'):L('Still needed','अभी बाकी'))+'</b>'+(is.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+is.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')}
+/* After a box saves, only the "Still needed" list is redrawn, so the cursor stays where the student is. */
+function lsHeadRefresh(id){try{const box=document.querySelector('#subMain .ls-box[data-ls="'+id+'"]');if(!box)return;const is=lsIssues(id,studyGet());box.querySelector('.ls-head').innerHTML=lsHeadHTML(is);box.style.borderColor=is.length?'var(--line,#ddd)':'#16a34a'}catch(e){}}
 const LS_IDS=['A1','A3','A4','C1','C2','C6','C10','E2','E3','E4','E5','E6','E7','F5'];
 
 /* ============ Rule packs (build 2026.10.29a) ============
@@ -5482,6 +5493,7 @@ function docSwitch(id){
   setEditorHTML(d?d.body:'');
   try{citStyleRestore();citRender();citRefreshDoc()}catch(e){}
   lastSaved=getEditorHTML();upd();docRenderList();showToast('Opened: '+(d?d.title:'document'));
+  try{setTimeout(hlAutoBook,80)}catch(e){}
 }
 function docNew(){
   docSaveBody(getEditorHTML());
@@ -12212,6 +12224,7 @@ window.addEventListener('resize',()=>{if(tbOn())tbClose()});
 function fsTime(t){try{return new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
 function fsMsgOf(el){const w=el.closest('.fs-wrap');if(w&&w._msg)return w._msg;return null}
 function fsMark(el,msg){if(!el||!el.parentNode)return;const own=fsMsgOf(el);
+  if(!own&&el.closest('.fs-wrap')){const b=el.closest('.fs-wrap').querySelector('.fs-go');if(b){b.classList.add('done');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('done'),1400)}return}
   if(own){own.textContent=msg||('✓ '+(studyHi()?'सहेजा गया':'Saved')+' '+fsTime(Date.now()));const b=el.closest('.fs-wrap').querySelector('.fs-go');if(b){b.classList.add('done');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('done'),1400)}return}
   let m=el.nextElementSibling&&el.nextElementSibling.classList&&el.nextElementSibling.classList.contains('fs-tick')?el.nextElementSibling:null;
   if(!m){m=document.createElement('span');m.className='fs-tick';el.insertAdjacentElement('afterend',m)}
@@ -12226,6 +12239,23 @@ function fsAddSave(id,fn){const el=document.getElementById(id);if(!el||el._fs)re
   const go=()=>{try{fn()}catch(e){}fsMark(el);el.blur()};
   b.onclick=go;
   el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();go()}})}
+/* The same save arrow on every box in the steps window that saves itself (not table cells, not the
+   search or action boxes). Single-line boxes save on Enter; longer boxes keep Enter for a new line and
+   save on the arrow or Ctrl+Enter. The box's own change handler does the saving. */
+function fsAuto(root){if(!root)return;const hi=studyHi();
+  root.querySelectorAll('textarea[onchange],textarea[oninput],input[type=text][onchange],input[type=text][oninput],input[type=number][onchange],input[type=email][onchange]').forEach(el=>{
+    if(el._fs||el.closest('table,.fs-wrap'))return;
+    el._fs=1;const w=document.createElement('div');w.className='fs-wrap'+(el.tagName==='INPUT'?' fs-one':'');el.parentNode.insertBefore(w,el);w.appendChild(el);
+    const multi=el.tagName==='TEXTAREA',b=document.createElement('button');b.type='button';b.className='fs-go';b.tabIndex=-1;
+    b.title=multi?(hi?'सहेजें (Ctrl+Enter)':'Save (Ctrl+Enter)'):(hi?'सहेजें (Enter)':'Save (Enter)');b.setAttribute('aria-label',b.title);
+    b.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg><svg class="fs-ok" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    w.appendChild(b);
+    const go=()=>{b.classList.add('done');setTimeout(()=>b.classList.remove('done'),1400);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));try{el.blur()}catch(e){}};
+    b.addEventListener('mousedown',e=>e.preventDefault());b.onclick=go;
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing&&((!multi&&!e.shiftKey)||(multi&&(e.ctrlKey||e.metaKey)))){e.preventDefault();go()}})})}
+(function(){const start=()=>{const d=document.getElementById('subDlg');if(!d){setTimeout(start,150);return}let t=0;
+  new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>{try{fsAuto(document.getElementById('subMain'))}catch(e){}},30)}).observe(d,{childList:true,subtree:true});try{fsAuto(document.getElementById('subMain'))}catch(e){}};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else setTimeout(start,0)})();
 function fsIdeaInit(){['ideaTopic','ideaResources','ideaTimeframe','ideaConstraints'].forEach(id=>fsAddSave(id,ideaSave));fsIdeaShow()}
 function fsIdeaShow(){let at=0;try{at=(studyGet().idea||{}).savedAt||0}catch(e){}const hi=studyHi();
   ['ideaTopic','ideaResources','ideaTimeframe','ideaConstraints'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const m=fsMsgOf(el);if(!m)return;
@@ -16573,6 +16603,46 @@ function bbFillFromSteps(){const hi=studyHi(),o=studyGet();let book=bbBookId(o);
     wrap.setAttribute('data-gen',bbHash(wrap.textContent));put++});
   try{bbRenumber()}catch(e){}try{docSaveBody(getEditorHTML());upd()}catch(e){}try{bbOutlineRender()}catch(e){}
   showToast(hi?put+' sections में आपके steps से draft डाला'+(kept?'; '+kept+' जिन्हें आपने बदला था, वैसे ही रहे':'')+' ✓':'Drafts from your steps put in '+put+' sections'+(kept?'; '+kept+' you had edited were left as they are':'')+' ✓')}
+/* ============ Study health (build 2026.11.02h) ============
+   One place that says what needs a look, each with the one button that fixes it. Checks that already
+   existed in separate tools (book check, stale results, retractions, synopsis gaps) are pulled together
+   here, plus three that guard against this app's own weak points: work kept only in this browser
+   (backup age), a step marked done that the app's own check disagrees with, and no AI key.
+   Housekeeping that cannot hurt runs by itself: opening the book refreshes untouched drafts. */
+function hlBookDiv(o){const book=bbBookId(o);if(!book)return null;const div=document.createElement('div');const d=bbIsBook()?{body:getEditorHTML()}:docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||'';return div}
+function hlItems(o){o=o||studyGet();const hi=studyHi(),L=(en,x)=>hi?x:en,out=[],add=(sev,msg,lab,act)=>out.push({sev:sev,msg:msg,lab:lab,act:act});
+  if(!getActiveProjectId())return out;
+  /* 1 work kept only here */
+  let docs=0;try{docs=docsGet().filter(d=>String(d.body||'').replace(/<[^>]+>/g,'').trim().length>40).length}catch(e){}
+  const bl=backupLast(),age=bl?Math.floor((Date.now()-bl)/864e5):-1;
+  if(docs&&(age<0||age>=7))add('fix',age<0?L('Your work is kept only in this browser and has never been backed up.','आपका काम सिर्फ़ इसी browser में है और इसका कभी backup नहीं लिया गया।'):L('Last backup was '+age+' days ago. Your work is kept only in this browser.','पिछला backup '+age+' दिन पहले लिया था। आपका काम सिर्फ़ इसी browser में है।'),L('Download backup','Backup download करें'),'backupExport()');
+  /* 2 no AI key */
+  let key=false;try{key=PROV_ORDER.some(provHasKey)}catch(e){}
+  if(!key)add('info',L('AI is not turned on yet.','AI अभी चालू नहीं है।'),L('Turn on free AI','मुफ़्त AI चालू करें'),'keyWizOpen()');
+  /* 3 steps marked done that the app's own check disagrees with */
+  SUBSTAGES.forEach(x=>{const id=x[0],r=(o.sub||{})[id];if(!r||r.s!=='dn'||id==='C9')return;let auto=null;try{auto=subAuto(id,o)}catch(e){}if(auto!==false)return;
+    let why='';try{if(LS_IDS.indexOf(id)>=0){const is=lsIssues(id,o);if(!is.length)return;why=is[0]}}catch(e){}
+    add('fix',L(id+' is marked done, but the app still finds it incomplete'+(why?': '+why:'')+'.',id+' पूरा लिखा है, पर app को अभी कमी दिखती है'+(why?': '+why:'')+'।'),L('Open '+id,id+' खोलें'),"subOpen('"+x[1]+"','"+id+"')")});
+  /* 4 synopsis gaps */
+  const g=synGaps(o);if(g>0)add('todo',L(g+' yellow gap'+(g===1?'':'s')+' left in the synopsis.','Synopsis में '+g+' पीली जगहें बाक़ी।'),L('Next gap','अगली जगह'),'synOpen();setTimeout(synNextGap,400)');
+  /* 5 results written from data that has changed since */
+  const div=hlBookDiv(o);
+  if(div){const runs=rtLoad('appu_statruns'),sets=rtLoad('appu_statsets');let st=0;div.querySelectorAll('.stat-tag[data-run]').forEach(el=>{const r=runs[el.getAttribute('data-run')];if(r&&sets[r.ds]&&sets[r.ds].hash!==r.hash)st++});
+    if(st)add('fix',L(st+' result'+(st===1?' in the book was':'s in the book were')+' worked out on data that has changed since.','किताब के '+st+' नतीजे ऐसे data से निकले थे जो बाद में बदल गया।'),L('Run them again','दोबारा चलाएँ'),"docSwitch(bbBookId());rtOpen()")}
+  /* 6 retracted sources in the library */
+  try{const c=retrCacheGet(),n=citGetLib().filter(d=>{const k=retrNormDoi(d.doi);return k&&c[k]&&c[k].r}).length;if(n)add('fix',L(n+' source'+(n===1?' in your library is':'s in your library are')+' marked as retracted.',n+' source retracted लिखे गए हैं।'),L('Show','दिखाएँ'),"showTool('cite')")}catch(e){}
+  /* 7 the book check's own fixes */
+  if(div){let f=[];try{f=bbCheck().filter(x=>x.sev==='fix')}catch(e){}if(f.length)add('fix',L(f.length+' thing'+(f.length===1?'':'s')+' to fix in the book, first: ','किताब में '+f.length+' चीज़ें ठीक करनी हैं, पहली: ')+f[0].msg.replace(/<[^>]+>/g,''),L('Check the book','किताब जाँचें'),"docSwitch(bbBookId());bbCheckOpen()")}
+  const rank={fix:0,todo:1,info:2};return out.sort((a,b)=>rank[a.sev]-rank[b.sev])}
+function hlHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,it=hlItems(o);if(!getActiveProjectId())return'';
+  const ico={fix:'⚠️',todo:'🟡',info:'ℹ️'};
+  return'<div class="hl-card"><div class="hl-head"><b>'+L('Study health','Study की सेहत')+'</b><span class="desc">'+(it.length?L(it.length+' need'+(it.length===1?'s':'')+' a look',it.length+' पर नज़र डालें'):L('Nothing needs a look ✓','सब ठीक ✓'))+'</span></div>'+
+   it.slice(0,6).map(x=>'<div class="hl-row"><span aria-hidden="true">'+ico[x.sev]+'</span><span class="hl-msg">'+escHTML(x.msg)+'</span><button type="button" class="btn btn-ghost btn-sm" onclick="'+escAttr(x.act)+'">'+escHTML(x.lab)+'</button></div>').join('')+
+   (it.length>6?'<p class="desc" style="margin:4px 0 0">+'+(it.length-6)+'</p>':'')+'</div>'}
+/* Opening the book refreshes the drafts the student has not touched (edited ones are kept). */
+function hlAutoBook(){try{const b=bbBookId();if(!b||docCurrentId()!==b||window._hlAutoAt&&Date.now()-window._hlAutoAt<60000)return;window._hlAutoAt=Date.now();
+  const before=getEditorHTML();const t=window.showToast;window.showToast=()=>{};try{bbFillFromSteps()}finally{window.showToast=t}
+  if(getEditorHTML()!==before)showToast(studyHi()?'किताब के अनछुए drafts आपके steps से ताज़ा किए ✓':'Untouched drafts in the book refreshed from your steps ✓')}catch(e){}}
 /* ---- outline, like PDF bookmarks ---- */
 function bbOutlineToggle(){const d=document.getElementById('bbOutline');if(!d)return;const on=d.style.display==='none';d.style.display=on?'block':'none';try{LS.set('appu_bb_out',on?'1':'')}catch(e){}if(on)bbOutlineRender()}
 function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!box||box.style.display==='none')return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),book=bbBookId();
@@ -16587,7 +16657,7 @@ function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!bo
   box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><span><a href="#" class="desc" onclick="bbFillFromSteps();return false">↧ '+L('Fill from my steps','मेरे steps से भरें')+'</a> · <a href="#" class="desc" onclick="bbCheckOpen();return false">✓ '+L('Check the book','किताब जाँचें')+'</a> · <a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></span></div>'+
    (flds.length?'<div class="desc" style="margin:4px 0">'+L('Linked number at the cursor:','Cursor पर जुड़ी हुई संख्या:')+' '+flds.map(f=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(hi?f[1][1]:f[1][0])+'" onmousedown="event.preventDefault()" onclick="bbFieldInsert(\''+f[0]+'\')">'+escHTML((hi?f[1][1]:f[1][0]).split(' (')[0])+' = '+escHTML(bbFieldVal(f[0],o))+'</button>').join(' ')+'</div>':'')+
    (isB&&xrCaps().length?'<div class="desc" style="margin:4px 0">'+L('Refer to a table or figure at the cursor:','Cursor पर table या figure का हवाला:')+' '+xrCaps().map(c=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(xrTitle(c))+'" onmousedown="event.preventDefault()" onclick="xrInsert(\''+c.getAttribute('data-capid')+'\')">'+escHTML(xrLabel(c))+'</button>').join(' ')+'</div>':'')+
-   nfyHTML(o)+
+   hlHTML(o)+nfyHTML(o)+
    (isB?'':'<button type="button" class="btn btn-purple btn-sm" style="margin:6px 0" onclick="docSwitch(\''+book+'\');bbOutlineRender()">'+L('Open the book','किताब खोलें')+'</button>')+
    '<div class="bb-list">'+rows+'</div>'+
    (missing.length?'<p class="desc" style="margin:8px 0 2px;color:#b45309">'+L('In your plan but not in the book:','योजना में है, किताब में नहीं:')+'</p>'+missing.slice(0,12).map(x=>'<div class="row" style="gap:6px;align-items:center;font-size:13px"><span>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</span>'+(isB?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbAddMissing(\''+x.n.id+'\')">+ '+L('Add','जोड़ें')+'</button>':'')+'</div>').join('')+(missing.length>12?'<p class="desc">+'+(missing.length-12)+'</p>':''):'')}
@@ -16782,7 +16852,7 @@ function apHomeRender(){
    +'<button type="button" class="hm-edit" onclick="apMeEdit()">'+escHTML(ht('edit'))+'</button>'
    +'<div class="hm-kv"><span>'+escHTML(ht('working'))+'</span><div>'+escHTML(active?active.name:ht('noproj'))+'</div><span>'+escHTML(ht('stage'))+'</span><div>'+escHTML(stNow?((STAGES.indexOf(stNow)+1)+' · '+stageLabel(stNow)):'-')+'</div>'
    +'<span>'+escHTML(ht('docs'))+'</span><div>'+docs+' &nbsp;·&nbsp; '+escHTML(ht('sources'))+' '+src+'</div><span>'+escHTML(ht('lang'))+'</span><div><a onclick="toggleLang()">'+(lang==='hi'?'हिंदी · English':'English · हिंदी')+'</a></div></div>'+cards+'</div>'
-   +'<div class="hm-main">'+apHomeTrain()+fdHomeHTML()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
+   +'<div class="hm-main">'+(active?(function(){try{return hlHTML()}catch(e){return''}})():'')+apHomeTrain()+fdHomeHTML()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
    +'<h3>'+escHTML(ht('h_learn'))+'</h3><p class="hm-hint">'+escHTML(ht('p_learn'))+'</p><div class="hm-grid">'+lt('lec','lectures','lectures_d','apHomeLectures()')+lt('paper','paper','paper_d',"apGoTool('analyse')")+lt('words','words','words_d',"apGoTool('words')")+'</div>'
    +'<div class="hm-foot"><button type="button" onclick="apGoTool(\'chat\')">'+escHTML(ht('ask'))+'</button>'+(apIsTrainee()?'':'<button type="button" id="hmTrecBtn" onclick="trOpen()">'+escHTML(ht('trec'))+'</button>')+'<button type="button" onclick="openProjectsDlg()">'+escHTML(ht('projects'))+'</button><button type="button" onclick="backupExport()">'+escHTML(ht('backup'))+'</button><button type="button" onclick="openSettings()">'+escHTML(ht('settings'))+'</button><button type="button" onclick="openHelp()">'+escHTML(ht('help'))+'</button></div></div>';
   try{apStageBarRender()}catch(e){}
@@ -16804,7 +16874,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02g';
+const APP_BUILD='2026.11.02h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
