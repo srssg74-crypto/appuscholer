@@ -18,8 +18,8 @@ with sync_playwright() as p:
     for s in ['A1','A3','A4','C1','C2','C6','C10','E2','E3','E4','E5','E6','E7','F5']:
         ok(J("subState('%s').s"%s)!='dn','%s not done on an empty study'%s)
     J("subOpen('idea','A1')"); t=J("document.getElementById('subMain').innerText")
-    ok('Still needed' in t and 'other topics' in t,'A1 page lists what is missing')
-    J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in college students'};studySet(o);lsSet('A1','alt','Social media and loneliness; dropped because school access was uncertain.')")
+    ok('Still needed' in t and 'two other topics' in t,'A1 page lists what is missing')
+    J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in college students'};studySet(o);lsSet('A1','p',{p:{who:'first-year nursing students',what:'exam anxiety',where:'two colleges in Pune'},alt1:'phone use and sleep',alt2:'loneliness in hostels',why:'I can reach these students through my supervisor, and the scale is free.'}.p);lsSet('A1','alt1','phone use');lsSet('A1','alt2','loneliness');lsSet('A1','why','I can reach these students and the scale is free to use.')")
     ok(J("subState('A1').s")=='dn','A1 done with topic and alternatives')
     J("lsSet('A3','aim','To find whether sleep hours relate to exam anxiety.');lsSet('A3','q','Do fewer sleep hours go with more anxiety?')")
     ok(J("subState('A3').s")!='dn','A3 needs hypotheses or the exploratory tick')
