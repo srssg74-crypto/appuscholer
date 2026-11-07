@@ -71,7 +71,7 @@ with sync_playwright() as p:
     fill('#ideaResources', 'Two colleges agreed; about 150 first-year students reachable in class; Google Forms or the app form; supervisor available weekly.')
     fill('#ideaTimeframe', 'Five months, by March')
     step('idea', 'A1')
-    fill("#subMain textarea[onchange*=\"'alt'\"],#subMain textarea[oninput*=\"'alt'\"]", 'I also considered phone use and sleep, and loneliness in hostels. I chose exam anxiety because the colleges asked for it and the GAD-7 is free.')
+    J("(()=>{const A={p:{who:'first-year nursing students',what:'exam anxiety',where:'two colleges in Pune'},alt1:'phone use and sleep',alt2:'loneliness in hostels',why:'I can reach these students through my supervisor, and the scale is free.'};a1Set('who',A.p.who);a1Set('what',A.p.what);a1Set('where',A.p.where);lsSet('A1','alt1',A.alt1);lsSet('A1','alt2',A.alt2);lsSet('A1','why',A.why)})()")
     step('idea', 'A1'); ok(state('A1') == 'dn' or 'Still needed' not in needed(), 'A1 complete after topic and alternatives: ' + needed()[:120])
     step('idea', 'A2')
     ta = J("[...document.querySelectorAll('#subMain textarea')].map(t=>(t.getAttribute('onchange')||t.getAttribute('oninput')||'').slice(0,40))")
