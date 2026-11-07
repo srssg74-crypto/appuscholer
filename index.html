@@ -17,7 +17,7 @@
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
     --purple-600:#6d28d9; --purple-500:#7c3aed; --purple-100:#ede9fe;
     --gold:#c9932e; --gold-bright:#f0ad3f;
-    --bg:#fbfaf9; --card:#ffffff; --ink:#2a2438; --muted:#787288;
+    --bg:#fbfaf9; --card:#ffffff; --ink:#2a2438; --muted:#625c78;
     --line:#ece8f2; --soft:#f8f6fc; --soft2:#faf9fd; --chip:#f4f3f6; --chipline:#ddd9e4;
     --head-title:#4c1d95; --dashed:#cdbdf0; --accent-ink:#5b21b6;
     --shadow-ink:17,12,34; --blob-a:rgba(124,58,237,.17); --blob-b:rgba(201,147,46,.22); --dot:rgba(91,33,182,.09);
@@ -289,7 +289,7 @@
   .dlg-body a{color:var(--purple-500);font-weight:700}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:26px;letter-spacing:.4px}
   .toast[popover]{inset:auto auto 24px 50%;margin:0;border:0;overflow:visible}
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--purple-900);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:50;max-width:92vw;text-align:center}
+  .toast{position:fixed;bottom:auto;top:16px;left:50%;transform:translateX(-50%);background:var(--purple-900);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:50;max-width:92vw;text-align:center}
   kbd{background:var(--chip);border:1px solid var(--chipline);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--ink)}
   .fld{margin-bottom:8px}
   .fld label{display:block;font-size:11px;font-weight:700;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
@@ -686,6 +686,13 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 .sub-dlg.sub-docked,.sub-dlg.sub-docked[open]{width:min(440px,42vw);right:auto;left:0;top:0;border-right:1px solid var(--ctl-line,#A9A3BA);box-shadow:6px 0 24px rgba(0,0,0,.12);z-index:60}
 .sub-dlg.sub-docked .sub-head,.sub-dlg.sub-docked .sub-list{display:none}.sub-dlg.sub-docked .sub-dockbar{display:flex}.sub-dlg.sub-docked .sub-body{grid-template-columns:1fr}
 .a1-docked-note{display:none}body.sub-docked-on{padding-left:min(440px,42vw)}
+/* ui quick wins 2026.11.02q: links, dark rows, dark warnings, touch size, picker */
+a:not([class]){color:var(--accent-ink)}
+:root[data-theme="dark"] .sub-item.on{background:#3a2d5e;color:#fff}
+:root[data-theme="dark"] [style*="#b45309"],:root[data-theme="dark"] .ls-head ul{color:#fdba74!important}
+#docSel{min-width:140px}
+@media(pointer:coarse){.tool-tab,.fmt-btn,.icon-btn,.stagebar button,.sub-item,.sub-tab{min-height:44px}.fmt-btn,.icon-btn{min-width:44px}}
+
 #subWork{background:#fff;border:2px solid #4B2E83;border-radius:10px;padding:10px 12px;margin:0 0 12px}#subWork .sw-t{font:700 13px system-ui;color:#4B2E83;margin-bottom:6px}#subWork .ls-box{border:0;padding:0;margin:0}#subWork .a1-grid{grid-template-columns:repeat(3,1fr)}#subWork .a1-two{grid-template-columns:repeat(2,1fr)}
 #subWork textarea{width:100%;min-height:72px;box-sizing:border-box}.sub-dlg.sub-docked #subMain>.row .btn-purple,.sub-dlg.sub-docked .sub-main>.row .btn-purple{display:none}
 .dock-guide{background:#fff;border:1px dashed #4B2E83;border-radius:8px;padding:8px 10px;margin:8px 0 0}
@@ -3362,7 +3369,8 @@ const SUB_SRC_CHECKED={_:'2026-10-27',F2:'2026-10-31',B1:'2026-10-31',B4:'2026-1
 function subSrcAge(id,now){const d=SUB_SRC_CHECKED[id]||SUB_SRC_CHECKED._,hi=studyHi(),t=new Date(d+'T00:00:00'),age=((now||Date.now())-t.getTime())/864e5,f=t.toLocaleDateString(hi?'hi-IN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   return' · '+(hi?'आख़िरी जाँच: ':'last checked: ')+f+(age>365?' <span style="color:#b45309">⚠️ '+(hi?'एक साल से पुरानी जाँच; नया version देखें':'checked over a year ago; look for a newer version')+'</span>':'')}
 const SUB_TOOL_LABEL={idea:['Open the Idea and Feasibility tool (AI feedback on your topic)','Idea और Feasibility tool खोलें (आपके विषय पर AI की राय)'],research:['Open paper search','Papers की खोज खोलें'],analyse:['Open the paper analysis tool','Paper analysis tool खोलें'],cite:['Open the Citation manager','Citation manager खोलें'],stats:['Open the Statistics lab','Statistics lab खोलें'],design:['Open the Design and Ethics tools','Design और Ethics tools खोलें'],qual:['Open qualitative coding','Qualitative coding खोलें'],slides:['Open the slides tool','Slides tool खोलें'],close:['Open the final checks','अंतिम जाँचें खोलें'],'@gapDlgOpen()':['Open the research gap finder','Research gap finder खोलें'],'@spOpen()':['Open the study plan','Study plan खोलें'],'@qnOpen()':['Open the questionnaire maker','Questionnaire maker खोलें'],'@ecOpen()':['Open the consent form maker','Consent form maker खोलें'],'@sfOpen()':['Open the secure form','Secure form खोलें'],'@statsOpen()':['Open the Statistics lab','Statistics lab खोलें'],'@bpOpen()':['Open the book plan','Book plan खोलें']};
-function subToolLabel(k){return SUB_TOOL_LABEL[k]||['Open the tool for this step','इस step का tool खोलें']}
+const SUB_STEP_BTN={A1:['Ask AI to check my topic','AI से मेरा विषय जँचवाएँ'],A2:['Ask AI to check my problem statement','AI से मेरा समस्या-कथन जँचवाएँ'],A3:['Ask AI to check my question and aim','AI से मेरा सवाल और उद्देश्य जँचवाएँ'],A4:['Ask AI for a go or stop opinion','AI से आगे बढ़ें या रुकें, राय लें']};
+function subToolLabel(k,id){if(id&&SUB_STEP_BTN[id]&&k==='idea')return SUB_STEP_BTN[id];return SUB_TOOL_LABEL[k]||['Open the tool for this step','इस step का tool खोलें']}
 /* A page-panel tool opens beside the step: the step stays on the left (instructions and what is still needed), the tool on the right. On a phone the tool takes the screen and a pill brings the step back. */
 let SUB_DOCK_ON=false;
 function subWorkRemove(){const w=document.getElementById('subWork');if(w)w.remove()}
@@ -3384,7 +3392,7 @@ function subDetailHTML(id,o){const hi=studyHi(),x=SUBSTAGES.find(y=>y[0]===id);i
   if(LS_IDS.indexOf(id)<0)h+='<div class="sub-box"><b>'+(hi?'आगे बढ़ने से पहले जाँच':'Check before moving on')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[4]))+'</p><p class="desc" style="margin:6px 0 0">'+(hi?'स्रोत: ':'Source: ')+escHTML(x[5])+subSrcAge(x[0])+'</p></div>';
   if(id==='C9')return h+ethicsFormHTML(o);
   try{h+=subExtraHTML(id,o)}catch(e){}
-  if(x[6]){const dock=x[6].charAt(0)!=='@',act=dock?"showTool('"+x[6]+"')":x[6].slice(1),lab=subToolLabel(x[6]);h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="'+(dock?'subDock(\''+x[6]+'\')':"document.getElementById('subDlg').close();"+escAttr(act))+'">'+escHTML(hi?lab[1]:lab[0])+' →</button></div>'}
+  if(x[6]){const dock=x[6].charAt(0)!=='@',act=dock?"showTool('"+x[6]+"')":x[6].slice(1),lab=subToolLabel(x[6],id);h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="'+(dock?'subDock(\''+x[6]+'\')':"document.getElementById('subDlg').close();"+escAttr(act))+'">'+escHTML(hi?lab[1]:lab[0])+' →</button></div>'}
   h+='<div class="sub-box"><b>'+(hi?'Status':'Status')+'</b>'+(st.auto?'<p class="desc" style="margin:4px 0">'+(hi?'App को आपकी study में यह भरा मिला, इसलिए "पूरा" दिखा रहा है। आप बदल सकते हैं।':'The app found this filled in your study, so it shows Done. You can change it.')+'</p>':'')+
    '<select id="subSel" onchange="subStatusPick(\''+id+'\',this.value)">'+SUB_STATUS.filter(s=>s[0]!=='ap').map(s=>'<option value="'+s[0]+'"'+(s[0]===st.s?' selected':'')+'>'+SUB_ICON[s[0]]+' '+(hi?s[2]:s[1])+'</option>').join('')+'</select>'+
    '<div id="subWhyBox" style="margin-top:8px;'+(st.s==='na'?'':'display:none')+'"><label class="desc">'+(hi?'यह कदम लागू क्यों नहीं? (ज़रूरी, supervisor देख सकेंगे)':'Why does this step not apply? (required; your supervisor can see it)')+'</label><textarea id="subWhy" rows="2" onchange="subSet(\''+id+'\',{why:this.value})">'+escHTML(rec.why||'')+'</textarea></div>'+
@@ -5254,7 +5262,7 @@ function saveAsProject(){
     showToast(t('toast_saved_as')+name);
     document.getElementById('saveAsProjectDlg').close();
     /* a fresh project opens the tool of its own stage, so the stage bar and the panel agree */
-    if(window._sapFresh){try{const tl=STAGE_FIRST_TOOL[stage];if(tl){window._apHomeLock=0;showTool(tl)}}catch(e){}}
+    try{const tl=STAGE_FIRST_TOOL[stage];if(tl){window._apHomeLock=0;showTool(tl)}}catch(e){}
     stageIntroShow(stage);
     return;
   }
@@ -17331,7 +17339,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02p';
+const APP_BUILD='2026.11.02q';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
