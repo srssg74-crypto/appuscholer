@@ -24,6 +24,7 @@ with sync_playwright() as p:
     ok(w>=1300 and J("Math.abs(document.getElementById('subDlg').getBoundingClientRect().bottom-innerHeight)<3"),'the step is a task bar along the bottom (%d wide)'%w)
     ok(J("document.body.classList.contains('sub-docked-on')"),'the page makes room for it')
     ok(J("!!document.getElementById('ideaTopic') && document.getElementById('ideaTopic').getBoundingClientRect().width>600"),'the Idea tool gets the full width')
+    ok(J("document.querySelectorAll('#tbFlow .tb-n').length")==5 and 'Topic' in J("document.getElementById('tbFlow').innerText"),'the flow strip is in the bar')
     ok('Who' in J("document.getElementById('tbChips').innerText"),'what is still needed stays in the bar')
     J("subUndock()"); pg.wait_for_timeout(300)
     ok(J("document.getElementById('subDlg').matches(':modal') && !document.getElementById('subDlg').classList.contains('sub-docked')"),'All steps goes back to the full view')

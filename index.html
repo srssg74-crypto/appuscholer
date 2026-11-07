@@ -289,6 +289,7 @@
   .dlg-body a{color:var(--purple-500);font-weight:700}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:26px;letter-spacing:.4px}
   .toast[popover]{inset:auto auto 24px 50%;margin:0;border:0;overflow:visible}
+  .toast[popover]{inset:16px auto auto 50%;margin:0;height:fit-content}
   .toast{position:fixed;bottom:auto;top:16px;left:50%;transform:translateX(-50%);background:var(--purple-900);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:50;max-width:92vw;text-align:center}
   kbd{background:var(--chip);border:1px solid var(--chipline);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--ink)}
   .fld{margin-bottom:8px}
@@ -688,8 +689,12 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 .a1-docked-note{display:none}body.sub-docked-on{padding-left:min(440px,42vw)}
 /* bottom task bar replaces the left dock (2026.11.02s) */
 .sub-dlg.sub-docked,.sub-dlg.sub-docked[open]{position:fixed!important;margin:0!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100vw!important;max-width:100vw!important;height:auto!important;max-height:none!important;border:0!important;border-top:4px solid #E8A317!important;background:#FFF6E0;box-shadow:0 -8px 28px rgba(0,0,0,.18)}
-body.sub-docked-on{padding-left:0!important;padding-bottom:76px}
+body.sub-docked-on{padding-left:0!important;padding-bottom:112px}
 #subWork .ls-head{display:none}
+.tb-flow{display:flex;align-items:center;gap:0;padding:8px 18px 0;overflow-x:auto}.tb-n{display:flex;align-items:center;gap:6px;background:none;border:0;font:inherit;color:#2a1a00;cursor:pointer;padding:2px 4px;white-space:nowrap}.tb-n:not(:last-child)::after{content:'';width:26px;height:2px;background:#e6c98a;margin-left:6px}.tb-n.done:not(:last-child)::after{background:#6d28d9}
+.tb-c{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 11.5px system-ui;border:2px solid #d9b866;background:#fff;color:#7a4b00}.tb-n.done .tb-c{background:#6d28d9;border-color:#6d28d9;color:#fff}.tb-n.cur .tb-c{border-color:#c27800;box-shadow:0 0 0 3px rgba(240,173,63,.45);color:#2a1a00}.tb-n.cur .tb-nl{font-weight:800}.tb-nl{font-size:13px}
+.tb-d{cursor:default}.tb-d .tb-c{border-radius:6px}.tb-d.ready .tb-c{background:#fff8ea;border-color:#c27800}.tb-d.set .tb-c{background:#6d28d9;border-color:#6d28d9;color:#fff}.tb-d::before{content:'';width:0;border-left:2px dashed #d9b866;height:18px;margin-right:6px}
+
 .sub-taskbar{position:relative}.tb-row{display:flex;align-items:center;gap:14px;padding:10px 18px;flex-wrap:wrap}.tb-title{display:flex;flex-direction:column;min-width:200px}.tb-k{font:700 10.5px system-ui;letter-spacing:.08em;text-transform:uppercase;color:#7a4b00}.tb-title b{font-size:15px;color:#2a1a00}
 .tb-chips{flex:1;display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-width:0}.tb-chip{font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid #cfc8de;background:#fff;color:#2a2233}.tb-chip.no{background:#fff3e0;border-color:#f3cf99;color:#7a3e00}.tb-chip.ok{background:#e6f4ea;border-color:#b7dfc2;color:#14532d;font-weight:700}
 .tb-act{display:flex;gap:6px;align-items:center}.tb-act .btn{background:#fff}.tb-act .btn-purple{background:#6d28d9;color:#fff}
@@ -3405,11 +3410,18 @@ const SUB_TOOL_LABEL={idea:['Open the Idea and Feasibility tool (AI feedback on 
 const SUB_STEP_BTN={A1:['Ask AI to check my topic','AI से मेरा विषय जँचवाएँ'],A2:['Ask AI to check my problem statement','AI से मेरा समस्या-कथन जँचवाएँ'],A3:['Ask AI to check my question and aim','AI से मेरा सवाल और उद्देश्य जँचवाएँ'],A4:['Ask AI for a go or stop opinion','AI से आगे बढ़ें या रुकें, राय लें']};
 function subToolLabel(k,id){if(id&&SUB_STEP_BTN[id]&&k==='idea')return SUB_STEP_BTN[id];return SUB_TOOL_LABEL[k]||['Open the tool for this step','इस step का tool खोलें']}
 /* A page-panel tool opens beside the step: the step stays on the left (instructions and what is still needed), the tool on the right. On a phone the tool takes the screen and a pill brings the step back. */
+function tbFlowHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,cur=SUB_CUR.id,dec=((wGet(o).A4)||{}).dec,c=a4Counts(o);
+  const nodes=S1_FLOW.map((n,i)=>{const done=['dn','na','ap'].includes(subState(n[0],o).s);return'<button type="button" class="tb-n'+(done?' done':'')+(n[0]===cur?' cur':'')+'" onclick="tbGo(\''+n[0]+'\')"><span class="tb-c">'+(done?'✓':(i+1))+'</span><span class="tb-nl">'+escHTML(n[1][hi?1:0])+'</span></button>'}).join('');
+  const lbl=dec?({go:L('Go ahead','आगे बढ़ें'),revise:L('Revise','बदलें'),new:L('New topic','नया विषय'),stop:L('Stop','रुकें')})[dec]:L('Decision','फ़ैसला');
+  return nodes+'<span class="tb-n tb-d'+(dec?' set':(c.left===0?' ready':''))+'"><span class="tb-c">⚑</span><span class="tb-nl">'+escHTML(lbl)+'</span></span>'}
+function tbGo(id){SUB_CUR.id=id;subRender();subWorkAdd()}
+function tbFlowRefresh(){const f=document.getElementById('tbFlow');if(!f)return;const t=document.createElement('div');t.innerHTML=tbFlowHTML(studyGet());[...f.children].forEach((el,i)=>{const nw=t.children[i];if(!nw)return;el.className=nw.className;[...el.children].forEach((c,j)=>{if(nw.children[j]&&c.textContent!==nw.children[j].textContent)c.textContent=nw.children[j].textContent})})}
 /* Task bar (build 2026.11.02s): while a tool is open the step shrinks to one bar at the bottom, so the tool gets the whole width. */
 function subTaskbarHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,id=SUB_CUR.id,x=SUBSTAGES.find(y=>y[0]===id)||[id,'',['',''],['',''],['',''],'',''],isLs=LS_IDS.includes(id),is=isLs?lsIssues(id,o):[],st=subState(id,o).s,done=['dn','na','ap'].includes(st);
   const chips=isLs?(done||!is.length?'<span class="tb-chip ok">✓ '+L('Done','पूरा')+'</span>':is.slice(0,2).map(t=>'<span class="tb-chip no">'+escHTML(t.length>44?t.slice(0,42)+'…':t)+'</span>').join('')+(is.length>2?'<span class="tb-chip">+'+(is.length-2)+' '+L('more','और')+'</span>':'')):(done?'<span class="tb-chip ok">✓ '+L('Done','पूरा')+'</span>':'');
   const mark=!isLs&&!done?'<button type="button" class="btn btn-purple btn-sm" onclick="subStatusPick(\''+id+'\',\'dn\')">'+L('Mark done','पूरा हुआ')+'</button>':'';
-  return'<div class="sub-taskbar"><div id="tbHow" class="tb-how" hidden><b>'+escHTML(id+' · '+subL(x[2]))+'</b><p>'+escHTML(subL(x[3]))+'</p></div><div class="tb-row"><div class="tb-title"><span class="tb-k">'+L('Your step','आपका step')+'</span><b>'+escHTML(id+' · '+subL(x[2]))+'</b></div><div class="tb-chips" id="tbChips">'+chips+'</div><div class="tb-act"><button type="button" class="btn btn-ghost btn-sm" onclick="var h=document.getElementById(\'tbHow\');h.hidden=!h.hidden">ⓘ '+L('How to fill','कैसे भरें')+'</button>'+mark+'<button type="button" class="btn btn-ghost btn-sm" onclick="subUndock()">↔ '+L('All steps','सभी steps')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()" aria-label="Close">✕</button></div></div></div>'}
+  const flow=SUB_CUR.stage==='idea'?'<div class="tb-flow" id="tbFlow">'+tbFlowHTML(o)+'</div>':'';
+  return'<div class="sub-taskbar"><div id="tbHow" class="tb-how" hidden><b>'+escHTML(id+' · '+subL(x[2]))+'</b><p>'+escHTML(subL(x[3]))+'</p></div>'+flow+'<div class="tb-row"><div class="tb-title"><span class="tb-k">'+L('Your step','आपका step')+'</span><b>'+escHTML(id+' · '+subL(x[2]))+'</b></div><div class="tb-chips" id="tbChips">'+chips+'</div><div class="tb-act"><button type="button" class="btn btn-ghost btn-sm" onclick="var h=document.getElementById(\'tbHow\');h.hidden=!h.hidden">ⓘ '+L('How to fill','कैसे भरें')+'</button>'+mark+'<button type="button" class="btn btn-ghost btn-sm" onclick="subUndock()">↔ '+L('All steps','सभी steps')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()" aria-label="Close">✕</button></div></div></div>'}
 let SUB_DOCK_ON=false;
 function subWorkRemove(){const w=document.getElementById('subWork');if(w)w.remove()}
 function subWorkAdd(){subWorkRemove();if(!SUB_DOCK_ON||!LS_IDS.includes(SUB_CUR.id))return;const host=document.querySelector('main .tool-main');if(!host)return;const hi=studyHi(),w=document.createElement('div');w.id='subWork';
@@ -4204,7 +4216,7 @@ function s1HeaderHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),cur=SU
    '<div class="s1-vid"><span class="s1-pl">▶</span><b>'+L('How this stage works','यह stage कैसे चलता है')+'</b><small>'+L('video coming soon','video जल्द आ रहा है')+'</small></div></div>'+
    '<div class="s1-flow" id="s1Flow">'+nodes+'<div class="s1-dec'+(dec?' set':ready?' ready':'')+'"><span class="s1-c s1-dc">'+L('Decision','फ़ैसला')+'</span><span class="s1-l">'+escHTML(decLbl)+'</span><span class="s1-a">'+L('Go · Revise · New topic · Stop','आगे · बदलें · नया विषय · रुकें')+'</span></div></div>'}
 /* updates in place: a click on a step node can be the very thing that made an input lose focus, so the node must not be replaced */
-function s1Refresh(){const f=document.getElementById('s1Flow');if(!f)return;const t=document.createElement('div');t.innerHTML=s1HeaderHTML();const n=t.querySelector('#s1Flow');if(!n||n.children.length!==f.children.length){if(n)f.innerHTML=n.innerHTML;return}
+function s1Refresh(){tbFlowRefresh();const f=document.getElementById('s1Flow');if(!f)return;const t=document.createElement('div');t.innerHTML=s1HeaderHTML();const n=t.querySelector('#s1Flow');if(!n||n.children.length!==f.children.length){if(n)f.innerHTML=n.innerHTML;return}
   [...f.children].forEach((el,i)=>{const nw=n.children[i];el.className=nw.className;const ac=nw.getAttribute('aria-current');ac?el.setAttribute('aria-current',ac):el.removeAttribute('aria-current');[...el.children].forEach((c,j)=>{const x=nw.children[j];if(x&&c.textContent!==x.textContent)c.textContent=x.textContent})})}
 function lsHTML(id,o,work){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues(id,o),a=w[id]||{},ta=(k,lab,ph)=>'<label class="desc" style="display:block;margin-top:6px">'+lab+'</label><textarea rows="2"'+(ph?' placeholder="'+escAttr(ph)+'"':'')+' onchange="lsSet(\''+id+'\',\''+k+'\',this.value)">'+escHTML(a[k]||'')+'</textarea>';
   let body='';
@@ -17410,7 +17422,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02s';
+const APP_BUILD='2026.11.02t';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
