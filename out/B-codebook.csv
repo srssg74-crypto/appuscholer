@@ -1,0 +1,9 @@
+﻿column,section,question,answers and codes
+age,Background,Age (in completed years),a number
+gender,Background,Gender,1 = Woman; 2 = Man; 3 = Another gender; 4 = Prefer not to say
+course,Background,Course and year,free text
+Seroconversion,Background,Seroconversion,1 = Yes; 2 = No
+Paracetamol_after_MR1,Background,Paracetamol after MR1,1 = Yes; 2 = No
+Infant_sex,Background,Infant sex,1 = Boy; 2 = Girl
+Birth_weight,Measurements (filled in by the researcher),Birth weight (reading from the instrument or laboratory report),a number
+Low_birth_weight,Background,Low birth weight,1 = Yes; 2 = No
