@@ -14591,6 +14591,19 @@ function apFacts(doc){
     {k:'prereg',label:'Pre-registered',v:apMention(all,/pre-?regist|aspredicted|\bOSF\b|CTRI/i)},
     {k:'limits',label:'Limitations discussed',v:rows.some(r=>/limitation/i.test(r.sec))||/\blimitations?\b/i.test(all)?'yes':''}
   ];
+  /* A review, a handbook or an essay talks about designs and tests; it did not use them. Keep only what a review can tell: its own type, databases and number of studies. */
+  if(kind==='review'||kind==='notpaper'){
+    f.design=[];f.tests=[];f.software=[];f.n={recruited:null,groups:[],analysed:null};f.age=null;f.ageRange=null;f.sex=[];f.scales=[];f.items=[];f.alpha=[];f.effect=[];f.pcount=0;f.alphaLevel=null;
+    f.checks=f.checks.filter(c=>c.k==='limits');
+    if(kind==='review'){
+      const dbs=apUniq(find(all,/\b(PubMed|MEDLINE|PsycINFO|PsycArticles|Scopus|Web of Science|Google Scholar|ERIC|EMBASE|CINAHL|Cochrane|JSTOR|Semantic Scholar|OpenAlex)\b/g));
+      const am=rows.filter(r=>/abstract|method|design|review/i.test(lab(r))).map(r=>r.text).join(' ');
+      const tre=/\b(systematic review|scoping review|narrative review|meta-analysis|umbrella review|rapid review|integrative review|critical review|literature review)\b/gi;let tm,types=[];
+      while((tm=tre.exec(am))){const pre=am.slice(Math.max(0,tm.index-32),tm.index).toLowerCase();if(/(rather than|not|than|neither|nor|instead of)\s+(?:an?\s+|the\s+)?(?:\w+,?\s+){0,1}$/.test(pre)||/\bor\s+(?:an?\s+)?$/.test(pre))continue;types.push(tm[0].toLowerCase());break}
+      const mm=/\b(\d{1,4})\s+(?:studies|articles|papers|records|reports)\s+(?:were\s+)?(?:included|identified|reviewed|screened|retrieved|met)/i.exec(all);
+      f.review={databases:dbs.slice(0,8),types:types,studies:mm?parseInt(mm[1],10):null};
+    }
+  }
   return f;
 }
 function apStageSentences(doc,perStage){
