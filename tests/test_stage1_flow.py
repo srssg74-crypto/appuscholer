@@ -38,6 +38,16 @@ with sync_playwright() as p:
     ok('New topic' in J("document.querySelector('#s1Flow .s1-dec').innerText"),'the strip shows the decision taken')
     pg.locator('#a4Dcs .a4-dc-go').click(); pg.wait_for_timeout(200)
     ok(J("studyGet().write.A4.dec")=='go','Go is stored')
+    # the same header and strip on the other five stages
+    for st,sid,title,n in [('lit','B3','Read what is already known',3),('design','C6','Plan how you will find out',4),('collect','D4','Collect and analyse your data',4),('writing','E5','Write it up',4),('review','F3','Check, submit and share',4)]:
+        J("subOpen('%s','%s')"%(st,sid)); pg.wait_for_timeout(250)
+        ok(title in J("document.getElementById('subDlg').innerText") and J("document.querySelectorAll('#s1Flow .s1-node').length")==n,'%s: header and %d-group strip'%(st,n))
+        ok(J("document.querySelectorAll('#s1Sub .s1-sp').length")>=1 or st=='writing' and False,'%s: the steps of the current group are listed'%st)
+    J("subOpen('lit','B1')"); pg.wait_for_timeout(200)
+    pg.locator('#s1Flow .s1-node').nth(1).click(); pg.wait_for_timeout(250)
+    ok(J("SUB_CUR.id")=='B3','a group node opens its first open step')
+    pg.locator('#s1Sub .s1-sp').nth(1).click(); pg.wait_for_timeout(250)
+    ok(J("SUB_CUR.id")=='B4','a step pill inside the group opens that step')
     real=[e for e in errors if 'favicon' not in e[1]]
     ok(not real,'no page errors %s'%real[:3]); b.close()
 print('\n%d failures'%len(fails) if fails else '\nALL PASS'); sys.exit(1 if fails else 0)
