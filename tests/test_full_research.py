@@ -184,7 +184,7 @@ with sync_playwright() as p:
     step('lit', 'B4'); print('B4', state('B4'), needed()[:200])
     step('lit', 'B5'); print('B5', state('B5'), J("document.getElementById('subMain').innerText")[:400].replace('\n', ' | '))
     step('lit', 'B6')
-    pg.locator('#subMain button', has_text=re.compile('Go to the tool')).first.click(); pg.wait_for_timeout(300)
+    pg.locator('#subMain button', has_text=re.compile('Open the|Go to the tool|Idea|Research|Design|Stats|Slides')).first.click(); pg.wait_for_timeout(300)
     print('B6 tool visible:', J("(document.querySelector('.tool-panel.active')||{}).dataset.panel"))
     J("gapDlgOpen()"); pg.wait_for_timeout(200)
     print('B4 now', state('B4'))
@@ -229,7 +229,7 @@ with sync_playwright() as p:
     shot('c5')
     # C6 questionnaire
     step('design', 'C6')
-    pg.locator('#subMain button', has_text=re.compile('Go to the tool')).first.click(); pg.wait_for_timeout(300)
+    pg.locator('#subMain button', has_text=re.compile('Open the|Go to the tool|Idea|Research|Design|Stats|Slides')).first.click(); pg.wait_for_timeout(300)
     print('C6 tool opened dialog?', J("!!(document.getElementById('qnDlg')&&document.getElementById('qnDlg').open)"), 'panel', J("(document.querySelector('.tool-panel.active')||{}).dataset.panel"))
     J("qnOpen()"); pg.wait_for_timeout(300)
     shot('qn')
@@ -349,7 +349,7 @@ with sync_playwright() as p:
     step('collect', 'D6'); print('D6', state('D6'), needed()[:200])
     print('STAGE D', J("['D1','D2','D3','D4','D5','D6'].map(i=>i+':'+subState(i).s).join(' ')"))
     # ---------- E ----------
-    step('writing', 'E1'); pg.locator('#subMain button', has_text=re.compile('Go to the tool')).first.click(); pg.wait_for_timeout(300)
+    step('writing', 'E1'); pg.locator('#subMain button', has_text=re.compile('Open the|Go to the tool|Idea|Research|Design|Stats|Slides')).first.click(); pg.wait_for_timeout(300)
     print('E1 opens bpDlg', J("!!(document.getElementById('bpDlg')||{}).open"))
     print('BP buttons', J("[...document.querySelectorAll('#bpDlg button')].map(b=>b.innerText.trim()).filter(Boolean).slice(0,12)"))
     shot('bp')

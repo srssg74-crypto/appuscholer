@@ -682,6 +682,13 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 .a1-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.a1-two{grid-template-columns:repeat(2,1fr)}
 .a1-f input{width:100%;box-sizing:border-box}.a1-live{margin:8px 0;padding:8px 10px;border:1px dashed var(--ctl-line,#A9A3BA);border-radius:10px;background:var(--card,#fff)}
 @media(max-width:720px){.a1-grid,.a1-two{grid-template-columns:1fr}}
+.sub-dockbar{display:none;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line,#ddd)}.sub-dockbar b{flex:1;font-size:14px}
+.sub-dlg.sub-docked,.sub-dlg.sub-docked[open]{width:min(440px,42vw);right:auto;left:0;top:0;border-right:1px solid var(--ctl-line,#A9A3BA);box-shadow:6px 0 24px rgba(0,0,0,.12);z-index:60}
+.sub-dlg.sub-docked .sub-head,.sub-dlg.sub-docked .sub-list{display:none}.sub-dlg.sub-docked .sub-dockbar{display:flex}.sub-dlg.sub-docked .sub-body{grid-template-columns:1fr}
+.a1-docked-note{display:none}body.sub-docked-on{padding-left:min(440px,42vw)}
+@media(min-width:1100px){body.sub-docked-on main{grid-template-columns:minmax(0,1fr)}body.sub-docked-on main .doc-pane,body.sub-docked-on main .tool-sidebar,body.sub-docked-on main .splitter{display:none}body.sub-docked-on main .dock-tabs,body.sub-docked-on main .tool-main,body.sub-docked-on main .ai-pane{grid-column:1}}
+
+.sub-dlg.sub-docked .a1-grid,.sub-dlg.sub-docked .a1-two{grid-template-columns:1fr}
 </style>
 <style id="ssCss">#ssDlg{display:none;position:fixed;inset:0;z-index:2000;background:#111;flex-direction:column;outline:none}
 #ssDlg .ss-stage{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;min-height:0}
@@ -3333,26 +3340,39 @@ function subOpen(stage,id){stage=stage||'idea';const list=SUBSTAGES.filter(x=>x[
   let d=document.getElementById('subDlg');
   if(!d){d=document.createElement('dialog');d.id='subDlg';d.className='sub-dlg';document.body.appendChild(d);
     const st=document.createElement('style');st.textContent='.sub-dlg,.sub-dlg[open]{width:100vw;height:100vh;max-width:100vw;max-height:100vh;margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:var(--card,#fff)}.sub-dlg::backdrop{background:rgba(0,0,0,.35)}.sub-wrap{display:flex;flex-direction:column;height:100%}.sub-head{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line,#ddd)}.sub-tab{border:1px solid var(--line,#ddd);background:none;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;color:inherit}.sub-tab.on{background:var(--purple-500,#6d28d9);color:#fff;border-color:transparent}.sub-body{display:grid;grid-template-columns:300px 1fr;flex:1;min-height:0}.sub-list{overflow:auto;border-right:1px solid var(--line,#ddd);padding:8px}.sub-item{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;font-size:14px;cursor:pointer;color:inherit}.sub-item.on{background:var(--purple-50,#f1ebff)}.sub-main{overflow:auto;padding:16px 20px}.sub-main textarea,.sub-main input[type=text],.sub-main input[type=email],.sub-main input[type=date],.sub-main select{width:100%;box-sizing:border-box}.sub-box{border:1px solid var(--line,#ddd);border-radius:10px;padding:10px 12px;margin:10px 0}@media(max-width:760px){.sub-body{grid-template-columns:1fr}.sub-list{border-right:0;border-bottom:1px solid var(--line,#ddd);max-height:34vh}}';document.head.appendChild(st)}
-  subRender();if(!d.open)d.showModal()}
+  subBackPill(false);subRender();if(!d.open)d.showModal()}
 function subRender(){const d=document.getElementById('subDlg');if(!d||!d.open&&!d.innerHTML&&!SUB_CUR.stage)return;if(!d)return;const hi=studyHi(),o=studyGet(),stage=SUB_CUR.stage;
   const tabs=STAGES.map(s=>{const c=subCount(s,o);return'<button type="button" class="sub-tab'+(s===stage?' on':'')+'" onclick="subOpen(\''+s+'\')">'+SUB_STAGE_LETTER[s]+' · '+escHTML(stageLabel(s))+' '+c.done+'/'+c.total+'</button>'}).join('');
   const list=SUBSTAGES.filter(x=>x[1]===stage).map(x=>{const st=subState(x[0],o);return'<button type="button" class="sub-item'+(x[0]===SUB_CUR.id?' on':'')+'" onclick="SUB_CUR.id=\''+x[0]+'\';subRender()">'+SUB_ICON[st.s]+' <b>'+x[0]+'</b> '+escHTML(subL(x[2]))+'</button>'}).join('');
-  d.innerHTML='<div class="sub-wrap"><div class="sub-head"><b style="margin-right:6px">🧭 '+(hi?'Research के कदम':'Research steps')+'</b>'+tabs+'<span style="flex:1"></span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕ '+(hi?'बंद करें':'Close')+'</button></div><div class="sub-body"><div class="sub-list">'+list+'</div><div class="sub-main" id="subMain">'+subDetailHTML(SUB_CUR.id,o)+'</div></div></div>'}
+  d.innerHTML='<div class="sub-wrap"><div class="sub-dockbar"><b>'+escHTML(SUB_CUR.id+' · '+((SUBSTAGES.find(y=>y[0]===SUB_CUR.id)||[0,0,['','']])[2][hi?1:0]))+'</b><button type="button" class="btn btn-ghost btn-sm" onclick="subUndock()">↔ '+(hi?'सभी steps':'All steps')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕</button></div><div class="sub-head"><b style="margin-right:6px">🧭 '+(hi?'Research के कदम':'Research steps')+'</b>'+tabs+'<span style="flex:1"></span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕ '+(hi?'बंद करें':'Close')+'</button></div><div class="sub-body"><div class="sub-list">'+list+'</div><div class="sub-main" id="subMain">'+subDetailHTML(SUB_CUR.id,o)+'</div></div></div>'}
 /* When each step's source was last checked against the original (register v6, TST-018). Review every 12 months. */
 const SUB_SRC_CHECKED={_:'2026-10-27',F2:'2026-10-31',B1:'2026-10-31',B4:'2026-10-31',C7:'2026-10-31',D1:'2026-10-31'};
 function subSrcAge(id,now){const d=SUB_SRC_CHECKED[id]||SUB_SRC_CHECKED._,hi=studyHi(),t=new Date(d+'T00:00:00'),age=((now||Date.now())-t.getTime())/864e5,f=t.toLocaleDateString(hi?'hi-IN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   return' · '+(hi?'आख़िरी जाँच: ':'last checked: ')+f+(age>365?' <span style="color:#b45309">⚠️ '+(hi?'एक साल से पुरानी जाँच; नया version देखें':'checked over a year ago; look for a newer version')+'</span>':'')}
+const SUB_TOOL_LABEL={idea:['Open the Idea and Feasibility tool (AI feedback on your topic)','Idea और Feasibility tool खोलें (आपके विषय पर AI की राय)'],research:['Open paper search','Papers की खोज खोलें'],analyse:['Open the paper analysis tool','Paper analysis tool खोलें'],cite:['Open the Citation manager','Citation manager खोलें'],stats:['Open the Statistics lab','Statistics lab खोलें'],design:['Open the Design and Ethics tools','Design और Ethics tools खोलें'],qual:['Open qualitative coding','Qualitative coding खोलें'],slides:['Open the slides tool','Slides tool खोलें'],close:['Open the final checks','अंतिम जाँचें खोलें'],'@gapDlgOpen()':['Open the research gap finder','Research gap finder खोलें'],'@spOpen()':['Open the study plan','Study plan खोलें'],'@qnOpen()':['Open the questionnaire maker','Questionnaire maker खोलें'],'@ecOpen()':['Open the consent form maker','Consent form maker खोलें'],'@sfOpen()':['Open the secure form','Secure form खोलें'],'@statsOpen()':['Open the Statistics lab','Statistics lab खोलें'],'@bpOpen()':['Open the book plan','Book plan खोलें']};
+function subToolLabel(k){return SUB_TOOL_LABEL[k]||['Open the tool for this step','इस step का tool खोलें']}
+/* A page-panel tool opens beside the step: the step stays on the left (instructions and what is still needed), the tool on the right. On a phone the tool takes the screen and a pill brings the step back. */
+function subDock(tool){const d=document.getElementById('subDlg');if(!d)return;const run=()=>{try{showTool(tool)}catch(e){}};
+  if(window.innerWidth<=760){d.close();run();subBackPill(true);return}
+  d.close();d.classList.add('sub-docked');d.show();document.body.classList.add('sub-docked-on');
+  if(!d._dockWired){d._dockWired=1;d.addEventListener('close',()=>{if(d.open)return;d.classList.remove('sub-docked');document.body.classList.remove('sub-docked-on')})}
+  run()}
+function subUndock(){const d=document.getElementById('subDlg');if(!d)return;d.close();d.classList.remove('sub-docked');document.body.classList.remove('sub-docked-on');d.showModal()}
+function subBackPill(on){let b=document.getElementById('subBackPill');
+  if(!on){if(b)b.remove();return}
+  if(b)return;b=document.createElement('button');b.id='subBackPill';b.type='button';b.className='btn btn-purple';b.style.cssText='position:fixed;left:12px;bottom:12px;z-index:80;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25)';
+  b.textContent=(studyHi()?'← इस step पर वापस':'← Back to the step');b.onclick=()=>{subBackPill(false);subOpen(SUB_CUR.stage,SUB_CUR.id)};document.body.appendChild(b)}
 function subDetailHTML(id,o){const hi=studyHi(),x=SUBSTAGES.find(y=>y[0]===id);if(!x)return'';const st=subState(id,o),rec=(o.sub||{})[id]||{};
   let h='<h2 style="margin:0 0 4px">'+x[0]+' · '+escHTML(subL(x[2]))+'</h2>';
   h+='<div class="sub-box"><b>'+(hi?'कैसे भरें':'How to fill it')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[3]))+'</p></div>';
   if(LS_IDS.indexOf(id)<0)h+='<div class="sub-box"><b>'+(hi?'आगे बढ़ने से पहले जाँच':'Check before moving on')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[4]))+'</p><p class="desc" style="margin:6px 0 0">'+(hi?'स्रोत: ':'Source: ')+escHTML(x[5])+subSrcAge(x[0])+'</p></div>';
   if(id==='C9')return h+ethicsFormHTML(o);
   try{h+=subExtraHTML(id,o)}catch(e){}
-  if(x[6]){const act=x[6].charAt(0)==='@'?x[6].slice(1):"showTool('"+x[6]+"')";h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="document.getElementById(\'subDlg\').close();'+escAttr(act)+'">'+(hi?'इसके tool पर जाएँ →':'Go to the tool for this →')+'</button></div>'}
+  if(x[6]){const dock=x[6].charAt(0)!=='@',act=dock?"showTool('"+x[6]+"')":x[6].slice(1),lab=subToolLabel(x[6]);h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="'+(dock?'subDock(\''+x[6]+'\')':"document.getElementById('subDlg').close();"+escAttr(act))+'">'+escHTML(hi?lab[1]:lab[0])+' →</button></div>'}
   h+='<div class="sub-box"><b>'+(hi?'Status':'Status')+'</b>'+(st.auto?'<p class="desc" style="margin:4px 0">'+(hi?'App को आपकी study में यह भरा मिला, इसलिए "पूरा" दिखा रहा है। आप बदल सकते हैं।':'The app found this filled in your study, so it shows Done. You can change it.')+'</p>':'')+
    '<select id="subSel" onchange="subStatusPick(\''+id+'\',this.value)">'+SUB_STATUS.filter(s=>s[0]!=='ap').map(s=>'<option value="'+s[0]+'"'+(s[0]===st.s?' selected':'')+'>'+SUB_ICON[s[0]]+' '+(hi?s[2]:s[1])+'</option>').join('')+'</select>'+
    '<div id="subWhyBox" style="margin-top:8px;'+(st.s==='na'?'':'display:none')+'"><label class="desc">'+(hi?'यह कदम लागू क्यों नहीं? (ज़रूरी, supervisor देख सकेंगे)':'Why does this step not apply? (required; your supervisor can see it)')+'</label><textarea id="subWhy" rows="2" onchange="subSet(\''+id+'\',{why:this.value})">'+escHTML(rec.why||'')+'</textarea></div>'+
-   '<label class="desc" style="display:block;margin-top:8px">'+(hi?'मेरे notes':'My notes')+'</label><textarea id="subNote" rows="3" onchange="subSet(\''+id+'\',{note:this.value})">'+escHTML(rec.note||'')+'</textarea></div>';
+   '<label class="desc" style="display:block;margin-top:8px"><b>'+(hi?'मेरी research डायरी: करना है / जाँचना है':'My research diary: To do / To check')+'</b></label><textarea id="subNote" rows="2" placeholder="'+escAttr(hi?'जैसे: दूसरी hypothesis के बारे में supervisor से पूछना है':'e.g. Ask my supervisor about the second hypothesis')+'" onchange="subSet(\''+id+'\',{note:this.value})">'+escHTML(rec.note||'')+'</textarea></div>';
   return h}
 function subStatusPick(id,v){const hi=studyHi();if(v==='na'){const box=document.getElementById('subWhyBox');if(box)box.style.display='';const w=(document.getElementById('subWhy')||{}).value||'';
     if(String(w).trim().length<5){showToast(hi?'"लागू नहीं" चुनने के लिए कारण लिखें':'Write the reason to mark this Not applicable');const o=studyGet();o.sub=o.sub||{};o.sub[id]=Object.assign({},o.sub[id]||{},{pendingNa:true});LS.set(studyKey(),JSON.stringify(o));setTimeout(()=>{const t=document.getElementById('subWhy');if(t){t.focus();t.onchange=function(){if(this.value.trim().length>=5)subSet(id,{why:this.value,s:'na',pendingNa:false});else subSet(id,{why:this.value})}}},50);return}
@@ -17294,7 +17314,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02n';
+const APP_BUILD='2026.11.02o';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
