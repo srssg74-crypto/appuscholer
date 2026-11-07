@@ -87,7 +87,7 @@ with sync_playwright() as p:
     ok('3.3.3' in h and 'Sample size' in h,'C3 says it goes into 3.3.3 Sample size')
     ok('study record' in J("bpStepBookHTML('A4',studyGet())"),'A4 says why it writes no part of the book')
     J("subOpen('design','C3')")
-    ok('Goes into the book at' in J("document.getElementById('subMain').innerText"),'the line shows inside the step')
+    ok('Goes into the book at' not in J("document.getElementById('subMain').innerText"),'the book line is no longer shown inside the step (the book plan keeps it)')
     J("document.getElementById('subDlg').close();bpOpen('method.size')")
     t=J("document.getElementById('bpDlg').innerText")
     ok('Chapter 3: Method' in t and 'Report' in t and 'Interpret' in t and 'STROBE' in t,'plan dialog shows chapters, the writing modes and the checklist it was checked against')
