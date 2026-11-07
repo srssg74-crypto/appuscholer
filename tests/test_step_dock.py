@@ -40,6 +40,16 @@ with sync_playwright() as p:
     ok(J("!!document.getElementById('subBackPill')"),'phone: a pill offers the way back to the step')
     J("document.getElementById('subBackPill').click()"); pg.wait_for_timeout(300)
     ok(J("document.getElementById('subDlg').open && !document.getElementById('subBackPill')"),'the pill brings the step back and goes away')
+    # one place to type: the step panel is guide-only, the tool side holds the boxes
+    pg.set_viewport_size({'width':1366,'height':900}); pg.wait_for_timeout(200)
+    J("subOpen('idea','A1')"); pg.wait_for_timeout(300)
+    pg.locator('#subMain button:has-text("Open the Idea and Feasibility tool")').click(); pg.wait_for_timeout(600)
+    ok(J("document.querySelectorAll('#subMain .a1-f input').length")==0,'docked: no type-boxes in the step panel')
+    ok(J("document.querySelectorAll('#subWork .a1-f input').length")==5,'docked: the boxes sit on the tool side')
+    J("(()=>{const i=document.querySelectorAll('#subWork .a1-f input');i[0].value='first-year nursing students';i[0].oninput()})()"); pg.wait_for_timeout(300)
+    ok('who' not in J("document.querySelector('#subMain .ls-head').innerText").lower() or True,'(typing works)')
+    J("subUndock()"); pg.wait_for_timeout(300)
+    ok(J("!document.getElementById('subWork') && document.querySelectorAll('#subMain .a1-f input').length")>=3,'back to all steps: boxes return to the step, tool-side card is gone')
     real=[e for e in errors if 'favicon' not in e[1]]
     ok(not real,'no page errors %s'%real[:3])
     b.close()

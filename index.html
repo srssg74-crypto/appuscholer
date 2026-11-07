@@ -686,6 +686,18 @@ body.no-ai-key #provTabs{animation:aiNudge 1.6s ease-out infinite;border-radius:
 .sub-dlg.sub-docked,.sub-dlg.sub-docked[open]{width:min(440px,42vw);right:auto;left:0;top:0;border-right:1px solid var(--ctl-line,#A9A3BA);box-shadow:6px 0 24px rgba(0,0,0,.12);z-index:60}
 .sub-dlg.sub-docked .sub-head,.sub-dlg.sub-docked .sub-list{display:none}.sub-dlg.sub-docked .sub-dockbar{display:flex}.sub-dlg.sub-docked .sub-body{grid-template-columns:1fr}
 .a1-docked-note{display:none}body.sub-docked-on{padding-left:min(440px,42vw)}
+#subWork{background:#fff;border:2px solid #4B2E83;border-radius:10px;padding:10px 12px;margin:0 0 12px}#subWork .sw-t{font:700 13px system-ui;color:#4B2E83;margin-bottom:6px}#subWork .ls-box{border:0;padding:0;margin:0}#subWork .a1-grid{grid-template-columns:repeat(3,1fr)}#subWork .a1-two{grid-template-columns:repeat(2,1fr)}
+#subWork textarea{width:100%;min-height:72px;box-sizing:border-box}.sub-dlg.sub-docked #subMain>.row .btn-purple,.sub-dlg.sub-docked .sub-main>.row .btn-purple{display:none}
+.dock-guide{background:#fff;border:1px dashed #4B2E83;border-radius:8px;padding:8px 10px;margin:8px 0 0}
+
+body.sub-docked-on .sub-dlg.sub-docked,body.sub-docked-on .sub-dlg.sub-docked .sub-wrap{background:#FFF6E0;color:#2a2233}
+.sub-dlg.sub-docked{border-right:6px solid #E8A317;border-top:5px solid #E8A317}
+.sub-dlg.sub-docked .sub-dockbar{background:#E8A317;color:#2a1a00;border-bottom:0;flex-wrap:wrap}.sub-dlg.sub-docked .sub-dockbar::before{content:'STEP · your instructions';flex-basis:100%;font:700 10.5px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.sub-dlg.sub-docked .sub-dockbar .btn{background:#fff}
+.sub-dlg.sub-docked input,.sub-dlg.sub-docked textarea,.sub-dlg.sub-docked select{background:#fff;color:#222}
+body.sub-docked-on main .tool-main::before{content:'TOOL · work here, the step stays on the left';display:block;margin:0 0 8px;padding:6px 10px;border-radius:8px;background:#4B2E83;color:#fff;font:700 10.5px/1.2 system-ui;letter-spacing:.08em;text-transform:uppercase}
+body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
+
 @media(min-width:1100px){body.sub-docked-on main{grid-template-columns:minmax(0,1fr)}body.sub-docked-on main .doc-pane,body.sub-docked-on main .tool-sidebar,body.sub-docked-on main .splitter{display:none}body.sub-docked-on main .dock-tabs,body.sub-docked-on main .tool-main,body.sub-docked-on main .ai-pane{grid-column:1}}
 
 .sub-dlg.sub-docked .a1-grid,.sub-dlg.sub-docked .a1-two{grid-template-columns:1fr}
@@ -3352,12 +3364,16 @@ function subSrcAge(id,now){const d=SUB_SRC_CHECKED[id]||SUB_SRC_CHECKED._,hi=stu
 const SUB_TOOL_LABEL={idea:['Open the Idea and Feasibility tool (AI feedback on your topic)','Idea और Feasibility tool खोलें (आपके विषय पर AI की राय)'],research:['Open paper search','Papers की खोज खोलें'],analyse:['Open the paper analysis tool','Paper analysis tool खोलें'],cite:['Open the Citation manager','Citation manager खोलें'],stats:['Open the Statistics lab','Statistics lab खोलें'],design:['Open the Design and Ethics tools','Design और Ethics tools खोलें'],qual:['Open qualitative coding','Qualitative coding खोलें'],slides:['Open the slides tool','Slides tool खोलें'],close:['Open the final checks','अंतिम जाँचें खोलें'],'@gapDlgOpen()':['Open the research gap finder','Research gap finder खोलें'],'@spOpen()':['Open the study plan','Study plan खोलें'],'@qnOpen()':['Open the questionnaire maker','Questionnaire maker खोलें'],'@ecOpen()':['Open the consent form maker','Consent form maker खोलें'],'@sfOpen()':['Open the secure form','Secure form खोलें'],'@statsOpen()':['Open the Statistics lab','Statistics lab खोलें'],'@bpOpen()':['Open the book plan','Book plan खोलें']};
 function subToolLabel(k){return SUB_TOOL_LABEL[k]||['Open the tool for this step','इस step का tool खोलें']}
 /* A page-panel tool opens beside the step: the step stays on the left (instructions and what is still needed), the tool on the right. On a phone the tool takes the screen and a pill brings the step back. */
+let SUB_DOCK_ON=false;
+function subWorkRemove(){const w=document.getElementById('subWork');if(w)w.remove()}
+function subWorkAdd(){subWorkRemove();if(!SUB_DOCK_ON||!LS_IDS.includes(SUB_CUR.id))return;const host=document.querySelector('main .tool-main');if(!host)return;const hi=studyHi(),w=document.createElement('div');w.id='subWork';
+  w.innerHTML='<div class="sw-t">✍️ '+SUB_CUR.id+' · '+(hi?'यहाँ लिखें':'type your answers here')+'</div>'+lsHTML(SUB_CUR.id,studyGet(),true);host.insertBefore(w,host.firstChild)}
 function subDock(tool){const d=document.getElementById('subDlg');if(!d)return;const run=()=>{try{showTool(tool)}catch(e){}};
   if(window.innerWidth<=760){d.close();run();subBackPill(true);return}
-  d.close();d.classList.add('sub-docked');d.show();document.body.classList.add('sub-docked-on');
-  if(!d._dockWired){d._dockWired=1;d.addEventListener('close',()=>{if(d.open)return;d.classList.remove('sub-docked');document.body.classList.remove('sub-docked-on')})}
-  run()}
-function subUndock(){const d=document.getElementById('subDlg');if(!d)return;d.close();d.classList.remove('sub-docked');document.body.classList.remove('sub-docked-on');d.showModal()}
+  SUB_DOCK_ON=true;d.close();d.classList.add('sub-docked');d.show();document.body.classList.add('sub-docked-on');
+  if(!d._dockWired){d._dockWired=1;d.addEventListener('close',()=>{if(d.open)return;SUB_DOCK_ON=false;subWorkRemove();d.classList.remove('sub-docked');document.body.classList.remove('sub-docked-on')})}
+  subRender();run();subWorkAdd()}
+function subUndock(){const d=document.getElementById('subDlg');if(!d)return;SUB_DOCK_ON=false;subWorkRemove();d.close();d.classList.remove('sub-docked');document.body.classList.remove('sub-docked-on');d.showModal();subRender()}
 function subBackPill(on){let b=document.getElementById('subBackPill');
   if(!on){if(b)b.remove();return}
   if(b)return;b=document.createElement('button');b.id='subBackPill';b.type='button';b.className='btn btn-purple';b.style.cssText='position:fixed;left:12px;bottom:12px;z-index:80;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25)';
@@ -4113,7 +4129,7 @@ function a1HTML(a){const hi=studyHi(),L=(en,x)=>hi?x:en,p=a.p||{};
    '<p class="desc" style="margin:10px 0 4px"><b>2.</b> '+L('Name two other topics you thought of, then say why you chose this one.','दो और विषय लिखें जो सोचे थे, फिर बताएँ कि यही क्यों चुना।')+'</p>'+
    '<div class="a1-grid a1-two">'+g('alt1',L('Other topic 1','दूसरा विषय 1'),L('e.g. phone use and sleep','जैसे: फ़ोन का उपयोग और नींद'))+g('alt2',L('Other topic 2','दूसरा विषय 2'),L('e.g. loneliness in hostels','जैसे: हॉस्टल में अकेलापन'))+'</div>'+
    '<label class="desc" style="display:block;margin-top:6px">'+L('Why this topic and not those','इन्हें छोड़कर यही क्यों')+'</label><textarea rows="2" placeholder="'+escAttr(L('e.g. Because I can reach these students through my supervisor, and the scale is free.','जैसे: क्योंकि इन छात्रों तक मैं अपने supervisor के ज़रिए पहुँच सकती हूँ, और scale मुफ़्त है।'))+'" onchange="lsSet(\'A1\',\'why\',this.value)">'+escHTML(a.why||'')+'</textarea>'}
-function lsHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues(id,o),a=w[id]||{},ta=(k,lab,ph)=>'<label class="desc" style="display:block;margin-top:6px">'+lab+'</label><textarea rows="2"'+(ph?' placeholder="'+escAttr(ph)+'"':'')+' onchange="lsSet(\''+id+'\',\''+k+'\',this.value)">'+escHTML(a[k]||'')+'</textarea>';
+function lsHTML(id,o,work){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues(id,o),a=w[id]||{},ta=(k,lab,ph)=>'<label class="desc" style="display:block;margin-top:6px">'+lab+'</label><textarea rows="2"'+(ph?' placeholder="'+escAttr(ph)+'"':'')+' onchange="lsSet(\''+id+'\',\''+k+'\',this.value)">'+escHTML(a[k]||'')+'</textarea>';
   let body='';
   if(id==='A1')body=a1HTML(a);
   if(id==='A3')body=ta('aim',L('Aim (one sentence)','Aim (एक वाक्य)'),L('e.g. To find out whether sleep hours relate to exam anxiety.','जैसे: यह जानना कि नींद के घंटे परीक्षा की चिंता से जुड़े हैं या नहीं।'))+ta('q',L('Research question (ends with ?)','Research question (अंत में ?)'),L('e.g. Do fewer sleep hours go with more exam anxiety in first-year nursing students?','जैसे: क्या कम नींद के घंटे प्रथम वर्ष नर्सिंग छात्रों में परीक्षा की ज़्यादा चिंता से जुड़े हैं?'))+'<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox"'+(a.noHyp?' checked':'')+' onchange="lsSet(\'A3\',\'noHyp\',this.checked)"> '+L('This study is exploratory or qualitative, so it has no hypotheses','यह study exploratory या qualitative है, इसलिए hypotheses नहीं')+'</label>';
@@ -4124,11 +4140,12 @@ function lsHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues
   if(id==='C10'){const minor=!!((o.ethics||{}).risk||{}).minor;body='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();ecOpen()">📝 '+L('Open the consent form maker','Consent form बनाने वाला खोलें')+'</button></div>'+(minor?'<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox"'+(a.assent?' checked':'')+' onchange="lsSet(\'C10\',\'assent\',this.checked)"> '+L('I have an assent form in simple words for participants under 18, and a consent form for the parent or guardian','मेरे पास 18 से कम उम्र वालों के लिए सरल शब्दों में assent form और माता-पिता के लिए consent form है')+'</label>':'')}
   if(id==='F5')body='<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();vivaOpen()">🎤 '+L('Open viva practice','Viva अभ्यास खोलें')+'</button></div>';
   if(/^E[2-7]$/.test(id)){const sec=lsSecFor(id);body='<p class="desc" style="margin:4px 0">'+(sec?L('Found in "'+sec.doc+'": '+sec.words+' words.','"'+sec.doc+'" में मिला: '+sec.words+' शब्द।'):L('The app looks for this heading in your documents.','App इस शीर्षक को आपके documents में ढूँढ़ता है।'))+'</p>'}
+  if(SUB_DOCK_ON&&!work)body='<p class="desc dock-guide">✍️ '+L('Type your answers in the purple TOOL panel on the right. This panel only tells you what is still needed and ticks itself.','अपने उत्तर दाईं ओर बैंगनी TOOL panel में लिखें। यह panel सिर्फ़ बताता है कि क्या बाकी है, और खुद टिक करता है।')+'</p>';
   const ok=!is.length;
   return'<div class="sub-box ls-box" data-ls="'+id+'" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><div class="ls-head">'+lsHeadHTML(is)+'</div>'+body+'</div>'}
 function lsHeadHTML(is){const hi=studyHi(),L=(en,x)=>hi?x:en,ok=!is.length;return'<b>'+(ok?'✅ '+L('Done','पूरा'):L('Still needed','अभी बाकी'))+'</b>'+(is.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+is.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')}
 /* After a box saves, only the "Still needed" list is redrawn, so the cursor stays where the student is. */
-function lsHeadRefresh(id){try{const box=document.querySelector('#subMain .ls-box[data-ls="'+id+'"]');if(!box)return;const is=lsIssues(id,studyGet());box.querySelector('.ls-head').innerHTML=lsHeadHTML(is);box.style.borderColor=is.length?'var(--line,#ddd)':'#16a34a'}catch(e){}}
+function lsHeadRefresh(id){try{const is=lsIssues(id,studyGet());document.querySelectorAll('.ls-box[data-ls="'+id+'"]').forEach(box=>{box.querySelector('.ls-head').innerHTML=lsHeadHTML(is);box.style.borderColor=is.length?'var(--line,#ddd)':'#16a34a'})}catch(e){}}
 const LS_IDS=['A1','A3','A4','C1','C2','C6','C10','E2','E3','E4','E5','E6','E7','F5'];
 
 /* ============ Rule packs (build 2026.10.29a) ============
@@ -12584,7 +12601,7 @@ function ideaLoad(){
    grows over the document's right side (same top, same bottom, right edge fixed) so the boxes are
    comfortable; a click back in the document, Esc, or "Back to my document" puts it back. */
 function tbOn(){return document.body.classList.contains('tool-big')}
-function tbOpen(){if(!dockOn()||tbOn())return;const m=document.querySelector('main .tool-main');if(!m||getComputedStyle(m).display==='none')return;
+function tbOpen(){if(!dockOn()||tbOn()||SUB_DOCK_ON)return;const m=document.querySelector('main .tool-main');if(!m||getComputedStyle(m).display==='none')return;
   const r=m.getBoundingClientRect(),dt=document.getElementById('dockTabs'),tr=dt?dt.getBoundingClientRect():r,W=Math.min(780,Math.max(r.width,innerWidth*.58));
   m.style.setProperty('--tb-top',Math.round(tr.top)+'px');m.style.setProperty('--tb-h',Math.round(r.bottom-tr.top)+'px');m.style.setProperty('--tb-right',Math.round(innerWidth-r.right)+'px');m.style.setProperty('--tb-w',Math.round(W)+'px');
   let bar=document.getElementById('tbBar');if(!bar){bar=document.createElement('div');bar.id='tbBar';m.prepend(bar)}
@@ -17314,7 +17331,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.02o';
+const APP_BUILD='2026.11.02p';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
