@@ -89,7 +89,7 @@ with sync_playwright() as p:
         pg.locator('#subMain input[type=radio]').nth(k).check()
     pg.wait_for_timeout(100)
     print('A4 ta', J("[...document.querySelectorAll('#subMain textarea,#subMain select')].map(t=>t.tagName+':'+(t.getAttribute('onchange')||t.getAttribute('oninput')||'').slice(0,50))"))
-    J("(()=>{const s=document.querySelector('#subMain select:not(#subSel)');if(s){s.value=s.options[1].value;s.dispatchEvent(new Event('change'))}})()")
+    pg.locator('#a4Dcs .a4-dc-go').click()
     print('A4 ta2', J("[...document.querySelectorAll('#subMain textarea')].map(t=>(t.getAttribute('onchange')||t.getAttribute('oninput')||'').slice(0,50))"))
     fill("#subMain textarea[onchange*=\"'A4','why'\"],#subMain textarea[oninput*=\"'A4','why'\"]", 'Access is agreed by both principals, the scales are free, and the timeline fits one semester.')
     step('idea', 'A4'); print('A4 after:', state('A4'), needed()[:250])
