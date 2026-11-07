@@ -14468,116 +14468,170 @@ function apSentences(text){
   return out.filter(s=>s);
 }
 const AP_SUBLAB=/^(Design|Participants?|Sample|Materials?|Measures?|Instruments?|Procedure|Data (?:processing|collection|analysis)|Statistical analysis|Analysis|Ethics|Ethical considerations|Setting)\.$/i;
+const AP_HEAD2=/^(?:\d+(?:\.\d+)*\s*[|.)]?\s+|[IVX]+\.\s+)?(abstract|summary|background|introduction|literature review|review of literature|theoretical (?:background|framework)|hypothes[ei]s(?: development)?|aims?(?: and objectives)?|objectives?|methods?|methodology|materials? and methods?|study design(?: and (?:setting|procedure))?|design|participants?(?: and procedures?)?|study (?:population|sample)|sampling|sample|measures?|materials?|instruments?|procedures?|data (?:collection|analys[ie]s|processing)|(?:[a-z]+ ){0,2}analys[ie]s|ethic(?:s|al)[a-z ]*|(?:[a-z]+ )?results?|findings|(?:general )?discussion|(?:study )?limitations?|strengths and limitations|conclusions?|recommendations?|implications|references|acknowledg(?:e)?ments?|case (?:report|presentation|description)|declarations?)[\s:.]*$/i;
 const AP_STAGE_SEC={
-  gap:[/abstract|introduction|background|aims?/i,/introduction/i],
+  gap:[/abstract|introduction|background|aims?|objective|hypothes/i,/introduction|hypothes|aims?|objective/i],
   lit:[/introduction|background|literature|review/i,/literature|review/i],
-  design:[/method|design/i,/^design$/i],
-  sample:[/method|participants?|sample/i,/participants?|sample/i],
+  design:[/method|design|setting|abstract/i,/design/i],
+  sample:[/method|design|setting|participants?|sample|sampling|results?|abstract/i,/participants?|sample|sampling|population/i],
   measures:[/method|materials?|measures?|instruments?/i,/materials?|measures?|instruments?/i],
   procedure:[/method|procedure|ethic/i,/procedure|ethic/i],
   data:[/method|data/i,/^data/i],
   stats:[/method|statistic|analysis/i,/statistic|^analysis$/i],
-  results:[/results?|findings/i,/results?|findings/i],
+  results:[/results?|findings|abstract/i,/results?|findings/i],
   conclusion:[/conclusion|discussion|abstract/i,/conclusion/i],
   limits:[/limitation|discussion/i,/limitation/i],
   recs:[/recommend|implication|conclusion|discussion/i,/recommend|implication/i]
 };
-const AP_TESTS=/\b(independent[- ]samples? t[- ]test|paired[- ]samples? t[- ]test|t[- ]test|one-way ANOVA|two-way ANOVA|repeated[- ]measures ANOVA|MANOVA|ANCOVA|ANOVA|multiple regression|linear regression|logistic regression|hierarchical regression|regression|Pearson(?:'s)? (?:correlation|r)|Spearman(?:'s)?(?: rho| correlation)?|chi-?square|Mann[- ]Whitney(?: U)?|Wilcoxon|Kruskal[- ]Wallis|Friedman|exploratory factor analysis|confirmatory factor analysis|factor analysis|structural equation model(?:l?ing)?|mediation|moderation|multilevel|thematic analysis|content analysis|grounded theory|interpretative phenomenological)\b/gi;
-const AP_DESIGNS=/\b(randomi[sz]ed controlled trial|randomi[sz]ed(?: two-group)? design|randomi[sz]ed|quasi-experiment(?:al)?|experiment(?:al)?|cross-sectional|longitudinal|cohort|case-control|correlational|survey|interviews?|focus groups?|case study|mixed[- ]methods?|qualitative|quantitative|systematic review|meta-analysis|scoping review|pre-?post|between-subjects|within-subjects|waiting[- ]list|waiting group|control group)\b/gi;
-const AP_SOFT=/\b(SPSS|Stata|SAS|JASP|jamovi|AMOS|Mplus|NVivo|ATLAS\.ti|G\*Power|Python|R version|RStudio|Excel)\b/g;
-const AP_KNOWN_SCALES=/\b(PHQ-?9|GAD-?7|DASS-?21|DASS-?42|DASS|BDI(?:-II)?|BAI|CES-?D|PSS(?:-10)?|SWLS|PANAS|Rosenberg Self-?Esteem Scale|NEO-?(?:PI|FFI)|Big Five Inventory|BFI|GHQ-?12|SF-?36|WHOQOL(?:-BREF)?|AUDIT|MBI|UCLA Loneliness Scale|Connor-Davidson Resilience Scale|CD-RISC|WISC|WAIS|MMPI|Edinburgh Postnatal Depression Scale|Beck [A-Z][a-z]+ Inventory)\b/g;
+const AP_TESTS=/\b(independent[- ]samples? t[- ]test|paired[- ]samples? t[- ]test|t[- ]test|one-way ANOVA|two-way ANOVA|repeated[- ]measures ANOVA|MANOVA|ANCOVA|ANOVA|multiple linear regression|multiple regression|linear regression|logistic regression|hierarchical regression|mixed(?:-effects?| linear| effects?)? models?|generali[sz]ed linear models?|likelihood ratio test|regression|Pearson(?:'s)? (?:correlation|r)|Spearman(?:'s)?(?: rho| correlation)?|chi-?square|Mann[- ]Whitney(?: U)?|Wilcoxon|Kruskal[- ]Wallis|Friedman|exploratory factor analysis|confirmatory factor analysis|factor analysis|structural equation model(?:l?ing)?|mediation|moderation|multilevel|thematic analysis|content analysis|grounded theory|interpretative phenomenological)\b/gi;
+const AP_DESIGNS=/\b(randomi[sz]ed controlled trial|randomi[sz]ed(?: two-group)? design|randomi[sz]ed|quasi-experiment(?:al)?|experiment(?:al)?|cross-?sectional|longitudinal|cohort|case-control|correlational|survey|interviews?|focus groups?|case study|mixed[- ]methods?|qualitative(?!\s+(?:variables?|data|measures?|values|analysis|results))|quantitative(?!\s+(?:variables?|data|measures?|values|analysis|results))|retrospective|prospective|observational|single-cent(?:er|re)|multi-?cent(?:er|re)|systematic review|meta-analysis|scoping review|pre-?post|between-subjects|within-subjects|waiting[- ]list|waiting group|control group)\b/gi;
+const AP_SOFT=/\b(SPSS|Stata|SAS|JASP|jamovi|AMOS|Mplus|NVivo|ATLAS\.ti|G\*Power|Python|R version|RStudio|Excel|SPM\d*|FSL|MATLAB|FreeSurfer|AFNI|DPABI|CONN|PROCESS)\b/g;
+const AP_KNOWN_SCALES=/\b(PHQ-?9|GAD-?7|DASS-?21|DASS-?42|DASS|BDI(?:-II)?|BAI|CES-?D|PSS(?:-10)?|SWLS|PANAS|PERMA-?Profiler|Rosenberg Self-?Esteem Scale|NEO-?(?:PI|FFI)|Big Five Inventory|BFI|GHQ-?12|SF-?36|WHOQOL(?:-BREF)?|AUDIT|MBI|UCLA Loneliness Scale|Connor-Davidson Resilience Scale|CD-RISC|WISC|WAIS|MMPI|Edinburgh Postnatal Depression Scale)\b/g;
 function apMention(txt,re){
   const m=re.exec(txt);if(!m)return'';
   const pre=txt.slice(Math.max(0,m.index-28),m.index).toLowerCase();
   return/\b(no|not|did not|didn't|without|never|nor|neither)\b[^.]*$/.test(pre)?'no':'yes';
 }
 function apUniq(a){const s=new Set(),o=[];a.forEach(x=>{const k=x.toLowerCase();if(!s.has(k)){s.add(k);o.push(x)}});return o}
+/* Sentences with the section they sit in. Headings are read from the lines of the file; "References" ends the paper. */
+function apRows(doc){
+  const rows=[],pages=doc.pages||[];
+  let sec='',sub='',buf='',bufPage=0,stop=false;
+  const paged=pages.length>1||doc.src==='pdf';
+  const seenOn={};
+  if(pages.length>=4)pages.forEach((pt,pi)=>{const here={};String(pt||'').split('\n').forEach(raw=>{const k=raw.trim().replace(/\d+/g,'#');if(k&&k.length<=70&&!here[k]){here[k]=1;(seenOn[k]=seenOn[k]||{})[pi]=1}})});
+  const isRun=raw=>{const k=raw.trim().replace(/\d+/g,'#');return !!(seenOn[k]&&Object.keys(seenOn[k]).length>=Math.max(3,Math.ceil(pages.length*0.3)))};
+  const flush=(carry)=>{
+    const t=buf.replace(/\s+/g,' ').trim();buf='';
+    if(!t||stop)return;
+    const ss=apSentences(t);
+    let keep='';
+    if(carry&&ss.length&&!/[.!?)"'”\]]$/.test(ss[ss.length-1]))keep=ss.pop();
+    ss.forEach(s=>{
+      if(AP_SUBLAB.test(s)){sub=s.replace(/\.$/,'');return}
+      if(s.length<30||s.length>450)return;
+      rows.push({text:s,page:bufPage,sec:sec,sub:sub});
+    });
+    if(keep)buf=keep+' ';
+  };
+  pages.forEach((pt,pi)=>{
+    String(pt||'').split('\n').forEach(raw=>{
+      const line=raw.trim();if(!line||isRun(raw))return;
+      const hm=(line.length<=70&&/^[A-Z0-9]/.test(line))?AP_HEAD2.exec(line):null;
+      if(hm){flush(false);if(/^(?:references|acknowledg(?:e)?ments?)$/i.test(hm[1]))stop=true;sec=hm[1];sub='';return}
+      if(!buf)bufPage=paged?pi+1:0;
+      buf+=line+' ';
+    });
+    flush(true);
+  });
+  flush(false);
+  return rows;
+}
 function apFacts(doc){
-  const ch=doc.chunks.filter(c=>!c.ref);
-  const txt=ch.map(c=>c.text).join(' ').replace(/\s+/g,' ');
-  const chars=txt.length;
-  const f={level:chars>5000||ch.some(c=>/method|results/i.test(c.sec||''))?'full':'abstract'};
-  const find=(re)=>{re.lastIndex=0;const o=[];let m;while((m=re.exec(txt))){o.push(m[0]);if(m.index===re.lastIndex)re.lastIndex++}return o};
-  f.design=apUniq(find(new RegExp(AP_DESIGNS.source,'gi'))).slice(0,6);
-  f.tests=apUniq(find(new RegExp(AP_TESTS.source,'gi'))).slice(0,8);
-  f.software=apUniq(find(new RegExp(AP_SOFT.source,'g'))).slice(0,4);
-  /* sample size */
-  const unit='(?:[a-z-]+\\s){0,2}(?:participants|students|adults|patients|children|adolescents|respondents|women|men|employees|teachers|people|individuals|volunteers|older adults|parents|nurses)';
-  const cand=[];
-  let m,re=new RegExp('\\b(\\d[\\d,]*|(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[- ](?:one|two|three|four|five|six|seven|eight|nine))?|one hundred|hundred|ten|eleven|twelve|fifteen)\\s'+unit,'gi');
-  while((m=re.exec(txt))){const n=apNumWord(m[1]);if(n&&n>=5)cand.push({n:n,at:m.index,text:m[0]})}
-  re=/\b(?:N|n)\s*=\s*(\d[\d,]*)/g;
-  const grp=[];while((m=re.exec(txt))){const n=apNumWord(m[1]);if(n)grp.push({n:n,at:m.index,text:m[0]})}
-  const recr=cand.length?cand.reduce((a,b)=>b.n>a.n?b:a):(grp.length?grp.reduce((a,b)=>b.n>a.n?b:a):null);
-  f.n={recruited:recr?recr.n:null,groups:grp.map(g=>g.n).filter(n=>!recr||n<recr.n).slice(0,6)};
-  m=/(?:leaving|remained|final sample (?:of|was|comprised)|analy[sz]ed|analysis (?:included|of))\s+(?:of\s+)?(\d[\d,]*)/i.exec(txt);
+  const rows=apRows(doc);
+  const lab=r=>r.sub||r.sec;
+  const structured=rows.some(r=>/method|design|participant|sample|measure|material|procedure|statistic/i.test(lab(r)))&&rows.some(r=>/result|finding/i.test(lab(r)));
+  const pick=(re)=>{const a=rows.filter(r=>re.test(lab(r)));return a.length?a:rows};
+  const meth=pick(/abstract|method|design|participant|sample|sampling|setting|measure|material|instrument|procedure|data|statistic|analysis|ethic/i);
+  const resu=pick(/result|finding|abstract/i);
+  const clean=s=>s.replace(/\u2212/g,'-').replace(/[‘’]/g,"'").replace(/\s+/g,' ');
+  const all=clean(rows.map(r=>r.text).join(' ')),mt=clean(meth.map(r=>r.text).join(' ')),rt=clean(resu.map(r=>r.text).join(' '));
+  const hasCase=/case (report|presentation)/i.test(rows.map(r=>r.sec).join(' '))||/^\s*case report/i.test((doc.pages&&doc.pages[0])||'');
+  const hasAbs=rows.some(r=>/abstract/i.test(r.sec))||/\babstract\b/i.test(((doc.pages&&doc.pages[0])||'').slice(0,3000));
+  /* research = has methods-type and results headings; case = case report; review = abstract but no methods and results; notpaper = none of these (a handbook, a leaflet) */
+  const looksStudy=(all.match(/\b[ptrF]\s*(?:\(\d+(?:,\s*\d+)?\)\s*)?[=<]\s*-?\.?\d/g)||[]).length>=5&&/informed consent|ethic|were recruited|participants/i.test(all);
+  const kind=(structured||looksStudy)?'research':all.length<4000?'short':hasCase?'case':hasAbs?'review':'notpaper';
+  const f={level:structured||(kind!=='short'&&all.length>12000)?'full':'abstract',kind:kind};
+  const find=(txt,re)=>{const r=new RegExp(re.source,re.flags.indexOf('g')>=0?re.flags:re.flags+'g');const o=[];let m;while((m=r.exec(txt))){o.push(m[0]);if(m.index===r.lastIndex)r.lastIndex++}return o};
+  {const dr=new RegExp(AP_DESIGNS.source,'gi');const seen={};f.design=[];let dm;
+    while((dm=dr.exec(mt))){const pre=mt.slice(Math.max(0,dm.index-14),dm.index).toLowerCase();if(/\b(not|non|no|neither|nor|future)[- ]?$/.test(pre))continue;const k=dm[0].toLowerCase().replace(/-/g,'');if(!seen[k]){seen[k]=1;f.design.push(dm[0])}}
+    f.design=f.design.slice(0,6)}
+  f.tests=apUniq(find(mt,AP_TESTS)).filter((x,i,a)=>!a.some((y,j)=>j!==i&&y.length>x.length&&y.toLowerCase().indexOf(x.toLowerCase())>=0)).slice(0,8);
+  f.software=apUniq(find(mt,AP_SOFT)).slice(0,4);
+  /* sample size: only from the methods-type text, never from the introduction */
+  let m,re;
+  const unit='(?:[a-z-]+\\s){0,2}(?:participants|students|adults|patients|children|adolescents|respondents|women|men|employees|teachers|people|individuals|volunteers|parents|nurses|cases)';
+  const num='(\\d[\\d,]*|(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[- ](?:one|two|three|four|five|six|seven|eight|nine))?|one hundred|ten|eleven|twelve|fifteen)';
+  const strong=new RegExp('(?:final sample|sample (?:of|size (?:of|was))|study (?:involved|included)|total of|recruited|enrolled|comprised|consisted of|included|involved)\\s+(?:of\\s+)?'+num+'(?!\\d)(?:\\s+(?:[a-z-]+\\s){0,2}(?:participants|students|adults|patients|children|adolescents|respondents|women|men|employees|teachers|people|individuals|volunteers|parents|nurses|cases))?','i');
+  m=strong.exec(mt);
+  let rec=m?apNumWord(m[1]):null;
+  if(!rec){re=new RegExp('\\b'+num+'\\s'+unit,'gi');const c=[];while((m=re.exec(mt))){if(/million|billion|thousand|percent/i.test(m[0]))continue;const n=apNumWord(m[1]);if(n&&n>=5)c.push(n)}rec=c.length?Math.max.apply(null,c):null}
+  const grp=[];re=/\b[Nn]\s*=\s*(\d[\d,]*)/g;while((m=re.exec(mt+' '+rt))){const n=apNumWord(m[1]);if(n&&(!rec||n<rec))grp.push(n)}
+  f.n={recruited:rec,groups:[],analysed:null};
+  m=/(?:leaving|remained|final sample (?:of|was|comprised)|analy[sz]ed|analysis (?:included|of))\s+(?:of\s+)?(\d[\d,]*)/i.exec(mt);
   f.n.analysed=m?apNumWord(m[1]):null;
-  m=/mean age(?: of| was| =)?\s*(\d+(?:\.\d+)?)(?:[^.;)]{0,25}?SD\s*=\s*(\d+(?:\.\d+)?))?/i.exec(txt);
+  const ref=f.n.analysed||rec;
+  if(grp.length>=2&&ref){const sum=grp.reduce((a,b)=>a+b,0);if(Math.abs(sum-ref)<=2)f.n.groups=grp.slice(0,6)}
+  const mr=mt+' '+rt;
+  m=/mean age(?: of| was| =)?\s*(\d+(?:\.\d+)?)(?:[^.;)]{0,25}?SD\s*=\s*(\d+(?:\.\d+)?))?/i.exec(mr);
   f.age=m?{mean:parseFloat(m[1]),sd:m[2]?parseFloat(m[2]):null}:null;
-  f.sex=[];re=/\b(\d+)\s+(women|men|female|females|male|males|girls|boys)\b/gi;while((m=re.exec(txt)))f.sex.push({n:parseInt(m[1],10),label:m[2].toLowerCase()});
+  m=/\bag(?:ed|es)\s+(?:between\s+)?(\d{1,2})\s*(?:-|–|to|and)\s*(\d{1,2})\b|age range(?: of| was)?\s*(\d{1,2})\s*(?:-|–|to)\s*(\d{1,2})/i.exec(mr);
+  f.ageRange=m?[parseInt(m[1]||m[3],10),parseInt(m[2]||m[4],10)]:null;
+  const sx={};re=/\b(\d+)\s+(women|men|female|females|male|males|girls|boys)\b/gi;while((m=re.exec(mr))){const l=m[2].toLowerCase();if(!sx[l]&&parseInt(m[1],10)<=(rec||1e9))sx[l]=parseInt(m[1],10)}
+  f.sex=Object.keys(sx).map(k=>({n:sx[k],label:k}));
   /* instruments */
-  const sc=[];find(new RegExp(AP_KNOWN_SCALES.source,'g')).forEach(x=>sc.push(x));
-  re=/\b((?:[A-Z][A-Za-z'-]+\s){1,4}(?:Scale|Inventory|Questionnaire|Index|Checklist|Schedule|Battery))\b/g;
-  while((m=re.exec(txt))){const nm=m[1].replace(/^(The|A|An|With|Using|Measured|Was|Were)\s/,'');if(nm.split(' ').length>=2)sc.push(nm)}
-  f.scales=apUniq(sc).slice(0,8);
-  f.items=[];re=/\b(\d{1,3})-item\b/gi;while((m=re.exec(txt)))f.items.push(parseInt(m[1],10));
-  f.alpha=[];re=/(?:Cronbach'?s?\s*(?:alpha|α)|α)\s*=\s*(0?\.\d+)/gi;while((m=re.exec(txt)))f.alpha.push(m[1]);
-  /* numbers */
+  let sc=find(mt,AP_KNOWN_SCALES);
+  re=/\b((?:[A-Z][A-Za-z'-]+\s){1,4}(?:Scale|Inventory|Questionnaire|Checklist|Profiler)(?: for (?:[A-Z][a-z]+)(?: [A-Z][a-z]+)?)?)\b/g;
+  while((m=re.exec(mt))){const nm=m[1].replace(/^(The|A|An|With|Using|Measured|Was|Were|Beck Scale\s+Using)\s/,'');if(nm.split(' ').length>=2&&!/\bFit\b/.test(nm)&&!/^(?:Adult|General|Information)\sInventory$/.test(nm))sc.push(nm)}
+  sc=apUniq(sc);f.scales=sc.filter((x,i)=>!sc.some((y,j)=>j!==i&&y.length>x.length&&y.toLowerCase().indexOf(x.toLowerCase())>=0)).slice(0,8);
+  f.items=[];re=/\b(\d{1,3})-item\b/gi;while((m=re.exec(mt)))f.items.push(parseInt(m[1],10));
+  f.alpha=[];re=/Cronbach'?s?\s*(?:alpha|α)(?:\s*coefficients?)?(?:\s+(?:was|were|of|=|ranged from))?\s*(0?\.\d+)/gi;while((m=re.exec(mt+' '+rt)))f.alpha.push(m[1]);
   f.effect=[];re=/\b(Cohen'?s d|d|g|ηp?2|R2|OR|β|r)\s*=\s*(-?\d*\.?\d+)/g;
-  while((m=re.exec(txt))){if(/^(d|g|r)$/.test(m[1])&&!/[,;(]\s*$/.test(txt.slice(Math.max(0,m.index-3),m.index)))continue;f.effect.push({k:m[1],v:m[2]})}
+  while((m=re.exec(rt))){if(/^(d|g|r)$/.test(m[1])&&!/[,;(]\s*$/.test(rt.slice(Math.max(0,m.index-3),m.index)))continue;f.effect.push({k:m[1],v:m[2]})}
   {const seen={};f.effect=f.effect.filter(e=>{const k=e.k+e.v;if(seen[k])return false;seen[k]=1;return true}).slice(0,8)}
-  f.pcount=(txt.match(/\bp\s*[=<>]\s*\.?\d/g)||[]).length;
-  m=/(?:significance|alpha) level(?: was| of| set at)?\s*(?:p\s*[<=]\s*)?(0?\.\d+)/i.exec(txt);f.alphaLevel=m?m[1]:null;
-  /* things a reader looks for: yes = mentioned, no = paper says it was not done, '' = not found in the text read */
+  f.pcount=(rt.match(/\b[pP]\s*[=<>]\s*\.?\d/g)||[]).length;
+  m=/(?:significance|alpha) level(?: was| of| set at)?\s*(?:p\s*[<=]\s*)?(0?\.\d+)/i.exec(mt);f.alphaLevel=m?m[1]:null;
   f.checks=[
-    {k:'ethics',label:'Ethics approval',v:apMention(txt,/ethic(?:s|al)?(?: review)? (?:committee|approval|board|clearance)|\bIRB\b|institutional review board/i)},
-    {k:'consent',label:'Consent',v:apMention(txt,/informed consent|consent form|gave (?:written )?consent/i)},
-    {k:'power',label:'Sample size justified (power)',v:apMention(txt,/power (?:analysis|calculation)|G\*Power|sample size (?:was )?(?:calculated|determined|justified)/i)},
-    {k:'normality',label:'Normality or assumptions checked',v:apMention(txt,/normality|shapiro|kolmogorov|skewness|kurtosis|assumptions? (?:of|were)/i)},
-    {k:'effect',label:'Effect size reported',v:f.effect.length||/effect size|eta squared|odds ratio/i.test(txt)?'yes':''},
-    {k:'missing',label:'Missing data or dropout described',v:apMention(txt,/missing (?:data|values)|attrition|drop-?outs?|did not return|lost to follow/i)},
-    {k:'prereg',label:'Pre-registered',v:apMention(txt,/pre-?regist|aspredicted|\bOSF\b|CTRI/i)},
-    {k:'limits',label:'Limitations discussed',v:ch.some(c=>/limitation/i.test(c.sec||''))||/\blimitations?\b/i.test(txt)?'yes':''}
+    {k:'ethics',label:'Ethics approval',v:apMention(all,/ethic(?:s|al)?(?: review)? (?:committee|approval|board|clearance)|\bIRB\b|institutional review board/i)},
+    {k:'consent',label:'Consent',v:apMention(all,/informed consent|consent form|gave (?:written )?consent|consent was obtained/i)},
+    {k:'power',label:'Sample size justified (power)',v:apMention(all,/power (?:analysis|calculation)|G\*Power|sample size (?:was )?(?:calculated|determined|justified)/i)},
+    {k:'normality',label:'Normality or assumptions checked',v:apMention(all,/normality|shapiro|kolmogorov|skewness|kurtosis|assumptions? (?:of|were)/i)},
+    {k:'effect',label:'Effect size reported',v:f.effect.length||/effect size|eta squared|odds ratio/i.test(all)?'yes':''},
+    {k:'missing',label:'Missing data or dropout described',v:apMention(all,/missing (?:data|values)|attrition|drop-?outs?|did not return|lost to follow/i)},
+    {k:'prereg',label:'Pre-registered',v:apMention(all,/pre-?regist|aspredicted|\bOSF\b|CTRI/i)},
+    {k:'limits',label:'Limitations discussed',v:rows.some(r=>/limitation/i.test(r.sec))||/\blimitations?\b/i.test(all)?'yes':''}
   ];
   return f;
 }
 function apStageSentences(doc,perStage){
   perStage=perStage||2;
-  const abs=apFacts(doc).level==='abstract';
-  const rows=[];
-  doc.chunks.filter(c=>!c.ref).forEach(c=>{
-    let sub='';
-    apSentences(c.text).forEach(s=>{
-      if(AP_SUBLAB.test(s)){sub=s.replace(/\.$/,'');return}
-      if(s.length<30||s.length>450)return;
-      rows.push({text:s,page:c.page,sec:c.sec||'',sub:sub});
-    });
-  });
+  const rows=apRows(doc);
+  const ff=apFacts(doc),abs=ff.level==='abstract';
   const out={};
+  const allow=ff.kind==='notpaper'?[]:ff.kind==='review'?['gap','lit','conclusion','limits','recs']:null;
   AP_STAGES.forEach(st=>{
+    if(allow&&allow.indexOf(st.k)<0){out[st.k]=[];return}
     const terms=apToks(st.terms||'');
     const secs=AP_STAGE_SEC[st.k]||[/./,/./];
     const sc=rows.map((r,i)=>{
-      const lc=r.text.toLowerCase();let s=0;
-      terms.forEach(w=>{if(lc.indexOf(w)>=0)s+=1});
+      const lc=r.text.toLowerCase();let s=0,h=0;
+      terms.forEach(w=>{if(lc.indexOf(w)>=0)h+=1});s+=Math.min(h,3);
       const lab=(abs&&/abstract/i.test(r.sec)&&!r.sub)?'':(r.sub||r.sec);
       if(lab){if(secs[1].test(lab))s+=4;else if(secs[0].test(lab))s+=2;else s-=2}
       if(!abs&&/abstract/i.test(r.sec)&&st.k!=='gap'&&st.k!=='conclusion')s-=2;
-      if(st.k==='sample'&&/\b(\d+|sixty|forty|fifty|thirty|twenty|ninety|eighty|seventy)\b.{0,40}\b(participants|students|adults|patients|children|respondents|women|men|people)\b/i.test(r.text))s+=3;
-      if(st.k==='results'&&/\bp\s*[=<>]\s*\.?\d|\bM\s*=|\bt\(|\bF\(|\br\(|\bn\s*=/.test(r.text))s+=3;
-      if(st.k==='stats'&&(AP_TESTS.lastIndex=0,AP_TESTS.test(r.text)))s+=3;
-      if(st.k==='measures'&&/\b\d+-item\b|Cronbach|alpha\s*=/i.test(r.text))s+=3;
-      if(st.k==='gap'&&/\b(gap|little is known|few studies|very few|has not been|have not been|lack of|we (?:asked|tested|expected)|aim|purpose)\b/i.test(r.text))s+=3;
-      if(st.k==='limits'&&/\blimitation|\bcannot\b|may not hold|self-report|did not (?:measure|check)\b/i.test(r.text))s+=3;
-      if(st.k==='recs'&&/\b(should|recommend|could offer|future (?:studies|research))\b/i.test(r.text))s+=3;
-      if(st.k==='conclusion'&&/\b(conclude|suggest|was linked|needs repeating|support)\b/i.test(r.text))s+=2;
-      if(st.k==='design'&&(AP_DESIGNS.lastIndex=0,AP_DESIGNS.test(r.text)))s+=3;
-      if(st.k==='procedure'&&/\b(consent|ethic|approved|debrief|told they could)\b/i.test(r.text))s+=3;
-      if(st.k==='data'&&/\b(missing|removed|entered|spreadsheet|coded|scored|calculated|outlier)\b/i.test(r.text))s+=3;
-      if(st.k==='lit'&&/\(([A-Z][A-Za-z-]+(?: (?:&|and) [A-Z][A-Za-z-]+)?(?: et al\.)?),? \d{4}\)|\b(?:earlier|previous|prior) (?:work|studies|research)\b/.test(r.text))s+=3;
+      const T=r.text;
+      if(st.k==='sample'){
+        if(/\b(\d+|sixty|forty|fifty|thirty|twenty|ninety|eighty|seventy)\b.{0,40}\b(participants|students|adults|patients|children|respondents|women|men|people)\b/i.test(T))s+=3;
+        if(/\b(final sample|study (?:involved|included)|sample (?:of|consisted|comprised)|total of|were recruited|inclusion criteria|participants were)\b/i.test(T))s+=4;
+        if(/\bpilot\b/i.test(T))s-=7;
+      }
+      if(st.k==='results'&&/\b[pP]\s*[=<>]\s*\.?\d|\bM\s*=|\bt\(|\bF\(|\br\(|\bn\s*=|\br\s*=/.test(T))s+=3;
+      if(st.k==='stats'){AP_TESTS.lastIndex=0;if(AP_TESTS.test(T))s+=3;if(/\b(SPSS|Stata|SAS|JASP|jamovi|R version)\b/.test(T))s+=3;AP_TESTS.lastIndex=0}
+      if(st.k==='measures'&&/\b\d+-item\b|Cronbach|alpha\s*=|(?:Scale|Inventory|Questionnaire|Profiler)\b/.test(T))s+=3;
+      if(st.k==='gap'){
+        if(/\b(gap|little is known|few studies|very few|has not been|have not been|lack of|under-?researched)\b/i.test(T))s+=3;
+        if(/\b(?:the )?(?:present|current) study\b.{0,90}\b(address|examin|aim|investigat|explor|test|provid)|\bwe (?:aim|sought|hypothesi[sz]ed|examined|investigated|asked|tested)|\b(?:aim|purpose|objective) of (?:this|the present|our)|hypotheses were|\bH1:/i.test(T))s+=6;
+      }
+      if(st.k==='limits'&&/\blimitation|\bcannot\b|may not hold|self-report|did not (?:measure|check)\b|should be acknowledged/i.test(T))s+=3;
+      if(st.k==='recs'&&/\b(should|recommend|could offer|future (?:studies|research))\b/i.test(T))s+=3;
+      if(st.k==='conclusion'&&/\b(conclude|suggest|was linked|needs repeating|support|associated with)\b/i.test(T))s+=2;
+      if(st.k==='design'){AP_DESIGNS.lastIndex=0;if(AP_DESIGNS.test(T))s+=3;AP_DESIGNS.lastIndex=0}
+      if(st.k==='procedure'&&/\b(consent|ethic|approved|debrief|told they could|anonymous)\b/i.test(T))s+=3;
+      if(st.k==='data'&&/\b(missing|removed|entered|spreadsheet|coded|scored|calculated|outlier|screened)\b/i.test(T))s+=3;
+      if(st.k==='lit'&&/\(([A-Z][A-Za-z-]+(?: (?:&|and) [A-Z][A-Za-z-]+)?(?: et al\.)?),? \d{4}\)|\b(?:earlier|previous|prior) (?:work|studies|research)\b|\[\d+(?:[,–-]\s*\d+)*\]/.test(T))s+=3;
       return{r:r,i:i,s:s};
     });
-    const best=sc.filter(x=>x.s>=4).sort((a,b)=>b.s-a.s||a.i-b.i).slice(0,perStage).sort((a,b)=>a.i-b.i);
+    const best=sc.filter(x=>x.s>=(abs?4:5)).sort((a,b)=>b.s-a.s||a.i-b.i).slice(0,perStage).sort((a,b)=>a.i-b.i);
     out[st.k]=best.map(x=>({text:x.r.text,page:x.r.page,sec:x.r.sub||x.r.sec,score:x.s}));
   });
   return out;
@@ -17613,7 +17667,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.07a';
+const APP_BUILD='2026.11.08a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
