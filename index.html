@@ -3824,6 +3824,76 @@ const B1_FLOW=[['id','Records from databases','Databases से records','i',1],
  ['oId','Other methods: records from websites, organisations, citation searching','दूसरे तरीके: websites, संस्थाओं, citation searching से records','o'],['oSought','Other methods: reports sought','दूसरे तरीके: माँगे गए reports','o'],
  ['oNotRet','Other methods: reports not retrieved','दूसरे तरीके: जो reports नहीं मिले','o'],['oFt','Other methods: reports assessed','दूसरे तरीके: पढ़े गए reports','o'],['oExF','Other methods: reports excluded','दूसरे तरीके: बाहर किए गए reports','o']];
 function b1Formal(o){const t=(wGet(o).B1||{}).type;return t==='scop'||t==='sys'||t==='meta'}
+/* B1 "Help me choose" (build 2026.11.08e): four plain questions (a fifth for meta-analysis) give a suggested review type
+   with its reasons, the checklist and the protocol it needs. Rules only, no AI. Agreed 8 Nov 2026, see
+   claude/appuscholar-b-steps-by-review-type-2026-11-08.md. */
+const B1_HELP_QS=[
+ ['goal',['1. What do you need from the papers you read?','1. पढ़े गए papers से आपको क्या चाहिए?'],[['argue','Background, and a case for my own study','Background, और अपनी study के पक्ष में तर्क'],['map','A map of what has been studied, and where the gaps are','अब तक क्या पढ़ा गया है उसका नक्शा, और कहाँ कमी है'],['answer','One answer to a focused question','एक तय सवाल का एक जवाब'],['number','One combined number (an effect size) from many studies','कई studies से मिलाकर एक संख्या (effect size)']]],
+ ['focus',['2. Can your question be written as PICO or PECO (who, which exposure or treatment, compared with what, which outcome)?','2. क्या आपका सवाल PICO या PECO में लिखा जा सकता है (कौन, कौन-सा exposure या treatment, किससे तुलना, कौन-सा outcome)?'],[['yes','Yes, it is written in A3','हाँ, A3 में लिखा है'],['notyet','Not yet','अभी नहीं'],['unsure','Not sure','पक्का नहीं']]],
+ ['team',['3. Who will screen the papers?','3. Papers की छँटाई कौन करेगा?'],[['solo','Only me','सिर्फ़ मैं'],['two','Me and one more person','मैं और एक और व्यक्ति']]],
+ ['time',['4. How much time do you have for the review itself?','4. Review के लिए आपके पास कितना समय है?'],[['lt2','Under 2 months','2 महीने से कम'],['m26','2 to 6 months','2 से 6 महीने'],['gt6','More than 6 months','6 महीने से ज़्यादा']]],
+ ['combine',['5. Do most studies report the same outcome with numbers you can combine (means and SDs, or correlations)?','5. क्या ज़्यादातर studies एक ही outcome के ऐसे numbers देती हैं जिन्हें मिलाया जा सके (mean और SD, या correlation)?'],[['yes','Yes','हाँ'],['no','No','नहीं'],['dk','I do not know yet','अभी पता नहीं']]]
+];
+const B1_HELP_TXT={
+ r_narr:['I need background and a case for my own study, so a narrative review fits.','मुझे background और अपनी study के पक्ष में तर्क चाहिए, इसलिए narrative review ठीक है।'],
+ r_scop:['I need a map of what has been studied and where the gaps are, so a scoping review fits.','मुझे यह नक्शा चाहिए कि क्या पढ़ा गया है और कहाँ कमी है, इसलिए scoping review ठीक है।'],
+ r_sys:['I need one answer to a focused question, so a systematic review fits.','मुझे एक तय सवाल का एक जवाब चाहिए, इसलिए systematic review ठीक है।'],
+ r_meta:['I need one combined effect size from many studies, so a systematic review with meta-analysis fits.','मुझे कई studies से मिलाकर एक effect size चाहिए, इसलिए meta-analysis के साथ systematic review ठीक है।'],
+ r_nocomb:['Most studies do not report numbers that can be combined, so the results will be brought together in words: a systematic review without meta-analysis.','ज़्यादातर studies ऐसे numbers नहीं देतीं जिन्हें मिलाया जा सके, इसलिए नतीजे शब्दों में जोड़े जाएँगे: meta-analysis के बिना systematic review।'],
+ r_notyet:['My question is not yet focused enough for a systematic review, so I start with a scoping review.','मेरा सवाल अभी systematic review के लिए पूरा तय नहीं है, इसलिए शुरुआत scoping review से।'],
+ r_time:['I have under two months, so a narrative review with a full search log is the safer choice.','मेरे पास दो महीने से कम समय है, इसलिए पूरे search log के साथ narrative review ज़्यादा सुरक्षित है।'],
+ n_sharpen:['Or sharpen the question in A3 (PICO or PECO) and come back to B1.','या A3 में सवाल को PICO या PECO में तय करें और B1 पर लौटें।'],
+ n_time:['A {t} usually takes several months: a protocol, two screening rounds and a quality check.','{t} में आम तौर पर कई महीने लगते हैं: protocol, छँटाई के दो दौर और quality जाँच।'],
+ n_solo:['PRISMA asks for two people to screen. Working alone is allowed: say so in the method, and ask a second person to screen a sample of the papers.','PRISMA छँटाई के लिए दो लोग माँगता है। अकेले काम चल सकता है: method में यह लिखें, और किसी दूसरे व्यक्ति से कुछ papers की छँटाई करवाएँ।'],
+ n_unsure:['Write the question as PICO or PECO in A3 first. If it does not fit, a scoping review is the better start.','पहले A3 में सवाल को PICO या PECO में लिखें। अगर न बैठे, तो scoping review से शुरुआत बेहतर है।'],
+ n_dk:['Before you commit, open three likely papers and check they report the same outcome with means and SDs or correlations.','पक्का करने से पहले तीन संभावित papers खोलें और देखें कि वे एक ही outcome के mean और SD या correlation देते हैं।'],
+ n_pool:['Pooling (forest plot, heterogeneity) is not in Stats Lab yet: you will note each study’s numbers in a table and run the pooling in meta-analysis software.','Pooling (forest plot, heterogeneity) अभी Stats Lab में नहीं है: हर study के numbers एक table में लिखे जाएँगे और pooling meta-analysis software में करनी होगी।'],
+ n_narr:['A narrative review still keeps the full search log in B2: database, words, date and number of results for every search.','Narrative review में भी B2 में पूरा search log रखें: हर खोज का database, शब्द, तारीख़ और नतीजों की संख्या।'],
+ g_narr:['SANRA, as a self-check','SANRA, ख़ुद की जाँच के लिए'],g_scop:['PRISMA-ScR','PRISMA-ScR'],g_sys:['PRISMA 2020','PRISMA 2020'],g_meta:['PRISMA 2020','PRISMA 2020'],
+ p_narr:['Not needed','ज़रूरी नहीं'],p_scop:['Written, registered on OSF (PROSPERO does not take scoping reviews)','लिखित, OSF पर registered (PROSPERO scoping review नहीं लेता)'],p_sys:['Written, registered on PROSPERO or OSF','लिखित, PROSPERO या OSF पर registered'],p_meta:['Written, registered on PROSPERO or OSF, with the effect measure planned','लिखित, PROSPERO या OSF पर registered, जोड़ने वाला effect measure पहले से तय']
+};
+function b1Suggest(h,hi){
+  h=h||{};const T=k=>B1_HELP_TXT[k][hi?1:0];
+  const name=k=>{const t=B1_TYPES.find(x=>x[0]===k);return t?String(t[hi?2:1]).replace(/\s*\(.*\)\s*$/,''):k};
+  if(!h.goal)return null;
+  let t={argue:'narr',map:'scop',answer:'sys',number:'meta'}[h.goal];if(!t)return null;
+  const r=[T('r_'+t)],n=[];
+  if(t==='meta'&&h.combine==='no'){t='sys';r.push(T('r_nocomb'))}
+  if((t==='sys'||t==='meta')&&h.focus==='notyet'){t='scop';r.push(T('r_notyet'));n.push(T('n_sharpen'))}
+  if(t!=='narr'&&h.time==='lt2'){n.push(T('n_time').replace('{t}',hi?name(t):name(t).toLowerCase()));t='narr';r.push(T('r_time'))}
+  if(t!=='narr'&&h.team==='solo')n.push(T('n_solo'));
+  if(t!=='narr'&&h.focus==='unsure')n.push(T('n_unsure'));
+  if(t==='meta'&&h.combine==='dk')n.push(T('n_dk'));
+  if(t==='meta')n.push(T('n_pool'));
+  if(t==='narr')n.push(T('n_narr'));
+  return{type:t,name:name(t),guide:T('g_'+t),proto:T('p_'+t),reasons:r,notes:n};
+}
+function b1HelpHTML(b,hi){
+  const h=b.help||{},L=(en,x)=>hi?x:en,qs=B1_HELP_QS.filter(q=>q[0]!=='combine'||h.goal==='number');
+  const done=qs.filter(q=>h[q[0]]).length,sg=b1Suggest(h,hi);
+  const q=x=>'<fieldset style="border:0;margin:10px 0 0;padding:0"><legend style="padding:0;font-weight:600;font-size:14.5px;line-height:1.45">'+escHTML(x[1][hi?1:0])+'</legend><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">'+
+    x[2].map(o=>{const on=h[x[0]]===o[0];return'<button type="button" class="btn btn-sm '+(on?'btn-purple':'btn-ghost')+'" aria-pressed="'+on+'" style="min-height:40px;text-align:left;white-space:normal'+(on?';color:#fff;background:#6d28d9;border-color:#6d28d9':'')+'" onclick="wNestRedraw(\'B1\',\'help\',\''+x[0]+'\',\''+(on?'':o[0])+'\')">'+escHTML(o[hi?2:1])+'</button>'}).join('')+'</div></fieldset>';
+  let s='';
+  if(sg){
+    s='<div style="margin-top:12px;border:2px solid #6d28d9;border-radius:10px;padding:12px 14px;background:#faf8ff" aria-live="polite">'+
+      '<p class="desc" style="margin:0">'+L('Suggestion, worked out from your answers (no AI)','आपके जवाबों से निकला सुझाव (AI नहीं)')+'</p>'+
+      '<p style="margin:4px 0 8px;font-size:18px;font-weight:700;color:#2e1065">'+escHTML(sg.name)+'</p>'+
+      '<p style="margin:0;font-size:14px"><b>'+L('Checklist the examiner will use','Examiner कौन-सी checklist देखेंगे')+':</b> '+escHTML(sg.guide)+'</p>'+
+      '<p style="margin:2px 0 8px;font-size:14px"><b>'+L('Protocol','Protocol')+':</b> '+escHTML(sg.proto)+'</p>'+
+      '<p style="margin:0 0 2px;font-weight:600;font-size:14px">'+L('Why','क्यों')+'</p>'+sg.reasons.map(x=>'<p style="margin:0 0 4px;font-size:14px;line-height:1.5">'+escHTML(x)+'</p>').join('')+
+      (sg.notes.length?'<ul style="margin:6px 0 0;padding-left:18px;color:#92400e;font-size:14px;line-height:1.5">'+sg.notes.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')+
+      '<div class="row" style="gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="b1UseSug()">'+L('Use this suggestion','यह सुझाव लें')+'</button><span class="desc">'+L('It fills the type and the reason below. You can still pick another type.','यह नीचे प्रकार और कारण भर देगा। आप फिर भी दूसरा प्रकार चुन सकते हैं।')+'</span></div></div>';
+  }
+  return'<details class="sub-box" id="b1Help"'+(b.type?'':' open')+' style="margin-bottom:10px"><summary style="cursor:pointer"><b>'+L('Help me choose','चुनने में मदद')+'</b> <span class="desc">('+L(done+' of '+qs.length+' answered',qs.length+' में से '+done+' जवाब')+(sg&&b.type&&sg.type!==b.type?', '+L('suggestion differs from your choice','सुझाव आपकी पसंद से अलग है'):'')+')</span></summary>'+qs.map(q).join('')+s+'</details>';
+}
+function b1UseSug(){
+  const o=studyGet(),b=(wGet(o).B1)||{},hi=studyHi(),sg=b1Suggest(b.help,hi);if(!sg)return;
+  const why=sg.reasons.join(' '),own=String(b.why||'').trim(),mine=own&&own!==String(b.whyAuto||'').trim();
+  wPatch('B1','type',sg.type);
+  if(!mine){wPatch('B1','why',why);wPatch('B1','whyAuto',why)}
+  wRedraw();
+  showToast(mine?(hi?'प्रकार चुन लिया। आपका अपना कारण रखा गया; सुझाया गया कारण ऊपर दिखा है।':'Type set. Your own reason was kept; the suggested reason is shown above.'):(hi?'प्रकार और कारण भर दिए। चाहें तो कारण अपने शब्दों में बदलें।':'Type and reason filled in. Edit the reason in your own words if you like.'));
+}
 function b1FlowIssues(o){const n=(wGet(o).B1||{}).n||{},v=k=>(n[k]===''||n[k]==null)?null:+n[k],z=k=>v(k)==null?0:v(k),hi=studyHi(),out=[],L=(en,x)=>hi?x:en;
   if(v('id')!=null&&v('dup')!=null&&v('scr')!=null){const e=v('id')+z('reg')-v('dup')-z('auto')-z('oth');if(e!==v('scr'))out.push(L('Screened should equal found − duplicates and other removals (','Screened = मिले − duplicates और दूसरे हटाए गए होना चाहिए (')+e+')')}
   if(v('scr')!=null&&v('exT')!=null&&v('sought')!=null&&v('scr')-v('exT')!==v('sought'))out.push(L('Reports sought should equal screened − excluded (','माँगे गए reports = छाँटे − बाहर होना चाहिए (')+(v('scr')-v('exT'))+')');
@@ -4347,7 +4417,7 @@ function wExtra3HTML(id,o){
   if(id==='D5')return d5HTML(o);
   if(id==='B3')return'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
   if(id==='B1'){const b=w.B1||{},n=b.n||{},f=b1Formal(o);
-    let h=lab(L('Type of review','Review का प्रकार'))+sel(B1_TYPES,b.type,"wPick('B1','type',this.value)")+
+    let h=b1HelpHTML(b,hi)+lab(L('Type of review','Review का प्रकार'))+sel(B1_TYPES,b.type,"wPick('B1','type',this.value)")+
      lab(L('Why this type (for your question, time and team)','यह प्रकार क्यों (आपके सवाल, समय और team के हिसाब से)'))+'<textarea rows="3" onchange="wPatch(\'B1\',\'why\',this.value)">'+escHTML(b.why||'')+'</textarea>';
     if(b.type==='narr')h+='<p class="desc" style="margin:6px 0 0">'+L('A narrative review still keeps a search log (B2), so you can say where you looked.','Narrative review में भी search log (B2) रखें, ताकि आप बता सकें कि कहाँ खोजा।')+'</p>';
     if(f){h+='<p style="margin:10px 0 2px"><b>'+L('Protocol','Protocol')+'</b> <span class="desc">'+(b.type==='scop'?'Arksey & O\'Malley 2005; PRISMA-ScR':'PRISMA 2020')+'</span></p>'+
@@ -17680,7 +17750,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08d';
+const APP_BUILD='2026.11.08e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
