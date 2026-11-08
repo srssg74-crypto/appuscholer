@@ -12537,7 +12537,17 @@ async function b3AiAsk(){const lib=citGetLib(),inc=[];
   B3AI.plan={all:inc.length,full:inc.filter(x=>x.kind==='full').length,abs:inc.filter(x=>x.kind==='abstract').length,none:inc.filter(x=>x.kind==='none').length,list:inc.filter(x=>x.kind!=='none')};B3AI.msg='';logRefresh()}
 function b3AiCancel(){B3AI.plan=null;logRefresh()}
 function b3AiPrompt(title,txt){return'Below is the text of a research paper. For each stage in the list, copy ONE sentence from the text, word for word, that best answers it. Maximum 45 words per sentence. If the text has nothing for a stage, use an empty string. Do not paraphrase and do not add words.\n\nStages:\n'+AP_STAGES.map(st=>'- "'+st.k+'": '+st.brief).join('\n')+'\n\nReply with JSON only, no other text: {'+AP_STAGES.map(st=>'"'+st.k+'":""').join(',')+'}\n\nTitle: '+title+'\n\nText:\n'+txt}
-function b3AiParse(raw){try{const m=String(raw||'').replace(/```json|```/g,'').match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null}catch(e){return null}}
+/* The model's reply is read leniently: prose around the JSON, code fences, a trailing comma, a reply cut off by the token limit
+   (the finished "stage": "sentence" pairs are kept), keys in any case, a list instead of a string. Anything else is a failed read. */
+function b3AiParse(raw){
+  let s=String(raw||'').replace(/```(?:json)?/gi,'');const a=s.indexOf('{');if(a<0)return null;s=s.slice(a);const b=s.lastIndexOf('}');let j=null;
+  const tryParse=t=>{try{const v=JSON.parse(t);return v&&typeof v==='object'&&!Array.isArray(v)?v:null}catch(e){return null}};
+  if(b>0)j=tryParse(s.slice(0,b+1))||tryParse(s.slice(0,b+1).replace(/,\s*([}\]])/g,'$1'));
+  if(!j){const o={};AP_STAGES.forEach(st=>{const m=s.match(new RegExp('"'+st.k+'"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"','i'));if(m){try{o[st.k]=JSON.parse('"'+m[1]+'"')}catch(e){o[st.k]=m[1]}}});j=Object.keys(o).length?o:null}
+  if(!j)return null;
+  const out={},low={};Object.keys(j).forEach(k=>{low[k.toLowerCase().trim()]=j[k]});
+  AP_STAGES.forEach(st=>{let v=low[st.k.toLowerCase()];if(Array.isArray(v))v=v.map(x=>typeof x==='string'?x:'').filter(Boolean).join(' ');out[st.k]=typeof v==='string'?v:''});
+  return out}
 async function b3AiRun(){const pl=B3AI.plan;if(!pl||B3AI.running)return;B3AI.running=true;let done=0,kept=0,dropped=0,failed=0,stopped='';const hi=studyHi();
   for(const x of pl.list){
     B3AI.msg=(hi?'पढ़ रहे हैं: ':'Reading: ')+(done+1)+' / '+pl.list.length;logRefresh();
@@ -18041,7 +18051,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08z';
+const APP_BUILD='2026.11.08za';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18782,7 +18792,7 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
-/* PDF tools (build 2026.11.08z): pdf-lib is loaded the first time it is needed. */
+/* PDF tools (build 2026.11.08za): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
   const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
