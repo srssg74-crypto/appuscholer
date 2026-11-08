@@ -3613,6 +3613,7 @@ function logTableHTML(d,o){const hi=studyHi(),rows=logRows(o,d.key),L=a=>hi?a[1]
    '<div style="overflow-x:auto"><table class="log-tbl" style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px"><thead><tr>'+d.cols.map(c=>'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--line,#ddd)">'+escHTML(hi?c[2]:c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>'+
    rows.map((r,i)=>'<tr>'+d.cols.map(c=>'<td style="padding:3px;vertical-align:top">'+cell(c,r,i)+'</td>').join('')+'<td><button type="button" class="btn btn-ghost btn-sm" title="'+(hi?'हटाएँ':'Remove')+'" onclick="logDel(\''+d.key+'\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>'+
    '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="logAdd(\''+d.key+'\')">+ '+(hi?'पंक्ति जोड़ें':'Add a row')+'</button>'+(d.lib?'<button type="button" class="btn btn-ghost btn-sm" onclick="logFromLibrary(\''+d.key+'\')">📚 '+(hi?'Library के papers लाएँ':'Bring papers from the library')+'</button>':'')+(rows.length?'<button type="button" class="btn btn-ghost btn-sm" onclick="logCsv(\''+d.key+'\')">⬇ CSV</button>':'')+'</div>';
+  if(d.key==='search'&&rows.some(r=>Array.isArray(r.keys))){const m=b2Summary(o);h+='<p class="desc" style="margin:6px 0 0">'+(hi?m.searches+' searches में '+m.read+' records पढ़े गए, '+m.unique+' अलग-अलग, '+m.dup+' duplicate।':m.searches+' searches read '+m.read+' records: '+m.unique+' different papers, '+m.dup+' duplicates.')+' <button type="button" class="btn btn-ghost btn-sm" onclick="b2UsePrisma()">'+(hi?'PRISMA flow में डालें':'Put into the PRISMA flow')+'</button></p>'}
   if(d.key==='recruit'&&rows.length){const sum=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);h+='<p class="desc" style="margin:6px 0 0">'+(hi?'कुल: ':'Total: ')+sum('appr')+(hi?' से पूछा, ':' approached, ')+sum('agreed')+(hi?' माने, ':' agreed, ')+sum('done')+(hi?' ने पूरा किया, ':' completed, ')+sum('left')+(hi?' हटे।':' withdrew.')+'</p>'}
   if(d.key==='matrix'&&rows.some(r=>r.stance)){const c=k=>rows.filter(r=>r.stance===k).length;h+='<p class="desc" style="margin:6px 0 0">'+(hi?'समर्थन: ':'Supports: ')+c('Supports')+(hi?', विरोध: ':', contrasts: ')+c('Contrasts')+(hi?', मिला-जुला: ':', mixed: ')+c('Mixed')+'. '+(c('Contrasts')?'':(hi?'कोई विरोधी study नहीं: एक बार उलटे नतीजे वाली studies भी खोजें, वरना review एकतरफ़ा लगेगा।':'No contrasting study yet: search once for studies with the opposite result, or the review will read one-sided.'))+'</p>'}
   if(d.key==='supervisor'&&rows.length){const open=rows.filter(r=>(r.st||'Open')!=='Done').length;h+='<p class="desc" style="margin:6px 0 0">'+(open?(hi?open+' टिप्पणियाँ अभी खुली हैं।':open+' comment(s) still open.'):(hi?'सभी टिप्पणियाँ बंद।':'All comments closed.'))+'</p>'}
@@ -12426,9 +12427,21 @@ function rsAskUse(){
 /* B2 fills itself. Every database that answered gets one row in the search log: date, database, the exact
    string that was sent, the filters, and how many records the database says it holds for that string.
    A database that did not answer is not logged (nothing was searched). Old rows stay; a repeat search adds a row. */
+function b2Key(p){const d=String(p.doi||'').toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//,'').trim();return d||String(p.title||'').toLowerCase().replace(/\W+/g,'').slice(0,60)}
+function b2Summary(o){const rows=logRows(o,'search').filter(r=>Array.isArray(r.keys)),seen=new Set();let read=0;
+  rows.forEach(r=>r.keys.forEach(k=>{read++;seen.add(k)}));
+  return{searches:rows.length,read:read,unique:seen.size,dup:read-seen.size}}
+function b2UsePrisma(){const o=studyGet(),m=b2Summary(o),b=(wGet(o).B1||{}),n=b.n||{},hi=studyHi();
+  if(!m.read){showToast(hi?'अभी कोई search दर्ज नहीं':'No searches logged yet');return}
+  let set=[];
+  if(n.id===''||n.id==null){wNest('B1','n','id',String(m.read));set.push('id')}
+  if(n.dup===''||n.dup==null){wNest('B1','n','dup',String(m.dup));set.push('dup')}
+  wRedraw();logRefresh();
+  showToast(set.length?(hi?'PRISMA में भर दिया (जो खाना खाली था)':'Put into the PRISMA flow (only boxes that were empty)'):(hi?'PRISMA के खाने पहले से भरे हैं, छुए नहीं':'The PRISMA boxes already have numbers; left alone'))}
 function b2AutoLog(dbs,outcomes,used,opt){
   const o=studyGet();if(!o||!studyKey())return 0;
   const rows=logRows(o,'search').slice(),today=new Date().toISOString().slice(0,10);let n=0;
+  window._rsEarlier=new Set();rows.forEach(r=>(r.keys||[]).forEach(k=>window._rsEarlier.add(k)));
   const kind={OpenAlex:'oa',PubMed:'pm'};
   dbs.forEach((db,i)=>{
     const out=outcomes[i];if(!Array.isArray(out))return;
@@ -12436,7 +12449,7 @@ function b2AutoLog(dbs,outcomes,used,opt){
     if(opt&&opt.design&&opt.design!=='any')lim.push('kind of study: '+opt.design);
     if(opt&&opt.focus)lim.push('narrowed to one topic');
     lim.push('first '+out.length+' read');
-    rows.push({date:today,db:db,q:used[kind[db]]||'',lim:lim.join('; '),hits:String(total),kept:'',auto:1});n++;
+    rows.push({date:today,db:db,q:used[kind[db]]||'',lim:lim.join('; '),hits:String(total),kept:'',auto:1,keys:out.map(b2Key)});n++;
   });
   if(n){logSaveRows('search',rows);try{subRenderSide()}catch(e){}}
   return n;
@@ -12575,6 +12588,10 @@ function rsCitesIn(t){const out=[],re=/([A-Z][A-Za-z'’-]+)(?:\s+(?:et al\.?|(?
 async function rsLookupCite(c,ctx){const q=[c.a].concat(rsQParts(ctx).slice(0,4).map(x=>x.w)).join(' ');
   const r=await fetch(oaUrl('https://api.openalex.org/works?per-page=10&search='+encodeURIComponent(q)+'&filter=publication_year:'+c.y+'&select=id,display_name,authorships,publication_year,primary_location,doi'));if(!r.ok)return[];const j=await r.json();
   return(j.results||[]).filter(w=>(w.authorships||[]).some(a=>String((a.author||{}).display_name||'').toLowerCase().indexOf(c.a.toLowerCase())>=0))}
+function rsSeenBadge(p){let inLib=false;try{const d=rsEntryFromResult(p);inLib=citGetLib().some(e=>e.title===d.title||(d.doi&&e.doi&&String(e.doi).toLowerCase()===String(d.doi).toLowerCase()))}catch(e){}
+  const earlier=!!(window._rsEarlier&&window._rsEarlier.has(b2Key(p))),hi=studyHi();
+  return(inLib?'<span class="src-tag" style="background:#ede9fe;color:#4c1d95" title="'+escAttr(hi?'यह paper आपकी library में है। PRISMA में duplicate गिना जाएगा।':'This paper is already in your library. It counts as a duplicate for PRISMA.')+'">'+(hi?'Library में पहले से':'Already in library')+'</span>':'')+
+   (earlier?'<span class="src-tag" style="background:#fef3c7;color:#713f12" title="'+escAttr(hi?'पिछली search में भी मिला था।':'Also found by an earlier search.')+'">'+(hi?'पहले की search में मिला':'Found in an earlier search')+'</span>':'')}
 function rsRenderResults(){
   const box=document.getElementById('rsResults');
   if(!rsResults.length){box.innerHTML='';return}
@@ -12586,6 +12603,7 @@ function rsRenderResults(){
       '<div style="flex:1"><h4>'+escHTML(p.title)+'</h4>'+rsRelHTML(p)+rsAnswerHTML(p)+rsQuickHTML(p)+
       '<div class="meta"><span class="src-tag">'+escHTML(p.source)+'</span>'+
         (p.retracted?'<span class="retr-badge" title="'+escAttr(t('retr_tip'))+'">⚠ '+escHTML(t('retr_badge'))+'</span>':'')+
+        rsSeenBadge(p)+
         (p.oaStatus?'<span class="oa-badge oa-'+p.oaStatus+'" title="'+escAttr(t('oa_tip_'+p.oaStatus))+'">'+escHTML(t('oa_badge_fmt').replace('{type}',p.oaStatus))+'</span>':'')+
         escHTML(p.authors)+
         (p.year?' · '+escHTML(p.year):'')+(p.venue?' · '+escHTML(p.venue)+' '+rsJBadge(p,i):'')+
@@ -17775,7 +17793,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08f';
+const APP_BUILD='2026.11.08g';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
