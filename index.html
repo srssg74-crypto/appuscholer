@@ -12496,10 +12496,47 @@ function b3FillAbstracts(){const l=citGetLib(),hi=studyHi();let n=0,papers=0;
     if(got){n+=got;papers++}});
   if(n)citSaveLib(l);logRefresh();
   showToast(n?(hi?papers+' papers में '+n+' खाने abstract से भरे (नियमों से, AI नहीं)':n+' cells filled from the abstracts of '+papers+' papers (by rules, no AI)'):(hi?'भरने को कुछ नहीं मिला: abstract नहीं हैं या खाने भरे हैं':'Nothing to fill: no abstracts, or the cells already have text'))}
+/* AI reading of all included papers. One AI call per paper (not one per stage). The AI must copy a sentence word for word;
+   a sentence that is not found in the paper's own text is dropped, so nothing invented reaches a cell. It never overwrites
+   the student's words, and it only runs after the student has seen the count and agreed. */
+const B3AI={plan:null,running:false,msg:''};
+async function b3AiSource(d){let txt='',kind='none';
+  if(d.shelf){try{const all=await shAll(),p=all.find(x=>x.id===d.shelf);if(p&&p.pages&&p.pages.length){const t=p.pages.join('\n');txt=t.length>16000?t.slice(0,12000)+'\n'+t.slice(-4000):t;kind='full'}}catch(e){}}
+  if(!txt&&d.abs){txt=String(d.abs);kind='abstract'}
+  return{txt:txt,kind:kind}}
+async function b3AiAsk(){const lib=citGetLib(),inc=[];
+  for(let i=0;i<lib.length;i++){const d=lib[i];if(!(d.scr&&d.scr.st==='included'))continue;const sc=await b3AiSource(d);inc.push({i:i,kind:sc.kind})}
+  B3AI.plan={all:inc.length,full:inc.filter(x=>x.kind==='full').length,abs:inc.filter(x=>x.kind==='abstract').length,none:inc.filter(x=>x.kind==='none').length,list:inc.filter(x=>x.kind!=='none')};B3AI.msg='';logRefresh()}
+function b3AiCancel(){B3AI.plan=null;logRefresh()}
+function b3AiPrompt(title,txt){return'Below is the text of a research paper. For each stage in the list, copy ONE sentence from the text, word for word, that best answers it. Maximum 45 words per sentence. If the text has nothing for a stage, use an empty string. Do not paraphrase and do not add words.\n\nStages:\n'+AP_STAGES.map(st=>'- "'+st.k+'": '+st.brief).join('\n')+'\n\nReply with JSON only, no other text: {'+AP_STAGES.map(st=>'"'+st.k+'":""').join(',')+'}\n\nTitle: '+title+'\n\nText:\n'+txt}
+function b3AiParse(raw){try{const m=String(raw||'').replace(/```json|```/g,'').match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null}catch(e){return null}}
+async function b3AiRun(){const pl=B3AI.plan;if(!pl||B3AI.running)return;B3AI.running=true;let done=0,kept=0,dropped=0,failed=0,stopped='';const hi=studyHi();
+  for(const x of pl.list){
+    B3AI.msg=(hi?'पढ़ रहे हैं: ':'Reading: ')+(done+1)+' / '+pl.list.length;logRefresh();
+    const l=citGetLib(),d=l[x.i];if(!d)continue;const sc=await b3AiSource(d);if(!sc.txt){continue}
+    let j=null;try{j=b3AiParse(await callAI(b3AiPrompt(d.title||'',sc.txt),{temp:0.1,max:1500,noLang:true}))}catch(e){stopped=apiMsg(e);break}
+    if(!j){failed++;done++;continue}
+    const src=apSquash(sc.txt);d.cells=Object.assign({},d.cells||{});
+    AP_STAGES.forEach(st=>{const v=String(j[st.k]||'').replace(/\s+/g,' ').trim();if(!v)return;
+      const old=d.cells[st.k];if(old&&old.by==='me'&&String(old.t||'').trim())return;
+      if(apSquash(v).length>=12&&src.indexOf(apSquash(v))>=0){d.cells[st.k]={t:v,by:'ai',src:sc.kind};kept++}else dropped++});
+    citSaveLib(l);done++}
+  B3AI.running=false;B3AI.plan=null;
+  B3AI.msg=(stopped?(hi?'रुक गया: ':'Stopped: ')+stopped+' · ':'')+(hi?done+' papers पढ़े। '+kept+' वाक्य भरे, '+dropped+' वाक्य छोड़े क्योंकि वे paper के text में नहीं मिले'+(failed?', '+failed+' paper का जवाब पढ़ा नहीं जा सका':'')+'।':done+' papers read. '+kept+' sentences filled, '+dropped+' dropped because they were not in the paper\'s own text'+(failed?', '+failed+' paper(s) gave an unreadable reply':'')+'.');
+  logRefresh()}
+function b3AiBoxHTML(L,hi){
+  const pl=B3AI.plan;
+  if(B3AI.running)return'<p class="desc" role="status" style="margin:6px 0">'+escHTML(B3AI.msg)+'</p>';
+  if(pl){return'<div style="border:1px solid #c4b5fd;background:#faf9fe;border-radius:8px;padding:8px 10px;margin:6px 0"><p style="margin:0 0 4px"><b>'+L('Before this runs','चलाने से पहले')+'</b></p>'+
+    (pl.list.length?'<p style="margin:0 0 4px">'+L(pl.list.length+' included papers will be read ('+pl.full+' from the full text on your shelf, '+pl.abs+' from the abstract only). That is '+pl.list.length+' AI calls with your own key, one per paper.',pl.list.length+' शामिल papers पढ़े जाएँगे ('+pl.full+' shelf के पूरे text से, '+pl.abs+' सिर्फ़ abstract से)। यानी आपकी अपनी key से '+pl.list.length+' AI calls, हर paper का एक।')+'</p>':'<p style="margin:0 0 4px">'+L('No included paper has an abstract or a PDF on the shelf, so there is nothing to read.','किसी शामिल paper का abstract या shelf पर PDF नहीं है, इसलिए पढ़ने को कुछ नहीं।')+'</p>')+
+    (pl.none?'<p class="desc" style="margin:0 0 4px">'+L(pl.none+' included paper(s) have no text and are skipped.',pl.none+' शामिल paper(s) में text नहीं है और वे छोड़े जाएँगे।')+'</p>':'')+
+    '<p class="desc" style="margin:0 0 6px">'+L('The AI must copy sentences word for word. A sentence not found in the paper is thrown away. Your own words are never overwritten. Excluded papers cost nothing.','AI को वाक्य जस के तस उतारने हैं। जो वाक्य paper में नहीं मिलता वह फेंक दिया जाता है। आपके अपने शब्द कभी नहीं बदलते। बाहर किए papers पर कोई ख़र्च नहीं।')+'</p>'+
+    '<div class="row" style="gap:6px">'+(pl.list.length?'<button type="button" class="btn btn-purple btn-sm" onclick="b3AiRun()">'+L('Yes, read them','हाँ, पढ़ें')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="b3AiCancel()">'+L('Cancel','रद्द करें')+'</button></div></div>'}
+  return'<button type="button" class="btn btn-ghost btn-sm" onclick="b3AiAsk()">'+L('Read all included papers (AI)','सभी शामिल papers पढ़ें (AI)')+'</button>'+(B3AI.msg?'<p class="desc" role="status" style="margin:6px 0">'+escHTML(B3AI.msg)+'</p>':'')}
 function b3TableHTML(o,L,hi){const lib=citGetLib();if(!lib.length)return'';
   const cols=b3Cols(o),stageName=k=>{const st=AP_STAGES.find(x=>x.k===k);return st?(typeof AP_STAGES_HI!=='undefined'&&hi&&AP_STAGES_HI[k]?AP_STAGES_HI[k][0]:st.name):k};
   const chips=AP_STAGES.map(st=>[st.k,stageName(st.k)]).concat(B3_EXTRA.map(x=>[x[0],hi?x[2]:x[1]])).map(c=>{const on=cols.indexOf(c[0])>=0;return'<button type="button" aria-pressed="'+on+'" onclick="b3ColToggle(\''+c[0]+'\')" style="min-height:32px;padding:3px 10px;border-radius:999px;border:1px solid '+(on?'#5b21b6':'#9ca3af')+';background:'+(on?'#5b21b6':'#fff')+';color:'+(on?'#fff':'#374151')+';font-size:12.5px;cursor:pointer">'+escHTML(c[1])+'</button>'}).join(' ');
-  const tag=by=>by==='rule'?'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#e0f2fe;color:#075985">'+L('From the abstract, by rules','Abstract से, नियमों से')+'</span>':by==='me'?'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#dcfce7;color:#14532d">'+L('My words','मेरे शब्द')+'</span>':'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#f3f4f6;color:#4b5563">'+L('Empty','खाली')+'</span>';
+  const tag=by=>by==='ai'?'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#ede9fe;color:#4c1d95">'+L('AI reading, quote checked','AI ने पढ़ा, उद्धरण जाँचा')+'</span>':by==='rule'?'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#e0f2fe;color:#075985">'+L('From the abstract, by rules','Abstract से, नियमों से')+'</span>':by==='me'?'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#dcfce7;color:#14532d">'+L('My words','मेरे शब्द')+'</span>':'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#f3f4f6;color:#4b5563">'+L('Empty','खाली')+'</span>';
   const cards=lib.map((d,i)=>{const st=(d.scr&&d.scr.st)||'toread',sc=d.scr||{},ex=st==='excluded',inc=st==='included';
     const cells=cols.map(k=>{let inner;
       if(k==='why')inner='<textarea rows="2" style="width:100%" onchange="b3Cell('+i+',\'why\',this.value)">'+escHTML(sc.why||'')+'</textarea>';
@@ -12515,7 +12552,7 @@ function b3TableHTML(o,L,hi){const lib=citGetLib();if(!lib.length)return'';
      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">'+cells+'</div></div>'}).join('');
   return'<div class="sub-box"><b>'+L('One table for every paper','हर paper की एक table')+'</b><p class="desc" style="margin:4px 0">'+L('Each paper is one card. Choose the columns you want. The Include and Exclude buttons set the same status as the library and the PRISMA counts. A cell shows your own words, or a sentence lifted from the abstract by rules, and never mixes the two.','हर paper एक card है। अपने columns चुनें। Include और Exclude वही status लगाते हैं जो library और PRISMA की गिनती में जाता है। हर खाने में या तो आपके शब्द होते हैं या abstract से नियमों से उठाया वाक्य; दोनों मिलते नहीं।')+'</p>'+
    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">'+chips+'</div>'+
-   '<button type="button" class="btn btn-ghost btn-sm" onclick="b3FillAbstracts()">'+L('Fill empty cells from the abstracts','खाली खाने abstracts से भरें')+'</button>'+cards+'</div>'}
+   '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" onclick="b3FillAbstracts()">'+L('Fill empty cells from the abstracts','खाली खाने abstracts से भरें')+'</button>'+(B3AI.plan||B3AI.running?'':b3AiBoxHTML(L,hi))+'</div>'+(B3AI.plan||B3AI.running?b3AiBoxHTML(L,hi):'')+cards+'</div>'}
 /* ---- Ten at a time (build 2026.11.08n) ----
    Papers not yet decided (to read, reading) are ordered by apQueue: fit to the review question first, then recency,
    citations, full text; retracted never. The student works through ten, then asks for the next ten, or stops. */
@@ -17976,7 +18013,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08p';
+const APP_BUILD='2026.11.08q';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
