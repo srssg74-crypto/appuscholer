@@ -4428,7 +4428,7 @@ function wExtra3HTML(id,o){
   if(id==='D2'){const d=dgPart(o);return'<div class="sub-box"><b>'+L('Participant flow diagram','Participants का flow diagram')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPartInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from the recruitment log below once it has people approached, agreed and completed.','नीचे के recruitment log में पूछे, माने और पूरा करने वालों की संख्या आते ही यहाँ बनेगा।')+'</p>')+'</div>'}
   if(id==='D4')return resD4HTML(o);
   if(id==='D5')return d5HTML(o);
-  if(id==='B3')return b3QueueHTML(o,L,hi)+b3SecondHTML(o,L,hi)+'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
+  if(id==='B3')return b3QueueHTML(o,L,hi)+b3TableHTML(o,L,hi)+b3SecondHTML(o,L,hi)+'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
   if(id==='B1'){const b=w.B1||{},n=b.n||{},f=b1Formal(o);
     let h=b1HelpHTML(b,hi)+lab(L('Type of review','Review का प्रकार'))+sel(B1_TYPES,b.type,"wPick('B1','type',this.value)")+
      lab(L('Why this type (for your question, time and team)','यह प्रकार क्यों (आपके सवाल, समय और team के हिसाब से)'))+'<textarea rows="3" onchange="wPatch(\'B1\',\'why\',this.value)">'+escHTML(b.why||'')+'</textarea>';
@@ -12459,6 +12459,45 @@ function rsAskUse(){
 /* B2 fills itself. Every database that answered gets one row in the search log: date, database, the exact
    string that was sent, the filters, and how many records the database says it holds for that string.
    A database that did not answer is not logged (nothing was searched). Old rows stay; a repeat search adds a row. */
+/* ---- One table for every paper (build 2026.11.08o) ----
+   Each library paper is a card with the twelve reading stages as cells you switch on and off. A cell holds the
+   student's own words (by:'me') or a sentence the app lifted from the abstract by rules (by:'rule'), never mixed up.
+   The decision buttons write the same status as the library. Stored on the library entry as d.cells and d.dir. */
+const B3_EXTRA=[['why','Why it matters to me','मेरे लिए क्यों ज़रूरी'],['dir','Direction of finding','नतीजे की दिशा'],['yj','Year and journal','साल और journal']];
+const B3_DIR=[['more','More','ज़्यादा'],['less','Less','कम'],['none','No difference','कोई फ़र्क़ नहीं'],['na','Not applicable','लागू नहीं']];
+function b3Cols(o){const c=(wGet(o).B3||{}).cols;return Array.isArray(c)?c:['design','sample','measures','results','limits','why']}
+function b3ColToggle(k){const o=studyGet(),c=b3Cols(o).slice(),i=c.indexOf(k);if(i>=0)c.splice(i,1);else c.push(k);wPatch('B3','cols',c);wRedraw();logRefresh()}
+function b3Cell(i,k,v){const l=citGetLib();if(!l[i])return;const d=l[i];
+  if(k==='why'){d.scr=Object.assign({st:'toread',why:'',src:''},d.scr||{});d.scr.why=v}
+  else if(k==='dir')d.dir=v;
+  else{d.cells=Object.assign({},d.cells||{});if(String(v).trim())d.cells[k]={t:String(v),by:'me'};else delete d.cells[k]}
+  citSaveLib(l);logRefresh()}
+function b3FillAbstracts(){const l=citGetLib(),hi=studyHi();let n=0,papers=0;
+  l.forEach(d=>{if(!d.abs)return;let got=0;try{const doc=apBuild(d.title||'',[d.abs],'text'),ss=apStageSentences(doc,1);d.cells=Object.assign({},d.cells||{});
+    AP_STAGES.forEach(st=>{if(d.cells[st.k]&&String(d.cells[st.k].t||'').trim())return;const x=(ss[st.k]||[])[0];if(x&&x.text){d.cells[st.k]={t:x.text,by:'rule'};got++}})}catch(e){}
+    if(got){n+=got;papers++}});
+  if(n)citSaveLib(l);logRefresh();
+  showToast(n?(hi?papers+' papers में '+n+' खाने abstract से भरे (नियमों से, AI नहीं)':n+' cells filled from the abstracts of '+papers+' papers (by rules, no AI)'):(hi?'भरने को कुछ नहीं मिला: abstract नहीं हैं या खाने भरे हैं':'Nothing to fill: no abstracts, or the cells already have text'))}
+function b3TableHTML(o,L,hi){const lib=citGetLib();if(!lib.length)return'';
+  const cols=b3Cols(o),stageName=k=>{const st=AP_STAGES.find(x=>x.k===k);return st?(typeof AP_STAGES_HI!=='undefined'&&hi&&AP_STAGES_HI[k]?AP_STAGES_HI[k][0]:st.name):k};
+  const chips=AP_STAGES.map(st=>[st.k,stageName(st.k)]).concat(B3_EXTRA.map(x=>[x[0],hi?x[2]:x[1]])).map(c=>{const on=cols.indexOf(c[0])>=0;return'<button type="button" aria-pressed="'+on+'" onclick="b3ColToggle(\''+c[0]+'\')" style="min-height:32px;padding:3px 10px;border-radius:999px;border:1px solid '+(on?'#5b21b6':'#9ca3af')+';background:'+(on?'#5b21b6':'#fff')+';color:'+(on?'#fff':'#374151')+';font-size:12.5px;cursor:pointer">'+escHTML(c[1])+'</button>'}).join(' ');
+  const tag=by=>by==='rule'?'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#e0f2fe;color:#075985">'+L('From the abstract, by rules','Abstract से, नियमों से')+'</span>':by==='me'?'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#dcfce7;color:#14532d">'+L('My words','मेरे शब्द')+'</span>':'<span style="font-size:11px;padding:1px 6px;border-radius:6px;background:#f3f4f6;color:#4b5563">'+L('Empty','खाली')+'</span>';
+  const cards=lib.map((d,i)=>{const st=(d.scr&&d.scr.st)||'toread',sc=d.scr||{},ex=st==='excluded',inc=st==='included';
+    const cells=cols.map(k=>{let inner;
+      if(k==='why')inner='<textarea rows="2" style="width:100%" onchange="b3Cell('+i+',\'why\',this.value)">'+escHTML(sc.why||'')+'</textarea>';
+      else if(k==='dir')inner='<select onchange="b3Cell('+i+',\'dir\',this.value)"><option value=""></option>'+B3_DIR.map(x=>'<option value="'+x[0]+'"'+(d.dir===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>';
+      else if(k==='yj')inner='<div style="font-size:13px">'+escHTML([d.year,d.source].filter(Boolean).join(' · ')||'—')+'</div>';
+      else{const c=(d.cells||{})[k];inner=tag(c&&c.by)+'<textarea rows="3" style="width:100%;margin-top:3px" onchange="b3Cell('+i+',\''+k+'\',this.value)">'+escHTML(c?c.t:'')+'</textarea>'}
+      const nm=k==='why'||k==='dir'||k==='yj'?(hi?B3_EXTRA.find(x=>x[0]===k)[2]:B3_EXTRA.find(x=>x[0]===k)[1]):stageName(k);
+      return'<div><div style="font-size:12px;font-weight:700;color:#2e1065;margin-bottom:2px">'+escHTML(nm)+'</div>'+inner+'</div>'}).join('');
+    return'<div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:8px 10px;margin:8px 0;background:'+(ex?'#fdf5f5':'#fff')+'"><div style="font-size:14px;font-weight:600">'+escHTML(d.title||'')+' <span class="desc">'+escHTML(d.year||'')+(d.shelf?' · 📖':'')+'</span></div>'+
+     '<div class="row" style="gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap"><button type="button" onclick="citScrSet('+i+',\'st\',\'included\')" style="min-height:36px;padding:4px 14px;border-radius:8px;border:1px solid #166534;font-weight:600;cursor:pointer;background:'+(inc?'#166534':'#fff')+';color:'+(inc?'#fff':'#166534')+'">'+L('Include','शामिल')+'</button>'+
+     '<button type="button" onclick="citScrSet('+i+',\'st\',\'excluded\')" style="min-height:36px;padding:4px 14px;border-radius:8px;border:1px solid #991b1b;font-weight:600;cursor:pointer;background:'+(ex?'#991b1b':'#fff')+';color:'+(ex?'#fff':'#991b1b')+'">'+L('Exclude','बाहर')+'</button>'+
+     (ex?'<input type="text" style="flex:1;min-width:180px" value="'+escAttr(sc.why||'')+'" placeholder="'+escAttr(L('One line: why it is out','बाहर करने का एक पंक्ति का कारण'))+'" onchange="citScrSet('+i+',\'why\',this.value)">':'')+'</div>'+
+     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">'+cells+'</div></div>'}).join('');
+  return'<div class="sub-box"><b>'+L('One table for every paper','हर paper की एक table')+'</b><p class="desc" style="margin:4px 0">'+L('Each paper is one card. Choose the columns you want. The Include and Exclude buttons set the same status as the library and the PRISMA counts. A cell shows your own words, or a sentence lifted from the abstract by rules, and never mixes the two.','हर paper एक card है। अपने columns चुनें। Include और Exclude वही status लगाते हैं जो library और PRISMA की गिनती में जाता है। हर खाने में या तो आपके शब्द होते हैं या abstract से नियमों से उठाया वाक्य; दोनों मिलते नहीं।')+'</p>'+
+   '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">'+chips+'</div>'+
+   '<button type="button" class="btn btn-ghost btn-sm" onclick="b3FillAbstracts()">'+L('Fill empty cells from the abstracts','खाली खाने abstracts से भरें')+'</button>'+cards+'</div>'}
 /* ---- Ten at a time (build 2026.11.08n) ----
    Papers not yet decided (to read, reading) are ordered by apQueue: fit to the review question first, then recency,
    citations, full text; retracted never. The student works through ten, then asks for the next ten, or stops. */
@@ -17919,7 +17958,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08n';
+const APP_BUILD='2026.11.08o';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
