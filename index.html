@@ -18013,7 +18013,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08v';
+const APP_BUILD='2026.11.08w';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18688,6 +18688,8 @@ function shTables(items,pageBox){
         let rr=run.map(function(l){const r=l.cells.map(function(c){return c.s});while(r.length<n)r.push('');return r}),pre=[];
         /* a sentence of running text caught on top of the table goes back to the text */
         while(rr.length>3&&rr[0][0].length>45&&!/\d/.test(rr[0].slice(1).join(''))&&rr[0].slice(1).every(function(c){return!c||c.length<4})){pre.push(rr[0].join(' ').trim());rr=rr.slice(1)}
+        /* a half sentence of running text in front of the numbers of a row goes back to the text; the numbers stay in the row */
+        if(rr[0][0].length>40&&/^[a-z]/.test(rr[0][0])&&/\d/.test(rr[0].slice(1).join(''))){pre.push(rr[0][0]);rr[0][0]=''}
         const dropped=run.length-rr.length;
         out.push({top:run[dropped].top+y0,bot:run[run.length-1].bot+y0,rows:rr,pre:pre,preTop:run[0].top+y0})}}
     i=j+1}
@@ -18730,7 +18732,7 @@ async function shWord(){
       let blocks=null;
       if(pdf){try{const pg=await pdf.getPage(n),tc=await pg.getTextContent();blocks=shPageBlocks(tc.items,pg.view);
           if(blocks.some(b=>b.t==='p'||b.t==='tbl')){tbls+=blocks.filter(b=>b.t==='tbl').length}else blocks=null;
-          let fig=false;try{const ol=await pg.getOperatorList(),O=pdfjsLib.OPS;let paths=0;ol.fnArray.forEach(f=>{if(f===O.paintImageXObject||f===O.paintInlineImageXObject||f===O.paintImageMaskXObject||f===O.paintJpegXObject)fig=true;if(f===O.constructPath)paths++});if(paths>120)fig=true}catch(e){}
+          let fig=false;try{const ol=await pg.getOperatorList(),O=pdfjsLib.OPS;let paths=0;ol.fnArray.forEach(f=>{if(f===O.paintImageXObject||f===O.paintInlineImageXObject||f===O.paintImageMaskXObject||f===O.paintJpegXObject)fig=true;if(f===O.constructPath)paths++});if(paths>60)fig=true}catch(e){}
           if(!fig&&/(^|\n)\s*(Fig\.?|Figure)\s*\(?\d/i.test(p.pages[n-1]||''))fig=true
           if(fig){const v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:1000/(v0.width||1000)}),cv=document.createElement('canvas');cv.width=Math.floor(v.width);cv.height=Math.floor(v.height);
             await pg.render({canvasContext:cv.getContext('2d'),viewport:v}).promise;const u=cv.toDataURL('image/jpeg',0.72);if(u.length>2000){pics++;html+=(blocks?shBlocksHTML(blocks):'')+'<p><i>This page has a figure. The page as a picture:</i></p><p><img src="'+u+'" style="width:520px"></p>';blocks='done'}}
