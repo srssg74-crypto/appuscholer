@@ -11727,7 +11727,7 @@ function citScrHTML(d,i){const hi=getLang()==='hi',sc=d.scr||{st:'toread',why:''
     CIT_ST.map(x=>'<option value="'+x[0]+'"'+(x[0]===st?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>'+
     (ex?'<select aria-label="'+(hi?'किस चरण पर बाहर':'Step where it was excluded')+'" onchange="citScrSet('+i+',\'rd\',this.value)"><option value="">'+(hi?'किस चरण पर?':'At which step?')+'</option><option value="1"'+(sc.rd==='1'?' selected':'')+'>'+(hi?'Title/abstract':'Title and abstract')+'</option><option value="2"'+(sc.rd==='2'?' selected':'')+'>'+(hi?'पूरा text':'Full text')+'</option></select>':'')+
     (ex||inc?'<input type="text" style="flex:1;min-width:180px" value="'+escAttr(sc.why||'')+'" placeholder="'+escAttr(ex?(hi?'बाहर करने का एक पंक्ति का कारण':'One line: why it is out'):(hi?'एक पंक्ति: मेरे research के लिए क्यों ज़रूरी':'One line: why it matters to my research'))+'" onchange="citScrSet('+i+',\'why\',this.value)">':'')+
-    (sc.src?'<span class="desc">'+(hi?'आई: ':'From: ')+escHTML(sc.src)+'</span>':'')+'</div>'+
+    (sc.src?'<span class="desc">'+(hi?'आई: ':'From: ')+escHTML(sc.src)+'</span>':'')+(d.shelf?'<span class="desc">📖 '+(hi?'PDF Reading shelf पर':'PDF on Reading shelf')+'</span>':'')+'</div>'+
     (need?'<div class="desc" style="color:#b45309;margin-top:2px">'+(hi?'कारण लिखें: PRISMA में हर बाहर किए paper का कारण चाहिए।':'Write the reason: PRISMA needs one for every excluded paper.')+'</div>':'')}
 function citScrSummary(l){const c={};l.forEach(d=>{const k=(d.scr&&d.scr.st)||'toread';c[k]=(c[k]||0)+1});const hi=getLang()==='hi';
   return CIT_ST.filter(x=>c[x[0]]).map(x=>c[x[0]]+' '+(hi?x[2]:x[1].toLowerCase())).join(' · ')}
@@ -17904,7 +17904,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08l';
+const APP_BUILD='2026.11.08m';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18424,6 +18424,7 @@ async function shAddFiles(input){
       const r=await shExtractPdf(f),chars=r.pages.reduce((a,x)=>a+x.length,0);
       if(chars<200){msgs.push(f.name+': no readable text (it looks scanned). Not added.');continue}
       const rec={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:shGuessTitle(r.pages,f.name.replace(/\.pdf$/i,''),r.meta),file:f.name,size:f.size,added:new Date().toISOString(),pages:r.pages,total:r.total,notes:[],cells:{}};
+      try{shLinkLib(rec)}catch(e){}
       await shPut(rec);have.push(rec);
       msgs.push(f.name+': added, '+r.pages.length+' pages'+(r.total>r.pages.length?' (first '+r.pages.length+' of '+r.total+')':'')+(r.reordered?' ('+r.reordered+' page'+(r.reordered===1?'':'s')+' had the two columns mixed line by line in the file; put back in column order)':''));
     }catch(e){msgs.push(f.name+': '+(e&&e.message?e.message:'could not be read'))}
@@ -18448,10 +18449,23 @@ function shRender(){
 function shStatusHTML(){return SH.status?'<p style="font-size:13px;margin:6px 0" role="status">'+escHTML(SH.status)+'</p>':''}
 async function shUsage(){try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();return Math.round((e.usage||0)/1048576)+' MB used of about '+Math.round((e.quota||0)/1048576)+' MB'}}catch(e){}return''}
 function shPapersRender(b){
-  const L=SH.papers.map(p=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><input type="text" value="'+escHTML(p.title)+'" style="width:100%;font-weight:700" onchange="shRename(\''+p.id+'\',this.value)" aria-label="Title"><div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+escHTML(p.file)+' · '+p.pages.length+' pages · '+p.notes.length+' highlights</div><div class="row" style="gap:6px"><button class="btn btn-purple" onclick="shRead(\''+p.id+'\',1)">Read</button><button class="btn btn-ghost" id="shDel_'+p.id+'" onclick="shAskDel(\''+p.id+'\')">Remove from shelf</button></div></div>').join('');
+  const L=SH.papers.map(p=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><input type="text" value="'+escHTML(p.title)+'" style="width:100%;font-weight:700" onchange="shRename(\''+p.id+'\',this.value)" aria-label="Title">'+shLibLine(p)+'<div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+escHTML(p.file)+' · '+p.pages.length+' pages · '+p.notes.length+' highlights</div><div class="row" style="gap:6px"><button class="btn btn-purple" onclick="shRead(\''+p.id+'\',1)">Read</button><button class="btn btn-ghost" id="shDel_'+p.id+'" onclick="shAskDel(\''+p.id+'\')">Remove from shelf</button></div></div>').join('');
   b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'shFile\').click()">➕ Add PDFs</button><input type="file" id="shFile" accept=".pdf,application/pdf" multiple style="display:none" onchange="shAddFiles(this)"><button class="btn btn-ghost" onclick="shBackup()">Back up the shelf</button><button class="btn btn-ghost" onclick="document.getElementById(\'shRest\').click()">Restore a shelf backup</button><input type="file" id="shRest" accept=".json" style="display:none" onchange="shRestore(this)"></div>'+shStatusHTML()+(SH.papers.length?L:'<p style="font-size:13.5px">The shelf is empty. Add a PDF to start.</p>')+'<p style="font-size:12.5px;color:var(--muted)" id="shUse"></p><p style="font-size:12.5px;color:var(--muted)">The shelf is kept apart from the normal backup. Press <b>Back up the shelf</b> now and then. Clearing your browser data erases the shelf.</p>';
   shUsage().then(u=>{const e=document.getElementById('shUse');if(e&&u)e.textContent='Browser storage: '+u+'.'});
 }
+/* Reading shelf and library on one paper list (build 2026.11.08m): a shelf PDF is linked to a library paper by title
+   (or by the student's choice), the shelf shows the library status, and the library card shows the PDF is on the shelf. */
+function shNorm(t){return String(t||'').toLowerCase().replace(/[^a-z0-9\u0900-\u097f]+/g,' ').trim()}
+function shLibMatch(title){const a=shNorm(title);if(a.length<12)return null;return citGetLib().find(d=>{const b=shNorm(d.title);return b.length>=12&&(a===b||(Math.min(a.length,b.length)>=25&&(a.indexOf(b)>=0||b.indexOf(a)>=0)))})||null}
+function shLinkLib(rec){const m=rec.lib?citGetLib().find(d=>d.cid===rec.lib):shLibMatch(rec.title);if(!m)return false;rec.lib=m.cid;const l=citGetLib(),i=l.findIndex(d=>d.cid===m.cid);if(i>=0&&l[i].shelf!==rec.id){l[i].shelf=rec.id;citSaveLib(l)}return true}
+async function shLink(id,cid){const p=SH.papers.find(x=>x.id===id);if(!p)return;
+  const l=citGetLib();l.forEach(d=>{if(d.shelf===id&&d.cid!==cid)delete d.shelf});
+  if(!cid){delete p.lib;citSaveLib(l);await shPut(p);shRender();return}
+  p.lib=cid;const i=l.findIndex(d=>d.cid===cid);if(i>=0)l[i].shelf=id;citSaveLib(l);await shPut(p);shRender()}
+function shLibLine(p){const hi=getLang()==='hi',lib=citGetLib(),m=p.lib?lib.find(d=>d.cid===p.lib):shLibMatch(p.title),CIT=Object.fromEntries(CIT_ST.map(x=>[x[0],hi?x[2]:x[1]]));
+  const opts='<option value="">'+(hi?'Library के paper से जोड़ें…':'Link to a library paper…')+'</option>'+lib.map(d=>'<option value="'+escAttr(d.cid)+'"'+(m&&m.cid===d.cid?' selected':'')+'>'+escHTML(String(d.title||'').slice(0,70))+'</option>').join('');
+  return'<div style="font-size:12.5px;margin:3px 0">'+(m?'📚 '+(hi?'Library में: ':'In your library: ')+'<b>'+escHTML(CIT[(m.scr&&m.scr.st)||'toread'])+'</b>'+(m.scr&&m.scr.why?' · '+escHTML(m.scr.why):''):'<span style="color:var(--muted)">'+(hi?'Library में नहीं मिला':'Not found in your library')+'</span>')+
+   ' <select style="max-width:240px;font-size:12px" aria-label="'+(hi?'Library से जोड़ें':'Link to library')+'" onchange="shLink(\''+p.id+'\',this.value)">'+opts+'</select></div>'}
 async function shRename(id,v){const p=SH.papers.find(x=>x.id===id);if(!p)return;p.title=String(v).trim()||p.file;await shPut(p)}
 async function shAskDel(id){
   const btn=document.getElementById('shDel_'+id);
