@@ -75,6 +75,20 @@ with sync_playwright() as p:
     J("wNest('B1','n','id','99')"); J("b2UsePrisma()")
     n=json.loads(J("JSON.stringify((wGet(studyGet()).B1||{}).n||{})"))
     ok(n.get('id')=='99','a box the student filled is never overwritten')
+
+    # ---- close the search (build 2026.11.08h) ----
+    T=lambda: J("document.getElementById('subMain').innerText")
+    for ty,has in (('narr',False),('scop',False),('sys',True),('meta',True)):
+        J("wPatch('B1','type','%s')"%ty); J("subOpen('lit','B2')")
+        ok(('Close the search' in T())==has,'%s: close button %s'%(ty,'shown' if has else 'hidden'))
+    ok('stays open' in (J("wPatch('B1','type','narr')") or '') + (J("subOpen('lit','B2')") or '') + T(),'narrative: says the search stays open')
+    J("wPatch('B1','type','sys')"); J("subOpen('lit','B2')")
+    ok(J("document.getElementById('b2CloseDate').value")==J("logRows(studyGet(),'search').map(r=>r.date).sort().pop()"),'date box starts at the last search date')
+    J("document.getElementById('b2CloseDate').value='2026-11-01'; b2Close()")
+    ok(J("(wGet(studyGet()).B2||{}).closed")=='2026-11-01' and 'Search closed on 2026-11-01' in T(),'closing saves the date')
+    ok('dated after this' in T(),'searches dated after the closing date are flagged')
+    J("b2Reopen()")
+    ok(J("(wGet(studyGet()).B2||{}).closed")=='' and 'Search closed on' not in T(),'reopen clears it')
     errors=[e for e in errors if '500' not in str(e)]
     ok(not errors,'no page errors %s'%errors)
     b.close()
