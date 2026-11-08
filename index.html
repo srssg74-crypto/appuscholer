@@ -11662,7 +11662,7 @@ function citStyleNoteUpdate(){
 function citRender(){
   citStyleNoteUpdate();
   const l=citGetLib(),box=document.getElementById('citLib');
-  document.getElementById('citCount').textContent=l.length;
+  document.getElementById('citCount').textContent=l.length+(l.some(d=>d.scr)?' ('+citScrSummary(l)+')':'');
   const sumEl=document.getElementById('citUsageSummary');
   const retrEl=document.getElementById('citRetractSummary');
   if(!l.length){box.innerHTML='<p class="desc">No sources yet.</p>';if(sumEl)sumEl.textContent='';if(retrEl)retrEl.textContent='';const a=document.getElementById('citRealSummary'),b2=document.getElementById('citNumMissing');if(a)a.textContent='';if(b2)b2.textContent='';return}
@@ -11702,11 +11702,28 @@ function citRender(){
     const retrLine=(retrStatus[i]&&retrStatus[i].r)?'<div class="retr-warn">⚠ '+escHTML(t('retr_lib_warn'))+'</div>':'';
     return'<div class="cit-item'+(i===citActiveIdx?' cit-active':'')+'" id="citItem'+i+'"><button type="button" class="del" onclick="citDel('+i+')" title="Remove">✕</button>'+
       '<b>'+escHTML(citLastName(d.author))+', '+escHTML(d.year||'n.d.')+'</b>'+(d.unverified?' <span title="'+escAttr(d.typed||'')+'" style="color:#b45309;font-size:12px">⚠ '+(getLang()==='hi'?'जैसा लिखा था वैसा रखा: लेखक, साल और title जाँचें':'kept as you typed it: check author, year and title')+'</span>':'')+(d.wc&&(d.wc.who==='none'||d.wc.ev==='none'||d.wc.why==='sell')?' <span style="color:#b45309;font-size:12px">⚠ '+(getLang()==='hi'?'कमज़ोर website':'weak website')+'</span>':'')+'<br>'+f.refHTML+usedLine+retrLine+rcLine(d,rcAll[citKey(d)])+
+      citScrHTML(d,i)+
       '<div class="row" style="margin-top:6px">'+
       '<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="citUseLib('+i+')">Insert '+escHTML(f.sup?'¹ ('+f.num+')':f.intext)+'</button>'+(d.doi?'<button type="button" class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="oaFind('+i+',this)">📄 '+(getLang()==='hi'?'मुफ़्त copy':'Free copy')+'</button>':'')+
       '</div></div>';
   }).join('');
 }
+/* Screening status of a library paper (build 2026.11.08i): to read, reading, included, excluded.
+   An excluded paper carries a one-line reason, an included one the line "why it matters to me".
+   src says which search brought it in. Stored on the library entry as d.scr = {st, why, src}. */
+const CIT_ST=[['toread','To read','पढ़ना है'],['reading','Reading','पढ़ रहे हैं'],['included','Included','शामिल'],['excluded','Excluded','बाहर']];
+function citScrSet(i,k,v){const l=citGetLib();if(!l[i])return;const d=l[i],sc=Object.assign({st:'toread',why:'',src:''},d.scr||{});
+  if(k==='st'&&v!==sc.st){sc.st=v;sc.at=new Date().toISOString().slice(0,10)}else if(k==='why')sc.why=v;
+  d.scr=sc;citSaveLib(l);citRender()}
+function citScrHTML(d,i){const hi=getLang()==='hi',sc=d.scr||{st:'toread',why:'',src:''},st=sc.st||'toread',ex=st==='excluded',inc=st==='included';
+  const need=ex&&!String(sc.why||'').trim();
+  return'<div class="row" style="margin-top:6px;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px"><select aria-label="'+(hi?'Screening स्थिति':'Screening status')+'" onchange="citScrSet('+i+',\'st\',this.value)">'+
+    CIT_ST.map(x=>'<option value="'+x[0]+'"'+(x[0]===st?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>'+
+    (ex||inc?'<input type="text" style="flex:1;min-width:180px" value="'+escAttr(sc.why||'')+'" placeholder="'+escAttr(ex?(hi?'बाहर करने का एक पंक्ति का कारण':'One line: why it is out'):(hi?'एक पंक्ति: मेरे research के लिए क्यों ज़रूरी':'One line: why it matters to my research'))+'" onchange="citScrSet('+i+',\'why\',this.value)">':'')+
+    (sc.src?'<span class="desc">'+(hi?'आई: ':'From: ')+escHTML(sc.src)+'</span>':'')+'</div>'+
+    (need?'<div class="desc" style="color:#b45309;margin-top:2px">'+(hi?'कारण लिखें: PRISMA में हर बाहर किए paper का कारण चाहिए।':'Write the reason: PRISMA needs one for every excluded paper.')+'</div>':'')}
+function citScrSummary(l){const c={};l.forEach(d=>{const k=(d.scr&&d.scr.st)||'toread';c[k]=(c[k]||0)+1});const hi=getLang()==='hi';
+  return CIT_ST.filter(x=>c[x[0]]).map(x=>c[x[0]]+' '+(hi?x[2]:x[1].toLowerCase())).join(' · ')}
 function citUseLib(i){const d=citGetLib()[i];if(!d)return;citPutIntext(d);showToast('Citation inserted ✓')}
 /* Reference list, inserted as formatted paragraphs: a heading, then one paragraph per source with a
    hanging indent and italics where the style asks for them. Author-date styles are sorted by
@@ -12435,6 +12452,7 @@ function rsAskUse(){
 /* B2 fills itself. Every database that answered gets one row in the search log: date, database, the exact
    string that was sent, the filters, and how many records the database says it holds for that string.
    A database that did not answer is not logged (nothing was searched). Old rows stay; a repeat search adds a row. */
+function b2SrcLabel(p){try{const r=logRows(studyGet(),'search').filter(x=>x.db===p.source).pop()||logRows(studyGet(),'search').pop();return r?((r.date||'')+' · '+(r.db||'')):''}catch(e){return''}}
 function b2Key(p){const d=String(p.doi||'').toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//,'').trim();return d||String(p.title||'').toLowerCase().replace(/\W+/g,'').slice(0,60)}
 function b2Summary(o){const rows=logRows(o,'search').filter(r=>Array.isArray(r.keys)),seen=new Set();let read=0;
   rows.forEach(r=>r.keys.forEach(k=>{read++;seen.add(k)}));
@@ -12600,6 +12618,8 @@ async function rsLookupCite(c,ctx){const q=[c.a].concat(rsQParts(ctx).slice(0,4)
   return(j.results||[]).filter(w=>(w.authorships||[]).some(a=>String((a.author||{}).display_name||'').toLowerCase().indexOf(c.a.toLowerCase())>=0))}
 function rsSeenBadge(p){let inLib=false;try{const d=rsEntryFromResult(p);inLib=citGetLib().some(e=>e.title===d.title||(d.doi&&e.doi&&String(e.doi).toLowerCase()===String(d.doi).toLowerCase()))}catch(e){}
   const earlier=!!(window._rsEarlier&&window._rsEarlier.has(b2Key(p))),hi=studyHi();
+  let ex=null;try{const d=rsEntryFromResult(p);ex=citGetLib().find(e=>(e.title===d.title||(d.doi&&e.doi&&String(e.doi).toLowerCase()===String(d.doi).toLowerCase()))&&e.scr&&e.scr.st==='excluded')}catch(e){}
+  if(ex)return'<span class="src-tag" style="background:#fee2e2;color:#7f1d1d" title="'+escAttr(hi?'आपने इसे पहले बाहर किया था। यह दोबारा नहीं गिना जाएगा।':'You excluded this paper earlier. It counts as a duplicate, not a new record.')+'">'+(hi?'पहले बाहर किया: ':'Excluded earlier: ')+escHTML(ex.scr.why||(hi?'कारण नहीं लिखा':'no reason written'))+'</span>'+(earlier?'<span class="src-tag" style="background:#fef3c7;color:#713f12">'+(hi?'पहले की search में मिला':'Found in an earlier search')+'</span>':'');
   return(inLib?'<span class="src-tag" style="background:#ede9fe;color:#4c1d95" title="'+escAttr(hi?'यह paper आपकी library में है। PRISMA में duplicate गिना जाएगा।':'This paper is already in your library. It counts as a duplicate for PRISMA.')+'">'+(hi?'Library में पहले से':'Already in library')+'</span>':'')+
    (earlier?'<span class="src-tag" style="background:#fef3c7;color:#713f12" title="'+escAttr(hi?'पिछली search में भी मिला था।':'Also found by an earlier search.')+'">'+(hi?'पहले की search में मिला':'Found in an earlier search')+'</span>':'')}
 function rsRenderResults(){
@@ -12723,6 +12743,7 @@ function rsAddToLibrary(i,quiet){
   /* The search already told us this paper's retraction status, so seed the library check with it
      instead of making the student wait for a second lookup. */
   if(d.doi&&p.source==='OpenAlex')retrCacheSet(d.doi,!!p.retracted);
+  d.scr={st:'toread',why:'',src:b2SrcLabel(p)};
   l.push(d);citSaveLib(l);
   if(!quiet)showToast(p.retracted?t('retr_added_warn'):'Added to citation library ✓ — check author formatting before you submit');
   return d;
@@ -17803,7 +17824,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08h';
+const APP_BUILD='2026.11.08i';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
