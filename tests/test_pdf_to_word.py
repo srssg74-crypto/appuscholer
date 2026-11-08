@@ -45,6 +45,13 @@ with sync_playwright() as p:
     # four spaced-out words lines that do not line up are not a table
     Z=[it('alpha beta',60,600),it('gamma',300,600),it('delta',500,600),it('one',60,585),it('two',200,585),it('three',420,585),it('x',100,570),it('y',350,570),it('z',480,570),it('p',60,555),it('q',260,555),it('r',470,555)]
     ok(not any(x['t']=='tbl' for x in pg.evaluate("([i,v])=>shPageBlocks(i,v)",[Z,[0,0,612,792]])),'scattered words are not a table')
+    # half a sentence in front of the numbers of the first row
+    H=[]
+    for r,(y,row) in enumerate([(640,['data collection was conducted individually in a private and','30-35','52','48,5%']),(626,['Education','12','11','10%']),(612,['Age','0.12','0.03','.001']),(598,['Gender','-0.40','0.11','.020'])]):
+        for c,x in enumerate([60,330,400,470]): H.append(it(row[c],x,y,w=(5*len(row[c]) if c else 235)))
+    bl5=pg.evaluate("([i,v])=>shPageBlocks(i,v)",[H,[0,0,612,792]])
+    t5=[x for x in bl5 if x['t']=='tbl']
+    ok(len(t5)==1 and t5[0]['rows'][0][0]=='' and t5[0]['rows'][0][1]=='30-35' and any(x['t']=='p' and x['s'].startswith('data collection') for x in bl5),'half sentence leaves the row, numbers stay %s'%bl5)
     # paragraphs and headings
     ps=pg.evaluate("shParas(%s)"%json.dumps("Method\nParticipants were 96 nurses recruited from two hos-\npitals in Jaipur. They answered a short form.\nStress was higher on nights. The effect was small.\nResults\nSleep predicted burnout."))
     ok([x['t'] for x in ps][:2]==['h','p'] and 'hospitals' in ps[1]['s'],'heading, paragraph, hyphen mended %s'%ps)
