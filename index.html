@@ -3643,6 +3643,16 @@ function wRedraw(){const m=document.getElementById('subMain');if(m){const y=m.sc
 function wCiteCount(t){t=String(t||'');return(t.match(/\([A-Z][^()]{1,80}?,?\s(19|20)\d{2}[a-z]?\)|\[\d+(?:[,–-]\s?\d+)*\]/g)||[]).length}
 function wProblemOk(o){const t=String((wGet(o).A2||{}).text||'').trim();return t.length>=250&&wCiteCount(t)>=2}
 /* B5: themes come from the Theme column of the B3 matrix */
+/* B5: each paper's direction chip and my taps from the reader, and a tally for the theme. */
+function wB5Lib(r){return r&&r.cid?citGetLib().find(d=>d.cid===r.cid)||null:null}
+function wB5Chips(r){const d=wB5Lib(r);if(!d)return'';const hi=studyHi(),c=[];
+  const dr=B3_DIR.find(x=>x[0]===d.dir);if(dr&&dr[0]!=='na')c.push((hi?'दिशा: ':'Direction: ')+(hi?dr[2]:dr[1]));
+  if(d.reads&&(d.reads.agree||d.reads.doubt))c.push((d.reads.agree?(hi?'सहमत ':'agreed ')+d.reads.agree:'')+(d.reads.agree&&d.reads.doubt?', ':'')+(d.reads.doubt?(hi?'शक ':'doubted ')+d.reads.doubt:''));
+  return c.length?' <span class="desc">['+escHTML(c.join('; '))+']</span>':''}
+function wB5Tally(rows){const hi=studyHi(),t={more:0,less:0,none:0},rd={agree:0,doubt:0};
+  rows.forEach(r=>{const d=wB5Lib(r);if(!d)return;if(t[d.dir]!=null)t[d.dir]++;if(d.reads){rd.agree+=d.reads.agree||0;rd.doubt+=d.reads.doubt||0}});
+  const nm=t.more+t.less+t.none;if(!nm&&!rd.agree&&!rd.doubt)return'';
+  return'<p class="desc" style="margin:4px 0">'+(nm?(hi?'दिशा: ':'Direction: ')+(hi?'ज़्यादा ':'More ')+t.more+', '+(hi?'कम ':'Less ')+t.less+', '+(hi?'कोई फ़र्क़ नहीं ':'No difference ')+t.none+(t.more&&t.less?(hi?'। ये आपस में टकराते हैं, इसे नीचे लिखें।':'. They conflict, so say why below.'):''):'')+((rd.agree||rd.doubt)?(nm?' · ':'')+(hi?'मेरे taps: सहमत ':'My taps: agreed ')+rd.agree+(hi?', शक ':', doubted ')+rd.doubt:'')+'</p>'}
 function wThemes(o){const g={};logRows(o,'matrix').forEach(r=>{const th=String(r.theme||'').trim();if(!th)return;(g[th]=g[th]||[]).push(r)});return g}
 function wThemesOk(o){const g=wThemes(o),k=Object.keys(g),notes=(wGet(o).B5||{}).notes||{};return k.length>0&&k.every(t=>(g[t].length>=2||notes['one:'+t])&&String(notes[t]||'').trim().length>=20)}
 /* B7 */
@@ -3679,7 +3689,7 @@ function wExtraHTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok
      box(wProblemOk(o),L('Problem statement','समस्या का कथन'),'<p class="desc" style="margin:4px 0">'+L('1–2 paragraphs. Who is affected, where, what is known (with sources) and what is not. At least two citations such as (Sharma, 2021) or [3].','1–2 paragraph। किस पर असर, कहाँ, क्या पता है (स्रोत के साथ) और क्या नहीं। कम से कम दो citations, जैसे (Sharma, 2021) या [3]।')+'</p><textarea rows="7" onchange="wPatch(\'A2\',\'text\',this.value);wRedraw()">'+escHTML(t)+'</textarea><p class="desc" style="margin:4px 0">'+L('Citations found: ','मिले citations: ')+n+' · '+L('Characters: ','अक्षर: ')+String(t).trim().length+'</p>'+(String(t).trim()?'<button type="button" class="btn btn-ghost btn-sm" onclick="wProblemInsert()">📄 '+L('Insert into my document','मेरे document में डालें')+'</button>':''))}
   if(id==='B5'){const g=wThemes(o),k=Object.keys(g),notes=(w.B5||{}).notes||{};
     if(!k.length)return box(false,L('Theme map','Themes का नक्शा'),'<p style="margin:6px 0 0">'+L('Write a theme for each paper in the B3 matrix (Theme column). The map builds itself from there.','B3 की matrix में हर paper का theme लिखें (Theme वाला खाना)। नक्शा वहीं से अपने-आप बनेगा।')+' <a href="#" onclick="SUB_CUR.id=\'B3\';subRender();return false">B3 →</a></p>');
-    return box(wThemesOk(o),L('Theme map','Themes का नक्शा'),k.map(th=>{const one=g[th].length<2;return'<div style="border-top:1px solid var(--line,#ddd);margin-top:8px;padding-top:6px"><b>'+escHTML(th)+'</b> <span class="desc">('+g[th].length+' '+(g[th].length===1?'paper':'papers')+')</span><ul style="margin:4px 0 4px 18px">'+g[th].map(r=>'<li>'+escHTML(r.paper||'')+(r.finding?': '+escHTML(r.finding):'')+'</li>').join('')+'</ul>'+
+    return box(wThemesOk(o),L('Theme map','Themes का नक्शा'),k.map(th=>{const one=g[th].length<2;return'<div style="border-top:1px solid var(--line,#ddd);margin-top:8px;padding-top:6px"><b>'+escHTML(th)+'</b> <span class="desc">('+g[th].length+' '+(g[th].length===1?'paper':'papers')+')</span><ul style="margin:4px 0 4px 18px">'+g[th].map(r=>'<li>'+escHTML(r.paper||'')+(r.finding?': '+escHTML(r.finding):'')+wB5Chips(r)+'</li>').join('')+'</ul>'+wB5Tally(g[th])+
       (one?'<label style="display:block;font-size:13px;color:#b45309"><input type="checkbox"'+(notes['one:'+th]?' checked':'')+' onchange="wB5Note(\'one:'+escAttr(th).replace(/'/g,'')+'\',this.checked)"> '+L('This theme rests on one study, and I will say so','यह theme एक ही study पर टिका है, और मैं यह लिखूँगा/लिखूँगी')+'</label>':'')+
       '<label class="desc">'+L('Where the studies agree, where they conflict, and why (20+ characters)','Studies कहाँ सहमत हैं, कहाँ टकराती हैं, और क्यों (20+ अक्षर)')+'</label><textarea rows="2" onchange="wB5Note(\''+escAttr(th).replace(/'/g,'')+'\',this.value)">'+escHTML(notes[th]||'')+'</textarea></div>'}).join(''))}
   if(id==='B7'){const f=w.B7||{},cons=(f.cons&&f.cons.length?f.cons:[{name:''},{name:''}]),vars=((o.design||{}).vars||[]).filter(v=>v.name);
@@ -18013,7 +18023,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08x';
+const APP_BUILD='2026.11.08y';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18626,9 +18636,18 @@ function shReaderRender(b){
    '<div id="shText" style="white-space:pre-wrap;font-size:14px;line-height:1.65;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;user-select:text">'+shMarkTerms(shMarked(p,SH.page))+'</div>'+
    '<p style="font-size:12.5px;color:var(--muted);margin:0 0 6px">This is the text extracted from the PDF. Tables and columns may run together, so check the original for exact figures. Select a passage above to highlight it.</p>'+
    '<textarea id="shNote" rows="2" style="width:100%" placeholder="Your note on the selected passage (optional)"></textarea><p style="font-size:12.5px;margin:6px 0 2px">Select a passage, then press the colour that says what it is:</p><div class="row" style="margin-top:2px;gap:6px;flex-wrap:wrap">'+SH_COLS.map(c=>'<button class="btn" style="background:'+c[2]+';color:#111;border:1px solid #888;min-height:40px" onclick="shSaveHL(\''+c[0]+'\')">'+c[1]+'</button>').join('')+'</div>'+
-   '<h3 style="margin:12px 0 4px;font-size:14px">Highlights</h3>'+(hl.length?hl.map(x=>'<div style="border-left:5px solid '+shColOf(x)+';padding:2px 8px;margin:6px 0;font-size:13px"><b>p. '+x.page+'</b> “'+escHTML(x.quote.slice(0,300))+'”'+(x.note?'<br><i>'+escHTML(x.note)+'</i>':'')+'<br><button class="btn btn-ghost" onclick="shRead(\''+p.id+'\','+x.page+')">Go to page</button> <button class="btn btn-ghost" onclick="shDelHL(\''+x.id+'\')">Delete</button></div>').join(''):'<p style="font-size:13px">None yet.</p>')+
+   '<h3 style="margin:12px 0 4px;font-size:14px">Highlights</h3>'+(hl.length?hl.map(x=>'<div style="border-left:5px solid '+shColOf(x)+';padding:2px 8px;margin:6px 0;font-size:13px"><b>p. '+x.page+'</b> “'+escHTML(x.quote.slice(0,300))+'”'+(x.note?'<br><i>'+escHTML(x.note)+'</i>':'')+'<br>'+shCardTapsHTML(x)+'<button class="btn btn-ghost" onclick="shRead(\''+p.id+'\','+x.page+')">Go to page</button> <button class="btn btn-ghost" onclick="shDelHL(\''+x.id+'\')">Delete</button>'+(SH.thought===x.id?'<br><textarea id="shTh" rows="2" style="width:100%;margin-top:4px" placeholder="Your own thought on this passage">'+escHTML(x.note||'')+'</textarea><button class="btn btn-purple" onclick="shThoughtSave(\''+x.id+'\')">Save my thought</button>':'')+'</div>').join(''):'<p style="font-size:13px">None yet.</p>')+
    '<h3 style="margin:12px 0 4px;font-size:14px">Summary, after you think first</h3><p style="font-size:13px;margin:0 0 4px">In your own words, in at least two lines: what do you think this paper says? The AI summary unlocks after that.</p><textarea id="shMine" rows="3" style="width:100%" oninput="shMineCheck()"></textarea><div class="row" style="margin-top:6px"><button class="btn btn-ghost" id="shAiBtn" onclick="shSummarise()" disabled>Summarise with AI</button></div><div id="shAi" style="margin-top:8px;font-size:13.5px;line-height:1.6;white-space:pre-wrap" aria-live="polite"></div>';
 }
+/* Taps on a highlight card: I agree, I doubt, and my own thought. The counts go to the linked library paper, where B5 reads them. */
+function shCardTapsHTML(x){const on=(s,c)=>'class="btn '+(x.stance===s?'btn-purple':'btn-ghost')+'" '+(x.stance===s?'style="background:'+c+';color:#fff" ':'')+'aria-pressed="'+(x.stance===s)+'" onclick="shStance(\''+x.id+'\',\''+s+'\')"';
+  return'<button '+on('agree','#15803d')+'>I agree</button> <button '+on('doubt','#b45309')+'>I doubt</button> <button class="btn btn-ghost" onclick="shThought(\''+x.id+'\')">My thought</button> '}
+function shReadCounts(p){const n=p.notes||[];return{agree:n.filter(x=>x.stance==='agree').length,doubt:n.filter(x=>x.stance==='doubt').length}}
+async function shStance(id,s){const p=SH.cur;if(!p)return;const n=p.notes.find(x=>x.id===id);if(!n)return;n.stance=(n.stance===s)?'':s;
+  try{const m=p.lib?citGetLib().find(d=>d.cid===p.lib):shLibMatch(p.title);if(m){const l=citGetLib(),i=l.findIndex(d=>d.cid===m.cid);l[i].reads=shReadCounts(p);citSaveLib(l)}}catch(e){}
+  await shPut(p);shRender()}
+function shThought(id){SH.thought=SH.thought===id?null:id;shRender();setTimeout(()=>{const t=document.getElementById('shTh');if(t)t.focus()},50)}
+async function shThoughtSave(id){const p=SH.cur;if(!p)return;const n=p.notes.find(x=>x.id===id);if(!n)return;n.note=(document.getElementById('shTh').value||'').trim();SH.thought=null;await shPut(p);shRender();showToast('Thought saved')}
 /* Search inside the open paper: every page that has the words, with a snippet; the words are marked in the page text. */
 function shInSearch(q){SH.inq=String(q||'').trim();const p=SH.cur;if(!p)return;const terms=Array.from(new Set(shTerms(SH.inq)));
   SH.inres=terms.length?p.pages.map((tx,i)=>({page:i+1,text:tx})).filter(x=>terms.every(t=>x.text.toLowerCase().indexOf(t)>=0)).map(x=>({page:x.page,sn:shSnippet(x.text,terms,160)})):[];
@@ -18745,7 +18764,7 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
-/* PDF tools (build 2026.11.08x): pdf-lib is loaded the first time it is needed. */
+/* PDF tools (build 2026.11.08y): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
   const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
