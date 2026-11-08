@@ -14220,7 +14220,7 @@ async function apFromFile(inp){
   const n=f.name.toLowerCase();
   try{
     showToast(apX('ap_t_reading',{f:f.name}));
-    if(/\.pdf$/.test(n)){const r=await shExtractPdf(f);apLoad(shGuessTitle(r.pages,f.name.replace(/\.pdf$/i,'')),r.pages,'pdf',false)}
+    if(/\.pdf$/.test(n)){const r=await shExtractPdf(f);apLoad(shGuessTitle(r.pages,f.name.replace(/\.pdf$/i,'')),r.pages,'pdf',false);if(r.reordered)setTimeout(function(){showToast(r.reordered+' page'+(r.reordered===1?'':'s')+' of this PDF had the two columns mixed line by line; put back in column order')},2200)}
     else if(/\.docx$/.test(n)){
       if(typeof mammoth==='undefined')throw new Error('The Word reader needs the internet once to load. Try again when you are online.');
       const o=await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});
@@ -17680,7 +17680,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08c';
+const APP_BUILD='2026.11.08d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -17982,18 +17982,184 @@ function shBestSentence(text,terms){
   sents.forEach(se=>{const l=se.toLowerCase();let sc=0;terms.forEach(t=>{if(l.indexOf(t)>=0)sc++});if(sc>bs){bs=sc;best=se}});
   return best||text.slice(0,240);
 }
+/* Reading order of one PDF page, region by region.
+   1. A clean vertical gap (a gutter) through the whole region splits it into left and right, read in that order.
+   2. Otherwise the region is cut at clear horizontal gaps into slabs. Neighbouring slabs whose union still has a
+      gutter are joined again, so a two-column body is never sliced into rows.
+   3. Otherwise lines that cross an otherwise clean gutter (a full-width heading or caption with no space around it)
+      are read in place and the rest is split into columns.
+   4. Otherwise lines are read top to bottom.
+   A gap only counts as a gutter when both sides look like text (at least three words a line, not a thin strip),
+   so tables stay row by row. Vertical text (journal side notes) is left out. */
+function apPageOrder(items,pageBox){
+  const x0=pageBox[0],y0=pageBox[1],PW=Math.max(1,pageBox[2]-pageBox[0]);
+  const ws=[];
+  (items||[]).forEach(function(i){
+    if(!i||typeof i.str!=='string'||!i.str.trim()||!i.transform)return;
+    if(Math.abs(i.transform[1])>0.1*Math.abs(i.transform[0]||1))return;
+    const h=Math.abs(i.height||i.transform[3]||1),x=i.transform[4]-x0,y=i.transform[5]-y0;
+    ws.push({s:i.str,x:x,w:Math.max(0.5,Math.abs(i.width||0)),y:y,h:h,n:(i.str.match(/\S+/g)||[]).length});
+  });
+  if(ws.reduce(function(n,i){return n+i.s.trim().length},0)<15)return{text:'',cols:0,scanned:true};
+  const hs=ws.map(function(w){return w.h}).sort(function(a,b){return a-b});
+  const fh=hs[Math.floor(hs.length/2)]||10;
+  const VMIN=Math.max(6,0.8*fh),HGAP=0.55*fh,TOL=Math.max(2,0.45*fh);
+  let maxCols=1;
+  function lines(arr){
+    const a=arr.slice().sort(function(p,q){return q.y-p.y||p.x-q.x}),L=[];
+    a.forEach(function(w){
+      let l=null;for(let k=L.length-1;k>=0&&k>=L.length-3;k--){if(Math.abs(L[k].y-w.y)<=TOL){l=L[k];break}}
+      if(l){l.ws.push(w);l.y=(l.y*(l.ws.length-1)+w.y)/l.ws.length}else L.push({y:w.y,ws:[w]});
+    });
+    L.forEach(function(l){l.ws.sort(function(p,q){return p.x-q.x})});
+    L.sort(function(p,q){return q.y-p.y});
+    return L;
+  }
+  function txt(l){return l.ws.map(function(w){return w.s}).join(' ').replace(/\s+/g,' ').trim()}
+  function med(a){a=a.slice().sort(function(p,q){return p-q});return a.length?a[Math.floor(a.length/2)]:0}
+  /* a side of a cut looks like running text */
+  function textLike(arr){
+    const L=lines(arr);if(!L.length)return false;
+    const wpl=med(L.map(function(l){return l.ws.reduce(function(n,w){return n+w.n},0)}));
+    const wid=med(L.map(function(l){const a=l.ws[0],b=l.ws[l.ws.length-1];return b.x+b.w-a.x}));
+    return wpl>=3&&wid>=0.12*PW;
+  }
+  /* widest vertical gap through the whole set whose two sides both look like text */
+  function vgap(arr){
+    if(arr.length<2)return null;
+    const iv=arr.map(function(w){return[w.x,w.x+w.w]}).sort(function(a,b){return a[0]-b[0]}),m=[];
+    iv.forEach(function(p){const l=m[m.length-1];if(l&&p[0]<=l[1]+0.5)l[1]=Math.max(l[1],p[1]);else m.push([p[0],p[1]])});
+    const gs=[];for(let k=0;k<m.length-1;k++){const w=m[k+1][0]-m[k][1];if(w>=VMIN)gs.push({c:(m[k][1]+m[k+1][0])/2,w:w})}
+    gs.sort(function(a,b){return b.w-a.w});
+    for(let k=0;k<gs.length;k++){
+      const c=gs[k].c,Lw=arr.filter(function(w){return w.x+w.w/2<c}),Rw=arr.filter(function(w){return w.x+w.w/2>=c});
+      if(Lw.length&&Rw.length&&textLike(Lw)&&textLike(Rw))return{c:c,w:gs[k].w,L:Lw,R:Rw};
+    }
+    return null;
+  }
+  /* horizontal slabs separated by clear gaps */
+  function slabs(arr){
+    const a=arr.slice().sort(function(p,q){return(q.y+0.8*q.h)-(p.y+0.8*p.h)}),out=[];
+    let cur=[],low=Infinity;
+    a.forEach(function(w){
+      const top=w.y+0.8*w.h,bot=w.y-0.2*w.h;
+      if(cur.length&&low-top>=HGAP){out.push(cur);cur=[]}
+      if(!cur.length)low=bot;
+      cur.push(w);low=Math.min(low,bot);
+    });
+    if(cur.length)out.push(cur);
+    return out;
+  }
+  /* lines crossing an otherwise clean gutter */
+  function blockers(arr,L){
+    if(L.length<5)return null;
+    let lo=Infinity,hi=-Infinity;arr.forEach(function(w){lo=Math.min(lo,w.x);hi=Math.max(hi,w.x+w.w)});
+    const BW=hi-lo;if(BW<4*VMIN)return null;
+    const a0=Math.floor(lo+0.2*BW),a1=Math.ceil(lo+0.8*BW),cnt=new Array(a1-a0+1).fill(0);
+    const spans=L.map(function(l){
+      const r=[];l.ws.forEach(function(w){const q=r[r.length-1];if(q&&w.x<=q[1]+0.6*VMIN)q[1]=Math.max(q[1],w.x+w.w);else r.push([w.x,w.x+w.w])});
+      r.forEach(function(q){for(let b=Math.max(a0,Math.floor(q[0]));b<=Math.min(a1,Math.ceil(q[1]));b++)cnt[b-a0]++});
+      return r;
+    });
+    let best=Infinity;cnt.forEach(function(v){if(v<best)best=v});
+    if(best===0||best>0.4*L.length)return null;
+    const cand=[];for(let b=0;b<cnt.length;b++)if(cnt[b]===best)cand.push(b+a0);
+    const x=cand[Math.floor(cand.length/2)];
+    const isB=L.map(function(l,k){return spans[k].some(function(q){return q[0]<=x&&q[1]>=x})});
+    const rest=[];L.forEach(function(l,k){if(!isB[k])rest.push.apply(rest,l.ws)});
+    const g=vgap(rest);if(!g||Math.abs(g.c-x)>2*VMIN+g.w)return null;
+    const parts=[];
+    L.forEach(function(l,k){const p=parts[parts.length-1];if(p&&p.full===isB[k])p.ws.push.apply(p.ws,l.ws);else parts.push({full:isB[k],ws:l.ws.slice()})});
+    return parts;
+  }
+  function order(arr,depth,cols){
+    if(!arr.length)return[];
+    const L=lines(arr);
+    if(L.length<=1||depth>14)return L.map(txt);
+    const g=vgap(arr);
+    if(g){maxCols=Math.max(maxCols,cols+1);return order(g.L,depth+1,cols+1).concat(order(g.R,depth+1,cols+1))}
+    const S=slabs(arr);
+    if(S.length>1){
+      const G=[];
+      S.forEach(function(s){const p=G[G.length-1];if(p&&vgap(p.concat(s)))p.push.apply(p,s);else G.push(s.slice())});
+      if(G.length>1){let out=[];G.forEach(function(gp){out=out.concat(order(gp,depth+1,cols))});return out}
+    }
+    const B=blockers(arr,L);
+    if(B){maxCols=Math.max(maxCols,cols+1);let out=[];B.forEach(function(p){out=out.concat(p.full?lines(p.ws).map(txt):order(p.ws,depth+1,cols))});return out}
+    return L.map(txt);
+  }
+  const out=order(ws,0,1);
+  return{text:out.join('\n'),cols:maxCols,scanned:false};
+}
+/* PDF text in the order pdf.js gives it (the order the PDF was written in, right for almost every journal PDF).
+   Only a page whose order runs across both columns line by line (left line, right line, next left line ...) is
+   rebuilt from positions with apPageOrder. Tested on 15 real PDFs (no page needed it) and on made-up PDFs. */
+function apStreamText(items){let t='';(items||[]).forEach(function(it){if(it&&typeof it.str==='string')t+=it.str+(it.hasEOL?'\n':' ')});return t.replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').trim()}
+function apInterleaved(items,pageBox){
+  const PW=Math.max(1,pageBox[2]-pageBox[0]),x0=pageBox[0];
+  const ws=(items||[]).filter(function(i){return i&&typeof i.str==='string'&&i.str.trim()&&i.transform&&Math.abs(i.transform[1])<=0.1*Math.abs(i.transform[0]||1)});
+  if(ws.length<12)return{hit:false,two:0,lines:0};
+  const hs=ws.map(function(i){return Math.abs(i.height||i.transform[3]||1)}).sort(function(a,b){return a-b}),fh=hs[Math.floor(hs.length/2)]||10;
+  const TOL=Math.max(2,0.45*fh),BIG=Math.max(8,1.2*fh);
+  const L=[];let cur=null;
+  ws.forEach(function(i){const y=i.transform[5];if(cur&&Math.abs(cur.y-y)<=TOL)cur.it.push(i);else{cur={y:y,it:[i]};L.push(cur)}});
+  let two=0;const cs=[];
+  L.forEach(function(l){
+    if(l.it.length<2)return;
+    const seg=[];let s={a:l.it[0].transform[4]-x0,b:l.it[0].transform[4]-x0+Math.abs(l.it[0].width||0)};
+    for(let k=1;k<l.it.length;k++){const it=l.it[k],a=it.transform[4]-x0,b=a+Math.abs(it.width||0);
+      if(a-s.b>=BIG){seg.push(s);s={a:a,b:b}}else{s.a=Math.min(s.a,a);s.b=Math.max(s.b,b)}}
+    seg.push(s);
+    if(seg.length!==2)return;
+    const c=(seg[0].b+seg[1].a)/2;
+    if(seg[0].b-seg[0].a>=0.25*PW&&seg[1].b-seg[1].a>=0.25*PW&&c>0.3*PW&&c<0.7*PW){two++;cs.push(c)}
+  });
+  let steady=0;if(cs.length){const m=cs.slice().sort(function(a,b){return a-b})[Math.floor(cs.length/2)];steady=cs.filter(function(c){return Math.abs(c-m)<=15}).length/cs.length}
+  return{hit:two>=6&&two>=0.3*L.length&&steady>=0.7,two:two,lines:L.length};
+}
+function apPageText(items,pageBox){
+  const t=apStreamText(items);
+  const d=apInterleaved(items,pageBox);
+  if(!d.hit)return{text:t,mode:'stream'};
+  const o=apPageOrder(items,pageBox);
+  const wc=function(x){return(x.match(/\S+/g)||[]).length};
+  if(o.scanned||!o.text||Math.abs(wc(o.text)-wc(t))>Math.max(6,wc(t)*0.08))return{text:t,mode:'stream'};
+  return{text:o.text,mode:'layout'};
+}
+/* Ligatures (ﬁ ﬂ ﬀ ﬃ ﬄ) become plain letters, so "significant" can be found. Words broken at a line end ("associ-" /
+   "ated") are mended once over all pages, and the paper itself decides: the hyphenated form used elsewhere keeps the
+   hyphen, the joined form used elsewhere joins; if neither, both halves used as words or as parts of other hyphenated
+   words keep the hyphen (task-related), as does a left half that starts other hyphenated words in the paper (self-harm), otherwise join (associated). "high- and low-" keeps its space. */
+const AP_LIG={'ﬀ':'ff','ﬁ':'fi','ﬂ':'fl','ﬃ':'ffi','ﬄ':'ffl','ﬅ':'st','ﬆ':'st'};
+function apJoinBreaks(pages){
+  pages=pages.map(function(t){return String(t||'').replace(/[ﬀ-ﬆ]/g,function(c){return AP_LIG[c]}).replace(/­\n/g,'-\n').replace(/­/g,'')});
+  const low=pages.join('\n').toLowerCase().replace(/[a-z]+-\n[a-z]+/g,' ');
+  const cnt={},part={},lead={};
+  (low.match(/[a-z]+(?:-[a-z]+)*/g)||[]).forEach(function(w){cnt[w]=(cnt[w]||0)+1;if(w.indexOf('-')>0){const ps=w.split('-');lead[ps[0]]=(lead[ps[0]]||0)+1;ps.forEach(function(p){part[p]=1})}});
+  const known=function(w){return(cnt[w]||0)>0||!!part[w]};
+  return pages.map(function(t){
+    return t.replace(/([A-Za-z]{2,})-\n([a-z]+)[ \t]?/g,function(m,a,b){
+      if(/^(and|or|to|nor|versus)$/.test(b))return a+'- '+b+' ';
+      const A=a.toLowerCase(),hy=cnt[A+'-'+b]||0,jo=cnt[A+b]||0;
+      const keep=(hy||jo)?hy>jo:((known(A)&&known(b))||(lead[A]||0)>=2);
+      return a+(keep?'-':'')+b+'\n';
+    });
+  });
+}
 async function shExtractPdf(file){
   if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader needs the internet once to load. Try again when you are online.');
   const buf=await file.arrayBuffer();
   const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-  const n=Math.min(pdf.numPages,200),pages=[];
+  const n=Math.min(pdf.numPages,200);let pages=[],reordered=0;
   for(let k=1;k<=n;k++){
-    const pg=await pdf.getPage(k),tc=await pg.getTextContent();let t='';
-    tc.items.forEach(it=>{t+=it.str+(it.hasEOL?'\n':' ')});
-    pages.push(t.replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').trim());
+    const pg=await pdf.getPage(k),tc=await pg.getTextContent();
+    let r;try{r=apPageText(tc.items,pg.view||[0,0,612,792])}catch(e){r={text:apStreamText(tc.items),mode:'stream'}}
+    if(r.mode==='layout')reordered++;
+    pages.push(r.text);
   }
+  try{pages=apJoinBreaks(pages)}catch(e){}
   let meta='';try{const md=await pdf.getMetadata();meta=String((md&&md.info&&md.info.Title)||'').trim()}catch(e){}
-  return{pages:pages,total:pdf.numPages,meta:meta};
+  return{pages:pages,total:pdf.numPages,meta:meta,reordered:reordered};
 }
 /* Version 93: the first line of a journal PDF is usually a running header ("Journal of …", a DOI,
    "Contents lists available at ScienceDirect", "RESEARCH ARTICLE"), which became the paper's title.
@@ -18035,7 +18201,7 @@ async function shAddFiles(input){
       if(chars<200){msgs.push(f.name+': no readable text (it looks scanned). Not added.');continue}
       const rec={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:shGuessTitle(r.pages,f.name.replace(/\.pdf$/i,''),r.meta),file:f.name,size:f.size,added:new Date().toISOString(),pages:r.pages,total:r.total,notes:[],cells:{}};
       await shPut(rec);have.push(rec);
-      msgs.push(f.name+': added, '+r.pages.length+' pages'+(r.total>r.pages.length?' (first '+r.pages.length+' of '+r.total+')':''));
+      msgs.push(f.name+': added, '+r.pages.length+' pages'+(r.total>r.pages.length?' (first '+r.pages.length+' of '+r.total+')':'')+(r.reordered?' ('+r.reordered+' page'+(r.reordered===1?'':'s')+' had the two columns mixed line by line in the file; put back in column order)':''));
     }catch(e){msgs.push(f.name+': '+(e&&e.message?e.message:'could not be read'))}
   }
   SH.status=msgs.join(' | ');
