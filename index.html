@@ -18013,7 +18013,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08w';
+const APP_BUILD='2026.11.08x';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18564,7 +18564,7 @@ function shStatusHTML(){return SH.status?'<p style="font-size:13px;margin:6px 0"
 async function shUsage(){try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();return Math.round((e.usage||0)/1048576)+' MB used of about '+Math.round((e.quota||0)/1048576)+' MB'}}catch(e){}return''}
 function shPapersRender(b){
   const L=SH.papers.map(p=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><input type="text" value="'+escHTML(p.title)+'" style="width:100%;font-weight:700" onchange="shRename(\''+p.id+'\',this.value)" aria-label="Title">'+shLibLine(p)+'<div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+escHTML(p.file)+' · '+p.pages.length+' pages · '+p.notes.length+' highlights</div><div class="row" style="gap:6px"><button class="btn btn-purple" onclick="shRead(\''+p.id+'\',1)">Read</button><button class="btn btn-ghost" id="shDel_'+p.id+'" onclick="shAskDel(\''+p.id+'\')">Remove from shelf</button></div></div>').join('');
-  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'shFile\').click()">➕ Add PDFs</button><input type="file" id="shFile" accept=".pdf,application/pdf" multiple style="display:none" onchange="shAddFiles(this)"><button class="btn btn-ghost" onclick="shBackup()">Back up the shelf</button><button class="btn btn-ghost" onclick="document.getElementById(\'shRest\').click()">Restore a shelf backup</button><input type="file" id="shRest" accept=".json" style="display:none" onchange="shRestore(this)"></div>'+shStatusHTML()+(SH.papers.length?L:'<p style="font-size:13.5px">The shelf is empty. Add a PDF to start.</p>')+'<p style="font-size:12.5px;color:var(--muted)" id="shUse"></p><p style="font-size:12.5px;color:var(--muted)">The shelf is kept apart from the normal backup. Press <b>Back up the shelf</b> now and then. Clearing your browser data erases the shelf.</p>';
+  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'shFile\').click()">➕ Add PDFs</button><input type="file" id="shFile" accept=".pdf,application/pdf" multiple style="display:none" onchange="shAddFiles(this)"><button class="btn btn-ghost" onclick="shPdfToolsOpen()">PDF tools</button><button class="btn btn-ghost" onclick="shBackup()">Back up the shelf</button><button class="btn btn-ghost" onclick="document.getElementById(\'shRest\').click()">Restore a shelf backup</button><input type="file" id="shRest" accept=".json" style="display:none" onchange="shRestore(this)"></div>'+shStatusHTML()+(SH.papers.length?L:'<p style="font-size:13.5px">The shelf is empty. Add a PDF to start.</p>')+'<p style="font-size:12.5px;color:var(--muted)" id="shUse"></p><p style="font-size:12.5px;color:var(--muted)">The shelf is kept apart from the normal backup. Press <b>Back up the shelf</b> now and then. Clearing your browser data erases the shelf.</p>';
   shUsage().then(u=>{const e=document.getElementById('shUse');if(e&&u)e.textContent='Browser storage: '+u+'.'});
 }
 /* Reading shelf and library on one paper list (build 2026.11.08m): a shelf PDF is linked to a library paper by title
@@ -18621,7 +18621,7 @@ function shReaderRender(b){
   const p=SH.cur;if(!p)return;const n=p.pages.length;
   const hl=p.notes.filter(x=>x.quote).sort((a,c)=>a.page-c.page);
   b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button></div>'+
-   '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center"><button class="btn '+(SH.img?'btn-purple':'btn-ghost')+'" onclick="shImgToggle()">'+(SH.img?'Hide page picture':'Show page picture')+'</button>'+'<button class="btn btn-ghost" onclick="shWord()">Save as Word</button>'+(SH.img?'<button class="btn btn-ghost" aria-label="Zoom out" onclick="shZoom(-0.25)">−</button><span style="font-size:13px">'+Math.round(SH.zoom*100)+'%</span><button class="btn btn-ghost" aria-label="Zoom in" onclick="shZoom(0.25)">+</button>':'')+
+   '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center"><button class="btn '+(SH.img?'btn-purple':'btn-ghost')+'" onclick="shImgToggle()">'+(SH.img?'Hide page picture':'Show page picture')+'</button>'+'<button class="btn btn-ghost" onclick="shWord()">Save as Word</button><button class="btn btn-ghost" onclick="shHlPdf()">Save PDF with my highlights</button>'+(SH.img?'<button class="btn btn-ghost" aria-label="Zoom out" onclick="shZoom(-0.25)">−</button><span style="font-size:13px">'+Math.round(SH.zoom*100)+'%</span><button class="btn btn-ghost" aria-label="Zoom in" onclick="shZoom(0.25)">+</button>':'')+
      '<input type="search" id="shInQ" value="'+escAttr(SH.inq||'')+'" placeholder="Search in this paper" style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')shInSearch(this.value)" aria-label="Search in this paper"><button class="btn btn-ghost" onclick="shInSearch(document.getElementById(\'shInQ\').value)">Find</button></div>'+shInResHTML(p)+(SH.img?'<div id="shImg" style="border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;text-align:center;overflow:auto"><span style="font-size:13px">Loading the page…</span></div>':'')+
    '<div id="shText" style="white-space:pre-wrap;font-size:14px;line-height:1.65;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;user-select:text">'+shMarkTerms(shMarked(p,SH.page))+'</div>'+
    '<p style="font-size:12.5px;color:var(--muted);margin:0 0 6px">This is the text extracted from the PDF. Tables and columns may run together, so check the original for exact figures. Select a passage above to highlight it.</p>'+
@@ -18745,6 +18745,69 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
+/* PDF tools (build 2026.11.08x): pdf-lib is loaded the first time it is needed. */
+function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
+  const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+  s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
+/* "1-3, 5" to [1,2,3,5]; null when it does not fit the page count. */
+function ptRange(str,max){const out=[];const parts=String(str||'').split(/[,;\s]+/).filter(Boolean);if(!parts.length)return null;
+  for(const q of parts){const m=q.match(/^(\d+)(?:-(\d+))?$/);if(!m)return null;let a=+m[1],b=m[2]?+m[2]:a;if(a<1||b<a||b>max)return null;for(let k=a;k<=b;k++)if(out.indexOf(k)<0)out.push(k)}
+  return out.sort(function(x,y){return x-y})}
+function ptAscii(t){return String(t||'').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[–—−]/g,'-').replace(/…/g,'...').replace(/[^\x20-\x7e]/g,'?')}
+function ptWrap(font,text,size,maxW){const words=ptAscii(text).split(/\s+/),lines=[];let cur='';
+  words.forEach(function(w){const t=cur?cur+' '+w:w;if(font.widthOfTextAtSize(t,size)>maxW&&cur){lines.push(cur);cur=w}else cur=t});if(cur)lines.push(cur);return lines}
+/* The paper's own PDF with every highlight drawn on it in its colour, and a last page listing the quotes and notes. */
+async function shHlPdf(){
+  const p=SH.cur;if(!p)return;
+  try{const buf=await shFileGet(p.id);if(!buf){showToast('This paper has no PDF kept. Attach it first (Show page picture, then Attach the PDF).');return}
+    if(typeof pdfjsLib==='undefined'){showToast('The PDF viewer needs the internet once to load.');return}
+    const PL=await plibLoad(),doc=await PL.PDFDocument.load(buf.slice(0)),pj=await pdfjsLib.getDocument({data:buf.slice(0)}).promise,font=await doc.embedFont(PL.StandardFonts.Helvetica);
+    const hex=h=>{const n=parseInt(h.slice(1),16);return PL.rgb(((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255)};
+    let drawn=0,missed=0;const flip=t=>[t[0],t[1],t[2],-t[3],t[4],-t[5]];
+    for(const n of p.notes.filter(x=>x.quote)){
+      if(n.page<1||n.page>doc.getPageCount()){missed++;continue}
+      const pg=doc.getPage(n.page-1),tc=await (await pj.getPage(n.page)).getTextContent(),bx=shQuoteBoxes(tc.items,n.quote,flip);
+      if(!bx.length){missed++;continue}
+      bx.forEach(r=>{const h=r.h/1.15;pg.drawRectangle({x:r.x,y:-r.y-1.2*h,width:r.w,height:1.15*h,color:hex(shColOf(n)),opacity:0.45,blendMode:PL.BlendMode.Multiply})});drawn++}
+    /* last pages: quotes and notes */
+    const W=595,H=842,M=50;let pg=doc.addPage([W,H]),y=H-M;
+    function line(t,size,bold){if(y<M+size){pg=doc.addPage([W,H]);y=H-M}pg.drawText(t,{x:M,y:y,size:size,font:font});y-=size*1.4}
+    line(ptAscii('Highlights and notes: '+(p.title||'')),13);y-=6;
+    const names={yellow:'Sample',green:'Method',blue:'Main finding',red:'Limitation',purple:'Quote'};
+    p.notes.slice().sort((x,y2)=>x.page-y2.page).forEach(n=>{
+      ptWrap(font,'p. '+n.page+' ['+(names[n.col]||'Highlight')+'] '+(n.quote||''),10,W-2*M).forEach(l=>line(l,10));
+      if(n.note)ptWrap(font,'   My note: '+n.note,10,W-2*M).forEach(l=>line(l,10));y-=5});
+    if(!p.notes.length)line('No highlights yet.',10);
+    const bytes=await doc.save(),safe=String(p.title||'paper').replace(/[^\w\- ]+/g,'').trim().slice(0,60)||'paper';
+    await shareBlob(new Blob([bytes],{type:'application/pdf'}),safe+' (highlighted).pdf','application/pdf');
+    showToast('PDF ready: '+drawn+' highlight'+(drawn===1?'':'s')+' drawn'+(missed?', '+missed+' could not be placed (they are in the list on the last page)':'')+'.')
+  }catch(e){showToast('Could not make the PDF: '+((e&&e.message)||'error'))}}
+/* Merge PDFs, or keep or remove pages of one. */
+const PT={files:[]};
+function shPdfToolsOpen(){let d=document.getElementById('ptDlg');
+  if(!d){d=document.createElement('dialog');d.id='ptDlg';d.style.cssText='max-width:560px;width:94vw;padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd)';document.body.appendChild(d)}
+  ptRender();if(!d.open)d.showModal()}
+function ptRender(){const d=document.getElementById('ptDlg');if(!d)return;
+  const L=PT.files.map(function(f,i){return'<div style="display:flex;gap:6px;align-items:center;margin:3px 0;font-size:13.5px"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">'+(i+1)+'. '+escHTML(f.name)+(f.pages?' ('+f.pages+' pages)':'')+'</span>'+
+    '<button class="btn btn-ghost" aria-label="Move up" onclick="ptMove('+i+',-1)">↑</button><button class="btn btn-ghost" aria-label="Move down" onclick="ptMove('+i+',1)">↓</button><button class="btn btn-ghost" aria-label="Remove" onclick="ptDel('+i+')">✕</button></div>'}).join('');
+  d.innerHTML='<h2 style="margin:0 0 6px">PDF tools</h2><p style="font-size:13.5px;margin:0 0 8px">Everything happens on this device. The files are not uploaded.</p>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'ptFile\').click()">Choose PDFs</button><input type="file" id="ptFile" accept=".pdf,application/pdf" multiple style="display:none" onchange="ptAdd(this)"></div>'+
+   (PT.files.length?'<div style="margin:8px 0">'+L+'</div>':'<p style="font-size:13.5px">Choose one PDF or more.</p>')+
+   (PT.files.length>1?'<button class="btn btn-purple" onclick="ptMerge()">Join them in this order</button>':'')+
+   (PT.files.length===1?'<div style="margin-top:8px;font-size:13.5px">Pages (like 1-3, 5): <input type="text" id="ptRange" style="width:9em"> <button class="btn btn-purple" onclick="ptPages(true)">Keep only these</button> <button class="btn btn-ghost" onclick="ptPages(false)">Remove these</button></div>':'')+
+   '<div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost" onclick="document.getElementById(\'ptDlg\').close()">Close</button></div>'}
+async function ptAdd(input){const fs=[...(input.files||[])];input.value='';
+  try{const PL=await plibLoad();for(const f of fs){const buf=await f.arrayBuffer();let n=0;try{n=(await PL.PDFDocument.load(buf.slice(0),{ignoreEncryption:false})).getPageCount()}catch(e){showToast(f.name+' could not be opened (locked or damaged).');continue}PT.files.push({name:f.name,buf:buf,pages:n})}}catch(e){showToast((e&&e.message)||'error')}ptRender()}
+function ptMove(i,d){const j=i+d;if(j<0||j>=PT.files.length)return;const t=PT.files[i];PT.files[i]=PT.files[j];PT.files[j]=t;ptRender()}
+function ptDel(i){PT.files.splice(i,1);ptRender()}
+async function ptMerge(){try{const PL=await plibLoad(),out=await PL.PDFDocument.create();
+    for(const f of PT.files){const s=await PL.PDFDocument.load(f.buf.slice(0)),pp=await out.copyPages(s,s.getPageIndices());pp.forEach(x=>out.addPage(x))}
+    const bytes=await out.save();await shareBlob(new Blob([bytes],{type:'application/pdf'}),'joined.pdf','application/pdf');showToast('Joined '+PT.files.length+' files, '+out.getPageCount()+' pages.')}catch(e){showToast('Could not join: '+((e&&e.message)||'error'))}}
+async function ptPages(keep){const f=PT.files[0];if(!f)return;const r=ptRange(document.getElementById('ptRange').value,f.pages);
+  if(!r){showToast('Pages must look like 1-3, 5 and stay within 1 to '+f.pages+'.');return}
+  const use=keep?r:Array.from({length:f.pages},(_,i)=>i+1).filter(n=>r.indexOf(n)<0);if(!use.length){showToast('That would leave no pages.');return}
+  try{const PL=await plibLoad(),s=await PL.PDFDocument.load(f.buf.slice(0)),out=await PL.PDFDocument.create(),pp=await out.copyPages(s,use.map(n=>n-1));pp.forEach(x=>out.addPage(x));
+    const bytes=await out.save();await shareBlob(new Blob([bytes],{type:'application/pdf'}),f.name.replace(/\.pdf$/i,'')+(keep?' (pages '+document.getElementById('ptRange').value.replace(/\s+/g,'')+')':' (some pages removed)')+'.pdf','application/pdf');showToast(use.length+' page'+(use.length===1?'':'s')+' in the new file.')}catch(e){showToast('Could not make the file: '+((e&&e.message)||'error'))}}
 async function shDrawImg(){const box=document.getElementById('shImg'),p=SH.cur;if(!box||!p)return;
   try{const buf=await shFileGet(p.id);
     if(!buf){box.innerHTML='<span style="font-size:13px">The page picture is not kept for this paper (it was added before pictures were kept). Attach its PDF once: <label class="btn btn-ghost" style="cursor:pointer;display:inline-block">Attach the PDF<input type="file" accept=".pdf,application/pdf" style="display:none" onchange="shAttach(this)"></label> The text and highlights are not read again.</span>';return}
