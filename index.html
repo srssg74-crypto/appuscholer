@@ -4593,7 +4593,25 @@ function tourAfterWelcome(){const d=document.getElementById('welcomeDlg');if(!d|
   d.addEventListener('close',()=>{if(LS.get('appu_demo'))return;setTimeout(()=>{const st=document.getElementById('settingsDlg');
     if(st&&st.open){if(!st._tour){st._tour=1;st.addEventListener('close',()=>{if(!LS.get('appu_demo'))setTimeout(tourStart,350)},{once:true})}}else tourStart()},350)})}
 
-function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
+/* B2 to B7: what this very step asks of the chosen review type, taken from the same table as the B1 steps panel. */
+function b1ItemNoteHTML(id,o){if(!/^B[2-7]$/.test(id))return'';const hi=studyHi(),L=(e,h)=>hi?h:e,type=(wGet(o).B1||{}).type,t=B1_TYPES.find(x=>x[0]===type);
+  if(!t)return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+L('Choose your review type in B1 and this step tells you what it asks of that type.','B1 में अपना review प्रकार चुनें; तब यह चरण बताएगा कि उस प्रकार से यह क्या माँगता है।')+' <a href="#" onclick="SUB_CUR.id=\'B1\';subRender();return false">B1 →</a></span></div>';
+  const rows=B1_STEPS.filter(r=>r[0]===id&&r[2][type]&&r[2][type][0]!=='H');
+  if(!rows.length)return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+escHTML(L('For a '+(t[1]||type)+', this step does not appear.','इस review प्रकार में यह चरण नहीं आता।'))+'</span></div>';
+  return'<div class="sub-box" style="border-style:dashed"><b>'+escHTML(L('For your review type: ','आपके review प्रकार के लिए: ')+(hi?(t[2]||t[1]):t[1]))+'</b>'+rows.map(r=>{const c=r[2][type],l=B1_LBL[c[0]];
+    return'<div style="display:flex;gap:8px;align-items:flex-start;padding:4px 0"><span style="flex:0 0 auto;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;background:'+l[2]+';color:'+l[3]+(c[0]==='O'?';border:1px solid #9ca3af':'')+'">'+escHTML(hi?l[1]:l[0])+'</span><div style="font-size:13px;line-height:1.4"><b>'+escHTML(hi?r[1][1]:r[1][0])+'</b>'+((hi?c[2]:c[1])?': '+escHTML(hi?c[2]:c[1]):'')+'</div></div>'}).join('')+'</div>'}
+/* Red (limitation) and purple (quote) highlights from the reader, shown where they are used: by theme in B5,
+   all limitations in B6 as possible gaps, all quotes in B7. Read from the library paper's highlight list. */
+function wCardsHTML(id,o){if(id!=='B5'&&id!=='B6'&&id!=='B7')return'';const hi=studyHi(),L=(e,h)=>hi?h:e,lib=citGetLib();
+  const show=(col,cids)=>{const out=[];lib.forEach(d=>{if(cids&&cids.indexOf(d.cid)<0)return;(d.hls||[]).filter(h=>h.col===col&&h.t).forEach(h=>out.push({d:d,h:h}))});return out};
+  const lab=d=>(citLastName(d.author)||'?')+' ('+(d.year||'n.d.')+')';
+  const list=items=>items.length?'<ul style="margin:4px 0 4px 18px;font-size:13px">'+items.slice(0,12).map(x=>'<li>“'+escHTML(String(x.h.t).slice(0,240))+'” <span class="desc">'+escHTML(lab(x.d))+(x.h.page?', p. '+x.h.page:'')+'</span></li>').join('')+(items.length>12?'<li class="desc">+'+(items.length-12)+'</li>':'')+'</ul>':'';
+  if(id==='B6'){const r=show('red');return r.length?'<div class="sub-box"><b>'+L('Limitations you highlighted in the reader','Reader में आपके चिह्नित limitations')+'</b><p class="desc" style="margin:2px 0">'+L('Each one is a possible gap. Pick the ones that several studies share.','हर एक संभावित gap है। उन्हें चुनें जो कई studies में साझा हैं।')+'</p>'+list(r)+'</div>':''}
+  if(id==='B7'){const q=show('purple');return q.length?'<div class="sub-box"><b>'+L('Quotes you kept in the reader','Reader में आपके रखे उद्धरण')+'</b><p class="desc" style="margin:2px 0">'+L('Look here for the theory or model the studies rely on.','यहाँ देखें कि studies किस theory या model पर टिकी हैं।')+'</p>'+list(q)+'</div>':''}
+  const g=wThemes(o),ks=Object.keys(g);let h='';
+  ks.forEach(th=>{const cids=g[th].map(r=>r.cid).filter(Boolean),r=show('red',cids),q=show('purple',cids);if(r.length||q.length)h+='<div style="margin-top:6px"><b>'+escHTML(th)+'</b>'+(r.length?'<div class="desc">'+L('Limitations','Limitations')+'</div>'+list(r):'')+(q.length?'<div class="desc">'+L('Quotes','उद्धरण')+'</div>'+list(q):'')+'</div>'});
+  return h?'<div class="sub-box"><b>'+L('Your red and purple highlights, by theme','आपके लाल और बैंगनी highlights, theme के अनुसार')+'</b>'+h+'</div>':''}
+function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=b1ItemNoteHTML(id,o)}catch(e){}try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{lg+=wCardsHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
   if(lg&&!['C3','C4'].includes(id))return lg;
   if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px">'+(ok?'<button type="button" class="btn btn-purple btn-sm" onclick="bbSampleToBook()">📖 '+(hi?'किताब में डालें (संख्याएँ जुड़ी रहेंगी)':'Put it in my book (numbers stay linked)')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
@@ -18023,7 +18041,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08y';
+const APP_BUILD='2026.11.08z';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18764,7 +18782,7 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
-/* PDF tools (build 2026.11.08y): pdf-lib is loaded the first time it is needed. */
+/* PDF tools (build 2026.11.08z): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
   const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
