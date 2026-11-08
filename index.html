@@ -4438,6 +4438,7 @@ function wExtra3HTML(id,o){
       '<p style="margin:10px 0 2px"><b>'+L('PRISMA flow numbers','PRISMA flow की संख्याएँ')+'</b> <span class="desc">'+L('(fill as you screen)','(छाँटते-छाँटते भरें)')+'</span></p>'+
       (()=>{const f=x=>'<div class="row" style="gap:6px;align-items:center;margin:2px 0"><input type="number" min="0" style="width:90px" value="'+escAttr(n[x[0]]==null?'':n[x[0]])+'" onchange="wNestRedraw(\'B1\',\'n\',\''+x[0]+'\',this.value)"> <span style="font-size:14px">'+escHTML(hi?x[2]:x[1])+(x[4]?'':' <span class="desc">'+L('(if any)','(हो तो)')+'</span>')+'</span></div>',g=(k,t)=>'<p class="desc" style="margin:6px 0 0;font-weight:600">'+t+'</p>'+B1_FLOW.filter(x=>x[3]===k).map(f).join('');
         return g('i',L('Identification','पहचान'))+g('s',L('Screening','छँटाई'))+g('n',L('Included','शामिल'))+'<details'+(n.oId!=null&&n.oId!==''?' open':'')+' style="margin-top:4px"><summary class="desc">'+L('Studies found by other methods (websites, organisations, reference lists)','दूसरे तरीकों से मिली studies (websites, संस्थाएँ, reference lists)')+'</summary>'+B1_FLOW.filter(x=>x[3]==='o').map(f).join('')+'</details>'})()+warn(b1FlowIssues(o))+
+      '<div class="row" style="gap:6px;margin:6px 0"><button type="button" class="btn btn-ghost btn-sm" onclick="b1FillFromLibrary()">'+L('Fill included and excluded from my library','Library से शामिल और बाहर वाले भरें')+'</button></div>'+
       lab(L('Reasons full texts were excluded, one per line with its number (e.g. Wrong population: 12)','पूरे text के बाद बाहर करने के कारण, हर पंक्ति में एक, संख्या सहित (जैसे Wrong population: 12)'))+'<textarea rows="3" onchange="wPick(\'B1\',\'exWhy\',this.value)">'+escHTML(b.exWhy||'')+'</textarea>'+
       (()=>{const d=dgPrisma(o);return d?(d.missing.length?'<p style="margin:6px 0 0;color:#b45309">⚠ '+L('Numbers still shown as n = ? must be filled before you submit.','जो संख्याएँ अभी n = ? दिख रही हैं, जमा करने से पहले भरें।')+'</p>':'')+'<div style="margin-top:8px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPrismaInsert()">📊 '+L('Put the PRISMA flow diagram in my document','PRISMA flow diagram document में डालें')+'</button></div>':'<p class="desc" style="margin:6px 0 0">'+L('The PRISMA flow diagram appears here once the first number is filled and the numbers add up. Numbers not filled yet show as n = ?.','पहली संख्या भरने और संख्याएँ आपस में मिलने पर PRISMA flow diagram यहाँ दिखेगा। जो संख्या अभी नहीं भरी, वह n = ? दिखेगी।')+'</p>'})()}
     return box(b1Ok(o),L('Review type','Review का प्रकार'),h)}
@@ -11714,11 +11715,13 @@ function citRender(){
 const CIT_ST=[['toread','To read','पढ़ना है'],['reading','Reading','पढ़ रहे हैं'],['included','Included','शामिल'],['excluded','Excluded','बाहर']];
 function citScrSet(i,k,v){const l=citGetLib();if(!l[i])return;const d=l[i],sc=Object.assign({st:'toread',why:'',src:''},d.scr||{});
   if(k==='st'&&v!==sc.st){sc.st=v;sc.at=new Date().toISOString().slice(0,10)}else if(k==='why')sc.why=v;
+  if(k==='rd')sc.rd=v;
   d.scr=sc;citSaveLib(l);citRender()}
 function citScrHTML(d,i){const hi=getLang()==='hi',sc=d.scr||{st:'toread',why:'',src:''},st=sc.st||'toread',ex=st==='excluded',inc=st==='included';
   const need=ex&&!String(sc.why||'').trim();
   return'<div class="row" style="margin-top:6px;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px"><select aria-label="'+(hi?'Screening स्थिति':'Screening status')+'" onchange="citScrSet('+i+',\'st\',this.value)">'+
     CIT_ST.map(x=>'<option value="'+x[0]+'"'+(x[0]===st?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>'+
+    (ex?'<select aria-label="'+(hi?'किस चरण पर बाहर':'Step where it was excluded')+'" onchange="citScrSet('+i+',\'rd\',this.value)"><option value="">'+(hi?'किस चरण पर?':'At which step?')+'</option><option value="1"'+(sc.rd==='1'?' selected':'')+'>'+(hi?'Title/abstract':'Title and abstract')+'</option><option value="2"'+(sc.rd==='2'?' selected':'')+'>'+(hi?'पूरा text':'Full text')+'</option></select>':'')+
     (ex||inc?'<input type="text" style="flex:1;min-width:180px" value="'+escAttr(sc.why||'')+'" placeholder="'+escAttr(ex?(hi?'बाहर करने का एक पंक्ति का कारण':'One line: why it is out'):(hi?'एक पंक्ति: मेरे research के लिए क्यों ज़रूरी':'One line: why it matters to my research'))+'" onchange="citScrSet('+i+',\'why\',this.value)">':'')+
     (sc.src?'<span class="desc">'+(hi?'आई: ':'From: ')+escHTML(sc.src)+'</span>':'')+'</div>'+
     (need?'<div class="desc" style="color:#b45309;margin-top:2px">'+(hi?'कारण लिखें: PRISMA में हर बाहर किए paper का कारण चाहिए।':'Write the reason: PRISMA needs one for every excluded paper.')+'</div>':'')}
@@ -12459,6 +12462,19 @@ function b2Summary(o){const rows=logRows(o,'search').filter(r=>Array.isArray(r.k
   return{searches:rows.length,read:read,unique:seen.size,dup:read-seen.size}}
 function b2Close(){const e=document.getElementById('b2CloseDate'),v=e&&e.value;if(!v)return;wPick('B2','closed',v);logRefresh()}
 function b2Reopen(){wPick('B2','closed','');logRefresh()}
+/* PRISMA numbers from the library: included, excluded at title and abstract, excluded at full text, and the
+   full-text reasons counted ("Wrong population: 12"). Only boxes that are empty are filled. */
+function b1LibCounts(){const l=citGetLib(),ex=l.filter(d=>d.scr&&d.scr.st==='excluded'),inc=l.filter(d=>d.scr&&d.scr.st==='included').length,
+  r1=ex.filter(d=>d.scr.rd==='1').length,r2=ex.filter(d=>d.scr.rd==='2'),noStep=ex.filter(d=>d.scr.rd!=='1'&&d.scr.rd!=='2').length,g={};
+  r2.forEach(d=>{const k=String(d.scr.why||'').trim().replace(/\s+/g,' ').split(':')[0].trim();if(!k)return;const key=k.toLowerCase();(g[key]=g[key]||{t:k,n:0}).n++});
+  const why=Object.keys(g).map(k=>g[k]).sort((a,b)=>b.n-a.n).map(x=>x.t.replace(/[.:;]+$/,'')+': '+x.n);
+  return{inc:inc,exT:r1,exF:r2.length,noStep:noStep,why:why,noWhy:ex.filter(d=>!String(d.scr.why||'').trim()).length}}
+function b1FillFromLibrary(){const o=studyGet(),b=wGet(o).B1||{},n=b.n||{},c=b1LibCounts(),hi=studyHi(),put=[];
+  const em=k=>n[k]===''||n[k]==null;
+  [['inc',c.inc],['exT',c.exT],['exF',c.exF]].forEach(x=>{if(em(x[0])&&x[1]>0){wNest('B1','n',x[0],String(x[1]));put.push(x[0])}});
+  if(!String(b.exWhy||'').trim()&&c.why.length){wPatch('B1','exWhy',c.why.join('\n'));put.push('exWhy')}
+  wRedraw();
+  showToast(put.length?(hi?'Library से भर दिया (सिर्फ़ खाली खाने)':'Filled from your library (only the empty boxes)')+(c.noStep||c.noWhy?(hi?' · कुछ बाहर किए papers में चरण या कारण नहीं है':' · some excluded papers have no step or reason'):''):(hi?'भरने को कुछ नहीं मिला: library में status डालें, या खाने पहले से भरे हैं':'Nothing to fill: set statuses in the library, or the boxes already have numbers'))}
 function b2UsePrisma(){const o=studyGet(),m=b2Summary(o),b=(wGet(o).B1||{}),n=b.n||{},hi=studyHi();
   if(!m.read){showToast(hi?'अभी कोई search दर्ज नहीं':'No searches logged yet');return}
   let set=[];
@@ -17824,7 +17840,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08i';
+const APP_BUILD='2026.11.08j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
