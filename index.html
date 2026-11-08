@@ -18013,7 +18013,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08s';
+const APP_BUILD='2026.11.08t';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18661,7 +18661,13 @@ async function shDrawImg(){const box=document.getElementById('shImg'),p=SH.cur;i
       p.notes.filter(n=>n.page===SH.page&&n.quote).forEach(n=>{shQuoteBoxes(tc.items,n.quote,tf).forEach(r=>boxes.push(Object.assign({col:shColOf(n)},r)))})}catch(e){}
     if(document.getElementById('shImg')===box&&SH.cur===p){box.innerHTML='';const wrap=document.createElement('div');wrap.style.cssText='position:relative;display:inline-block;width:'+w+'px;text-align:left';wrap.appendChild(cv);
       boxes.forEach(r=>{const d=document.createElement('div');d.className='shHlBox';d.style.cssText='position:absolute;left:'+r.x+'px;top:'+r.y+'px;width:'+r.w+'px;height:'+r.h+'px;background:'+r.col+';opacity:.5;mix-blend-mode:multiply;pointer-events:none';wrap.appendChild(d)});
-      box.appendChild(wrap)}
+      box.appendChild(wrap);
+      try{const lay=document.createElement('div');lay.id='shLayer';lay.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;line-height:1';
+        const dpr2=(window.devicePixelRatio||1),cssv2=pg.getViewport({scale:sc/dpr2}),tf2=t=>pdfjsLib.Util.transform(cssv2.transform,t),spans=[];
+        (await pg.getTextContent()).items.forEach(it=>{const str=String(it.str||'');if(!str.trim())return;const tr=tf2(it.transform),h=Math.hypot(tr[2],tr[3]),sp=document.createElement('span');
+          sp.textContent=str;sp.style.cssText='position:absolute;left:'+tr[4]+'px;top:'+(tr[5]-h*0.9)+'px;font:'+h+'px sans-serif;white-space:pre;color:transparent;transform-origin:0 0;cursor:text';
+          sp.dataset.w=String((it.width||0)*Math.hypot(tr[0],tr[1])/Math.max(1e-9,Math.hypot(it.transform[0],it.transform[1])));lay.appendChild(sp);spans.push(sp)});
+        wrap.appendChild(lay);spans.forEach(sp=>{const mw=sp.getBoundingClientRect().width,tw=parseFloat(sp.dataset.w);if(mw>0&&tw>0)sp.style.transform='scaleX('+(tw/mw)+')'})}catch(e){}}
   }catch(e){box.innerHTML='<span style="font-size:13px">The page picture could not be drawn ('+escHTML((e&&e.message)||'error')+'). The text below still works.</span>'}}
 function shPage(d){if(!SH.cur)return;SH.page=Math.min(SH.cur.pages.length,Math.max(1,SH.page+d));shRender()}
 function shGo(v){if(!SH.cur)return;SH.page=Math.min(SH.cur.pages.length,Math.max(1,parseInt(v,10)||1));shRender()}
@@ -18680,16 +18686,23 @@ function shCardToLib(p,note){const m=p.lib?citGetLib().find(d=>d.cid===p.lib):nu
     else d.cells[c[3]]={t:note.quote,by:'hl',page:note.page,pid:p.id}}
   citSaveLib(l);return true}
 async function shOpenAt(pid,page){const d=document.getElementById('shelfDlg');if(d&&!d.open)d.showModal();try{SH.papers=await shAll()}catch(e){}SH.tab='papers';shRead(pid,page)}
+/* Find a selected passage in the page text. Exact words first; then letters and digits only, so line breaks and hyphens do not matter. Returns [text] like String.match. */
+function shFindQuote(pageText,txt){
+  const rx=new RegExp(txt.split(' ').map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('\\s+'));
+  const m=pageText.match(rx);if(m)return m;
+  const sq=c=>c.toLowerCase().replace(/[^\p{L}\p{N}]/gu,''),q=sq(txt);if(q.length<8)return null;
+  let all='';const map=[];for(let i=0;i<pageText.length;i++){const c=sq(pageText[i]);if(c){map.push(i);all+=c}}
+  const at=all.indexOf(q);if(at<0)return null;
+  return[pageText.slice(map[at],map[at+q.length-1]+1)]}
 async function shSaveHL(col){
   const p=SH.cur;if(!p)return;
   const sel=window.getSelection(),txt=sel?String(sel.toString()).replace(/\s+/g,' ').trim():'';
-  const box=document.getElementById('shText');
-  if(!txt||!sel.anchorNode||!box.contains(sel.anchorNode)){showToast('Select some text on the page first');return}
+  const box=document.getElementById('shText'),pic=document.getElementById('shLayer');
+  if(!txt||!sel.anchorNode||!((box&&box.contains(sel.anchorNode))||(pic&&pic.contains(sel.anchorNode)))){showToast('Select some text on the page first');return}
   /* store the quote exactly as it appears in the page text, so it can be found and marked again */
   const pageText=p.pages[SH.page-1]||'';
-  const rx=new RegExp(txt.split(' ').map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('\\s+'));
-  const m=pageText.match(rx);
-  if(!m){showToast('That selection crosses a highlight. Select a shorter passage.');return}
+  const m=shFindQuote(pageText,txt);
+  if(!m){showToast(pic&&pic.contains(sel.anchorNode)?'Could not match that selection to the page text. Select a shorter passage, or select in the text below.':'That selection crosses a highlight. Select a shorter passage.');return}
   const nt={id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),page:SH.page,quote:m[0],col:col||'yellow',note:(document.getElementById('shNote').value||'').trim(),at:new Date().toISOString()};
   p.notes.push(nt);
   let tolib=false;try{tolib=shCardToLib(p,nt)}catch(e){}
