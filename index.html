@@ -18013,7 +18013,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08t';
+const APP_BUILD='2026.11.08u';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18621,7 +18621,7 @@ function shReaderRender(b){
   const p=SH.cur;if(!p)return;const n=p.pages.length;
   const hl=p.notes.filter(x=>x.quote).sort((a,c)=>a.page-c.page);
   b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button></div>'+
-   '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center"><button class="btn '+(SH.img?'btn-purple':'btn-ghost')+'" onclick="shImgToggle()">'+(SH.img?'Hide page picture':'Show page picture')+'</button>'+(SH.img?'<button class="btn btn-ghost" aria-label="Zoom out" onclick="shZoom(-0.25)">−</button><span style="font-size:13px">'+Math.round(SH.zoom*100)+'%</span><button class="btn btn-ghost" aria-label="Zoom in" onclick="shZoom(0.25)">+</button>':'')+
+   '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center"><button class="btn '+(SH.img?'btn-purple':'btn-ghost')+'" onclick="shImgToggle()">'+(SH.img?'Hide page picture':'Show page picture')+'</button>'+'<button class="btn btn-ghost" onclick="shWord()">Save as Word</button>'+(SH.img?'<button class="btn btn-ghost" aria-label="Zoom out" onclick="shZoom(-0.25)">−</button><span style="font-size:13px">'+Math.round(SH.zoom*100)+'%</span><button class="btn btn-ghost" aria-label="Zoom in" onclick="shZoom(0.25)">+</button>':'')+
      '<input type="search" id="shInQ" value="'+escAttr(SH.inq||'')+'" placeholder="Search in this paper" style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')shInSearch(this.value)" aria-label="Search in this paper"><button class="btn btn-ghost" onclick="shInSearch(document.getElementById(\'shInQ\').value)">Find</button></div>'+shInResHTML(p)+(SH.img?'<div id="shImg" style="border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;text-align:center;overflow:auto"><span style="font-size:13px">Loading the page…</span></div>':'')+
    '<div id="shText" style="white-space:pre-wrap;font-size:14px;line-height:1.65;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;user-select:text">'+shMarkTerms(shMarked(p,SH.page))+'</div>'+
    '<p style="font-size:12.5px;color:var(--muted);margin:0 0 6px">This is the text extracted from the PDF. Tables and columns may run together, so check the original for exact figures. Select a passage above to highlight it.</p>'+
@@ -18650,6 +18650,89 @@ function shQuoteBoxes(items,quote,tf){
   return Object.keys(per).map(k=>{const it=items[k],r=per[k],tr=tf(it.transform),w=(it.width||0)*Math.hypot(tr[0],tr[1])/Math.max(1e-9,Math.hypot(it.transform[0],it.transform[1])),h=Math.abs(it.height||Math.hypot(it.transform[2],it.transform[3]))*Math.hypot(tr[2],tr[3])/Math.max(1e-9,Math.hypot(it.transform[2],it.transform[3]));
     const x0=tr[4]+w*(r.a/r.n),x1=tr[4]+w*((r.b+1)/r.n);return{x:x0,y:tr[5]-h,w:Math.max(2,x1-x0),h:h*1.15}})}
 function shImgToggle(){SH.img=!SH.img;try{LS.set('appu_sh_img',SH.img?'1':'0')}catch(e){}shRender()}
+/* PDF page to Word blocks. Running text comes from apPageText. A table is 3 or more lines in a row that each split into 3 or more
+   cells (gap of 2.2 line heights or more) with numbers in them and about the same cell count; a single spaced-out line never counts. */
+function shTables(items,pageBox){
+  const x0=pageBox[0],y0=pageBox[1],PW=Math.max(1,pageBox[2]-pageBox[0]),ws=[];
+  (items||[]).forEach(function(i){if(!i||typeof i.str!=='string'||!i.str.trim()||!i.transform)return;
+    if(Math.abs(i.transform[1])>0.1*Math.abs(i.transform[0]||1))return;
+    ws.push({s:i.str.trim(),x:i.transform[4]-x0,w:Math.max(0.5,Math.abs(i.width||0)),y:i.transform[5]-y0,h:Math.abs(i.height||i.transform[3]||1)})});
+  if(ws.length<9)return[];
+  const hs=ws.map(function(w){return w.h}).sort(function(a,b){return a-b}),fh=hs[Math.floor(hs.length/2)]||10,TOL=Math.max(2,0.45*fh);
+  const a=ws.slice().sort(function(p,q){return q.y-p.y||p.x-q.x}),L=[];
+  a.forEach(function(w){let l=null;for(let k=L.length-1;k>=0&&k>=L.length-3;k--){if(Math.abs(L[k].y-w.y)<=TOL){l=L[k];break}}
+    if(l){l.ws.push(w)}else L.push({y:w.y,ws:[w]})});
+  L.forEach(function(l){l.ws.sort(function(p,q){return p.x-q.x});const c=[];l.ws.forEach(function(w){const t=c[c.length-1];
+      if(t&&w.x-(t.x+t.w)<2.2*fh){t.s+=' '+w.s;t.w=w.x+w.w-t.x}else c.push({s:w.s,x:w.x,w:w.w})});
+    l.cells=c;l.top=l.y+Math.max.apply(null,l.ws.map(function(w){return w.h}))*0.8;l.bot=l.y-0.2*fh;l.wid=c[c.length-1].x+c[c.length-1].w-c[0].x;
+    l.ok=c.length>=3});
+  L.sort(function(p,q){return q.y-p.y});
+  const out=[];let i=0;
+  while(i<L.length){
+    if(!L[i].ok){i++;continue}
+    let j=i;while(j+1<L.length&&L[j+1].ok&&L[j].bot-L[j+1].top<2.2*fh)j++;
+    const run=L.slice(i,j+1);
+    if(run.length>=3){
+      const cc=run.map(function(l){return l.cells.length}),all=[].concat.apply([],run.map(function(l){return l.cells}));
+      const num=all.filter(function(c){return/\d/.test(c.s)}).length/all.length;
+      const wide=Math.max.apply(null,run.map(function(l){return l.wid}));
+      const bandTop=run[0].top,bandBot=run[run.length-1].bot,xl=Math.min.apply(null,all.map(function(c){return c.x})),xr=Math.max.apply(null,all.map(function(c){return c.x+c.w}));
+      /* a narrow table is kept only when nothing else sits beside it, so a two-column page never loses the other column */
+      const alone=!ws.some(function(w){return w.y<=bandTop&&w.y>=bandBot&&(w.x+w.w<xl-fh||w.x>xr+fh)});
+      if(Math.max.apply(null,cc)-Math.min.apply(null,cc)<=3&&num>=0.3&&(wide>=0.5*PW||(wide>=0.25*PW&&alone))){
+        const n=Math.max.apply(null,cc);
+        out.push({top:run[0].top+y0,bot:run[run.length-1].bot+y0,rows:run.map(function(l){const r=l.cells.map(function(c){return c.s});while(r.length<n)r.push('');return r})})}}
+    i=j+1}
+  return out}
+/* Text lines to paragraphs. A line that ends a sentence and falls short of the full width ends the paragraph. */
+function shParas(text){
+  const lines=String(text||'').split('\n').map(function(x){return x.trim()}).filter(Boolean),out=[];if(!lines.length)return out;
+  const mx=lines.reduce(function(m,l){return Math.max(m,l.length)},0);let cur='';
+  function flush(){if(cur){out.push({t:'p',s:cur});cur=''}}
+  lines.forEach(function(l,k){
+    const head=l.length<=70&&!/[.!?,;:]$/.test(l)&&/^(\d+(\.\d+)*\.?\s+)?[A-Z]/.test(l)&&l.split(/\s+/).length<=9&&(!cur||/[.!?]$/.test(cur));
+    if(head&&(k===lines.length-1||lines[k+1].length>l.length*1.0||/^\d/.test(l))){flush();out.push({t:'h',s:l});return}
+    if(cur&&/-$/.test(cur)&&/^[a-z]/.test(l))cur=cur.slice(0,-1)+l;else cur=cur?cur+' '+l:l;
+    if(/[.!?]["')\]]?$/.test(l)&&l.length<0.7*mx)flush()});
+  flush();return out}
+/* One PDF page to blocks: paragraphs, headings and tables in reading order. */
+function shPageBlocks(items,pageBox){
+  const tb=shTables(items,pageBox).sort(function(p,q){return q.top-p.top}),blocks=[];
+  function seg(hi,lo){const it=(items||[]).filter(function(i){if(!i||!i.transform)return false;const y=i.transform[5];return y<hi&&y>=lo});
+    if(!it.length)return;let t='';try{t=apPageText(it,pageBox).text}catch(e){}shParas(t).forEach(function(b){blocks.push(b)})}
+  let hi=Infinity;
+  tb.forEach(function(t){seg(hi,t.top);blocks.push({t:'tbl',rows:t.rows});hi=t.bot});
+  seg(hi,-Infinity);return blocks}
+function shBlocksHTML(blocks){
+  return blocks.map(function(b){
+    if(b.t==='h')return'<h3>'+escHTML(b.s)+'</h3>';
+    if(b.t==='tbl')return'<table>'+b.rows.map(function(r,k){return'<tr>'+r.map(function(c){return(k===0?'<th>':'<td>')+escHTML(c)+(k===0?'</th>':'</td>')}).join('')+'</tr>'}).join('')+'</table>';
+    return'<p>'+escHTML(b.s)+'</p>'}).join('')}
+/* Save the open paper as a Word file: text in paragraphs, tables as real tables, a page picture where a page has a figure.
+   Needs the stored PDF for tables and figures; without it only the page text is used. */
+async function shWord(){
+  const p=SH.cur;if(!p)return;const hi=false;
+  let pdf=null;try{const buf=await shFileGet(p.id);if(buf&&typeof pdfjsLib!=='undefined')pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise}catch(e){}
+  showToast(pdf?'Making the Word file. Long papers take a minute.':'Making the Word file from the stored text. Tables and figures need the PDF attached.');
+  let html='<h1>'+escHTML(p.title||'Paper')+'</h1><p><i>Converted from the PDF. Check tables and numbers against the original. Page marks show where each page began.</i></p>',pics=0,tbls=0;
+  try{
+    for(let n=1;n<=p.pages.length;n++){
+      html+='<p style="color:#888">[Page '+n+']</p>';
+      let blocks=null;
+      if(pdf){try{const pg=await pdf.getPage(n),tc=await pg.getTextContent();blocks=shPageBlocks(tc.items,pg.view);
+          if(blocks.some(b=>b.t==='p'||b.t==='tbl')){tbls+=blocks.filter(b=>b.t==='tbl').length}else blocks=null;
+          let fig=false;try{const ol=await pg.getOperatorList(),O=pdfjsLib.OPS;let paths=0;ol.fnArray.forEach(f=>{if(f===O.paintImageXObject||f===O.paintInlineImageXObject||f===O.paintImageMaskXObject||f===O.paintJpegXObject)fig=true;if(f===O.constructPath)paths++});if(paths>150)fig=true}catch(e){}
+          if(fig){const v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:1000/(v0.width||1000)}),cv=document.createElement('canvas');cv.width=Math.floor(v.width);cv.height=Math.floor(v.height);
+            await pg.render({canvasContext:cv.getContext('2d'),viewport:v}).promise;const u=cv.toDataURL('image/jpeg',0.72);if(u.length>2000){pics++;html+=(blocks?shBlocksHTML(blocks):'')+'<p><i>This page has a figure. The page as a picture:</i></p><p><img src="'+u+'" style="width:520px"></p>';blocks='done'}}
+        }catch(e){blocks=null}}
+      if(blocks==='done')continue;
+      if(blocks)html+=shBlocksHTML(blocks);
+      else html+=shBlocksHTML(shParas(p.pages[n-1]||''))}
+    const holder=document.createElement('div');holder.innerHTML=html;
+    const blob=await dxBuild(holder,p.title||'paper'),safe=String(p.title||'paper').replace(/[^\w\- ]+/g,'').trim().slice(0,60)||'paper';
+    await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
+  }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
 async function shDrawImg(){const box=document.getElementById('shImg'),p=SH.cur;if(!box||!p)return;
   try{const buf=await shFileGet(p.id);
     if(!buf){box.innerHTML='<span style="font-size:13px">The page picture is not kept for this paper (it was added before pictures were kept). Attach its PDF once: <label class="btn btn-ghost" style="cursor:pointer;display:inline-block">Attach the PDF<input type="file" accept=".pdf,application/pdf" style="display:none" onchange="shAttach(this)"></label> The text and highlights are not read again.</span>';return}
