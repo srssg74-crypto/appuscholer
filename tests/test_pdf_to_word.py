@@ -28,6 +28,23 @@ with sync_playwright() as p:
     ok(kinds.index('tbl')>0 and kinds[-1]=='p','table sits between the text above and below %s'%kinds)
     bl2=pg.evaluate("([i,v])=>shPageBlocks(i,v)",[AUTH+TXT_A,[0,0,612,792]])
     ok(not any(x['t']=='tbl' for x in bl2),'one spaced-out line is not a table')
+    # sentence caught on top of a table goes back to the text
+    PRE=[it('Given the sensitive nature of the topic, we asked all of them twice.',60,640)]
+    T2=[]
+    for r,(y,row) in enumerate([(626,['Predictor','B','SE','p']),(612,['Age','0.12','0.03','.001']),(598,['Gender','-0.40','0.11','.020']),(584,['Income','0.05','0.02','.012'])]):
+        for c,x in enumerate([60,250,350,450]): T2.append(it(row[c],x,y))
+    bl3=pg.evaluate("([i,v])=>shPageBlocks(i,v)",[T2+[it('Given the sensitive nature of the topic under study',60,640),it('B',300,640),it('-',380,640),it('-',460,640)],[0,0,612,792]])
+    t3=[x for x in bl3 if x['t']=='tbl']
+    ok(len(t3)==1 and t3[0]['rows'][0][0]=='Predictor' and any(x['t']=='p' and 'sensitive nature' in x['s'] for x in bl3),'a sentence on top of the table moves to the text %s'%bl3)
+    # word-only table (no numbers) with aligned columns
+    W=[]
+    for r,(y,row) in enumerate([(600,['Layer','Baseline','Notes']),(585,['Charts','Plotly','Tie to data']),(570,['Stats','Python','Log the seed']),(555,['Export','Docx','Keep the original']),(540,['Store','Browser','Local only'])]):
+        for c,x in enumerate([60,220,380]): W.append(it(row[c],x,y,w=40))
+    bl4=pg.evaluate("([i,v])=>shPageBlocks(i,v)",[W,[0,0,612,792]])
+    ok(any(x['t']=='tbl' and len(x['rows'])==5 for x in bl4),'a table of words only is found')
+    # four spaced-out words lines that do not line up are not a table
+    Z=[it('alpha beta',60,600),it('gamma',300,600),it('delta',500,600),it('one',60,585),it('two',200,585),it('three',420,585),it('x',100,570),it('y',350,570),it('z',480,570),it('p',60,555),it('q',260,555),it('r',470,555)]
+    ok(not any(x['t']=='tbl' for x in pg.evaluate("([i,v])=>shPageBlocks(i,v)",[Z,[0,0,612,792]])),'scattered words are not a table')
     # paragraphs and headings
     ps=pg.evaluate("shParas(%s)"%json.dumps("Method\nParticipants were 96 nurses recruited from two hos-\npitals in Jaipur. They answered a short form.\nStress was higher on nights. The effect was small.\nResults\nSleep predicted burnout."))
     ok([x['t'] for x in ps][:2]==['h','p'] and 'hospitals' in ps[1]['s'],'heading, paragraph, hyphen mended %s'%ps)
@@ -41,6 +58,8 @@ with sync_playwright() as p:
     J("(async()=>{await shPut({id:'pW',title:'Nurse stress',file:'n.pdf',size:1,added:'2026-11-08',pages:%s,total:2,notes:[],cells:{}})})()"%json.dumps(PAGES)); pg.wait_for_timeout(300)
     J("shOpenAt('pW',1)"); pg.wait_for_timeout(600)
     J("window.__b=null;shareBlob=async function(b,n,t){window.__n=n;window.__b=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});return true};0")
+    J("shWord()"); pg.wait_for_timeout(600)
+    ok(J("window.__b")is None and 'no PDF kept' in J("document.getElementById('toast')?document.getElementById('toast').innerText:document.body.innerText"),'first tap on a paper without a PDF asks to attach it, builds nothing')
     J("shWord()"); pg.wait_for_timeout(2500)
     d=J("window.__b")
     ok(bool(d) and J("window.__n")=='Nurse stress.docx','a .docx was made')

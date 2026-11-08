@@ -18013,7 +18013,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08u';
+const APP_BUILD='2026.11.08v';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18679,9 +18679,17 @@ function shTables(items,pageBox){
       const bandTop=run[0].top,bandBot=run[run.length-1].bot,xl=Math.min.apply(null,all.map(function(c){return c.x})),xr=Math.max.apply(null,all.map(function(c){return c.x+c.w}));
       /* a narrow table is kept only when nothing else sits beside it, so a two-column page never loses the other column */
       const alone=!ws.some(function(w){return w.y<=bandTop&&w.y>=bandBot&&(w.x+w.w<xl-fh||w.x>xr+fh)});
-      if(Math.max.apply(null,cc)-Math.min.apply(null,cc)<=3&&num>=0.3&&(wide>=0.5*PW||(wide>=0.25*PW&&alone))){
+      /* word-only tables: no numbers, but 4 or more rows whose cells start in the same 3 or more places */
+      let aligned=false;if(num<0.3&&run.length>=4){const lefts=all.map(function(c){return c.x}).sort(function(p,q){return p-q}),cl=[];
+        lefts.forEach(function(v){const t=cl[cl.length-1];if(t&&v-t.v<1.2*fh){t.n++}else cl.push({v:v,n:1})});
+        aligned=cl.filter(function(c){return c.n>=0.7*run.length}).length>=3}
+      if(Math.max.apply(null,cc)-Math.min.apply(null,cc)<=3&&(num>=0.3||aligned)&&(wide>=0.5*PW||(wide>=0.25*PW&&alone))){
         const n=Math.max.apply(null,cc);
-        out.push({top:run[0].top+y0,bot:run[run.length-1].bot+y0,rows:run.map(function(l){const r=l.cells.map(function(c){return c.s});while(r.length<n)r.push('');return r})})}}
+        let rr=run.map(function(l){const r=l.cells.map(function(c){return c.s});while(r.length<n)r.push('');return r}),pre=[];
+        /* a sentence of running text caught on top of the table goes back to the text */
+        while(rr.length>3&&rr[0][0].length>45&&!/\d/.test(rr[0].slice(1).join(''))&&rr[0].slice(1).every(function(c){return!c||c.length<4})){pre.push(rr[0].join(' ').trim());rr=rr.slice(1)}
+        const dropped=run.length-rr.length;
+        out.push({top:run[dropped].top+y0,bot:run[run.length-1].bot+y0,rows:rr,pre:pre,preTop:run[0].top+y0})}}
     i=j+1}
   return out}
 /* Text lines to paragraphs. A line that ends a sentence and falls short of the full width ends the paragraph. */
@@ -18701,7 +18709,7 @@ function shPageBlocks(items,pageBox){
   function seg(hi,lo){const it=(items||[]).filter(function(i){if(!i||!i.transform)return false;const y=i.transform[5];return y<hi&&y>=lo});
     if(!it.length)return;let t='';try{t=apPageText(it,pageBox).text}catch(e){}shParas(t).forEach(function(b){blocks.push(b)})}
   let hi=Infinity;
-  tb.forEach(function(t){seg(hi,t.top);blocks.push({t:'tbl',rows:t.rows});hi=t.bot});
+  tb.forEach(function(t){seg(hi,t.preTop);(t.pre||[]).forEach(function(s){blocks.push({t:'p',s:s})});blocks.push({t:'tbl',rows:t.rows});hi=t.bot});
   seg(hi,-Infinity);return blocks}
 function shBlocksHTML(blocks){
   return blocks.map(function(b){
@@ -18713,6 +18721,7 @@ function shBlocksHTML(blocks){
 async function shWord(){
   const p=SH.cur;if(!p)return;const hi=false;
   let pdf=null;try{const buf=await shFileGet(p.id);if(buf&&typeof pdfjsLib!=='undefined')pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise}catch(e){}
+  if(!pdf&&SH.wordAsked!==p.id){SH.wordAsked=p.id;SH.img=true;shRender();showToast('This paper has no PDF kept. Attach it below for tables and figures, then tap Save as Word again. Tap Save as Word without attaching to get the text only.');return}
   showToast(pdf?'Making the Word file. Long papers take a minute.':'Making the Word file from the stored text. Tables and figures need the PDF attached.');
   let html='<h1>'+escHTML(p.title||'Paper')+'</h1><p><i>Converted from the PDF. Check tables and numbers against the original. Page marks show where each page began.</i></p>',pics=0,tbls=0;
   try{
@@ -18721,7 +18730,8 @@ async function shWord(){
       let blocks=null;
       if(pdf){try{const pg=await pdf.getPage(n),tc=await pg.getTextContent();blocks=shPageBlocks(tc.items,pg.view);
           if(blocks.some(b=>b.t==='p'||b.t==='tbl')){tbls+=blocks.filter(b=>b.t==='tbl').length}else blocks=null;
-          let fig=false;try{const ol=await pg.getOperatorList(),O=pdfjsLib.OPS;let paths=0;ol.fnArray.forEach(f=>{if(f===O.paintImageXObject||f===O.paintInlineImageXObject||f===O.paintImageMaskXObject||f===O.paintJpegXObject)fig=true;if(f===O.constructPath)paths++});if(paths>150)fig=true}catch(e){}
+          let fig=false;try{const ol=await pg.getOperatorList(),O=pdfjsLib.OPS;let paths=0;ol.fnArray.forEach(f=>{if(f===O.paintImageXObject||f===O.paintInlineImageXObject||f===O.paintImageMaskXObject||f===O.paintJpegXObject)fig=true;if(f===O.constructPath)paths++});if(paths>120)fig=true}catch(e){}
+          if(!fig&&/(^|\n)\s*(Fig\.?|Figure)\s*\(?\d/i.test(p.pages[n-1]||''))fig=true
           if(fig){const v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:1000/(v0.width||1000)}),cv=document.createElement('canvas');cv.width=Math.floor(v.width);cv.height=Math.floor(v.height);
             await pg.render({canvasContext:cv.getContext('2d'),viewport:v}).promise;const u=cv.toDataURL('image/jpeg',0.72);if(u.length>2000){pics++;html+=(blocks?shBlocksHTML(blocks):'')+'<p><i>This page has a figure. The page as a picture:</i></p><p><img src="'+u+'" style="width:520px"></p>';blocks='done'}}
         }catch(e){blocks=null}}
