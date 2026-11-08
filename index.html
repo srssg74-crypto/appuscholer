@@ -12088,7 +12088,9 @@ async function rsFetchOpenAlex(q,extra){
   const r=await fetch(url);
   if(!r.ok)throw oaHttpError(r);
   const j=await r.json();
-  return(j.results||[]).map(rsFromOA);
+  const out=(j.results||[]).map(rsFromOA);
+  out.total=(j.meta&&typeof j.meta.count==='number')?j.meta.count:null;
+  return out;
 }
 /* PubMed abstracts come from efetch as XML. A failure here only means the result has no abstract. */
 async function rsPubmedAbstracts(ids){
@@ -12111,12 +12113,13 @@ async function rsFetchPubmed(q,per){
   if(!s.ok)throw new Error('HTTP '+s.status);
   const sj=await s.json();
   const ids=(sj.esearchresult&&sj.esearchresult.idlist)||[];
-  if(!ids.length)return[];
+  const pmTotal=sj.esearchresult&&sj.esearchresult.count!=null&&isFinite(+sj.esearchresult.count)?+sj.esearchresult.count:null;
+  if(!ids.length){const z=[];z.total=pmTotal==null?0:pmTotal;return z}
   const d=await fetch('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id='+ids.join(','));
   if(!d.ok)throw new Error('HTTP '+d.status);
   const dj=await d.json();
   const abs=await rsPubmedAbstracts(ids);
-  return ids.map(id=>{
+  const pmOut=ids.map(id=>{
     const it=dj.result&&dj.result[id];if(!it)return null;
     const authors=(it.authors||[]).filter(a=>!a.authtype||a.authtype==='Author').map(a=>a.name).filter(Boolean);
     const doi=(((it.articleids||[]).find(x=>x.idtype==='doi')||{}).value||'').trim();
@@ -12127,6 +12130,8 @@ async function rsFetchPubmed(q,per){
       year:(it.pubdate||'').slice(0,4),venue:it.fulljournalname||it.source||'',
       abstract:abs[id]||'',pmid:id,citationCount:0,doi:doi,url:'https://pubmed.ncbi.nlm.nih.gov/'+id+'/'};
   }).filter(Boolean);
+  pmOut.total=pmTotal;
+  return pmOut;
 }
 /* ---- quick read of an abstract (Version 40) ----
    One AI call per paper returns a one-sentence summary, the kind of study and the sample size. The design and the
@@ -12418,6 +12423,24 @@ function rsAskUse(){
   document.getElementById('rsAsk').innerHTML='<div class="desc">'+nrX('nr_set',{t:escHTML(tp)})+'</div>';
   RS_NARROW.size=null;rsFocusRender();rsSpecUpdate();
 }
+/* B2 fills itself. Every database that answered gets one row in the search log: date, database, the exact
+   string that was sent, the filters, and how many records the database says it holds for that string.
+   A database that did not answer is not logged (nothing was searched). Old rows stay; a repeat search adds a row. */
+function b2AutoLog(dbs,outcomes,used,opt){
+  const o=studyGet();if(!o||!studyKey())return 0;
+  const rows=logRows(o,'search').slice(),today=new Date().toISOString().slice(0,10);let n=0;
+  const kind={OpenAlex:'oa',PubMed:'pm'};
+  dbs.forEach((db,i)=>{
+    const out=outcomes[i];if(!Array.isArray(out))return;
+    const total=(out.total==null)?out.length:out.total,lim=[];
+    if(opt&&opt.design&&opt.design!=='any')lim.push('kind of study: '+opt.design);
+    if(opt&&opt.focus)lim.push('narrowed to one topic');
+    lim.push('first '+out.length+' read');
+    rows.push({date:today,db:db,q:used[kind[db]]||'',lim:lim.join('; '),hits:String(total),kept:'',auto:1});n++;
+  });
+  if(n){logSaveRows('search',rows);try{subRenderSide()}catch(e){}}
+  return n;
+}
 async function researchSearch(){
   const q=document.getElementById('rsTopic').value.trim();
   try{const o=studyGet();if(o.search!==q){o.search=q;LS.set(studyKey(),JSON.stringify(o))}LS.set('appu_rs_owner',studyKey())}catch(e){}
@@ -12440,10 +12463,11 @@ async function researchSearch(){
   const jobs=[];
   const design=(document.getElementById('rsDesign')||{}).value||'any',terms=rsPickedTerms(q),dd=RS_DESIGN[design]||{};
   let fellBack=false;
+  const used={};
   const withFallback=async(fn,kind)=>{
-    try{return await fn(rsBuildQuery(q,kind,terms,design))}
+    try{used[kind]=rsBuildQuery(q,kind,terms,design);return await fn(used[kind])}
     catch(e){
-      if(terms.length&&!(e&&/budget/.test(e.message||''))){fellBack=true;return await fn(rsBuildQuery(q,kind,[],design))}
+      if(terms.length&&!(e&&/budget/.test(e.message||''))){fellBack=true;used[kind]=rsBuildQuery(q,kind,[],design);return await fn(used[kind])}
       throw e;
     }
   };
@@ -12452,6 +12476,7 @@ async function researchSearch(){
   if(useOA)jobs.push(withFallback(s=>rsFetchOpenAlex(s,{filter:[dd.oaFilter||'',rsFocusFilter(q)].filter(Boolean).join(','),per:rank?25:8}),'oa').catch(e=>({error:'OpenAlex',detail:(e&&e.message)||'unknown error'})));
   if(usePm)jobs.push(withFallback(s=>rsFetchPubmed(s,rank?15:6),'pm').catch(e=>({error:'PubMed',detail:(e&&e.message)||'unknown error'})));
   const outcomes=await Promise.all(jobs);
+  try{b2AutoLog([useOA?'OpenAlex':null,usePm?'PubMed':null].filter(Boolean),outcomes,used,{design:design,focus:!!rsFocusFilter(q),rank:rank})}catch(e){}
   let merged=[],failed=[];
   outcomes.forEach(o=>{if(o&&o.error)failed.push(o.error+' ('+o.detail+')');else if(Array.isArray(o))merged=merged.concat(o)});
   const seen=new Set();
@@ -17750,7 +17775,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08e';
+const APP_BUILD='2026.11.08f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
