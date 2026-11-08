@@ -17680,7 +17680,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08b';
+const APP_BUILD='2026.11.08c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18529,7 +18529,33 @@ function statsInsert(){
   insertIntoEditor(t,!!(savedRange&&editor.contains(savedRange.startContainer)),false,rid);showToast('Inserted ✓ — Ctrl+Z to undo');
   try{const o=studyGet(),a=o.analysis||{tests:[]},sel=document.getElementById('statsTest'),nm=sel&&sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:'';a.ran=true;if(nm&&a.tests.indexOf(nm)<0)a.tests.push(nm);o.analysis=a;studySet(o)}catch(e){}
 }
+/* Plain-language note without AI: p-value and effect size read from the APA sentence, with the usual rules of thumb. No claim about design or cause. */
+function statsPlain(apa){
+  const t=String(apa||'').replace(/\s+/g,' ');
+  const pm=t.match(/p\s*(=|<)\s*(\.\d+)/);
+  if(!pm)return '';
+  const p=parseFloat('0'+pm[2]),lt=pm[1]==='<',sg=lt||p<0.05,out=[];
+  out.push(sg
+    ?'The p-value ('+(lt?'below ':'')+pm[2]+') is under .05, so this result is statistically significant: it would be unlikely to look like this by chance alone if there were no effect in the population.'
+    :'The p-value ('+pm[2]+') is .05 or above, so this result is not statistically significant. That does not show there is no effect; this data cannot rule out chance.');
+  const e=[];let m;
+  if(m=t.match(/\bd\s*=\s*(-?\d*\.?\d+)/)){const v=Math.abs(parseFloat(m[1]));e.push('Cohen\'s d = '+m[1]+' is a '+(v<0.2?'negligible':v<0.5?'small':v<0.8?'medium':'large')+' effect by the usual rule of thumb (0.2 small, 0.5 medium, 0.8 large)')}
+  if(m=t.match(/η²\s*=\s*(\.?\d*\.?\d+)/)){const v=parseFloat('0'+m[1].replace(/^0(?=\.)/,''));e.push('η² = '+m[1]+' means the grouping accounts for about '+Math.round(v*100)+'% of the variation, a '+(v<0.01?'negligible':v<0.06?'small':v<0.14?'medium':'large')+' effect (.01 small, .06 medium, .14 large)')}
+  if(m=t.match(/\br(?:ₛ)?\(\d+\)\s*=\s*(-?\.?\d+)/)){const v=Math.abs(parseFloat('0'+m[1].replace('-','')));e.push('A correlation of '+m[1]+' is '+(v<0.1?'negligible':v<0.3?'small':v<0.5?'medium':'large')+' (.1 small, .3 medium, .5 large)')}
+  if(m=t.match(/(?:adjusted )?R²\s*=\s*(\.?\d*\.?\d+)/)){const v=parseFloat('0'+m[1].replace(/^0(?=\.)/,''));e.push('R² = '+m[1]+' means the model accounts for about '+Math.round(v*100)+'% of the variation in the outcome')}
+  if(e.length)out.push(e.join('. ')+'.');
+  out.push('Statistical significance does not show that an effect is large or useful.');
+  return out.join(' ');
+}
 async function statsExplain(){
+  if(!window._statsSummary){showToast('Run a test first');return}
+  const out=document.getElementById('statsSentence');
+  let box=document.getElementById('statsPlain');
+  if(!box){box=document.createElement('div');box.id='statsPlain';box.style.cssText='margin-top:8px;font-size:13.5px;line-height:1.6';out.parentNode.insertBefore(box,out.nextSibling)}
+  const note=statsPlain(window._statsAPA);
+  box.innerHTML=(note?'<p style="margin:0 0 6px"><b>In plain language</b> (worked out from the numbers, no AI)<br>'+escHTML(note)+'</p>':'<p style="margin:0 0 6px">This result has no p-value, so there is no quick note. Use the AI explanation.</p>')+'<button class="btn btn-ghost" onclick="statsExplainAI()">Explain more with AI</button>';
+}
+async function statsExplainAI(){
   if(!window._statsSummary){showToast('Run a test first');return}
   const out=document.getElementById('statsSentence');
   const prev=out.textContent;out.textContent='💜 Thinking…';
