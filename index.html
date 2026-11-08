@@ -4413,6 +4413,14 @@ function wExtra3HTML(id,o){
   if(id==='C8'||id==='E1'||id==='F4')return packStepHTML(id,o);const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(ok,title,body)=>'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'var(--line,#ddd)')+'"><b>'+(ok?'✅ ':'')+title+'</b>'+body+'</div>',
    lab=t=>'<label class="desc" style="display:block;margin-top:6px">'+t+'</label>',sel=(opts,v,on)=>'<select onchange="'+on+'"><option value=""></option>'+opts.map(x=>'<option value="'+x[0]+'"'+(v===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>',
    warn=list=>list.length?'<ul class="desc" style="margin:6px 0 0;padding-left:18px;color:#b45309">'+list.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'';
+  if(id==='B2'){const ty=(w.B1||{}).type,b=w.B2||{},rows=logRows(o,'search'),today=new Date().toISOString().slice(0,10);
+    if(ty!=='sys'&&ty!=='meta')return ty==='narr'||ty==='scop'?'<p class="desc" style="margin:6px 0">'+L('In a '+(ty==='narr'?'narrative':'scoping')+' review the search stays open; you can search again whenever you find a gap. Every search still goes in the log.',(ty==='narr'?'Narrative':'Scoping')+' review में search खुली रहती है; gap दिखे तो कभी भी फिर search करें। हर search log में जाती है।')+'</p>':'';
+    const last=rows.map(r=>String(r.date||'')).filter(Boolean).sort().pop()||'',late=b.closed?rows.filter(r=>r.date&&r.date>b.closed):[];
+    return'<div class="sub-box" style="border-color:'+(b.closed?'#16a34a':'var(--line,#ddd)')+'"><b>'+(b.closed?'✅ ':'')+L('Close the search','Search बंद करें')+'</b>'+
+     '<p class="desc" style="margin:4px 0">'+L('A systematic review needs one date after which no new searches count. Everything you screen comes from searches up to this date.','Systematic review में एक तारीख चाहिए जिसके बाद की search नहीं गिनी जाती। जो भी आप छाँटते हैं वह इसी तारीख तक की searches से आता है।')+'</p>'+
+     (b.closed?'<p style="margin:6px 0"><b>'+L('Search closed on ','Search बंद हुई ')+escHTML(b.closed)+'</b> <button type="button" class="btn btn-ghost btn-sm" onclick="b2Reopen()">'+L('Reopen','फिर खोलें')+'</button></p>'+
+       (late.length?'<p class="desc" style="color:#b45309;margin:4px 0">'+L(late.length+' search(es) in the log are dated after this. They are outside the closed search. Reopen it, or say in your method that they were an update search.',late.length+' search(es) इस तारीख के बाद की हैं। वे बंद search के बाहर हैं। इसे फिर खोलें, या method में लिखें कि वे update search थीं।')+'</p>':''):
+       '<div class="row" style="gap:6px;align-items:center;margin-top:6px"><input type="date" id="b2CloseDate" value="'+escAttr(last||today)+'" max="'+today+'"><button type="button" class="btn btn-purple btn-sm" onclick="b2Close()"'+(rows.length?'':' disabled')+'>'+L('Close the search','Search बंद करें')+'</button></div>'+(rows.length?'':'<p class="desc" style="margin:4px 0">'+L('Log at least one search first.','पहले कम से कम एक search दर्ज करें।')+'</p>'))+'</div>'}
   if(id==='D2'){const d=dgPart(o);return'<div class="sub-box"><b>'+L('Participant flow diagram','Participants का flow diagram')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPartInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from the recruitment log below once it has people approached, agreed and completed.','नीचे के recruitment log में पूछे, माने और पूरा करने वालों की संख्या आते ही यहाँ बनेगा।')+'</p>')+'</div>'}
   if(id==='D4')return resD4HTML(o);
   if(id==='D5')return d5HTML(o);
@@ -12431,6 +12439,8 @@ function b2Key(p){const d=String(p.doi||'').toLowerCase().replace(/^https?:\/\/(
 function b2Summary(o){const rows=logRows(o,'search').filter(r=>Array.isArray(r.keys)),seen=new Set();let read=0;
   rows.forEach(r=>r.keys.forEach(k=>{read++;seen.add(k)}));
   return{searches:rows.length,read:read,unique:seen.size,dup:read-seen.size}}
+function b2Close(){const e=document.getElementById('b2CloseDate'),v=e&&e.value;if(!v)return;wPick('B2','closed',v);logRefresh()}
+function b2Reopen(){wPick('B2','closed','');logRefresh()}
 function b2UsePrisma(){const o=studyGet(),m=b2Summary(o),b=(wGet(o).B1||{}),n=b.n||{},hi=studyHi();
   if(!m.read){showToast(hi?'अभी कोई search दर्ज नहीं':'No searches logged yet');return}
   let set=[];
@@ -17424,7 +17434,7 @@ function bbAutoParts(o){const e=escHTML,P=t=>'<p>'+t+'</p>',w=wGet(o),d=o.idea||
   add('intro.objectives',(aim?P('The aim of this study is '+e(aim.replace(/^to\s+/i,'to ').replace(/^./,c=>c.toLowerCase()).replace(/\.$/,''))+'.'):'')+(hyp.length?'<ol>'+hyp.map(x=>{let t=x.replace(/^H\d+[:.]\s*/,'').replace(/\.$/,'');return'<li>To examine whether '+e(t.charAt(0).toLowerCase()+t.slice(1))+'.</li>'}).join('')+'</ol>':''));
   add('intro.hypotheses',hyp.length?'<ol>'+hyp.map(x=>'<li>'+e(x.replace(/^H\d+[:.]\s*/,''))+'</li>').join('')+'</ol>':'');
   const se=logRows(o,'search').filter(r=>String(r.db||'').trim());
-  add('lit.sources',se.length?P('The literature was searched in '+e([...new Set(se.map(r=>r.db))].join(', '))+'. '+se.map(r=>'On '+e(r.date||'[date]')+', the search '+e(r.q||'')+(r.lim?' ('+e(r.lim)+')':'')+' in '+e(r.db)+' gave '+e(String(r.hits||'?'))+' records, of which '+e(String(r.kept||'?'))+' were kept.').join(' ')):'');
+  add('lit.sources',se.length?P('The literature was searched in '+e([...new Set(se.map(r=>r.db))].join(', '))+'. '+se.map(r=>'On '+e(r.date||'[date]')+', the search '+e(r.q||'')+(r.lim?' ('+e(r.lim)+')':'')+' in '+e(r.db)+' gave '+e(String(r.hits||'?'))+' records, of which '+e(String(r.kept||'?'))+' were kept.').join(' ')+((w.B2||{}).closed?' The search was closed on '+e(w.B2.closed)+'; no search after that date is included.':'')):'');
   const th=wThemes(o),notes=((w.B5||{}).notes)||{};
   add('lit.themes',Object.keys(th).map(t=>'<p><b>'+e(t)+'.</b> '+e(notes[t]||'')+'</p><ul>'+th[t].map(r=>'<li>'+e(r.paper||'')+(r.finding?': '+e(r.finding):'')+'</li>').join('')+'</ul>').join(''));
   add('lit.gap',gap?P(e(gap)):'');
@@ -17793,7 +17803,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08g';
+const APP_BUILD='2026.11.08h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
