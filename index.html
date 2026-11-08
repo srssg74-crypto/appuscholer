@@ -4428,7 +4428,7 @@ function wExtra3HTML(id,o){
   if(id==='D2'){const d=dgPart(o);return'<div class="sub-box"><b>'+L('Participant flow diagram','Participants का flow diagram')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgPartInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from the recruitment log below once it has people approached, agreed and completed.','नीचे के recruitment log में पूछे, माने और पूरा करने वालों की संख्या आते ही यहाँ बनेगा।')+'</p>')+'</div>'}
   if(id==='D4')return resD4HTML(o);
   if(id==='D5')return d5HTML(o);
-  if(id==='B3')return'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
+  if(id==='B3')return b3SecondHTML(o,L,hi)+'<div class="sub-box"><b>'+L('Related papers','जुड़े हुए papers')+'</b><p class="desc" style="margin:4px 0">'+L('OpenAlex lists papers related to each source in your library. Use it to find what your search missed, including studies with the opposite result.','OpenAlex आपकी library के हर source से जुड़े papers बताता है। इससे वे papers मिलते हैं जो आपकी search में छूट गए, उलटे नतीजे वाली studies भी।')+'</p><button type="button" class="btn btn-ghost btn-sm" onclick="relFind()">🔗 '+L('Find related papers','जुड़े papers खोजें')+'</button><div id="relOut" style="margin-top:6px"></div></div>';
   if(id==='B1'){const b=w.B1||{},n=b.n||{},f=b1Formal(o);
     let h=b1HelpHTML(b,hi)+lab(L('Type of review','Review का प्रकार'))+sel(B1_TYPES,b.type,"wPick('B1','type',this.value)")+
      lab(L('Why this type (for your question, time and team)','यह प्रकार क्यों (आपके सवाल, समय और team के हिसाब से)'))+'<textarea rows="3" onchange="wPatch(\'B1\',\'why\',this.value)">'+escHTML(b.why||'')+'</textarea>';
@@ -12459,6 +12459,65 @@ function rsAskUse(){
 /* B2 fills itself. Every database that answered gets one row in the search log: date, database, the exact
    string that was sent, the filters, and how many records the database says it holds for that string.
    A database that did not answer is not logged (nothing was searched). Old rows stay; a repeat search adds a row. */
+/* ---- Second reviewer, blind (build 2026.11.08l) ----
+   No server. The student makes one HTML file with titles and abstracts only (no decisions). The second reviewer
+   opens it in any browser, marks include / exclude / unsure, and downloads a small JSON file. The student loads that
+   file here; the app compares it with the student's own decisions, lists the disagreements and works out Cohen's kappa.
+   The student's decisions are snapshotted at import, so settling a disagreement later does not move the kappa. */
+function b3Kappa(pairs){/* pairs of ['i'|'e','i'|'e'] */
+  const n=pairs.length;if(!n)return{n:0,po:null,k:null};let a=0,i1=0,i2=0;
+  pairs.forEach(p=>{if(p[0]===p[1])a++;if(p[0]==='i')i1++;if(p[1]==='i')i2++});
+  const po=a/n,pe=(i1/n)*(i2/n)+((n-i1)/n)*((n-i2)/n);
+  const k=pe===1?(po===1?1:0):(po-pe)/(1-pe);
+  return{n:n,po:po,k:k,pe:pe}}
+function b3KappaWord(k,hi){if(k==null)return'';const w=k<0.2?['slight','मामूली']:k<0.4?['fair','ठीक-ठाक']:k<0.6?['moderate','मध्यम']:k<0.8?['substantial','काफ़ी अच्छी']:['almost perfect','लगभग पूरी'];return hi?w[1]:w[0]}
+function b3Mine(d){const st=d.scr&&d.scr.st;return st==='included'?'i':st==='excluded'?'e':'u'}
+function b3ReviewerHTML(papers,qtext){
+  const data=JSON.stringify({v:1,kind:'appuscholar-screen',q:qtext,papers:papers}).replace(/</g,'\\u003c');
+  const css='body{font:16px/1.5 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px;color:#1f2937}h1{font-size:20px}.q{background:#f3f0ff;border-radius:8px;padding:8px 12px}.t{font-size:18px;font-weight:600;margin:12px 0 4px}.a{white-space:pre-wrap;border:1px solid #ddd;border-radius:8px;padding:10px;max-height:46vh;overflow:auto}button{font:inherit;padding:12px 18px;margin:8px 8px 0 0;border-radius:8px;border:1px solid #6d28d9;background:#fff;cursor:pointer;min-height:44px}button.i{background:#166534;color:#fff;border-color:#166534}button.e{background:#991b1b;color:#fff;border-color:#991b1b}button.on{outline:3px solid #a78bfa}.m{color:#555;font-size:14px}';
+  const js="var D=JSON.parse(document.getElementById('d').textContent),K='appu_screen_'+D.papers.length+'_'+(D.papers[0]&&D.papers[0].c),S={};try{S=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){}var i=0,nm=S.__name||'';"+
+   "function sv(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}function $(x){return document.getElementById(x)}"+
+   "function show(){var p=D.papers[i],done=D.papers.filter(function(x){return S[x.c]}).length;$('c').textContent='Paper '+(i+1)+' of '+D.papers.length+' ('+done+' decided)';$('t').textContent=p.t;$('a').textContent=p.a||'(No abstract was available for this paper. Decide on the title, or mark Unsure.)';"+
+   "['i','e','u'].forEach(function(k){$('b'+k).className=(k==='i'?'i ':k==='e'?'e ':'')+(S[p.c]===k?'on':'')});$('end').style.display=done===D.papers.length?'block':'none'}"+
+   "function pick(k){S[D.papers[i].c]=k;sv();if(i<D.papers.length-1)i++;show()}function go(n){i=Math.max(0,Math.min(D.papers.length-1,i+n));show()}"+
+   "function fin(){var n=$('nm').value.trim();if(!n){alert('Please type your name first.');return}S.__name=n;sv();var o={v:1,kind:'appuscholar-screen-answers',reviewer:n,at:new Date().toISOString(),decisions:{}};D.papers.forEach(function(p){o.decisions[p.c]=S[p.c]||'u'});var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'}));a.download='screening-'+n.replace(/\\W+/g,'_')+'.json';document.body.appendChild(a);a.click()}"+
+   "$('nm').value=nm;show();";
+  return'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Screening: second reviewer</title><style>'+css+'</style></head><body>'+
+   '<h1>Screening: second reviewer</h1><p class="m">Read each title and abstract and choose Include, Exclude or Unsure. You cannot see the other reviewer\'s choices. Your progress is kept in this browser, so you can close the page and come back. When every paper has a choice, type your name and download your answers, then send that small file back.</p>'+
+   '<div class="q"><b>Review question:</b> '+String(qtext||'').replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+'</div><p class="m" id="c"></p><div class="t" id="t"></div><div class="a" id="a"></div>'+
+   '<div><button id="bi" onclick="pick(\'i\')">Include</button><button id="be" onclick="pick(\'e\')">Exclude</button><button id="bu" onclick="pick(\'u\')">Unsure</button></div><div><button onclick="go(-1)">Back</button><button onclick="go(1)">Skip</button></div>'+
+   '<div id="end" style="display:none;margin-top:16px;border-top:1px solid #ddd;padding-top:12px"><p><b>All papers have a choice.</b></p><label>Your name <input id="nm" style="font:inherit;padding:8px"></label> <button onclick="fin()">Download my answers</button></div>'+
+   '<script type="application/json" id="d">'+data+'<\/script><script>'+js+'<\/script></body></html>'}
+function b3SecondMake(){const lib=citGetLib(),hi=studyHi();if(!lib.length){showToast(hi?'पहले library में papers जोड़ें':'Add papers to the library first');return}
+  const o=studyGet(),q=String(((wGet(o).A3||{}).q)||(o.design||{}).topic||o.search||''),papers=lib.map(d=>({c:d.cid,t:String(d.title||'(no title)'),a:String(d.abs||'')}));
+  const html=b3ReviewerHTML(papers,q),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download='screening-second-reviewer.html';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+  showToast(hi?'File बन गई: इसे दूसरे reviewer को भेजें':'File ready: send it to the second reviewer')}
+function b3SecondLoad(inp){const f=inp.files&&inp.files[0];if(!f)return;const hi=studyHi(),r=new FileReader();
+  r.onload=function(){try{const j=JSON.parse(r.result);if(!j||j.kind!=='appuscholar-screen-answers'||!j.decisions)throw 0;
+    const own={};citGetLib().forEach(d=>{own[d.cid]=b3Mine(d)});
+    wPatch('B3','second',{reviewer:String(j.reviewer||'').slice(0,60),at:String(j.at||'').slice(0,10),theirs:j.decisions,own:own,final:{}});wRedraw();logRefresh();
+    showToast(hi?'Reviewer की file जुड़ गई':'Reviewer\'s answers loaded')}catch(e){showToast(hi?'यह screening की जवाबों वाली file नहीं है':'That is not a screening answers file')}};
+  r.readAsText(f);inp.value=''}
+function b3SecondStats(sec){const pairs=[],dis=[],lib=citGetLib(),by={};lib.forEach(d=>{by[d.cid]=d});
+  Object.keys(sec.theirs||{}).forEach(c=>{if(!by[c])return;const a=(sec.own||{})[c]||'u',b=sec.theirs[c];
+    if(a==='u'||b==='u'){dis.push({c:c,a:a,b:b,why:'unsure'});return}
+    pairs.push([a,b]);if(a!==b)dis.push({c:c,a:a,b:b,why:'differ'})});
+  return{k:b3Kappa(pairs),dis:dis,by:by}}
+function b3Resolve(c,v){const l=citGetLib(),i=l.findIndex(d=>d.cid===c);if(i<0)return;const o=studyGet(),sec=Object.assign({},(wGet(o).B3||{}).second||{});sec.final=Object.assign({},sec.final||{},{[c]:v});wPatch('B3','second',sec);citScrSet(i,'st',v==='i'?'included':'excluded');wRedraw();logRefresh()}
+function b3SecondHTML(o,L,hi){const ty=(wGet(o).B1||{}).type;if(ty!=='sys'&&ty!=='meta'&&ty!=='scop')return'';
+  const sec=(wGet(o).B3||{}).second,n=citGetLib().length;
+  let h='<div class="sub-box"><b>'+L('Second reviewer','दूसरा reviewer')+'</b> <span class="desc">'+(ty==='scop'?L('(optional)','(वैकल्पिक)'):L('(recommended)','(सुझाया गया)'))+'</span><p class="desc" style="margin:4px 0">'+L('A second person screens the same titles and abstracts without seeing your choices. You send one file, they send one file back, and the app lists where you differ and gives Cohen\'s kappa for your method.','एक दूसरा व्यक्ति आपकी पसंद देखे बिना वही titles और abstracts छाँटता है। आप एक file भेजते हैं, वे एक file लौटाते हैं, और app बताता है कि कहाँ अंतर है और method के लिए Cohen\'s kappa देता है।')+'</p>'+
+   '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" onclick="b3SecondMake()"'+(n?'':' disabled')+'>⬇ '+L('Make the file for the reviewer ('+n+' papers)','Reviewer के लिए file बनाएँ ('+n+' papers)')+'</button>'+
+   '<label class="btn btn-ghost btn-sm" style="cursor:pointer">⬆ '+L('Load the reviewer\'s answers','Reviewer के जवाब जोड़ें')+'<input type="file" accept=".json,application/json" style="display:none" onchange="b3SecondLoad(this)"></label></div>';
+  if(sec&&sec.theirs){const st=b3SecondStats(sec),k=st.k;
+    h+='<p style="margin:8px 0 2px"><b>'+L('Compared with ','तुलना: ')+escHTML(sec.reviewer||L('the second reviewer','दूसरे reviewer'))+'</b> <span class="desc">'+escHTML(sec.at||'')+'</span></p>'+
+     (k.n?'<p style="margin:2px 0">'+L(k.n+' papers decided by both. Agreement '+Math.round(k.po*100)+'%. Cohen\'s kappa '+k.k.toFixed(2)+' ('+b3KappaWord(k.k,false)+').',k.n+' papers दोनों ने तय किए। सहमति '+Math.round(k.po*100)+'%। Cohen\'s kappa '+k.k.toFixed(2)+' ('+b3KappaWord(k.k,true)+')।')+'</p>':'<p class="desc">'+L('No paper has a clear include or exclude from both of you yet.','अभी किसी paper पर दोनों का साफ़ include या exclude नहीं है।')+'</p>')+
+     (st.dis.length?'<p style="margin:8px 0 2px"><b>'+L('To settle ('+st.dis.length+')','तय करने हैं ('+st.dis.length+')')+'</b></p>'+st.dis.map(x=>{const d=st.by[x.c],nm={i:L('include','include'),e:L('exclude','exclude'),u:L('unsure','अनिश्चित')},fin=(sec.final||{})[x.c];
+        return'<div style="border-top:1px solid var(--line,#ddd);padding:6px 0;font-size:13px"><div>'+escHTML(d.title||'')+'</div><div class="desc">'+L('You: ','आप: ')+nm[x.a]+' · '+L('Reviewer: ','Reviewer: ')+nm[x.b]+'</div>'+
+        (fin?'<div class="desc">✅ '+L('Settled: ','तय: ')+nm[fin]+'</div>':'')+
+        '<div class="row" style="gap:6px;margin-top:4px"><button type="button" class="btn btn-ghost btn-sm" onclick="b3Resolve(\''+x.c+'\',\'i\')">'+L('Include','Include')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="b3Resolve(\''+x.c+'\',\'e\')">'+L('Exclude','Exclude')+'</button></div></div>'}).join(''):'')+
+     '<p class="desc" style="margin:6px 0 0">'+L('Kappa is worked out from your choices at the moment you loaded the file, so settling a disagreement does not change it.','Kappa file जोड़ते समय की आपकी पसंद से बना है, इसलिए असहमति सुलझाने पर वह नहीं बदलता।')+'</p>'}
+  return h+'</div>'}
 function b2SrcLabel(p){try{const r=logRows(studyGet(),'search').filter(x=>x.db===p.source).pop()||logRows(studyGet(),'search').pop();return r?((r.date||'')+' · '+(r.db||'')):''}catch(e){return''}}
 function b2Key(p){const d=String(p.doi||'').toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//,'').trim();return d||String(p.title||'').toLowerCase().replace(/\W+/g,'').slice(0,60)}
 function b2Summary(o){const rows=logRows(o,'search').filter(r=>Array.isArray(r.keys)),seen=new Set();let read=0;
@@ -12764,6 +12823,7 @@ function rsAddToLibrary(i,quiet){
      instead of making the student wait for a second lookup. */
   if(d.doi&&p.source==='OpenAlex')retrCacheSet(d.doi,!!p.retracted);
   d.scr={st:'toread',why:'',src:b2SrcLabel(p)};
+  if(p.abstract)d.abs=String(p.abstract).slice(0,3000);
   l.push(d);citSaveLib(l);
   if(!quiet)showToast(p.retracted?t('retr_added_warn'):'Added to citation library ✓ — check author formatting before you submit');
   return d;
@@ -17844,7 +17904,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08k';
+const APP_BUILD='2026.11.08l';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
