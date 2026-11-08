@@ -17680,7 +17680,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08c';
+const APP_BUILD='2026.11.08d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -17982,6 +17982,49 @@ function shBestSentence(text,terms){
   sents.forEach(se=>{const l=se.toLowerCase();let sc=0;terms.forEach(t=>{if(l.indexOf(t)>=0)sc++});if(sc>bs){bs=sc;best=se}});
   return best||text.slice(0,240);
 }
+/* Reading order of one PDF page (build 2026.11.08d): the gutter between columns is found first, then words are put in columns, then lines are built inside each column. Full-width lines (title, abstract, captions) stay where they are. Vertical text (journal side notes) is left out. */
+function apPageOrder(items,pageBox){
+  const x0=pageBox[0],y0=pageBox[1],W=pageBox[2]-pageBox[0],H=pageBox[3]-pageBox[1];
+  const ws=items.filter(i=>typeof i.str==='string'&&i.str.trim()&&i.transform&&Math.abs(i.transform[1])<=0.1*Math.abs(i.transform[0]||1)).map(i=>({s:i.str,x:i.transform[4]-x0,y:i.transform[5]-y0,w:Math.abs(i.width||0),h:Math.abs(i.height||i.transform[3]||1)}));
+  if(ws.reduce((n,i)=>n+i.s.length,0)<15)return{text:'',cols:0,scanned:true};
+  const med=a=>{a=a.slice().sort((p,q)=>p-q);return a[Math.floor(a.length/2)]||1};
+  const fh=med(ws.map(w=>w.h));
+  /* gutter: widest empty vertical strip in the middle 30 to 70 percent, ignoring the few words that cross it */
+  const N=Math.ceil(W),cov=new Array(N).fill(0);
+  ws.forEach(w=>{for(let b=Math.max(0,Math.floor(w.x));b<Math.min(N,Math.ceil(w.x+w.w));b++)cov[b]++});
+  const lim=Math.max(2,Math.round(ws.length*0.02));
+  let best=0,bs=-1,run=0,st=0;
+  for(let b=Math.floor(W*0.3);b<=Math.ceil(W*0.7);b++){
+    if(cov[b]<=lim){if(!run)st=b;run++;if(run>best){best=run;bs=st}}else run=0;
+  }
+  const gw=best,g=bs+best/2;
+  const two=gw>=Math.max(6,fh*0.8);
+  const clus=(arr)=>{arr=arr.slice().sort((a,b)=>b.y-a.y||a.x-b.x);const L=[];
+    arr.forEach(w=>{const l=L.find(q=>Math.abs(q.y-w.y)<=Math.max(2,fh*0.45));if(l){l.ws.push(w);l.y=(l.y*(l.ws.length-1)+w.y)/l.ws.length}else L.push({y:w.y,ws:[w]})});
+    L.forEach(l=>l.ws.sort((a,b)=>a.x-b.x));L.sort((a,b)=>b.y-a.y);return L};
+  const txt=l=>l.ws.map(w=>w.s).join(' ').replace(/\s+/g,' ').trim();
+  let out=[];
+  if(!two){clus(ws).forEach(l=>out.push(txt(l)));return{text:out.join('\n'),cols:1,gutter:null}}
+  /* full-width bands: a raw line whose words touch the gutter strip, or sit on both sides with no gap */
+  const raw=clus(ws);
+  raw.forEach(l=>{
+    const hit=l.ws.some(w=>w.x<g+gw*0.35&&w.x+w.w>g-gw*0.35);
+    const L=l.ws.filter(w=>w.x+w.w<=g),R=l.ws.filter(w=>w.x>=g);
+    l.full=hit||(L.length&&R.length&&(Math.min(...R.map(w=>w.x))-Math.max(...L.map(w=>w.x+w.w)))<gw*0.6);
+  });
+  /* blocks in reading order */
+  let i=0;
+  while(i<raw.length){
+    if(raw[i].full){out.push(txt(raw[i]));i++;continue}
+    let j=i;const blk=[];
+    while(j<raw.length&&!raw[j].full){blk.push(...raw[j].ws);j++}
+    const Lw=blk.filter(w=>w.x+w.w/2<g),Rw=blk.filter(w=>w.x+w.w/2>=g);
+    clus(Lw).forEach(l=>out.push(txt(l)));
+    clus(Rw).forEach(l=>out.push(txt(l)));
+    i=j;
+  }
+  return{text:out.join('\n'),cols:2,gutter:Math.round(g),gw:Math.round(gw)};
+}
 async function shExtractPdf(file){
   if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader needs the internet once to load. Try again when you are online.');
   const buf=await file.arrayBuffer();
@@ -17990,7 +18033,14 @@ async function shExtractPdf(file){
   for(let k=1;k<=n;k++){
     const pg=await pdf.getPage(k),tc=await pg.getTextContent();let t='';
     tc.items.forEach(it=>{t+=it.str+(it.hasEOL?'\n':' ')});
-    pages.push(t.replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').trim());
+    t=t.replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').trim();
+    /* column-aware order; the old order is kept if anything looks off (a word count that differs a lot) */
+    try{
+      const o=apPageOrder(tc.items,pg.view||[0,0,612,792]);
+      const wc=x=>(x.match(/\S+/g)||[]).length;
+      if(!o.scanned&&o.text&&Math.abs(wc(o.text)-wc(t))<=Math.max(6,wc(t)*0.08))t=o.text.replace(/[ \t]+/g,' ').trim();
+    }catch(e){}
+    pages.push(t);
   }
   let meta='';try{const md=await pdf.getMetadata();meta=String((md&&md.info&&md.info.Title)||'').trim()}catch(e){}
   return{pages:pages,total:pdf.numPages,meta:meta};
