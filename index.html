@@ -3387,9 +3387,12 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'E1':{const pk=packE1Ok(o);return pk===null?!!(o.draft&&o.draft.built):pk}
     case'F6':return subPosterSaved();
   }}catch(e){}return false}
+/* When the whole study is a review, the steps whose work the B steps already did count as done, and the ones that make no sense count as not applicable. A state the student set by hand always wins. */
+const REV_DONE={C1:'B1',C2:'B3',C4:'B3',C7:'B5',C8:'B1',D2:'B2',D3:'B3',D4:'B5'},REV_NA=['C3','C5','C6','D1','D5'];
 function subState(id,o){o=o||studyGet();
   if(id==='C9'){const e=ethicsState(o);return{s:e.none?'na':e.open?(e.route==='und'?'dn':'ap'):(e.route?'ip':'ns'),auto:false}}
   const r=(o.sub||{})[id];if(r&&r.s)return{s:r.s,auto:false};
+  if((o.design||{}).type==='review'){if(REV_DONE[id])return{s:'dn',auto:true};if(REV_NA.indexOf(id)>=0)return{s:'na',auto:true}}
   return subAuto(id,o)?{s:'dn',auto:true}:{s:'ns',auto:false}}
 function subCount(stage,o){o=o||studyGet();const list=SUBSTAGES.filter(x=>x[1]===stage);
   return{done:list.filter(x=>['dn','na','ap'].includes(subState(x[0],o).s)).length,total:list.length}}
@@ -3447,7 +3450,7 @@ function subDetailHTML(id,o){const hi=studyHi(),x=SUBSTAGES.find(y=>y[0]===id);i
   let h='<h2 style="margin:0 0 4px">'+x[0]+' · '+escHTML(subL(x[2]))+'</h2>';
   h+='<div class="sub-box"><b>'+(hi?'कैसे भरें':'How to fill it')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[3]))+'</p></div>';
   if(LS_IDS.indexOf(id)<0)h+='<div class="sub-box"><b>'+(hi?'आगे बढ़ने से पहले जाँच':'Check before moving on')+'</b><p style="margin:6px 0 0">'+escHTML(subL(x[4]))+'</p><p class="desc" style="margin:6px 0 0">'+(hi?'स्रोत: ':'Source: ')+escHTML(x[5])+subSrcAge(x[0])+'</p></div>';
-  if(id==='C9')return h+ethicsFormHTML(o);
+  if(id==='C9')return h+cfNoteHTML(id,o)+ethicsFormHTML(o);
   try{h+=subExtraHTML(id,o)}catch(e){}
   if(x[6]){const dock=x[6].charAt(0)!=='@',act=dock?"showTool('"+x[6]+"')":x[6].slice(1),lab=subToolLabel(x[6],id);h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="'+(dock?'subDock(\''+x[6]+'\')':"document.getElementById('subDlg').close();"+escAttr(act))+'">'+escHTML(hi?lab[1]:lab[0])+' →</button></div>'}
   h+='<div class="sub-box"><b>'+(hi?'Status':'Status')+'</b>'+(st.auto?'<p class="desc" style="margin:4px 0">'+(hi?'App को आपकी study में यह भरा मिला, इसलिए "पूरा" दिखा रहा है। आप बदल सकते हैं।':'The app found this filled in your study, so it shows Done. You can change it.')+'</p>':'')+
@@ -4614,11 +4617,46 @@ function wCardsHTML(id,o){if(id!=='B5'&&id!=='B6'&&id!=='B7')return'';const hi=s
   const g=wThemes(o),ks=Object.keys(g);let h='';
   ks.forEach(th=>{const cids=g[th].map(r=>r.cid).filter(Boolean),r=show('red',cids),q=show('purple',cids);if(r.length||q.length)h+='<div style="margin-top:6px"><b>'+escHTML(th)+'</b>'+(r.length?'<div class="desc">'+L('Limitations','Limitations')+'</div>'+list(r):'')+(q.length?'<div class="desc">'+L('Quotes','उद्धरण')+'</div>'+list(q):'')+'</div>'});
   return h?'<div class="sub-box"><b>'+L('Your red and purple highlights, by theme','आपके लाल और बैंगनी highlights, theme के अनुसार')+'</b>'+h+'</div>':''}
-function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=b1ItemNoteHTML(id,o)}catch(e){}try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{lg+=wCardsHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
+/* C1 to F7: what each step asks of the chosen design family (agreed 9 Nov 2026, claude/appuscholar-c-to-f-steps-by-design-draft-2026-11-09.md).
+   Cell format: "L|English|Hindi", L as in B1_LBL (R, C, L, O, H). Order: survey and correlational, groups and experiments, follow-up, qualitative, mixed, review. */
+const CF_FAM_NAMES={sv:['Survey or correlational study','Survey या correlational study'],ge:['Groups or experiment','Groups या experiment'],fu:['Follow-up design','Follow-up design'],ql:['Qualitative study','Qualitative study'],mx:['Mixed methods','Mixed methods'],rv:['Review','Review']};
+const CF_FAM={survey:'sv',correlational:'sv','two-group':'ge','multi-group':'ge','pre-post':'ge',experiment:'ge',longitudinal:'fu',cohort:'fu','case-control':'fu',qualitative:'ql',mixed:'mx',review:'rv'};
+const CF_ROWS={
+ C1:['R','R|State how people are allocated to groups.|लोग ग्रुपों में कैसे बाँटे गए, यह लिखें।','R|State the exposure and how long you follow people.|Exposure और follow-up की अवधि लिखें।','R|Name the approach (for example thematic analysis, phenomenology).|तरीक़े का नाम लिखें (जैसे thematic analysis, phenomenology)।','R|Say which part comes first and how the two parts meet.|कौन-सा हिस्सा पहले आता है और दोनों कैसे मिलते हैं, लिखें।','R|Already settled in B1.|यह B1 में तय हो चुका है।'],
+ C2:['R','R|Add inclusion and exclusion rules.|Inclusion और exclusion के नियम जोड़ें।','R|Say how the group, or the cases and the controls, are picked.|समूह, या cases और controls, कैसे चुने गए, यह लिखें।','R|Purposive sampling, and how many interviews you plan.|Purposive sampling और कितने interview सोचे हैं।','R|Do it for both parts.|दोनों हिस्सों के लिए करें।','H'],
+ C3:['R|Use the calculator.|Calculator इस्तेमाल करें।','R|Calculator; record the effect size and where it came from.|Calculator; effect size और उसका स्रोत दर्ज करें।','R|Calculator; for case-control, the ratio of controls to cases.|Calculator; case-control में cases के मुक़ाबले controls का अनुपात।','L|Give the reason you stopped (saturation). No calculation.|रुकने का कारण (saturation) लिखें। गणना नहीं।','R|Calculator for the numbers part; a short reason for the other part.|संख्या वाले हिस्से के लिए calculator; दूसरे के लिए छोटा कारण।','H'],
+ C4:['R','R|Describe the treatment or manipulation as well.|Treatment या manipulation का भी वर्णन करें।','R|Define the exposure and the outcome.|Exposure और outcome की परिभाषा लिखें।','L|The interview guide takes the place of the variable table.|Interview guide, variable table की जगह लेती है।','R','H'],
+ C5:['O','O','O','O|Interview guide only.|सिर्फ़ interview guide।','O','H'],
+ C6:['R','O|Needed if a questionnaire gives your outcome.|Questionnaire से outcome मिलता हो तो ज़रूरी।','O','H|Build the interview guide here instead.|यहाँ interview guide बनाएँ।','R|For the survey part.|Survey वाले हिस्से के लिए।','H'],
+ C7:['R','R|Write it before you collect data.|Data लेने से पहले लिखें।','R|Say how confounders are handled.|Confounders को कैसे सँभालेंगे, लिखें।','R|The coding approach.|Coding का तरीक़ा।','R|Both parts, and how they meet.|दोनों हिस्से, और वे कैसे मिलते हैं।','H'],
+ C8:['R','R|With a registration field for a trial.|Trial के लिए registration का खाना।','R','R','R','H'],
+ C9:['R','R|Add a harm and withdrawal plan.|नुक़सान और बाहर निकलने की योजना जोड़ें।','R','R|Add a distress protocol if the topic is sensitive.|विषय संवेदनशील हो तो distress protocol जोड़ें।','R','H'],
+ D1:['C','C','C','C|One or two practice interviews.|एक-दो अभ्यास interview।','C','H'],
+ D2:['R','R|Keep the allocation record too.|Allocation का record भी रखें।','R|Keep the follow-up log too.|Follow-up log भी रखें।','R|Log the recordings and the consent.|Recordings और consent का log रखें।','R','H'],
+ D3:['R','R','R|Keep the attrition record.|Attrition का record रखें।','L|Clean and check the transcripts.|Transcripts साफ़ करें और जाँचें।','R','H'],
+ D4:['R','R','R','H','R','H|The numbers go through the B5 table.|संख्याएँ B5 की table से जाती हैं।'],
+ D5:['H','H','H','R','R','H'],
+ D6:['R','R','R','R|Themes take the place of effect sizes.|Effect size की जगह themes।','R','R'],
+ E4:['R','R','R','R','R','R|The search and screening methods.|Search और screening के तरीक़े।'],
+ E5:['R','R','R','R|Themes and quotes.|Themes और उद्धरण।','R|Both parts.|दोनों हिस्से।','R'],
+ F2:['R|STROBE (cross-sectional).|STROBE (cross-sectional)।','R|CONSORT 2025 for a trial; TREND or STROBE for the others.|Trial के लिए CONSORT 2025; बाक़ी के लिए TREND या STROBE।','R|STROBE.|STROBE।','R|COREQ or SRQR.|COREQ या SRQR।','R|GRAMMS.|GRAMMS।','R|PRISMA 2020 or PRISMA-ScR.|PRISMA 2020 या PRISMA-ScR।'],
+ F5:['C','C','C','C','C','C'],
+ F6:['O','O','O','O','O','O'],
+ F7:['R','R','R','R|Include the recordings and the key file.|Recordings और key file भी शामिल करें।','R','L']};
+['E1','E2','E3','E6','E7','E8','F1','F3','F4'].forEach(k=>{CF_ROWS[k]=['R','R','R','R','R','R']});
+CF_ROWS.E3[5]='R|This chapter is the review.|यह chapter ही review है।';
+function cfNoteHTML(id,o){const row=CF_ROWS[id];if(!row)return'';const hi=studyHi(),L=(e,h)=>hi?h:e,ty=(o.design||{}).type,fam=CF_FAM[ty];
+  if(!fam)return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+L('Choose your study design in C1 and this step tells you what it asks of that design.','C1 में अपना study design चुनें; तब यह चरण बताएगा कि उस design से यह क्या माँगता है।')+' <a href="#" onclick="SUB_CUR.id=\'C1\';subRender();return false">C1 →</a></span></div>';
+  if(ty==='review'&&(REV_DONE[id]||REV_NA.indexOf(id)>=0)){const via=REV_DONE[id];
+    return'<div class="sub-box" style="border-color:#16a34a;border-style:dashed"><b>'+(via?'✅ '+L('Already done in your review steps','आपके review steps में हो चुका'):L('Not needed for a review','Review के लिए ज़रूरी नहीं'))+'</b> <span class="desc">'+(via?L('This step counts as done because the work sits in '+via+'.','यह चरण पूरा गिना जाता है, क्योंकि यह काम '+via+' में है।')+' <a href="#" onclick="SUB_CUR.id=\''+via+'\';subRender();return false">'+via+' →</a> ':L('It counts as not applicable. You can still set its status yourself.','इसे लागू नहीं गिना जाता। आप चाहें तो status ख़ुद बदल सकते हैं।'))+'</span></div>'}
+  const cell=String(row[['sv','ge','fu','ql','mx','rv'].indexOf(fam)]||'H').split('|'),l=B1_LBL[cell[0]]||B1_LBL.R;
+  if(cell[0]==='H')return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+escHTML(L('For '+studyDesignShort(ty)+', this step does not appear.','इस design में यह चरण नहीं आता।'))+((hi?cell[2]:cell[1])?' '+escHTML(hi?cell[2]:cell[1]):'')+'</span></div>';
+  return'<div class="sub-box" style="border-style:dashed;display:flex;gap:8px;align-items:flex-start"><span style="flex:0 0 auto;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;background:'+l[2]+';color:'+l[3]+(cell[0]==='O'?';border:1px solid #9ca3af':'')+'">'+escHTML(hi?l[1]:l[0])+'</span><div style="font-size:13px;line-height:1.4"><b>'+escHTML(L('For your design: ','आपके design के लिए: ')+(hi?CF_FAM_NAMES[fam][1]:CF_FAM_NAMES[fam][0]))+'</b>'+((hi?cell[2]:cell[1])?' '+escHTML(hi?cell[2]:cell[1]):'')+'</div></div>'}
+function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=b1ItemNoteHTML(id,o)}catch(e){}try{lg+=cfNoteHTML(id,o)}catch(e){}try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{lg+=wCardsHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
   if(lg&&!['C3','C4'].includes(id))return lg;
-  if(id==='C3'){const ok=ssComplete(ds);return'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px">'+(ok?'<button type="button" class="btn btn-purple btn-sm" onclick="bbSampleToBook()">📖 '+(hi?'किताब में डालें (संख्याएँ जुड़ी रहेंगी)':'Put it in my book (numbers stay linked)')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
-  if(id==='C4'){const c=scaleCheck(o);if(!(ds.vars||[]).some(x=>x.scale&&x.scale!=='own'&&x.scale!=='instr'))return'';return'<div class="sub-box" style="border-color:'+(c.ok?'#16a34a':'#b45309')+'"><b>'+(c.ok?'✅ ':'⚠️ ')+(hi?'Scales की अनुमति':'Scale permissions')+'</b><p style="margin:6px 0 0">'+(c.ok?(hi?'चुने गए सभी scales मुफ़्त हैं या उनकी wording owner के page से डाली गई है।':'All chosen scales are free, or their wording was added from the owner\'s page.'):escHTML(c.issues.join('; ')))+'</p></div>'}
+  if(id==='C3'){const ok=ssComplete(ds);return cfNoteHTML(id,o)+'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px">'+(ok?'<button type="button" class="btn btn-purple btn-sm" onclick="bbSampleToBook()">📖 '+(hi?'किताब में डालें (संख्याएँ जुड़ी रहेंगी)':'Put it in my book (numbers stay linked)')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
+  if(id==='C4'){const c=scaleCheck(o);if(!(ds.vars||[]).some(x=>x.scale&&x.scale!=='own'&&x.scale!=='instr'))return cfNoteHTML(id,o);return cfNoteHTML(id,o)+'<div class="sub-box" style="border-color:'+(c.ok?'#16a34a':'#b45309')+'"><b>'+(c.ok?'✅ ':'⚠️ ')+(hi?'Scales की अनुमति':'Scale permissions')+'</b><p style="margin:6px 0 0">'+(c.ok?(hi?'चुने गए सभी scales मुफ़्त हैं या उनकी wording owner के page से डाली गई है।':'All chosen scales are free, or their wording was added from the owner\'s page.'):escHTML(c.issues.join('; ')))+'</p></div>'}
   return''}
 function ethicsDraftSentence(){const o=studyGet(),e=ethicsGet(o),s=ethicsState(o);if(!s.open)return'';
   const fmt=d=>{try{return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}catch(x){return d}};
@@ -18067,7 +18105,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.09c';
+const APP_BUILD='2026.11.09e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18808,7 +18846,7 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
-/* PDF tools (build 2026.11.09c): pdf-lib is loaded the first time it is needed. */
+/* PDF tools (build 2026.11.09e): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
   const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
