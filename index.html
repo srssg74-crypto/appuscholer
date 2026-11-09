@@ -816,8 +816,11 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
       <h2 data-i18n="doc_pane_h2">📝 Your Document</h2>
       <span class="badge" id="saveBadge" data-i18n="autosave_on">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
       <div class="spacer"></div>
-      <button class="btn btn-ghost" onclick="downloadDoc()" data-i18n="download_btn">⬇ Download (Word)</button>
-      <button class="btn btn-ghost" onclick="downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you've been told you need it.">⬇ Advanced format</button>
+      <details class="dl-menu" id="dlMenu" style="position:relative;display:inline-block"><summary class="btn btn-ghost" style="list-style:none;cursor:pointer" data-i18n="download_menu">⬇ Download ▾</summary>
+        <div style="position:absolute;right:0;top:100%;z-index:30;background:var(--card,#fff);border:1px solid var(--line,#ddd);border-radius:10px;padding:6px;min-width:190px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:4px">
+          <button class="btn btn-ghost" onclick="document.getElementById('dlMenu').open=false;downloadDoc()" data-i18n="download_btn">⬇ Download (Word)</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('dlMenu').open=false;downloadLatex()" data-i18n="latex_btn" data-i18n-title="latex_btn_title" title="A special format some universities or journals require (LaTeX, via a site called Overleaf). Skip this unless you have been told you need it.">⬇ LaTeX file</button>
+        </div></details>
       <div class="docbar">
         <label for="docSel" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase" data-i18n="doc_label">Doc</label>
         <select id="docSel" onchange="docSwitch(this.value)" aria-label="Choose document"></select>
@@ -2400,7 +2403,7 @@ const I18N={
     project_bar_empty:'No research project yet — working in scratch space',
     project_bar_new:'✨ New project', save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
     doc_pane_h2:'📝 Your Document', autosave_on:'Auto-save on',
-    download_btn:'⬇ Download (Word)', latex_btn:'⬇ LaTeX file', latex_btn_title:"Download as a LaTeX file (.tex), the format some universities and journals ask for. It opens in Overleaf. Skip this unless you have been told you need it.",
+    download_menu:'⬇ Download ▾', download_btn:'⬇ Download (Word)', latex_btn:'⬇ LaTeX file', latex_btn_title:"Download as a LaTeX file (.tex), the format some universities and journals ask for. It opens in Overleaf. Skip this unless you have been told you need it.",
     doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
     doc_import_btn:'📂 Import', doc_import_title:'Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor',
     editor_placeholder:'Start writing here… Select text and press Improve, or just write and let AI continue.',
@@ -2643,7 +2646,7 @@ const I18N={
     project_bar_empty:'अभी कोई शोध प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
     project_bar_new:'✨ नया प्रोजेक्ट', save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
     doc_pane_h2:'📝 आपका दस्तावेज़', autosave_on:'ऑटो-सेव चालू',
-    download_btn:'⬇ डाउनलोड (Word)', latex_btn:'⬇ LaTeX फ़ाइल', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
+    download_menu:'⬇ डाउनलोड ▾', download_btn:'⬇ डाउनलोड (Word)', latex_btn:'⬇ LaTeX फ़ाइल', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
     doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
     doc_import_btn:'📂 आयात करें', doc_import_title:'.docx, .pdf, .txt या .html फ़ाइल को नए दस्तावेज़ के रूप में आयात करें — या एडिटर पर खींच कर छोड़ें',
     editor_placeholder:'यहाँ लिखना शुरू करें… टेक्स्ट चुनें और "सुधारें" दबाएँ, या बस लिखें और AI को आगे बढ़ाने दें।',
@@ -18064,7 +18067,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.09b';
+const APP_BUILD='2026.11.09c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18805,7 +18808,7 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
-/* PDF tools (build 2026.11.09b): pdf-lib is loaded the first time it is needed. */
+/* PDF tools (build 2026.11.09c): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
   const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
