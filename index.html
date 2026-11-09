@@ -629,6 +629,7 @@ main .tool-main,.tool-panel,.tool-panel .panel,#subMain{overflow-x:hidden;min-wi
 .tool-panel pre,.tool-panel code{white-space:pre-wrap}
 .tool-panel table{display:block;max-width:100%;overflow-x:auto}
 /* save feedback: a round arrow inside the box */
+[data-panel=practice] .fs-tick{display:block;min-height:1.4em}
 .fs-wrap{position:relative}
 .fs-wrap textarea,.fs-wrap input{padding-right:48px!important}
 .fs-go{position:absolute;right:8px;bottom:8px;width:32px;height:32px;border-radius:999px;border:none;background:var(--purple-600);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(var(--shadow-ink),.25);transition:background .15s,transform .1s}
@@ -1129,14 +1130,16 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
       <p class="hint" id="pgIntro"></p>
       <div class="fld"><label for="pgScen" id="pgScenL">Scenario</label><select id="pgScen"><option value="hostel_sleep">Hostel and day-scholar students: exam anxiety</option><option value="coaching_null">Coaching classes and exam anxiety</option><option value="mindful_effect">Mindfulness workshop and exam anxiety</option></select></div>
       <div class="fld"><label for="pgSeed" id="pgSeedL">Seed number</label>
-        <div><input id="pgSeed" type="number" min="1" max="999999" style="max-width:160px"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn" id="pgRand" onclick="pgRandom()">New random seed</button><button type="button" class="btn primary" id="pgStart" onclick="pgStartRun()">Start</button></div>
+        <div><input id="pgSeed" type="number" min="1" max="999999" style="max-width:160px"><span class="fs-tick"></span></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn" id="pgRand" onclick="pgRandom()">New random seed</button><button type="button" class="btn primary" id="pgStart" onclick="pgStartRun()">Start</button></div>
         <div class="hint" id="pgSeedH"></div></div>
+      <div class="fld"><label><input type="checkbox" id="pgPlanOn" onchange="document.getElementById('pgPlanBox').hidden=!this.checked"> <span id="pgPlanL">Postgraduate level: plan the sample size first</span></label>
+        <div id="pgPlanBox" hidden style="margin-top:6px"><input id="pgPlanN" type="number" min="5" max="500" placeholder="n per group" style="max-width:160px"><span class="fs-tick"></span><div class="hint" id="pgPlanH"></div></div></div>
       <div id="pgRun" hidden>
         <div class="card-inner" id="pgStory" style="margin:10px 0"></div>
         <div id="pgCols" class="hint"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button type="button" class="btn primary" id="pgOpen" onclick="pgOpenStats()">Open the data in Statistics &amp; Charts</button><button type="button" class="btn" id="pgCsvBtn" onclick="pgDownload()">Download CSV</button></div>
-        <div class="fld"><label for="pgQ" id="pgQL"></label><textarea id="pgQ" rows="2" oninput="pgSaveText()"></textarea></div>
-        <div class="fld"><label for="pgClaim" id="pgClaimL"></label><textarea id="pgClaim" rows="5" oninput="pgSaveText()"></textarea></div>
+        <div class="fld"><label for="pgQ" id="pgQL"></label><textarea id="pgQ" rows="2" oninput="pgSaveText()"></textarea><span class="fs-tick"></span></div>
+        <div class="fld"><label for="pgClaim" id="pgClaimL"></label><textarea id="pgClaim" rows="5" oninput="pgSaveText()"></textarea><span class="fs-tick"></span></div>
         <button type="button" class="btn" id="pgReveal" onclick="pgDoReveal()">Show the answer key</button>
         <div class="hint" id="pgGate"></div>
         <div id="pgKey" hidden class="card-inner" style="margin-top:12px"></div>
@@ -18204,9 +18207,13 @@ function pgCsv(g){const cols=g.columns.map(c=>c.id);return cols.join(',')+'\n'+g
 function pgT(en,hi){return LS.get('appu_lang')==='hi'?hi:en}
 function pgState(){try{return JSON.parse(LS.get('appu_practice')||'{}')}catch(e){return{}}}
 function pgSet(o){try{LS.set('appu_practice',JSON.stringify(o))}catch(e){}}
-function pgGen(){const s=pgState();return s.seed?pgGenerate(s.scen||'hostel_sleep',s.seed):null}
+function pgPhi(x){const t=1/(1+0.2316419*Math.abs(x)),d=0.3989423*Math.exp(-x*x/2),p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p}
+function pgPower(dEff,nPer){return pgPhi(Math.abs(dEff)*Math.sqrt(nPer/2)-1.96)}
+function pgNeed(dEff,pw){return Math.ceil(2*Math.pow((1.96+(pw>=.9?1.2816:0.8416))/Math.abs(dEff),2))}
+function pgGen(){const s=pgState();if(!s.seed)return null;const o=s.plan>=5?{n:2*Math.min(500,s.plan),hostelShare:0.5}:undefined;return pgGenerate(s.scen||'hostel_sleep',s.seed,o)}
 function pgRandom(){document.getElementById('pgSeed').value=1+Math.floor(Math.random()*999999)}
-function pgStartRun(){const v=parseInt(document.getElementById('pgSeed').value,10);if(!(v>=1)){pgRandom();return pgStartRun()}pgSet({seed:v,scen:document.getElementById('pgScen').value||'hostel_sleep',q:'',claim:'',revealed:false});pgRender()}
+function pgStartRun(){const v=parseInt(document.getElementById('pgSeed').value,10);if(!(v>=1)){pgRandom();return pgStartRun()}const pl=document.getElementById('pgPlanOn').checked?parseInt(document.getElementById('pgPlanN').value,10):0;if(document.getElementById('pgPlanOn').checked&&!(pl>=5)){showToast(pgT('Enter how many students you plan per group (at least 5).','प्रति समूह कितने विद्यार्थी चाहिए, लिखिए (कम से कम 5)।'));return}
+  pgSet({seed:v,scen:document.getElementById('pgScen').value||'hostel_sleep',plan:pl||0,q:'',claim:'',revealed:false});pgRender()}
 function pgSaveText(){const s=pgState();if(!s.seed)return;s.q=document.getElementById('pgQ').value;s.claim=document.getElementById('pgClaim').value;pgSet(s);pgGateRender()}
 function pgOpenStats(){const g=pgGen();if(!g)return;showTool('stats');setTimeout(()=>{document.getElementById('statsPaste').value=pgCsv(g);try{statsParse()}catch(e){}},50)}
 function pgDownload(){const g=pgGen();if(!g)return;const b=new Blob([pgCsv(g)],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='practice-'+g.key.seed+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
@@ -18230,6 +18237,8 @@ function pgPoints(g){
   if(t.miscode_group)P.push({id:'miscode',h:L('Student numbers '+ids(t.miscode_group.ids)+' have the group spelt "'+t.miscode_group.wrong+'".','विद्यार्थी क्रमांक '+ids(t.miscode_group.ids)+' में ग्रुप "'+t.miscode_group.wrong+'" लिखा है।')});
   if(t.duplicate_rows)P.push({id:'dups',h:L('Rows for student numbers '+ids(t.duplicate_rows.copiedIds)+' appear twice.','विद्यार्थी क्रमांक '+ids(t.duplicate_rows.copiedIds)+' की पंक्तियाँ दो बार हैं।')});
   P.push({id:'causal',h:L('A survey like this can show an association only. Did your write-up avoid saying "caused"?','ऐसा सर्वे सिर्फ़ संबंध दिखा सकता है। क्या आपके लेख में "कारण बना" लिखने से बचा गया?')});
+  const st=pgState();if(st.plan>=5){const per=Math.min(500,st.plan),de=k.truth.nullEffect?0.3:Math.abs(k.truth.groupEffect_latentSD),pw=Math.round(pgPower(de,per)*100),need=pgNeed(de,.8);
+    P.unshift({id:'power',h:L('You planned '+per+' students per group. For a difference of '+de+' SD, that gives about '+pw+'% power; 80% needs about '+need+' per group.'+(k.truth.nullEffect?' (This world has no true effect, so 0.3 SD is taken as the smallest difference worth finding.)':'')+(pw<80?' A result with so little power could miss a real effect, so a "no difference" here would not be strong evidence.':''),'आपने हर समूह में '+per+' विद्यार्थी सोचे। '+de+' SD के अंतर के लिए इससे लगभग '+pw+'% शक्ति मिलती है; 80% के लिए हर समूह में लगभग '+need+' चाहिए।'+(k.truth.nullEffect?' (इस दुनिया में कोई असली असर नहीं है, इसलिए 0.3 SD सबसे छोटा काम का अंतर माना गया।)':'')+(pw<80?' इतनी कम शक्ति से असली असर छूट सकता है, इसलिए यहाँ "कोई अंतर नहीं" मज़बूत सबूत नहीं होगा।':''))})}
   return P}
 async function pgPortfolio(){
   const g=pgGen(),s=pgState();if(!g||!s.revealed)return;const hi=LS.get('appu_lang')==='hi',L=(a,b)=>hi?b:a,P=pgPoints(g),self=s.self||{},sc=PG_SCENARIOS[g.scenario];
@@ -18260,7 +18269,7 @@ function pgRender(){
   const set=(i,t)=>{const e=document.getElementById(i);if(e)e.textContent=t};
   set('pgTitle',pgT('🧪 Practice study','🧪 अभ्यास अध्ययन'));
   set('pgIntro',pgT('Run a small study from start to finish on invented data. Nothing here goes into a real project.','बनावटी आँकड़ों पर एक छोटा अध्ययन शुरू से अंत तक चलाइए। यहाँ का कुछ भी असली प्रोजेक्ट में नहीं जाता।'));
-  set('pgSeedL',pgT('Seed number','सीड नंबर'));set('pgScenL',pgT('Scenario','परिदृश्य'));try{const so=document.getElementById('pgScen').options,hi0=LS.get('appu_lang')==='hi';for(let i=0;i<so.length;i++)so[i].textContent=PG_SCENARIOS[so[i].value].title[hi0?'hi':'en']}catch(e){}
+  set('pgPlanL',pgT('Postgraduate level: plan the sample size first','स्नातकोत्तर स्तर: पहले नमूने का आकार तय करें'));set('pgPlanH',pgT('Decide how many students you will study in each group. The data will have exactly that many. The key then tells you how much power that gave you.','तय कीजिए कि हर समूह में कितने विद्यार्थी लेंगे। आँकड़े ठीक उतने ही होंगे। कुंजी बताएगी कि इससे कितनी शक्ति मिली।'));set('pgSeedL',pgT('Seed number','सीड नंबर'));set('pgScenL',pgT('Scenario','परिदृश्य'));try{const so=document.getElementById('pgScen').options,hi0=LS.get('appu_lang')==='hi';for(let i=0;i<so.length;i++)so[i].textContent=PG_SCENARIOS[so[i].value].title[hi0?'hi':'en']}catch(e){}
   set('pgSeedH',pgT('The same number always gives the same data, so a whole class can use one number.','एक ही नंबर हमेशा वही आँकड़े देता है, इसलिए पूरी कक्षा एक नंबर इस्तेमाल कर सकती है।'));
   set('pgRand',pgT('New random seed','नया रैंडम सीड'));set('pgStart',pgT('Start','शुरू करें'));
   set('pgOpen',pgT('Open the data in Statistics & Charts','आँकड़े Statistics & Charts में खोलें'));set('pgCsvBtn',pgT('Download CSV','CSV डाउनलोड करें'));
@@ -18278,7 +18287,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.09j';
+const APP_BUILD='2026.11.10a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
