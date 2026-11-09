@@ -12518,6 +12518,19 @@ function b3Cell(i,k,v){const l=citGetLib();if(!l[i])return;const d=l[i];
   else if(k==='dir')d.dir=v;
   else{d.cells=Object.assign({},d.cells||{});if(String(v).trim())d.cells[k]={t:String(v),by:'me'};else delete d.cells[k]}
   citSaveLib(l);logRefresh()}
+/* Older library papers have no abstract. One free OpenAlex lookup by DOI, 25 papers per call, fills only the empty ones. */
+function b3DoiKey(x){return String(x||'').trim().toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//,'')}
+function b3NoAbs(){const l=citGetLib();return{withDoi:l.filter(d=>!d.abs&&/^10\.\d{4,}\//.test(b3DoiKey(d.doi))).length,noDoi:l.filter(d=>!d.abs&&!/^10\.\d{4,}\//.test(b3DoiKey(d.doi))).length}}
+let B3ABS={running:false};
+async function b3GetAbstracts(){if(B3ABS.running)return;const hi=studyHi();B3ABS.running=true;let got=0,miss=0,err='';
+  try{const l=citGetLib(),todo=l.map((d,i)=>({d,i,k:b3DoiKey(d.doi)})).filter(x=>!x.d.abs&&/^10\.\d{4,}\//.test(x.k));
+    for(let s=0;s<todo.length;s+=25){const part=todo.slice(s,s+25);showToast((hi?'abstract खोज रहे हैं: ':'Looking up abstracts: ')+Math.min(s+25,todo.length)+' / '+todo.length);
+      let r;try{r=await fetch(oaUrl('https://api.openalex.org/works?per-page=50&select=id,doi,abstract_inverted_index&filter=doi:'+part.map(x=>encodeURIComponent('https://doi.org/'+x.k)).join('|')));if(!r.ok)throw new Error('OpenAlex '+r.status)}catch(e){err=(e&&e.message)||'network';break}
+      const j=await r.json(),by={};(j.results||[]).forEach(w=>{by[b3DoiKey(w.doi)]=rsReconstructAbstract(w.abstract_inverted_index)});
+      const l2=citGetLib();part.forEach(x=>{const ab=by[x.k],e=l2.find(d=>d.cid===x.d.cid);if(e&&ab&&ab.length>40&&!e.abs){e.abs=ab;got++}else miss++});citSaveLib(l2)}
+  }catch(e){err=(e&&e.message)||'error'}
+  B3ABS.running=false;logRefresh();
+  showToast((hi?got+' abstract मिले, '+miss+' में OpenAlex के पास नहीं है':got+' abstracts found, '+miss+' not held by OpenAlex')+(err?(hi?' · रुका: ':' · stopped: ')+err:''))}
 function b3FillAbstracts(){const l=citGetLib(),hi=studyHi();let n=0,papers=0;
   l.forEach(d=>{if(!d.abs)return;let got=0;try{const doc=apBuild(d.title||'',[d.abs],'text'),ss=apStageSentences(doc,1);d.cells=Object.assign({},d.cells||{});
     AP_STAGES.forEach(st=>{if(d.cells[st.k]&&String(d.cells[st.k].t||'').trim())return;const x=(ss[st.k]||[])[0];if(x&&x.text){d.cells[st.k]={t:x.text,by:'rule'};got++}})}catch(e){}
@@ -12590,7 +12603,7 @@ function b3TableHTML(o,L,hi){const lib=citGetLib();if(!lib.length)return'';
      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">'+cells+'</div></div>'}).join('');
   return'<div class="sub-box"><b>'+L('One table for every paper','हर paper की एक table')+'</b><p class="desc" style="margin:4px 0">'+L('Each paper is one card. Choose the columns you want. The Include and Exclude buttons set the same status as the library and the PRISMA counts. A cell shows your own words, or a sentence lifted from the abstract by rules, and never mixes the two.','हर paper एक card है। अपने columns चुनें। Include और Exclude वही status लगाते हैं जो library और PRISMA की गिनती में जाता है। हर खाने में या तो आपके शब्द होते हैं या abstract से नियमों से उठाया वाक्य; दोनों मिलते नहीं।')+'</p>'+
    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">'+chips+'</div>'+
-   '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" onclick="b3FillAbstracts()">'+L('Fill empty cells from the abstracts','खाली खाने abstracts से भरें')+'</button>'+(B3AI.plan||B3AI.running?'':b3AiBoxHTML(L,hi))+'</div>'+(B3AI.plan||B3AI.running?b3AiBoxHTML(L,hi):'')+cards+'</div>'}
+   '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" onclick="b3FillAbstracts()">'+L('Fill empty cells from the abstracts','खाली खाने abstracts से भरें')+'</button>'+(function(){const c=b3NoAbs();return c.withDoi?'<button type="button" class="btn btn-ghost btn-sm" onclick="b3GetAbstracts()">'+L('Get '+c.withDoi+' missing abstract'+(c.withDoi===1?'':'s')+' by DOI','DOI से '+c.withDoi+' छूटे abstract लाएँ')+'</button>':''})()+(B3AI.plan||B3AI.running?'':b3AiBoxHTML(L,hi))+'</div>'+(B3AI.plan||B3AI.running?b3AiBoxHTML(L,hi):'')+cards+'</div>'}
 /* ---- Ten at a time (build 2026.11.08n) ----
    Papers not yet decided (to read, reading) are ordered by apQueue: fit to the review question first, then recency,
    citations, full text; retracted never. The student works through ten, then asks for the next ten, or stops. */
@@ -18051,7 +18064,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.09a';
+const APP_BUILD='2026.11.09b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18792,7 +18805,7 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
-/* PDF tools (build 2026.11.09a): pdf-lib is loaded the first time it is needed. */
+/* PDF tools (build 2026.11.09b): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
   const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
