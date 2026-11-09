@@ -18104,8 +18104,53 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
   const rp=window.renderProjectBar;if(typeof rp==='function'){window.renderProjectBar=function(){rp.apply(this,arguments);try{apStageBarRender();if(apHomeIs())apHomeRender()}catch(e){}}}
 })();
 
+/* ===== Practice sandbox: seeded synthetic data (plan only; no screen yet) =====
+   Same seed gives the same data. The recipe is the answer key. Data are invented, for practice only. */
+function pgRng(seed){let a=(seed>>>0)||1;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function pgNormal(r){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const PG_SCENARIOS={
+  hostel_sleep:{
+    title:{en:'Hostel and day-scholar students: exam anxiety',hi:'हॉस्टल और घर से आने वाले विद्यार्थी: परीक्षा की चिंता'},
+    story:{en:'A college counsellor wonders whether students who live in the hostel feel more exam anxiety than students who travel from home. She gives a five-item anxiety scale and asks about sleep.',hi:'कॉलेज की एक काउंसलर जानना चाहती हैं कि हॉस्टल में रहने वाले विद्यार्थियों को घर से आने वाले विद्यार्थियों से ज़्यादा परीक्षा की चिंता होती है या नहीं। वे पाँच प्रश्नों का चिंता पैमाना देती हैं और नींद के बारे में पूछती हैं।'},
+    columns:[
+      {id:'id',en:'Student number',hi:'विद्यार्थी क्रमांक'},
+      {id:'group',en:'Residence (Hostel or Day)',hi:'निवास (Hostel या Day)'},
+      {id:'year',en:'Year of study (1 to 3)',hi:'अध्ययन का वर्ष (1 से 3)'},
+      {id:'sleep_hours',en:'Hours slept on a usual night',hi:'सामान्य रात में सोने के घंटे'},
+      {id:'a1',en:'Anxiety item 1 (1 to 5)',hi:'चिंता प्रश्न 1 (1 से 5)'},{id:'a2',en:'Anxiety item 2 (1 to 5)',hi:'चिंता प्रश्न 2 (1 से 5)'},
+      {id:'a3',en:'Anxiety item 3, reverse worded (1 to 5)',hi:'चिंता प्रश्न 3, उलटा शब्दांकन (1 से 5)'},
+      {id:'a4',en:'Anxiety item 4 (1 to 5)',hi:'चिंता प्रश्न 4 (1 से 5)'},{id:'a5',en:'Anxiety item 5 (1 to 5)',hi:'चिंता प्रश्न 5 (1 से 5)'}],
+    defaults:{n:120,groupEffect:0.35,yearEffect:0.3,hostelShare:0.5,traps:['reverse_item','missing_random','outlier','duplicate_rows','miscode_group']},
+    reverse:['a3']
+  }
+};
+function pgGenerate(id,seed,opt){
+  const sc=PG_SCENARIOS[id];if(!sc)return null;
+  opt=opt||{};const d=sc.defaults;
+  const n=Math.max(8,opt.n|0||d.n),ge=opt.groupEffect==null?d.groupEffect:+opt.groupEffect,ye=opt.yearEffect==null?d.yearEffect:+opt.yearEffect;
+  const traps=Array.isArray(opt.traps)?opt.traps:d.traps,r=pgRng(seed),pick=p=>{const u=r();let c=0;for(let i=0;i<p.length;i++){c+=p[i];if(u<c)return i+1}return p.length};
+  const rows=[],latent=[];
+  for(let i=0;i<n;i++){
+    const hostel=r()<(opt.hostelShare==null?d.hostelShare:opt.hostelShare);
+    const year=hostel?pick([.15,.35,.5]):pick([.45,.35,.2]); /* hostel students are more senior: the hidden confounder */
+    const A=ge*(hostel?1:0)+ye*(year-2)+pgNormal(r);
+    const sleep=Math.round((7-0.5*A+0.8*pgNormal(r))*2)/2;
+    const row={id:i+1,group:hostel?'Hostel':'Day',year:year,sleep_hours:Math.max(3,Math.min(10,sleep))};
+    const load=[.9,.8,.85,.75,.8];
+    for(let k=0;k<5;k++){let x=Math.round(3+load[k]*A*0.9+0.7*pgNormal(r));x=Math.max(1,Math.min(5,x));if(k===2&&traps.indexOf('reverse_item')>=0)x=6-x;row['a'+(k+1)]=x}
+    rows.push(row);latent.push(A)}
+  const key={scenario:id,seed:seed,n:n,truth:{groupEffect_latentSD:ge,yearEffect_latentSD_per_year:ye,confounder:'year (hostel students are more senior)',reverseKeyedItems:traps.indexOf('reverse_item')>=0?sc.reverse.slice():[],nullEffect:ge===0},traps:{},note:'Invented data, practice only.'};
+  const idx=m=>Math.floor(r()*m);
+  if(traps.indexOf('missing_random')>=0){const hit=[];for(let i=0;i<rows.length;i++)if(r()<0.06){rows[i].sleep_hours='';hit.push(rows[i].id)}key.traps.missing_random={column:'sleep_hours',ids:hit}}
+  if(traps.indexOf('outlier')>=0){const k=idx(rows.length);key.traps.outlier={id:rows[k].id,column:'sleep_hours',original:rows[k].sleep_hours,entered:19};rows[k].sleep_hours=19}
+  if(traps.indexOf('miscode_group')>=0){const ids=[];for(let j=0;j<2;j++){const k=idx(rows.length);rows[k].group='Hostl';ids.push(rows[k].id)}key.traps.miscode_group={column:'group',wrong:'Hostl',ids:ids}}
+  if(traps.indexOf('duplicate_rows')>=0){const ids=[];for(let j=0;j<2;j++){const k=idx(rows.length);rows.push(Object.assign({},rows[k]));ids.push(rows[k].id)}key.traps.duplicate_rows={copiedIds:ids}}
+  return{scenario:id,columns:sc.columns,rows:rows,key:key}
+}
+function pgCsv(g){const cols=g.columns.map(c=>c.id);return cols.join(',')+'\n'+g.rows.map(r=>cols.map(c=>r[c]).join(',')).join('\n')}
+
 const APP_VERSION=118;
-const APP_BUILD='2026.11.09e';
+const APP_BUILD='2026.11.09f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
