@@ -1127,6 +1127,7 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
     <section class="card tool-panel" data-panel="practice"><div class="panel">
       <h2 id="pgTitle">🧪 Practice study</h2>
       <p class="hint" id="pgIntro"></p>
+      <div class="fld"><label for="pgScen" id="pgScenL">Scenario</label><select id="pgScen"><option value="hostel_sleep">Hostel and day-scholar students: exam anxiety</option><option value="coaching_null">Coaching classes and exam anxiety</option><option value="mindful_effect">Mindfulness workshop and exam anxiety</option></select></div>
       <div class="fld"><label for="pgSeed" id="pgSeedL">Seed number</label>
         <div><input id="pgSeed" type="number" min="1" max="999999" style="max-width:160px"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn" id="pgRand" onclick="pgRandom()">New random seed</button><button type="button" class="btn primary" id="pgStart" onclick="pgStartRun()">Start</button></div>
         <div class="hint" id="pgSeedH"></div></div>
@@ -18129,6 +18130,7 @@ function pgRng(seed){let a=(seed>>>0)||1;return function(){a|=0;a=a+0x6D2B79F5|0
 function pgNormal(r){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
 const PG_SCENARIOS={
   hostel_sleep:{
+    g1:'Hostel',g0:'Day',bad:'Hostl',confounder:'year (hostel students are more senior)',hasConf:true,
     title:{en:'Hostel and day-scholar students: exam anxiety',hi:'हॉस्टल और घर से आने वाले विद्यार्थी: परीक्षा की चिंता'},
     story:{en:'A college counsellor wonders whether students who live in the hostel feel more exam anxiety than students who travel from home. She gives a five-item anxiety scale and asks about sleep.',hi:'कॉलेज की एक काउंसलर जानना चाहती हैं कि हॉस्टल में रहने वाले विद्यार्थियों को घर से आने वाले विद्यार्थियों से ज़्यादा परीक्षा की चिंता होती है या नहीं। वे पाँच प्रश्नों का चिंता पैमाना देती हैं और नींद के बारे में पूछती हैं।'},
     columns:[
@@ -18141,6 +18143,36 @@ const PG_SCENARIOS={
       {id:'a4',en:'Anxiety item 4 (1 to 5)',hi:'चिंता प्रश्न 4 (1 से 5)'},{id:'a5',en:'Anxiety item 5 (1 to 5)',hi:'चिंता प्रश्न 5 (1 से 5)'}],
     defaults:{n:120,groupEffect:0.35,yearEffect:0.3,hostelShare:0.5,traps:['reverse_item','missing_random','outlier','duplicate_rows','miscode_group']},
     reverse:['a3']
+  },
+  coaching_null:{
+    g1:'Coaching',g0:'Self',bad:'Coachng',confounder:'none planted',hasConf:false,
+    title:{en:'Coaching classes and exam anxiety',hi:'कोचिंग क्लास और परीक्षा की चिंता'},
+    story:{en:'A parent group asks whether students who attend coaching classes feel more exam anxiety than students who study on their own. A teacher gives a five-item anxiety scale and asks about sleep.',hi:'एक अभिभावक समूह पूछता है कि कोचिंग जाने वाले विद्यार्थियों को खुद पढ़ने वाले विद्यार्थियों से ज़्यादा परीक्षा की चिंता होती है या नहीं। एक शिक्षक पाँच प्रश्नों का चिंता पैमाना देते हैं और नींद के बारे में पूछते हैं।'},
+    columns:[
+      {id:'id',en:'Student number',hi:'विद्यार्थी क्रमांक'},
+      {id:'group',en:'Study mode (Coaching or Self)',hi:'पढ़ाई का तरीका (Coaching या Self)'},
+      {id:'year',en:'Year of study (1 to 3)',hi:'अध्ययन का वर्ष (1 से 3)'},
+      {id:'sleep_hours',en:'Hours slept on a usual night',hi:'सामान्य रात में सोने के घंटे'},
+      {id:'a1',en:'Anxiety item 1 (1 to 5)',hi:'चिंता प्रश्न 1 (1 से 5)'},{id:'a2',en:'Anxiety item 2 (1 to 5)',hi:'चिंता प्रश्न 2 (1 से 5)'},
+      {id:'a3',en:'Anxiety item 3, reverse worded (1 to 5)',hi:'चिंता प्रश्न 3, उलटा शब्दांकन (1 से 5)'},
+      {id:'a4',en:'Anxiety item 4 (1 to 5)',hi:'चिंता प्रश्न 4 (1 से 5)'},{id:'a5',en:'Anxiety item 5 (1 to 5)',hi:'चिंता प्रश्न 5 (1 से 5)'}],
+    defaults:{n:100,groupEffect:0,yearEffect:0,hostelShare:0.5,traps:['reverse_item','missing_random','duplicate_rows']},
+    reverse:['a3']
+  },
+  mindful_effect:{
+    g1:'Workshop',g0:'None',bad:'Workshp',confounder:'none planted',hasConf:false,
+    title:{en:'Mindfulness workshop and exam anxiety',hi:'माइंडफुलनेस वर्कशॉप और परीक्षा की चिंता'},
+    story:{en:'A college offers a voluntary two-week mindfulness workshop before exams. Students chose whether to join. A counsellor gives everyone the same five-item anxiety scale and asks about sleep.',hi:'एक कॉलेज परीक्षा से पहले दो हफ़्ते की स्वैच्छिक माइंडफुलनेस वर्कशॉप चलाता है। विद्यार्थियों ने खुद चुना कि जुड़ना है या नहीं। एक काउंसलर सबको वही पाँच प्रश्नों का चिंता पैमाना देती हैं और नींद के बारे में पूछती हैं।'},
+    columns:[
+      {id:'id',en:'Student number',hi:'विद्यार्थी क्रमांक'},
+      {id:'group',en:'Workshop (Workshop or None)',hi:'वर्कशॉप (Workshop या None)'},
+      {id:'year',en:'Year of study (1 to 3)',hi:'अध्ययन का वर्ष (1 से 3)'},
+      {id:'sleep_hours',en:'Hours slept on a usual night',hi:'सामान्य रात में सोने के घंटे'},
+      {id:'a1',en:'Anxiety item 1 (1 to 5)',hi:'चिंता प्रश्न 1 (1 से 5)'},{id:'a2',en:'Anxiety item 2 (1 to 5)',hi:'चिंता प्रश्न 2 (1 से 5)'},
+      {id:'a3',en:'Anxiety item 3, reverse worded (1 to 5)',hi:'चिंता प्रश्न 3, उलटा शब्दांकन (1 से 5)'},
+      {id:'a4',en:'Anxiety item 4 (1 to 5)',hi:'चिंता प्रश्न 4 (1 से 5)'},{id:'a5',en:'Anxiety item 5 (1 to 5)',hi:'चिंता प्रश्न 5 (1 से 5)'}],
+    defaults:{n:140,groupEffect:-0.6,yearEffect:0,hostelShare:0.3,traps:['reverse_item','missing_random','outlier','miscode_group']},
+    reverse:['a3']
   }
 };
 function pgGenerate(id,seed,opt){
@@ -18151,18 +18183,18 @@ function pgGenerate(id,seed,opt){
   const rows=[],latent=[];
   for(let i=0;i<n;i++){
     const hostel=r()<(opt.hostelShare==null?d.hostelShare:opt.hostelShare);
-    const year=hostel?pick([.15,.35,.5]):pick([.45,.35,.2]); /* hostel students are more senior: the hidden confounder */
+    const year=sc.hasConf?(hostel?pick([.15,.35,.5]):pick([.45,.35,.2])):pick([.3,.35,.35]); /* hostel students are more senior: the hidden confounder */
     const A=ge*(hostel?1:0)+ye*(year-2)+pgNormal(r);
     const sleep=Math.round((7-0.5*A+0.8*pgNormal(r))*2)/2;
-    const row={id:i+1,group:hostel?'Hostel':'Day',year:year,sleep_hours:Math.max(3,Math.min(10,sleep))};
+    const row={id:i+1,group:hostel?sc.g1:sc.g0,year:year,sleep_hours:Math.max(3,Math.min(10,sleep))};
     const load=[.9,.8,.85,.75,.8];
     for(let k=0;k<5;k++){let x=Math.round(3+load[k]*A*0.9+0.7*pgNormal(r));x=Math.max(1,Math.min(5,x));if(k===2&&traps.indexOf('reverse_item')>=0)x=6-x;row['a'+(k+1)]=x}
     rows.push(row);latent.push(A)}
-  const key={scenario:id,seed:seed,n:n,truth:{groupEffect_latentSD:ge,yearEffect_latentSD_per_year:ye,confounder:'year (hostel students are more senior)',reverseKeyedItems:traps.indexOf('reverse_item')>=0?sc.reverse.slice():[],nullEffect:ge===0},traps:{},note:'Invented data, practice only.'};
+  const key={scenario:id,seed:seed,n:n,truth:{groupEffect_latentSD:ge,yearEffect_latentSD_per_year:ye,confounder:sc.confounder,reverseKeyedItems:traps.indexOf('reverse_item')>=0?sc.reverse.slice():[],nullEffect:ge===0},traps:{},note:'Invented data, practice only.'};
   const idx=m=>Math.floor(r()*m);
   if(traps.indexOf('missing_random')>=0){const hit=[];for(let i=0;i<rows.length;i++)if(r()<0.06){rows[i].sleep_hours='';hit.push(rows[i].id)}key.traps.missing_random={column:'sleep_hours',ids:hit}}
   if(traps.indexOf('outlier')>=0){const k=idx(rows.length);key.traps.outlier={id:rows[k].id,column:'sleep_hours',original:rows[k].sleep_hours,entered:19};rows[k].sleep_hours=19}
-  if(traps.indexOf('miscode_group')>=0){const ids=[];for(let j=0;j<2;j++){const k=idx(rows.length);rows[k].group='Hostl';ids.push(rows[k].id)}key.traps.miscode_group={column:'group',wrong:'Hostl',ids:ids}}
+  if(traps.indexOf('miscode_group')>=0){const ids=[];for(let j=0;j<2;j++){const k=idx(rows.length);rows[k].group=sc.bad;ids.push(rows[k].id)}key.traps.miscode_group={column:'group',wrong:sc.bad,ids:ids}}
   if(traps.indexOf('duplicate_rows')>=0){const ids=[];for(let j=0;j<2;j++){const k=idx(rows.length);rows.push(Object.assign({},rows[k]));ids.push(rows[k].id)}key.traps.duplicate_rows={copiedIds:ids}}
   return{scenario:id,columns:sc.columns,rows:rows,key:key}
 }
@@ -18172,33 +18204,64 @@ function pgCsv(g){const cols=g.columns.map(c=>c.id);return cols.join(',')+'\n'+g
 function pgT(en,hi){return LS.get('appu_lang')==='hi'?hi:en}
 function pgState(){try{return JSON.parse(LS.get('appu_practice')||'{}')}catch(e){return{}}}
 function pgSet(o){try{LS.set('appu_practice',JSON.stringify(o))}catch(e){}}
-function pgGen(){const s=pgState();return s.seed?pgGenerate('hostel_sleep',s.seed):null}
+function pgGen(){const s=pgState();return s.seed?pgGenerate(s.scen||'hostel_sleep',s.seed):null}
 function pgRandom(){document.getElementById('pgSeed').value=1+Math.floor(Math.random()*999999)}
-function pgStartRun(){const v=parseInt(document.getElementById('pgSeed').value,10);if(!(v>=1)){pgRandom();return pgStartRun()}pgSet({seed:v,q:'',claim:'',revealed:false});pgRender()}
+function pgStartRun(){const v=parseInt(document.getElementById('pgSeed').value,10);if(!(v>=1)){pgRandom();return pgStartRun()}pgSet({seed:v,scen:document.getElementById('pgScen').value||'hostel_sleep',q:'',claim:'',revealed:false});pgRender()}
 function pgSaveText(){const s=pgState();if(!s.seed)return;s.q=document.getElementById('pgQ').value;s.claim=document.getElementById('pgClaim').value;pgSet(s);pgGateRender()}
 function pgOpenStats(){const g=pgGen();if(!g)return;showTool('stats');setTimeout(()=>{document.getElementById('statsPaste').value=pgCsv(g);try{statsParse()}catch(e){}},50)}
 function pgDownload(){const g=pgGen();if(!g)return;const b=new Blob([pgCsv(g)],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='practice-'+g.key.seed+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function pgGateOk(){const s=pgState();return(s.q||'').trim().length>=15&&(s.claim||'').trim().length>=40}
 function pgGateRender(){const b=document.getElementById('pgReveal'),h=document.getElementById('pgGate');if(!b)return;const ok=pgGateOk()||pgState().revealed;b.disabled=!ok;h.textContent=ok?'':pgT('Write your question and your findings first. The key opens after you have tried.','पहले अपना सवाल और अपने निष्कर्ष लिखिए। कोशिश के बाद ही उत्तर-कुंजी खुलेगी।')}
 function pgDoReveal(){if(!pgGateOk())return;const s=pgState();s.revealed=true;pgSet(s);pgRender()}
+function pgPoints(g){
+  const k=g.key,t=k.traps,L=(a,b)=>pgT(a,b),ids=a=>a.join(', '),P=[];
+  if(g.scenario==='coaching_null'){
+    P.push({id:'effect',h:L('The true effect of coaching on anxiety is zero. Any difference you saw is chance. A result of no difference is still a result: report it with its interval and do not say "coaching has no effect".','कोचिंग का चिंता पर असली असर शून्य है। जो भी अंतर दिखा वह संयोग है। "कोई अंतर नहीं" भी एक नतीजा है: इसे विश्वास-अंतराल के साथ लिखिए और "कोचिंग का कोई असर नहीं" मत कहिए।')});
+    P.push({id:'noconf',h:L('No hidden confounder was planted in this data. Did you look for one before you decided that?','इस डेटा में कोई छिपा भ्रमकारी कारक नहीं डाला गया था। क्या आपने यह तय करने से पहले उसे खोजा?')})}
+  else if(g.scenario==='mindful_effect'){
+    P.push({id:'effect',h:L('The workshop group has lower anxiety, a real and fairly large difference (about 0.6 SD). Report its size with an interval, not only a p value.','वर्कशॉप वाले समूह की चिंता कम है, यह असली और काफ़ी बड़ा अंतर है (लगभग 0.6 SD)। इसका आकार विश्वास-अंतराल के साथ लिखिए, सिर्फ़ p मान नहीं।')});
+    P.push({id:'unequal',h:L('The groups are unequal in size (about 30 percent joined). Did you use a test that copes with that, such as Welch, and report both group sizes?','दोनों समूह बराबर आकार के नहीं हैं (लगभग 30 प्रतिशत जुड़े)। क्या आपने ऐसा टेस्ट लिया जो इसे सँभाले, जैसे Welch, और दोनों समूहों की संख्या लिखी?')});
+    P.push({id:'selection',h:L('Students chose whether to join. Anxious students may have chosen differently, so a causal claim needs great care. What did you say?','विद्यार्थियों ने खुद चुना कि जुड़ना है या नहीं। चिंतित विद्यार्थियों ने अलग चुनाव किया हो सकता है, इसलिए कारण का दावा बहुत सावधानी माँगता है। आपने क्या लिखा?')})}
+  else{P.push({id:'effect',h:k.truth.nullEffect?L('The true effect of living in a hostel on anxiety is zero. Any difference you found came from year of study.','हॉस्टल में रहने का चिंता पर असली असर शून्य है। आपको जो अंतर मिला वह पढ़ाई के वर्ष से आया।'):L('The true effect of hostel living on anxiety is real but modest ('+k.truth.groupEffect_latentSD+' SD). The raw difference is larger than this because hostel students are more senior.','हॉस्टल में रहने का चिंता पर असली असर है पर मध्यम ('+k.truth.groupEffect_latentSD+' SD)। कच्चा अंतर इससे बड़ा दिखता है क्योंकि हॉस्टल के विद्यार्थी ज़्यादा सीनियर हैं।')});
+  P.push({id:'confounder',h:L('Hidden confounder: year of study. Did you check it?','छिपा हुआ भ्रमकारी कारक: पढ़ाई का वर्ष। क्या आपने इसे जाँचा?')})}
+  if(k.truth.reverseKeyedItems.length)P.push({id:'reverse',h:L('Item 3 is reverse worded. It must be flipped (6 minus the answer) before you add the items.','प्रश्न 3 उलटे शब्दों में है। जोड़ने से पहले इसे पलटना था (6 में से उत्तर घटाइए)।')});
+  if(t.missing_random)P.push({id:'missing',h:L('Sleep hours are missing for student numbers '+ids(t.missing_random.ids)+'. How did you handle them?','नींद के घंटे इन विद्यार्थी क्रमांकों के गायब हैं: '+ids(t.missing_random.ids)+'। आपने इन्हें कैसे सँभाला?')});
+  if(t.outlier)P.push({id:'outlier',h:L('Student '+t.outlier.id+' has 19 hours of sleep, a typing error (the real value was '+t.outlier.original+').','विद्यार्थी '+t.outlier.id+' के 19 घंटे नींद लिखी है, यह टाइपिंग की ग़लती है (असली मान '+t.outlier.original+' था)।')});
+  if(t.miscode_group)P.push({id:'miscode',h:L('Student numbers '+ids(t.miscode_group.ids)+' have the group spelt "'+t.miscode_group.wrong+'".','विद्यार्थी क्रमांक '+ids(t.miscode_group.ids)+' में ग्रुप "'+t.miscode_group.wrong+'" लिखा है।')});
+  if(t.duplicate_rows)P.push({id:'dups',h:L('Rows for student numbers '+ids(t.duplicate_rows.copiedIds)+' appear twice.','विद्यार्थी क्रमांक '+ids(t.duplicate_rows.copiedIds)+' की पंक्तियाँ दो बार हैं।')});
+  P.push({id:'causal',h:L('A survey like this can show an association only. Did your write-up avoid saying "caused"?','ऐसा सर्वे सिर्फ़ संबंध दिखा सकता है। क्या आपके लेख में "कारण बना" लिखने से बचा गया?')});
+  return P}
+async function pgPortfolio(){
+  const g=pgGen(),s=pgState();if(!g||!s.revealed)return;const hi=LS.get('appu_lang')==='hi',L=(a,b)=>hi?b:a,P=pgPoints(g),self=s.self||{},sc=PG_SCENARIOS[g.scenario];
+  try{const h=document.createElement('div');
+    h.innerHTML='<h1>'+escHTML(L('Practice portfolio','अभ्यास पोर्टफ़ोलियो'))+'</h1><p><i>'+escHTML(L('Invented data, practice only. Not a real study.','बनावटी आँकड़े, सिर्फ़ अभ्यास के लिए। यह असली अध्ययन नहीं है।'))+'</i></p>'
+    +'<h2>'+escHTML(sc.title[hi?'hi':'en'])+'</h2><p>'+escHTML(L('Seed number: ','सीड नंबर: ')+g.key.seed)+'</p><p>'+escHTML(sc.story[hi?'hi':'en'])+'</p>'
+    +'<h2>'+escHTML(L('My research question','मेरा शोध-प्रश्न'))+'</h2><p>'+escHTML(s.q||'')+'</p>'
+    +'<h2>'+escHTML(L('What I found and what I can claim','मैंने क्या पाया और क्या दावा कर सकता हूँ'))+'</h2><p>'+escHTML(s.claim||'').replace(/\n/g,'<br>')+'</p>'
+    +'<h2>'+escHTML(L('Comparison with the answer key','उत्तर-कुंजी से तुलना'))+'</h2>'
+    +'<table><tr><th>'+escHTML(L('Point','बिंदु'))+'</th><th>'+escHTML(L('My own mark','मेरा निशान'))+'</th></tr>'+P.map(p=>'<tr><td>'+escHTML(p.h)+'</td><td>'+escHTML(self[p.id]==='got'?L('Caught','पकड़ा'):self[p.id]==='missed'?L('Missed','छूटा'):L('Not marked','निशान नहीं'))+'</td></tr>').join('')+'</table>'
+    +'<p>'+escHTML(L('Caught '+P.filter(p=>self[p.id]==='got').length+' of '+P.length+'. This is my own count, not a grade.',P.length+' में से '+P.filter(p=>self[p.id]==='got').length+' पकड़े। यह मेरी अपनी गिनती है, अंक नहीं।'))+'</p>';
+    const blob=await dxBuild(h,L('Practice portfolio','अभ्यास पोर्टफ़ोलियो')),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='practice-portfolio-'+g.key.seed+'.docx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    showToast(L('Practice portfolio downloaded as a Word file ✓','अभ्यास पोर्टफ़ोलियो Word file में download हुआ ✓'))}catch(e){showToast(L('Could not make the Word file: ','Word file नहीं बन पाई: ')+(e&&e.message||e))}}
+function pgMark(id,v){const s=pgState();s.self=s.self||{};s.self[id]=v;pgSet(s);pgRender()}
 function pgKeyHTML(g){
-  const k=g.key,t=k.traps,L=(a,b)=>pgT(a,b),li=x=>'<li>'+x+'</li>';
-  const ids=a=>a.join(', ');
-  let h='<h3>'+L('Answer key','उत्तर-कुंजी')+'</h3><p>'+L('Compare each point with what you wrote. The data are invented, for practice only.','हर बिंदु को अपने लिखे से मिलाइए। ये आँकड़े बनावटी हैं, सिर्फ़ अभ्यास के लिए।')+'</p><ul>';
-  h+=li(k.truth.nullEffect?L('The true effect of living in a hostel on anxiety is zero. Any difference you found came from year of study.','हॉस्टल में रहने का चिंता पर असली असर शून्य है। आपको जो अंतर मिला वह पढ़ाई के वर्ष से आया।'):L('The true effect of hostel living on anxiety is real but modest ('+k.truth.groupEffect_latentSD+' SD). The raw difference is larger than this because hostel students are more senior.','हॉस्टल में रहने का चिंता पर असली असर है पर मध्यम ('+k.truth.groupEffect_latentSD+' SD)। कच्चा अंतर इससे बड़ा दिखता है क्योंकि हॉस्टल के विद्यार्थी ज़्यादा सीनियर हैं।'));
-  h+=li(L('Hidden confounder: year of study. Did you check it?','छिपा हुआ भ्रमकारी कारक: पढ़ाई का वर्ष। क्या आपने इसे जाँचा?'));
-  if(k.truth.reverseKeyedItems.length)h+=li(L('Item 3 is reverse worded. It must be flipped (6 minus the answer) before you add the items.','प्रश्न 3 उलटे शब्दों में है। जोड़ने से पहले इसे पलटना था (6 में से उत्तर घटाइए)।'));
-  if(t.missing_random)h+=li(L('Sleep hours are missing for student numbers '+ids(t.missing_random.ids)+'. How did you handle them?','नींद के घंटे इन विद्यार्थी क्रमांकों के गायब हैं: '+ids(t.missing_random.ids)+'। आपने इन्हें कैसे सँभाला?'));
-  if(t.outlier)h+=li(L('Student '+t.outlier.id+' has 19 hours of sleep, a typing error (the real value was '+t.outlier.original+').','विद्यार्थी '+t.outlier.id+' के 19 घंटे नींद लिखी है, यह टाइपिंग की ग़लती है (असली मान '+t.outlier.original+' था)।'));
-  if(t.miscode_group)h+=li(L('Student numbers '+ids(t.miscode_group.ids)+' have the group spelt "Hostl".','विद्यार्थी क्रमांक '+ids(t.miscode_group.ids)+' में ग्रुप "Hostl" लिखा है।'));
-  if(t.duplicate_rows)h+=li(L('Rows for student numbers '+ids(t.duplicate_rows.copiedIds)+' appear twice.','विद्यार्थी क्रमांक '+ids(t.duplicate_rows.copiedIds)+' की पंक्तियाँ दो बार हैं।'));
-  h+='</ul><p>'+L('Did your write-up say "caused"? A survey like this can show an association only.','क्या आपके लेख में "कारण बना" लिखा था? ऐसा सर्वे सिर्फ़ संबंध दिखा सकता है।')+'</p>';
+  const s=pgState(),self=s.self||{},P=pgPoints(g),L=(a,b)=>pgT(a,b);
+  const got=P.filter(p=>self[p.id]==='got').length,done=P.filter(p=>self[p.id]).length;
+  let h='<h3>'+L('Compare with the answer key','अपने लिखे को उत्तर-कुंजी से मिलाइए')+'</h3><p class="hint">'+L('The data are invented, for practice only. For each point, say whether you caught it. Only you decide.','ये आँकड़े बनावटी हैं, सिर्फ़ अभ्यास के लिए। हर बिंदु पर खुद बताइए कि आपने उसे पकड़ा या नहीं। फ़ैसला सिर्फ़ आपका है।')+'</p>';
+  h+='<div class="pg-cmp" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">';
+  h+='<div><b>'+L('What you wrote','आपने जो लिखा')+'</b><div style="white-space:pre-wrap;margin-top:6px">'+escHTML(s.q||'')+'\n\n'+escHTML(s.claim||'')+'</div></div>';
+  h+='<div><b>'+L('Answer key','उत्तर-कुंजी')+'</b><ul style="padding-left:18px;margin:6px 0">';
+  P.forEach(p=>{const m=self[p.id];h+='<li style="margin-bottom:10px">'+escHTML(p.h)+'<div style="display:flex;gap:6px;margin-top:4px"><button type="button" class="btn btn-sm'+(m==='got'?' primary':'')+'" data-pg="'+p.id+'" data-v="got" onclick="pgMark(\''+p.id+'\',\'got\')">'+L('I caught this','मैंने पकड़ा')+'</button><button type="button" class="btn btn-sm'+(m==='missed'?' primary':'')+'" data-pg="'+p.id+'" data-v="missed" onclick="pgMark(\''+p.id+'\',\'missed\')">'+L('I missed this','मुझसे छूटा')+'</button></div></li>'});
+  h+='</ul></div></div>';
+  h+='<div style="margin:8px 0"><button type="button" class="btn" id="pgPort" onclick="pgPortfolio()">'+L('Download my practice portfolio (Word)','मेरा अभ्यास पोर्टफ़ोलियो डाउनलोड करें (Word)')+'</button></div>';
+  h+='<p id="pgTally"><b>'+L('You marked '+done+' of '+P.length+'. Caught: '+got+'.','आपने '+P.length+' में से '+done+' पर निशान लगाया। पकड़े: '+got+'।')+'</b> '+(done===P.length?L('The points you missed are the ones to look for next time. This is your own tally, not a grade.','जो बिंदु छूटे, अगली बार उन्हें खोजिए। यह आपकी अपनी गिनती है, अंक नहीं।'):'')+'</p>';
   return h}
 function pgRender(){
   const set=(i,t)=>{const e=document.getElementById(i);if(e)e.textContent=t};
   set('pgTitle',pgT('🧪 Practice study','🧪 अभ्यास अध्ययन'));
   set('pgIntro',pgT('Run a small study from start to finish on invented data. Nothing here goes into a real project.','बनावटी आँकड़ों पर एक छोटा अध्ययन शुरू से अंत तक चलाइए। यहाँ का कुछ भी असली प्रोजेक्ट में नहीं जाता।'));
-  set('pgSeedL',pgT('Seed number','सीड नंबर'));set('pgSeedH',pgT('The same number always gives the same data, so a whole class can use one number.','एक ही नंबर हमेशा वही आँकड़े देता है, इसलिए पूरी कक्षा एक नंबर इस्तेमाल कर सकती है।'));
+  set('pgSeedL',pgT('Seed number','सीड नंबर'));set('pgScenL',pgT('Scenario','परिदृश्य'));try{const so=document.getElementById('pgScen').options,hi0=LS.get('appu_lang')==='hi';for(let i=0;i<so.length;i++)so[i].textContent=PG_SCENARIOS[so[i].value].title[hi0?'hi':'en']}catch(e){}
+  set('pgSeedH',pgT('The same number always gives the same data, so a whole class can use one number.','एक ही नंबर हमेशा वही आँकड़े देता है, इसलिए पूरी कक्षा एक नंबर इस्तेमाल कर सकती है।'));
   set('pgRand',pgT('New random seed','नया रैंडम सीड'));set('pgStart',pgT('Start','शुरू करें'));
   set('pgOpen',pgT('Open the data in Statistics & Charts','आँकड़े Statistics & Charts में खोलें'));set('pgCsvBtn',pgT('Download CSV','CSV डाउनलोड करें'));
   set('pgQL',pgT('Your research question, in one sentence','आपका शोध-प्रश्न, एक वाक्य में'));set('pgClaimL',pgT('What you found and what you can claim','आपने क्या पाया और आप क्या दावा कर सकते हैं'));
@@ -18215,7 +18278,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.09g';
+const APP_BUILD='2026.11.09j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
