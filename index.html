@@ -18181,18 +18181,28 @@ function pgDownload(){const g=pgGen();if(!g)return;const b=new Blob([pgCsv(g)],{
 function pgGateOk(){const s=pgState();return(s.q||'').trim().length>=15&&(s.claim||'').trim().length>=40}
 function pgGateRender(){const b=document.getElementById('pgReveal'),h=document.getElementById('pgGate');if(!b)return;const ok=pgGateOk()||pgState().revealed;b.disabled=!ok;h.textContent=ok?'':pgT('Write your question and your findings first. The key opens after you have tried.','पहले अपना सवाल और अपने निष्कर्ष लिखिए। कोशिश के बाद ही उत्तर-कुंजी खुलेगी।')}
 function pgDoReveal(){if(!pgGateOk())return;const s=pgState();s.revealed=true;pgSet(s);pgRender()}
+function pgPoints(g){
+  const k=g.key,t=k.traps,L=(a,b)=>pgT(a,b),ids=a=>a.join(', '),P=[];
+  P.push({id:'effect',h:k.truth.nullEffect?L('The true effect of living in a hostel on anxiety is zero. Any difference you found came from year of study.','हॉस्टल में रहने का चिंता पर असली असर शून्य है। आपको जो अंतर मिला वह पढ़ाई के वर्ष से आया।'):L('The true effect of hostel living on anxiety is real but modest ('+k.truth.groupEffect_latentSD+' SD). The raw difference is larger than this because hostel students are more senior.','हॉस्टल में रहने का चिंता पर असली असर है पर मध्यम ('+k.truth.groupEffect_latentSD+' SD)। कच्चा अंतर इससे बड़ा दिखता है क्योंकि हॉस्टल के विद्यार्थी ज़्यादा सीनियर हैं।')});
+  P.push({id:'confounder',h:L('Hidden confounder: year of study. Did you check it?','छिपा हुआ भ्रमकारी कारक: पढ़ाई का वर्ष। क्या आपने इसे जाँचा?')});
+  if(k.truth.reverseKeyedItems.length)P.push({id:'reverse',h:L('Item 3 is reverse worded. It must be flipped (6 minus the answer) before you add the items.','प्रश्न 3 उलटे शब्दों में है। जोड़ने से पहले इसे पलटना था (6 में से उत्तर घटाइए)।')});
+  if(t.missing_random)P.push({id:'missing',h:L('Sleep hours are missing for student numbers '+ids(t.missing_random.ids)+'. How did you handle them?','नींद के घंटे इन विद्यार्थी क्रमांकों के गायब हैं: '+ids(t.missing_random.ids)+'। आपने इन्हें कैसे सँभाला?')});
+  if(t.outlier)P.push({id:'outlier',h:L('Student '+t.outlier.id+' has 19 hours of sleep, a typing error (the real value was '+t.outlier.original+').','विद्यार्थी '+t.outlier.id+' के 19 घंटे नींद लिखी है, यह टाइपिंग की ग़लती है (असली मान '+t.outlier.original+' था)।')});
+  if(t.miscode_group)P.push({id:'miscode',h:L('Student numbers '+ids(t.miscode_group.ids)+' have the group spelt "Hostl".','विद्यार्थी क्रमांक '+ids(t.miscode_group.ids)+' में ग्रुप "Hostl" लिखा है।')});
+  if(t.duplicate_rows)P.push({id:'dups',h:L('Rows for student numbers '+ids(t.duplicate_rows.copiedIds)+' appear twice.','विद्यार्थी क्रमांक '+ids(t.duplicate_rows.copiedIds)+' की पंक्तियाँ दो बार हैं।')});
+  P.push({id:'causal',h:L('A survey like this can show an association only. Did your write-up avoid saying "caused"?','ऐसा सर्वे सिर्फ़ संबंध दिखा सकता है। क्या आपके लेख में "कारण बना" लिखने से बचा गया?')});
+  return P}
+function pgMark(id,v){const s=pgState();s.self=s.self||{};s.self[id]=v;pgSet(s);pgRender()}
 function pgKeyHTML(g){
-  const k=g.key,t=k.traps,L=(a,b)=>pgT(a,b),li=x=>'<li>'+x+'</li>';
-  const ids=a=>a.join(', ');
-  let h='<h3>'+L('Answer key','उत्तर-कुंजी')+'</h3><p>'+L('Compare each point with what you wrote. The data are invented, for practice only.','हर बिंदु को अपने लिखे से मिलाइए। ये आँकड़े बनावटी हैं, सिर्फ़ अभ्यास के लिए।')+'</p><ul>';
-  h+=li(k.truth.nullEffect?L('The true effect of living in a hostel on anxiety is zero. Any difference you found came from year of study.','हॉस्टल में रहने का चिंता पर असली असर शून्य है। आपको जो अंतर मिला वह पढ़ाई के वर्ष से आया।'):L('The true effect of hostel living on anxiety is real but modest ('+k.truth.groupEffect_latentSD+' SD). The raw difference is larger than this because hostel students are more senior.','हॉस्टल में रहने का चिंता पर असली असर है पर मध्यम ('+k.truth.groupEffect_latentSD+' SD)। कच्चा अंतर इससे बड़ा दिखता है क्योंकि हॉस्टल के विद्यार्थी ज़्यादा सीनियर हैं।'));
-  h+=li(L('Hidden confounder: year of study. Did you check it?','छिपा हुआ भ्रमकारी कारक: पढ़ाई का वर्ष। क्या आपने इसे जाँचा?'));
-  if(k.truth.reverseKeyedItems.length)h+=li(L('Item 3 is reverse worded. It must be flipped (6 minus the answer) before you add the items.','प्रश्न 3 उलटे शब्दों में है। जोड़ने से पहले इसे पलटना था (6 में से उत्तर घटाइए)।'));
-  if(t.missing_random)h+=li(L('Sleep hours are missing for student numbers '+ids(t.missing_random.ids)+'. How did you handle them?','नींद के घंटे इन विद्यार्थी क्रमांकों के गायब हैं: '+ids(t.missing_random.ids)+'। आपने इन्हें कैसे सँभाला?'));
-  if(t.outlier)h+=li(L('Student '+t.outlier.id+' has 19 hours of sleep, a typing error (the real value was '+t.outlier.original+').','विद्यार्थी '+t.outlier.id+' के 19 घंटे नींद लिखी है, यह टाइपिंग की ग़लती है (असली मान '+t.outlier.original+' था)।'));
-  if(t.miscode_group)h+=li(L('Student numbers '+ids(t.miscode_group.ids)+' have the group spelt "Hostl".','विद्यार्थी क्रमांक '+ids(t.miscode_group.ids)+' में ग्रुप "Hostl" लिखा है।'));
-  if(t.duplicate_rows)h+=li(L('Rows for student numbers '+ids(t.duplicate_rows.copiedIds)+' appear twice.','विद्यार्थी क्रमांक '+ids(t.duplicate_rows.copiedIds)+' की पंक्तियाँ दो बार हैं।'));
-  h+='</ul><p>'+L('Did your write-up say "caused"? A survey like this can show an association only.','क्या आपके लेख में "कारण बना" लिखा था? ऐसा सर्वे सिर्फ़ संबंध दिखा सकता है।')+'</p>';
+  const s=pgState(),self=s.self||{},P=pgPoints(g),L=(a,b)=>pgT(a,b);
+  const got=P.filter(p=>self[p.id]==='got').length,done=P.filter(p=>self[p.id]).length;
+  let h='<h3>'+L('Compare with the answer key','अपने लिखे को उत्तर-कुंजी से मिलाइए')+'</h3><p class="hint">'+L('The data are invented, for practice only. For each point, say whether you caught it. Only you decide.','ये आँकड़े बनावटी हैं, सिर्फ़ अभ्यास के लिए। हर बिंदु पर खुद बताइए कि आपने उसे पकड़ा या नहीं। फ़ैसला सिर्फ़ आपका है।')+'</p>';
+  h+='<div class="pg-cmp" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">';
+  h+='<div><b>'+L('What you wrote','आपने जो लिखा')+'</b><div style="white-space:pre-wrap;margin-top:6px">'+escHTML(s.q||'')+'\n\n'+escHTML(s.claim||'')+'</div></div>';
+  h+='<div><b>'+L('Answer key','उत्तर-कुंजी')+'</b><ul style="padding-left:18px;margin:6px 0">';
+  P.forEach(p=>{const m=self[p.id];h+='<li style="margin-bottom:10px">'+escHTML(p.h)+'<div style="display:flex;gap:6px;margin-top:4px"><button type="button" class="btn btn-sm'+(m==='got'?' primary':'')+'" data-pg="'+p.id+'" data-v="got" onclick="pgMark(\''+p.id+'\',\'got\')">'+L('I caught this','मैंने पकड़ा')+'</button><button type="button" class="btn btn-sm'+(m==='missed'?' primary':'')+'" data-pg="'+p.id+'" data-v="missed" onclick="pgMark(\''+p.id+'\',\'missed\')">'+L('I missed this','मुझसे छूटा')+'</button></div></li>'});
+  h+='</ul></div></div>';
+  h+='<p id="pgTally"><b>'+L('You marked '+done+' of '+P.length+'. Caught: '+got+'.','आपने '+P.length+' में से '+done+' पर निशान लगाया। पकड़े: '+got+'।')+'</b> '+(done===P.length?L('The points you missed are the ones to look for next time. This is your own tally, not a grade.','जो बिंदु छूटे, अगली बार उन्हें खोजिए। यह आपकी अपनी गिनती है, अंक नहीं।'):'')+'</p>';
   return h}
 function pgRender(){
   const set=(i,t)=>{const e=document.getElementById(i);if(e)e.textContent=t};
@@ -18215,7 +18225,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.09g';
+const APP_BUILD='2026.11.09h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
