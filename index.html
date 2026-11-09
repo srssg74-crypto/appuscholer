@@ -3614,7 +3614,7 @@ function logTableHTML(d,o){if(d.only&&((wGet(o).B1||{}).type)!==d.only)return'';
   let h='<div class="sub-box"><b>'+escHTML(L(d.t))+'</b> <span class="desc">('+rows.length+')</span><p class="desc" style="margin:4px 0">'+escHTML(L(d.note))+'</p>'+
    '<div style="overflow-x:auto"><table class="log-tbl" style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px"><thead><tr>'+d.cols.map(c=>'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--line,#ddd)">'+escHTML(hi?c[2]:c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>'+
    rows.map((r,i)=>'<tr>'+d.cols.map(c=>'<td style="padding:3px;vertical-align:top">'+cell(c,r,i)+'</td>').join('')+'<td><button type="button" class="btn btn-ghost btn-sm" title="'+(hi?'हटाएँ':'Remove')+'" onclick="logDel(\''+d.key+'\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>'+
-   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="logAdd(\''+d.key+'\')">+ '+(hi?'पंक्ति जोड़ें':'Add a row')+'</button>'+(d.lib?'<button type="button" class="btn btn-ghost btn-sm" onclick="logFromLibrary(\''+d.key+'\')">📚 '+(hi?'Library के papers लाएँ':'Bring papers from the library')+'</button>':'')+(rows.length?'<button type="button" class="btn btn-ghost btn-sm" onclick="logCsv(\''+d.key+'\')">⬇ CSV</button>':'')+'</div>';
+   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="logAdd(\''+d.key+'\')">+ '+(hi?'पंक्ति जोड़ें':'Add a row')+'</button>'+(d.lib?'<button type="button" class="btn btn-ghost btn-sm" onclick="logFromLibrary(\''+d.key+'\')">📚 '+(d.key==='effects'?(hi?'शामिल papers की पंक्तियाँ जोड़ें':'Add a row for each included paper'):(hi?'Library के हर paper की पंक्ति जोड़ें':'Add a row for each library paper'))+'</button>':'')+(rows.length?'<button type="button" class="btn btn-ghost btn-sm" onclick="logCsv(\''+d.key+'\')">⬇ CSV</button>':'')+'</div>';
   if(d.key==='search'&&rows.some(r=>Array.isArray(r.keys))){const m=b2Summary(o);h+='<p class="desc" style="margin:6px 0 0">'+(hi?m.searches+' searches में '+m.read+' records पढ़े गए, '+m.unique+' अलग-अलग, '+m.dup+' duplicate।':m.searches+' searches read '+m.read+' records: '+m.unique+' different papers, '+m.dup+' duplicates.')+' <button type="button" class="btn btn-ghost btn-sm" onclick="b2UsePrisma()">'+(hi?'PRISMA flow में डालें':'Put into the PRISMA flow')+'</button></p>'}
   if(d.key==='effects'&&rows.length){const m=new Set(rows.map(r=>r.measure).filter(Boolean)),bad=rows.filter(r=>r.es===''||r.es==null||r.lo===''||r.lo==null||r.hi===''||r.hi==null||(+r.lo>+r.es)||(+r.hi<+r.es)).length;
     h+='<p class="desc" style="margin:6px 0 0;'+(m.size>1||bad?'color:#b45309':'')+'">'+(m.size>1?(hi?'अलग-अलग माप मिले हैं ('+[...m].join(', ')+')। उन्हें सीधे जोड़ा नहीं जा सकता।':'Different measures are mixed ('+[...m].join(', ')+'). They cannot be pooled as they are. ')+' ':'')+(bad?(hi?bad+' पंक्तियों में संख्या अधूरी है, या interval effect size को घेरता नहीं।':bad+' row(s) have a missing number, or an interval that does not contain the effect size.'):(hi?'सभी पंक्तियाँ पूरी हैं।':'All rows are complete.'))+'</p>'}
@@ -18051,7 +18051,7 @@ function apMeSave(){LS.set('appu_me',JSON.stringify({name:document.getElementByI
 })();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.08za';
+const APP_BUILD='2026.11.09a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18792,7 +18792,7 @@ async function shWord(){
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     showToast('Word file ready'+(tbls?': '+tbls+' table'+(tbls>1?'s':''):'')+(pics?', '+pics+' page picture'+(pics>1?'s':''):'')+'.')
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
-/* PDF tools (build 2026.11.08za): pdf-lib is loaded the first time it is needed. */
+/* PDF tools (build 2026.11.09a): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
   const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}

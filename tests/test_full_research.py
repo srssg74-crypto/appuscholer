@@ -168,7 +168,7 @@ with sync_playwright() as p:
     nlib = J("citGetLib().length")
     ok(nlib == 4, 'four references in the library (%s)' % nlib)
     step('lit', 'B3')
-    pg.locator('#subMain button', has_text='Bring papers from the library').first.click(); pg.wait_for_timeout(300)
+    pg.locator('#subMain button', has_text='Add a row for each library paper').first.click(); pg.wait_for_timeout(300)
     nrows = J("logRows(studyGet(),'matrix').length")
     ok(nrows == 4, 'source matrix filled from the library (%s rows)' % nrows)
     print('B3 keys', J("[...new Set([...document.querySelectorAll('#subMain [onchange^=\"logCell(\\'matrix\\',0\"]')].map(e=>e.getAttribute('onchange').split(',')[2]))]"))
@@ -177,7 +177,7 @@ with sync_playwright() as p:
         logfill('matrix', r, {'design': 'Cross-sectional', 'sample': 'Students', 'measure': 'Self-report', 'finding': 'Shorter sleep went with more anxiety', 'limit': 'Single city', 'stance': 'Supports', 'quote': 'p. 104', 'theme': themes[r]})
     step('lit', 'B3'); print('B3', state('B3'), needed()[:150])
     step('lit', 'B4')
-    pg.locator('#subMain button', has_text='Bring papers from the library').first.click(); pg.wait_for_timeout(300)
+    pg.locator('#subMain button', has_text='Add a row for each library paper').first.click(); pg.wait_for_timeout(300)
     print('B4 keys', J("[...new Set([...document.querySelectorAll('#subMain [onchange^=\"logCell(\\'quality\\',0\"]')].map(e=>e.getAttribute('onchange').split(',')[2]))]"))
     for r in range(4):
         logfill('quality', r, {'str': 'Large sample, validated scale', 'weak': 'Convenience sample', 'tool': 'AXIS', 'judge': 'Moderate', 'ret': 'not retracted'})
