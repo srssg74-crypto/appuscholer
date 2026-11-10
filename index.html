@@ -4133,6 +4133,51 @@ function dgGantt(o){const rows=dgPlanRows(o);if(rows.length<2)return null;const 
   b+='<text x="'+LW+'" y="9" font-size="10" fill="#555">Month</text>';
   rows.forEach((r,i)=>{const y=26+i*rh;b+='<text x="6" y="'+(y+17)+'" font-size="12" fill="#111">'+dgEsc(DG_STAGE_EN[r.s]||r.s)+'</text><rect x="'+(LW+(r.a-1)*cw+1)+'" y="'+(y+5)+'" width="'+(r.d*cw-2)+'" height="'+(rh-10)+'" rx="3" fill="#4b6fa8"/>'});
   return{svg:dgFrame(W,H,b),w:W,h:H}}
+/* ============ Conceptual framework figure and the figure check (build 2026.11.10b) ============
+   The framework is drawn from the variables and roles already in the study record: nothing is added.
+   The figure check borrows the "red line" rules of the PaperBanana judge prompts (MIT licence, llmsresearch/paperbanana):
+   legible at print size, text fits its box, no overlapping boxes, no caption inside the picture, a compact layout,
+   and every label traceable to the record. All of it is plain code that reads the SVG; no AI is called. */
+function dgFw(o){
+  const ds=(o||studyGet()).design||{},vars=(ds.vars||[]).filter(v=>String(v.name||'').trim()),hi=studyHi();
+  const L=vars.filter(v=>v.role==='predictor'||v.role==='group'),R=vars.filter(v=>v.role==='outcome'),C=vars.filter(v=>v.role==='covariate');
+  if(!L.length||!R.length)return null;
+  const W=620,bw=200,xL=20,xR=W-20-bw,jx=W/2,lh=16,gap=14,top=26,ws=n=>dgWrap(String(n).trim(),26).slice(0,3);
+  const col=(arr,x)=>{let y=top;return arr.map(v=>{const b=dgBox(x,y,bw,ws(v.name),{bold:true,minH:36});const r={y:y,h:b.h,svg:b.svg,yc:y+b.h/2};y+=b.h+gap;return r})};
+  const a=col(L,xL),b=col(R,xR),hL=a.length?a[a.length-1].y+a[a.length-1].h:0,hR=b.length?b[b.length-1].y+b[b.length-1].h:0,colH=Math.max(hL,hR);
+  const jy=top+(colH-top)/2;let body='';
+  const hL1=hi?'Predictor या group':'Predictors and groups',hR1=hi?'Outcome':'Outcomes';
+  body+='<text x="'+(xL+bw/2)+'" y="16" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f3b63">'+dgEsc(hL1)+'</text><text x="'+(xR+bw/2)+'" y="16" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f3b63">'+dgEsc(hR1)+'</text>';
+  a.forEach(r=>{body+=r.svg+'<line x1="'+(xL+bw)+'" y1="'+r.yc+'" x2="'+jx+'" y2="'+jy+'" stroke="#333" stroke-width="1.2"/>'});
+  b.forEach(r=>{body+=r.svg+dgArrow(jx,jy,xR-2,r.yc)});
+  let H=colH+8,cv='';
+  if(C.length){const cl=dgWrap(C.map(v=>String(v.name).trim()).join(', '),70).slice(0,3),cy=colH+22,ch=cl.length*lh+34,cw=420,cx=(W-cw)/2,hd=hi?'Covariate / पृष्ठभूमि':'Covariates';
+    cv='<line x1="'+jx+'" y1="'+jy+'" x2="'+jx+'" y2="'+cy+'" stroke="#333" stroke-width="1.2" stroke-dasharray="5 4"/><rect x="'+cx+'" y="'+cy+'" width="'+cw+'" height="'+ch+'" rx="4" fill="#f6f6f6" stroke="#333" stroke-width="1" stroke-dasharray="5 4"/><text x="'+(W/2)+'" y="'+(cy+16)+'" text-anchor="middle" font-size="12.5" font-weight="700" fill="#111">'+dgEsc(hd)+'</text>'+cl.map((t,i)=>'<text x="'+(W/2)+'" y="'+(cy+34+lh*i)+'" text-anchor="middle" font-size="12.5" fill="#111">'+dgEsc(t)+'</text>').join('');H=cy+ch+8}
+  const allowed=vars.map(v=>String(v.name).trim()).concat([C.map(v=>String(v.name).trim()).join(', '),hL1,hR1,hi?'Covariate / पृष्ठभूमि':'Covariates']);
+  return{svg:dgFrame(W,H,body+cv),w:W,h:H,allowed:allowed}}
+function dgFwInsert(){const d=dgFw(studyGet());if(!d){showToast(studyHi()?'कम से कम एक predictor या group और एक outcome variable लिखिए':'Add at least one predictor or group and one outcome variable first');return}
+  dgInsert(d,'Figure. Conceptual framework of the study: variables and their roles.','Conceptual framework','intro.objectives','framework')}
+function dgCheck(d,printW){
+  printW=printW||432;const res=[],hi=studyHi(),L=(en,x)=>hi?x:en;let doc;
+  try{doc=new DOMParser().parseFromString(d.svg.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '),'image/svg+xml')}catch(e){return[]}
+  const vb=(doc.documentElement.getAttribute('viewBox')||'0 0 '+d.w+' '+d.h).split(/\s+/).map(Number),W=vb[2],H=vb[3];
+  const T=[...doc.querySelectorAll('text')].map(t=>({s:(t.textContent||'').trim(),fs:+t.getAttribute('font-size')||12,x:+t.getAttribute('x')||0,y:+t.getAttribute('y')||0,anchor:t.getAttribute('text-anchor'),rot:/rotate/.test(t.getAttribute('transform')||'')})).filter(t=>t.s);
+  const R0=[...doc.querySelectorAll('rect')].map(r=>({x:+r.getAttribute('x')||0,y:+r.getAttribute('y')||0,w:+r.getAttribute('width')||0,h:+r.getAttribute('height')||0,st:!!r.getAttribute('stroke')})).filter(r=>r.w>0&&r.h>0),R=R0.filter(r=>r.st);
+  const add=(ok,en,hiT)=>res.push({ok:ok,t:L(en,hiT)});
+  const minPt=T.length?Math.min(...T.map(t=>t.fs*printW/W)):0;
+  add(minPt>=8,'Text stays at least 8 pt when the figure is printed 6 inches wide (smallest: '+minPt.toFixed(1)+' pt).','Figure 6 इंच चौड़ा छपने पर text कम से कम 8 pt रहता है (सबसे छोटा: '+minPt.toFixed(1)+' pt)।');
+  const tooWide=T.filter(t=>{if(t.anchor!=='middle'||t.rot)return false;const w=t.s.length*t.fs*0.56;const box=R0.filter(r=>t.x>r.x&&t.x<r.x+r.w&&t.y>r.y&&t.y<r.y+r.h).sort((p,q)=>p.w-q.w)[0];return box&&w>box.w-6});
+  add(!tooWide.length,tooWide.length?'Text may run past its box: "'+tooWide[0].s.slice(0,30)+'".':'Every label fits inside its box.',tooWide.length?'कुछ text अपने box से बाहर जा सकता है: "'+tooWide[0].s.slice(0,30)+'"।':'हर label अपने box के अंदर आता है।');
+  let ov=0;for(let i=0;i<R.length;i++)for(let j=i+1;j<R.length;j++){const a=R[i],b=R[j],ix=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x),iy=Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y);if(ix>1&&iy>1){const inA=b.x>=a.x&&b.y>=a.y&&b.x+b.w<=a.x+a.w&&b.y+b.h<=a.y+a.h,inB=a.x>=b.x&&a.y>=b.y&&a.x+a.w<=b.x+b.w&&a.y+a.h<=b.y+b.h;if(!inA&&!inB)ov++}}
+  add(!ov,ov?ov+' boxes overlap.':'No boxes overlap.',ov?ov+' box आपस में overlap करते हैं।':'कोई box overlap नहीं करता।');
+  add(!T.some(t=>/^(figure|fig\.)\s*\d*/i.test(t.s)),'The picture carries no figure title or caption text (the caption goes in the document).','Picture के अंदर figure का title या caption नहीं है (caption document में जाता है)।');
+  if(R0.length||T.length){const tw=t=>t.s.length*t.fs*0.56,E=R0.map(r=>[r.x,r.y,r.x+r.w,r.y+r.h]).concat(T.filter(t=>!t.rot).map(t=>{const w=tw(t),l=t.anchor==='middle'?t.x-w/2:t.x;return[l,t.y-t.fs,l+w,t.y]})),x0=Math.min(...E.map(e=>e[0])),x1=Math.max(...E.map(e=>e[2])),y0=Math.min(...E.map(e=>e[1])),y1=Math.max(...E.map(e=>e[3])),cov=((x1-x0)*(y1-y0))/(W*H);add(cov>=0.7,'The layout is a compact rectangle ('+Math.round(cov*100)+'% of the frame is used).','Layout एक compact आयत है (frame का '+Math.round(cov*100)+'% इस्तेमाल हुआ)।')}
+  if(d.allowed){const al=d.allowed.map(x=>x.toLowerCase().replace(/\s+/g,' '));const bad=T.filter(t=>{const s=t.s.toLowerCase().replace(/\s+/g,' ');return !al.some(a=>a.indexOf(s)>=0)});add(!bad.length,bad.length?'A label is not from your study record: "'+bad[0].s.slice(0,30)+'".':'Every label comes from your variables or a fixed heading. Nothing was added.',bad.length?'एक label आपके study record से नहीं है: "'+bad[0].s.slice(0,30)+'"।':'हर label आपके variables या तय heading से है। कुछ जोड़ा नहीं गया।')}
+  return res}
+function dgCheckHTML(d){const r=dgCheck(d);if(!r.length)return'';return'<div class="desc" style="margin-top:6px"><b>'+(studyHi()?'Figure की जाँच':'Figure check')+'</b><ul style="margin:4px 0 0 18px;padding:0">'+r.map(x=>'<li style="list-style:none;margin-left:-18px">'+(x.ok?'✓ ':'⚠ ')+escHTML(x.t)+'</li>').join('')+'</ul></div>'}
+function dgFwHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,d=dgFw(o);
+  return'<div class="sub-box"><b>'+L('Conceptual framework figure','Conceptual framework का figure')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff;overflow-x:auto">'+d.svg+'</div>'+dgCheckHTML(d)+'<div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgFwInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from your variables once you have at least one predictor or group and one outcome.','कम से कम एक predictor या group और एक outcome भरते ही आपके variables से यहाँ बनेगा।')+'</p>')+'</div>'}
+
 function dgPlanSet(s,k,v){const o=studyGet();o.write=o.write||{};const c=o.write.C8=o.write.C8||{};c.plan=c.plan||{};c.plan[s]=Object.assign({},c.plan[s]||{},{[k]:v});studySet(o);wRedraw()}
 function dgGanttInsert(){const d=dgGantt(studyGet());if(!d){showToast(studyHi()?'कम से कम दो stages के महीने भरें':'Fill the months for at least two stages');return}dgInsert(d,'Figure. Work plan of the study (months from registration).','Work plan chart','syn.timeline','gantt')}
 function dgPlanHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,p=((wGet(o).C8||{}).plan)||{},d=dgGantt(o);
@@ -4679,7 +4724,7 @@ function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
   if(lg&&!['C3','C4'].includes(id))return lg;
   if(id==='C3'){const ok=ssComplete(ds);return cfNoteHTML(id,o)+'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px">'+(ok?'<button type="button" class="btn btn-purple btn-sm" onclick="bbSampleToBook()">📖 '+(hi?'किताब में डालें (संख्याएँ जुड़ी रहेंगी)':'Put it in my book (numbers stay linked)')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
-  if(id==='C4'){const c=scaleCheck(o);if(!(ds.vars||[]).some(x=>x.scale&&x.scale!=='own'&&x.scale!=='instr'))return cfNoteHTML(id,o);return cfNoteHTML(id,o)+'<div class="sub-box" style="border-color:'+(c.ok?'#16a34a':'#b45309')+'"><b>'+(c.ok?'✅ ':'⚠️ ')+(hi?'Scales की अनुमति':'Scale permissions')+'</b><p style="margin:6px 0 0">'+(c.ok?(hi?'चुने गए सभी scales मुफ़्त हैं या उनकी wording owner के page से डाली गई है।':'All chosen scales are free, or their wording was added from the owner\'s page.'):escHTML(c.issues.join('; ')))+'</p></div>'}
+  if(id==='C4'){const c=scaleCheck(o);if(!(ds.vars||[]).some(x=>x.scale&&x.scale!=='own'&&x.scale!=='instr'))return cfNoteHTML(id,o)+dgFwHTML(o);return cfNoteHTML(id,o)+dgFwHTML(o)+'<div class="sub-box" style="border-color:'+(c.ok?'#16a34a':'#b45309')+'"><b>'+(c.ok?'✅ ':'⚠️ ')+(hi?'Scales की अनुमति':'Scale permissions')+'</b><p style="margin:6px 0 0">'+(c.ok?(hi?'चुने गए सभी scales मुफ़्त हैं या उनकी wording owner के page से डाली गई है।':'All chosen scales are free, or their wording was added from the owner\'s page.'):escHTML(c.issues.join('; ')))+'</p></div>'}
   return''}
 function ethicsDraftSentence(){const o=studyGet(),e=ethicsGet(o),s=ethicsState(o);if(!s.open)return'';
   const fmt=d=>{try{return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}catch(x){return d}};
@@ -18287,7 +18332,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10a';
+const APP_BUILD='2026.11.10b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
