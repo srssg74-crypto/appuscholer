@@ -48,6 +48,8 @@ with sync_playwright() as p:
     ok('"left":1' in d6,'body text beside the table is left alone')
     d7=J("pdfReflowHTML(['Study Title Is Here Today\\nA body paragraph that is long enough to stand as a line of its own in the text here\\n\uE012A\uE014B\uE013C\uE014D\\nthe rest of the sentence ends here.\\n'])")
     ok('<table>' in d7 and d7.index('the rest')<d7.index('<table>'),'a table inside a sentence moves after it')
+    d8=J("pdfReflowHTML(['Study Title Is Here Today\\nA body paragraph that is long enough to stand as a line of its own in the text here.\\nTreatment\\nTreatment is generally a combination of two things and it is long enough to be a paragraph.\\n'])")
+    ok('<h2>Treatment</h2>' in d8,'a one-word line between two long paragraphs is a heading')
     J("window.__f=shExtractPdf;shExtractPdf=async()=>({pages:['Title Of The Paper Goes Here For Test\\nBody line one of the paragraph is long enough to be a full line here\\nand it ends now.\\n'],total:1})")
     J("window.confirm=()=>true")
     r=J("(async()=>{const f=new File([new Uint8Array([37,80,68,70])],'Paper.pdf',{type:'application/pdf'});await docImportOne(f,'');return getEditorHTML()})()")

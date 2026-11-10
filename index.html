@@ -775,7 +775,7 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
 </style>
 <style id="ssCss">#ssDlg{display:none;position:fixed;inset:0;z-index:2000;background:#111;flex-direction:column;outline:none}
 #ssDlg .ss-stage{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;min-height:0}
-.ss-slide{background:#fff;color:#1a1a1a;width:min(96vw,calc((100vh - 70px)*16/9));aspect-ratio:16/9;border-radius:6px;padding:4.5% 5.5%;box-sizing:border-box;display:flex;flex-direction:column;font-family:Calibri,"IBM Plex Sans","Noto Sans Devanagari",Arial,sans-serif;font-size:clamp(12px,2.1vw,30px);overflow:hidden}
+.ss-slide{background:#fff;color:#1a1a1a;width:min(96vw,calc((100vh - 70px)*16/9));aspect-ratio:16/9;border-radius:6px;padding:4.5% 5.5%;box-sizing:border-box;display:flex;flex-direction:column;font-family:Calibri,"IBM Plex Sans","Noto Sans Devanagari",Arial,sans-serif;font-size:clamp(8px,calc(min(96vw,(100vh - 70px)*16/9)*0.021),30px);overflow:hidden}
 .ss-slide h2{font-size:1.4em;color:#1F4E79;margin:0 0 .6em;line-height:1.2;font-weight:700}
 .ss-slide .ss-body{flex:1;display:flex;gap:4%;align-items:flex-start;min-height:0}
 .ss-slide ul{margin:0;padding-left:1.1em;line-height:1.45;flex:1}.ss-slide li{margin:0 0 .45em}
@@ -6178,7 +6178,7 @@ function pdfReflowHTML(pages){
   const shortLine=x=>x.charAt(0)!=='\uE012'&&x.length<45&&!/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(x),fig=[];
   {let i=0;const keep=[];while(i<paras.length){let j=i;while(j<paras.length&&shortLine(paras[j]))j++;if(j-i>=4){for(let k=i;k<j;k++)fig.push(paras[k]);i=j}else{keep.push(paras[i]);i++}}paras=keep}
   /* A single short line between two long paragraphs is a heading. */
-  const isHead=(x,i)=>x.length>=4&&x.length<=60&&/^[A-Z]/.test(x)&&!/[-.,;:?!]$/.test(x)&&(x.match(/\S+/g)||[]).length>=2&&(x.match(/\S+/g)||[]).length<=9&&i>0&&i<paras.length-1&&paras[i-1].length>=45&&paras[i+1].length>=45;
+  const isHead=(x,i)=>x.length>=6&&x.length<=60&&/^[A-Z]/.test(x)&&!/[-.,;:?!]$/.test(x)&&(x.match(/\S+/g)||[]).length>=1&&(x.match(/\S+/g)||[]).length<=9&&i>0&&i<paras.length-1&&paras[i-1].length>=45&&paras[i+1].length>=45;
   const tblHTML=x=>{const R=x.slice(1).split('\uE013').map(r=>r.split('\uE014'));const th=R[0].every(c=>!/^\d/.test(c));return'<table><tbody>'+R.map((r,k)=>'<tr>'+r.map(c=>(th&&k===0?'<th>':'<td>')+escHTML(c)+(th&&k===0?'</th>':'</td>')).join('')+'</tr>').join('')+'</tbody></table>'};
   const bodyHTML=paras.map((x,i)=>(x.charAt(0)==='\uE012'?tblHTML(x):isHead(x,i)?'<h2>'+escHTML(x)+'</h2>':'<p>'+escHTML(x)+'</p>'));
   return(t?'<h1>'+escHTML(t)+'</h1>':'')+bodyHTML.join('')+(fig.length?'<h2>Figure and table text</h2>'+fig.map(x=>'<p>'+escHTML(x)+'</p>').join(''):'')+(det.length?'<h2>Paper details</h2>'+det.map(x=>'<p>'+escHTML(x)+'</p>').join(''):'')||'<p></p>'}
@@ -8559,14 +8559,18 @@ function ssOpen(){const m=_pptxSlideModel;const hi=studyHi();if(!m||!m.length){s
     let x0=null;d.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});d.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)ssGo(dx<0?1:-1);x0=null})}
   d.innerHTML='<div class="ss-stage"><div class="ss-slide" id="ssSlide"></div></div><div class="ss-bar"><button type="button" onclick="ssGo(-1)" aria-label="Previous">‹</button><span id="ssNum"></span><button type="button" onclick="ssGo(1)" aria-label="Next">›</button><span id="ssClock" class="ss-clock"></span><span class="ss-sp"></span><button type="button" onclick="ssFull()">'+(hi?'पूरी screen':'Full screen')+' (F)</button><button type="button" onclick="ssPrint()">Print / PDF</button><button type="button" onclick="ssClose()">✕ Esc</button></div>';
   d.style.display='flex';SS.t0=Date.now();clearInterval(SS.tick);SS.tick=setInterval(ssClock,1000);ssShow(0);d.focus()}
-function ssShow(i){const m=_pptxSlideModel;SS.i=Math.max(0,Math.min(m.length-1,i));const x=m[SS.i];document.getElementById('ssSlide').className='ss-slide'+(x.cover?' is-cover':'')+(x.role==='appendix'?' is-app':'');document.getElementById('ssSlide').innerHTML=ssSlideHTML(x,SS.i,m.length);document.getElementById('ssNum').textContent=(SS.i+1)+' / '+m.length;ssClock()}
+function ssShow(i){const m=_pptxSlideModel;SS.i=Math.max(0,Math.min(m.length-1,i));const x=m[SS.i];document.getElementById('ssSlide').className='ss-slide'+(x.cover?' is-cover':'')+(x.role==='appendix'?' is-app':'');document.getElementById('ssSlide').innerHTML=ssSlideHTML(x,SS.i,m.length);document.getElementById('ssNum').textContent=(SS.i+1)+' / '+m.length;ssClock();try{ssFit()}catch(e){}}
+/* A slide whose text is longer than the slide shrinks its type a little at a time until it fits, so the last lines are never cut. */
+function ssFit(){const el=document.getElementById('ssSlide');if(!el)return;el.style.fontSize='';let fs=parseFloat(getComputedStyle(el).fontSize),n=0;
+  const over=()=>{const b=el.querySelector('.ss-body');return el.scrollHeight>el.clientHeight+1||(b&&b.scrollHeight>b.clientHeight+1)};
+  while(over()&&fs>9&&n<30){fs*=0.94;el.style.fontSize=fs+'px';n++}}
 function ssGo(k){ssShow(SS.i+k)}
 function ssClock(){const el=document.getElementById('ssClock');if(!el)return;const s=Math.floor((Date.now()-SS.t0)/1000);el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function ssFull(){const d=document.getElementById('ssDlg');try{document.fullscreenElement?document.exitFullscreen():d.requestFullscreen()}catch(e){}}
 function ssClose(){const d=document.getElementById('ssDlg');if(!d)return;clearInterval(SS.tick);try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}d.style.display='none'}
 function ssPrint(){const m=_pptxSlideModel;if(!m||!m.length)return;const w=window.open('','_blank');if(!w){showToast('Allow pop-ups to print');return}
   const css=document.getElementById('ssCss')?document.getElementById('ssCss').textContent:'';
-  w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Slides</title><style>'+css+'@page{size:A4 landscape;margin:0}body{margin:0}.ss-slide{width:297mm;height:209mm;box-shadow:none;border-radius:0;page-break-after:always;margin:0}</style></head><body>'+m.map((x,i)=>'<div class="ss-slide'+(x.cover?' is-cover':'')+'">'+ssSlideHTML(x,i,m.length)+'</div>').join('')+'<script>setTimeout(function(){window.print()},600)<\/script></body></html>');w.document.close()}
+  w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Slides</title><style>'+css+'@page{size:A4 landscape;margin:0}body{margin:0}.ss-slide{font-size:clamp(12px,2.1vw,30px);width:297mm;height:209mm;box-shadow:none;border-radius:0;page-break-after:always;margin:0}</style></head><body>'+m.map((x,i)=>'<div class="ss-slide'+(x.cover?' is-cover':'')+'">'+ssSlideHTML(x,i,m.length)+'</div>').join('')+'<script>setTimeout(function(){window.print()},600)<\/script></body></html>');w.document.close()}
 /* ---- journal club ---- */
 function jcPick(){const hi=studyHi(),L=(en,x)=>hi?x:en,lib=(function(){try{return citGetLib()}catch(e){return[]}})();
   let d=document.getElementById('jcDlg');if(!d){d=document.createElement('dialog');d.id='jcDlg';d.style.cssText='max-width:640px;width:94vw;padding:16px 20px';document.body.appendChild(d)}
@@ -18583,7 +18587,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10x';
+const APP_BUILD='2026.11.10y';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
