@@ -6114,14 +6114,14 @@ function docNew(){
    joined back together, a short line or a line ending in . ? ! : starts a new paragraph. */
 function pdfReflowHTML(pages){
   const per=[];
-  (pages||[]).forEach(pg=>{const paras=[];let cur='';
+  (pages||[]).forEach(pg=>{pg=String(pg||'').replace(/[ \t]([⁰¹²³⁴⁵⁶⁷⁸⁹][⁰¹²³⁴⁵⁶⁷⁸⁹,]*)(?=[ \t\n]|$)/g,'$1');const paras=[];let cur='';
     const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
     String(pg||'').split('\n').forEach(l=>{
       l=l.trim();if(!l){flush();return}
       /* a line cut at a hyphen that is followed by a capital cannot be continued by it: another block (an abstract, a box) starts here */
       if(cur&&/[a-z]-$/.test(cur)&&/^[A-Z]/.test(l))flush();
       cur+=(cur?' ':'')+l;
-      if(/[.?!:]["”')\]]*$/.test(l)||l.length<45)flush()});flush();per.push(paras)});
+      if(/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(l)||l.length<45)flush()});flush();per.push(paras)});
   /* a paragraph cut at a hyphen at the end of a column or page continues in the next page's first paragraph that starts in lower case;
      the two halves are joined only when the whole word is used elsewhere in the paper */
   const voc={};per.forEach(ps=>ps.forEach(x=>(x.toLowerCase().match(/[a-z]+/g)||[]).forEach(w=>{voc[w]=(voc[w]||0)+1})));
@@ -6132,18 +6132,18 @@ function pdfReflowHTML(pages){
       if((voc[whole]||0)>=2){per[k][i]=per[k][i].slice(0,-1)+per[k+1][j];per[k+1].splice(j,1)}}}
   /* front-matter and footer paragraphs (keywords, affiliations, correspondence, copyright) go to a "Paper details" block at the end, not into the body */
   const FM=/^(keywords?|key words|author affiliations?|affiliations?|address for correspondence|correspondence|corresponding author|©|copyright|received[: ]|accepted[: ]|e-?mail)/i;
-  let paras=[],det=[];per.forEach(ps=>ps.forEach(x=>{(FM.test(x)||/all rights reserved/i.test(x))?det.push(x):paras.push(x)}));
+  let paras=[],det=[];per.forEach(ps=>ps.forEach(x=>{(FM.test(x)||/all rights reserved/i.test(x))?det.push(x.replace(/(all rights reserved\.?)\s+(\d\s)+(?=www)/i,'$1 ')):paras.push(x)}));
   let t='';try{const f=paras[0]||'';if(paras.length>1&&shTitleOk(f)&&/^[A-Z]/.test(f)&&!/[-.,;:]$/.test(f)&&!/(^|\s)\d+(\s|$)/.test(f))t=paras.shift()}catch(e){}
   /* A sentence that was cut by a column end, a page turn or a figure continues in the next paragraph when that starts in lower case.
      A figure or table caption that landed inside such a sentence is moved to after the sentence. A reference cut before its year line is joined. */
-  {const open=x=>!!x&&!/[.?!:]["”')\]]*$/.test(x),isCap=x=>/^(Figure|Fig\.|Table)\s+\d/.test(x),out=[];let pend=[];
+  {const open=x=>!!x&&!/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(x),isCap=x=>/^(Figure|Fig\.|Table)\s+\d/.test(x),out=[];let pend=[];
    paras.forEach(x=>{const last=out.length?out[out.length-1]:'';
      if(isCap(x)&&open(last)){pend.push(x);return}
      if(out.length&&((open(last)&&/^[a-z(]/.test(x))||(/^\d{4}[;:]/.test(x)&&/\s?\.$/.test(last))))out[out.length-1]=last+' '+x;else out.push(x);
      if(pend.length&&!open(out[out.length-1])){pend.forEach(c=>out.push(c));pend=[]}});
    pend.forEach(c=>out.push(c));paras=out}
   /* Four or more short, unfinished lines in a row are the labels of a figure or the rows of a table, not sentences. They are kept, in their own block, so they do not cut the body text. */
-  const shortLine=x=>x.length<45&&!/[.?!:]["”')\]]*$/.test(x),fig=[];
+  const shortLine=x=>x.length<45&&!/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(x),fig=[];
   {let i=0;const keep=[];while(i<paras.length){let j=i;while(j<paras.length&&shortLine(paras[j]))j++;if(j-i>=4){for(let k=i;k<j;k++)fig.push(paras[k]);i=j}else{keep.push(paras[i]);i++}}paras=keep}
   /* A single short line between two long paragraphs is a heading. */
   const isHead=(x,i)=>x.length>=4&&x.length<=60&&/^[A-Z]/.test(x)&&!/[-.,;:?!]$/.test(x)&&(x.match(/\S+/g)||[]).length>=2&&(x.match(/\S+/g)||[]).length<=9&&i>0&&i<paras.length-1&&paras[i-1].length>=45&&paras[i+1].length>=45;
@@ -6198,7 +6198,7 @@ async function docImportOne(file,origin){
   }else if(name.endsWith('.html')||name.endsWith('.htm')){
     html=await file.text();
   }else if(name.endsWith('.pdf')){
-    const ex=await shExtractPdf(file);
+    const ex=await shExtractPdf(file,{sup:true});
     let pgs=ex.pages;try{pgs=apDropRunningHeads(pgs)}catch(e){}
     html=pdfReflowHTML(pgs);
     try{const ph=pdfPicturesHTML(await pdfExtractImages(file,12));if(ph){const at=html.indexOf('<h2>Figure and table text</h2>')>=0?html.indexOf('<h2>Figure and table text</h2>'):(html.indexOf('<h2>Paper details</h2>')>=0?html.indexOf('<h2>Paper details</h2>'):html.length);html=html.slice(0,at)+ph+html.slice(at)}}catch(e){}
@@ -18550,7 +18550,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10s';
+const APP_BUILD='2026.11.10t';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -19048,13 +19048,24 @@ function apDropRunningHeads(pages){
     edges(L).forEach(function(i){const k=norm(L[i]);if(k&&L[i].length<=90&&seen[k]>=need)drop[i]=1});
     if(seq&&pn[pi])drop[pn[pi].i]=1;
     return L.filter(function(x,i){return !drop[i]}).join('\n')})}
-async function shExtractPdf(file){
+/* Citation numbers are printed small and raised. When the importer asks for it, a digit-only item that is about half the size
+   of the text around it and sits above the baseline becomes a real superscript (⁴), so it is not read as a number in the sentence. */
+function apMarkSup(items){
+  const hs=(items||[]).filter(it=>it&&it.str&&it.str.trim()&&it.height>0).map(it=>it.height).sort((a,b)=>a-b),med=hs.length?hs[hs.length>>1]:0;
+  if(!med)return items;const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  return items.map((it,k)=>{
+    if(!it||typeof it.str!=='string'||!/^\s*\d{1,3}(,\d{1,3})*\s*$/.test(it.str)||!(it.height<=med*0.7)||k===0)return it;
+    const pv=items[k-1];if(!pv||!pv.transform||!it.transform||!(it.transform[5]>pv.transform[5]+med*0.15))return it;
+    return Object.assign({},it,{str:it.str.trim().replace(/\d/g,d=>SUP[d])+(/\s$/.test(it.str)?' ':'')})});
+}
+async function shExtractPdf(file,opts){
   if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader needs the internet once to load. Try again when you are online.');
   const buf=await file.arrayBuffer();
   const pdf=await pdfjsLib.getDocument({data:buf}).promise;
   const n=Math.min(pdf.numPages,200);let pages=[],reordered=0;
   for(let k=1;k<=n;k++){
     const pg=await pdf.getPage(k),tc=await pg.getTextContent();
+    if(opts&&opts.sup){try{tc.items=apMarkSup(tc.items)}catch(e){}}
     let r;try{r=apPageText(tc.items,pg.view||[0,0,612,792])}catch(e){r={text:apStreamText(tc.items),mode:'stream'}}
     if(r.mode==='layout')reordered++;
     pages.push(r.text);
