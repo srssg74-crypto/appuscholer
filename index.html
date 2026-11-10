@@ -4734,7 +4734,9 @@ CF_ROWS.E3[5]='R|This chapter is the review.|यह chapter ही review है
 const CF_OVR={'pre-post':{
   C1:'R|State the gap between the two measurements and what happens in between. If there is a control group, say how it was chosen.|दोनों माप के बीच का अंतर और बीच में क्या होता है, यह लिखें। Control group हो तो उसका चुनाव कैसे हुआ, यह भी लिखें।',
   D2:'R|Keep a log of who was measured at both times. Keep the allocation record if there is a control group.|कौन दोनों बार मापा गया, इसका log रखें। Control group हो तो allocation का record भी रखें।',
-  D3:'R|Keep the attrition record: who was lost between the two measurements, and why.|Attrition का record रखें: दोनों माप के बीच कौन छूटा और क्यों।'},
+  D3:'R|Keep the attrition record: who was lost between the two measurements, and why.|Attrition का record रखें: दोनों माप के बीच कौन छूटा और क्यों।',
+  D6:'R|Name each threat and say what you did about it: events in between (history), natural change over time (maturation), and extreme scores moving toward the average (regression to the mean). With a control group, add unmeasured confounders and how the groups were chosen.|हर खतरे का नाम लिखें और क्या किया, यह भी: बीच की घटनाएँ (history), समय के साथ अपने आप बदलाव (maturation), और extreme score का औसत की ओर लौटना (regression to the mean)। Control group हो तो अनजाने confounder और group चुनने का तरीका भी जोड़ें।',
+  F2:'R|Report with TREND (22 items, for evaluations without random assignment). If people were randomised, use CONSORT 2025 instead.|TREND से report करें (22 items, बिना random assignment के evaluation के लिए)। लोग random बाँटे गए हों तो CONSORT 2025।'},
  'case-control':{
   C1:'R|State how cases and controls were identified and which past exposures you ask about.|Cases और controls कैसे पहचाने गए और पिछले कौन से exposure पूछे जा रहे हैं, यह लिखें।',
   D2:'R|Keep a record of how cases and controls were found and matched.|Cases और controls कैसे मिले और कैसे मिलाए गए, इसका record रखें।',
@@ -18358,7 +18360,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10d';
+const APP_BUILD='2026.11.10e';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
