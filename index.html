@@ -831,7 +831,7 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
         <button class="icon-btn" onclick="docRename()" title="Rename this document" aria-label="Rename this document"><svg class="ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
         <button class="icon-btn icon-del" onclick="docDelete()" data-i18n-title="doc_delete_title" title="Delete this document" aria-label="Delete this document"><svg class="ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
         <button class="icon-btn" onclick="document.getElementById('docImportInput').click()" data-i18n="doc_import_btn" data-i18n-title="doc_import_title" title="Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor">📂 Import</button>
-        <button class="icon-btn" onclick="bbOutlineToggle()" title="The book of this study: chapters like PDF bookmarks">📖 Book</button>
+        <button class="icon-btn" onclick="bbOutlineToggle()" title="Thesis outline: the chapters of this study, like PDF bookmarks">📖 Outline</button>
         <button class="icon-btn" id="docOriginBtn" onclick="docOriginToggle()"></button>
         <input type="file" id="docImportInput" accept=".docx,.pdf,.txt,.md,.html,.htm" style="display:none" onchange="docImportFiles(this.files);this.value=''">
       </div>
@@ -930,9 +930,8 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
       <button class="btn btn-ghost" onclick="improveText()" data-i18n="improve_btn" data-i18n-title="improve_btn_title" title="Select some text first, then click to polish its grammar">💜 Improve selection</button>
       <button class="btn btn-ghost" onclick="makeLonger()" data-i18n="extend_btn" data-i18n-title="extend_btn_title" title="Select some text first, then click to extend it">➕ Extend</button>
       <button class="btn btn-ghost" onclick="insertScaffold()" data-i18n="template_btn" data-i18n-title="template_btn_title" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
-      <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 AI text</button>
-      <button class="btn btn-ghost" id="mvBtn" onclick="mvOpen()" data-i18n="mv_btn" data-i18n-title="mv_btn_title" title="A full practice viva on your whole document: questions, follow-ups and feedback at the end">🎙 Mock viva</button>
-      <button class="btn btn-ghost" id="vivaBtn" onclick="vivaOpen()" data-i18n="viva_btn" data-i18n-title="viva_btn_title" title="Practise answering an examiner's question about your writing, with no AI help in the answer box">🎓 Viva question</button>
+      <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 Show AI-written parts</button>
+      <button class="btn btn-ghost" id="vivaMenuBtn" onclick="vivaChoose()" data-i18n="viva_menu">🎓 Viva practice</button>
       <button class="btn btn-ghost" id="draftFirstBtn" onclick="toggleDraftFirst()" data-i18n="df_btn" data-i18n-title="df_btn_title" title="Write first. The AI then asks questions about your writing instead of writing for you.">✍ Draft first</button>
       <button type="button" class="btn btn-ghost" id="citCaretChip" style="display:none" onclick="citJumpToCaret()"></button>
       <span class="stats" id="stats">0 words</span>
@@ -2431,7 +2430,7 @@ const I18N={
     improve_btn:'💜 Improve selection', improve_btn_title:'Select some text first, then click to polish its grammar',
     extend_btn:'➕ Extend', extend_btn_title:'Select some text first, then click to extend it',
     template_btn:'🧱 Template', template_btn_title:'Insert a ready-made outline (lab report, essay, literature review)',
-    aitext_btn:'👁 AI text', aitext_btn_title:'Mark every AI-inserted passage directly in the document',
+    viva_menu:'🎓 Viva practice', aitext_btn:'👁 Show AI-written parts', aitext_btn_title:'Mark every AI-inserted passage directly in the document',
     ai_pane_h3:'✨ AI Suggestion',
     ai_pane_desc:'Select text in your document, then click a button. Press <kbd>Tab</kbd> in the editor to accept. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes it.',
     ai_pane_desc_touch:'Select text in your document, then tap a button. Tap Accept ✓ below the suggestion to put it in, and ↶ Undo to take it back.',
@@ -2674,7 +2673,7 @@ const I18N={
     improve_btn:'💜 चयन सुधारें', improve_btn_title:'पहले कुछ टेक्स्ट चुनें, फिर व्याकरण सुधारने के लिए क्लिक करें',
     extend_btn:'➕ विस्तार करें', extend_btn_title:'पहले कुछ टेक्स्ट चुनें, फिर उसे बढ़ाने के लिए क्लिक करें',
     template_btn:'🧱 टेम्पलेट', template_btn_title:'एक तैयार रूपरेखा डालें (लैब रिपोर्ट, निबंध, साहित्य समीक्षा)',
-    aitext_btn:'👁 AI टेक्स्ट', aitext_btn_title:'दस्तावेज़ में हर AI-लिखित अंश को चिह्नित करें',
+    viva_menu:'🎓 Viva अभ्यास', aitext_btn:'👁 AI-लिखे हिस्से दिखाएँ', aitext_btn_title:'दस्तावेज़ में हर AI-लिखित अंश को चिह्नित करें',
     ai_pane_h3:'✨ AI सुझाव',
     ai_pane_desc:'अपने दस्तावेज़ में टेक्स्ट चुनें, फिर कोई बटन दबाएँ। स्वीकार करने के लिए एडिटर में <kbd>Tab</kbd> दबाएँ। <kbd>Ctrl</kbd>+<kbd>Z</kbd> इसे पूर्ववत करता है।',
     ai_pane_desc_touch:'Document में text चुनें, फिर कोई बटन दबाएँ। सुझाव डालने के लिए उसके नीचे Accept ✓ दबाएँ, और वापस लेने के लिए ↶ Undo।',
@@ -6569,6 +6568,15 @@ function mvDigest(txt,budget){
   const share=Math.max(160,Math.floor((budget-heads)/longs));
   return paras.map(x=>x.length<90?x:(x.length>share?x.slice(0,share)+' […]':x)).join('\n').slice(0,budget);
 }
+function vivaChoose(){const hi=studyHi();let d=document.getElementById('vivaChooseDlg');
+  if(!d){d=document.createElement('dialog');d.id='vivaChooseDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--line,#ddd);max-width:420px;width:92vw';document.body.appendChild(d)}
+  d.innerHTML='<h2 style="margin:0 0 8px;font-size:18px">🎓 '+(hi?'Viva अभ्यास':'Viva practice')+'</h2>'
+   +'<button type="button" class="btn btn-purple" id="vivaBtn" style="width:100%;margin-bottom:8px" onclick="document.getElementById(\'vivaChooseDlg\').close();vivaOpen()">'+(hi?'🎓 एक examiner सवाल':'🎓 One examiner question')+'</button>'
+   +'<p class="desc" style="margin:0 0 12px">'+(hi?'अपने लेखन के बारे में एक सवाल। जवाब के डिब्बे में AI की मदद नहीं।':'One question about your own writing. The answer box has no AI help.')+'</p>'
+   +'<button type="button" class="btn btn-ghost" id="mvBtn" style="width:100%;margin-bottom:8px" onclick="document.getElementById(\'vivaChooseDlg\').close();mvOpen()">'+(hi?'🎙 पूरा mock viva':'🎙 Full mock viva')+'</button>'
+   +'<p class="desc" style="margin:0 0 12px">'+(hi?'पूरे दस्तावेज़ पर सवाल, follow-up और अंत में feedback।':'Questions on the whole document, follow-ups, and feedback at the end.')+'</p>'
+   +'<div class="row" style="justify-content:flex-end"><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'vivaChooseDlg\').close()">'+(hi?'बंद करें':'Close')+'</button></div>';
+  d.showModal()}
 function mvOpen(){
   MV=mvLoad();if(MV&&MV.stage==='setup')MV=null;
   mvRender();document.getElementById('mvDlg').showModal();
@@ -14526,7 +14534,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Design &amp; Ethics.</b> Choose the method, work out which approvals you need, and prepare consent forms and the ethics package.</li>
 <li><b>Collection &amp; Analysis.</b> Run tests on your data, make charts, and code interviews.</li>
 <li><b>Writing.</b> Train it on your own style, manage citations, and ask questions while you write.</li>
-<li><b>Review &amp; Publish.</b> Turn the document into slides. The AI text and Viva question buttons help you check your own work before you hand it in.</li>
+<li><b>Review &amp; Publish.</b> Turn the document into slides. The Show AI-written parts button and the Viva practice menu help you check your own work before you hand it in.</li>
 </ul>`},
 {id:'editor',g:'Tools',t:'The writing area and its buttons',k:'editor write continue improve extend template viva draft first ai text highlight document dictate voice speak microphone dictation speech',h:`
 <p>The large page on the left is your document. Several buttons sit under it.</p>
@@ -14535,8 +14543,8 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Improve selection</b> rewrites the text you selected. Check that it still says what you meant.</li>
 <li><b>Extend</b> roughly doubles the length of the passage you selected, with more detail and examples. Press Tab to replace your selection with it.</li>
 <li><b>Template</b> inserts a ready-made outline for a lab report, an essay or a literature review. You fill it in.</li>
-<li><b>AI text</b> marks every passage the AI inserted, directly in the document. Use it before you submit, so you can see how much of the page is yours.</li>
-<li><b>Viva question</b> asks you an examiner-style question about your own writing. The answer box has no AI help.</li>
+<li><b>Show AI-written parts</b> marks every passage the AI inserted, directly in the document. Use it before you submit, so you can see how much of the page is yours.</li>
+<li><b>Viva practice</b> has two choices. One examiner question asks you an examiner-style question about your own writing. The answer box has no AI help.</li>
 <li><b>Draft first</b> turns the AI into a questioner. You write, and it asks about what you wrote.</li>
 </ul>
 <p><b>Dictate</b> types what you say, at your cursor. Pick the language beside the button, press it, and speak. It works in Chrome and Edge, needs internet, and types each phrase when you pause. Say <i>full stop</i>, <i>comma</i>, <i>question mark</i>, <i>new line</i> or <i>new paragraph</i> for punctuation. In Hindi say <i>पूर्ण विराम</i>, <i>अल्पविराम</i> or <i>नई पंक्ति</i>. Your voice goes to your browser's speech service, which is Google in Chrome and Microsoft in Edge. Appuscholar never receives it. Never dictate participant names, interview recordings or anything that identifies a person. Press the button again to stop.</p>
@@ -18471,7 +18479,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10l';
+const APP_BUILD='2026.11.10m';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
