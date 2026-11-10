@@ -6113,16 +6113,68 @@ function docNew(){
 /* PDF import into the writing tool: page text in reading order (the Reader's extractor), lines of one paragraph
    joined back together, a short line or a line ending in . ? ! : starts a new paragraph. */
 function pdfReflowHTML(pages){
-  const paras=[];let cur='';
-  const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
-  (pages||[]).forEach(pg=>{String(pg||'').split('\n').forEach(l=>{
-    l=l.trim();if(!l){flush();return}
-    /* a line cut at a hyphen that is followed by a capital cannot be continued by it: another block (an abstract, a box) starts here */
-    if(cur&&/[a-z]-$/.test(cur)&&/^[A-Z]/.test(l))flush();
-    cur+=(cur?' ':'')+l;
-    if(/[.?!:]["”')\]]*$/.test(l)||l.length<45)flush()});flush()});
+  const per=[];
+  (pages||[]).forEach(pg=>{const paras=[];let cur='';
+    const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
+    String(pg||'').split('\n').forEach(l=>{
+      l=l.trim();if(!l){flush();return}
+      /* a line cut at a hyphen that is followed by a capital cannot be continued by it: another block (an abstract, a box) starts here */
+      if(cur&&/[a-z]-$/.test(cur)&&/^[A-Z]/.test(l))flush();
+      cur+=(cur?' ':'')+l;
+      if(/[.?!:]["”')\]]*$/.test(l)||l.length<45)flush()});flush();per.push(paras)});
+  /* a paragraph cut at a hyphen at the end of a column or page continues in the next page's first paragraph that starts in lower case;
+     the two halves are joined only when the whole word is used elsewhere in the paper */
+  const voc={};per.forEach(ps=>ps.forEach(x=>(x.toLowerCase().match(/[a-z]+/g)||[]).forEach(w=>{voc[w]=(voc[w]||0)+1})));
+  for(let k=0;k+1<per.length;k++){
+    for(let i=0;i<per[k].length;i++){const m=/([A-Za-z]{2,})-$/.exec(per[k][i]);if(!m)continue;
+      const j=per[k+1].findIndex(x=>/^[a-z]/.test(x));if(j<0)continue;
+      const fw=/^[a-z]+/.exec(per[k+1][j])[0],whole=(m[1]+fw).toLowerCase();
+      if((voc[whole]||0)>=2){per[k][i]=per[k][i].slice(0,-1)+per[k+1][j];per[k+1].splice(j,1)}}}
+  /* front-matter and footer paragraphs (keywords, affiliations, correspondence, copyright) go to a "Paper details" block at the end, not into the body */
+  const FM=/^(keywords?|key words|author affiliations?|affiliations?|address for correspondence|correspondence|corresponding author|©|copyright|received[: ]|accepted[: ]|e-?mail)/i;
+  let paras=[],det=[];per.forEach(ps=>ps.forEach(x=>{(FM.test(x)||/all rights reserved/i.test(x))?det.push(x):paras.push(x)}));
   let t='';try{const f=paras[0]||'';if(paras.length>1&&shTitleOk(f)&&/^[A-Z]/.test(f)&&!/[-.,;:]$/.test(f)&&!/(^|\s)\d+(\s|$)/.test(f))t=paras.shift()}catch(e){}
-  return(t?'<h1>'+escHTML(t)+'</h1>':'')+paras.map(x=>'<p>'+escHTML(x)+'</p>').join('')||'<p></p>'}
+  /* Four or more short, unfinished lines in a row are the labels of a figure or the rows of a table, not sentences. They are kept, in their own block, so they do not cut the body text. */
+  const shortLine=x=>x.length<45&&!/[.?!:]["”')\]]*$/.test(x),fig=[];
+  {let i=0;const keep=[];while(i<paras.length){let j=i;while(j<paras.length&&shortLine(paras[j]))j++;if(j-i>=4){for(let k=i;k<j;k++)fig.push(paras[k]);i=j}else{keep.push(paras[i]);i++}}paras=keep}
+  /* A single short line between two long paragraphs is a heading. */
+  const isHead=(x,i)=>x.length>=4&&x.length<=60&&/^[A-Z]/.test(x)&&!/[-.,;:?!]$/.test(x)&&(x.match(/\S+/g)||[]).length>=2&&(x.match(/\S+/g)||[]).length<=9&&i>0&&i<paras.length-1&&paras[i-1].length>=45&&paras[i+1].length>=45;
+  const bodyHTML=paras.map((x,i)=>(isHead(x,i)?'<h2>'+escHTML(x)+'</h2>':'<p>'+escHTML(x)+'</p>'));
+  return(t?'<h1>'+escHTML(t)+'</h1>':'')+bodyHTML.join('')+(fig.length?'<h2>Figure and table text</h2>'+fig.map(x=>'<p>'+escHTML(x)+'</p>').join(''):'')+(det.length?'<h2>Paper details</h2>'+det.map(x=>'<p>'+escHTML(x)+'</p>').join(''):'')||'<p></p>'}
+/* Pictures inside a PDF (the photos and scanned figures, not charts drawn as lines) are taken out one by one and
+   shrunk. They go in a "Pictures in the PDF" block with their page number, because where each one stood in the text is not known. */
+async function pdfExtractImages(file,maxN){
+  const out=[],seen={};
+  try{
+    const buf=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:buf}).promise,OPS=pdfjsLib.OPS,n=Math.min(pdf.numPages,40);
+    for(let k=1;k<=n&&out.length<maxN;k++){
+      const pg=await pdf.getPage(k),ops=await pg.getOperatorList(),names={};
+      for(let i=0;i<ops.fnArray.length&&out.length<maxN;i++){
+        const fn=ops.fnArray[i];
+        if(fn!==OPS.paintImageXObject&&fn!==OPS.paintInlineImageXObject&&fn!==OPS.paintJpegXObject)continue;
+        const arg=ops.argsArray[i];let img=null;
+        if(fn===OPS.paintInlineImageXObject)img=arg[0];
+        else{const nm=arg[0];if(names[nm])continue;names[nm]=1;
+          img=await new Promise(res=>{const tm=setTimeout(()=>res(null),3000);try{pg.objs.get(nm,o=>{clearTimeout(tm);res(o)})}catch(e){clearTimeout(tm);res(null)}})}
+        if(!img||!img.width||!img.height||img.width<100||img.height<100)continue;
+        const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const g=c.getContext('2d'),px=img.width*img.height;
+        if(img.bitmap)g.drawImage(img.bitmap,0,0);
+        else if(img.data){let rgba;const d=img.data;
+          if(d.length===px*4)rgba=new Uint8ClampedArray(d);
+          else if(d.length===px*3){rgba=new Uint8ClampedArray(px*4);for(let a=0,b=0;a<px;a++){rgba[b++]=d[a*3];rgba[b++]=d[a*3+1];rgba[b++]=d[a*3+2];rgba[b++]=255}}
+          else if(d.length===px){rgba=new Uint8ClampedArray(px*4);for(let a=0,b=0;a<px;a++){const v=d[a];rgba[b++]=v;rgba[b++]=v;rgba[b++]=v;rgba[b++]=255}}
+          else continue;
+          g.putImageData(new ImageData(rgba,img.width,img.height),0,0)}
+        else continue;
+        /* a picture whose middle is flat (a soft shadow or a mask the layout uses) carries nothing to read */
+        try{const sm=document.createElement('canvas');sm.width=sm.height=24;const sg=sm.getContext('2d');sg.drawImage(c,0,0,24,24);const dd=sg.getImageData(0,0,24,24).data;let su=0,sq=0,cn=0;for(let yy=6;yy<18;yy++)for(let xx=6;xx<18;xx++){const q=(yy*24+xx)*4,v=(dd[q]+dd[q+1]+dd[q+2])/3;su+=v;sq+=v*v;cn++}const mu=su/cn;if(Math.sqrt(Math.max(0,sq/cn-mu*mu))<12)continue}catch(e){}
+        let src=c.toDataURL('image/jpeg',0.85);
+        try{src=await imgShrinkDataUrl(src,1200,0.82)||src}catch(e){}
+        const key=src.length+':'+src.slice(-60);if(seen[key])continue;seen[key]=1;
+        out.push({page:k,src:src})}}
+  }catch(e){}
+  return out}
+function pdfPicturesHTML(imgs){return imgs.length?'<h2>Pictures in the PDF</h2>'+imgs.map(m=>'<figure><img src="'+m.src+'" alt="Picture from page '+m.page+' of the PDF"><figcaption>Picture from page '+m.page+' of the PDF</figcaption></figure>').join(''):''}
 async function docImportOne(file,origin){
   const name=(file.name||'file').toLowerCase();
   let html;
@@ -6141,6 +6193,7 @@ async function docImportOne(file,origin){
     const ex=await shExtractPdf(file);
     let pgs=ex.pages;try{pgs=apDropRunningHeads(pgs)}catch(e){}
     html=pdfReflowHTML(pgs);
+    try{const ph=pdfPicturesHTML(await pdfExtractImages(file,12));if(ph){const at=html.indexOf('<h2>Figure and table text</h2>')>=0?html.indexOf('<h2>Figure and table text</h2>'):(html.indexOf('<h2>Paper details</h2>')>=0?html.indexOf('<h2>Paper details</h2>'):html.length);html=html.slice(0,at)+ph+html.slice(at)}}catch(e){}
   }else if(name.endsWith('.txt')||name.endsWith('.md')){
     const txt=await readFileText(file);
     html=txt.split(/\n{2,}/).map(p=>'<p>'+escHTML(p).replace(/\n/g,'<br>')+'</p>').join('');
@@ -18489,7 +18542,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10p';
+const APP_BUILD='2026.11.10r';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
