@@ -6134,6 +6134,14 @@ function pdfReflowHTML(pages){
   const FM=/^(keywords?|key words|author affiliations?|affiliations?|address for correspondence|correspondence|corresponding author|©|copyright|received[: ]|accepted[: ]|e-?mail)/i;
   let paras=[],det=[];per.forEach(ps=>ps.forEach(x=>{(FM.test(x)||/all rights reserved/i.test(x))?det.push(x):paras.push(x)}));
   let t='';try{const f=paras[0]||'';if(paras.length>1&&shTitleOk(f)&&/^[A-Z]/.test(f)&&!/[-.,;:]$/.test(f)&&!/(^|\s)\d+(\s|$)/.test(f))t=paras.shift()}catch(e){}
+  /* A sentence that was cut by a column end, a page turn or a figure continues in the next paragraph when that starts in lower case.
+     A figure or table caption that landed inside such a sentence is moved to after the sentence. A reference cut before its year line is joined. */
+  {const open=x=>!!x&&!/[.?!:]["”')\]]*$/.test(x),isCap=x=>/^(Figure|Fig\.|Table)\s+\d/.test(x),out=[];let pend=[];
+   paras.forEach(x=>{const last=out.length?out[out.length-1]:'';
+     if(isCap(x)&&open(last)){pend.push(x);return}
+     if(out.length&&((open(last)&&/^[a-z(]/.test(x))||(/^\d{4}[;:]/.test(x)&&/\s?\.$/.test(last))))out[out.length-1]=last+' '+x;else out.push(x);
+     if(pend.length&&!open(out[out.length-1])){pend.forEach(c=>out.push(c));pend=[]}});
+   pend.forEach(c=>out.push(c));paras=out}
   /* Four or more short, unfinished lines in a row are the labels of a figure or the rows of a table, not sentences. They are kept, in their own block, so they do not cut the body text. */
   const shortLine=x=>x.length<45&&!/[.?!:]["”')\]]*$/.test(x),fig=[];
   {let i=0;const keep=[];while(i<paras.length){let j=i;while(j<paras.length&&shortLine(paras[j]))j++;if(j-i>=4){for(let k=i;k<j;k++)fig.push(paras[k]);i=j}else{keep.push(paras[i]);i++}}paras=keep}
@@ -18542,7 +18550,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10r';
+const APP_BUILD='2026.11.10s';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
