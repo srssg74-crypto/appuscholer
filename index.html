@@ -6118,6 +6118,7 @@ function pdfReflowHTML(pages){
     const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
     String(pg||'').split('\n').forEach(l=>{
       l=l.trim();if(!l){flush();return}
+      if(l.charAt(0)==='\uE012'){flush();paras.push(l);return}
       /* a line cut at a hyphen that is followed by a capital cannot be continued by it: another block (an abstract, a box) starts here */
       if(cur&&/[a-z]-$/.test(cur)&&/^[A-Z]/.test(l))flush();
       cur+=(cur?' ':'')+l;
@@ -6136,18 +6137,19 @@ function pdfReflowHTML(pages){
   let t='';try{const f=paras[0]||'';if(paras.length>1&&shTitleOk(f)&&/^[A-Z]/.test(f)&&!/[-.,;:]$/.test(f)&&!/(^|\s)\d+(\s|$)/.test(f))t=paras.shift()}catch(e){}
   /* A sentence that was cut by a column end, a page turn or a figure continues in the next paragraph when that starts in lower case.
      A figure or table caption that landed inside such a sentence is moved to after the sentence. A reference cut before its year line is joined. */
-  {const open=x=>!!x&&!/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(x),isCap=x=>/^(Figure|Fig\.|Table)\s+\d/.test(x),out=[];let pend=[];
+  {const open=x=>!!x&&x.charAt(0)!=='\uE012'&&!/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(x),isCap=x=>/^(Figure|Fig\.|Table)\s+\d/.test(x)||x.charAt(0)==='\uE012',out=[];let pend=[];
    paras.forEach(x=>{const last=out.length?out[out.length-1]:'';
      if(isCap(x)&&open(last)){pend.push(x);return}
      if(out.length&&((open(last)&&/^[a-z(]/.test(x))||(/^\d{4}[;:]/.test(x)&&/\s?\.$/.test(last))))out[out.length-1]=last+' '+x;else out.push(x);
      if(pend.length&&!open(out[out.length-1])){pend.forEach(c=>out.push(c));pend=[]}});
    pend.forEach(c=>out.push(c));paras=out}
   /* Four or more short, unfinished lines in a row are the labels of a figure or the rows of a table, not sentences. They are kept, in their own block, so they do not cut the body text. */
-  const shortLine=x=>x.length<45&&!/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(x),fig=[];
+  const shortLine=x=>x.charAt(0)!=='\uE012'&&x.length<45&&!/[.?!:]["”')\]]*[⁰¹²³⁴⁵⁶⁷⁸⁹,]*$/.test(x),fig=[];
   {let i=0;const keep=[];while(i<paras.length){let j=i;while(j<paras.length&&shortLine(paras[j]))j++;if(j-i>=4){for(let k=i;k<j;k++)fig.push(paras[k]);i=j}else{keep.push(paras[i]);i++}}paras=keep}
   /* A single short line between two long paragraphs is a heading. */
   const isHead=(x,i)=>x.length>=4&&x.length<=60&&/^[A-Z]/.test(x)&&!/[-.,;:?!]$/.test(x)&&(x.match(/\S+/g)||[]).length>=2&&(x.match(/\S+/g)||[]).length<=9&&i>0&&i<paras.length-1&&paras[i-1].length>=45&&paras[i+1].length>=45;
-  const bodyHTML=paras.map((x,i)=>(isHead(x,i)?'<h2>'+escHTML(x)+'</h2>':'<p>'+escHTML(x)+'</p>'));
+  const tblHTML=x=>{const R=x.slice(1).split('\uE013').map(r=>r.split('\uE014'));const th=R[0].every(c=>!/^\d/.test(c));return'<table><tbody>'+R.map((r,k)=>'<tr>'+r.map(c=>(th&&k===0?'<th>':'<td>')+escHTML(c)+(th&&k===0?'</th>':'</td>')).join('')+'</tr>').join('')+'</tbody></table>'};
+  const bodyHTML=paras.map((x,i)=>(x.charAt(0)==='\uE012'?tblHTML(x):isHead(x,i)?'<h2>'+escHTML(x)+'</h2>':'<p>'+escHTML(x)+'</p>'));
   return(t?'<h1>'+escHTML(t)+'</h1>':'')+bodyHTML.join('')+(fig.length?'<h2>Figure and table text</h2>'+fig.map(x=>'<p>'+escHTML(x)+'</p>').join(''):'')+(det.length?'<h2>Paper details</h2>'+det.map(x=>'<p>'+escHTML(x)+'</p>').join(''):'')||'<p></p>'}
 /* Pictures inside a PDF (the photos and scanned figures, not charts drawn as lines) are taken out one by one and
    shrunk. They go in a "Pictures in the PDF" block with their page number, because where each one stood in the text is not known. */
@@ -6198,7 +6200,7 @@ async function docImportOne(file,origin){
   }else if(name.endsWith('.html')||name.endsWith('.htm')){
     html=await file.text();
   }else if(name.endsWith('.pdf')){
-    const ex=await shExtractPdf(file,{sup:true});
+    const ex=await shExtractPdf(file,{sup:true,tables:true});
     let pgs=ex.pages;try{pgs=apDropRunningHeads(pgs)}catch(e){}
     html=pdfReflowHTML(pgs);
     try{const ph=pdfPicturesHTML(await pdfExtractImages(file,12));if(ph){const at=html.indexOf('<h2>Figure and table text</h2>')>=0?html.indexOf('<h2>Figure and table text</h2>'):(html.indexOf('<h2>Paper details</h2>')>=0?html.indexOf('<h2>Paper details</h2>'):html.length);html=html.slice(0,at)+ph+html.slice(at)}}catch(e){}
@@ -18550,7 +18552,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10t';
+const APP_BUILD='2026.11.10u';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -19058,6 +19060,50 @@ function apMarkSup(items){
     const pv=items[k-1];if(!pv||!pv.transform||!it.transform||!(it.transform[5]>pv.transform[5]+med*0.15))return it;
     return Object.assign({},it,{str:it.str.trim().replace(/\d/g,d=>SUP[d])+(/\s$/.test(it.str)?' ':'')})});
 }
+/* Tables in a PDF are only text at x and y positions. Rows that have two or more short items with wide gaps, three or more rows in a run
+   (four when every row has just two items), are taken as a table: the columns are the x positions that cluster, a lone short line under a row
+   continues that row's first cell, and a first cell that carries the row label and the first number together is split. */
+function apTables(items){
+  const its=(items||[]).filter(it=>it&&typeof it.str==='string'&&it.str.trim()&&it.transform);
+  if(its.length<6)return{items:items,tables:[]};
+  const rows=[];its.slice().sort((a,b)=>b.transform[5]-a.transform[5]).forEach(it=>{const y=it.transform[5],r=rows.find(r=>Math.abs(r.y-y)<=2.5);if(r)r.its.push(it);else rows.push({y,its:[it]})});
+  rows.sort((a,b)=>b.y-a.y);
+  /* only short, narrow items can be cells; a long line at the same height belongs to the other column of the page */
+  rows.forEach(r=>{r.sh=r.its.filter(it=>it.str.trim().length<=45&&(it.width||0)<=130).sort((a,b)=>a.transform[4]-b.transform[4])});
+  const tab=r=>{const a=r.sh;if(a.length<2)return false;for(let i=1;i<a.length;i++){const p=a[i-1];if(a[i].transform[4]-(p.transform[4]+(p.width||0))<5)return false}return true};
+  const T=rows.map(tab),used=new Set(),tables=[];
+  let i=0;while(i<rows.length){
+    if(!T[i]){i++;continue}
+    let j=i;const mem=[];
+    while(j<rows.length){
+      if(T[j]){mem.push({r:rows[j],cont:false});j++;continue}
+      const r=rows[j],h=(r.sh[0]&&r.sh[0].height)||8,x0=Math.min.apply(null,mem.map(m=>m.r.sh[0].transform[4]));
+      if(mem.length&&r.sh.length===1&&Math.abs(r.sh[0].transform[4]-x0)<=4&&rows[j-1].y-r.y<=h*1.7){mem.push({r,cont:true});j++;continue}
+      break}
+    const data=mem.filter(m=>!m.cont);
+    if(data.length>=3){
+      const xs=[];data.forEach(m=>m.r.sh.forEach(it=>xs.push(it.transform[4])));
+      xs.sort((a,b)=>a-b);const cl=[[xs[0]]];for(let k=1;k<xs.length;k++){if(xs[k]-xs[k-1]>20)cl.push([xs[k]]);else cl[cl.length-1].push(xs[k])}
+      const cx=cl.map(c=>c[0]),ci=x=>{let b=0;for(let k=0;k<cx.length;k++)if(x>=cx[k]-20)b=k;return b};
+      /* a column that only a few rows use is body text from beside the table, not part of it */
+      const cnt=cx.map(()=>0);data.forEach(m=>{const seen=new Set();m.r.sh.forEach(it=>seen.add(ci(it.transform[4])));seen.forEach(c=>cnt[c]++)});
+      const keep=cx.map((_,k)=>cnt[k]>=Math.max(2,Math.ceil(data.length*0.6))),kc=keep.map((k,n)=>k?n:-1).filter(n=>n>=0);
+      const out=[],eat=[];
+      mem.forEach(m=>{
+        if(m.cont){if(out.length&&kc.length){out[out.length-1][0]=(out[out.length-1][0]+' '+m.r.sh[0].str.trim()).trim();eat.push(m.r.sh[0])}return}
+        const row=kc.map(()=>'');
+        m.r.sh.forEach((it,k)=>{const c=ci(it.transform[4]);if(!keep[c])return;
+          const sp=(c===kc[0]&&kc.length>1)?splitLabel(it.str):null;
+          if(sp){row[0]=(row[0]+' '+sp[0]).trim();row[1]=(row[1]+' '+sp[1]).trim()}
+          else{const q=kc.indexOf(c);row[q]=(row[q]+' '+it.str.trim()).trim()}eat.push(it)});
+        out.push(row)});
+      if(out.length>2&&!out[0][0]&&!out[1][0]){out[0]=out[0].map((c,q)=>(c+' '+out[1][q]).trim());out.splice(1,1)}
+      const filled=out.filter(r=>r.filter(c=>c).length>=2).length;
+      if(kc.length>=2&&(filled>=4||(filled>=3&&kc.length>=3))){eat.forEach(it=>used.add(it));tables.push({y:rows[i].y,rows:out})}}
+    i=Math.max(j,i+1)}
+  return{items:(items||[]).filter(it=>!used.has(it)),tables:tables};
+}
+function splitLabel(str){const m=/^(.*[A-Za-z)])\s+(\d+(?:\.\d+)?\s*(?:\(.*\))?)$/.exec(String(str).trim());return m&&m[1].length>=3?[m[1],m[2]]:null}
 async function shExtractPdf(file,opts){
   if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader needs the internet once to load. Try again when you are online.');
   const buf=await file.arrayBuffer();
@@ -19066,9 +19112,10 @@ async function shExtractPdf(file,opts){
   for(let k=1;k<=n;k++){
     const pg=await pdf.getPage(k),tc=await pg.getTextContent();
     if(opts&&opts.sup){try{tc.items=apMarkSup(tc.items)}catch(e){}}
+    let tbl=[];if(opts&&opts.tables){try{const T=apTables(tc.items);tc.items=T.items;tbl=T.tables}catch(e){}}
     let r;try{r=apPageText(tc.items,pg.view||[0,0,612,792])}catch(e){r={text:apStreamText(tc.items),mode:'stream'}}
     if(r.mode==='layout')reordered++;
-    pages.push(r.text);
+    pages.push(r.text+tbl.map(t=>'\n\uE012'+t.rows.map(x=>x.join('\uE014')).join('\uE013')).join(''));
   }
   try{pages=apJoinBreaks(pages)}catch(e){}
   try{pages=apFixDropCaps(pages)}catch(e){}
