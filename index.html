@@ -4193,6 +4193,73 @@ function dgCheckHTML(d){const r=dgCheck(d);if(!r.length)return'';return'<div cla
 function dgFwHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,d=dgFw(o);
   return'<div class="sub-box"><b>'+L('Conceptual framework figure','Conceptual framework का figure')+'</b>'+(d?'<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff;overflow-x:auto">'+d.svg+'</div>'+dgCheckHTML(d)+'<div class="row" style="margin-top:6px"><button type="button" class="btn btn-purple btn-sm" onclick="dgFwInsert()">📊 '+L('Put it in my document','Document में डालें')+'</button></div>':'<p class="desc" style="margin:4px 0 0">'+L('Drawn from your variables once you have at least one predictor or group and one outcome.','कम से कम एक predictor या group और एक outcome भरते ही आपके variables से यहाँ बनेगा।')+'</p>')+'</div>'}
 
+
+/* Design flow diagram: the whole study design as one picture, built from the student's own plan (population,
+   sample, groups, variables) and the fixed steps their design type has. Plain code, no AI. When the design
+   type is changed, the old picture's boxes are kept so the new picture can show what is new or gone. */
+function dgDesignRows(o){
+  const ds=(o||studyGet()).design||{},ty=ds.type;if(!ty||ty==='review')return null;
+  const hi=studyHi(),T=(e,h)=>hi?h:e,vars=(ds.vars||[]).filter(v=>String(v.name||'').trim()),nm=v=>String(v.name).trim();
+  const Y=vars.filter(v=>v.role==='outcome').map(nm),X=vars.filter(v=>v.role==='predictor'||v.role==='group').map(nm);
+  const names=a=>a.slice(0,3).join(', ')+(a.length>3?' +'+(a.length-3):'');
+  const gv=vars.find(v=>v.role==='group'&&v.levels)||vars.find(v=>v.levels&&(v.role==='predictor'||v.role==='group')),
+   gl=gv?String(gv.levels).split(/[,;\n]/).map(x=>x.trim()).filter(Boolean).slice(0,4):[];
+  const grp=(n)=>{const a=gl.slice();while(a.length<n)a.push(T('Group ','ग्रुप ')+(a.length+1));return a.slice(0,Math.max(n,gl.length||n)).map(x=>[x])};
+  const meas=(lab)=>[lab||T('Measure','माप'),names(Y)||T('outcome','outcome')];
+  const rows=[];
+  rows.push({cells:[[T('Population','Population'),(ds.pop||'').slice(0,70)].filter(Boolean)]});
+  rows.push({cells:[[T('Sample','Sample')+(ds.n?' (n = '+ds.n+')':''),(ds.sampling||'').slice(0,70)].filter(Boolean)]});
+  if(ty==='survey'||ty==='correlational')rows.push({cells:[meas(T('One measurement','एक बार माप'))]});
+  else if(ty==='two-group'||ty==='multi-group'){rows.push({cells:grp(ty==='two-group'?2:3)});rows.push({cells:[meas(T('Compare on','तुलना'))]})}
+  else if(ty==='experiment'){rows.push({cells:[[T('Random allocation','Random allocation')]]});rows.push({cells:[[T('Intervention group','Intervention group')],[T('Control group','Control group')]]});rows.push({cells:[meas()]})}
+  else if(ty==='pre-post'){rows.push({cells:[meas(T('Measure before','पहले माप'))]});rows.push({cells:[[T('Intervention or event','Intervention या घटना')]]});rows.push({cells:[meas(T('Measure after','बाद में माप'))]})}
+  else if(ty==='longitudinal'){rows.push({h:1,cells:[[T('Wave 1','Wave 1'),T('same people','वही लोग')],[T('Wave 2','Wave 2'),T('same people','वही लोग')],[T('Wave 3 or more','Wave 3 या ज़्यादा'),T('same people','वही लोग')]]});rows.push({cells:[[T('Outcome at each wave','हर wave पर outcome'),names(Y)||T('outcome','outcome')]]})}
+  else if(ty==='cohort'){rows.push({cells:[[T('Exposed group','Exposed group')],[T('Unexposed group','Unexposed group')]]});rows.push({cells:[[T('Follow over time','समय के साथ follow करें')]]});rows.push({cells:[[T('Outcome occurs?','Outcome हुआ?'),names(Y)||T('outcome','outcome')]]})}
+  else if(ty==='case-control'){rows.push({cells:[[T('Cases (have the outcome)','Cases (outcome है)')],[T('Controls (do not)','Controls (outcome नहीं)')]]});rows.push({cells:[[T('Look back at past exposures','पीछे की exposure देखें'),names(X)||T('exposure','exposure')]]})}
+  else if(ty==='qualitative'){rows.push({cells:[[T('Interviews or focus groups','Interview या focus group')]]});rows.push({cells:[[T('Transcribe and code','Transcribe और code करें')]]});rows.push({cells:[[T('Themes','Themes')]]})}
+  else if(ty==='mixed'){rows.push({cells:[[T('Quantitative strand','Quantitative हिस्सा'),names(Y)||T('measures','माप')],[T('Qualitative strand','Qualitative हिस्सा'),T('interviews','interview')]]});rows.push({cells:[[T('Combine the findings','निष्कर्ष जोड़ें')]]})}
+  let st=null;try{st=studySuggestTest()}catch(e){}
+  if(st&&st.k){const lab=st.k==='mediate'?T('Mediation analysis','Mediation analysis'):st.k==='moderate'?T('Moderation analysis','Moderation analysis'):(RES_KEYMAP[st.k]||'');if(lab)rows.push({cells:[[T('Analysis','विश्लेषण'),lab]]})}
+  return rows}
+function dgDesignCells(o){const r=dgDesignRows(o);return r?[].concat.apply([],r.map(x=>x.cells.map(c=>c.join(' · ')))):null}
+function dgDesign(o,changed){
+  const rows=dgDesignRows(o);if(!rows)return null;const hi=studyHi();changed=changed||[];
+  const pad=20,CWN={1:300,2:240,3:180,4:140},cwOf=n=>CWN[n]||140,W=Math.max(340,Math.max(...rows.map(r=>r.cells.length*cwOf(r.cells.length)+(r.cells.length-1)*28))+2*pad),gapY=34;let y=12,body='',allowed=[],prev=null;
+  rows.forEach((r,ri)=>{const n=r.cells.length,cw=cwOf(n),ch=Math.max(10,Math.floor((cw-12)/7.2));
+    const wr=r.cells.map(c=>c.map((t,i)=>dgWrap(t,ch).slice(0,i?3:2)));const L=wr.map(c=>[].concat.apply([],c));
+    const h=Math.max(36,Math.max(...L.map(l=>l.length))*16+16),tw=n*cw+(n-1)*28,x0=(W-tw)/2,cur=[];
+    r.cells.forEach((c,i)=>{const x=x0+i*(cw+28),ch2=changed.indexOf(c.join(' · '))>=0;
+      body+='<rect x="'+x+'" y="'+y+'" width="'+cw+'" height="'+h+'" rx="4" fill="'+(ch2?'#fff1dc':'#fff')+'" stroke="'+(ch2?'#c2620a':'#333')+'" stroke-width="'+(ch2?2:1)+'"/>';
+      const lines=L[i],t0=y+(h-lines.length*16)/2+12;
+      lines.forEach((l,k)=>{allowed.push(l);body+='<text x="'+(x+cw/2)+'" y="'+(t0+16*k)+'" text-anchor="middle" font-size="12.5"'+(k===0?' font-weight="700"':'')+' fill="#111">'+dgEsc(l)+'</text>'});
+      cur.push({x:x,w:cw,cx:x+cw/2})});
+    if(r.h&&n>1)for(let i=0;i<n-1;i++){const a=cur[i],b=cur[i+1];body+=dgArrow(a.x+a.w,y+h/2,b.x-2,y+h/2)}
+    if(prev){const my=y-gapY/2,xs=prev.cur.map(c=>c.cx).concat(cur.map(c=>c.cx));
+      if(prev.cur.length===1&&cur.length===1)body+=dgArrow(cur[0].cx,prev.y+prev.h,cur[0].cx,y-2);
+      else{prev.cur.forEach(c=>{body+='<line x1="'+c.cx+'" y1="'+(prev.y+prev.h)+'" x2="'+c.cx+'" y2="'+my+'" stroke="#333" stroke-width="1.2"/>'});
+        body+='<line x1="'+Math.min(...xs)+'" y1="'+my+'" x2="'+Math.max(...xs)+'" y2="'+my+'" stroke="#333" stroke-width="1.2"/>';
+        cur.forEach(c=>{body+=dgArrow(c.cx,my,c.cx,y-2)})}}
+    prev={y:y,h:h,cur:cur};y+=h+gapY});
+  const H=y-gapY+12;return{svg:dgFrame(W,H,body),w:W,h:H,allowed:allowed,rows:rows}}
+function dgDesignDiff(o){const f=(o.design||{}).flowPrev;if(!f)return null;const now=dgDesignCells(o)||[],was=f.cells||[];
+  return{type:f.type,added:now.filter(x=>was.indexOf(x)<0),gone:was.filter(x=>now.indexOf(x)<0)}}
+function cfCellKey(ty,id){const row=CF_ROWS[id],fam=CF_FAM[ty];if(!row||!fam)return'';return String((CF_OVR[ty]&&CF_OVR[ty][id])||row[['sv','ge','fu','ql','mx','rv'].indexOf(fam)]||'H')}
+function dgDesignStale(a,b){return Object.keys(CF_ROWS).filter(id=>cfCellKey(a,id)!==cfCellKey(b,id))}
+function dgDesignDismiss(){const o=studyGet();if(o.design)delete o.design.flowPrev;studySet(o);try{subRender()}catch(e){}}
+function dgDesignInsert(){const o=studyGet(),d=dgDesign(o);if(!d){showToast(studyHi()?'पहले study design चुनिए':'Choose a study design first');return}
+  dgInsert(d,'Figure. Design of the study.','Study design flow','method.design','design-flow')}
+function dgDesignHTML(id,o){if(id!=='C1')return'';const hi=studyHi(),L=(e,h)=>hi?h:e,ds=o.design||{};
+  if(!ds.type)return'';if(ds.type==='review')return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+L('A review has its own flow diagram (PRISMA) in the review steps.','Review का अपना flow diagram (PRISMA) review steps में है।')+'</span></div>';
+  const df=dgDesignDiff(o),d=dgDesign(o,df?df.added:[]);if(!d)return'';let h='<div class="sub-box"><b>'+L('Your study design at a glance','आपकी study का design एक नज़र में')+'</b>';
+  if(df&&(df.added.length||df.gone.length||df.type!==ds.type)){const st=dgDesignStale(df.type,ds.type);
+    h+='<div style="margin:8px 0;padding:8px 10px;border:2px solid #c2620a;border-radius:8px;background:#fff8ee"><b>'+L('You changed the design','आपने design बदला')+'</b> <span class="desc">'+escHTML(studyDesignLabel(df.type))+' → '+escHTML(studyDesignLabel(ds.type))+'</span>'
+     +(df.added.length?'<div class="desc" style="margin-top:4px">'+L('New or changed boxes (orange in the picture): ','नए या बदले box (चित्र में नारंगी): ')+escHTML(df.added.join(' | '))+'</div>':'')
+     +(df.gone.length?'<div class="desc" style="margin-top:4px">'+L('No longer in the design: ','अब design में नहीं: ')+escHTML(df.gone.join(' | '))+'</div>':'')
+     +(st.length?'<div class="desc" style="margin-top:4px">'+L('These steps now read differently for the new design: ','ये steps अब नए design के हिसाब से पढ़ते हैं: ')+escHTML(st.join(', '))+L('. If you wrote them for the old design, read them again.','। अगर आपने इन्हें पुराने design के लिए लिखा था, तो दोबारा देखिए।')+'</div>':'')
+     +'<div class="row" style="margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="dgDesignDismiss()">'+L('Got it, clear this note','समझ गया, यह नोट हटाएँ')+'</button></div></div>'}
+  h+='<div style="margin-top:6px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff;overflow-x:auto">'+d.svg+'</div>'+dgCheckHTML(d)
+   +'<div class="row" style="margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="dgDesignInsert()">'+L('Insert in my document','मेरे document में डालें')+'</button></div>'
+   +'<p class="desc" style="margin:6px 0 0">'+L('Every box comes from your study plan. Change the plan and the picture changes.','हर box आपकी study की योजना से आता है। योजना बदलिए तो चित्र बदलता है।')+'</p></div>';return h}
 function dgPlanSet(s,k,v){const o=studyGet();o.write=o.write||{};const c=o.write.C8=o.write.C8||{};c.plan=c.plan||{};c.plan[s]=Object.assign({},c.plan[s]||{},{[k]:v});studySet(o);wRedraw()}
 function dgGanttInsert(){const d=dgGantt(studyGet());if(!d){showToast(studyHi()?'कम से कम दो stages के महीने भरें':'Fill the months for at least two stages');return}dgInsert(d,'Figure. Work plan of the study (months from registration).','Work plan chart','syn.timeline','gantt')}
 function dgPlanHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,p=((wGet(o).C8||{}).plan)||{},d=dgGantt(o);
@@ -4748,7 +4815,7 @@ function cfNoteHTML(id,o){const row=CF_ROWS[id];if(!row)return'';const hi=studyH
   const cell=String((CF_OVR[ty]&&CF_OVR[ty][id])||row[['sv','ge','fu','ql','mx','rv'].indexOf(fam)]||'H').split('|'),l=B1_LBL[cell[0]]||B1_LBL.R;
   if(cell[0]==='H')return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+escHTML(L('For '+studyDesignShort(ty)+', this step does not appear.','इस design में यह चरण नहीं आता।'))+((hi?cell[2]:cell[1])?' '+escHTML(hi?cell[2]:cell[1]):'')+'</span></div>';
   return'<div class="sub-box" style="border-style:dashed;display:flex;gap:8px;align-items:flex-start"><span style="flex:0 0 auto;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;background:'+l[2]+';color:'+l[3]+(cell[0]==='O'?';border:1px solid #9ca3af':'')+'">'+escHTML(hi?l[1]:l[0])+'</span><div style="font-size:13px;line-height:1.4"><b>'+escHTML(L('For your design: ','आपके design के लिए: ')+(hi?CF_FAM_NAMES[fam][1]:CF_FAM_NAMES[fam][0]))+'</b>'+((hi?cell[2]:cell[1])?' '+escHTML(hi?cell[2]:cell[1]):'')+'</div></div>'}
-function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=b1ItemNoteHTML(id,o)}catch(e){}try{lg+=cfNoteHTML(id,o)}catch(e){}try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{lg+=wCardsHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
+function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=b1ItemNoteHTML(id,o)}catch(e){}try{lg+=cfNoteHTML(id,o)}catch(e){}try{lg+=dgDesignHTML(id,o)}catch(e){}try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{lg+=wCardsHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
   if(id==='B6'&&!logRows(o,'search').length)lg='<div class="sub-box" style="border-color:#b45309"><b>⚠️ '+(hi?'अभी कोई search दर्ज नहीं':'No search logged yet')+'</b><p style="margin:6px 0 0">'+(hi?'"भारत में कम studies" जैसा दावा तभी करें जब B2 में search दर्ज हो।':'Claim something like "few Indian studies" only after a search is logged in B2.')+' <a href="#" onclick="SUB_CUR.id=\'B2\';subRender();return false">B2 →</a></p></div>'+lg;
   if(lg&&!['C3','C4'].includes(id))return lg;
   if(id==='C3'){const ok=ssComplete(ds);return cfNoteHTML(id,o)+'<div class="sub-box" style="border-color:'+(ok?'#16a34a':'#b45309')+'"><b>'+(ok?'✅ ':'⚠️ ')+(hi?'Sample size':'Sample size')+'</b><p style="margin:6px 0 0">'+(ds.n?(hi?'योजना में संख्या: ':'Number in the plan: ')+escHTML(String(ds.n))+'. ':'')+(ok?escHTML(ssDraftText(ds)):(ds.n?(hi?'इस संख्या का आधार अभी नहीं लिखा। Paper के draft में संख्या के साथ यह खाली जगह दिखेगी।':'How this number was reached is not recorded yet. The paper draft will show a gap next to the number.'):(hi?'अभी कोई संख्या नहीं।':'No number yet.')))+'</p><div class="row" style="margin-top:6px;gap:6px">'+(ok?'<button type="button" class="btn btn-purple btn-sm" onclick="bbSampleToBook()">📖 '+(hi?'किताब में डालें (संख्याएँ जुड़ी रहेंगी)':'Put it in my book (numbers stay linked)')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();pwOpen()">🎯 '+(hi?'Power calculator':'Power calculator')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();spOpen()">📐 '+(hi?'योजना में आधार लिखें':'Write the basis in the plan')+'</button></div></div>'}
@@ -4813,6 +4880,7 @@ function spGuessInstr(inp){const tr=inp.closest('tr');if(!tr)return;const sc=tr.
 function spAddRow(){const d=document.getElementById('spDlg');const tb=document.querySelector('#spVars tbody');if(!d||!tb)return;tb.insertAdjacentHTML('beforeend',spRowHTML({role:'covariate',type:'category'},d._opt,d._scales))}
 function spSave(){const hi=studyHi(),o0=studyGet();const vars=[...document.querySelectorAll('#spVars tbody tr')].map(tr=>({name:tr.querySelector('.spName').value.trim(),role:tr.querySelector('.spRole').value,type:tr.querySelector('.spTypeV').value,scale:tr.querySelector('.spScale').value,levels:tr.querySelector('.spLevels').value.trim()})).filter(v=>v.name);
   const ds={type:document.getElementById('spType').value,pop:document.getElementById('spPop').value.trim(),n:document.getElementById('spN').value.trim(),sampling:document.getElementById('spSampling').value.trim(),vars:vars,hyp:document.getElementById('spHyp').value.trim()};try{ds.ss=ssReadBasis(o0.design)}catch(e){}
+  try{const od=o0.design||{};if(od.flowPrev)ds.flowPrev=od.flowPrev;if(od.type&&ds.type&&od.type!==ds.type&&!od.flowPrev){const pc=dgDesignCells(o0);if(pc)ds.flowPrev={type:od.type,cells:pc}}}catch(e){}
   if(!ds.type){showToast(hi?'पहले study design चुनिए':'Choose a study design first');return}
   if(!vars.some(v=>v.role==='outcome')){showToast(hi?'कम से कम एक outcome (DV) variable लिखिए':'Add at least one outcome (DV) variable');return}
   studyPatch('design',ds);document.getElementById('spDlg').close();try{designRender&&designRender()}catch(e){}
@@ -18363,7 +18431,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10f';
+const APP_BUILD='2026.11.10g';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
