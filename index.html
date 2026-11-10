@@ -6136,7 +6136,8 @@ async function docImportOne(file,origin){
     html=await file.text();
   }else if(name.endsWith('.pdf')){
     const ex=await shExtractPdf(file);
-    html=pdfReflowHTML(ex.pages);
+    let pgs=ex.pages;try{pgs=apDropRunningHeads(pgs)}catch(e){}
+    html=pdfReflowHTML(pgs);
   }else if(name.endsWith('.txt')||name.endsWith('.md')){
     const txt=await readFileText(file);
     html=txt.split(/\n{2,}/).map(p=>'<p>'+escHTML(p).replace(/\n/g,'<br>')+'</p>').join('');
@@ -18485,7 +18486,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10n';
+const APP_BUILD='2026.11.10o';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -18926,10 +18927,17 @@ function apInterleaved(items,pageBox){
   let steady=0;if(cs.length){const m=cs.slice().sort(function(a,b){return a-b})[Math.floor(cs.length/2)];steady=cs.filter(function(c){return Math.abs(c-m)<=15}).length/cs.length}
   return{hit:two>=6&&two>=0.3*L.length&&steady>=0.7,two:two,lines:L.length};
 }
+/* Some journals write the body of the first page before the title block (title, authors, drop cap, abstract come
+   later in the file). The signature: the text jumps far UP the page and not into a column to the right, which is
+   what a legitimate second column does. Such a page is rebuilt from positions. */
+function apOutOfOrder(items,pageBox){
+  const H=Math.max(1,pageBox[3]-pageBox[1]),pts=(items||[]).filter(function(i){return i&&typeof i.str==='string'&&i.str.trim()&&i.transform&&Math.abs(i.transform[1])<=0.1*Math.abs(i.transform[0]||1)}).map(function(i){return{x:i.transform[4],y:i.transform[5]}});
+  for(let k=0;k+1<pts.length;k++){if(pts[k+1].y-pts[k].y>0.12*H&&pts[k+1].x<=pts[k].x+20)return true}
+  return false}
 function apPageText(items,pageBox){
   const t=apStreamText(items);
   const d=apInterleaved(items,pageBox);
-  if(!d.hit)return{text:t,mode:'stream'};
+  if(!d.hit&&!apOutOfOrder(items,pageBox))return{text:t,mode:'stream'};
   const o=apPageOrder(items,pageBox);
   const wc=function(x){return(x.match(/\S+/g)||[]).length};
   if(o.scanned||!o.text||Math.abs(wc(o.text)-wc(t))>Math.max(6,wc(t)*0.08))return{text:t,mode:'stream'};
@@ -18955,6 +18963,27 @@ function apJoinBreaks(pages){
     });
   });
 }
+/* A drop cap ("A" then "nxiety") comes out as a separate letter. The paper itself decides: when the fragment is not a
+   word anywhere else in the paper but letter+fragment is used at least twice, the two are joined. */
+function apFixDropCaps(pages){
+  const cnt={};pages.join('\n').toLowerCase().replace(/[a-z]+/g,function(w){cnt[w]=(cnt[w]||0)+1;return w});
+  return pages.map(function(t){return String(t||'').replace(/(^|\n)([A-Z])[ \n]([a-z]{3,})(?=[^a-z]|$)/g,function(m,pre,L,frag){
+    return((cnt[frag]||0)<=1&&(cnt[L.toLowerCase()+frag]||0)>=2)?pre+L+frag:m})})}
+/* Running heads and feet (the journal name, "Sleep and anxiety disorders - Staner", page numbers) repeat on page after
+   page. A line near the top or bottom of a page that shows up on three or more pages is dropped. */
+function apDropRunningHeads(pages){
+  const norm=function(l){return l.toLowerCase().replace(/[^a-z0-9]+/g,'')};
+  const edges=function(L){const o=[];for(let i=0;i<L.length;i++)if(i<2||i>=L.length-2)o.push(i);return o};
+  const seen={},pn=[];
+  pages.forEach(function(t,pi){const L=String(t||'').split('\n'),u={};pn[pi]=null;
+    edges(L).forEach(function(i){const k=norm(L[i]);if(!k||L[i].length>90)return;if(/^[\d ]{1,7}$/.test(L[i].trim())){pn[pi]={i:i,n:+L[i].replace(/\s/g,'')};return}u[k]=1});
+    Object.keys(u).forEach(function(k){seen[k]=(seen[k]||0)+1})});
+  const need=Math.max(3,Math.ceil(pages.length*0.3));
+  const nums=pn.filter(Boolean),seq=nums.length>=3&&nums.every(function(x,j){return j===0||x.n===nums[j-1].n+1});
+  return pages.map(function(t,pi){const L=String(t||'').split('\n'),drop={};
+    edges(L).forEach(function(i){const k=norm(L[i]);if(k&&L[i].length<=90&&seen[k]>=need)drop[i]=1});
+    if(seq&&pn[pi])drop[pn[pi].i]=1;
+    return L.filter(function(x,i){return !drop[i]}).join('\n')})}
 async function shExtractPdf(file){
   if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader needs the internet once to load. Try again when you are online.');
   const buf=await file.arrayBuffer();
@@ -18967,6 +18996,7 @@ async function shExtractPdf(file){
     pages.push(r.text);
   }
   try{pages=apJoinBreaks(pages)}catch(e){}
+  try{pages=apFixDropCaps(pages)}catch(e){}
   let meta='';try{const md=await pdf.getMetadata();meta=String((md&&md.info&&md.info.Title)||'').trim()}catch(e){}
   return{pages:pages,total:pdf.numPages,meta:meta,reordered:reordered};
 }
