@@ -14,7 +14,7 @@ with sync_playwright() as p:
     ok('Outline' in J("document.querySelector('.docbar').innerText") and 'Book' not in J("document.querySelector('.docbar').innerText"),'Book is now Outline')
     ok('Show AI-written parts' in J("document.getElementById('aiHighlightBtn').innerText"),'AI text renamed')
     ok(J("[...document.querySelectorAll('.toolbar button')].filter(b=>/Viva/.test(b.innerText)).length")==1,'viva buttons sit inside one menu')
-    pg.click('#vivaMenuBtn'); pg.wait_for_timeout(300)
+    J("tbMoreToggle(true)"); pg.click('#vivaMenuBtn'); pg.wait_for_timeout(300)
     t=J("document.getElementById('vivaChooseDlg').innerText"); ok('One examiner question' in t and 'Full mock viva' in t,'chooser offers both')
     pg.click('#vivaBtn'); pg.wait_for_timeout(500)
     ok(J("!!document.getElementById('vivaDlg')&&document.getElementById('vivaDlg').open")or J("!!document.querySelector('dialog[open]')"),'one-question viva opens')
