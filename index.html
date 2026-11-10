@@ -6108,6 +6108,16 @@ function docNew(){
    it exactly as if they'd typed it here. .pdf/.txt/.md come in as plain paragraphs
    (PDF text extraction doesn't carry real formatting). Drop a file onto the editor,
    paste one (copy a file in your file manager, then Ctrl+V here), or use Import. */
+/* PDF import into the writing tool: page text in reading order (the Reader's extractor), lines of one paragraph
+   joined back together, a short line or a line ending in . ? ! : starts a new paragraph. */
+function pdfReflowHTML(pages){
+  const paras=[];let cur='';
+  const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
+  (pages||[]).forEach(pg=>{String(pg||'').split('\n').forEach(l=>{
+    l=l.trim();if(!l){flush();return}
+    cur+=(cur?' ':'')+l;
+    if(/[.?!:]["”')\]]*$/.test(l)||l.length<45)flush()});flush()});
+  return paras.map(x=>'<p>'+escHTML(x)+'</p>').join('')||'<p></p>'}
 async function docImportOne(file,origin){
   const name=(file.name||'file').toLowerCase();
   let html;
@@ -6122,7 +6132,10 @@ async function docImportOne(file,origin){
     throw new Error('"'+file.name+'" is an old .doc file — Save As .docx in Word first, then import that');
   }else if(name.endsWith('.html')||name.endsWith('.htm')){
     html=await file.text();
-  }else if(name.endsWith('.pdf')||name.endsWith('.txt')||name.endsWith('.md')){
+  }else if(name.endsWith('.pdf')){
+    const ex=await shExtractPdf(file);
+    html=pdfReflowHTML(ex.pages);
+  }else if(name.endsWith('.txt')||name.endsWith('.md')){
     const txt=await readFileText(file);
     html=txt.split(/\n{2,}/).map(p=>'<p>'+escHTML(p).replace(/\n/g,'<br>')+'</p>').join('');
   }else{
@@ -18456,7 +18469,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10i';
+const APP_BUILD='2026.11.10j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
