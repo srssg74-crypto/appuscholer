@@ -4668,11 +4668,22 @@ const CF_ROWS={
  F7:['R','R','R','R|Include the recordings and the key file.|Recordings और key file भी शामिल करें।','R','L']};
 ['E1','E2','E3','E6','E7','E8','F1','F3','F4'].forEach(k=>{CF_ROWS[k]=['R','R','R','R','R','R']});
 CF_ROWS.E3[5]='R|This chapter is the review.|यह chapter ही review है।';
+/* Notes that replace the family's note for one design (decided 10 Nov 2026 from two methods sources):
+   pre-post keeps the experiment duties but also needs the follow-up records; case-control looks backward,
+   so it follows nobody and loses no one to attrition. */
+const CF_OVR={'pre-post':{
+  C1:'R|State the gap between the two measurements and what happens in between. If there is a control group, say how it was chosen.|दोनों माप के बीच का अंतर और बीच में क्या होता है, यह लिखें। Control group हो तो उसका चुनाव कैसे हुआ, यह भी लिखें।',
+  D2:'R|Keep a log of who was measured at both times. Keep the allocation record if there is a control group.|कौन दोनों बार मापा गया, इसका log रखें। Control group हो तो allocation का record भी रखें।',
+  D3:'R|Keep the attrition record: who was lost between the two measurements, and why.|Attrition का record रखें: दोनों माप के बीच कौन छूटा और क्यों।'},
+ 'case-control':{
+  C1:'R|State how cases and controls were identified and which past exposures you ask about.|Cases और controls कैसे पहचाने गए और पिछले कौन से exposure पूछे जा रहे हैं, यह लिखें।',
+  D2:'R|Keep a record of how cases and controls were found and matched.|Cases और controls कैसे मिले और कैसे मिलाए गए, इसका record रखें।',
+  D3:'R|Nobody is followed, so there is no attrition record. Keep a record of missing answers about past exposure.|किसी का follow-up नहीं होता, इसलिए attrition record नहीं। पिछले exposure के छूटे उत्तरों का record रखें।'}};
 function cfNoteHTML(id,o){const row=CF_ROWS[id];if(!row)return'';const hi=studyHi(),L=(e,h)=>hi?h:e,ty=(o.design||{}).type,fam=CF_FAM[ty];
   if(!fam)return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+L('Choose your study design in C1 and this step tells you what it asks of that design.','C1 में अपना study design चुनें; तब यह चरण बताएगा कि उस design से यह क्या माँगता है।')+' <a href="#" onclick="SUB_CUR.id=\'C1\';subRender();return false">C1 →</a></span></div>';
   if(ty==='review'&&(REV_DONE[id]||REV_NA.indexOf(id)>=0)){const via=REV_DONE[id];
     return'<div class="sub-box" style="border-color:#16a34a;border-style:dashed"><b>'+(via?'✅ '+L('Already done in your review steps','आपके review steps में हो चुका'):L('Not needed for a review','Review के लिए ज़रूरी नहीं'))+'</b> <span class="desc">'+(via?L('This step counts as done because the work sits in '+via+'.','यह चरण पूरा गिना जाता है, क्योंकि यह काम '+via+' में है।')+' <a href="#" onclick="SUB_CUR.id=\''+via+'\';subRender();return false">'+via+' →</a> ':L('It counts as not applicable. You can still set its status yourself.','इसे लागू नहीं गिना जाता। आप चाहें तो status ख़ुद बदल सकते हैं।'))+'</span></div>'}
-  const cell=String(row[['sv','ge','fu','ql','mx','rv'].indexOf(fam)]||'H').split('|'),l=B1_LBL[cell[0]]||B1_LBL.R;
+  const cell=String((CF_OVR[ty]&&CF_OVR[ty][id])||row[['sv','ge','fu','ql','mx','rv'].indexOf(fam)]||'H').split('|'),l=B1_LBL[cell[0]]||B1_LBL.R;
   if(cell[0]==='H')return'<div class="sub-box" style="border-style:dashed"><span class="desc">'+escHTML(L('For '+studyDesignShort(ty)+', this step does not appear.','इस design में यह चरण नहीं आता।'))+((hi?cell[2]:cell[1])?' '+escHTML(hi?cell[2]:cell[1]):'')+'</span></div>';
   return'<div class="sub-box" style="border-style:dashed;display:flex;gap:8px;align-items:flex-start"><span style="flex:0 0 auto;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;background:'+l[2]+';color:'+l[3]+(cell[0]==='O'?';border:1px solid #9ca3af':'')+'">'+escHTML(hi?l[1]:l[0])+'</span><div style="font-size:13px;line-height:1.4"><b>'+escHTML(L('For your design: ','आपके design के लिए: ')+(hi?CF_FAM_NAMES[fam][1]:CF_FAM_NAMES[fam][0]))+'</b>'+((hi?cell[2]:cell[1])?' '+escHTML(hi?cell[2]:cell[1]):'')+'</div></div>'}
 function subExtraHTML(id,o){const hi=studyHi(),ds=o.design||{};let lg='';try{lg+=b1ItemNoteHTML(id,o)}catch(e){}try{lg+=cfNoteHTML(id,o)}catch(e){}try{lg+=wExtraHTML(id,o)}catch(e){}try{lg+=wExtra2HTML(id,o)}catch(e){}try{lg+=wExtra3HTML(id,o)}catch(e){}try{lg+=wCardsHTML(id,o)}catch(e){}try{(SUB_LOGS[id]||[]).forEach(d=>{lg+=logTableHTML(d,o)})}catch(e){}
@@ -18287,7 +18298,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10a';
+const APP_BUILD='2026.11.10d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
