@@ -4902,10 +4902,13 @@ function qnForms(){const hi=studyHi(),items=qnItems(),q=qnModel().q,box=document
 function qnInsert(){insertHTMLBlockIntoEditor('<p><br></p>'+qnHTML().replace(/<h1>/g,'<h2>').replace(/<\/h1>/g,'</h2>').replace(/<h2>(?!.*<h2>)/,'<h3>')+'<p><br></p>');showToast(studyHi()?'Questionnaire document में डाली गई ✓':'Questionnaire placed in your document ✓')}
 /* ---- The study plan inside the Statistics Lab: suggested test, matched columns, scale scoring ---- */
 function studySuggestTest(){const ds=studyGet().design||{},vars=(ds.vars||[]).filter(v=>v.name);if(!ds.type)return null;
-  const out=vars.filter(v=>v.role==='outcome'),pred=vars.filter(v=>v.role==='predictor'),grp=vars.filter(v=>v.role==='group'),cov=vars.filter(v=>v.role==='covariate');
+  const out=vars.filter(v=>v.role==='outcome'),pred=vars.filter(v=>v.role==='predictor'),grp=vars.filter(v=>v.role==='group'),cov=vars.filter(v=>v.role==='covariate'),med=vars.filter(v=>v.role==='mediator'),mod=vars.filter(v=>v.role==='moderator');
   const y=out[0];const lv=g=>String(g&&g.levels||'').split(',').map(s=>s.trim()).filter(Boolean).length;
   const hi=studyHi();let k='desc',why='';
   if(ds.type==='qualitative')return{k:null,why:hi?'Qualitative study: Stage 4 में Qualitative Coding इस्तेमाल करें।':'Qualitative study: use Qualitative Coding in Stage 4.'};
+  const num=v=>v&&(v.type==='score'||v.type==='yesno'),x0=pred[0]||grp[0]||null;
+  if(ds.type!=='review'&&y&&y.type==='score'&&num(x0)&&med.length&&num(med[0])){return{k:'mediate',why:hi?'आपने एक mediator बताया है, इसलिए mediation analysis: क्या '+med[0].name+' '+x0.name+' का असर '+y.name+' तक पहुँचाता है। (Moderator हो तो उसे अलग से moderation analysis में जाँचें।)':'You named a mediator, so mediation analysis: does '+med[0].name+' carry the effect of '+x0.name+' on '+y.name+'. (If you also have a moderator, test it separately with the moderation analysis.)',y:y,x:x0,m:med[0]}}
+  if(ds.type!=='review'&&y&&y.type==='score'&&num(x0)&&mod.length&&num(mod[0])){return{k:'moderate',why:hi?'आपने एक moderator बताया है, इसलिए moderation analysis: क्या '+mod[0].name+' के स्तर के साथ '+x0.name+' का '+y.name+' पर असर बदलता है। (दो ग्रुप वाले variable को 0/1 column बनाएँ।)':'You named a moderator, so moderation analysis: does the effect of '+x0.name+' on '+y.name+' change with '+mod[0].name+'. (A two-group variable must be a 0/1 column.)',y:y,x:x0,w:mod[0]}}
   if(y&&y.type==='yesno'){k='logistic';why=hi?'Outcome हाँ/नहीं है, इसलिए logistic regression।':'The outcome is yes/no, so logistic regression.'}
   else if(ds.type==='pre-post'){k='ttestPaired';why=hi?'वही लोग दो बार मापे गए, इसलिए paired t-test (data बहुत तिरछा हो तो Wilcoxon)।':'The same people measured twice: paired t-test (Wilcoxon if the data are very skewed).'}
   else if(ds.type==='longitudinal'){k='rmanova';why=hi?'वही लोग तीन या ज़्यादा बार: repeated-measures ANOVA।':'The same people three or more times: repeated-measures ANOVA.'}
@@ -4955,9 +4958,9 @@ function studyUseTest(){const s=studySuggestTest();if(!s||!s.k)return;const sel=
   /* Pick the columns whose names match the planned variables. */
   const data=window._statsData;if(!data)return;const norm=z=>String(z||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const find=v=>v?data.headers.findIndex(h=>norm(h)===norm(v.name)||norm(h)===norm(qnSlug(v.name))||norm(h).indexOf(norm(v.name))===0):-1;
-  const yi=find(s.y),xi=find(s.x);
+  const yi=find(s.y),xi=find(s.x),mi=find(s.m),wi=find(s.w);
   document.querySelectorAll('#statsFields select').forEach(se=>{const lab=(se.closest('.fld')&&se.closest('.fld').innerText||'').toLowerCase();
-    const want=/group|factor|predictor|\bx\b|first|variable 1|independent/.test(lab)?xi:(/outcome|score|\by\b|second|variable 2|dependent/.test(lab)?yi:-1);
+    const want=/mediator/.test(lab)?mi:/moderator/.test(lab)?wi:/group|factor|predictor|\bx\b|first|variable 1|independent/.test(lab)?xi:(/outcome|score|\by\b|second|variable 2|dependent/.test(lab)?yi:-1);
     if(want>=0&&[...se.options].some(o=>+o.value===want))se.value=String(want)})
   /* Tick the planned predictors and covariates in the first predictor lists (not the optional step 2). */
   const ds=studyGet().design||{},pv=(ds.vars||[]).filter(v=>v.name&&(v.role==='predictor'||v.role==='covariate'||v.role==='group'));
@@ -5036,7 +5039,7 @@ function reviewRun(){const hi=studyHi(),o=studyGet(),d=o.idea||{},ds=o.design||{
     add(vHit(v,resu),'Results report "'+v.name+'".','Results में "'+v.name+'" का नतीजा है।')});
   const hyp=String(ds.hyp||'').match(/H\d+/g)||[];hyp.forEach(hh=>add(new RegExp('\\b'+hh+'\\b').test(resu+disc),hh+' is answered in the Results or Discussion.',hh+' का जवाब Results या Discussion में है।'));
   if(ds.n){const ns=(meth+resu).match(/\b[Nn]\s*=\s*([\d,]+)/g)||[];const nums=ns.map(x=>+x.replace(/\D/g,''));add(!nums.length||nums.some(x=>x<=+ds.n),'Reported N fits the planned sample size ('+ds.n+').','बताया गया N योजना के sample size ('+ds.n+') से मेल खाता है।')}
-  const st=studySuggestTest();if(st&&st.k){const word={pearson:'correlat',spearman:'spearman',ttestInd:'t(',ttestPaired:'t(',welchAnova:'f(',mregress:'regress',logistic:'odds',chisq:'χ²',rmanova:'f('}[st.k];if(word)add(low.indexOf(word.toLowerCase())>=0,'The planned analysis ('+st.k+') appears in the Results.','योजना वाला analysis ('+st.k+') Results में है।')}
+  const st=studySuggestTest();if(st&&st.k){const word={pearson:'correlat',spearman:'spearman',ttestInd:'t(',ttestPaired:'t(',welchAnova:'f(',mregress:'regress',logistic:'odds',chisq:'χ²',rmanova:'f(',mediate:'indirect',moderate:'interaction'}[st.k];if(word)add(low.indexOf(word.toLowerCase())>=0,'The planned analysis ('+st.k+') appears in the Results.','योजना वाला analysis ('+st.k+') Results में है।')}
   if(vars.some(v=>v.scale==='instr'))add(/calibrat/i.test(meth)&&/\b(model|make|analy[sz]er|manufactur|device|machine)\b/i.test(meth),'Methods name each instrument (make, model) and how it was calibrated.','Methods में हर instrument का make, model और calibration लिखा है।');
   if(/\br\s*\(\d+\)\s*=/.test(resu))add(/r²|r2\b|r-squared|variance|variation|cause|causal|direction/i.test(disc),'The Discussion explains what each correlation means (direction, size, r², not cause).','Discussion में correlation का अर्थ लिखा है (दिशा, आकार, r², cause नहीं)।');
   const tags=editor.querySelectorAll('.stat-tag').length;add(tags>0,'Results come from the Statistics Lab ('+tags+' tagged result'+(tags===1?'':'s')+').','Results Statistics Lab से आए हैं ('+tags+' tagged)।');
@@ -18360,7 +18363,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10e';
+const APP_BUILD='2026.11.10f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}

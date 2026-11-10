@@ -43,7 +43,7 @@ with sync_playwright() as p:
     import json
     J("(()=>{const o=studyGet();o.design.vars=%s;studySet(o)})()"%json.dumps(base)); s1=J("JSON.stringify(studySuggestTest())")
     J("(()=>{const o=studyGet();o.design.vars=%s;studySet(o)})()"%json.dumps(base+[{'name':'Rumination','role':'mediator','type':'score'},{'name':'Support','role':'moderator','type':'score'}])); s2=J("JSON.stringify(studySuggestTest())")
-    ok(s1==s2,'a mediator and a moderator do not change the suggested test (%s)'%s1[:60])
+    ok('pearson' in s1 and 'mediate' in s2,'a mediator now moves the suggestion from Pearson to mediation (step 2) (%s)'%s2[:50])
     # the check catches problems
     bad=J("dgCheck({w:620,h:100,svg:'<svg viewBox=\"0 0 1400 100\"><rect stroke=\"#000\" x=\"0\" y=\"0\" width=\"60\" height=\"30\"/><rect stroke=\"#000\" x=\"40\" y=\"10\" width=\"60\" height=\"30\"/><text x=\"30\" y=\"20\" text-anchor=\"middle\" font-size=\"9\">A very long label that cannot fit</text><text x=\"5\" y=\"90\" font-size=\"12\">Figure 1. Title</text></svg>'})")
     fl=[x['t'] for x in bad if not x['ok']]
