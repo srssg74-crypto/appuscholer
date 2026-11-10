@@ -6117,9 +6117,12 @@ function pdfReflowHTML(pages){
   const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
   (pages||[]).forEach(pg=>{String(pg||'').split('\n').forEach(l=>{
     l=l.trim();if(!l){flush();return}
+    /* a line cut at a hyphen that is followed by a capital cannot be continued by it: another block (an abstract, a box) starts here */
+    if(cur&&/[a-z]-$/.test(cur)&&/^[A-Z]/.test(l))flush();
     cur+=(cur?' ':'')+l;
     if(/[.?!:]["”')\]]*$/.test(l)||l.length<45)flush()});flush()});
-  return paras.map(x=>'<p>'+escHTML(x)+'</p>').join('')||'<p></p>'}
+  let t='';try{const f=paras[0]||'';if(paras.length>1&&shTitleOk(f)&&/^[A-Z]/.test(f)&&!/[-.,;:]$/.test(f)&&!/(^|\s)\d+(\s|$)/.test(f))t=paras.shift()}catch(e){}
+  return(t?'<h1>'+escHTML(t)+'</h1>':'')+paras.map(x=>'<p>'+escHTML(x)+'</p>').join('')||'<p></p>'}
 async function docImportOne(file,origin){
   const name=(file.name||'file').toLowerCase();
   let html;
@@ -18486,7 +18489,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10o';
+const APP_BUILD='2026.11.10p';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
