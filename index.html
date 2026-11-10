@@ -6113,16 +6113,28 @@ function docNew(){
 /* PDF import into the writing tool: page text in reading order (the Reader's extractor), lines of one paragraph
    joined back together, a short line or a line ending in . ? ! : starts a new paragraph. */
 function pdfReflowHTML(pages){
-  const paras=[];let cur='';
-  const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
-  (pages||[]).forEach(pg=>{String(pg||'').split('\n').forEach(l=>{
-    l=l.trim();if(!l){flush();return}
-    /* a line cut at a hyphen that is followed by a capital cannot be continued by it: another block (an abstract, a box) starts here */
-    if(cur&&/[a-z]-$/.test(cur)&&/^[A-Z]/.test(l))flush();
-    cur+=(cur?' ':'')+l;
-    if(/[.?!:]["”')\]]*$/.test(l)||l.length<45)flush()});flush()});
+  const per=[];
+  (pages||[]).forEach(pg=>{const paras=[];let cur='';
+    const flush=()=>{if(cur.trim())paras.push(cur.trim());cur=''};
+    String(pg||'').split('\n').forEach(l=>{
+      l=l.trim();if(!l){flush();return}
+      /* a line cut at a hyphen that is followed by a capital cannot be continued by it: another block (an abstract, a box) starts here */
+      if(cur&&/[a-z]-$/.test(cur)&&/^[A-Z]/.test(l))flush();
+      cur+=(cur?' ':'')+l;
+      if(/[.?!:]["”')\]]*$/.test(l)||l.length<45)flush()});flush();per.push(paras)});
+  /* a paragraph cut at a hyphen at the end of a column or page continues in the next page's first paragraph that starts in lower case;
+     the two halves are joined only when the whole word is used elsewhere in the paper */
+  const voc={};per.forEach(ps=>ps.forEach(x=>(x.toLowerCase().match(/[a-z]+/g)||[]).forEach(w=>{voc[w]=(voc[w]||0)+1})));
+  for(let k=0;k+1<per.length;k++){
+    for(let i=0;i<per[k].length;i++){const m=/([A-Za-z]{2,})-$/.exec(per[k][i]);if(!m)continue;
+      const j=per[k+1].findIndex(x=>/^[a-z]/.test(x));if(j<0)continue;
+      const fw=/^[a-z]+/.exec(per[k+1][j])[0],whole=(m[1]+fw).toLowerCase();
+      if((voc[whole]||0)>=2){per[k][i]=per[k][i].slice(0,-1)+per[k+1][j];per[k+1].splice(j,1)}}}
+  /* front-matter and footer paragraphs (keywords, affiliations, correspondence, copyright) go to a "Paper details" block at the end, not into the body */
+  const FM=/^(keywords?|key words|author affiliations?|affiliations?|address for correspondence|correspondence|corresponding author|©|copyright|received[: ]|accepted[: ]|e-?mail)/i;
+  let paras=[],det=[];per.forEach(ps=>ps.forEach(x=>{(FM.test(x)||/all rights reserved/i.test(x))?det.push(x):paras.push(x)}));
   let t='';try{const f=paras[0]||'';if(paras.length>1&&shTitleOk(f)&&/^[A-Z]/.test(f)&&!/[-.,;:]$/.test(f)&&!/(^|\s)\d+(\s|$)/.test(f))t=paras.shift()}catch(e){}
-  return(t?'<h1>'+escHTML(t)+'</h1>':'')+paras.map(x=>'<p>'+escHTML(x)+'</p>').join('')||'<p></p>'}
+  return(t?'<h1>'+escHTML(t)+'</h1>':'')+paras.map(x=>'<p>'+escHTML(x)+'</p>').join('')+(det.length?'<h2>Paper details</h2>'+det.map(x=>'<p>'+escHTML(x)+'</p>').join(''):'')||'<p></p>'}
 async function docImportOne(file,origin){
   const name=(file.name||'file').toLowerCase();
   let html;
@@ -18489,7 +18501,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10p';
+const APP_BUILD='2026.11.10q';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
