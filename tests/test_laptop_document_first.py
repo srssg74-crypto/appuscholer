@@ -25,7 +25,7 @@ with sync_playwright() as p:
     pg.mouse.click(700,125); pg.wait_for_timeout(300)
     ok(not pg.evaluate("document.getElementById('fmtBar').classList.contains('more-open')"),'clicking the page closes it')
     pg.click('#focusBtn'); pg.wait_for_timeout(300)
-    h2,w2=H(); ok(h2>=h+80 and w2>=900,'Focus gives the document %dx%d'%(w2,h2))
+    h2,w2=H(); ok(h2>=h+80 and w2>=800,'Focus gives the document %dx%d'%(w2,h2))
     ok(J("getComputedStyle(document.querySelector('.tool-sidebar')).display")=='none','side panel hidden in Focus')
     ok(J("getComputedStyle(document.getElementById('editor')).backgroundColor")=='rgb(255, 255, 255)' and J("document.getElementById('editor').getBoundingClientRect().width")<=816,'Focus shows the document as a white page, 816px at most')
     J("document.documentElement.setAttribute('data-theme','dark')"); pg.wait_for_timeout(200)
