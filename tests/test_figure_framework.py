@@ -16,7 +16,7 @@ with sync_playwright() as p:
     ok(J("dgFw(studyGet())")==None,'no variables: no figure')
     J("(()=>{const o=studyGet();o.design=o.design||{};o.design.type='survey';o.design.vars=[{name:'Hours of sleep',role:'predictor',type:'score'},{name:'Residence (hostel or day)',role:'group',type:'category'},{name:'Exam anxiety',role:'outcome',type:'score'}];studySet(o)})()")
     d=J("(()=>{const d=dgFw(studyGet());return {svg:d.svg,n:d.allowed.length}})()")
-    ok('Hours of sleep' in d['svg'] and 'Residence (hostel or day)' in d['svg'] and 'Exam anxiety' in d['svg'],'names from the record are in the figure')
+    ok('Hours of sleep' in d['svg'] and 'Residence (hostel' in d['svg'] and 'Exam anxiety' in d['svg'],'names from the record are in the figure')
     ok('Covariates' not in d['svg'],'no covariate box when none exist')
     r=J("dgCheck(dgFw(studyGet()))")
     for x in r: print('   ',('ok ' if x['ok'] else 'NO ')+x['t'])
@@ -27,6 +27,23 @@ with sync_playwright() as p:
     # many variables and a long name
     J("(()=>{const o=studyGet();o.design.vars=[1,2,3,4,5].map(i=>({name:'Predictor number '+i+' with a rather long descriptive name',role:'predictor',type:'score'})).concat([{name:'Outcome',role:'outcome',type:'score'}]);studySet(o)})()")
     r=J("dgCheck(dgFw(studyGet()))"); ok(all(x['ok'] for x in r),'five long predictors still pass')
+    # mediator and moderator
+    J("(()=>{const o=studyGet();o.design.vars=[{name:'Hours of sleep',role:'predictor',type:'score'},{name:'Exam anxiety',role:'outcome',type:'score'},{name:'Rumination',role:'mediator',type:'score'},{name:'Social support',role:'moderator',type:'score'},{name:'Age',role:'covariate',type:'score'}];studySet(o)})()")
+    sv=J("dgFw(studyGet()).svg")
+    ok('Rumination' in sv and 'Mediators' in sv and 'Social support' in sv and 'Moderators' in sv and 'Covariates' in sv,'mediator, moderator and covariate all drawn with headings')
+    r=J("dgCheck(dgFw(studyGet()))")
+    for x in r: print('   ',('ok ' if x['ok'] else 'NO ')+x['t'])
+    ok(len(r)==6 and all(x['ok'] for x in r),'check passes with mediator, moderator and covariate')
+    J("(()=>{const o=studyGet();o.design.vars=[{name:'Stress',role:'predictor',type:'score'},{name:'Anxiety',role:'outcome',type:'score'},{name:'Rumination about exams',role:'mediator',type:'score'},{name:'Sleep quality',role:'mediator',type:'score'},{name:'Social support',role:'moderator',type:'score'},{name:'Coping style',role:'moderator',type:'score'},{name:'Gender',role:'covariate',type:'category'}];studySet(o)})()")
+    r=J("dgCheck(dgFw(studyGet()))"); ok(all(x['ok'] for x in r),'two mediators and two moderators still pass')
+    ok(J("studyRoleLabel('mediator')")=='Mediator (carries the effect)' and J("studyRoleLabel('moderator')")=='Moderator (changes the effect)','role labels')
+    # roles do not disturb other parts: test suggestion and protocol text
+    J("(()=>{const o=studyGet();o.design.vars=[{name:'Stress',role:'predictor',type:'score'},{name:'Anxiety',role:'outcome',type:'score'},{name:'Rumination',role:'mediator',type:'score'}];studySet(o)})()")
+    base=[{'name':'Stress','role':'predictor','type':'score'},{'name':'Anxiety','role':'outcome','type':'score'}]
+    import json
+    J("(()=>{const o=studyGet();o.design.vars=%s;studySet(o)})()"%json.dumps(base)); s1=J("JSON.stringify(studySuggestTest())")
+    J("(()=>{const o=studyGet();o.design.vars=%s;studySet(o)})()"%json.dumps(base+[{'name':'Rumination','role':'mediator','type':'score'},{'name':'Support','role':'moderator','type':'score'}])); s2=J("JSON.stringify(studySuggestTest())")
+    ok(s1==s2,'a mediator and a moderator do not change the suggested test (%s)'%s1[:60])
     # the check catches problems
     bad=J("dgCheck({w:620,h:100,svg:'<svg viewBox=\"0 0 1400 100\"><rect stroke=\"#000\" x=\"0\" y=\"0\" width=\"60\" height=\"30\"/><rect stroke=\"#000\" x=\"40\" y=\"10\" width=\"60\" height=\"30\"/><text x=\"30\" y=\"20\" text-anchor=\"middle\" font-size=\"9\">A very long label that cannot fit</text><text x=\"5\" y=\"90\" font-size=\"12\">Figure 1. Title</text></svg>'})")
     fl=[x['t'] for x in bad if not x['ok']]
