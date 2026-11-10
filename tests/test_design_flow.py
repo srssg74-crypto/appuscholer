@@ -48,6 +48,13 @@ with sync_playwright() as p:
     ok('Random allocation' in J("document.getElementById('spPrev').textContent"),'preview follows the dropdown live')
     J("(()=>{const s=document.getElementById('spN');s.value='123';s.dispatchEvent(new Event('input',{bubbles:true}))})()"); pg.wait_for_timeout(700)
     ok('n = 123' in J("document.getElementById('spPrev').textContent"),'preview follows sample size')
+    for ty in ['survey','correlational','two-group','multi-group','pre-post','experiment','longitudinal','cohort','case-control','qualitative','mixed']:
+        h=J("dgClaimHTML('%s')"%ty); ok('You can say' in h and 'You cannot say' in h and 'Watch for' in h,'claim card for '+ty)
+    ok(J("dgClaimHTML('review')")=='','no claim card for a review')
+    setd('pre-post'); t=c1(); ok('regression to the mean' in t and 'control group' in t,'pre-post card in C1')
+    J("LS.set('appu_lang','hi');applyLang()"); setd('experiment'); ok('आप कह सकते हैं' in c1(),'Hindi claim card')
+    J("LS.set('appu_lang','en');applyLang()"); setd('experiment'); J("spOpen()"); pg.wait_for_timeout(500)
+    ok('You cannot say' in J("document.getElementById('spPrev').textContent"),'claim card in the dialog preview')
     ok(not [e for e in errors if 'Failed to load resource' not in str(e)],'no page errors %s'%errors)
     b.close()
 print('failures:',len(fails)); sys.exit(1 if fails else 0)
