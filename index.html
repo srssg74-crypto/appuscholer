@@ -17498,9 +17498,12 @@ function apStageOfNow(){const tb=document.querySelector('.tool-tab.active');retu
 function apStageBarRender(){
   const el=document.getElementById('stageBar');if(!el)return;
   const home=apHomeIs(),cur=home?null:apStageOfNow(),p=getActiveProject(),ps=(p&&p.status!=='complete')?p.stage:null;
+  try{treeFocusStage(cur)}catch(e){}
   el.innerHTML='<button type="button" class="'+(home?'on':'')+'" onclick="apHomeShow()">⌂ '+escHTML(ht('home'))+'</button><span class="sb-sep">|</span>'
    +STAGES.map((s,i)=>'<button type="button" class="'+(cur===s?'on':'')+(ps===s?' proj':'')+'" onclick="apGoStage(\''+s+'\')" '+(cur===s?'aria-current="page"':'')+'>'+(i+1)+' '+escHTML(ht('s_'+s))+'</button>'+(i<STAGES.length-1?'<span class="sb-sep">›</span>':'')).join('');
 }
+/* The left tree shows the tools of the stage the student is in; the other stages stay folded until opened by hand. */
+function treeFocusStage(cur){if(!cur)return;STAGES.forEach(st=>{const g=document.querySelector('.stage-group[data-stage="'+st+'"]');if(g)g.classList.toggle('collapsed',st!==cur)})}
 function apHomeHide(){document.body.classList.remove('at-home');try{apStageBarRender()}catch(e){}try{dockLayout()}catch(e){}}
 function apHomeShow(){document.body.classList.add('at-home');apHomeRender();try{window.scrollTo(0,0)}catch(e){}}
 function apGoStage(s){const tl=STAGE_FIRST_TOOL[s];apHomeHide();if(tl)showTool(tl);try{if(!dockOn()){revealToolPanel()}else window.scrollTo(0,0)}catch(e){}}
@@ -18469,7 +18472,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10j';
+const APP_BUILD='2026.11.10k';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}

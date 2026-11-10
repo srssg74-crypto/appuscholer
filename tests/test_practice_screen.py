@@ -10,7 +10,7 @@ def ok(c,m):
 with sync_playwright() as p:
     errors=[]; b,pg=new_page(p,errors); J=lambda js: pg.evaluate(js)
     pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
-    pg.click('.tool-tab[data-tool=practice]'); pg.wait_for_timeout(300)
+    J("treeFocusStage('idea')"); pg.click('.tool-tab[data-tool=practice]'); pg.wait_for_timeout(300)
     ok(J("document.querySelector('[data-panel=practice]').classList.contains('active')"),'tab opens the panel')
     ok(J("document.getElementById('pgRun').hidden")==True,'nothing shown before Start')
     pg.fill('#pgSeed','42'); pg.wait_for_timeout(700); pg.click('#pgStart'); pg.wait_for_timeout(200)
@@ -36,7 +36,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300); pg.click('#pgOpen'); pg.wait_for_timeout(800)
     ok(J("document.getElementById('statsPaste').value.split('\\n')[0]")=='id,group,year,sleep_hours,a1,a2,a3,a4,a5','data lands in Statistics')
     ok(J("document.querySelector('[data-panel=stats]').classList.contains('active')"),'Statistics tab opened')
-    pg.reload(); pg.wait_for_timeout(1500); pg.click('.tool-tab[data-tool=practice]'); pg.wait_for_timeout(300)
+    pg.reload(); pg.wait_for_timeout(1500); J("treeFocusStage('idea')"); pg.click('.tool-tab[data-tool=practice]'); pg.wait_for_timeout(300)
     ok(J("document.getElementById('pgQ').value").startswith('Do hostel') and not J("document.getElementById('pgKey').hidden") and 'Caught: 7' in J("document.getElementById('pgTally').innerText"),'work, reveal and marks survive reload')
     J("LS.set('appu_lang','hi');applyLang()"); pg.wait_for_timeout(300)
     ok('अभ्यास' in J("document.getElementById('pgTitle').innerText") and 'उत्तर-कुंजी' in J("document.getElementById('pgKey').innerText"),'Hindi title and key')
