@@ -122,7 +122,7 @@
     main .split-row,main .tool-shell{display:contents}
     main .doc-pane{grid-column:2;grid-row:1/3;height:auto;min-height:0}
     main .splitter{display:block;grid-column:3;grid-row:1/3;justify-self:start;margin:0 0 0 -12px;width:10px;flex:none;z-index:2}
-    main .tool-sidebar{grid-column:1;grid-row:1/3;position:static;max-height:none;height:100%;width:236px;flex:none;box-sizing:border-box}
+    main .tool-sidebar{grid-column:1;grid-row:1/3;position:static;max-height:none;height:100%;width:204px;flex:none;box-sizing:border-box}
     main .tool-sidebar.collapsed{width:50px}
     main .doc-pane .card-head .btn{padding:6px 10px;font-size:12px}
     main .doc-pane .card-head{gap:6px}
@@ -135,6 +135,13 @@
     main.dock-ai .ai-pane{display:flex}
     main.dock-ai .tool-main{display:none}
   }
+  /* Laptop layout: the document comes first. The second row of writing tools stays folded until asked for. */
+  .doc-pane .toolbar .tb2{display:none}
+  .doc-pane .toolbar.tb-open .tb2{display:inline-flex}
+  /* Focus: the document alone, using the whole screen. The button stays in the document header to come back. */
+  body.focus-write .tool-sidebar,body.focus-write .dock-tabs,body.focus-write .tool-main,body.focus-write .ai-pane,body.focus-write .splitter,body.focus-write .subbar,body.focus-write .stagebar{display:none!important}
+  @media(min-width:1100px){body.focus-write main{grid-template-columns:minmax(0,1fr);margin-top:6px}body.focus-write main .doc-pane{grid-column:1}}
+  body.focus-write main .doc-pane{max-width:1100px;margin-left:auto;margin-right:auto;width:100%}
   .dock-tab{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dock-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
   .dock-tab .dock-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold,#f2b134);margin-left:6px;vertical-align:middle}
@@ -819,6 +826,7 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
       <h2 data-i18n="doc_pane_h2">📝 Your Document</h2>
       <span class="badge" id="saveBadge" data-i18n="autosave_on">Auto-save on</span><span class="badge" id="provBadge" style="background:#fbbf24;color:#3b0764">—</span>
       <div class="spacer"></div>
+      <button type="button" class="btn btn-ghost" id="focusBtn" onclick="focusToggle()" aria-pressed="false" title="Hide the side panels and use the whole screen for your document">⛶ Focus</button>
       <details class="dl-menu" id="dlMenu" style="position:relative;display:inline-block"><summary class="btn btn-ghost" style="list-style:none;cursor:pointer" data-i18n="download_menu">⬇ Download ▾</summary>
         <div style="position:absolute;right:0;top:100%;z-index:30;background:var(--card,#fff);border:1px solid var(--line,#ddd);border-radius:10px;padding:6px;min-width:190px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:4px">
           <button class="btn btn-ghost" onclick="document.getElementById('dlMenu').open=false;downloadDoc()" data-i18n="download_btn">⬇ Download (Word)</button>
@@ -929,10 +937,11 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
       <button class="btn btn-purple" onclick="continueWriting()" data-i18n="continue_btn" data-i18n-title="continue_btn_title" title="AI writes the next ~120 words for you">✨ Continue Writing <kbd>Tab</kbd></button>
       <button class="btn btn-ghost" onclick="improveText()" data-i18n="improve_btn" data-i18n-title="improve_btn_title" title="Select some text first, then click to polish its grammar">💜 Improve selection</button>
       <button class="btn btn-ghost" onclick="makeLonger()" data-i18n="extend_btn" data-i18n-title="extend_btn_title" title="Select some text first, then click to extend it">➕ Extend</button>
-      <button class="btn btn-ghost" onclick="insertScaffold()" data-i18n="template_btn" data-i18n-title="template_btn_title" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
-      <button class="btn btn-ghost" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 Show AI-written parts</button>
-      <button class="btn btn-ghost" id="vivaMenuBtn" onclick="vivaChoose()" data-i18n="viva_menu">🎓 Viva practice</button>
-      <button class="btn btn-ghost" id="draftFirstBtn" onclick="toggleDraftFirst()" data-i18n="df_btn" data-i18n-title="df_btn_title" title="Write first. The AI then asks questions about your writing instead of writing for you.">✍ Draft first</button>
+      <button class="btn btn-ghost" id="tbMoreBtn" onclick="tbMoreToggle()" aria-expanded="false" title="More writing tools">⋯ More</button>
+      <button class="btn btn-ghost tb2" onclick="insertScaffold()" data-i18n="template_btn" data-i18n-title="template_btn_title" title="Insert a ready-made outline (lab report, essay, literature review)">🧱 Template</button>
+      <button class="btn btn-ghost tb2" id="aiHighlightBtn" onclick="toggleAiHighlight()" data-i18n="aitext_btn" data-i18n-title="aitext_btn_title" title="Mark every AI-inserted passage directly in the document">👁 Show AI-written parts</button>
+      <button class="btn btn-ghost tb2" id="vivaMenuBtn" onclick="vivaChoose()" data-i18n="viva_menu">🎓 Viva practice</button>
+      <button class="btn btn-ghost tb2" id="draftFirstBtn" onclick="toggleDraftFirst()" data-i18n="df_btn" data-i18n-title="df_btn_title" title="Write first. The AI then asks questions about your writing instead of writing for you.">✍ Draft first</button>
       <button type="button" class="btn btn-ghost" id="citCaretChip" style="display:none" onclick="citJumpToCaret()"></button>
       <span class="stats" id="stats">0 words</span>
       <span class="orig-badge" id="origBadge" style="display:none;cursor:pointer" onclick="provShow()" role="button" tabindex="0"></span>
@@ -3286,10 +3295,14 @@ const STUDY_TYPES=[['score','Score (numbers)','Score (अंक)'],['category','
 function studyStatus(o){o=o||studyGet();const v=(o.design&&o.design.vars)||[];
   return{q:!!(o.idea&&String(o.idea.topic||'').trim()),gap:!!(o.gap&&String(o.gap.text||'').trim()),design:!!(o.design&&o.design.type),
     vars:v.some(x=>x.role==='outcome'),hyp:!!(o.design&&String(o.design.hyp||'').trim()),qn:!!(o.qn&&o.qn.built),data:!!(o.analysis&&o.analysis.ran),draft:!!(o.draft&&o.draft.built)}}
+function focusToggle(force){const on=typeof force==='boolean'?force:!document.body.classList.contains('focus-write');document.body.classList.toggle('focus-write',on);
+  const b=document.getElementById('focusBtn');if(b){b.setAttribute('aria-pressed',on?'true':'false');b.textContent=on?'⛶ Back to panels':'⛶ Focus'}
+  try{if(typeof dockLayout==='function')dockLayout()}catch(e){}}
+function tbMoreToggle(force){const t=document.querySelector('.doc-pane .toolbar'),b=document.getElementById('tbMoreBtn');if(!t)return;const on=typeof force==='boolean'?force:!t.classList.contains('tb-open');t.classList.toggle('tb-open',on);if(b){b.setAttribute('aria-expanded',on?'true':'false');b.textContent=on?'▴ Less':'⋯ More'}}
 function studyStripHTML(stage){const hi=studyHi(),o=studyGet(),d=o.idea||{},q=String(d.topic||'').trim(),s=studyStatus(o);
   const lab=hi?'📌 आपकी study:':'📌 Your study:';
   const open='<button type="button" class="back-btn" onclick="studyDlgOpen()">'+(hi?'पूरी योजना देखें':'See the whole plan')+'</button> <button type="button" class="back-btn" onclick="ideaInboxOpen()" title="'+(hi?'अचानक आया idea सहेजें':'Save a sudden idea')+'">💡 '+(hi?'Idea inbox':'Idea inbox')+(Array.isArray(o.inbox)&&o.inbox.length?' ('+o.inbox.length+')':'')+'</button>';
-  if(!q)return stage==='idea'?'':'<span class="study-strip" style="flex-basis:100%;font-size:13px">'+lab+' '+(hi?'अभी research question नहीं लिखा।':'no research question yet.')+' <button type="button" class="back-btn" onclick="showTool(\'idea\')">'+(hi?'Stage 1 में लिखें':'Write it in Stage 1')+' →</button></span>';
+  if(!q)return'';
   const tick=(ok,l)=>'<span style="margin-right:8px;white-space:nowrap">'+(ok?'✅':'⬜')+' '+l+'</span>';
   const marks=tick(s.q,hi?'सवाल':'Question')+tick(s.gap,hi?'रिसर्च गैप':'Research gap')+tick(s.design&&s.vars,hi?'Design':'Design')+tick(s.qn,hi?'Questionnaire':'Questionnaire')+tick(s.data,hi?'Analysis':'Analysis')+tick(s.draft,hi?'Draft':'Draft');
   return'<span class="study-strip" style="flex-basis:100%;font-size:13px">'+lab+' <b>'+escHTML(q.length>120?q.slice(0,120)+'…':q)+'</b> '+open+'<br><span style="font-size:12px">'+marks+'</span></span>'}
@@ -5810,7 +5823,7 @@ function dockLayout(){
        A width the student dragged is remembered separately for each kind. */
     const kind=dockKind(),w=parseFloat(LS.get('appu_dock_w_'+kind)||(kind==='write'?LS.get('appu_dock_w'):''));
     if(w&&w>=320&&w<=760)m.style.setProperty('--dockw',w+'px');
-    else if(kind==='tool')m.style.setProperty('--dockw',Math.max(420,Math.min(600,Math.round(m.getBoundingClientRect().width*0.46)))+'px');
+    else if(kind==='tool')m.style.setProperty('--dockw',Math.max(380,Math.min(520,Math.round(m.getBoundingClientRect().width*0.36)))+'px');
     else m.style.removeProperty('--dockw');
   }else{
     m.style.removeProperty('--dockh');m.classList.remove('dock-ai');
@@ -18552,7 +18565,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10u';
+const APP_BUILD='2026.11.10v';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
