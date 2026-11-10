@@ -4218,7 +4218,7 @@ function dgDesignRows(o){
   else if(ty==='case-control'){rows.push({cells:[[T('Cases (have the outcome)','Cases (outcome है)')],[T('Controls (do not)','Controls (outcome नहीं)')]]});rows.push({cells:[[T('Look back at past exposures','पीछे की exposure देखें'),names(X)||T('exposure','exposure')]]})}
   else if(ty==='qualitative'){rows.push({cells:[[T('Interviews or focus groups','Interview या focus group')]]});rows.push({cells:[[T('Transcribe and code','Transcribe और code करें')]]});rows.push({cells:[[T('Themes','Themes')]]})}
   else if(ty==='mixed'){rows.push({cells:[[T('Quantitative strand','Quantitative हिस्सा'),names(Y)||T('measures','माप')],[T('Qualitative strand','Qualitative हिस्सा'),T('interviews','interview')]]});rows.push({cells:[[T('Combine the findings','निष्कर्ष जोड़ें')]]})}
-  let st=null;try{st=studySuggestTest()}catch(e){}
+  let st=null;try{if(!(o&&o._preview))st=studySuggestTest()}catch(e){}
   if(st&&st.k){const lab=st.k==='mediate'?T('Mediation analysis','Mediation analysis'):st.k==='moderate'?T('Moderation analysis','Moderation analysis'):(RES_KEYMAP[st.k]||'');if(lab)rows.push({cells:[[T('Analysis','विश्लेषण'),lab]]})}
   return rows}
 function dgDesignCells(o){const r=dgDesignRows(o);return r?[].concat.apply([],r.map(x=>x.cells.map(c=>c.join(' · ')))):null}
@@ -4870,9 +4870,15 @@ function spOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{},d0=o.idea||{};
    '<table style="width:100%;border-collapse:collapse;font-size:13px" id="spVars"><thead><tr><th style="text-align:left">'+(hi?'नाम':'Name')+'</th><th>'+(hi?'भूमिका':'Role')+'</th><th>'+(hi?'प्रकार':'Type')+'</th><th>'+(hi?'कैसे मापेंगे':'Measured with')+'</th><th>'+(hi?'Categories (कॉमा से)':'Categories (comma)')+'</th><th></th></tr></thead><tbody>'+
    vars.map(v=>spRowHTML(v,opt,scales)).join('')+'</tbody></table>'+
    '<button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="spAddRow()">+ '+(hi?'एक variable और':'Add a variable')+'</button>'+
+   '<div id="spPrev"></div>'+
    '<label style="margin-top:12px;display:block"><b>Hypotheses</b> <span class="desc">'+(hi?'(हर पंक्ति में एक)':'(one per line)')+'</span></label><textarea id="spHyp" rows="3" style="width:100%" placeholder="'+escAttr(hi?'जैसे: H1: exam के हफ़्ते में कम सोने वाले students का anxiety score ज़्यादा होगा।':'e.g. H1: Students who sleep less in exam week will have higher anxiety scores.')+'">'+escHTML(ds.hyp||'')+'</textarea>'+
    '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'spDlg\').close()">'+(hi?'रद्द करें':'Cancel')+'</button><button type="button" class="btn btn-purple" onclick="spSave()">'+(hi?'सहेजें':'Save')+'</button></div>';
-  d._opt=opt;d._scales=scales;if(!d.open)d.showModal()}
+  d._opt=opt;d._scales=scales;if(!d.open)d.showModal();d.oninput=d.onchange=()=>{clearTimeout(d._pt);d._pt=setTimeout(spPreview,250)};spPreview()}
+function spPreview(){const el=document.getElementById('spPrev');if(!el)return;const hi=studyHi(),g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+  const vars=[...document.querySelectorAll('#spVars tbody tr')].map(tr=>({name:tr.querySelector('.spName').value.trim(),role:tr.querySelector('.spRole').value,type:tr.querySelector('.spTypeV').value,levels:tr.querySelector('.spLevels').value.trim()})).filter(v=>v.name);
+  const ty=g('spType');if(!ty){el.innerHTML='';return}
+  const d=dgDesign({design:{type:ty,pop:g('spPop'),n:g('spN'),sampling:g('spSampling'),vars:vars},_preview:1});
+  el.innerHTML=d?'<p style="margin:12px 0 4px"><b>'+(hi?'आपका design एक नज़र में':'Your design at a glance')+'</b></p><div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff;overflow-x:auto;max-height:340px;overflow-y:auto">'+d.svg+'</div>':''}
 function spRowHTML(v,opt,scales){const hi=studyHi();return'<tr><td><input class="spName" style="width:100%" value="'+escAttr(v.name||'')+'" placeholder="'+escAttr(hi?'जैसे: Exam anxiety':'e.g. Exam anxiety')+'" oninput="spGuessInstr(this)"></td><td><select class="spRole">'+opt(STUDY_ROLES,v.role)+'</select></td><td><select class="spTypeV">'+opt(STUDY_TYPES,v.type)+'</select></td><td><select class="spScale" style="max-width:220px">'+scales.map(x=>'<option value="'+x[0]+'"'+(x[0]===(v.scale||'')?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select></td><td><input class="spLevels" style="width:100%" value="'+escAttr(v.levels||'')+'"></td><td><button type="button" class="btn btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()" title="Remove">✕</button></td></tr>'}
 /* Hb, blood pressure, weight and the like are read off an instrument or a lab report, so the plan marks them that way. */
 const SP_INSTR_RE=/\b(h(a)?emoglobin|hb|bp|blood pressure|systolic|diastolic|pulse|heart rate|weight|height|bmi|waist|glucose|sugar|hba1c|ferritin|tsh|t3|t4|cholesterol|creatinine|cortisol|antibody|igg|igm|titre|titer|temperature|spo2|oxygen|platelet|wbc|rbc|vitamin|serum|plasma|urine|eeg|ecg|reaction time|grip)\b/i;
@@ -18431,7 +18437,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10g';
+const APP_BUILD='2026.11.10h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
