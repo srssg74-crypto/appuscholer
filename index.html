@@ -792,7 +792,6 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
   <button class="btn btn-ghost" onclick="toggleLang()" id="langBtn" title="Interface language">हि</button>
   <button class="btn btn-ghost" onclick="toggleTheme()" id="themeBtn" data-i18n-title="theme_btn_title" title="Light / dark">🌙</button>
   <button class="btn btn-ghost" onclick="openHelp()" data-i18n="help_btn">❓ Help</button>
-  <button class="btn btn-gold" id="aiKeyBtn" onclick="PROV_ORDER.some(provHasKey)?openSettings():keyWizOpen()" data-i18n="settings_btn">⚙ AI Provider / Key</button>
 </header>
 <div class="stagebar" id="stageBar" role="navigation" aria-label="Research stages"></div>
 <div class="subbar">
@@ -803,9 +802,12 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
   <span class="project-bar-status" id="projectBarStatus"></span>
   <div class="spacer"></div>
   <button type="button" class="btn btn-purple btn-sm btn-new" onclick="openNewProjectDirect()" data-i18n="project_bar_new">✨ New project</button>
-  <button type="button" class="btn btn-ghost btn-sm" onclick="openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as research project</button>
-  <button type="button" class="btn btn-ghost btn-sm" onclick="openProjectsDlg()" data-i18n="projects_btn">📁 Research Projects</button>
-  <button type="button" class="btn btn-ghost btn-sm" id="backupBarBtn" onclick="backupExport()" data-i18n="backup_btn" data-i18n-title="backup_btn_title" title="Save a copy of all your work to your computer">⬇ Backup</button>
+  <details class="dl-menu" id="projMenu" style="position:relative;display:inline-block"><summary class="btn btn-ghost btn-sm" style="list-style:none;cursor:pointer" data-i18n="projects_menu">📁 Projects ▾</summary>
+    <div style="position:absolute;right:0;top:100%;z-index:30;background:var(--card,#fff);border:1px solid var(--line,#ddd);border-radius:10px;padding:6px;min-width:230px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:4px">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('projMenu').open=false;openProjectsDlg()" data-i18n="projects_btn">📁 Research Projects</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('projMenu').open=false;openSaveAsProject()" data-i18n="save_as_project_btn">💾 Save as research project</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="backupBarBtn" onclick="document.getElementById('projMenu').open=false;backupExport()" data-i18n="backup_btn" data-i18n-title="backup_btn_title" title="Save a copy of all your work to your computer">⬇ Backup</button>
+    </div></details>
 </div>
 </div>
 
@@ -965,10 +967,6 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
   <div class="tool-shell" id="toolShell">
   <nav class="tool-sidebar" id="toolSidebar" role="tablist" aria-label="Writing tools">
     <button type="button" class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Collapse the tool panel" aria-label="Collapse or expand the tool panel">☰</button>
-    <div class="sidebar-pinned">
-      <button type="button" class="tool-tab sidebar-pin" style="background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)" onclick="openNewProjectDirect()" data-i18n-title="tab_new_project_title" title="Start a brand-new research project — names your project, then walks you through its six stages"><span class="sidebar-label" data-i18n="tab_new_project">✨ New Research Project</span></button>
-      <button type="button" class="tool-tab sidebar-pin" onclick="openProjectsDlg()" data-i18n-title="tab_projects_title" title="Switch to a research project you've already saved"><span class="sidebar-label" data-i18n="tab_projects">🗂 Research Projects</span></button>
-    </div>
 
     <div class="stage-group" data-stage="idea">
       <button type="button" class="stage-header" onclick="toggleStageGroup('idea')">💡 <span class="stage-header-label" data-i18n="stage_idea">Idea &amp; Feasibility</span><span class="stage-dot" data-stagedot="idea"></span><span class="chev">▾</span></button>
@@ -2423,7 +2421,7 @@ const I18N={
   en:{
     help_btn:'❓ Help', settings_btn:'⚙ AI Provider / Key', theme_btn_title:'Light / dark',
     project_bar_empty:'No research project yet — working in scratch space',
-    project_bar_new:'✨ New project', save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
+    projects_menu:'📁 Projects ▾', project_bar_new:'✨ New project', save_as_project_btn:'💾 Save as research project', projects_btn:'📁 Research Projects',
     doc_pane_h2:'📝 Your Document', autosave_on:'Auto-save on',
     download_menu:'⬇ Download ▾', download_btn:'⬇ Download (Word)', latex_btn:'⬇ LaTeX file', latex_btn_title:"Download as a LaTeX file (.tex), the format some universities and journals ask for. It opens in Overleaf. Skip this unless you have been told you need it.",
     doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
@@ -2666,7 +2664,7 @@ const I18N={
   hi:{
     help_btn:'❓ सहायता', settings_btn:'⚙ AI प्रदाता / कुंजी', theme_btn_title:'हल्का / गहरा',
     project_bar_empty:'अभी कोई शोध प्रोजेक्ट नहीं — स्क्रैच स्पेस में काम जारी',
-    project_bar_new:'✨ नया प्रोजेक्ट', save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
+    projects_menu:'📁 प्रोजेक्ट ▾', project_bar_new:'✨ नया प्रोजेक्ट', save_as_project_btn:'💾 शोध प्रोजेक्ट के रूप में सहेजें', projects_btn:'📁 शोध प्रोजेक्ट्स',
     doc_pane_h2:'📝 आपका दस्तावेज़', autosave_on:'ऑटो-सेव चालू',
     download_menu:'⬇ डाउनलोड ▾', download_btn:'⬇ डाउनलोड (Word)', latex_btn:'⬇ LaTeX फ़ाइल', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
     doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
@@ -8779,8 +8777,9 @@ function toggleProvMenu(e){
   const bar=document.getElementById('provTabs'),cur=getProv();
   bar.insertAdjacentHTML('beforeend','<div class="prov-menu" id="provMenu">'+PROV_ORDER.map(p=>'<button type="button" class="ptab'+(p===cur?' active':'')+(provHasKey(p)?' has-key':'')+
     '" data-p="'+p+'" title="'+(provHasKey(p)?'Key saved — click to use':'No key yet — click to add')+'"><span class="dot"></span>'+
-    escHTML(PROVIDERS[p].name)+'</button>').join('')+'</div>');
-  bar.querySelectorAll('.ptab').forEach(b=>b.onclick=()=>switchProv(b.dataset.p));
+    escHTML(PROVIDERS[p].name)+'</button>').join('')+'<button type="button" class="ptab ptab-set" id="provSetBtn" style="border-top:1px solid var(--line,#ddd);margin-top:4px">'+(studyHi()?'⚙ Key और settings':'⚙ Key and settings')+'</button></div>');
+  const sb=document.getElementById('provSetBtn');if(sb)sb.onclick=()=>{closeProvMenu();PROV_ORDER.some(provHasKey)?openSettings():keyWizOpen()};
+  bar.querySelectorAll('.ptab[data-p]').forEach(b=>b.onclick=()=>switchProv(b.dataset.p));
   setTimeout(()=>document.addEventListener('click',closeProvMenuOnOutsideClick),0);
 }
 function refreshProvUI(){closeProvMenu();renderProvTabs();updProvBadge();keyNudge()}
@@ -18472,7 +18471,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10k';
+const APP_BUILD='2026.11.10l';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
