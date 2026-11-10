@@ -149,6 +149,15 @@
   }
   /* Short laptop screens: a slimmer top bar. The version number is still in Help. */
   @media(max-height:760px){header{min-height:44px!important;padding-top:4px!important;padding-bottom:4px!important}header .logo{width:32px;height:32px;flex-basis:32px}#verBadge{display:none}}
+  /* The document looks like a page: white paper with margins on a grey desk, the way it will look in Word or as a PDF, in both themes.
+     Focus gives it full size; beside the tool panel the margins are narrower. */
+  #docPane{background:#d4d4da}
+  #editor#editor{flex:1 1 auto;width:calc(100% - 20px);max-width:816px;margin:10px auto;background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);padding:26px 34px;font-family:"Times New Roman",Times,"Noto Serif Devanagari","Noto Sans Devanagari",serif;font-size:16px;line-height:1.6;border-radius:2px}
+  body.focus-write #editor#editor{padding:48px 64px;margin:12px auto;width:calc(100% - 28px)}
+  #editor#editor :is(h1,h2,h3,h4,p,li,td,th,blockquote,figcaption,div){color:#1a1a1a}
+  #editor:empty::before{color:#8a8a94}
+  #editor table td,#editor table th{border-color:#b9b9c2}
+  #editor h1{font-size:1.7em;line-height:1.25}#editor h2{font-size:1.3em}
   .dock-tab{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--accent-ink);cursor:pointer;font-family:inherit;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dock-tab.active{background:linear-gradient(135deg,var(--purple-600),var(--purple-800));color:#fff;border-color:var(--purple-800)}
   .dock-tab .dock-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold,#f2b134);margin-left:6px;vertical-align:middle}
@@ -18574,7 +18583,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=118;
-const APP_BUILD='2026.11.10w';
+const APP_BUILD='2026.11.10x';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
