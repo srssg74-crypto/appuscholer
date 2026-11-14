@@ -225,7 +225,6 @@ pr = R.stratified_clusters(seed, [{"id":"__proto__"},{"id":"constructor"}], ["__
 assert {i for i, _ in pr["allocation"]} == {"__proto__","constructor"}
 
 # command line config path
-cfg = R.run_config({"method":"cluster_minimisation","clusters":big,"arms":["A","B"],"factors":["reg"],"weight":"size"}, seed) if hasattr(R, "run_config") else None
 
 # ---- constrained clusters (rules as data) ----
 V = json.load(open("vectors.json", encoding="utf-8"))
@@ -253,5 +252,77 @@ for kw in [dict(constraints=[]), dict(constraints=[{"type":"bogus","factor":"siz
         raise SystemExit("should raise: %r" % (kw,))
     except ValueError:
         pass
+
+# ---- review fixes: fractional weights, byte order, boundaries, ties, parity of refusals ----
+fv = json.load(open("vectors.json", encoding="utf-8"))["clusters_fractional"]
+fs = bytes.fromhex(fv["seed_hex"]); fa = (fv["arms"], fv["factors"], fv["bins"], fv["weight"])
+assert R.stratified_clusters(fs, fv["clusters"], *fa) == fv["stratified"], "fractional stratified vector"
+assert R.cluster_minimisation(fs, fv["clusters"], *fa) == fv["minimisation"], "fractional minimisation vector"
+# plain left-to-right sum, not Python's compensated sum: 0.1*1..10 adds to 3.3000000000000003 only left to right
+t = R.stratified_clusters(seed, [{"id": f"c{i}", "w": 0.1} for i in range(10)], ["A","B"], [], None, "w")
+tot = 0.0
+for _ in range(3): tot += 0.1
+assert R._fsum([0.1, 0.1, 0.1]) == tot, "_fsum must add left to right"
+# ids are ordered by UTF-8 bytes: U+E000 (3 bytes) sorts before an emoji (4 bytes) although UTF-16 says the opposite
+oc = R.stratified_clusters(seed, [{"id": "\U0001F600"}, {"id": "\ue000"}], ["A","B"], [])
+assert [i for i, _ in oc["allocation"]] == ["\ue000", "\U0001F600"], oc["allocation"]
+# boundaries
+ex = [{"id": "a", "s": 1}, {"id": "b", "s": 1}, {"id": "c", "s": 3}, {"id": "d", "s": 3}]
+assert R.cluster_minimisation(seed, ex, ["A","B"], [], None, "s")["method"] == "cluster_minimisation"
+for w in (0.001, 1e9):
+    R.cluster_minimisation(seed, [{"id": "a", "s": w}, {"id": "b", "s": w}], ["A","B"], [], None, "s")
+for w in (0.0009, 1e9 * 1.0000001):
+    try:
+        R.cluster_minimisation(seed, [{"id": "a", "s": w}, {"id": "b", "s": 5}], ["A","B"], [], None, "s"); raise SystemExit("weight %r should raise" % w)
+    except ValueError: pass
+c2 = [{"id": f"c{i}", "x": v} for i, v in enumerate([10, 20, 30, 50])]
+# the best possible split of these four sizes differs by exactly 5 ({10,50} against {20,30}):
+# a limit of 5 passes, a limit just under it finds nothing
+assert R.constrained_clusters(seed, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":5}], 300)["attempts"] >= 1
+try:
+    R.constrained_clusters(seed, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":4.99}], 300); raise SystemExit("should raise")
+except ValueError: pass
+# count_diff is a size, not a signed difference: 3 of level u in arm B and 1 in A fails max 1 whichever arm holds more
+c3 = [{"id": f"c{i}", "u": "p" if i < 3 else "q"} for i in range(4)]
+cr = R.constrained_clusters(seed, c3, ["A","B"], [{"type":"count_diff","factor":"u","max":1}], 300)
+cnt = {}
+for i, a in cr["allocation"]: cnt.setdefault(c3[int(i[1:])]["u"], []).append(a)
+assert abs(cnt["p"].count("A") - cnt["p"].count("B")) <= 1
+# narrow choice: six sizes, tight limit, few acceptable allocations
+nc = R.constrained_clusters(seed, [{"id": f"c{i}", "x": 10 * (i + 1)} for i in range(6)], ["A","B"], [{"type":"mean_diff","factor":"x","max":4}], 2000)
+assert any(w["kind"] == "narrow_choice" for w in nc["warnings"]) and nc["acceptable_seen"] < 20
+# ties: with no factor and equal clusters, minimisation uses both arms across seeds
+firsts = {R.cluster_minimisation(bytes([k]) * 32, [{"id": "a"}, {"id": "b"}], ["A","B"], [])["allocation"][0][1] for k in range(1, 40)}
+assert firsts == {"A", "B"}, firsts
+# strata_too_fine boundary: 2 strata x 2 arms = 4 slots with exactly 4 clusters is not too fine
+eq = R.stratified_clusters(seed, [{"id": f"c{i}", "g": i % 2} for i in range(4)], ["A","B"], ["g"])
+assert not any(w["kind"] == "strata_too_fine" for w in eq["warnings"])
+# a level with one cluster is flagged by minimisation; two is not
+lm = R.cluster_minimisation(seed, [{"id": "a", "g": "x"}, {"id": "b", "g": "y"}, {"id": "c", "g": "y"}], ["A","B"], ["g"])
+assert [w["level"] for w in lm["warnings"] if w["kind"] == "level_single_cluster"] == ["x"]
+# stratified with spare clusters in one stratum of 5 and three arms
+sp = R.stratified_clusters(seed, [{"id": f"c{i}", "g": "a"} for i in range(5)], ["A","B","C"], ["g"])
+assert sorted(n for _, n in sp["strata"][0]["counts"]) == [1, 2, 2]
+# inputs the two engines must refuse alike
+def refuses(fn, *a):
+    try: fn(seed, *a)
+    except ValueError: return True
+    return False
+base = [{"id": "a", "g": 1}, {"id": "b", "g": 2}]
+assert refuses(R.cluster_minimisation, base, ["A","B"], ["g"], None, None, "0.9")
+assert refuses(R.cluster_minimisation, base, ["A","B"], ["g"], None, None, None)
+assert refuses(R.cluster_minimisation, base, ["A","B"], ["g"], None, None, True)
+assert refuses(R.stratified_clusters, base, "AB", ["g"])
+assert refuses(R.stratified_clusters, [{"id": "\ud800", "g": 1}, {"id": "b", "g": 2}], ["A","B"], ["g"])
+assert refuses(R.stratified_clusters, [{"id": "a", "g": "\udfff"}, {"id": "b", "g": 2}], ["A","B"], ["g"])
+assert refuses(R.stratified_clusters, [{"id": "a", "g": 10**17}, {"id": "b", "g": 2}], ["A","B"], ["g"])
+assert refuses(R.stratified_clusters, [{"id": "a", "g": 1}, {"id": "b", "g": 2}], ["A","B"], ["g"], {"g": [9007199254740992, 9007199254740993]})
+assert refuses(R.stratified_clusters, [{"id": "a", "s": 5}, {"id": "b", "s": 5}], ["A","B"], [], None, "")
+assert refuses(R.constrained_clusters, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":10**400}], 100)
+assert R.constrained_clusters(seed, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":20}], 100.0)["method"] == "constrained_clusters"
+cfgres, cfgparams = R.run_config({"method": "cluster_minimisation", "clusters": big, "arms": ["A","B"], "factors": ["reg"], "weight": "size"}, seed)
+assert cfgres["method"] == "cluster_minimisation" and cfgparams["weight"] == "size" and cfgparams["p_best"] == 0.8
+cfgres, cfgparams = R.run_config({"method": "constrained_clusters", "clusters": c2, "arms": ["A","B"], "constraints": [{"type":"mean_diff","factor":"x","max":20}]}, seed)
+assert cfgres["method"] == "constrained_clusters" and cfgparams["tries"] == 10000
 
 print("ALL TESTS PASSED")

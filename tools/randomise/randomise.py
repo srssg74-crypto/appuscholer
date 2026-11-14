@@ -346,7 +346,7 @@ def constrained_two_arm(seed: bytes, units, balance_ok, arm_names=("A", "B"),
 # before anything is allocated, so these methods allocate all clusters in one
 # pass instead of one arrival at a time.
 #
-# Rules shared by both methods, fixed here so the two engines (Python and
+# Rules shared by all three methods, fixed here so the two engines (Python and
 # alloc.js) cannot drift apart:
 #
 # - A cluster is a dict with a unique string "id", a value for every factor,
@@ -358,7 +358,8 @@ def constrained_two_arm(seed: bytes, units, balance_ok, arm_names=("A", "B"),
 #   `bins[factor]`, a strictly increasing list of cut points. A value goes in
 #   bin i where i is the number of cut points at or below it: cuts [20, 50]
 #   give <20, 20 to under 50, and 50 or more. A factor with no bins keeps its
-#   own values as levels, and the level must be a string or a whole number.
+#   own values as levels: a string, a whole number up to 2^53, or true/false (written "true"/"false",
+#   so 1 and "1" are the same level). Text must be valid Unicode (no lone surrogates).
 # - Results hold lists of pairs, never objects keyed by data, so the output
 #   has one order and one JSON form in every language.
 
@@ -368,13 +369,37 @@ MIN_WEIGHT = 1e-3
 
 def bin_level(value, cuts) -> int:
     """Index of the bin a numeric value falls in. See the rules above."""
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value \
-            or value in (float("inf"), float("-inf")):
+    if not _finite(value):
         raise ValueError(f"a binned factor needs a finite number, got {value!r}")
     i = 0
     while i < len(cuts) and value >= cuts[i]:
         i += 1
     return i
+
+
+def _fsum(values):
+    """Plain left-to-right sum. The built-in sum() uses compensated summation for floats from
+    Python 3.12, which JavaScript does not, so fractional weights would disagree in the last digit."""
+    t = 0
+    for v in values:
+        t += v
+    return t
+
+
+def _clean(text, what):
+    """Reject text that is not valid Unicode (a lone surrogate): JavaScript would accept it."""
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        raise ValueError(f"{what} contains an invalid character (lone surrogate)")
+    return text
+
+
+def _finite(x):
+    """A finite real number whose value is the same in JavaScript: integers beyond 2^53 are refused."""
+    if isinstance(x, bool) or not isinstance(x, (int, float)) or x != x or x in (float("inf"), float("-inf")):
+        return False
+    return not (isinstance(x, int) and abs(x) > 2 ** 53)
 
 
 def _num(x):
@@ -398,9 +423,20 @@ def _cluster_table(clusters, arms, factors, bins, weight):
 
     Each row is {"id", "levels": [[factor, level], ...], "weight": number or None}.
     """
+    if not isinstance(arms, (list, tuple)):
+        raise ValueError("arms must be a list")
+    if factors is not None and not isinstance(factors, (list, tuple)):
+        raise ValueError("factors must be a list")
+    if bins is not None and not isinstance(bins, dict):
+        raise ValueError("bins must be an object")
+    if weight is not None and (not isinstance(weight, str) or not weight):
+        raise ValueError("weight must be the name of a field")
     arms = list(arms)
     factors = list(factors or [])
     bins = dict(bins or {})
+    for t in arms + factors:
+        if isinstance(t, str):
+            _clean(t, "an arm or factor name")
     if len(arms) < 2 or len(set(arms)) != len(arms) or not all(isinstance(a, str) and a for a in arms):
         raise ValueError("arms must be two or more different non-empty strings")
     if len(set(factors)) != len(factors) or not all(isinstance(f, str) and f for f in factors):
@@ -409,8 +445,7 @@ def _cluster_table(clusters, arms, factors, bins, weight):
         if f not in factors:
             raise ValueError(f"bins given for '{f}', which is not a factor")
         if (not isinstance(cuts, (list, tuple)) or not cuts
-                or any(isinstance(c, bool) or not isinstance(c, (int, float)) or c != c
-                       or c in (float("inf"), float("-inf")) for c in cuts)
+                or any(not _finite(c) for c in cuts)
                 or any(cuts[i] >= cuts[i + 1] for i in range(len(cuts) - 1))):
             raise ValueError(f"bins for '{f}' must be a non-empty, strictly increasing list of numbers")
     if not isinstance(clusters, (list, tuple)) or len(clusters) < 2:
@@ -420,7 +455,7 @@ def _cluster_table(clusters, arms, factors, bins, weight):
     for c in clusters:
         if not isinstance(c, dict) or not isinstance(c.get("id"), str) or not c["id"]:
             raise ValueError("every cluster needs a non-empty string id")
-        cid = c["id"]
+        cid = _clean(c["id"], "a cluster id")
         if cid in seen:
             raise ValueError(f"cluster id '{cid}' appears twice")
         seen.add(cid)
@@ -431,11 +466,14 @@ def _cluster_table(clusters, arms, factors, bins, weight):
             if f in bins:
                 levels.append([f, "b%d" % bin_level(c[f], bins[f])])
             else:
-                levels.append([f, stratum_label(c[f])])
+                lab = stratum_label(c[f])
+                if isinstance(c[f], int) and not isinstance(c[f], bool) and abs(c[f]) > 2 ** 53:
+                    raise ValueError(f"cluster '{cid}': '{f}' is a whole number beyond 2^53")
+                levels.append([f, _clean(lab, "a factor level")])
         w = None
         if weight is not None:
             w = c.get(weight)
-            if isinstance(w, bool) or not isinstance(w, (int, float)) or not (MIN_WEIGHT <= w <= MAX_WEIGHT):
+            if not _finite(w) or not (MIN_WEIGHT <= w <= MAX_WEIGHT):
                 raise ValueError(f"cluster '{cid}': '{weight}' must be a number from {MIN_WEIGHT:g} to {MAX_WEIGHT:g}")
         rows.append({"id": cid, "levels": levels, "weight": w})
     rows.sort(key=lambda r: _utf8_key(r["id"]))
@@ -447,7 +485,7 @@ def _arm_totals(rows, alloc, arms, weight):
     for a in arms:
         mine = [r for r in rows if alloc[r["id"]] == a]
         out.append({"arm": a, "clusters": len(mine),
-                    "weight": _num(sum(r["weight"] for r in mine)) if weight is not None else None})
+                    "weight": _num(_fsum(r["weight"] for r in mine)) if weight is not None else None})
     return out
 
 
@@ -536,11 +574,11 @@ def cluster_minimisation(seed: bytes, clusters, arms, factors, bins=None, weight
     still gets no pair to balance against. The warning `level_single_cluster`
     names such levels.
     """
-    if not 0.5 < p_best <= 1:
-        raise ValueError("p_best should be between 0.5 and 1")
+    if isinstance(p_best, bool) or not isinstance(p_best, (int, float)) or not 0.5 < p_best <= 1:
+        raise ValueError("p_best should be a number above 0.5 and at most 1")
     rows, arms, factors = _cluster_table(clusters, arms, factors, bins, weight)
     n = len(rows)
-    mean_w = (sum(r["weight"] for r in rows) / n) if weight is not None else None
+    mean_w = (_fsum(r["weight"] for r in rows) / n) if weight is not None else None
     order_stream = HashStream(seed, "cluster-minimisation:order")
     stream = HashStream(seed, "cluster-minimisation")
     order = order_stream.shuffle(range(n))
@@ -591,8 +629,8 @@ def cluster_minimisation(seed: bytes, clusters, arms, factors, bins=None, weight
         entry = {"factor": f, "level": lvl, "clusters": members_n,
                  "counts": [[a, groups[key]["n"][a]] for a in arms]}
         if weight is not None:
-            sums = {a: sum(rr["weight"] for rr in rows
-                           if alloc[rr["id"]] == a and [f, lvl] in rr["levels"]) for a in arms}
+            sums = {a: _fsum(rr["weight"] for rr in rows
+                             if alloc[rr["id"]] == a and [f, lvl] in rr["levels"]) for a in arms}
             entry["weights"] = [[a, _num(sums[a])] for a in arms]
         balance.append(entry)
         if members_n < 2:
@@ -608,6 +646,7 @@ def cluster_minimisation(seed: bytes, clusters, arms, factors, bins=None, weight
 
 
 MAX_TRIES = 200000
+NARROW_CHOICE = 100  # fewer distinct acceptable allocations than this in `tries` draws is a warning
 
 
 def constrained_clusters(seed: bytes, clusters, arms, constraints, tries=10000):
@@ -615,9 +654,11 @@ def constrained_clusters(seed: bytes, clusters, arms, constraints, tries=10000):
 
     Candidate allocations are drawn at random, each putting half the clusters
     (rounded so the arms differ by at most one) in each arm. The first
-    candidate that meets every constraint is the allocation. The number of
-    candidates tried is recorded; if none of `tries` qualifies the call raises,
-    and the constraints should be loosened or the design widened.
+    candidate that meets every constraint is the allocation. All `tries`
+    candidates are drawn, to count how many different allocations qualified
+    (`acceptable_seen`). If fewer than NARROW_CHOICE did, the warning
+    `narrow_choice` says the rules leave too small a set to randomise from.
+    If none qualifies the call raises: loosen the rules or widen the design.
 
     Each constraint is a dict, so it can sit in a plan and be hashed:
       {"type": "mean_diff", "factor": F, "max": X}   arm means of numeric F differ by at most X
@@ -629,6 +670,8 @@ def constrained_clusters(seed: bytes, clusters, arms, constraints, tries=10000):
     rows, arms, _ = _cluster_table(clusters, arms, [], None, None)
     if len(arms) != 2:
         raise ValueError("constrained_clusters handles two arms")
+    if isinstance(tries, float) and tries.is_integer():
+        tries = int(tries)
     if not isinstance(tries, int) or isinstance(tries, bool) or not 1 <= tries <= MAX_TRIES:
         raise ValueError(f"tries must be a whole number from 1 to {MAX_TRIES}")
     if not isinstance(constraints, (list, tuple)) or not constraints:
@@ -641,7 +684,7 @@ def constrained_clusters(seed: bytes, clusters, arms, constraints, tries=10000):
         f, mx = c.get("factor"), c.get("max")
         if not isinstance(f, str) or not f:
             raise ValueError("a constraint needs a factor name")
-        if isinstance(mx, bool) or not isinstance(mx, (int, float)) or mx != mx or mx < 0 or mx == float("inf"):
+        if not _finite(mx) or mx < 0:
             raise ValueError("a constraint max must be a finite number, zero or more")
         vals = []
         for r in rows:
@@ -649,17 +692,22 @@ def constrained_clusters(seed: bytes, clusters, arms, constraints, tries=10000):
                 raise ValueError(f"cluster '{r['id']}' has no value for factor '{f}'")
             x = byid[r["id"]][f]
             if c["type"] == "mean_diff":
-                if isinstance(x, bool) or not isinstance(x, (int, float)) or x != x or x in (float("inf"), float("-inf")):
+                if not _finite(x):
                     raise ValueError(f"mean_diff needs a finite number for '{f}' on cluster '{r['id']}'")
                 vals.append(x)
             else:
-                vals.append(stratum_label(x))
+                if isinstance(x, int) and not isinstance(x, bool) and abs(x) > 2 ** 53:
+                    raise ValueError(f"count_diff: '{f}' on cluster '{r['id']}' is a whole number beyond 2^53")
+                vals.append(_clean(stratum_label(x), "a factor level"))
         prepared.append((c["type"], vals, mx))
     n = len(rows)
     stream = HashStream(seed, "constrained-clusters")
     sizes = [n // 2, n - n // 2]
     first_is_big = n % 2 == 1 and stream.randbelow(2) == 0
     n0 = sizes[1] if first_is_big else sizes[0]
+    chosen = None
+    attempt_at = 0
+    distinct = set()
     for attempt in range(1, tries + 1):
         picks = stream.shuffle(range(n))
         in0 = set(picks[:n0])
@@ -684,12 +732,21 @@ def constrained_clusters(seed: bytes, clusters, arms, constraints, tries=10000):
                     ok = False
                     break
         if ok:
-            return {
-                "method": "constrained_clusters",
-                "allocation": [[rows[i]["id"], arms[0] if i in in0 else arms[1]] for i in range(n)],
-                "attempts": attempt,
-                "arm_totals": [{"arm": arms[0], "clusters": n0}, {"arm": arms[1], "clusters": n - n0}],
-            }
+            if chosen is None:
+                chosen, attempt_at = in0, attempt
+            distinct.add(",".join(str(i) for i in sorted(in0)))
+    if chosen is not None:
+        warnings = []
+        if len(distinct) < NARROW_CHOICE:
+            warnings.append({"kind": "narrow_choice", "distinct_acceptable": len(distinct), "tries": tries})
+        return {
+            "method": "constrained_clusters",
+            "allocation": [[rows[i]["id"], arms[0] if i in chosen else arms[1]] for i in range(n)],
+            "attempts": attempt_at,
+            "acceptable_seen": len(distinct),
+            "arm_totals": [{"arm": arms[0], "clusters": n0}, {"arm": arms[1], "clusters": n - n0}],
+            "warnings": warnings,
+        }
     raise ValueError(f"none of {tries} random allocations met the constraints; loosen them")
 
 

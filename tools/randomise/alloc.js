@@ -304,6 +304,12 @@
   var MAX_WEIGHT = 1e9, MIN_WEIGHT = 1e-3;
 
   function isNum(x) { return typeof x === "number" && isFinite(x); }
+  var NARROW_CHOICE = 100;
+  var LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?:^|[^\ud800-\udbff])[\udc00-\udfff]/;
+  function clean(text, what) {
+    if (LONE_SURROGATE.test(text)) throw new Error(what + " contains an invalid character (lone surrogate)");
+    return text;
+  }
   function binLevel(value, cuts) {
     if (!isNum(value)) throw new Error("a binned factor needs a finite number, got " + JSON.stringify(value));
     var i = 0;
@@ -319,9 +325,14 @@
   function levelsKey(levels) { return JSON.stringify(levels); }
 
   function clusterTable(clusters, arms, factors, bins, weight) {
-    arms = Array.prototype.slice.call(arms || []);
-    factors = Array.prototype.slice.call(factors || []);
+    if (!Array.isArray(arms)) throw new Error("arms must be a list");
+    if (factors !== null && factors !== undefined && !Array.isArray(factors)) throw new Error("factors must be a list");
+    if (bins !== null && bins !== undefined && (typeof bins !== "object" || Array.isArray(bins))) throw new Error("bins must be an object");
+    if (weight !== null && weight !== undefined && (typeof weight !== "string" || !weight)) throw new Error("weight must be the name of a field");
+    arms = arms.slice();
+    factors = (factors || []).slice();
     bins = bins || {};
+    arms.concat(factors).forEach(function (t) { if (typeof t === "string") clean(t, "an arm or factor name"); });
     var ok = function (a) { return typeof a === "string" && a.length > 0; };
     if (arms.length < 2 || new Set(arms).size !== arms.length || !arms.every(ok))
       throw new Error("arms must be two or more different non-empty strings");
@@ -337,14 +348,14 @@
     var seen = new Set(), rows = [];
     clusters.forEach(function (c) {
       if (!c || typeof c !== "object" || Array.isArray(c) || !ok(c.id)) throw new Error("every cluster needs a non-empty string id");
-      var cid = c.id;
+      var cid = clean(c.id, "a cluster id");
       if (seen.has(cid)) throw new Error("cluster id '" + cid + "' appears twice");
       seen.add(cid);
       var levels = [];
       factors.forEach(function (f) {
         if (!Object.prototype.hasOwnProperty.call(c, f)) throw new Error("cluster '" + cid + "' has no value for factor '" + f + "'");
         if (Object.prototype.hasOwnProperty.call(bins, f)) levels.push([f, "b" + binLevel(c[f], bins[f])]);
-        else levels.push([f, stratumLabel(c[f])]);
+        else levels.push([f, clean(stratumLabel(c[f]), "a factor level")]);
       });
       var w = null;
       if (weight !== null && weight !== undefined) {
@@ -416,8 +427,8 @@
   }
 
   function clusterMinimisation(seed, clusters, arms, factors, bins, weight, pBest) {
-    if (pBest === undefined || pBest === null) pBest = 0.8;
-    if (!(pBest > 0.5 && pBest <= 1)) throw new Error("p_best should be between 0.5 and 1");
+    if (pBest === undefined) pBest = 0.8;
+    if (typeof pBest !== "number" || !(pBest > 0.5 && pBest <= 1)) throw new Error("p_best should be a number above 0.5 and at most 1");
     var t = clusterTable(clusters, arms, factors, bins, weight), rows = t.rows;
     arms = t.arms;
     var hasW = weight !== null && weight !== undefined, n = rows.length, meanW = null;
@@ -497,7 +508,7 @@
 
   var MAX_TRIES = 200000;
   function constrainedClusters(seed, clusters, arms, constraints, tries) {
-    if (tries === undefined || tries === null) tries = 10000;
+    if (tries === undefined) tries = 10000;
     var t = clusterTable(clusters, arms, [], null, null), rows = t.rows;
     arms = t.arms;
     if (arms.length !== 2) throw new Error("constrained_clusters handles two arms");
@@ -517,7 +528,7 @@
           if (!isNum(x)) throw new Error("mean_diff needs a finite number for '" + f + "' on cluster '" + r.id + "'");
           return x;
         }
-        return stratumLabel(x);
+        return clean(stratumLabel(x), "a factor level");
       });
       return { kind: c.type, vals: vals, mx: mx };
     });
@@ -526,6 +537,7 @@
     var firstIsBig = n % 2 === 1 && stream.randbelow(2) === 0;
     var n0 = firstIsBig ? hi : lo;
     var idx = []; for (var q = 0; q < n; q++) idx.push(q);
+    var chosen = null, attemptAt = 0, distinct = new Set();
     for (var attempt = 1; attempt <= tries; attempt++) {
       var picks = stream.shuffle(idx), in0 = new Set(picks.slice(0, n0)), ok = true;
       for (var pi = 0; pi < prepared.length && ok; pi++) {
@@ -544,13 +556,21 @@
         }
       }
       if (ok) {
-        return {
-          method: "constrained_clusters",
-          allocation: rows.map(function (r, i) { return [r.id, in0.has(i) ? arms[0] : arms[1]]; }),
-          attempts: attempt,
-          arm_totals: [{ arm: arms[0], clusters: n0 }, { arm: arms[1], clusters: n - n0 }]
-        };
+        if (chosen === null) { chosen = in0; attemptAt = attempt; }
+        distinct.add(Array.from(in0).sort(function (x, y) { return x - y; }).join(","));
       }
+    }
+    if (chosen !== null) {
+      var warnings = [];
+      if (distinct.size < NARROW_CHOICE) warnings.push({ kind: "narrow_choice", distinct_acceptable: distinct.size, tries: tries });
+      return {
+        method: "constrained_clusters",
+        allocation: rows.map(function (r, i) { return [r.id, chosen.has(i) ? arms[0] : arms[1]]; }),
+        attempts: attemptAt,
+        acceptable_seen: distinct.size,
+        arm_totals: [{ arm: arms[0], clusters: n0 }, { arm: arms[1], clusters: n - n0 }],
+        warnings: warnings
+      };
     }
     throw new Error("none of " + tries + " random allocations met the constraints; loosen them");
   }

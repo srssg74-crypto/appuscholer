@@ -38,9 +38,16 @@ give identical results (see the `clusters`, `constrained` and
   within every factor level. Does not guarantee balance with few clusters.
 - `constrained_clusters` — two arms; random candidates are drawn until one
   meets rules written as data (`mean_diff`, `count_diff`). For fewer than
-  about 20 clusters. Raises if no candidate meets the rules in `tries`.
+  about 20 clusters. All `tries` candidates are drawn so the result can say how
+  many different allocations qualified (`acceptable_seen`); under 100 gives the
+  warning `narrow_choice`, meaning the rules leave too small a set to randomise
+  from. Raises if no candidate qualifies.
 
-Shared rules: the result depends on the seed and the set of clusters, never on
+Shared rules (inputs that would let the engines disagree are refused in both:
+lone surrogates in text, whole numbers beyond 2^53, a non-list `arms`, a
+non-numeric `p_best`; levels `1` and `"1"`, or `true` and `"true"`, are the same
+level; weights are summed left to right so Python 3.12 and JavaScript agree on
+fractional sizes): the result depends on the seed and the set of clusters, never on
 the order they were typed (ids are sorted by UTF-8 bytes first). Numeric
 factors are cut with `bins` (cut points; a value on a cut goes up). Weights
 must be between 0.001 and 1e9. Results hold lists of pairs, never objects keyed
