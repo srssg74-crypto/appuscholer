@@ -17986,7 +17986,7 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(prev.card&&prev.card.unit!==c.unit)ch.push('unit '+prev.card.unit+' → '+c.unit);
   const log=(prev.log||[]).slice(),rec=alRec(c);
   log.push({at:new Date().toISOString(),kind:(prev.plan||prev.card)?'changed':'created',text:ch.length?ch.join('; '):'saved',suggested:rec.m,method:p.method,warn:(randomised&&p.conc==='open')?'not concealed':''});
-  o.alloc={card:c,plan:p,log,commit:prev.commit,deviations:prev.deviations||[],enrol:prev.enrol||[]};studySet(o);
+  o.alloc={card:c,plan:p,log,commit:prev.commit,deviations:prev.deviations||[],enrol:prev.enrol||[],verify:prev.verify,lock:prev.lock};studySet(o);
   if(msg)msg.textContent=L('Saved to the decision log.','decision log में सहेजा गया।');alRender()}
 function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=a.plan||{},lg=(a.log||[]).slice().reverse();
   const inp=(id,lab,v,ph,type)=>'<div class="fld"><label for="'+id+'">'+lab+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v||'')+'" placeholder="'+escHTML(ph||'')+'"></div>';
@@ -18005,7 +18005,7 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
   inp('alArms',L('Arm labels (comma separated, e.g. A,B)','Arm के नाम (कॉमा से, जैसे A,B)'),p.arms,'A,B')+
   inp('alMaker',L('Who makes the list','सूची कौन बनाएगा'),p.maker,L('name and role','नाम और भूमिका'))+inp('alHolder',L('Who holds the master list','Master list किसके पास रहेगी'),p.holder,L('name and role','नाम और भूमिका'))+
-  alCommitHTML(a,L)+alDevHTML(a,L)+alRunnerHTML()+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
+  alCommitHTML(a,L)+alDevHTML(a,L)+alRunnerHTML()+alVerHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" style="flex:1" onclick="alSave()">'+L('Save to decision log','Decision log में सहेजें')+'</button></div>'+
   '<h4 style="margin:12px 0 4px">'+L('Decision log (read only)','Decision log (केवल पढ़ने के लिए)')+'</h4>'+
   (lg.length?'<ul class="desc" style="padding-left:18px;margin:0">'+lg.map(e=>'<li>'+escHTML(String(e.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(e.kind)+': '+escHTML(e.text)+(e.warn?' ⚠ '+escHTML(e.warn):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
@@ -18055,7 +18055,7 @@ async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.ge
   if(a.commit){AL_PENDING=null;alRender();return}
   if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
   const planHash=AL_PENDING.planHash,at=new Date().toISOString();
-  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[],enrol:a.enrol||[]};
+  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[],enrol:a.enrol||[],verify:a.verify,lock:a.lock};
   AL_PENDING=null;studySet(o);alRender()}
 
 /* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
@@ -18169,7 +18169,10 @@ async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)retur
   const n=parseInt(alVal('enN'),10)||(a.card&&a.card.n)||0;const arms=String(a.plan.arms||'A,B').split(',').map(x=>x.trim()).filter(Boolean);
   let list;try{list=await alBuildList(ALG.fromHex(m[1].toLowerCase()),a.plan.method,n,arms)}catch(e){enMsg(String(e.message||e));return}
   if(!list||!n){enMsg(L('Set the number of participants first.','पहले participants की संख्या लिखें।'));return}
-  AL_SEED=m[1].toLowerCase();AL_LIST=list;enMsg(L('Seed matches the commitment. List built in memory.','Seed commitment से मेल खाता है। List memory में बनी।'));alRender()}
+  AL_SEED=m[1].toLowerCase();AL_LIST=list;
+  const lh=await alHash(new TextEncoder().encode(JSON.stringify(list))),at=new Date().toISOString();
+  o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'list built',text:'list of '+n+' · hash '+lh.slice(0,16),hash:lh,n}])});studySet(o);
+  enMsg(L('Seed matches the commitment. List built in memory.','Seed commitment से मेल खाता है। List memory में बनी।'));alRender()}
 function enEnrol(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),code=alVal('enCode').trim();
   if(!AL_LIST){enMsg(L('Load the seed file first.','पहले seed file लोड करें।'));return}
   if(code.length<2){enMsg(L('Enter a participant code.','Participant code लिखें।'));return}
@@ -18189,6 +18192,49 @@ function enEnvelopes(){if(!AL_LIST){enMsg(studyHi()?'पहले seed file ल�
   const faces='envelope_no,face_en,face_hi\n'+AL_LIST.map((_,i)=>(i+1)+',Envelope '+(i+1)+',लिफ़ाफ़ा '+(i+1)).join('\n')+'\n';
   [['master_list.csv',master],['envelope_faces.csv',faces]].forEach(([n,t])=>{const u=URL.createObjectURL(new Blob([t],{type:'text/csv'})),x=document.createElement('a');x.href=u;x.download=n;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)});
   const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'envelopes',text:'envelope files downloaded'}])});studySet(o)}
+
+/* ---- Stage 8: reveal and verify, then the analysis lock. The verifier uploads the seed (and optionally the master list). The app rebuilds the list and compares it with the hash logged when the list was built. ---- */
+function alVerHTML(a,L){if(!a.commit)return'';const v=a.verify,lk=a.lock,fac=alFactors(a.card&&a.card.factors);
+  const vtxt=v?(v.ok?L('Last verification passed ','आख़िरी verification पास ')+escHTML(String(v.at).slice(0,16).replace('T',' ')):L('Last verification FAILED ','आख़िरी verification फेल ')+escHTML(String(v.at).slice(0,16).replace('T',' '))):L('Not verified yet.','अभी verify नहीं हुआ।');
+  return'<h4 style="margin:12px 0 4px">'+L('6. Reveal and verify (stage 8)','6. Reveal और verify (चरण 8)')+'</h4>'+
+  '<p class="desc">'+vtxt+'</p>'+
+  '<div class="fld"><label for="enVerSeed">'+L('Seed file (revealed for verification)','Seed file (verification के लिए)')+'</label><input id="enVerSeed" type="file" accept=".txt"></div>'+
+  '<div class="fld"><label for="enVerMaster">'+L('Master list CSV (optional, checked row by row)','Master list CSV (वैकल्पिक, हर पंक्ति जाँची जाएगी)')+'</label><input id="enVerMaster" type="file" accept=".csv"></div>'+
+  '<div class="row"><button type="button" class="btn btn-purple" onclick="enVerify()">'+L('Verify','Verify करें')+'</button></div>'+
+  '<h4 style="margin:12px 0 4px">'+L('7. Analysis lock','7. Analysis lock')+'</h4>'+
+  (lk?'<p class="desc">'+L('Locked ','Lock हुआ ')+escHTML(String(lk.at).slice(0,16).replace('T',' '))+'<br>'+L('Fingerprint: ','Fingerprint: ')+'<code style="word-break:break-all">'+escHTML(lk.fingerprint)+'</code><br>'+L('Covariates: ','Covariates: ')+escHTML(lk.covariates)+(lk.verifiedAtLock?'':'<br><span style="color:#b45309">'+L('Locked before verification. Verify the seed before you report results.','Verification से पहले lock हुआ। नतीजे लिखने से पहले seed verify करें।')+'</span>')+'</p>':
+  '<div class="fld"><label for="alCov">'+L('Covariates for the analysis (must include every stratifying factor)','Analysis में covariates (हर stratifying factor शामिल हो)')+'</label><input id="alCov" type="text" value="'+escHTML(fac.join(', '))+'"></div>'+
+  '<p class="desc">'+L('Locking records the allocation fingerprint. Lock is allowed before verification, but you will be reminded to verify.','Lock में allocation का fingerprint दर्ज होता है। Verification से पहले भी lock हो सकता है, पर आपको verify करने की याद दिलाई जाएगी।')+'</p>'+
+  '<div class="row"><button type="button" class="btn btn-gold" onclick="alLock()">'+L('Lock the analysis plan','Analysis plan lock करें')+'</button></div>')}
+async function enVerify(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('enMsg');if(e)e.textContent=t};
+  const sf=document.getElementById('enVerSeed'),mf=document.getElementById('enVerMaster');
+  if(!(sf&&sf.files&&sf.files[0])){msg(L('Choose the seed file first.','पहले seed file चुनें।'));return}
+  const m=(await sf.files[0].text()).match(/Seed \(hex\):\s*([0-9a-f]{64})/i)||(await sf.files[0].text()).match(/^\s*([0-9a-f]{64})\s*$/im);
+  if(!m){msg(L('No seed found in that file.','उस file में seed नहीं मिला।'));return}
+  const seedHex=m[1].toLowerCase(),built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0];
+  if(!built){msg(L('No list has been built yet.','अभी कोई list नहीं बनी।'));return}
+  const seedOk=await alCheckSeed(seedHex,a.commit);
+  let listOk=false,masterOk=null,rebuilt=null;
+  if(seedOk){const arms=String(a.plan.arms||'A,B').split(',').map(x=>x.trim()).filter(Boolean);
+    try{rebuilt=await alBuildList(ALG.fromHex(seedHex),a.plan.method,built.n,arms)}catch(e){rebuilt=null}
+    listOk=!!rebuilt&&(await alHash(new TextEncoder().encode(JSON.stringify(rebuilt))))===built.hash}
+  if(seedOk&&rebuilt&&mf&&mf.files&&mf.files[0]){const rows=(await mf.files[0].text()).trim().split(/\r?\n/).slice(1).map(l=>l.split(',')[1]);
+    masterOk=JSON.stringify(rows)===JSON.stringify(rebuilt)}
+  const ok=seedOk&&listOk&&masterOk!==false,at=new Date().toISOString();
+  const what=!seedOk?L('seed does not match the commitment','seed commitment से नहीं मिलता'):!listOk?L('rebuilt list differs from the logged list','दोबारा बनी list, दर्ज list से अलग है'):masterOk===false?L('master list differs from the seed','master list, seed से अलग है'):L('list matches','list मेल खाती है');
+  o.alloc=Object.assign({},a,{verify:{at,ok,seedOk,listOk,masterOk},log:(a.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
+  studySet(o);msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
+async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('alMsg');if(e)e.textContent=t};
+  if(a.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));return}
+  if(!a.commit){msg(L('Register the commitment first.','पहले commitment दर्ज करें।'));return}
+  if(a.verify&&!a.verify.ok){msg(L('The last verification failed. Resolve it before you lock.','आख़िरी verification फेल है। Lock से पहले उसे सुलझाएँ।'));return}
+  const cov=alVal('alCov').trim(),fac=alFactors(a.card&&a.card.factors),miss=fac.filter(f=>cov.toLowerCase().indexOf(f.toLowerCase())<0);
+  if(miss.length){msg(L('Name these factors as covariates: ','इन factors को covariates में लिखें: ')+miss.join(', '));return}
+  const built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0],at=new Date().toISOString();
+  const fingerprint=await alHash(new TextEncoder().encode(a.commit.planHash+'|'+a.commit.hash+'|'+(built?built.hash:'')));
+  const verifiedAtLock=!!(a.verify&&a.verify.ok);
+  o.alloc=Object.assign({},a,{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before verification')}])});
+  studySet(o);alRender()}
 function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
 function alOpen(){let d=document.getElementById('alDlg');
   if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
