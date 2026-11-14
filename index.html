@@ -17973,7 +17973,7 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(c.reason.length<30){if(msg)msg.textContent=L('The reason needs 30+ characters.','कारण में 30+ अक्षर चाहिए।');return}
   if(!p.method){if(msg)msg.textContent=L('Choose a method.','एक method चुनें।');return}
   const randomised=p.method!=='none';
-  if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change as a deviation in your write-up instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव को अपने लेख में deviation के रूप में लिखें।');return}
+  if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change in the deviation log below instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव नीचे deviation log में दर्ज करें।');return}
   if(randomised&&(!p.conc||!p.maker||!p.holder)){if(msg)msg.textContent=L('For a randomised study, choose concealment and name who makes and who holds the list.','randomised study के लिए concealment चुनें और बताएँ कि सूची कौन बनाएगा और कौन रखेगा।');return}
   const ch=[];
   if(prev.plan&&prev.plan.method!==p.method)ch.push('method '+prev.plan.method+' → '+p.method);
@@ -17982,7 +17982,7 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(prev.card&&prev.card.unit!==c.unit)ch.push('unit '+prev.card.unit+' → '+c.unit);
   const log=(prev.log||[]).slice(),rec=alRec(c);
   log.push({at:new Date().toISOString(),kind:(prev.plan||prev.card)?'changed':'created',text:ch.length?ch.join('; '):'saved',suggested:rec.m,method:p.method,warn:(randomised&&p.conc==='open')?'not concealed':''});
-  o.alloc={card:c,plan:p,log,commit:prev.commit};studySet(o);
+  o.alloc={card:c,plan:p,log,commit:prev.commit,deviations:prev.deviations||[]};studySet(o);
   if(msg)msg.textContent=L('Saved to the decision log.','decision log में सहेजा गया।');alRender()}
 function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=a.plan||{},lg=(a.log||[]).slice().reverse();
   const inp=(id,lab,v,ph,type)=>'<div class="fld"><label for="'+id+'">'+lab+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v||'')+'" placeholder="'+escHTML(ph||'')+'"></div>';
@@ -18000,7 +18000,7 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   inp('alParams',L('Parameters (block sizes, strata, factor levels, p for minimisation, balance rule)','Parameters (block size, strata, factor levels, minimisation के लिए p, balance नियम)'),p.params,'')+
   '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
   inp('alMaker',L('Who makes the list','सूची कौन बनाएगा'),p.maker,L('name and role','नाम और भूमिका'))+inp('alHolder',L('Who holds the master list','Master list किसके पास रहेगी'),p.holder,L('name and role','नाम और भूमिका'))+
-  alCommitHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
+  alCommitHTML(a,L)+alDevHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" style="flex:1" onclick="alSave()">'+L('Save to decision log','Decision log में सहेजें')+'</button></div>'+
   '<h4 style="margin:12px 0 4px">'+L('Decision log (read only)','Decision log (केवल पढ़ने के लिए)')+'</h4>'+
   (lg.length?'<ul class="desc" style="padding-left:18px;margin:0">'+lg.map(e=>'<li>'+escHTML(String(e.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(e.kind)+': '+escHTML(e.text)+(e.warn?' ⚠ '+escHTML(e.warn):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
@@ -18013,8 +18013,9 @@ function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
   if(cm)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Registered ','दर्ज ')+escHTML(String(cm.at||'').slice(0,16).replace('T',' '))+'<br>'+L('Commitment: ','Commitment: ')+'<code style="word-break:break-all">'+escHTML(cm.hash)+'</code></p>'+
     '<p class="desc">'+L('The plan is locked. Enrolment can start. A change now goes in as a deviation entry.','योजना बंद है। अब enrolment शुरू हो सकता है। बदलाव deviation entry के रूप में जाएगा।')+'</p>';
   if(!alOk(o)||!a.plan||a.plan.method==='none')return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Save a complete randomised plan first. Non-randomised designs have nothing to register here.','पहले एक पूरी randomised योजना सहेजें। जो design randomised नहीं है, उसे यहाँ दर्ज करने को कुछ नहीं।')+'</p>';
-  if(!AL_PENDING)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Create the commitment before any participant is enrolled. You will get a seed file to keep away from this site.','किसी भी participant के enrol होने से पहले commitment बनाएँ। आपको एक seed file मिलेगी, जिसे इस site से दूर रखना है।')+'</p><div class="row"><button type="button" class="btn btn-purple" onclick="alMakeCommit()">'+L('Create commitment','Commitment बनाएँ')+'</button></div>';
+  if(!AL_PENDING)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Create the commitment before any participant is enrolled. You will get a seed file to keep away from this site.','किसी भी participant के enrol होने से पहले commitment बनाएँ। आपको एक seed file मिलेगी, जिसे इस site से दूर रखना है।')+'</p><p class="desc" style="color:#b45309">'+L('If you close this page before saving the seed, you will need to create a new commitment. Nothing in your study is lost, because nothing is registered yet.','अगर seed सहेजने से पहले यह page बंद करेंगे, तो नया commitment बनाना होगा। आपके study का कुछ नहीं जाता, क्योंकि अभी कुछ दर्ज नहीं हुआ है।')+'</p><div class="row"><button type="button" class="btn btn-purple" onclick="alMakeCommit()">'+L('Create commitment','Commitment बनाएँ')+'</button></div>';
   return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Commitment (not yet registered): ','Commitment (अभी दर्ज नहीं): ')+'<code style="word-break:break-all">'+escHTML(AL_PENDING.hash)+'</code></p>'+
+    '<p class="desc" style="color:#b45309">'+L('Keep this page open until you have saved the seed. If you close it, this commitment is lost and you need a new one. Nothing is registered until you tick the box below.','Seed सहेजने तक यह page खुला रखें। बंद करने पर यह commitment खो जाएगा और नया बनाना होगा। box पर टिक करने तक कुछ भी दर्ज नहीं होता।')+'</p>'+
     '<div class="row"><button type="button" class="btn btn-ghost btn-sm" onclick="alDownloadSeed()">'+L('Download seed file','Seed file डाउनलोड करें')+'</button></div>'+
     '<label style="display:block;margin:8px 0;font-size:14px"><input type="checkbox" id="alSeedSaved"> '+L('I have saved the seed file somewhere other than this site.','मैंने seed file इस site के अलावा कहीं सहेज ली है।')+'</label>'+
     '<div class="row"><button type="button" class="btn btn-purple" onclick="alRegister()">'+L('Register commitment','Commitment दर्ज करें')+'</button></div>'}
@@ -18036,8 +18037,28 @@ async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.ge
   if(a.commit){AL_PENDING=null;alRender();return}
   if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
   const planHash=await alHash(new TextEncoder().encode(AL_PENDING.plan)),at=new Date().toISOString();
-  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)}};
+  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[]};
   AL_PENDING=null;studySet(o);alRender()}
+
+/* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
+function alDevHTML(a,L){if(!a.commit)return'';const d=(a.deviations||[]).slice().reverse();
+  return'<h4 style="margin:12px 0 4px">'+L('4. Deviation log (append only)','4. Deviation log (केवल जोड़ें)')+'</h4>'+
+    (d.length?'<ul class="desc" style="padding-left:18px;margin:0 0 8px">'+d.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.what)+' · '+L('why: ','कारण: ')+escHTML(x.why)+(x.by?' · '+L('agreed by: ','किसने माना: ')+escHTML(x.by):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No deviations recorded.','कोई deviation दर्ज नहीं।')+'</p>')+
+    '<p class="desc">'+L('Record a change to the registered plan here. Entries cannot be edited or removed.','registered योजना में बदलाव यहाँ दर्ज करें। entries बदली या हटाई नहीं जातीं।')+'</p>'+
+    '<div class="fld"><label for="alDevWhat">'+L('What changed','क्या बदला')+'</label><textarea id="alDevWhat" rows="2"></textarea></div>'+
+    '<div class="fld"><label for="alDevWhy">'+L('Why (30+ characters)','कारण (30+ अक्षर)')+'</label><textarea id="alDevWhy" rows="2"></textarea></div>'+
+    '<div class="fld"><label for="alDevBy">'+L('Who agreed (name and role)','किसने माना (नाम और भूमिका)')+'</label><input id="alDevBy" type="text"></div>'+
+    '<p class="desc" id="alDevMsg" style="color:#b45309;min-height:1em"></p>'+
+    '<div class="row"><button type="button" class="btn btn-gold" onclick="alDevSave()">'+L('Add deviation','Deviation जोड़ें')+'</button></div>'}
+function alDevSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alDevMsg');
+  const o=studyGet(),a=alGet(o);
+  if(!a.commit){if(msg)msg.textContent=L('Deviations can be logged only after registration.','Deviation केवल registration के बाद दर्ज हो सकता है।');return}
+  const what=alVal('alDevWhat').trim(),why=alVal('alDevWhy').trim(),by=alVal('alDevBy').trim();
+  if(what.length<10){if(msg)msg.textContent=L('Describe what changed (10+ characters).','बताएँ क्या बदला (10+ अक्षर)।');return}
+  if(why.length<30){if(msg)msg.textContent=L('Say why (30+ characters).','कारण लिखें (30+ अक्षर)।');return}
+  const at=new Date().toISOString();
+  o.alloc=Object.assign({},a,{deviations:(a.deviations||[]).concat([{at,what,why,by}]),log:(a.log||[]).concat([{at,kind:'deviation',text:what.slice(0,80)}])});
+  studySet(o);alRender()}
 function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
 function alOpen(){let d=document.getElementById('alDlg');
   if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
