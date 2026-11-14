@@ -18219,8 +18219,10 @@ async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)retur
   const lh=await alListHash(ALG.fromHex(m[1].toLowerCase()),list),at=new Date().toISOString();
   list=null; /* built only to log its hash; not kept, so it is not a standing, inspectable variable between enrolments */
   AL_SEED=m[1].toLowerCase();AL_BUILT_N=n;
-  const roleAck=(a.log||[]).filter(x=>x.kind==='seed loaded for enrolment').length;
-  o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'list built',text:'list of '+n+' · hash '+lh.slice(0,16),hash:lh,n}],[{at,kind:'seed loaded for enrolment',text:'acknowledged the concealment risk before loading'+(roleAck?' (again, '+(roleAck+1)+' times so far)':'')}])});studySet(o);
+  /* Re-read the study right before this write: o/a were captured before several awaits (file read, hashing), and anything else writing to this study in the meantime - a deviation, an enrolment, a card edit - would otherwise be silently lost when this stale copy is written back. */
+  const o2=studyGet(),a2=alGet(o2);
+  const roleAck=(a2.log||[]).filter(x=>x.kind==='seed loaded for enrolment').length;
+  o2.alloc=Object.assign({},a2,{log:(a2.log||[]).concat([{at,kind:'list built',text:'list of '+n+' · hash '+lh.slice(0,16),hash:lh,n}],[{at,kind:'seed loaded for enrolment',text:'acknowledged the concealment risk before loading'+(roleAck?' (again, '+(roleAck+1)+' times so far)':'')}])});studySet(o2);
   enMsg(L('Seed matches the commitment. Ready to enrol; the list is not kept on screen.','Seed commitment से मेल खाता है। Enrol के लिए तैयार; list screen पर नहीं रखी जाती।'));alRender()}
 function enEnrol(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),code=alVal('enCode').trim();
   if(!AL_SEED){enMsg(L('Load the seed file first.','पहले seed file लोड करें।'));return}
@@ -18277,8 +18279,10 @@ async function enVerify(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(
     masterOk=JSON.stringify(rows)===JSON.stringify(rebuilt)}
   const ok=seedOk&&listOk&&masterOk!==false,at=new Date().toISOString();
   const what=!seedOk?L('seed does not match the commitment','seed commitment से नहीं मिलता'):!listOk?L('rebuilt list differs from the logged list','दोबारा बनी list, दर्ज list से अलग है'):masterOk===false?L('master list differs from the seed','master list, seed से अलग है'):L('list matches','list मेल खाती है');
-  o.alloc=Object.assign({},a,{verify:{at,ok,seedOk,listOk,masterOk},log:(a.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
-  studySet(o);msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
+  /* Re-read right before the write: o/a were captured before several file-read and hashing awaits, and this is otherwise a stale copy that could silently overwrite a concurrent change (an enrolment, a deviation). */
+  const o2=studyGet(),a2=alGet(o2);
+  o2.alloc=Object.assign({},a2,{verify:{at,ok,seedOk,listOk,masterOk},log:(a2.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
+  studySet(o2);msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
 async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('alMsg');if(e)e.textContent=t};
   if(a.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));return}
   if(!a.commit){msg(L('Register the commitment first.','पहले commitment दर्ज करें।'));return}
@@ -18288,8 +18292,11 @@ async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),
   const built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0],at=new Date().toISOString();
   const fingerprint=await alHash(new TextEncoder().encode(a.commit.planHash+'|'+a.commit.hash+'|'+(built?built.hash:'')));
   const verifiedAtLock=!!(a.verify&&a.verify.ok);
-  o.alloc=Object.assign({},a,{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before verification')}])});
-  studySet(o);alRender()}
+  /* Re-read right before the write: o/a were captured before a hashing await, and this is otherwise a stale copy that could silently overwrite a concurrent change, or even write a second lock if two lock attempts overlapped (the "already locked" check above only ever saw the state at the start of this call). */
+  const o2=studyGet(),a2=alGet(o2);
+  if(a2.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));alRender();return}
+  o2.alloc=Object.assign({},a2,{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a2.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before verification')}])});
+  studySet(o2);alRender()}
 
 /* ---- Stage 9: methods sentences drafted from the study record, and CONSORT 2025 items 17a, 17b, 18, 20a, 20b, 21a. The student edits the text. Only recorded values appear; anything missing is a bracketed placeholder. ---- */
 const AL_METHOD_TEXT={simple:'simple randomisation',perm:'permuted blocks with block sizes drawn at random from a fixed list',strat:'stratified permuted blocks',mini:'minimisation (Pocock and Simon) with a biased coin',cons:'constrained randomisation',xo:'a cross-over design with balanced Williams rows'};
