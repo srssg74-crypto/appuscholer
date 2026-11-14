@@ -17990,14 +17990,14 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   const armList=p.arms?p.arms.split(',').map(x=>x.trim()).filter(Boolean):[],armK=armList.length;
   p.blockSizesText=alVal('alBlocks').trim();p.ratioText=alVal('alRatio').trim();
   if(p.method==='perm'){const bs=alParseBlockSizes(p.blockSizesText,armK);
-    if(bs==='bad'){if(msg)msg.textContent=L('Block sizes must each be a whole positive multiple of the number of arms ('+armK+'), separated by commas.','हर block size, arms की संख्या ('+armK+') का पूर्ण धनात्मक गुणज होना चाहिए, कॉमा से अलग।');return}
+    if(bs==='bad'){if(msg)msg.textContent=L('Block sizes must each be a whole positive multiple of the number of arms ('+armK+'), at most '+AL_MAX_BLOCK+', separated by commas.','हर block size, arms की संख्या ('+armK+') का पूर्ण धनात्मक गुणज होना चाहिए, अधिकतम '+AL_MAX_BLOCK+', कॉमा से अलग।');return}
     /* Blank means the default, but the default must fit this plan's arm count, and the plan must say what it is: a 3-arm plan used to save with a silent [4,6,8] and then fail at seed load. */
     p.blockSizes=bs||(armK?alDefaultBlocks(armK):null)}else{p.blockSizes=null}
   if(p.method==='simple'&&p.ratioText){const rt=alParseRatio(p.ratioText,armK);
     if(rt==='bad'){if(msg)msg.textContent=L('The ratio needs one positive number per arm, in the same order as the arm labels.','Ratio में हर arm के लिए एक धनात्मक संख्या चाहिए, arm के नामों वाले क्रम में।');return}
     p.probs=rt||null}else{p.probs=null}
   /* Immutability check runs last, once every field (arms, blind, block sizes, ratio) is on p. Checking earlier (before arms/blind/blocks/ratio were set) let a registered plan's arms, blinding, block sizes or ratio silently diverge from what was actually committed. */
-  if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change in the deviation log below instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव नीचे deviation log में दर्ज करें।');return}
+  if(prev.commit&&alPlanNorm(p)!==alPlanNorm(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change in the deviation log below instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव नीचे deviation log में दर्ज करें।');return}
   const ch=[];
   if(prev.plan&&prev.plan.method!==p.method)ch.push('method '+prev.plan.method+' → '+p.method);
   if(prev.plan&&prev.plan.conc!==p.conc)ch.push('concealment '+(prev.plan.conc||'-')+' → '+p.conc);
@@ -18037,6 +18037,10 @@ let AL_PENDING=null;
 async function alHash(bytes){const d=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')}
 /* Keyed by the seed, so the list cannot be recovered from the study record by anyone without the seed (the plain hash of a short list is brute-forceable). */
 async function alListHash(seedBytes,list){return ALG.hex(await ALG.hmac(seedBytes,new TextEncoder().encode('appuscholar-list-v1:'+JSON.stringify(list))))}
+/* Third review: plans registered before block-size defaults were written onto the plan hold blockSizes:null where a fresh save now holds [4,6,8]. For the "registered plan cannot be edited" comparison only, both sides are normalised: a blank/null block-size field on a permuted-block plan stands for the arm-count default, and keys holding null, undefined or '' are dropped. The commitment's plan hash is untouched by this; it is the plan as registered. */
+function alPlanNorm(p){const q=Object.assign({},p||{});const arms=String(q.arms||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(q.method==='perm'&&!q.blockSizes&&arms.length)q.blockSizes=alDefaultBlocks(arms.length);
+  Object.keys(q).forEach(k=>{if(q[k]===null||q[k]===undefined||q[k]==='')delete q[k]});return alCanon(q)}
 /* Canonical JSON of a plan: sorted keys, no spaces. Matches the Python engine's plan_hash. */
 function alCanon(o){return JSON.stringify(Object.keys(o).sort().reduce((m,k)=>{m[k]=o[k];return m},{}))}
 /* Every write to the allocation record that happens after an await goes through here (second review, finding 10). The record is re-read at the moment of writing, so a copy taken before the await never overwrites what another call (an enrolment, a deviation) wrote in the meantime. `key` is studyKey() as it was before the awaits: if the active study changed while this call was in flight (a project switch), nothing is written, so one study's entry never lands in another's record. `patch` is an object, or a function of the fresh record that returns one. Returns the fresh record, or null when it refused. */
@@ -18076,7 +18080,7 @@ async function alMakeCommit(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.
   const fresh=alWrite(key,a2=>{if(JSON.stringify(a2.plan)!==planJSON||a2.commit)return{};
     const prevRolls=(a2.log||[]).filter(e=>e.kind==='commitment created').length;
     return{log:(a2.log||[]).concat([{at:at2,kind:'commitment created',text:'candidate '+hash.slice(0,16)+(prevRolls?' · re-created, '+(prevRolls+1)+' so far':'')}])}});
-  if(!fresh||fresh.commit||JSON.stringify(fresh.plan)!==planJSON){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed while the commitment was being made. Create it again.','Commitment बनते समय योजना बदल गई। फिर बनाएँ।');alRender();return}
+  if(!fresh||fresh.commit||JSON.stringify(fresh.plan)!==planJSON){AL_PENDING=null;alRender();const e=document.getElementById('alMsg');if(e)e.textContent=L('The plan changed while the commitment was being made. Create it again.','Commitment बनते समय योजना बदल गई। फिर बनाएँ।');return}
   AL_PENDING={hash,planHash:planHex,seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:planJSON};
   alRender()}
 function alDownloadSeed(){if(!AL_PENDING)return;
@@ -18089,7 +18093,7 @@ async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.ge
   if(!(document.getElementById('alSeedSaved')||{}).checked){if(msg)msg.textContent=L('Save the seed file first, then tick the box.','पहले seed file सहेजें, फिर box पर टिक करें।');return}
   const key=studyKey(),o=studyGet(),a=alGet(o);
   if(a.commit){AL_PENDING=null;alRender();return}
-  if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
+  if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;alRender();const e=document.getElementById('alMsg');if(e)e.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');return}
   const pub=alVal('alPubNote').trim();
   if(pub.length<10){msg.textContent=L('Say where you sent or published this commitment hash outside this app, and when (10+ characters).','यह commitment hash आपने इस app से बाहर कहाँ और कब भेजा या publish किया, वह लिखें (10+ अक्षर)।');return}
   const pending=AL_PENDING,at=new Date().toISOString();
@@ -18143,9 +18147,11 @@ function crArmWarn(text){const o=studyGet(),a=(o.alloc&&o.alloc.plan&&o.alloc.pl
   const arms=a.split(',').map(x=>x.trim().normalize('NFC')).filter(Boolean),t=String(text||'').normalize('NFC');
   const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   /* Second review, finding 14. Two faults in the first version: `\b` without the `u` flag treats every Devanagari letter as a non-word character, so arms like "उपचार,नियंत्रण" could never match; and with the default arms "A,B", "\bA\b" matched the English word "a" in every sentence, so the badge was noise. Now: letter/digit boundaries by Unicode property (so Hindi labels match, and a label ending in punctuation such as "Drug+" matches too), and a one-character label only counts when the text names it as an arm or group ("arm A", "group B", "A arm", "समूह A"). */
-  const B='[\\p{L}\\p{N}_]',pre='(?<!'+B+')',post='(?!'+B+')',grp='(?:arm|arms|group|groups|condition|allocation|branch|समूह|ग्रुप|भुजा|आर्म)';
+  /* Third review: \p{M} in the boundary class, so a Devanagari vowel sign is part of the word ("कमी" does not contain the arm "कम"); and the group words carry their own left boundary, so "harm", "alarm" and "farm" no longer stand in for "arm". */
+  const B='[\\p{L}\\p{N}\\p{M}_]',pre='(?<!'+B+')',post='(?!'+B+')',grp=pre+'(?:arm|arms|group|groups|समूह|ग्रुप|भुजा|आर्म)';
+  /* Labels of one or two characters ("A", "B", "No") are ordinary words far too often; they count only next to an arm/group word. "condition" was dropped from that list: "his condition a week later" is not arm A. */
   return arms.some(arm=>{if(!arm)return false;const e=esc(arm);
-    const re=arm.length>1?new RegExp(pre+e+post,'iu'):new RegExp('(?:'+grp+'\\s*[:\\-]?\\s*'+e+post+')|(?:'+pre+e+'\\s+'+grp+post+')','iu');
+    const re=arm.length>2?new RegExp(pre+e+post,'iu'):new RegExp('(?:'+grp+'\\s*[:\\-]?\\s*'+e+post+')|(?:'+pre+e+'\\s+'+grp+post+')','iu');
     return re.test(t)})}
 function crHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,c=crGet(),list=(c.entries||[]).slice().reverse(),
   dec=(k)=>(CR_DECISIONS.find(x=>x[0]===k)||['',k])[1],tst=(k)=>(CR_TESTS.find(x=>x[0]===k)||['',k])[1];
@@ -18214,14 +18220,16 @@ async function alSimple(seed,n,arms,probs){const st=await AlStream.make(seed,'si
 function alDefaultBlocks(k){return[2*k,3*k,4*k]}
 async function alPermBlocks(seed,n,arms,sizes){const st=await AlStream.make(seed,'blocks'),k=arms.length;sizes=sizes||alDefaultBlocks(k);
   /* review finding 12: 0%k===0, so a block size of 0 used to pass this check; the queue would then stay empty and q.shift() silently pushes undefined into the list instead of an arm label. The plan form (alParseBlockSizes) already refuses 0 before save, but this runtime function is defense in depth for any direct call. */
-  for(const b of sizes)if(b<=0||b%k)throw new Error('block size '+b+' is not a positive multiple of '+k);
+  for(const b of sizes)if(!Number.isInteger(b)||b<=0||b%k||b>10000)throw new Error('block size '+b+' is not a positive whole multiple of '+k+' (max 10000)');
   const out=[];let q=[];while(out.length<n){if(!q.length){const size=sizes[await st.randbelow(sizes.length)];const block=[];for(let i=0;i<size;i++)block.push(arms[i%k]);q=await st.shuffle(block)}out.push(q.shift())}return out}
 async function alBuildList(seed,method,n,arms,opts){opts=opts||{};if(method==='simple')return alSimple(seed,n,arms,opts.probs);if(method==='perm')return alPermBlocks(seed,n,arms,opts.sizes);return null}
 /* Parse "4,6,8" into [4,6,8], validated against the arm count. Parse "0.6,0.4" or "3,2" (any positive numbers) into probabilities that sum to 1, in arm order. Both return null on anything that doesn't parse, so the caller can refuse to save rather than silently falling back to a default the plan does not say. */
 function alParseBlockSizes(text,k){const t=String(text||'').trim();if(!t)return null;
   /* Every token must be a whole positive number. The old version parseInt-ed each token and dropped the ones that failed, so "six" fell through to the default and "4,x,8" saved as [4,8] (second review, finding 5). */
   const toks=t.split(',').map(x=>x.trim());if(toks.some(x=>!/^\d+$/.test(x)))return'bad';
-  const nums=toks.map(x=>parseInt(x,10));if(nums.some(b=>b<=0||b%k))return'bad';return nums}
+  const nums=toks.map(x=>parseInt(x,10));if(nums.some(b=>b<=0||b%k||b>AL_MAX_BLOCK))return'bad';return nums}
+/* Third review: no upper bound meant 4,6,100000000 was accepted and the tab hung shuffling it at seed load. Blocks above 100 have no design purpose. */
+const AL_MAX_BLOCK=100;
 function alParseRatio(text,k){const t=String(text||'').trim();if(!t)return null;
   const nums=t.split(/[,:]/).map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
   if(nums.length!==k||nums.some(x=>x<=0))return'bad';const tot=nums.reduce((a,b)=>a+b,0);return nums.map(x=>x/tot)}
@@ -18345,9 +18353,9 @@ async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const key=studyKey(
   let second=false;
   const fresh=alWrite(key,a2=>{if(a2.lock){second=true;return{}}
     return{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a2.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before external verification')}])}});
+  alRender(); /* render first: alRender() replaces #alMsg, so a message set before it is wiped */
   if(second){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'))}
-  else if(!fresh){msg(L('The study changed while locking. Nothing locked.','Lock करते समय study बदल गई। कुछ lock नहीं हुआ।'))}
-  alRender()}
+  else if(!fresh){msg(L('The study changed while locking. Nothing locked.','Lock करते समय study बदल गई। कुछ lock नहीं हुआ।'))}}
 
 /* ---- Stage 9: methods sentences drafted from the study record, and CONSORT 2025 items 17a, 17b, 18, 20a, 20b, 21a. The student edits the text. Only recorded values appear; anything missing is a bracketed placeholder. ---- */
 const AL_METHOD_TEXT={simple:'simple randomisation',perm:'permuted blocks with block sizes drawn at random from a fixed list',strat:'stratified permuted blocks',mini:'minimisation (Pocock and Simon) with a biased coin',cons:'constrained randomisation',xo:'a cross-over design with balanced Williams rows'};

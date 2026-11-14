@@ -86,6 +86,15 @@ with sync_playwright() as p:
     ok(warn('उपचार,नियंत्रण','प्रतिभागी का उपचारक बदला।')==False,'a longer Hindi word that merely starts with the arm label is not flagged')
     ok(warn('Drug+,Placebo','Switched to Drug+ after week 2.')==True,'a label ending in punctuation (Drug+) is flagged')
     ok(warn('Intervention,Control','We controlled for age and sex.')==False,'"controlled" does not match the arm "Control"')
+    # third review: group words need their own left boundary, matras are part of a word, short labels need context
+    ok(warn('A,B','The study could harm a participant if continued.')==False,'"harm a" is not "arm A"')
+    ok(warn('A,B','The alarm a nurse heard went off twice.')==False,'"alarm a" is not "arm A"')
+    ok(warn('A,B','His condition a week later was stable.')==False,'"condition a" is not arm A')
+    ok(warn('कम,ज़्यादा','रक्त में कमी देखी गई।')==False,'a Devanagari vowel sign is part of the word: "कमी" does not contain the arm "कम"')
+    ok(warn('मल,कुछ','कोमल त्वचा पर दाने।')==False,'"कोमल" does not contain the arm "मल"')
+    ok(warn('कम,ज़्यादा','कम समूह का प्रतिभागी है।')==True,'"कम समूह" is flagged')
+    ok(warn('Yes,No','There was no fever on day three.')==False,'a two-letter label that is an English word ("No") is not flagged bare')
+    ok(warn('Yes,No','Moved to the No arm by mistake.')==True,'but "the No arm" is flagged')
     J("(()=>{const o=studyGet();o.alloc.plan.arms='Intervention,Control';studySet(o)})()")
 
     # logging an entry while "none" is ticked clears it, and that clearing is logged

@@ -185,7 +185,7 @@
       // Second review: NaN <= 0 and NaN % k are both false, so NaN slipped through the same way,
       // as did 4.5 (4.5 % 2 is 0.5, caught) but not e.g. 6.0000000001 % 3. Require a finite
       // positive integer, same as the Python engine's isinstance(b, int) check.
-      if (typeof b !== "number" || !isFinite(b) || Math.floor(b) !== b || b <= 0 || b % k) throw new Error("block size " + b + " is not a positive whole multiple of " + k + " arms");
+      if (typeof b !== "number" || !isFinite(b) || Math.floor(b) !== b || b <= 0 || b % k || b > 10000) throw new Error("block size " + b + " is not a positive whole multiple of " + k + " arms (max 10000)");
     }
   }
   BlockGen.prototype.next = function () {
@@ -210,7 +210,15 @@
   // true -> "true" and 1 -> "1" in both engines. Second review, finding 12: 1 and "1" used to be
   // two gens sharing one stream key ("stratum:1"), i.e. two strata with identical sequences,
   // and true/1 diverged from Python (str(True) is "True"). Labels should be strings anyway.
-  function stratumLabel(s) { return String(s); }
+  // Third review: String(x) and Python's str(x) differ for floats, null, arrays and large numbers,
+  // and a different label keys a different stream. Only strings, whole numbers and booleans are
+  // accepted; anything else is a protocol error, thrown here and raised in randomise.py alike.
+  function stratumLabel(s) {
+    if (typeof s === "string") return s;
+    if (typeof s === "boolean") return s ? "true" : "false";
+    if (typeof s === "number" && Number.isSafeInteger(s)) return String(s);
+    throw new Error("stratum label must be a string or whole number, got " + (s === null ? "null" : typeof s) + ": " + JSON.stringify(s));
+  }
 
   function stratifiedBlocks(seed, strata, arms, blockSizes) {
     blockSizes = blockSizes || defaultBlocks(arms.length);

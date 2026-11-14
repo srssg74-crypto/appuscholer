@@ -38,6 +38,26 @@ with sync_playwright() as p:
     ok(J("studyGet().alloc.card.n")==99,'a card edit made during alMakeCommit is not reverted by its write')
     ok(J("!!AL_PENDING"),'the pending commitment was still created')
     ok(any(e['kind']=='commitment created' for e in J("studyGet().alloc.log")),'the commitment-created log entry still lands')
+    # third review: a plan change during the hashing drops the candidate, and the message survives the re-render
+    J("alMakeCommit();true")
+    pg.wait_for_timeout(50)
+    J("const o=studyGet();o.alloc.plan.params='changed mid-flight';studySet(o)")
+    pg.wait_for_timeout(800)
+    ok(J("AL_PENDING")==None,'a plan change during alMakeCommit drops the candidate')
+    m=J("document.getElementById('alMsg').textContent")
+    ok('changed while the commitment' in m,'and the message is not wiped by the re-render: '+repr(m))
+    J("const o=studyGet();o.alloc.plan.params='';studySet(o)")
+    J(RESTORE)
+    J("alMakeCommit()"); pg.wait_for_timeout(300)
+    # the synchronous "plan changed after the commitment" refusal in alRegister keeps its message too
+    J("const o=studyGet();o.alloc.plan.params='edited after commit';studySet(o)")
+    J("document.getElementById('alSeedSaved').checked=true;document.getElementById('alPubNote').value='Emailed the commitment hash to Dr. Gaur on registration day.';alRegister()"); pg.wait_for_timeout(300)
+    m=J("document.getElementById('alMsg').textContent")
+    ok(J("AL_PENDING")==None and 'changed after the commitment' in m,'alRegister: plan-changed refusal keeps its message: '+repr(m))
+    J("const o=studyGet();o.alloc.plan.params='';studySet(o)")
+    J(SLOW_DIGEST%150)
+    J("alMakeCommit();true"); pg.wait_for_timeout(50)
+    J("const o=studyGet();o.alloc.card.n=99;studySet(o)"); pg.wait_for_timeout(800)
     J(RESTORE)
 
     # --- finding 2: a forged planHash on AL_PENDING must not register ---

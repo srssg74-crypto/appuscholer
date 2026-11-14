@@ -75,6 +75,8 @@ with sync_playwright() as p:
     J("alLock()"); pg.wait_for_timeout(300)
     after=J("(studyGet().alloc.log||[]).filter(e=>e.kind==='analysis locked').length")
     ok(before==1 and after==1,'calling alLock again after it is already locked never writes a second lock entry')
+    # third review: the "Already locked" message must survive alLock's re-render
+    ok('Already locked' in J("document.getElementById('alMsg').textContent"),'the "Already locked" message is shown, not wiped')
 
     errs=[e for e in errors if e[0]=='pageerror']
     ok(not errs,'no page errors '+json.dumps(errs[:3]))

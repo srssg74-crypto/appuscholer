@@ -122,6 +122,13 @@ except ValueError:
 # generators yielding identical sequences (the old pinned value was six A's). They are now one
 # stratum in both engines (stratum_label / stratumLabel), so this is one balanced block of 6.
 assert R.stratified_blocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], (4,6,8)) == ["A","A","A","B","B","B"]
+# third review: labels that str() and String() render differently (floats, None, lists) are refused
+assert R.stratified_blocks(seed12, [1.0, 1, "1"], ["A","B"]) == R.stratified_blocks(seed12, ["1","1","1"], ["A","B"])
+for bad in [[1.5, 1.5], [None, None], [[1,2],[1,2]], [1e23, 1e23]]:
+    try:
+        R.stratified_blocks(seed12, bad, ["A","B"], (4,6,8)); raise SystemExit(f"strata {bad!r} should raise")
+    except ValueError:
+        pass
 # True and 1 are different strata in both engines ("true" vs "1"), and give the same output as JS.
 assert R.stratified_blocks(seed12, [True,1,True,1], ["A","B"], (4,6,8)) == R.stratified_blocks(seed12, ["true","1","true","1"], ["A","B"], (4,6,8))
 
@@ -132,7 +139,10 @@ assert R.permuted_blocks(seed, 40, ["A","B"]) == R.permuted_blocks(seed, 40, ["A
 # a three-arm plan with default blocks must simply work (this used to raise "4 is not a multiple of 3")
 three = R.permuted_blocks(seed12, 30, ["A","B","C"])
 assert len(three) == 30 and sorted(set(three)) == ["A","B","C"] and three.count("A") == three.count("B") == three.count("C")
-for bad in [(float("nan"),), (4.0,), (6.5,), (True,), ()]:
+# third review: 4.0 is 4 in both engines (JSON cannot tell them apart in JS); 6.5, NaN, True, an
+# empty list and anything over 10000 are refused in both.
+assert R.permuted_blocks(seed12, 8, ["A","B"], (4.0,)) == R.permuted_blocks(seed12, 8, ["A","B"], (4,))
+for bad in [(float("nan"),), (6.5,), (True,), (), (10002,), (float("inf"),)]:
     try:
         R.permuted_blocks(seed12, 4, ["A","B"], bad); raise SystemExit(f"block sizes {bad!r} should raise")
     except ValueError:

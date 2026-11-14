@@ -49,7 +49,23 @@ with sync_playwright() as p:
     lst=J("(async()=>await alBuildList(ALG.fromHex(%s),'perm',30,['A','B','C'],{sizes:studyGet().alloc.plan.blockSizes}))()"%json.dumps(seed_hex))
     # the last block is cut at n, so exact balance is not promised; within one block (max 12) of each other is
     counts=[lst.count(a) for a in 'ABC']
-    ok(len(lst)==30 and None not in lst and min(counts)>0 and max(counts)-min(counts)<12,'the list has 30 real arms, all three present, counts within one block of each other: '+json.dumps(counts))
+    # with blocks of 6,9,12 and 3 arms, the cut last block can leave arms at most max(sizes)/k = 4 apart
+    ok(len(lst)==30 and None not in lst and min(counts)>0 and max(counts)-min(counts)<=4,'the list has 30 real arms, all three present, counts at most 4 apart: '+json.dumps(counts))
+    # third review: an upper bound on block sizes, so a typo cannot hang the tab at seed load
+    J(base+"document.getElementById('alArms').value='A,B,C';document.getElementById('alBlocks').value='6,9,100000002';alSave()")
+    ok(J("studyGet().alloc.plan.blockSizes")==[6,9,12],'a block size above 100 is refused (plan unchanged)')
+    ok('at most 100' in J("document.getElementById('alMsg').textContent"),'and the refusal names the cap')
+    # third review regression: a plan registered before the defaults were written onto the plan holds
+    # blockSizes:null. It must still be editable in its non-plan fields (the reason here), because the
+    # comparison treats null as the default; and the registered plan itself stays unchanged.
+    J("(()=>{const o=studyGet();o.alloc.plan.blockSizes=null;o.alloc.commit.plan.blockSizes=null;studySet(o)})()")
+    J("alOpen()"); pg.wait_for_timeout(200)
+    J("document.getElementById('alReason').value=%s;alSave()"%json.dumps(REASON+' Reworded after registration.'))
+    ok(J("studyGet().alloc.card.reason").endswith('Reworded after registration.'),'a plan registered with blockSizes:null can still have its reason edited')
+    ok(J("studyGet().alloc.commit.plan.blockSizes")==None,'the registered plan is untouched')
+    # but a real plan change is still refused
+    J("document.getElementById('alArms').value='A,B,C,D';alSave()")
+    ok(J("studyGet().alloc.plan.arms")=='A,B,C','a real plan change on a registered plan is still refused')
     # a two-arm plan with blank blocks still gets [4,6,8], so existing two-arm studies are unchanged
     J("const o=studyGet();o.alloc=null;studySet(o);alOpen()"); pg.wait_for_timeout(200)
     J("document.getElementById('alReason').value=%s;document.getElementById('alN').value='30';alRefresh()"%json.dumps(REASON))

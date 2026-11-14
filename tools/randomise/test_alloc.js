@@ -44,6 +44,11 @@ try {
 // Second review: 1 and "1" used to be two gens sharing one stream key (two strata with identical
 // sequences, pinned then as six A's). They are now one stratum in both engines: one balanced block.
 check("stratified: numeric 1 and string \"1\" labels are one stratum", A.stratifiedBlocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], [4,6,8]), ["A","A","A","B","B","B"]);
+// third review: labels that String() and str() render differently are refused in both engines
+[[1.5,1.5],[null,null],[[1,2],[1,2]],[1e23,1e23],[{},{}]].forEach(function (bad) {
+  try { A.stratifiedBlocks(seed12, bad, ["A","B"], [4,6,8]); fails++; console.log("FAIL strata " + JSON.stringify(bad) + " should throw"); }
+  catch (e) { console.log("ok  ", "stratified: labels " + JSON.stringify(bad) + " throw"); }
+});
 check("stratified: true and 1 are different strata, keyed like Python", A.stratifiedBlocks(seed12, [true,1,true,1], ["A","B"], [4,6,8]), A.stratifiedBlocks(seed12, ["true","1","true","1"], ["A","B"], [4,6,8]));
 
 // Second review, findings 5 and 12: arm-count defaults and strict block-size validation.
@@ -51,7 +56,8 @@ check("default blocks follow the arm count", [A.defaultBlocks(2), A.defaultBlock
 check("two-arm default is still [4,6,8] (vectors unchanged)", A.permutedBlocks(seed, 40, ["A","B"]), v.blocks_A_B_40);
 const three = A.permutedBlocks(seed12, 30, ["A","B","C"]);
 check("three-arm plan with default blocks works and is balanced", [three.length, three.filter(x=>x==="A").length, three.filter(x=>x==="B").length, three.filter(x=>x==="C").length, three.indexOf(undefined)], [30,10,10,10,-1]);
-[[NaN],[4.0000000001],[6.5],["4"],[],[Infinity]].forEach(function (bad) {
+check("block size 4.0 is 4 (JSON cannot tell them apart)", A.permutedBlocks(seed12, 8, ["A","B"], [4.0]), A.permutedBlocks(seed12, 8, ["A","B"], [4]));
+[[NaN],[4.0000000001],[6.5],["4"],[],[Infinity],[10002]].forEach(function (bad) {
   try { A.permutedBlocks(seed12, 4, ["A","B"], bad); fails++; console.log("FAIL block sizes " + JSON.stringify(bad) + " should throw"); }
   catch (e) { console.log("ok  ", "permuted blocks: block sizes " + JSON.stringify(bad) + " throw"); }
 });
