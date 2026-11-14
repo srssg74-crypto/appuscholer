@@ -118,6 +118,30 @@ try:
     R.permuted_blocks(seed12, 4, ["A","B"], (0,)); raise SystemExit("block size 0 should raise")
 except ValueError:
     pass
-assert R.stratified_blocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], (4,6,8)) == ["A","A","A","A","A","A"]
+# Second review: 1 and "1" used to be two strata that shared one stream key, i.e. two separate
+# generators yielding identical sequences (the old pinned value was six A's). They are now one
+# stratum in both engines (stratum_label / stratumLabel), so this is one balanced block of 6.
+assert R.stratified_blocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], (4,6,8)) == ["A","A","A","B","B","B"]
+# True and 1 are different strata in both engines ("true" vs "1"), and give the same output as JS.
+assert R.stratified_blocks(seed12, [True,1,True,1], ["A","B"], (4,6,8)) == R.stratified_blocks(seed12, ["true","1","true","1"], ["A","B"], (4,6,8))
+
+# 14 second review, findings 5 and 12: arm-count defaults and strict block-size validation.
+assert R.default_blocks(2) == [4, 6, 8] and R.default_blocks(3) == [6, 9, 12]
+# default blocks for two arms are still (4,6,8), so existing two-arm lists and vectors are unchanged
+assert R.permuted_blocks(seed, 40, ["A","B"]) == R.permuted_blocks(seed, 40, ["A","B"], (4,6,8))
+# a three-arm plan with default blocks must simply work (this used to raise "4 is not a multiple of 3")
+three = R.permuted_blocks(seed12, 30, ["A","B","C"])
+assert len(three) == 30 and sorted(set(three)) == ["A","B","C"] and three.count("A") == three.count("B") == three.count("C")
+for bad in [(float("nan"),), (4.0,), (6.5,), (True,), ()]:
+    try:
+        R.permuted_blocks(seed12, 4, ["A","B"], bad); raise SystemExit(f"block sizes {bad!r} should raise")
+    except ValueError:
+        pass
+# an arm named __proto__ must not break minimisation (pins the JS Map fix; Python never had the bug)
+mp = R.minimisation(seed12, [{"sex":"m"},{"sex":"f"},{"sex":"m"},{"sex":"f"}], ["__proto__","B"], ["sex"])
+assert len(mp) == 4 and set(mp) <= {"__proto__","B"}
+# matched pairs: a unit called __proto__ keeps its allocation
+pp = R.matched_pairs(seed12, [["__proto__","u2"],["c3","c4"]])
+assert set(pp) == {"__proto__","u2","c3","c4"}
 
 print("ALL TESTS PASSED")

@@ -1,6 +1,9 @@
 const fs = require("fs");
-const A = require("./alloc.js");
-const v = JSON.parse(fs.readFileSync("vectors.json", "utf8"));
+const path = require("path");
+const A = require(path.join(__dirname, "alloc.js"));
+// second review, finding 13: a bare "vectors.json" only resolved from inside this folder, so the
+// suite failed with ENOENT from the repo root. Resolve next to this file instead.
+const v = JSON.parse(fs.readFileSync(path.join(__dirname, "vectors.json"), "utf8"));
 const seed = A.fromHex(v.seed_hex);
 let fails = 0;
 function check(name, got, want) {
@@ -38,7 +41,27 @@ try {
   A.permutedBlocks(seed12, 4, ["A","B"], [0]);
   fails++; console.log("FAIL block size 0 should throw, not silently build a short/undefined-padded list");
 } catch (e) { console.log("ok  ", "permuted blocks: block size 0 throws"); }
-check("stratified: numeric 1 and string \"1\" labels", A.stratifiedBlocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], [4,6,8]), ["A","A","A","A","A","A"]);
+// Second review: 1 and "1" used to be two gens sharing one stream key (two strata with identical
+// sequences, pinned then as six A's). They are now one stratum in both engines: one balanced block.
+check("stratified: numeric 1 and string \"1\" labels are one stratum", A.stratifiedBlocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], [4,6,8]), ["A","A","A","B","B","B"]);
+check("stratified: true and 1 are different strata, keyed like Python", A.stratifiedBlocks(seed12, [true,1,true,1], ["A","B"], [4,6,8]), A.stratifiedBlocks(seed12, ["true","1","true","1"], ["A","B"], [4,6,8]));
+
+// Second review, findings 5 and 12: arm-count defaults and strict block-size validation.
+check("default blocks follow the arm count", [A.defaultBlocks(2), A.defaultBlocks(3)], [[4,6,8],[6,9,12]]);
+check("two-arm default is still [4,6,8] (vectors unchanged)", A.permutedBlocks(seed, 40, ["A","B"]), v.blocks_A_B_40);
+const three = A.permutedBlocks(seed12, 30, ["A","B","C"]);
+check("three-arm plan with default blocks works and is balanced", [three.length, three.filter(x=>x==="A").length, three.filter(x=>x==="B").length, three.filter(x=>x==="C").length, three.indexOf(undefined)], [30,10,10,10,-1]);
+[[NaN],[4.0000000001],[6.5],["4"],[],[Infinity]].forEach(function (bad) {
+  try { A.permutedBlocks(seed12, 4, ["A","B"], bad); fails++; console.log("FAIL block sizes " + JSON.stringify(bad) + " should throw"); }
+  catch (e) { console.log("ok  ", "permuted blocks: block sizes " + JSON.stringify(bad) + " throw"); }
+});
+try {
+  const mp = A.minimisation(seed12, [{sex:"m"},{sex:"f"},{sex:"m"},{sex:"f"}], ["__proto__","B"], ["sex"]);
+  check("minimisation: an arm named __proto__ does not throw", mp.length, 4);
+} catch (e) { fails++; console.log("FAIL minimisation threw on arm __proto__: " + e.message); }
+const pp = A.matchedPairs(seed12, [["__proto__","u2"],["c3","c4"]]);
+check("matched pairs: a unit called __proto__ keeps its allocation", Object.keys(pp).sort(), ["__proto__","c3","c4","u2"]);
+check("matched pairs: numeric 1 and string \"1\" are not silently merged away from Python", typeof pp, "object");
 
 console.log(fails === 0 ? "ALL JS TESTS PASSED" : fails + " FAILED");
 process.exit(fails ? 1 : 0);

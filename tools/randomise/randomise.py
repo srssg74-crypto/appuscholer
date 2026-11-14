@@ -141,17 +141,38 @@ def simple(seed: bytes, n: int, arms, probs=None):
     return out
 
 
+def default_blocks(k: int):
+    """Default block sizes for k arms: 2k, 3k, 4k. [4, 6, 8] for two arms, [6, 9, 12] for three.
+
+    A fixed (4, 6, 8) default only fits two arms (second review, finding 5)."""
+    return [2 * k, 3 * k, 4 * k]
+
+
+def stratum_label(s):
+    """One string per stratum, the same in both engines (second review, finding 12).
+
+    The JS engine keys strata by String(label), so True must become "true" here (str(True) is
+    "True"), and 1 and "1" are one stratum in both. Labels should be strings in the protocol
+    anyway; this only keeps the two engines in step for anything else that slips through."""
+    if isinstance(s, bool):
+        return "true" if s else "false"
+    return str(s)
+
+
 def _block_generator(stream: HashStream, arms, block_sizes):
     """Endless stream of arm labels, in randomly ordered blocks of random size."""
     arms = list(arms)
     k = len(arms)
-    sizes = list(block_sizes)
+    sizes = list(block_sizes) if block_sizes is not None else default_blocks(k)
+    if not sizes:
+        raise ValueError("block sizes must be a non-empty list")
     for b in sizes:
         # review finding 12: 0 % k == 0, so a block size of 0 used to pass this check. With only
         # size-0 blocks, the while loop below would then spin forever choosing size 0 and never
         # reaching `yield` - a silent hang with no error, rather than failing fast at validation.
-        if b <= 0 or b % k:
-            raise ValueError(f"block size {b} is not a positive multiple of {k} arms")
+        # Second review: NaN and floats must fail here too, as they now do in alloc.js.
+        if isinstance(b, bool) or not isinstance(b, int) or b <= 0 or b % k:
+            raise ValueError(f"block size {b} is not a positive whole multiple of {k} arms")
     while True:
         size = sizes[stream.randbelow(len(sizes))]
         block = [arms[i % k] for i in range(size)]
@@ -159,7 +180,7 @@ def _block_generator(stream: HashStream, arms, block_sizes):
             yield arm
 
 
-def permuted_blocks(seed: bytes, n: int, arms, block_sizes=(4, 6, 8)):
+def permuted_blocks(seed: bytes, n: int, arms, block_sizes=None):
     """Permuted-block randomisation with varying block sizes.
 
     Each block has equal numbers per arm. The block size changes at random,
@@ -169,7 +190,7 @@ def permuted_blocks(seed: bytes, n: int, arms, block_sizes=(4, 6, 8)):
     return [next(gen) for _ in range(n)]
 
 
-def stratified_blocks(seed: bytes, strata, arms, block_sizes=(4, 6, 8)):
+def stratified_blocks(seed: bytes, strata, arms, block_sizes=None):
     """Stratified permuted blocks. Each stratum has its own stream and its own blocks.
 
     `strata` is the stratum label for each participant, in enrolment order.
@@ -177,7 +198,8 @@ def stratified_blocks(seed: bytes, strata, arms, block_sizes=(4, 6, 8)):
     """
     gens = {}
     out = []
-    for s in strata:
+    for raw in strata:
+        s = stratum_label(raw)
         if s not in gens:
             gens[s] = _block_generator(
                 HashStream(seed, f"stratum:{s}"), arms, block_sizes
@@ -445,11 +467,11 @@ def run_config(config: dict, seed: bytes):
         params = {"n": config["n"], "arms": config["arms"], "probs": config.get("probs")}
         res = simple(seed, config["n"], config["arms"], config.get("probs"))
     elif m == "permuted_blocks":
-        bs = config.get("block_sizes", [4, 6, 8])
+        bs = config.get("block_sizes")
         params = {"n": config["n"], "arms": config["arms"], "block_sizes": bs}
         res = permuted_blocks(seed, config["n"], config["arms"], bs)
     elif m == "stratified":
-        bs = config.get("block_sizes", [4, 6, 8])
+        bs = config.get("block_sizes")
         params = {"strata": config["strata"], "arms": config["arms"], "block_sizes": bs}
         res = stratified_blocks(seed, config["strata"], config["arms"], bs)
     elif m == "minimisation":

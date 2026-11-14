@@ -43,7 +43,8 @@ with sync_playwright() as p:
     # an invalid ratio (wrong count) is refused
     J("document.getElementById('alRatio').value='2,1,1';alSave()")
     msg2=J("document.getElementById('alMsg').textContent")
-    ok('Treatment' not in msg2 or len(msg2)>0,'an invalid ratio is refused with an explanation: '+msg2)
+    # second review: the old assertion here ('Treatment' not in msg2 or len(msg2)>0) was close to always true
+    ok('ratio' in msg2.lower() and 'one positive number per arm' in msg2,'an invalid ratio is refused with the ratio explanation: '+msg2)
     ok(J("studyGet().alloc.plan.ratioText")=='2,1','the bad ratio attempt does not overwrite the last valid saved plan')
 
     # finding 5: the runner actually uses the recorded ratio when building the list

@@ -169,14 +169,23 @@
     return out;
   }
 
+  // Default block sizes follow the arm count: 2k, 3k, 4k. A fixed [4,6,8] only fits two arms
+  // (second review, finding 5). For two arms this is still [4,6,8], so the vectors are unchanged.
+  function defaultBlocks(k) { return [2 * k, 3 * k, 4 * k]; }
+
   function BlockGen(stream, arms, blockSizes) {
     this.st = stream; this.arms = arms; this.sizes = blockSizes; this.queue = [];
     var k = arms.length;
+    if (!Array.isArray(blockSizes) || blockSizes.length === 0) throw new Error("block sizes must be a non-empty list");
     for (var i = 0; i < blockSizes.length; i++) {
+      var b = blockSizes[i];
       // review finding 12: 0 % k === 0, so a block size of 0 used to pass this check. With an
       // empty queue, next() below would then do queue.shift() on an empty array and silently
       // return undefined as the "arm" for that position, corrupting the list with no error at all.
-      if (blockSizes[i] <= 0 || blockSizes[i] % k) throw new Error("block size " + blockSizes[i] + " is not a positive multiple of " + k + " arms");
+      // Second review: NaN <= 0 and NaN % k are both false, so NaN slipped through the same way,
+      // as did 4.5 (4.5 % 2 is 0.5, caught) but not e.g. 6.0000000001 % 3. Require a finite
+      // positive integer, same as the Python engine's isinstance(b, int) check.
+      if (typeof b !== "number" || !isFinite(b) || Math.floor(b) !== b || b <= 0 || b % k) throw new Error("block size " + b + " is not a positive whole multiple of " + k + " arms");
     }
   }
   BlockGen.prototype.next = function () {
@@ -190,15 +199,21 @@
   };
 
   function permutedBlocks(seed, n, arms, blockSizes) {
-    blockSizes = blockSizes || [4, 6, 8];
+    blockSizes = blockSizes || defaultBlocks(arms.length);
     var g = new BlockGen(new HashStream(seed, "blocks"), arms, blockSizes);
     var out = [];
     for (var i = 0; i < n; i++) out.push(g.next());
     return out;
   }
 
+  // One string per stratum, the same rule as randomise.py's stratum_label: String(label), so
+  // true -> "true" and 1 -> "1" in both engines. Second review, finding 12: 1 and "1" used to be
+  // two gens sharing one stream key ("stratum:1"), i.e. two strata with identical sequences,
+  // and true/1 diverged from Python (str(True) is "True"). Labels should be strings anyway.
+  function stratumLabel(s) { return String(s); }
+
   function stratifiedBlocks(seed, strata, arms, blockSizes) {
-    blockSizes = blockSizes || [4, 6, 8];
+    blockSizes = blockSizes || defaultBlocks(arms.length);
     // review finding 12: a plain {} used as a map coerces every key to a string and already has
     // inherited properties (constructor, __proto__, toString, ...). A stratum label equal to one
     // of those names would find it already "in gens" via the prototype chain and crash calling
@@ -207,7 +222,7 @@
     // Map has neither problem: no inherited keys, and keys keep their original type.
     var gens = new Map(), out = [];
     for (var i = 0; i < strata.length; i++) {
-      var s = strata[i];
+      var s = stratumLabel(strata[i]);
       if (!gens.has(s)) gens.set(s, new BlockGen(new HashStream(seed, "stratum:" + s), arms, blockSizes));
       out.push(gens.get(s).next());
     }
@@ -226,7 +241,8 @@
     factors.forEach(function (f) { counts.set(f, new Map()); });
     var out = [];
     people.forEach(function (person) {
-      var scores = {};
+      // second review, finding 12: this was a plain {}, so an arm named "__proto__" threw.
+      var scores = new Map();
       arms.forEach(function (arm) {
         var total = 0;
         factors.forEach(function (f) {
@@ -236,10 +252,10 @@
           var after = arms.map(function (a) { return c.get(a) + (a === arm ? 1 : 0); });
           total += Math.max.apply(null, after) - Math.min.apply(null, after);
         });
-        scores[arm] = total;
+        scores.set(arm, total);
       });
-      var best = Math.min.apply(null, arms.map(function (a) { return scores[a]; }));
-      var bestArms = arms.filter(function (a) { return scores[a] === best; });
+      var best = Math.min.apply(null, arms.map(function (a) { return scores.get(a); }));
+      var bestArms = arms.filter(function (a) { return scores.get(a) === best; });
       var arm;
       if (st.uniform() < pBest) {
         arm = bestArms[st.randbelow(bestArms.length)];
@@ -264,8 +280,15 @@
       if (st.randbelow(2) === 0) { allocMap.set(p[0], armNames[0]); allocMap.set(p[1], armNames[1]); }
       else { allocMap.set(p[1], armNames[0]); allocMap.set(p[0], armNames[1]); }
     });
-    var alloc = {};
-    allocMap.forEach(function (v, k) { alloc[k] = v; });
+    // Second review, finding 12: copying into a plain {} lost a unit called "__proto__" (the
+    // assignment set the prototype instead of a key) and merged 1 with "1". A null-prototype
+    // object has no __proto__ setter, so every unit id lands as an own key; ids are coerced to
+    // strings here, as they are in the CSV the Python engine reads them from, and as
+    // Object.defineProperty keeps "__proto__" as an ordinary own property.
+    var alloc = Object.create(null);
+    allocMap.forEach(function (v, k) {
+      Object.defineProperty(alloc, String(k), { value: v, enumerable: true, writable: true, configurable: true });
+    });
     return alloc;
   }
 
@@ -313,6 +336,8 @@
     planHash: planHash,
     commitmentV2: commitmentV2,
     simple: simple,
+    defaultBlocks: defaultBlocks,
+    stratumLabel: stratumLabel,
     permutedBlocks: permutedBlocks,
     stratifiedBlocks: stratifiedBlocks,
     minimisation: minimisation,
