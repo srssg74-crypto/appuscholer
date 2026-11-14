@@ -69,5 +69,45 @@ const pp = A.matchedPairs(seed12, [["__proto__","u2"],["c3","c4"]]);
 check("matched pairs: a unit called __proto__ keeps its allocation", Object.keys(pp).sort(), ["__proto__","c3","c4","u2"]);
 check("matched pairs: numeric 1 and string \"1\" are not silently merged away from Python", typeof pp, "object");
 
+// ---- cluster trials: shared vectors, order independence, validation ----
+const cv = v.clusters, cs = A.fromHex(cv.seed_hex);
+check("cluster stratified matches the Python vector", A.stratifiedClusters(cs, cv.clusters, cv.arms, cv.factors, cv.bins, cv.weight), cv.stratified);
+check("cluster minimisation matches the Python vector", A.clusterMinimisation(cs, cv.clusters, cv.arms, cv.factors, cv.bins, cv.weight), cv.minimisation);
+const reversed = cv.clusters.slice().reverse();
+check("cluster stratified does not depend on input order", A.stratifiedClusters(cs, reversed, cv.arms, cv.factors, cv.bins, cv.weight).allocation, cv.stratified.allocation);
+check("cluster minimisation does not depend on input order", A.clusterMinimisation(cs, reversed, cv.arms, cv.factors, cv.bins, cv.weight).allocation, cv.minimisation.allocation);
+check("bin edges: a value on a cut point goes up", [A.binLevel(99.9,[100,200]), A.binLevel(100,[100,200]), A.binLevel(200,[100,200])], [0,1,2]);
+[
+  [[{id:"a"}], ["A","B"], []],
+  [[{id:"a"},{id:"a"}], ["A","B"], []],
+  [[{id:"a"},{id:""}], ["A","B"], []],
+  [[{id:"a"},{id:"b"}], ["A"], []],
+  [[{id:"a",g:1},{id:"b"}], ["A","B"], ["g"]],
+  [[{id:"a",g:1.5},{id:"b",g:2}], ["A","B"], ["g"]],
+].forEach(function (c, i) {
+  [A.stratifiedClusters, A.clusterMinimisation].forEach(function (fn) {
+    try { fn(cs, c[0], c[1], c[2]); fails++; console.log("FAIL cluster validation case " + i + " should throw"); }
+    catch (e) { console.log("ok  ", "cluster validation case " + i + " throws"); }
+  });
+});
+try { A.stratifiedClusters(cs, [{id:"a",g:1},{id:"b",g:2}], ["A","B"], ["g"], {g:[5,5]}); fails++; console.log("FAIL equal cut points should throw"); }
+catch (e) { console.log("ok   equal cut points throw"); }
+try { A.clusterMinimisation(cs, [{id:"a",s:true},{id:"b",s:5}], ["A","B"], [], null, "s"); fails++; console.log("FAIL boolean weight should throw"); }
+catch (e) { console.log("ok   boolean weight throws"); }
+const pr = A.stratifiedClusters(cs, [{id:"__proto__"},{id:"constructor"}], ["__proto__","B"], []);
+check("cluster ids and arms called __proto__ are only names", pr.allocation.map(function (x) { return x[0]; }).sort(), ["__proto__","constructor"]);
+
+// ---- constrained clusters ----
+["constrained","constrained_odd"].forEach(function (k) {
+  const c = v[k];
+  check("constrained clusters match the Python vector (" + k + ")", A.constrainedClusters(A.fromHex(c.seed_hex), c.clusters, c.arms, c.constraints, c.tries), c.result);
+});
+const cc = v.constrained;
+check("constrained clusters do not depend on input order", A.constrainedClusters(A.fromHex(cc.seed_hex), cc.clusters.slice().reverse(), cc.arms, cc.constraints, cc.tries), cc.result);
+[[[]],[[{type:"bogus",factor:"size",max:1}]],[[{type:"mean_diff",factor:"nope",max:1}]],[[{type:"mean_diff",factor:"size",max:-1}]],[[{type:"mean_diff",factor:"region",max:1}]],[[{type:"mean_diff",factor:"size",max:0.0001}],20],[[{type:"mean_diff",factor:"size",max:10}],0]].forEach(function (a, i) {
+  try { A.constrainedClusters(A.fromHex(cc.seed_hex), cc.clusters, cc.arms, a[0], a[1] === undefined ? 100 : a[1]); fails++; console.log("FAIL constrained case " + i + " should throw"); }
+  catch (e) { console.log("ok  ", "constrained case " + i + " throws"); }
+});
+
 console.log(fails === 0 ? "ALL JS TESTS PASSED" : fails + " FAILED");
 process.exit(fails ? 1 : 0);

@@ -300,6 +300,261 @@
     return alloc;
   }
 
+  // ---- Cluster trials (mirrors randomise.py; see the rules in its comments) ----
+  var MAX_WEIGHT = 1e9, MIN_WEIGHT = 1e-3;
+
+  function isNum(x) { return typeof x === "number" && isFinite(x); }
+  function binLevel(value, cuts) {
+    if (!isNum(value)) throw new Error("a binned factor needs a finite number, got " + JSON.stringify(value));
+    var i = 0;
+    while (i < cuts.length && value >= cuts[i]) i++;
+    return i;
+  }
+  function cmpBytes(a, b) {
+    var x = utf8(a), y = utf8(b), n = Math.min(x.length, y.length);
+    for (var i = 0; i < n; i++) if (x[i] !== y[i]) return x[i] - y[i];
+    return x.length - y.length;
+  }
+  function sortedByBytes(keys) { return keys.slice().sort(cmpBytes); }
+  function levelsKey(levels) { return JSON.stringify(levels); }
+
+  function clusterTable(clusters, arms, factors, bins, weight) {
+    arms = Array.prototype.slice.call(arms || []);
+    factors = Array.prototype.slice.call(factors || []);
+    bins = bins || {};
+    var ok = function (a) { return typeof a === "string" && a.length > 0; };
+    if (arms.length < 2 || new Set(arms).size !== arms.length || !arms.every(ok))
+      throw new Error("arms must be two or more different non-empty strings");
+    if (new Set(factors).size !== factors.length || !factors.every(ok))
+      throw new Error("factors must be different non-empty strings");
+    Object.keys(bins).forEach(function (f) {
+      var cuts = bins[f];
+      if (factors.indexOf(f) < 0) throw new Error("bins given for '" + f + "', which is not a factor");
+      if (!Array.isArray(cuts) || !cuts.length || !cuts.every(isNum) || cuts.some(function (c, i) { return i < cuts.length - 1 && c >= cuts[i + 1]; }))
+        throw new Error("bins for '" + f + "' must be a non-empty, strictly increasing list of numbers");
+    });
+    if (!Array.isArray(clusters) || clusters.length < 2) throw new Error("a cluster trial needs a list of at least two clusters");
+    var seen = new Set(), rows = [];
+    clusters.forEach(function (c) {
+      if (!c || typeof c !== "object" || Array.isArray(c) || !ok(c.id)) throw new Error("every cluster needs a non-empty string id");
+      var cid = c.id;
+      if (seen.has(cid)) throw new Error("cluster id '" + cid + "' appears twice");
+      seen.add(cid);
+      var levels = [];
+      factors.forEach(function (f) {
+        if (!Object.prototype.hasOwnProperty.call(c, f)) throw new Error("cluster '" + cid + "' has no value for factor '" + f + "'");
+        if (Object.prototype.hasOwnProperty.call(bins, f)) levels.push([f, "b" + binLevel(c[f], bins[f])]);
+        else levels.push([f, stratumLabel(c[f])]);
+      });
+      var w = null;
+      if (weight !== null && weight !== undefined) {
+        w = Object.prototype.hasOwnProperty.call(c, weight) ? c[weight] : undefined;
+        if (!isNum(w) || w < MIN_WEIGHT || w > MAX_WEIGHT)
+          throw new Error("cluster '" + cid + "': '" + weight + "' must be a number from " + MIN_WEIGHT + " to " + MAX_WEIGHT);
+      }
+      rows.push({ id: cid, levels: levels, weight: w });
+    });
+    rows.sort(function (a, b) { return cmpBytes(a.id, b.id); });
+    return { rows: rows, arms: arms, factors: factors };
+  }
+
+  function armTotals(rows, alloc, arms, weight) {
+    var hasW = weight !== null && weight !== undefined;
+    return arms.map(function (a) {
+      var mine = rows.filter(function (r) { return alloc.get(r.id) === a; });
+      var w = null;
+      if (hasW) { w = 0; mine.forEach(function (r) { w += r.weight; }); }
+      return { arm: a, clusters: mine.length, weight: w };
+    });
+  }
+
+  function stratifiedClusters(seed, clusters, arms, factors, bins, weight) {
+    var t = clusterTable(clusters, arms, factors, bins, weight), rows = t.rows;
+    arms = t.arms;
+    var k = arms.length, strata = new Map();
+    rows.forEach(function (r) {
+      var key = levelsKey(r.levels);
+      if (!strata.has(key)) strata.set(key, []);
+      strata.get(key).push(r);
+    });
+    var globalCounts = new Map(), alloc = new Map(), detail = [], warnings = [];
+    arms.forEach(function (a) { globalCounts.set(a, 0); });
+    sortedByBytes(Array.from(strata.keys())).forEach(function (key) {
+      var members = strata.get(key), m = members.length;
+      var stream = new HashStream(seed, "cluster-stratum:" + key);
+      var base = Math.floor(m / k), spare = m % k;
+      var order = []; for (var i = 0; i < k; i++) order.push(i);
+      var shuffled = stream.shuffle(order);
+      var ranked = shuffled.slice().sort(function (x, y) {
+        var d = globalCounts.get(arms[x]) - globalCounts.get(arms[y]);
+        return d !== 0 ? d : shuffled.indexOf(x) - shuffled.indexOf(y);
+      });
+      var extra = new Set(ranked.slice(0, spare)), labels = [];
+      arms.forEach(function (a, i) {
+        var q = base + (extra.has(i) ? 1 : 0);
+        for (var j = 0; j < q; j++) labels.push(a);
+      });
+      labels = stream.shuffle(labels);
+      var counts = new Map(); arms.forEach(function (a) { counts.set(a, 0); });
+      members.forEach(function (r, idx) {
+        var lab = labels[idx];
+        alloc.set(r.id, lab);
+        globalCounts.set(lab, globalCounts.get(lab) + 1);
+        counts.set(lab, counts.get(lab) + 1);
+      });
+      detail.push({ levels: members[0].levels, clusters: m, counts: arms.map(function (a) { return [a, counts.get(a)]; }) });
+      if (m < k) warnings.push({ kind: "stratum_missing_arm", levels: members[0].levels, clusters: m });
+    });
+    if (strata.size * k > rows.length) warnings.push({ kind: "strata_too_fine", strata: strata.size, clusters: rows.length, arms: k });
+    return {
+      method: "stratified_clusters",
+      allocation: rows.map(function (r) { return [r.id, alloc.get(r.id)]; }),
+      strata: detail,
+      arm_totals: armTotals(rows, alloc, arms, weight),
+      warnings: warnings
+    };
+  }
+
+  function clusterMinimisation(seed, clusters, arms, factors, bins, weight, pBest) {
+    if (pBest === undefined || pBest === null) pBest = 0.8;
+    if (!(pBest > 0.5 && pBest <= 1)) throw new Error("p_best should be between 0.5 and 1");
+    var t = clusterTable(clusters, arms, factors, bins, weight), rows = t.rows;
+    arms = t.arms;
+    var hasW = weight !== null && weight !== undefined, n = rows.length, meanW = null;
+    if (hasW) { var tot = 0; rows.forEach(function (r) { tot += r.weight; }); meanW = tot / n; }
+    var orderStream = new HashStream(seed, "cluster-minimisation:order");
+    var stream = new HashStream(seed, "cluster-minimisation");
+    var idxs = []; for (var i = 0; i < n; i++) idxs.push(i);
+    var order = orderStream.shuffle(idxs);
+    function fresh() {
+      var g = { n: new Map(), w: new Map() };
+      arms.forEach(function (a) { g.n.set(a, 0); g.w.set(a, 0); });
+      return g;
+    }
+    var overall = fresh(), groups = new Map();
+    rows.forEach(function (r) {
+      r.levels.forEach(function (fl) { var key = levelsKey(fl); if (!groups.has(key)) groups.set(key, fresh()); });
+    });
+    function spread(tot, arm, add) {
+      var lo = Infinity, hi = -Infinity;
+      arms.forEach(function (a) {
+        var v = tot.get(a) + (a === arm ? add : 0);
+        if (v < lo) lo = v; if (v > hi) hi = v;
+      });
+      return hi - lo;
+    }
+    var alloc = new Map();
+    order.forEach(function (idx) {
+      var r = rows[idx], wn = hasW ? r.weight / meanW : 0;
+      var members = [overall].concat(r.levels.map(function (fl) { return groups.get(levelsKey(fl)); }));
+      var scores = new Map(), best = Infinity;
+      arms.forEach(function (a) {
+        var total = 0;
+        members.forEach(function (g) {
+          total += spread(g.n, a, 1);
+          if (hasW) total += spread(g.w, a, wn);
+        });
+        scores.set(a, total);
+        if (total < best) best = total;
+      });
+      var bestArms = arms.filter(function (a) { return scores.get(a) === best; }), arm;
+      if (stream.uniform() < pBest) {
+        arm = bestArms[stream.randbelow(bestArms.length)];
+      } else {
+        var others = arms.filter(function (a) { return bestArms.indexOf(a) < 0; });
+        if (!others.length) others = arms;
+        arm = others[stream.randbelow(others.length)];
+      }
+      members.forEach(function (g) { g.n.set(arm, g.n.get(arm) + 1); g.w.set(arm, g.w.get(arm) + wn); });
+      alloc.set(r.id, arm);
+    });
+    var balance = [], warnings = [];
+    sortedByBytes(Array.from(groups.keys())).forEach(function (key) {
+      var fl = JSON.parse(key), g = groups.get(key), m = 0;
+      arms.forEach(function (a) { m += g.n.get(a); });
+      var entry = { factor: fl[0], level: fl[1], clusters: m, counts: arms.map(function (a) { return [a, g.n.get(a)]; }) };
+      if (hasW) {
+        entry.weights = arms.map(function (a) {
+          var sum = 0;
+          rows.forEach(function (rr) {
+            if (alloc.get(rr.id) === a && rr.levels.some(function (x) { return x[0] === fl[0] && x[1] === fl[1]; })) sum += rr.weight;
+          });
+          return [a, sum];
+        });
+      }
+      balance.push(entry);
+      if (m < 2) warnings.push({ kind: "level_single_cluster", factor: fl[0], level: fl[1] });
+    });
+    return {
+      method: "cluster_minimisation",
+      processing_order: order.map(function (i) { return rows[i].id; }),
+      allocation: rows.map(function (r) { return [r.id, alloc.get(r.id)]; }),
+      arm_totals: armTotals(rows, alloc, arms, weight),
+      balance: balance,
+      warnings: warnings
+    };
+  }
+
+  var MAX_TRIES = 200000;
+  function constrainedClusters(seed, clusters, arms, constraints, tries) {
+    if (tries === undefined || tries === null) tries = 10000;
+    var t = clusterTable(clusters, arms, [], null, null), rows = t.rows;
+    arms = t.arms;
+    if (arms.length !== 2) throw new Error("constrained_clusters handles two arms");
+    if (!Number.isInteger(tries) || tries < 1 || tries > MAX_TRIES) throw new Error("tries must be a whole number from 1 to " + MAX_TRIES);
+    if (!Array.isArray(constraints) || !constraints.length) throw new Error("give at least one constraint");
+    var byid = new Map(); clusters.forEach(function (c) { byid.set(c.id, c); });
+    var prepared = constraints.map(function (c) {
+      if (!c || typeof c !== "object" || (c.type !== "mean_diff" && c.type !== "count_diff")) throw new Error("a constraint needs type mean_diff or count_diff");
+      var f = c.factor, mx = c.max;
+      if (typeof f !== "string" || !f) throw new Error("a constraint needs a factor name");
+      if (!isNum(mx) || mx < 0) throw new Error("a constraint max must be a finite number, zero or more");
+      var vals = rows.map(function (r) {
+        var rec = byid.get(r.id);
+        if (!Object.prototype.hasOwnProperty.call(rec, f)) throw new Error("cluster '" + r.id + "' has no value for factor '" + f + "'");
+        var x = rec[f];
+        if (c.type === "mean_diff") {
+          if (!isNum(x)) throw new Error("mean_diff needs a finite number for '" + f + "' on cluster '" + r.id + "'");
+          return x;
+        }
+        return stratumLabel(x);
+      });
+      return { kind: c.type, vals: vals, mx: mx };
+    });
+    var n = rows.length, stream = new HashStream(seed, "constrained-clusters");
+    var lo = Math.floor(n / 2), hi = n - lo;
+    var firstIsBig = n % 2 === 1 && stream.randbelow(2) === 0;
+    var n0 = firstIsBig ? hi : lo;
+    var idx = []; for (var q = 0; q < n; q++) idx.push(q);
+    for (var attempt = 1; attempt <= tries; attempt++) {
+      var picks = stream.shuffle(idx), in0 = new Set(picks.slice(0, n0)), ok = true;
+      for (var pi = 0; pi < prepared.length && ok; pi++) {
+        var pc = prepared[pi];
+        if (pc.kind === "mean_diff") {
+          var s0 = 0, s1 = 0;
+          for (var i = 0; i < n; i++) { if (in0.has(i)) s0 += pc.vals[i]; else s1 += pc.vals[i]; }
+          if (Math.abs(s0 / n0 - s1 / (n - n0)) > pc.mx) ok = false;
+        } else {
+          var lv = new Map();
+          for (var j = 0; j < n; j++) {
+            if (!lv.has(pc.vals[j])) lv.set(pc.vals[j], [0, 0]);
+            lv.get(pc.vals[j])[in0.has(j) ? 0 : 1]++;
+          }
+          lv.forEach(function (e) { if (Math.abs(e[0] - e[1]) > pc.mx) ok = false; });
+        }
+      }
+      if (ok) {
+        return {
+          method: "constrained_clusters",
+          allocation: rows.map(function (r, i) { return [r.id, in0.has(i) ? arms[0] : arms[1]]; }),
+          attempts: attempt,
+          arm_totals: [{ arm: arms[0], clusters: n0 }, { arm: arms[1], clusters: n - n0 }]
+        };
+      }
+    }
+    throw new Error("none of " + tries + " random allocations met the constraints; loosen them");
+  }
+
   function williamsRows(k) {
     if (k < 2) throw new Error("need at least two treatments");
     var seq = [0], lo = 1, hi = k - 1, takeLo = true;
@@ -350,6 +605,10 @@
     stratifiedBlocks: stratifiedBlocks,
     minimisation: minimisation,
     matchedPairs: matchedPairs,
+    binLevel: binLevel,
+    stratifiedClusters: stratifiedClusters,
+    clusterMinimisation: clusterMinimisation,
+    constrainedClusters: constrainedClusters,
     williamsRows: williamsRows,
     crossover: crossover,
     resultHash: resultHash,
