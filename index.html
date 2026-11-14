@@ -18039,6 +18039,8 @@ async function alHash(bytes){const d=await crypto.subtle.digest('SHA-256',bytes)
 async function alListHash(seedBytes,list){return ALG.hex(await ALG.hmac(seedBytes,new TextEncoder().encode('appuscholar-list-v1:'+JSON.stringify(list))))}
 /* Canonical JSON of a plan: sorted keys, no spaces. Matches the Python engine's plan_hash. */
 function alCanon(o){return JSON.stringify(Object.keys(o).sort().reduce((m,k)=>{m[k]=o[k];return m},{}))}
+/* Every write to the allocation record that happens after an await goes through here (second review, finding 10). The record is re-read at the moment of writing, so a copy taken before the await never overwrites what another call (an enrolment, a deviation) wrote in the meantime. `key` is studyKey() as it was before the awaits: if the active study changed while this call was in flight (a project switch), nothing is written, so one study's entry never lands in another's record. `patch` is an object, or a function of the fresh record that returns one. Returns the fresh record, or null when it refused. */
+function alWrite(key,patch){if(studyKey()!==key)return null;const o=studyGet(),a=alGet(o);o.alloc=Object.assign({},a,typeof patch==='function'?patch(a,o):patch);studySet(o);return o.alloc}
 /* Ethics hard stop: a commitment needs an approval number, or a written note that review is not needed. Reads the Design & Ethics record (designGet('ec')). */
 function alEthics(){const s=designGet('ec')||{};
   if(s.status==='approved'&&String(s.apprNo||'').trim())return{ok:true};
@@ -18061,18 +18063,22 @@ function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
     '<label style="display:block;margin:8px 0;font-size:14px"><input type="checkbox" id="alSeedSaved"> '+L('I have saved the seed file somewhere other than this site.','मैंने seed file इस site के अलावा कहीं सहेज ली है।')+'</label>'+
     '<div class="row"><button type="button" class="btn btn-purple" onclick="alRegister()">'+L('Register commitment','Commitment दर्ज करें')+'</button></div>'}
 async function alMakeCommit(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
-  const o=studyGet(),a=alGet(o);
+  const key=studyKey(),o=studyGet(),a=alGet(o);
   if(a.commit||!alOk(o)||a.plan.method==='none'){if(msg)msg.textContent=L('Nothing to register.','दर्ज करने को कुछ नहीं।');return}
   const eth=alEthics();if(!eth.ok){if(msg)msg.textContent=L(eth.en,eth.hi);return}
   const seed=new Uint8Array(32);crypto.getRandomValues(seed);
-  const planHex=await alHash(new TextEncoder().encode(alCanon(a.plan)));
+  const planJSON=JSON.stringify(a.plan),planHex=await alHash(new TextEncoder().encode(alCanon(a.plan)));
   const planBytes=new Uint8Array(32);for(let i=0;i<32;i++)planBytes[i]=parseInt(planHex.substr(i*2,2),16);
   const pre=new TextEncoder().encode('appuscholar-commit-v2:');
   const buf=new Uint8Array(pre.length+32+32);buf.set(pre);buf.set(seed,pre.length);buf.set(planBytes,pre.length+32);
-  AL_PENDING={hash:await alHash(buf),planHash:planHex,seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:JSON.stringify(a.plan)};
-  const at2=new Date().toISOString(),prevRolls=(a.log||[]).filter(e=>e.kind==='commitment created').length;
-  o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at:at2,kind:'commitment created',text:'candidate '+AL_PENDING.hash.slice(0,16)+(prevRolls?' · re-created, '+(prevRolls+1)+' so far':'')}])});
-  studySet(o);alRender()}
+  const hash=await alHash(buf),at2=new Date().toISOString();
+  /* Second review, finding 10: the study is written from a fresh read, not the copy taken before the two hashing awaits (a card edit made meanwhile used to be reverted). If the plan itself changed during the awaits, this candidate hashes a plan that no longer exists, so it is dropped. If the active study changed, nothing is written and nothing is pending. */
+  const fresh=alWrite(key,a2=>{if(JSON.stringify(a2.plan)!==planJSON||a2.commit)return{};
+    const prevRolls=(a2.log||[]).filter(e=>e.kind==='commitment created').length;
+    return{log:(a2.log||[]).concat([{at:at2,kind:'commitment created',text:'candidate '+hash.slice(0,16)+(prevRolls?' · re-created, '+(prevRolls+1)+' so far':'')}])}});
+  if(!fresh||fresh.commit||JSON.stringify(fresh.plan)!==planJSON){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed while the commitment was being made. Create it again.','Commitment बनते समय योजना बदल गई। फिर बनाएँ।');alRender();return}
+  AL_PENDING={hash,planHash:planHex,seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:planJSON};
+  alRender()}
 function alDownloadSeed(){if(!AL_PENDING)return;
   const txt=['Appuscholar randomisation seed','Commitment: '+AL_PENDING.hash,'Seed (hex): '+AL_PENDING.seedHex,'','Keep this file away from the app, away from the master list, and away from anyone who does not need it.'].join('\n');
   const u=URL.createObjectURL(new Blob([txt],{type:'text/plain'})),x=document.createElement('a');x.href=u;x.download='appuscholar_seed_KEEP_SECRET.txt';document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
@@ -18081,18 +18087,26 @@ async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.ge
   /* alMakeCommit() checked ethics when the candidate was created, but ethics approval can be edited or withdrawn in Design & Ethics any time between that and registration (the commitment can sit unregistered for a while). Re-check here so registration itself never slips through without an approval that still holds. The pending commitment and its already-saved seed stay valid - fixing the ethics record and registering again needs no new seed. */
   const eth=alEthics();if(!eth.ok){if(msg)msg.textContent=L(eth.en,eth.hi);return}
   if(!(document.getElementById('alSeedSaved')||{}).checked){if(msg)msg.textContent=L('Save the seed file first, then tick the box.','पहले seed file सहेजें, फिर box पर टिक करें।');return}
-  const o=studyGet(),a=alGet(o);
+  const key=studyKey(),o=studyGet(),a=alGet(o);
   if(a.commit){AL_PENDING=null;alRender();return}
   if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
   const pub=alVal('alPubNote').trim();
   if(pub.length<10){msg.textContent=L('Say where you sent or published this commitment hash outside this app, and when (10+ characters).','यह commitment hash आपने इस app से बाहर कहाँ और कब भेजा या publish किया, वह लिखें (10+ अक्षर)।');return}
-  const planHash=AL_PENDING.planHash,at=new Date().toISOString();
-  const seedBytes=ALG.fromHex(AL_PENDING.seedHex),planHashBytes=ALG.fromHex(planHash),pre=new TextEncoder().encode('appuscholar-commit-v2:');
+  const pending=AL_PENDING,at=new Date().toISOString();
+  /* Second review, finding 2: the plan hash is recomputed here from the plan actually in the study record, not read off AL_PENDING. Before this, AL_PENDING.planHash was trusted as given, so a pending object with a forged planHash (and a hash recomputed to match it) registered with a plan hash that was not the plan's. Now the stored plan, the plan hash and the commitment hash must all agree, each derived from the one before. */
+  const planHash=await alHash(new TextEncoder().encode(alCanon(a.plan)));
+  /* Refusals below re-render first and set the message after, because alRender() replaces #alMsg and used to wipe the text set just before it. */
+  const refuse=t=>{AL_PENDING=null;alRender();const e=document.getElementById('alMsg');if(e)e.textContent=t};
+  if(planHash!==pending.planHash){refuse(L('The commitment\'s plan hash is not the hash of this plan. Not registered. Create a new commitment.','Commitment का plan hash इस योजना का hash नहीं है। दर्ज नहीं हुआ। नया commitment बनाएँ।'));return}
+  const seedBytes=ALG.fromHex(pending.seedHex),planHashBytes=ALG.fromHex(planHash),pre=new TextEncoder().encode('appuscholar-commit-v2:');
   const buf=new Uint8Array(pre.length+seedBytes.length+planHashBytes.length);buf.set(pre);buf.set(seedBytes,pre.length);buf.set(planHashBytes,pre.length+seedBytes.length);
   const recomputed=await alHash(buf);
-  if(recomputed!==AL_PENDING.hash){AL_PENDING=null;msg.textContent=L('The commitment hash does not match its own seed and plan. Not registered.','Commitment hash अपने seed और plan से मेल नहीं खाता। दर्ज नहीं हुआ।');alRender();return}
-  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan),publishedTo:pub},deviations:a.deviations||[],enrol:a.enrol||[],verify:a.verify,lock:a.lock};
-  AL_PENDING=null;studySet(o);alRender()}
+  if(recomputed!==pending.hash){refuse(L('The commitment hash does not match its own seed and plan. Not registered.','Commitment hash अपने seed और plan से मेल नहीं खाता। दर्ज नहीं हुआ।'));return}
+  /* Second review, finding 10: written from a fresh read after the two awaits above, and only if the plan is still the one that was hashed and nothing else registered meanwhile. */
+  const fresh=alWrite(key,a2=>{if(a2.commit||JSON.stringify(a2.plan)!==pending.plan)return{};
+    return{log:(a2.log||[]).concat([{at,kind:'registered',text:'commitment '+pending.hash+' · plan '+planHash.slice(0,16),method:a2.plan.method}]),commit:{version:2,hash:pending.hash,at,planHash,plan:JSON.parse(pending.plan),publishedTo:pub}}});
+  if(!fresh||!fresh.commit||fresh.commit.hash!==pending.hash){refuse(L('The plan or the study changed while registering. Nothing was registered; create a new commitment.','दर्ज करते समय योजना या study बदल गई। कुछ दर्ज नहीं हुआ; नया commitment बनाएँ।'));return}
+  AL_PENDING=null;alRender()}
 
 /* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
 function alDevHTML(a,L){if(!a.commit)return'';const d=(a.deviations||[]).slice().reverse();
@@ -18226,7 +18240,7 @@ function alRunnerHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),cm=a.comm
   '<div class="row" style="gap:8px"><button type="button" class="btn btn-ghost btn-sm" onclick="enEnvelopes()">'+L('Download envelope files (coordinator only)','Envelope files डाउनलोड करें (केवल coordinator)')+'</button></div>'+
   '<p class="desc">'+L('The master list and the seed together let anyone rebuild every arm. Keep them apart.','Master list और seed साथ हों तो कोई भी हर arm फिर से बना सकता है। दोनों को अलग रखें।')+'</p>'}
 function enMsg(t){const e=document.getElementById('enMsg');if(e)e.textContent=t}
-async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)return;const o=studyGet(),a=alGet(o),hi=studyHi(),L=(en,x)=>hi?x:en;
+async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)return;const key=studyKey(),o=studyGet(),a=alGet(o),hi=studyHi(),L=(en,x)=>hi?x:en;
   if(!(document.getElementById('enRoleAck')||{}).checked){enMsg(L('Tick the box above first: whoever loads the seed here can see every future assignment.','पहले ऊपर वाला box टिक करें: जो यहाँ seed लोड करे, वह हर आगे की assignment देख सकता है।'));input.value='';return}
   const txt=await f.text();const m=txt.match(/Seed \(hex\):\s*([0-9a-f]{64})/i)||txt.match(/^\s*([0-9a-f]{64})\s*$/im);
   if(!m){enMsg(L('No 64-character seed found in that file.','उस file में 64 अक्षरों वाला seed नहीं मिला।'));return}
@@ -18239,11 +18253,11 @@ async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)retur
   if(!list||!n){enMsg(L('Set the number of participants first.','पहले participants की संख्या लिखें।'));return}
   const lh=await alListHash(ALG.fromHex(m[1].toLowerCase()),list),at=new Date().toISOString();
   list=null; /* built only to log its hash; not kept, so it is not a standing, inspectable variable between enrolments */
+  /* Re-read the study right before this write: o/a were captured before several awaits (file read, hashing), and anything else writing to this study in the meantime - a deviation, an enrolment, a card edit - would otherwise be silently lost when this stale copy is written back. If the study was switched meanwhile, the seed is not kept either: it belongs to the study that was open. */
+  const written=alWrite(key,a2=>{const roleAck=(a2.log||[]).filter(x=>x.kind==='seed loaded for enrolment').length;
+    return{log:(a2.log||[]).concat([{at,kind:'list built',text:'list of '+n+' · hash '+lh.slice(0,16),hash:lh,n}],[{at,kind:'seed loaded for enrolment',text:'acknowledged the concealment risk before loading'+(roleAck?' (again, '+(roleAck+1)+' times so far)':'')}])}});
+  if(!written){AL_SEED=null;AL_BUILT_N=0;enMsg(L('The study changed while the seed was loading. Load it again in the study it belongs to.','Seed लोड होते समय study बदल गई। उसी study में फिर लोड करें।'));return}
   AL_SEED=m[1].toLowerCase();AL_BUILT_N=n;
-  /* Re-read the study right before this write: o/a were captured before several awaits (file read, hashing), and anything else writing to this study in the meantime - a deviation, an enrolment, a card edit - would otherwise be silently lost when this stale copy is written back. */
-  const o2=studyGet(),a2=alGet(o2);
-  const roleAck=(a2.log||[]).filter(x=>x.kind==='seed loaded for enrolment').length;
-  o2.alloc=Object.assign({},a2,{log:(a2.log||[]).concat([{at,kind:'list built',text:'list of '+n+' · hash '+lh.slice(0,16),hash:lh,n}],[{at,kind:'seed loaded for enrolment',text:'acknowledged the concealment risk before loading'+(roleAck?' (again, '+(roleAck+1)+' times so far)':'')}])});studySet(o2);
   enMsg(L('Seed matches the commitment. Ready to enrol; the list is not kept on screen.','Seed commitment से मेल खाता है। Enrol के लिए तैयार; list screen पर नहीं रखी जाती।'));alRender()}
 function enEnrol(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),code=alVal('enCode').trim();
   if(!AL_SEED){enMsg(L('Load the seed file first.','पहले seed file लोड करें।'));return}
@@ -18253,23 +18267,27 @@ function enEnrol(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alG
   const at=new Date().toISOString(),pos=en.length+1;
   o.alloc=Object.assign({},a,{enrol:en.concat([{code,pos,at}]),log:(a.log||[]).concat([{at,kind:'enrolled',text:code+' · position '+pos}])});
   studySet(o);alRender()}
-async function enReveal(code){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),x=(a.enrol||[]).find(e=>e.code===code);
+async function enReveal(code){const hi=studyHi(),L=(en,x)=>hi?x:en;const key=studyKey(),o=studyGet(),a=alGet(o),x=(a.enrol||[]).find(e=>e.code===code);
   if(!x){enMsg(L('Not enrolled.','Enrol नहीं है।'));return}
   if(!AL_SEED){enMsg(L('Load the seed file to see the arm. The reveal is logged either way.','Arm देखने के लिए seed file लोड करें।'));return}
   const arms=String(a.plan.arms||'A,B').split(',').map(s2=>s2.trim()).filter(Boolean),built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0];
   let list=await alBuildList(ALG.fromHex(AL_SEED),a.plan.method,built?built.n:AL_BUILT_N,arms,{sizes:a.plan.blockSizes,probs:a.plan.probs});
   const arm=list[x.pos-1];list=null; /* built fresh for this one reveal, discarded right after, never kept standing */
-  const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'reveal',text:code+' · position '+x.pos}])});studySet(o);
+  const at=new Date().toISOString();
+  /* Second review, finding 10: this function became async on this branch and then wrote back the copy of the study taken before the await, so a participant enrolled while the list was being rebuilt was dropped from the record. The log entry now goes onto a fresh read; if the study was switched meanwhile, nothing is written and the arm is not shown (it belongs to the study that was open, not the one that is). */
+  if(!alWrite(key,a2=>({log:(a2.log||[]).concat([{at,kind:'reveal',text:code+' · position '+x.pos}])}))){enMsg(L('The study changed while the arm was being looked up. Nothing shown, nothing logged.','Arm देखते समय study बदल गई। कुछ नहीं दिखाया, कुछ log नहीं हुआ।'));return}
   enMsg(L('Arm for '+code+': ','"'+code+'" का arm: ')+arm);}
 async function enEnvelopes(){if(!AL_SEED){enMsg(studyHi()?'पहले seed file लोड करें।':'Load the seed file first.');return}
-  const o=studyGet(),a=alGet(o),sid=String(o.id||o.title||'study').replace(/[^A-Za-z0-9_-]/g,'_');
+  const key=studyKey(),o=studyGet(),a=alGet(o),sid=String(o.id||o.title||'study').replace(/[^A-Za-z0-9_-]/g,'_');
   const arms=String(a.plan.arms||'A,B').split(',').map(s2=>s2.trim()).filter(Boolean),built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0];
   let list=await alBuildList(ALG.fromHex(AL_SEED),a.plan.method,built?built.n:AL_BUILT_N,arms,{sizes:a.plan.blockSizes,probs:a.plan.probs});
+  const at=new Date().toISOString();
+  /* Second review, finding 10: the log entry is written from a fresh read, and before the files are offered, so a study switch during the rebuild means no download of another study's arms and no stale write. */
+  if(!alWrite(key,a2=>({log:(a2.log||[]).concat([{at,kind:'envelopes',text:'envelope files downloaded: every arm was exposed to whoever downloaded them'}])}))){list=null;enMsg(studyHi()?'Study बदल गई; envelope files नहीं बनीं।':'The study changed; no envelope files were made.');return}
   const master='envelope_no,arm,study_id\n'+list.map((arm,i)=>(i+1)+','+arm+','+sid).join('\n')+'\n';
   const faces='envelope_no,face_en,face_hi\n'+list.map((_,i)=>(i+1)+',Envelope '+(i+1)+',लिफ़ाफ़ा '+(i+1)).join('\n')+'\n';
   list=null;
-  [['master_list.csv',master],['envelope_faces.csv',faces]].forEach(([n,t])=>{const u=URL.createObjectURL(new Blob([t],{type:'text/csv'})),x=document.createElement('a');x.href=u;x.download=n;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)});
-  const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'envelopes',text:'envelope files downloaded: every arm was exposed to whoever downloaded them'}])});studySet(o)}
+  [['master_list.csv',master],['envelope_faces.csv',faces]].forEach(([n,t])=>{const u=URL.createObjectURL(new Blob([t],{type:'text/csv'})),x=document.createElement('a');x.href=u;x.download=n;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)})}
 
 /* ---- Stage 8: reveal and verify, then the analysis lock. The verifier uploads the seed (and optionally the master list). The app rebuilds the list and compares it with the hash logged when the list was built. ---- */
 function alVerHTML(a,L){if(!a.commit)return'';const v=a.verify,lk=a.lock,fac=alFactors(a.card&&a.card.factors);
@@ -18284,7 +18302,7 @@ function alVerHTML(a,L){if(!a.commit)return'';const v=a.verify,lk=a.lock,fac=alF
   '<div class="fld"><label for="alCov">'+L('Covariates for the analysis (must include every stratifying factor)','Analysis में covariates (हर stratifying factor शामिल हो)')+'</label><input id="alCov" type="text" value="'+escHTML(fac.join(', '))+'"></div>'+
   '<p class="desc">'+L('Locking records the allocation fingerprint. Lock is allowed before verification, but you will be reminded to verify.','Lock में allocation का fingerprint दर्ज होता है। Verification से पहले भी lock हो सकता है, पर आपको verify करने की याद दिलाई जाएगी।')+'</p>'+
   '<div class="row"><button type="button" class="btn btn-gold" onclick="alLock()">'+L('Lock the analysis plan','Analysis plan lock करें')+'</button></div>')}
-async function enVerify(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('enMsg');if(e)e.textContent=t};
+async function enVerify(){const hi=studyHi(),L=(en,x)=>hi?x:en;const key=studyKey(),o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('enMsg');if(e)e.textContent=t};
   const sf=document.getElementById('enVerSeed'),mf=document.getElementById('enVerMaster');
   if(!(sf&&sf.files&&sf.files[0])){msg(L('Choose the seed file first.','पहले seed file चुनें।'));return}
   const m=(await sf.files[0].text()).match(/Seed \(hex\):\s*([0-9a-f]{64})/i)||(await sf.files[0].text()).match(/^\s*([0-9a-f]{64})\s*$/im);
@@ -18303,10 +18321,9 @@ async function enVerify(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(
   const external=masterOk!==null;
   const what=!seedOk?L('seed does not match the commitment','seed commitment से नहीं मिलता'):!listOk?L('rebuilt list differs from the logged list','दोबारा बनी list, दर्ज list से अलग है'):masterOk===false?L('master list differs from the seed','master list, seed से अलग है'):external?L('list matches the master list','list, master list से मेल खाती है'):L('seed reproduces the logged list, but no master list was given to check it against anything outside the app','seed से वही logged list बनती है, पर app के बाहर जाँचने के लिए कोई master list नहीं दी गई');
   /* Re-read right before the write: o/a were captured before several file-read and hashing awaits, and this is otherwise a stale copy that could silently overwrite a concurrent change (an enrolment, a deviation). */
-  const o2=studyGet(),a2=alGet(o2);
-  o2.alloc=Object.assign({},a2,{verify:{at,ok,seedOk,listOk,masterOk,external},log:(a2.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
-  studySet(o2);msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
-async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('alMsg');if(e)e.textContent=t};
+  if(!alWrite(key,a2=>({verify:{at,ok,seedOk,listOk,masterOk,external},log:(a2.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])}))){msg(L('The study changed during verification. Nothing recorded.','Verification के दौरान study बदल गई। कुछ दर्ज नहीं हुआ।'));return}
+  msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
+async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const key=studyKey(),o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('alMsg');if(e)e.textContent=t};
   if(a.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));return}
   if(!a.commit){msg(L('Register the commitment first.','पहले commitment दर्ज करें।'));return}
   if(a.verify&&!a.verify.ok){msg(L('The last verification failed. Resolve it before you lock.','आख़िरी verification फेल है। Lock से पहले उसे सुलझाएँ।'));return}
@@ -18314,12 +18331,15 @@ async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),
   if(miss.length){msg(L('Name these factors as covariates: ','इन factors को covariates में लिखें: ')+miss.join(', '));return}
   const built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0],at=new Date().toISOString();
   const fingerprint=await alHash(new TextEncoder().encode(a.commit.planHash+'|'+a.commit.hash+'|'+(built?built.hash:'')));
-  const verifiedAtLock=!!(a.verify&&a.verify.ok);
+  /* Second review, finding 11 (minor): a verification that only checked the app's record against itself (no master list) does not count as verified at lock; the lock says so. */
+  const verifiedAtLock=!!(a.verify&&a.verify.ok&&a.verify.external);
   /* Re-read right before the write: o/a were captured before a hashing await, and this is otherwise a stale copy that could silently overwrite a concurrent change, or even write a second lock if two lock attempts overlapped (the "already locked" check above only ever saw the state at the start of this call). */
-  const o2=studyGet(),a2=alGet(o2);
-  if(a2.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));alRender();return}
-  o2.alloc=Object.assign({},a2,{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a2.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before verification')}])});
-  studySet(o2);alRender()}
+  let second=false;
+  const fresh=alWrite(key,a2=>{if(a2.lock){second=true;return{}}
+    return{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a2.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before external verification')}])}});
+  if(second){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'))}
+  else if(!fresh){msg(L('The study changed while locking. Nothing locked.','Lock करते समय study बदल गई। कुछ lock नहीं हुआ।'))}
+  alRender()}
 
 /* ---- Stage 9: methods sentences drafted from the study record, and CONSORT 2025 items 17a, 17b, 18, 20a, 20b, 21a. The student edits the text. Only recorded values appear; anything missing is a bracketed placeholder. ---- */
 const AL_METHOD_TEXT={simple:'simple randomisation',perm:'permuted blocks with block sizes drawn at random from a fixed list',strat:'stratified permuted blocks',mini:'minimisation (Pocock and Simon) with a biased coin',cons:'constrained randomisation',xo:'a cross-over design with balanced Williams rows'};

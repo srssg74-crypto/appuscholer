@@ -50,7 +50,9 @@ with sync_playwright() as p:
     arms=J("(async()=>await alSimple(ALG.fromHex(%s),10,['A','B']))()"%json.dumps(seed_hex))
     open(master,'w').write('envelope_no,arm,study_id\n'+''.join('%d,%s,x\n'%(i+1,a) for i,a in enumerate(arms)))
     pg.set_input_files('#enVerSeed',seedf); pg.set_input_files('#enVerMaster',master)
-    J("enVerify()")
+    # second review: pg.evaluate awaits a returned promise, so J("enVerify()") used to finish the whole
+    # verification before the "concurrent" write below ran. Fire without awaiting so the race is real.
+    J("enVerify();true")
     pg.wait_for_timeout(100)
     J("document.getElementById('alDevWhat').value='Second concurrent note during verification';document.getElementById('alDevWhy').value='Testing that verification does not clobber a deviation logged while it runs.';alDevSave()")
     pg.wait_for_timeout(2000)
@@ -59,7 +61,7 @@ with sync_playwright() as p:
     ok(rec2.get('verify',{}).get('ok')==True,'the verification result itself still lands correctly')
 
     # alLock: still delayed, its own hash (fingerprint) gives one more await window
-    J("document.getElementById('alCov').value='';alLock()")
+    J("document.getElementById('alCov').value='';alLock();true")
     pg.wait_for_timeout(50)
     J("document.getElementById('alDevWhat').value='Third note during locking';document.getElementById('alDevWhy').value='Testing that locking does not clobber a deviation logged while it runs.';alDevSave()")
     pg.wait_for_timeout(1000)
