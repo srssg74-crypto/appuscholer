@@ -18007,9 +18007,11 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   '<h4 style="margin:12px 0 4px">'+L('Decision log (read only)','Decision log (केवल पढ़ने के लिए)')+'</h4>'+
   (lg.length?'<ul class="desc" style="padding-left:18px;margin:0">'+lg.map(e=>'<li>'+escHTML(String(e.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(e.kind)+': '+escHTML(e.text)+(e.warn?' ⚠ '+escHTML(e.warn):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
 
-/* Commitment (stage 5). Only the hash goes into the study record. The seed lives in memory until the student saves it to a file. */
+/* Commitment (stage 5), version 2: SHA-256 over the prefix, the seed and the plan hash. Only the hashes and the plan snapshot go into the study record. The seed lives in memory until the student saves it to a file. */
 let AL_PENDING=null;
 async function alHash(bytes){const d=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+/* Canonical JSON of a plan: sorted keys, no spaces. Matches the Python engine's plan_hash. */
+function alCanon(o){return JSON.stringify(Object.keys(o).sort().reduce((m,k)=>{m[k]=o[k];return m},{}))}
 function alEnrolOK(o){return !!(alGet(o).commit)}
 function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
   if(cm)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Registered ','दर्ज ')+escHTML(String(cm.at||'').slice(0,16).replace('T',' '))+'<br>'+L('Commitment: ','Commitment: ')+'<code style="word-break:break-all">'+escHTML(cm.hash)+'</code></p>'+
@@ -18025,9 +18027,11 @@ async function alMakeCommit(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.
   const o=studyGet(),a=alGet(o);
   if(a.commit||!alOk(o)||a.plan.method==='none'){if(msg)msg.textContent=L('Nothing to register.','दर्ज करने को कुछ नहीं।');return}
   const seed=new Uint8Array(32);crypto.getRandomValues(seed);
-  const pre=new TextEncoder().encode('appuscholar-commit-v1:');
-  const buf=new Uint8Array(pre.length+32);buf.set(pre);buf.set(seed,pre.length);
-  AL_PENDING={hash:await alHash(buf),seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:JSON.stringify(a.plan)};
+  const planHex=await alHash(new TextEncoder().encode(alCanon(a.plan)));
+  const planBytes=new Uint8Array(32);for(let i=0;i<32;i++)planBytes[i]=parseInt(planHex.substr(i*2,2),16);
+  const pre=new TextEncoder().encode('appuscholar-commit-v2:');
+  const buf=new Uint8Array(pre.length+32+32);buf.set(pre);buf.set(seed,pre.length);buf.set(planBytes,pre.length+32);
+  AL_PENDING={hash:await alHash(buf),planHash:planHex,seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:JSON.stringify(a.plan)};
   alRender()}
 function alDownloadSeed(){if(!AL_PENDING)return;
   const txt=['Appuscholar randomisation seed','Commitment: '+AL_PENDING.hash,'Seed (hex): '+AL_PENDING.seedHex,'','Keep this file away from the app, away from the master list, and away from anyone who does not need it.'].join('\n');
@@ -18038,8 +18042,8 @@ async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.ge
   const o=studyGet(),a=alGet(o);
   if(a.commit){AL_PENDING=null;alRender();return}
   if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
-  const planHash=await alHash(new TextEncoder().encode(AL_PENDING.plan)),at=new Date().toISOString();
-  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[]};
+  const planHash=AL_PENDING.planHash,at=new Date().toISOString();
+  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[]};
   AL_PENDING=null;studySet(o);alRender()}
 
 /* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
