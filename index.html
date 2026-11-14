@@ -17977,6 +17977,8 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   const randomised=p.method!=='none';
   if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change in the deviation log below instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव नीचे deviation log में दर्ज करें।');return}
   if(randomised&&(!p.conc||!p.maker||!p.holder)){if(msg)msg.textContent=L('For a randomised study, choose concealment and name who makes and who holds the list.','randomised study के लिए concealment चुनें और बताएँ कि सूची कौन बनाएगा और कौन रखेगा।');return}
+  p.arms=alVal('alArms').trim();
+  if(randomised&&!p.arms){if(msg)msg.textContent=L('List the arm labels, for example A,B.','Arm के नाम लिखें, जैसे A,B।');return}
   const ch=[];
   if(prev.plan&&prev.plan.method!==p.method)ch.push('method '+prev.plan.method+' → '+p.method);
   if(prev.plan&&prev.plan.conc!==p.conc)ch.push('concealment '+(prev.plan.conc||'-')+' → '+p.conc);
@@ -17984,7 +17986,7 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(prev.card&&prev.card.unit!==c.unit)ch.push('unit '+prev.card.unit+' → '+c.unit);
   const log=(prev.log||[]).slice(),rec=alRec(c);
   log.push({at:new Date().toISOString(),kind:(prev.plan||prev.card)?'changed':'created',text:ch.length?ch.join('; '):'saved',suggested:rec.m,method:p.method,warn:(randomised&&p.conc==='open')?'not concealed':''});
-  o.alloc={card:c,plan:p,log,commit:prev.commit,deviations:prev.deviations||[]};studySet(o);
+  o.alloc={card:c,plan:p,log,commit:prev.commit,deviations:prev.deviations||[],enrol:prev.enrol||[]};studySet(o);
   if(msg)msg.textContent=L('Saved to the decision log.','decision log में सहेजा गया।');alRender()}
 function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=a.plan||{},lg=(a.log||[]).slice().reverse();
   const inp=(id,lab,v,ph,type)=>'<div class="fld"><label for="'+id+'">'+lab+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v||'')+'" placeholder="'+escHTML(ph||'')+'"></div>';
@@ -18001,8 +18003,9 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   '<div class="fld"><label for="alMethod">'+L('Method','Method')+'</label><select id="alMethod"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_METHODS,p.method||'')+'</select></div>'+
   inp('alParams',L('Parameters (block sizes, strata, factor levels, p for minimisation, balance rule)','Parameters (block size, strata, factor levels, minimisation के लिए p, balance नियम)'),p.params,'')+
   '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
+  inp('alArms',L('Arm labels (comma separated, e.g. A,B)','Arm के नाम (कॉमा से, जैसे A,B)'),p.arms,'A,B')+
   inp('alMaker',L('Who makes the list','सूची कौन बनाएगा'),p.maker,L('name and role','नाम और भूमिका'))+inp('alHolder',L('Who holds the master list','Master list किसके पास रहेगी'),p.holder,L('name and role','नाम और भूमिका'))+
-  alCommitHTML(a,L)+alDevHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
+  alCommitHTML(a,L)+alDevHTML(a,L)+alRunnerHTML()+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" style="flex:1" onclick="alSave()">'+L('Save to decision log','Decision log में सहेजें')+'</button></div>'+
   '<h4 style="margin:12px 0 4px">'+L('Decision log (read only)','Decision log (केवल पढ़ने के लिए)')+'</h4>'+
   (lg.length?'<ul class="desc" style="padding-left:18px;margin:0">'+lg.map(e=>'<li>'+escHTML(String(e.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(e.kind)+': '+escHTML(e.text)+(e.warn?' ⚠ '+escHTML(e.warn):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
@@ -18052,7 +18055,7 @@ async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.ge
   if(a.commit){AL_PENDING=null;alRender();return}
   if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
   const planHash=AL_PENDING.planHash,at=new Date().toISOString();
-  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[]};
+  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[],enrol:a.enrol||[]};
   AL_PENDING=null;studySet(o);alRender()}
 
 /* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
@@ -18116,6 +18119,76 @@ function crRender(){const d=document.getElementById('crDlg');if(d&&d.open){const
 function crOpen(){let d=document.getElementById('crDlg');
   if(!d){d=document.createElement('dialog');d.id='crDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
   d.innerHTML=crHTML();if(!d.open)d.showModal();crWarn()}
+
+/* ---- Allocation engine in the app (simple and permuted blocks). Same algorithm as the Python engine: HMAC-keyed counter stream, rejection sampling, Fisher-Yates. Other methods still run in the Python engine. ---- */
+const ALG={
+  cat(...xs){const n=xs.reduce((t,x)=>t+x.length,0),o=new Uint8Array(n);let p=0;xs.forEach(x=>{o.set(x,p);p+=x.length});return o},
+  async hmac(key,bytes){const k=await crypto.subtle.importKey('raw',key,{name:'HMAC',hash:'SHA-256'},false,['sign']);return new Uint8Array(await crypto.subtle.sign('HMAC',k,bytes))},
+  async sha(bytes){return new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))},
+  hex(b){return[...b].map(x=>x.toString(16).padStart(2,'0')).join('')},
+  fromHex(h){const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return b}
+};
+class AlStream{
+  static async make(seed,label){const s=new AlStream();s.key=await ALG.hmac(seed,new TextEncoder().encode(label));s.ctr=0;s.buf=new Uint8Array(0);return s}
+  async fill(n){while(this.buf.length<n){const c=new Uint8Array(8);let x=this.ctr;for(let i=7;i>=0;i--){c[i]=x%256;x=Math.floor(x/256)}this.buf=ALG.cat(this.buf,await ALG.sha(ALG.cat(this.key,c)));this.ctr++}}
+  async next64(){await this.fill(8);let v=0n;for(let i=0;i<8;i++)v=(v<<8n)|BigInt(this.buf[i]);this.buf=this.buf.slice(8);return v}
+  async randbelow(n){const N=BigInt(n),lim=((2n**64n)/N)*N;for(;;){const x=await this.next64();if(x<lim)return Number(x%N)}}
+  async uniform(){return Number(await this.next64())/2**64}
+  async shuffle(items){const a=items.slice();for(let i=a.length-1;i>0;i--){const j=await this.randbelow(i+1);const t=a[i];a[i]=a[j];a[j]=t}return a}
+}
+async function alSimple(seed,n,arms){const st=await AlStream.make(seed,'simple'),k=arms.length,cum=[];let t=0;for(let i=0;i<k;i++){t+=1/k;cum.push(t)}
+  const out=[];for(let i=0;i<n;i++){const u=await st.uniform();let arm=arms[k-1];for(let j=0;j<k;j++){if(u<cum[j]){arm=arms[j];break}}out.push(arm)}return out}
+async function alPermBlocks(seed,n,arms,sizes){const st=await AlStream.make(seed,'blocks'),k=arms.length;sizes=sizes||[4,6,8];
+  for(const b of sizes)if(b%k)throw new Error('block size '+b+' is not a multiple of '+k);
+  const out=[];let q=[];while(out.length<n){if(!q.length){const size=sizes[await st.randbelow(sizes.length)];const block=[];for(let i=0;i<size;i++)block.push(arms[i%k]);q=await st.shuffle(block)}out.push(q.shift())}return out}
+async function alBuildList(seed,method,n,arms){if(method==='simple')return alSimple(seed,n,arms);if(method==='perm')return alPermBlocks(seed,n,arms);return null}
+/* Seed file: the seed in hex on the line "Seed (hex): ..." or a bare 64-character hex string. Must reproduce the registered v2 commitment. */
+async function alCheckSeed(seedHex,commit){const seed=ALG.fromHex(seedHex),pre=new TextEncoder().encode('appuscholar-commit-v2:');
+  const planBytes=ALG.fromHex(commit.planHash),h=ALG.hex(await ALG.sha(ALG.cat(pre,seed,planBytes)));return h===commit.hash}
+let AL_LIST=null,AL_SEED=null;
+function alRunnerHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),cm=a.commit,en=a.enrol||[],p=a.plan||{};
+  if(!cm)return'<p class="desc">'+L('Register the commitment first (stage 5). Nothing is enrolled before that.','पहले commitment दर्ज करें (चरण 5)। उससे पहले कोई enrol नहीं होता।')+'</p>';
+  const method=p.method,supported=method==='simple'||method==='perm';
+  return'<h4 style="margin:12px 0 4px">'+L('5. Allocation runner (stage 7)','5. Allocation runner (चरण 7)')+'</h4>'+
+  (!supported?'<p class="desc" style="color:#b45309">'+L('This method runs in the Python engine for now. The app runs simple and permuted blocks.','यह method अभी Python engine में चलता है। App में simple और permuted blocks हैं।')+'</p>':'')+
+  (supported?'<div class="fld"><label for="enSeed">'+L('Load the seed file (kept in memory only, never saved)','Seed file लोड करें (केवल memory में, कभी सहेजी नहीं जाती)')+'</label><input id="enSeed" type="file" accept=".txt" onchange="enLoadSeed(this)"></div>'+
+  '<div class="fld"><label for="enN">'+L('Number of participants on the list','List में participants की संख्या')+'</label><input id="enN" type="number" min="1" value="'+(a.card&&a.card.n||'')+'"></div>'+
+  '<p class="desc" id="enStatus">'+(AL_LIST?L('List ready: ','List तैयार: ')+AL_LIST.length+L(' positions.',' positions।'):L('No list loaded.','कोई list लोड नहीं।'))+'</p>'+
+  '<div class="fld"><label for="enCode">'+L('Enrol: participant code (never a name)','Enrol: participant code (नाम नहीं)')+'</label><input id="enCode" type="text"></div>'+
+  '<div class="row"><button type="button" class="btn btn-purple" onclick="enEnrol()">'+L('Enrol and show the position','Enrol करें और position दिखाएँ')+'</button></div>':'')+
+  '<h4 style="margin:10px 0 4px">'+L('Enrolled (positions only, no arms)','Enrolled (केवल positions, arm नहीं)')+'</h4>'+
+  (en.length?'<ul class="desc" style="padding-left:18px;margin:0">'+en.map(x=>'<li>'+escHTML(x.code)+' · '+L('position ','position ')+x.pos+' · '+escHTML(String(x.at).slice(0,16).replace('T',' '))+' <button type="button" class="btn btn-ghost btn-sm" onclick="enReveal(\''+escHTML(x.code)+'\')">'+L('Reveal arm (logged)','Arm दिखाएँ (log होगा)')+'</button></li>').join('')+'</ul>':'<p class="desc">'+L('No one enrolled yet.','अभी कोई enrol नहीं।')+'</p>')+
+  '<p class="desc" id="enMsg" style="color:#b45309;min-height:1em"></p>'+
+  '<div class="row" style="gap:8px"><button type="button" class="btn btn-ghost btn-sm" onclick="enEnvelopes()">'+L('Download envelope files (coordinator only)','Envelope files डाउनलोड करें (केवल coordinator)')+'</button></div>'+
+  '<p class="desc">'+L('The master list and the seed together let anyone rebuild every arm. Keep them apart.','Master list और seed साथ हों तो कोई भी हर arm फिर से बना सकता है। दोनों को अलग रखें।')+'</p>'}
+function enMsg(t){const e=document.getElementById('enMsg');if(e)e.textContent=t}
+async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)return;const o=studyGet(),a=alGet(o),hi=studyHi(),L=(en,x)=>hi?x:en;
+  const txt=await f.text();const m=txt.match(/Seed \(hex\):\s*([0-9a-f]{64})/i)||txt.match(/^\s*([0-9a-f]{64})\s*$/im);
+  if(!m){enMsg(L('No 64-character seed found in that file.','उस file में 64 अक्षरों वाला seed नहीं मिला।'));return}
+  if(!(await alCheckSeed(m[1].toLowerCase(),a.commit))){enMsg(L('This seed does not match the registered commitment. The list is not built.','यह seed registered commitment से मेल नहीं खाता। List नहीं बनी।'));AL_LIST=null;AL_SEED=null;alRender();return}
+  const n=parseInt(alVal('enN'),10)||(a.card&&a.card.n)||0;const arms=String(a.plan.arms||'A,B').split(',').map(x=>x.trim()).filter(Boolean);
+  let list;try{list=await alBuildList(ALG.fromHex(m[1].toLowerCase()),a.plan.method,n,arms)}catch(e){enMsg(String(e.message||e));return}
+  if(!list||!n){enMsg(L('Set the number of participants first.','पहले participants की संख्या लिखें।'));return}
+  AL_SEED=m[1].toLowerCase();AL_LIST=list;enMsg(L('Seed matches the commitment. List built in memory.','Seed commitment से मेल खाता है। List memory में बनी।'));alRender()}
+function enEnrol(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),code=alVal('enCode').trim();
+  if(!AL_LIST){enMsg(L('Load the seed file first.','पहले seed file लोड करें।'));return}
+  if(code.length<2){enMsg(L('Enter a participant code.','Participant code लिखें।'));return}
+  const en=(a.enrol||[]);if(en.some(x=>x.code===code)){enMsg(L('This code is already enrolled.','यह code पहले से enrol है।'));return}
+  if(en.length>=AL_LIST.length){enMsg(L('The list is used up. Make a new list with a larger number, under a deviation.','List पूरी हो चुकी है। बड़ी संख्या वाली नई list बनाएँ, deviation के साथ।'));return}
+  const at=new Date().toISOString(),pos=en.length+1;
+  o.alloc=Object.assign({},a,{enrol:en.concat([{code,pos,at}]),log:(a.log||[]).concat([{at,kind:'enrolled',text:code+' · position '+pos}])});
+  studySet(o);alRender()}
+function enReveal(code){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),x=(a.enrol||[]).find(e=>e.code===code);
+  if(!x){enMsg(L('Not enrolled.','Enrol नहीं है।'));return}
+  if(!AL_LIST){enMsg(L('Load the seed file to see the arm. The reveal is logged either way.','Arm देखने के लिए seed file लोड करें।'));return}
+  const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'reveal',text:code+' · position '+x.pos}])});studySet(o);
+  enMsg(L('Arm for '+code+': ','"'+code+'" का arm: ')+AL_LIST[x.pos-1]);}
+function enEnvelopes(){if(!AL_LIST){enMsg(studyHi()?'पहले seed file लोड करें।':'Load the seed file first.');return}
+  const o=studyGet(),a=alGet(o),sid=String(o.id||o.title||'study').replace(/[^A-Za-z0-9_-]/g,'_');
+  const master='envelope_no,arm,study_id\n'+AL_LIST.map((arm,i)=>(i+1)+','+arm+','+sid).join('\n')+'\n';
+  const faces='envelope_no,face_en,face_hi\n'+AL_LIST.map((_,i)=>(i+1)+',Envelope '+(i+1)+',लिफ़ाफ़ा '+(i+1)).join('\n')+'\n';
+  [['master_list.csv',master],['envelope_faces.csv',faces]].forEach(([n,t])=>{const u=URL.createObjectURL(new Blob([t],{type:'text/csv'})),x=document.createElement('a');x.href=u;x.download=n;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)});
+  const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'envelopes',text:'envelope files downloaded'}])});studySet(o)}
 function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
 function alOpen(){let d=document.getElementById('alDlg');
   if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
