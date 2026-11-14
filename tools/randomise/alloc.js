@@ -173,7 +173,10 @@
     this.st = stream; this.arms = arms; this.sizes = blockSizes; this.queue = [];
     var k = arms.length;
     for (var i = 0; i < blockSizes.length; i++) {
-      if (blockSizes[i] % k) throw new Error("block size " + blockSizes[i] + " is not a multiple of " + k + " arms");
+      // review finding 12: 0 % k === 0, so a block size of 0 used to pass this check. With an
+      // empty queue, next() below would then do queue.shift() on an empty array and silently
+      // return undefined as the "arm" for that position, corrupting the list with no error at all.
+      if (blockSizes[i] <= 0 || blockSizes[i] % k) throw new Error("block size " + blockSizes[i] + " is not a positive multiple of " + k + " arms");
     }
   }
   BlockGen.prototype.next = function () {
@@ -196,11 +199,17 @@
 
   function stratifiedBlocks(seed, strata, arms, blockSizes) {
     blockSizes = blockSizes || [4, 6, 8];
-    var gens = {}, out = [];
+    // review finding 12: a plain {} used as a map coerces every key to a string and already has
+    // inherited properties (constructor, __proto__, toString, ...). A stratum label equal to one
+    // of those names would find it already "in gens" via the prototype chain and crash calling
+    // .next() on it; and numeric label 1 and string label "1" would collide into the same key,
+    // merging two distinct strata that Python's dict (real type-sensitive keys) keeps separate.
+    // Map has neither problem: no inherited keys, and keys keep their original type.
+    var gens = new Map(), out = [];
     for (var i = 0; i < strata.length; i++) {
       var s = strata[i];
-      if (!(s in gens)) gens[s] = new BlockGen(new HashStream(seed, "stratum:" + s), arms, blockSizes);
-      out.push(gens[s].next());
+      if (!gens.has(s)) gens.set(s, new BlockGen(new HashStream(seed, "stratum:" + s), arms, blockSizes));
+      out.push(gens.get(s).next());
     }
     return out;
   }
@@ -208,18 +217,23 @@
   function minimisation(seed, people, arms, factors, pBest) {
     if (pBest === undefined) pBest = 0.8;
     var st = new HashStream(seed, "minimisation");
-    var counts = {};
-    factors.forEach(function (f) { counts[f] = {}; });
+    // review finding 12: plain {} objects used as maps coerce keys to strings and inherit
+    // Object.prototype properties (constructor, __proto__, ...), so a factor level equal to one
+    // of those names would find a bogus "existing" entry via the prototype chain instead of
+    // initializing fresh counts, and a numeric level 1 would collide with a string level "1" -
+    // two levels Python's dict (real, type-sensitive keys) keeps separate. Map avoids both.
+    var counts = new Map();
+    factors.forEach(function (f) { counts.set(f, new Map()); });
     var out = [];
     people.forEach(function (person) {
       var scores = {};
       arms.forEach(function (arm) {
         var total = 0;
         factors.forEach(function (f) {
-          var lvl = person[f];
-          if (!counts[f][lvl]) { counts[f][lvl] = {}; arms.forEach(function (a) { counts[f][lvl][a] = 0; }); }
-          var c = counts[f][lvl];
-          var after = arms.map(function (a) { return c[a] + (a === arm ? 1 : 0); });
+          var lvl = person[f], byLevel = counts.get(f);
+          if (!byLevel.has(lvl)) { var fresh = new Map(); arms.forEach(function (a) { fresh.set(a, 0); }); byLevel.set(lvl, fresh); }
+          var c = byLevel.get(lvl);
+          var after = arms.map(function (a) { return c.get(a) + (a === arm ? 1 : 0); });
           total += Math.max.apply(null, after) - Math.min.apply(null, after);
         });
         scores[arm] = total;
@@ -234,7 +248,7 @@
         if (others.length === 0) others = arms.slice();
         arm = others[st.randbelow(others.length)];
       }
-      factors.forEach(function (f) { counts[f][person[f]][arm] += 1; });
+      factors.forEach(function (f) { var c = counts.get(f).get(person[f]); c.set(arm, c.get(arm) + 1); });
       out.push(arm);
     });
     return out;
@@ -243,11 +257,15 @@
   function matchedPairs(seed, pairs, armNames) {
     armNames = armNames || ["A", "B"];
     var st = new HashStream(seed, "pairs");
-    var alloc = {};
+    // same reasoning as above: a unit id of "constructor" or similar should not collide with
+    // Object.prototype when used as a plain-object key.
+    var allocMap = new Map();
     pairs.forEach(function (p) {
-      if (st.randbelow(2) === 0) { alloc[p[0]] = armNames[0]; alloc[p[1]] = armNames[1]; }
-      else { alloc[p[1]] = armNames[0]; alloc[p[0]] = armNames[1]; }
+      if (st.randbelow(2) === 0) { allocMap.set(p[0], armNames[0]); allocMap.set(p[1], armNames[1]); }
+      else { allocMap.set(p[1], armNames[0]); allocMap.set(p[0], armNames[1]); }
     });
+    var alloc = {};
+    allocMap.forEach(function (v, k) { alloc[k] = v; });
     return alloc;
   }
 

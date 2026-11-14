@@ -147,8 +147,11 @@ def _block_generator(stream: HashStream, arms, block_sizes):
     k = len(arms)
     sizes = list(block_sizes)
     for b in sizes:
-        if b % k:
-            raise ValueError(f"block size {b} is not a multiple of {k} arms")
+        # review finding 12: 0 % k == 0, so a block size of 0 used to pass this check. With only
+        # size-0 blocks, the while loop below would then spin forever choosing size 0 and never
+        # reaching `yield` - a silent hang with no error, rather than failing fast at validation.
+        if b <= 0 or b % k:
+            raise ValueError(f"block size {b} is not a positive multiple of {k} arms")
     while True:
         size = sizes[stream.randbelow(len(sizes))]
         block = [arms[i % k] for i in range(size)]

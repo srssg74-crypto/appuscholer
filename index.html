@@ -18176,7 +18176,8 @@ async function alSimple(seed,n,arms,probs){const st=await AlStream.make(seed,'si
   const cum=[];let t=0;for(let i=0;i<k;i++){t+=probs[i];cum.push(t)}
   const out=[];for(let i=0;i<n;i++){const u=await st.uniform();let arm=arms[k-1];for(let j=0;j<k;j++){if(u<cum[j]){arm=arms[j];break}}out.push(arm)}return out}
 async function alPermBlocks(seed,n,arms,sizes){const st=await AlStream.make(seed,'blocks'),k=arms.length;sizes=sizes||[4,6,8];
-  for(const b of sizes)if(b%k)throw new Error('block size '+b+' is not a multiple of '+k);
+  /* review finding 12: 0%k===0, so a block size of 0 used to pass this check; the queue would then stay empty and q.shift() silently pushes undefined into the list instead of an arm label. The plan form (alParseBlockSizes) already refuses 0 before save, but this runtime function is defense in depth for any direct call. */
+  for(const b of sizes)if(b<=0||b%k)throw new Error('block size '+b+' is not a positive multiple of '+k);
   const out=[];let q=[];while(out.length<n){if(!q.length){const size=sizes[await st.randbelow(sizes.length)];const block=[];for(let i=0;i<size;i++)block.push(arms[i%k]);q=await st.shuffle(block)}out.push(q.shift())}return out}
 async function alBuildList(seed,method,n,arms,opts){opts=opts||{};if(method==='simple')return alSimple(seed,n,arms,opts.probs);if(method==='perm')return alPermBlocks(seed,n,arms,opts.sizes);return null}
 /* Parse "4,6,8" into [4,6,8], validated against the arm count. Parse "0.6,0.4" or "3,2" (any positive numbers) into probabilities that sum to 1, in arm order. Both return null on anything that doesn't parse, so the caller can refuse to save rather than silently falling back to a default the plan does not say. */
