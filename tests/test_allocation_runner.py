@@ -7,7 +7,7 @@ fails=[]
 def ok(c,m):
     print(('PASS ' if c else 'FAIL ')+m)
     if not c: fails.append(m)
-VEC=json.load(open('/tmp/claude-0/-home-claude/d540b351-a2df-5fa6-9a88-226a4c6e6a4f/scratchpad/appuscholar_randomise/vectors.json'))
+VEC=json.load(open(os.path.join(os.path.dirname(__file__),'..','tools','randomise','vectors.json')))
 SEED=VEC['seed_hex']
 REASON='Two intact sections of one college, so chance keeps the groups close on baseline anxiety.'
 with sync_playwright() as p:
