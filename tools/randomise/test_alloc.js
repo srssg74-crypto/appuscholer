@@ -10,6 +10,10 @@ function check(name, got, want) {
 }
 check("commitment", A.commitment(seed), v.commitment);
 check("plan hash", A.planHash(v.plan_example), v.plan_sha256);
+// review finding 7: a plan with non-ASCII (Hindi) text must hash the same way here as in
+// randomise.py, now that randomise.py's _canonical() uses ensure_ascii=False to match
+// JSON.stringify's literal-UTF-8 behaviour. Pinned against the Python engine's own output.
+check("plan hash (unicode, cross-engine)", A.planHash({method:"perm",maker:"डॉ. मीना शर्मा",holder:"समन्वयक",arms:"A,B",params:"blocks of 4,6,8",conc:"central",blind:"both"}), "892b237f034c3d508750d98bf1e0cdf366a8573011daf5944fdc9e26986089db");
 check("commitment v2", A.commitmentV2(seed, v.plan_sha256), v.commitment_v2);
 check("simple 2 arms", A.simple(seed, 30, ["A","B"]), v.simple_A_B_30);
 check("simple 3 arms probs", A.simple(seed, 30, ["A","B","C"], [0.5,0.3,0.2]), v.simple_3arms_probs_30);
@@ -25,5 +29,16 @@ check("matched pairs", A.matchedPairs(seed, [["c1","c2"],["c3","c4"],["c5","c6"]
 check("result hash", A.resultHash(A.permutedBlocks(seed, 40, ["A","B"], [4,6,8])), v.result_hash_blocks40);
 // SHA-256 known answer (empty string)
 check("sha256 empty", A.hex(A.sha256(new Uint8Array(0))), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+// review finding 12: engine edge cases. A plain {} used as a map would crash or silently merge
+// keys here; Map-based gens/counts fix this. Pinned against the Python engine's own output for
+// the identical seed and inputs (see test_randomise.py's matching assertions).
+const seed12 = A.fromHex("03".repeat(32));
+check("stratified: reserved-name labels don't crash", A.stratifiedBlocks(seed12, ["constructor","__proto__","toString","constructor","__proto__"], ["A","B"], [4,6,8]), ["A","B","B","A","A"]);
+try {
+  A.permutedBlocks(seed12, 4, ["A","B"], [0]);
+  fails++; console.log("FAIL block size 0 should throw, not silently build a short/undefined-padded list");
+} catch (e) { console.log("ok  ", "permuted blocks: block size 0 throws"); }
+check("stratified: numeric 1 and string \"1\" labels", A.stratifiedBlocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], [4,6,8]), ["A","A","A","A","A","A"]);
+
 console.log(fails === 0 ? "ALL JS TESTS PASSED" : fails + " FAILED");
 process.exit(fails ? 1 : 0);

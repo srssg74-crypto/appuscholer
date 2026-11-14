@@ -5634,7 +5634,9 @@ function stageLabel(id){return t('stage_'+id)}
 
 function setActiveProject(id,opts){
   /* A new project starts its study record from what was in the scratch space, if it has none yet. */
-  try{if(id&&!LS.get('appu_study_'+id)){const sc=LS.get('appu_study_scratch')||(LS.get('appu_idea_intake')?JSON.stringify({idea:JSON.parse(LS.get('appu_idea_intake'))}):'');if(sc)LS.set('appu_study_'+id,sc)}}catch(e){}
+  try{if(id&&!LS.get('appu_study_'+id)){const scRaw=LS.get('appu_study_scratch')||(LS.get('appu_idea_intake')?JSON.stringify({idea:JSON.parse(LS.get('appu_idea_intake'))}):'');
+    if(scRaw){let sc=scRaw;try{const parsed=JSON.parse(scRaw);if(parsed&&(parsed.alloc||parsed.cr)){delete parsed.alloc;delete parsed.cr;sc=JSON.stringify(parsed)}}catch(e){}
+    LS.set('appu_study_'+id,sc)}}}catch(e){}
   const _oldPid=getActiveProjectId()||'';
   if(_oldPid!==(id||''))studyBeforeSwitch();
   if(opts&&opts.bringDoc&&id&&_oldPid!==id)studyBring(id);
@@ -6041,7 +6043,11 @@ function studyBring(id){
   try{sdGet('').then(v=>{if(v)return sdGet(id).then(w=>{if(!w)return sdPut(id,v).then(()=>{if(docPid()===id)statsLoadMine()})})}).catch(()=>{})}catch(e){}
 }
 /* Called by setActiveProject before and after the study changes. */
-function studyBeforeSwitch(){try{if(editor&&!window._bkRestoring)docSaveBody(getEditorHTML())}catch(e){}}
+function studyBeforeSwitch(){try{if(editor&&!window._bkRestoring)docSaveBody(getEditorHTML())}catch(e){}
+  /* The allocation runner's seed and pending commitment are in-memory only and study-specific.
+     Carrying them across a project switch would reveal one study's arms while enrolling in
+     another, or let one study's pending commitment be registered under a different plan. */
+  AL_SEED=null;AL_BUILT_N=0;AL_PENDING=null;}
 function studyAfterSwitch(){
   try{if(!editor)return}catch(e){return}
   const docs=docMigrate(),d=docs.find(x=>x.id===docCurrentId());
@@ -17976,12 +17982,21 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(c.reason.length<30){if(msg)msg.textContent=L('The reason needs 30+ characters.','कारण में 30+ अक्षर चाहिए।');return}
   if(!p.method){if(msg)msg.textContent=L('Choose a method.','एक method चुनें।');return}
   const randomised=p.method!=='none';
-  if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change in the deviation log below instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव नीचे deviation log में दर्ज करें।');return}
   if(randomised&&(!p.conc||!p.maker||!p.holder)){if(msg)msg.textContent=L('For a randomised study, choose concealment and name who makes and who holds the list.','randomised study के लिए concealment चुनें और बताएँ कि सूची कौन बनाएगा और कौन रखेगा।');return}
   p.arms=alVal('alArms').trim();
   if(randomised&&!p.arms){if(msg)msg.textContent=L('List the arm labels, for example A,B.','Arm के नाम लिखें, जैसे A,B।');return}
   p.blind=alVal('alBlind');
   if(randomised&&!p.blind){if(msg)msg.textContent=L('Say who is blinded, or that blinding was not attempted.','बताएँ कौन blind है, या यह कि blinding नहीं की गई।');return}
+  const armList=p.arms?p.arms.split(',').map(x=>x.trim()).filter(Boolean):[],armK=armList.length;
+  p.blockSizesText=alVal('alBlocks').trim();p.ratioText=alVal('alRatio').trim();
+  if(p.method==='perm'&&p.blockSizesText){const bs=alParseBlockSizes(p.blockSizesText,armK);
+    if(bs==='bad'){if(msg)msg.textContent=L('Block sizes must each be a positive multiple of the number of arms ('+armK+').','हर block size, arms की संख्या ('+armK+') का धनात्मक गुणज होना चाहिए।');return}
+    p.blockSizes=bs||null}else{p.blockSizes=null}
+  if(p.method==='simple'&&p.ratioText){const rt=alParseRatio(p.ratioText,armK);
+    if(rt==='bad'){if(msg)msg.textContent=L('The ratio needs one positive number per arm, in the same order as the arm labels.','Ratio में हर arm के लिए एक धनात्मक संख्या चाहिए, arm के नामों वाले क्रम में।');return}
+    p.probs=rt||null}else{p.probs=null}
+  /* Immutability check runs last, once every field (arms, blind, block sizes, ratio) is on p. Checking earlier (before arms/blind/blocks/ratio were set) let a registered plan's arms, blinding, block sizes or ratio silently diverge from what was actually committed. */
+  if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change in the deviation log below instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव नीचे deviation log में दर्ज करें।');return}
   const ch=[];
   if(prev.plan&&prev.plan.method!==p.method)ch.push('method '+prev.plan.method+' → '+p.method);
   if(prev.plan&&prev.plan.conc!==p.conc)ch.push('concealment '+(prev.plan.conc||'-')+' → '+p.conc);
@@ -18004,7 +18019,9 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   '<div id="alRecBox"></div>'+
   '<h4 style="margin:10px 0 4px">'+L('2. Plan','2. Plan')+'</h4>'+
   '<div class="fld"><label for="alMethod">'+L('Method','Method')+'</label><select id="alMethod"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_METHODS,p.method||'')+'</select></div>'+
-  inp('alParams',L('Parameters (block sizes, strata, factor levels, p for minimisation, balance rule)','Parameters (block size, strata, factor levels, minimisation के लिए p, balance नियम)'),p.params,'')+
+  inp('alParams',L('Parameters (notes: strata, factor levels, p for minimisation, balance rule)','Parameters (notes: strata, factor levels, minimisation के लिए p, balance नियम)'),p.params,'')+
+  '<div class="row" style="gap:8px"><div class="fld" style="flex:1"><label for="alBlocks">'+L('Block sizes, if permuted blocks (comma separated, each a multiple of the number of arms)','Block sizes, अगर permuted blocks (कॉमा से, हर एक arms की संख्या का गुणज)')+'</label><input id="alBlocks" type="text" value="'+escHTML(p.blockSizesText||(p.blockSizes?p.blockSizes.join(','):''))+'" placeholder="4,6,8"></div>'+
+  '<div class="fld" style="flex:1"><label for="alRatio">'+L('Allocation ratio, if simple (comma separated, same order as arms; leave blank for equal)','Allocation ratio, अगर simple (कॉमा से, arms वाले क्रम में; बराबर के लिए खाली छोड़ें)')+'</label><input id="alRatio" type="text" value="'+escHTML(p.ratioText||'')+'" placeholder="1,1 or 2,1"></div></div>'+
   '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
   inp('alArms',L('Arm labels (comma separated, e.g. A,B)','Arm के नाम (कॉमा से, जैसे A,B)'),p.arms,'A,B')+
   '<div class="fld"><label for="alBlind">'+L('Blinding','Blinding')+'</label><select id="alBlind"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_BLIND,p.blind||'')+'</select></div>'+
@@ -18017,6 +18034,8 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
 /* Commitment (stage 5), version 2: SHA-256 over the prefix, the seed and the plan hash. Only the hashes and the plan snapshot go into the study record. The seed lives in memory until the student saves it to a file. */
 let AL_PENDING=null;
 async function alHash(bytes){const d=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+/* Keyed by the seed, so the list cannot be recovered from the study record by anyone without the seed (the plain hash of a short list is brute-forceable). */
+async function alListHash(seedBytes,list){return ALG.hex(await ALG.hmac(seedBytes,new TextEncoder().encode('appuscholar-list-v1:'+JSON.stringify(list))))}
 /* Canonical JSON of a plan: sorted keys, no spaces. Matches the Python engine's plan_hash. */
 function alCanon(o){return JSON.stringify(Object.keys(o).sort().reduce((m,k)=>{m[k]=o[k];return m},{}))}
 /* Ethics hard stop: a commitment needs an approval number, or a written note that review is not needed. Reads the Design & Ethics record (designGet('ec')). */
@@ -18028,12 +18047,14 @@ function alEthics(){const s=designGet('ec')||{};
   return{ok:false,en:'Record the ethics approval, or the committee\'s written note that review is not needed, in Design & Ethics before you register.',hi:'पंजीकरण से पहले Design & Ethics में ethics approval, या committee की लिखित सूचना कि review नहीं चाहिए, दर्ज करें।'}}
 function alEnrolOK(o){return !!(alGet(o).commit)}
 function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
-  if(cm)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Registered ','दर्ज ')+escHTML(String(cm.at||'').slice(0,16).replace('T',' '))+'<br>'+L('Commitment: ','Commitment: ')+'<code style="word-break:break-all">'+escHTML(cm.hash)+'</code></p>'+
+  if(cm)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Registered ','दर्ज ')+escHTML(String(cm.at||'').slice(0,16).replace('T',' '))+'<br>'+L('Commitment: ','Commitment: ')+'<code style="word-break:break-all">'+escHTML(cm.hash)+'</code>'+(cm.publishedTo?'<br>'+L('Published: ','Published: ')+escHTML(cm.publishedTo):'')+'</p>'+
     '<p class="desc">'+L('The plan is locked. Enrolment can start. A change now goes in as a deviation entry.','योजना बंद है। अब enrolment शुरू हो सकता है। बदलाव deviation entry के रूप में जाएगा।')+'</p>';
   if(!alOk(o)||!a.plan||a.plan.method==='none')return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Save a complete randomised plan first. Non-randomised designs have nothing to register here.','पहले एक पूरी randomised योजना सहेजें। जो design randomised नहीं है, उसे यहाँ दर्ज करने को कुछ नहीं।')+'</p>';
   if(!AL_PENDING&&!alEthics().ok)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc" style="color:#b45309">'+L(alEthics().en,alEthics().hi)+'</p>';
   if(!AL_PENDING)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Create the commitment before any participant is enrolled. You will get a seed file to keep away from this site.','किसी भी participant के enrol होने से पहले commitment बनाएँ। आपको एक seed file मिलेगी, जिसे इस site से दूर रखना है।')+'</p><p class="desc" style="color:#b45309">'+L('If you close this page before saving the seed, you will need to create a new commitment. Nothing in your study is lost, because nothing is registered yet.','अगर seed सहेजने से पहले यह page बंद करेंगे, तो नया commitment बनाना होगा। आपके study का कुछ नहीं जाता, क्योंकि अभी कुछ दर्ज नहीं हुआ है।')+'</p><div class="row"><button type="button" class="btn btn-purple" onclick="alMakeCommit()">'+L('Create commitment','Commitment बनाएँ')+'</button></div>';
   return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Commitment (not yet registered): ','Commitment (अभी दर्ज नहीं): ')+'<code style="word-break:break-all">'+escHTML(AL_PENDING.hash)+'</code></p>'+
+    '<p class="desc">'+L('This hash on its own proves nothing: it only lives in this browser until you register it, and the seed can be re-created as many times as you like before that (the log shows how many times). Send or publish this exact hash somewhere outside this app before you register it, so there is outside proof of when it existed.','यह hash अपने आप कुछ साबित नहीं करता: जब तक दर्ज न हो, यह इस browser में ही रहता है, और उससे पहले seed जितनी बार चाहें फिर बन सकता है (log बताता है कितनी बार)। दर्ज करने से पहले यह hash इस app के बाहर कहीं भेजें या publish करें, ताकि बाहर इसके होने का सबूत रहे।')+'</p>'+
+    '<div class="fld"><label for="alPubNote">'+L('Where and when you sent or published this exact hash (email to supervisor, trial registry, dated note, etc.)','यह hash आपने कहाँ और कब भेजा या publish किया (supervisor को email, trial registry, dated note, आदि)')+'</label><textarea id="alPubNote" rows="2"></textarea></div>'+
     '<p class="desc" style="color:#b45309">'+L('Keep this page open until you have saved the seed. If you close it, this commitment is lost and you need a new one. Nothing is registered until you tick the box below.','Seed सहेजने तक यह page खुला रखें। बंद करने पर यह commitment खो जाएगा और नया बनाना होगा। box पर टिक करने तक कुछ भी दर्ज नहीं होता।')+'</p>'+
     '<div class="row"><button type="button" class="btn btn-ghost btn-sm" onclick="alDownloadSeed()">'+L('Download seed file','Seed file डाउनलोड करें')+'</button></div>'+
     '<label style="display:block;margin:8px 0;font-size:14px"><input type="checkbox" id="alSeedSaved"> '+L('I have saved the seed file somewhere other than this site.','मैंने seed file इस site के अलावा कहीं सहेज ली है।')+'</label>'+
@@ -18048,24 +18069,34 @@ async function alMakeCommit(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.
   const pre=new TextEncoder().encode('appuscholar-commit-v2:');
   const buf=new Uint8Array(pre.length+32+32);buf.set(pre);buf.set(seed,pre.length);buf.set(planBytes,pre.length+32);
   AL_PENDING={hash:await alHash(buf),planHash:planHex,seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:JSON.stringify(a.plan)};
-  alRender()}
+  const at2=new Date().toISOString(),prevRolls=(a.log||[]).filter(e=>e.kind==='commitment created').length;
+  o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at:at2,kind:'commitment created',text:'candidate '+AL_PENDING.hash.slice(0,16)+(prevRolls?' · re-created, '+(prevRolls+1)+' so far':'')}])});
+  studySet(o);alRender()}
 function alDownloadSeed(){if(!AL_PENDING)return;
   const txt=['Appuscholar randomisation seed','Commitment: '+AL_PENDING.hash,'Seed (hex): '+AL_PENDING.seedHex,'','Keep this file away from the app, away from the master list, and away from anyone who does not need it.'].join('\n');
   const u=URL.createObjectURL(new Blob([txt],{type:'text/plain'})),x=document.createElement('a');x.href=u;x.download='appuscholar_seed_KEEP_SECRET.txt';document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
   if(!AL_PENDING)return;
+  /* alMakeCommit() checked ethics when the candidate was created, but ethics approval can be edited or withdrawn in Design & Ethics any time between that and registration (the commitment can sit unregistered for a while). Re-check here so registration itself never slips through without an approval that still holds. The pending commitment and its already-saved seed stay valid - fixing the ethics record and registering again needs no new seed. */
+  const eth=alEthics();if(!eth.ok){if(msg)msg.textContent=L(eth.en,eth.hi);return}
   if(!(document.getElementById('alSeedSaved')||{}).checked){if(msg)msg.textContent=L('Save the seed file first, then tick the box.','पहले seed file सहेजें, फिर box पर टिक करें।');return}
   const o=studyGet(),a=alGet(o);
   if(a.commit){AL_PENDING=null;alRender();return}
   if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
+  const pub=alVal('alPubNote').trim();
+  if(pub.length<10){msg.textContent=L('Say where you sent or published this commitment hash outside this app, and when (10+ characters).','यह commitment hash आपने इस app से बाहर कहाँ और कब भेजा या publish किया, वह लिखें (10+ अक्षर)।');return}
   const planHash=AL_PENDING.planHash,at=new Date().toISOString();
-  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[],enrol:a.enrol||[],verify:a.verify,lock:a.lock};
+  const seedBytes=ALG.fromHex(AL_PENDING.seedHex),planHashBytes=ALG.fromHex(planHash),pre=new TextEncoder().encode('appuscholar-commit-v2:');
+  const buf=new Uint8Array(pre.length+seedBytes.length+planHashBytes.length);buf.set(pre);buf.set(seedBytes,pre.length);buf.set(planHashBytes,pre.length+seedBytes.length);
+  const recomputed=await alHash(buf);
+  if(recomputed!==AL_PENDING.hash){AL_PENDING=null;msg.textContent=L('The commitment hash does not match its own seed and plan. Not registered.','Commitment hash अपने seed और plan से मेल नहीं खाता। दर्ज नहीं हुआ।');alRender();return}
+  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{version:2,hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan),publishedTo:pub},deviations:a.deviations||[],enrol:a.enrol||[],verify:a.verify,lock:a.lock};
   AL_PENDING=null;studySet(o);alRender()}
 
 /* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
 function alDevHTML(a,L){if(!a.commit)return'';const d=(a.deviations||[]).slice().reverse();
   return'<h4 style="margin:12px 0 4px">'+L('4. Deviation log (append only)','4. Deviation log (केवल जोड़ें)')+'</h4>'+
-    (d.length?'<ul class="desc" style="padding-left:18px;margin:0 0 8px">'+d.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.what)+' · '+L('why: ','कारण: ')+escHTML(x.why)+(x.by?' · '+L('agreed by: ','किसने माना: ')+escHTML(x.by):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No deviations recorded.','कोई deviation दर्ज नहीं।')+'</p>')+
+    (d.length?'<ul class="desc" style="padding-left:18px;margin:0 0 8px">'+d.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.what)+' · '+L('why: ','कारण: ')+escHTML(x.why)+(x.by?' · '+L('agreed by: ','किसने माना: ')+escHTML(x.by):'')+(x.armWarn?' · <span style="color:#b45309">⚠ '+L('may name an arm','शायद arm का नाम है')+'</span>':'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No deviations recorded.','कोई deviation दर्ज नहीं।')+'</p>')+
     '<p class="desc">'+L('Record a change to the registered plan here. Entries cannot be edited or removed.','registered योजना में बदलाव यहाँ दर्ज करें। entries बदली या हटाई नहीं जातीं।')+'</p>'+
     '<div class="fld"><label for="alDevWhat">'+L('What changed','क्या बदला')+'</label><textarea id="alDevWhat" rows="2"></textarea></div>'+
     '<div class="fld"><label for="alDevWhy">'+L('Why (30+ characters)','कारण (30+ अक्षर)')+'</label><textarea id="alDevWhy" rows="2"></textarea></div>'+
@@ -18079,15 +18110,22 @@ function alDevSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElemen
   if(what.length<10){if(msg)msg.textContent=L('Describe what changed (10+ characters).','बताएँ क्या बदला (10+ अक्षर)।');return}
   if(why.length<30){if(msg)msg.textContent=L('Say why (30+ characters).','कारण लिखें (30+ अक्षर)।');return}
   const at=new Date().toISOString();
-  o.alloc=Object.assign({},a,{deviations:(a.deviations||[]).concat([{at,what,why,by}]),log:(a.log||[]).concat([{at,kind:'deviation',text:what.slice(0,80)}])});
-  studySet(o);alRender()}
+  /* review finding 14: "what changed" and "why" are free text with no check against an arm label slipping in - naming a participant's arm in a deviation note is a real way unblinding data enters this record. A soft flag (not a block) on the entry, same as the D7 reason field. */
+  const armWarn=crArmWarn(what)||crArmWarn(why);
+  o.alloc=Object.assign({},a,{deviations:(a.deviations||[]).concat([{at,what,why,by,armWarn}]),log:(a.log||[]).concat([{at,kind:'deviation',text:what.slice(0,80)}])});
+  studySet(o);alRender();
+  if(armWarn){const w=document.getElementById('alDevMsg');if(w)w.textContent=L('Saved, but this may name an allocation arm - check it does not unblind anyone reading this log.','सहेजा गया, पर इसमें शायद allocation arm का नाम है - देखें कि यह log पढ़ने वाले किसी को unblind न करे।')}}
 
 /* Out-of-range clinical reports (D7). The student or a clinician judges significance; the app only keeps the record. Append only. No participant names or values are stored. */
 const CR_DECISIONS=[['ns','Clinically not significant (I judged this)'],['rev','Needs a clinician to review'],['sig','Clinically significant (refer the participant)']];
 const CR_TESTS=[['blood','Blood test'],['pft','Lung function (PFT, spirometry)'],['urine','Urine test'],['liver','Liver or kidney test'],['thyroid','Thyroid test'],['other','Other report']];
-function crGet(o){return((o||studyGet()).cr)||{entries:[],none:false}}
+function crGet(o){return((o||studyGet()).cr)||{entries:[],none:false,log:[]}}
 function crOk(o){const c=crGet(o);if(c.none)return true;const e=c.entries||[];
   return e.length>0&&e.every(x=>x.decision&&x.reason&&x.reason.length>=30&&x.by&&(x.decision!=='rev'&&x.decision!=='sig'||x.clin))}
+/* review finding 14: a plan's arm labels (e.g. "Intervention,Control") showing up in a free-text reason is a real way unblinding/PII-adjacent data enters an append-only record meant to hold neither. This is a soft, best-effort check on whole words only - it cannot catch every way a value or name could appear in prose, and is not a reason to block saving (free text can't be perfectly policed), only to flag the entry for later review. */
+function crArmWarn(text){const o=studyGet(),a=(o.alloc&&o.alloc.plan&&o.alloc.plan.arms)||'';
+  const arms=a.split(',').map(x=>x.trim()).filter(Boolean),t=String(text||'');
+  return arms.some(arm=>arm&&new RegExp('\\b'+arm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(t))}
 function crHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,c=crGet(),list=(c.entries||[]).slice().reverse(),
   dec=(k)=>(CR_DECISIONS.find(x=>x[0]===k)||['',k])[1],tst=(k)=>(CR_TESTS.find(x=>x[0]===k)||['',k])[1];
   return'<div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">'+L('Out-of-range clinical reports','सीमा से बाहर clinical रिपोर्ट')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'crDlg\').close()">'+L('Close','बंद करें')+'</button></div>'+
@@ -18105,10 +18143,13 @@ function crHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,c=crGet(),list=(c.entries
   '<p class="desc" id="crMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row"><button type="button" class="btn btn-purple" style="flex:1" onclick="crSave()">'+L('Add to the log','Log में जोड़ें')+'</button></div>'+
   '<h4 style="margin:12px 0 4px">'+L('Log (append only)','Log (केवल जोड़ें)')+'</h4>'+
-  (list.length?'<ul class="desc" style="padding-left:18px;margin:0">'+list.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.code||'-')+' · '+escHTML(tst(x.test))+' ('+escHTML(x.name||'-')+', '+(x.dir==='high'?L('above','ऊपर'):L('below','नीचे'))+') · '+escHTML(dec(x.decision))+' · '+escHTML(x.reason)+(x.clin?' · '+L('clinician: ','clinician: ')+escHTML(x.clin):'')+' · '+L('by ','द्वारा ')+escHTML(x.by)+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
+  (list.length?'<ul class="desc" style="padding-left:18px;margin:0">'+list.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.code||'-')+' · '+escHTML(tst(x.test))+' ('+escHTML(x.name||'-')+', '+(x.dir==='high'?L('above','ऊपर'):L('below','नीचे'))+') · '+escHTML(dec(x.decision))+' · '+escHTML(x.reason)+(x.clin?' · '+L('clinician: ','clinician: ')+escHTML(x.clin):'')+' · '+L('by ','द्वारा ')+escHTML(x.by)+(x.armWarn?' · <span style="color:#b45309">⚠ '+L('may name an arm','शायद arm का नाम है')+'</span>':'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
 function crWarn(){const hi=studyHi(),L=(en,x)=>hi?x:en,v=alVal('crDec'),w=document.getElementById('crWarn');if(!w)return;
   w.textContent=v==='sig'?L('Significant: the participant\'s own doctor must be told now. This log does not replace their care.','Significant: participant के अपने doctor को अभी बताना होगा। यह log उनके इलाज की जगह नहीं लेता।'):v==='rev'?L('Review: a clinician must see this before the participant continues.','Review: participant आगे बढ़ने से पहले clinician इसे देखें।'):''}
-function crNoneSet(on){const o=studyGet(),c=crGet(o);o.cr=Object.assign({},c,{none:!!on});studySet(o);crRender()}
+function crNoneSet(on){const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),c=crGet(o),at=new Date().toISOString();
+  /* review finding 14: ticking "nothing out of range" while entries already exist contradicted the record, and the toggle itself was never logged - so a reviewer could not tell afterward whether it had been ticked, unticked, or ticked by mistake. */
+  if(on&&(c.entries||[]).length>0){const msg=document.getElementById('crMsg'),box=document.getElementById('crNone');if(box)box.checked=false;if(msg)msg.textContent=L('There are already '+c.entries.length+' entries logged. This cannot be ticked while entries exist.','पहले से '+c.entries.length+' entries दर्ज हैं। Entries रहते यह टिक नहीं हो सकता।');return}
+  o.cr=Object.assign({},c,{none:!!on,log:(c.log||[]).concat([{at,kind:on?'none ticked':'none unticked',text:on?'marked nothing out of range so far':'unmarked'}])});studySet(o);crRender()}
 function crSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('crMsg');
   const o=studyGet(),c=crGet(o),code=alVal('crCode').trim(),dec=alVal('crDec'),reason=alVal('crReason').trim(),by=alVal('crBy').trim(),clin=alVal('crClin').trim(),name=alVal('crName').trim();
   if(code.length<2){if(msg)msg.textContent=L('Enter a participant code.','Participant code लिखें।');return}
@@ -18116,9 +18157,11 @@ function crSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(reason.length<30){if(msg)msg.textContent=L('The reason needs 30+ characters.','कारण में 30+ अक्षर चाहिए।');return}
   if(!by){if(msg)msg.textContent=L('Write who judged it.','बताएँ फ़ैसला किसने किया।');return}
   if((dec==='rev'||dec==='sig')&&!clin){if(msg)msg.textContent=L('Name the clinician who was asked.','जिस clinician से पूछा, उसका नाम लिखें।');return}
-  const at=new Date().toISOString();
-  o.cr=Object.assign({},c,{none:false,entries:(c.entries||[]).concat([{at,code,test:alVal('crTest'),name,dir:alVal('crDir'),decision:dec,reason,by,clin}])});
-  studySet(o);crRender()}
+  const at=new Date().toISOString(),armWarn=crArmWarn(reason);
+  /* review finding 14: the reason field is free text with no check against an arm label slipping in - a real way unblinding data could enter this record. A soft flag on the entry (not a block: free text can't be perfectly policed) lets anyone reviewing the log see it was never checked for this. */
+  o.cr=Object.assign({},c,{none:false,entries:(c.entries||[]).concat([{at,code,test:alVal('crTest'),name,dir:alVal('crDir'),decision:dec,reason,by,clin,armWarn}])});
+  studySet(o);crRender();
+  if(armWarn){const w=document.getElementById('crMsg');if(w)w.textContent=L('Saved, but the reason may name an allocation arm - check it does not unblind anyone reading this log.','सहेजा गया, पर कारण में शायद allocation arm का नाम है - देखें कि यह log पढ़ने वाले किसी को unblind न करे।')}}
 function crRender(){const d=document.getElementById('crDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=crHTML();d.scrollTop=top;crWarn()}}
 function crOpen(){let d=document.getElementById('crDlg');
   if(!d){d=document.createElement('dialog');d.id='crDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
@@ -18140,66 +18183,92 @@ class AlStream{
   async uniform(){return Number(await this.next64())/2**64}
   async shuffle(items){const a=items.slice();for(let i=a.length-1;i>0;i--){const j=await this.randbelow(i+1);const t=a[i];a[i]=a[j];a[j]=t}return a}
 }
-async function alSimple(seed,n,arms){const st=await AlStream.make(seed,'simple'),k=arms.length,cum=[];let t=0;for(let i=0;i<k;i++){t+=1/k;cum.push(t)}
+async function alSimple(seed,n,arms,probs){const st=await AlStream.make(seed,'simple'),k=arms.length;
+  probs=(probs&&probs.length===k)?probs:new Array(k).fill(1/k);
+  const cum=[];let t=0;for(let i=0;i<k;i++){t+=probs[i];cum.push(t)}
   const out=[];for(let i=0;i<n;i++){const u=await st.uniform();let arm=arms[k-1];for(let j=0;j<k;j++){if(u<cum[j]){arm=arms[j];break}}out.push(arm)}return out}
 async function alPermBlocks(seed,n,arms,sizes){const st=await AlStream.make(seed,'blocks'),k=arms.length;sizes=sizes||[4,6,8];
-  for(const b of sizes)if(b%k)throw new Error('block size '+b+' is not a multiple of '+k);
+  /* review finding 12: 0%k===0, so a block size of 0 used to pass this check; the queue would then stay empty and q.shift() silently pushes undefined into the list instead of an arm label. The plan form (alParseBlockSizes) already refuses 0 before save, but this runtime function is defense in depth for any direct call. */
+  for(const b of sizes)if(b<=0||b%k)throw new Error('block size '+b+' is not a positive multiple of '+k);
   const out=[];let q=[];while(out.length<n){if(!q.length){const size=sizes[await st.randbelow(sizes.length)];const block=[];for(let i=0;i<size;i++)block.push(arms[i%k]);q=await st.shuffle(block)}out.push(q.shift())}return out}
-async function alBuildList(seed,method,n,arms){if(method==='simple')return alSimple(seed,n,arms);if(method==='perm')return alPermBlocks(seed,n,arms);return null}
+async function alBuildList(seed,method,n,arms,opts){opts=opts||{};if(method==='simple')return alSimple(seed,n,arms,opts.probs);if(method==='perm')return alPermBlocks(seed,n,arms,opts.sizes);return null}
+/* Parse "4,6,8" into [4,6,8], validated against the arm count. Parse "0.6,0.4" or "3,2" (any positive numbers) into probabilities that sum to 1, in arm order. Both return null on anything that doesn't parse, so the caller can refuse to save rather than silently falling back to a default the plan does not say. */
+function alParseBlockSizes(text,k){const nums=String(text||'').split(',').map(x=>parseInt(x.trim(),10)).filter(x=>!isNaN(x));
+  if(!nums.length)return null;if(nums.some(b=>b<=0||b%k))return'bad';return nums}
+function alParseRatio(text,k){const t=String(text||'').trim();if(!t)return null;
+  const nums=t.split(/[,:]/).map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+  if(nums.length!==k||nums.some(x=>x<=0))return'bad';const tot=nums.reduce((a,b)=>a+b,0);return nums.map(x=>x/tot)}
 /* Seed file: the seed in hex on the line "Seed (hex): ..." or a bare 64-character hex string. Must reproduce the registered v2 commitment. */
 async function alCheckSeed(seedHex,commit){const seed=ALG.fromHex(seedHex),pre=new TextEncoder().encode('appuscholar-commit-v2:');
   const planBytes=ALG.fromHex(commit.planHash),h=ALG.hex(await ALG.sha(ALG.cat(pre,seed,planBytes)));return h===commit.hash}
-let AL_LIST=null,AL_SEED=null;
+let AL_SEED=null,AL_BUILT_N=0;
 function alRunnerHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),cm=a.commit,en=a.enrol||[],p=a.plan||{};
   if(!cm)return'<p class="desc">'+L('Register the commitment first (stage 5). Nothing is enrolled before that.','पहले commitment दर्ज करें (चरण 5)। उससे पहले कोई enrol नहीं होता।')+'</p>';
   const method=p.method,supported=method==='simple'||method==='perm';
   return'<h4 style="margin:12px 0 4px">'+L('5. Allocation runner (stage 7)','5. Allocation runner (चरण 7)')+'</h4>'+
   (!supported?'<p class="desc" style="color:#b45309">'+L('This method runs in the Python engine for now. The app runs simple and permuted blocks.','यह method अभी Python engine में चलता है। App में simple और permuted blocks हैं।')+'</p>':'')+
-  (supported?'<div class="fld"><label for="enSeed">'+L('Load the seed file (kept in memory only, never saved)','Seed file लोड करें (केवल memory में, कभी सहेजी नहीं जाती)')+'</label><input id="enSeed" type="file" accept=".txt" onchange="enLoadSeed(this)"></div>'+
+  (supported?'<p class="desc" style="color:#b45309">'+L('Loading the seed on this screen lets whoever uses it see every future assignment just by looking (for example, in the browser console). The person enrolling participants should not be the person who holds the seed. If one person must do both, that is a real break in concealment, and it is logged as one below.','इस screen पर seed लोड करने से जो भी इसे इस्तेमाल करे, वह हर आगे की assignment देख सकता है (जैसे browser console में)। Participants को enrol करने वाला व्यक्ति seed रखने वाला नहीं होना चाहिए। अगर एक ही व्यक्ति दोनों करे, तो यह concealment में सच्ची कमी है, और यह नीचे log होता है।')+'</p>'+
+  '<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox" id="enRoleAck"> '+L('I understand, and I am loading the seed anyway.','मैं समझता/समझती हूँ, और फिर भी seed लोड कर रहा/रही हूँ।')+'</label>'+
+  '<div class="fld"><label for="enSeed">'+L('Load the seed file (kept in memory only, never saved)','Seed file लोड करें (केवल memory में, कभी सहेजी नहीं जाती)')+'</label><input id="enSeed" type="file" accept=".txt" onchange="enLoadSeed(this)"></div>'+
   '<div class="fld"><label for="enN">'+L('Number of participants on the list','List में participants की संख्या')+'</label><input id="enN" type="number" min="1" value="'+(a.card&&a.card.n||'')+'"></div>'+
-  '<p class="desc" id="enStatus">'+(AL_LIST?L('List ready: ','List तैयार: ')+AL_LIST.length+L(' positions.',' positions।'):L('No list loaded.','कोई list लोड नहीं।'))+'</p>'+
+  '<p class="desc" id="enStatus">'+(AL_SEED?L('Seed loaded. ','Seed लोड। ')+AL_BUILT_N+L(' positions available.',' positions उपलब्ध।'):L('No list loaded.','कोई list लोड नहीं।'))+'</p>'+
   '<div class="fld"><label for="enCode">'+L('Enrol: participant code (never a name)','Enrol: participant code (नाम नहीं)')+'</label><input id="enCode" type="text"></div>'+
   '<div class="row"><button type="button" class="btn btn-purple" onclick="enEnrol()">'+L('Enrol and show the position','Enrol करें और position दिखाएँ')+'</button></div>':'')+
   '<h4 style="margin:10px 0 4px">'+L('Enrolled (positions only, no arms)','Enrolled (केवल positions, arm नहीं)')+'</h4>'+
-  (en.length?'<ul class="desc" style="padding-left:18px;margin:0">'+en.map(x=>'<li>'+escHTML(x.code)+' · '+L('position ','position ')+x.pos+' · '+escHTML(String(x.at).slice(0,16).replace('T',' '))+' <button type="button" class="btn btn-ghost btn-sm" onclick="enReveal(\''+escHTML(x.code)+'\')">'+L('Reveal arm (logged)','Arm दिखाएँ (log होगा)')+'</button></li>').join('')+'</ul>':'<p class="desc">'+L('No one enrolled yet.','अभी कोई enrol नहीं।')+'</p>')+
+  /* data-reveal-code, not an inline onclick built from the participant code: HTML-entity escaping a quote inside onclick="enReveal('...')" does not stop it, because the browser decodes entities in the attribute value before handing the string to the JS parser, so a code containing a quote could still break out of the string and run arbitrary script. A delegated listener (attached once, in alOpen) reads the code from the attribute instead. */
+  (en.length?'<ul class="desc" style="padding-left:18px;margin:0">'+en.map(x=>'<li>'+escHTML(x.code)+' · '+L('position ','position ')+x.pos+' · '+escHTML(String(x.at).slice(0,16).replace('T',' '))+' <button type="button" class="btn btn-ghost btn-sm" data-reveal-code="'+escHTML(x.code)+'">'+L('Reveal arm (logged)','Arm दिखाएँ (log होगा)')+'</button></li>').join('')+'</ul>':'<p class="desc">'+L('No one enrolled yet.','अभी कोई enrol नहीं।')+'</p>')+
   '<p class="desc" id="enMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="gap:8px"><button type="button" class="btn btn-ghost btn-sm" onclick="enEnvelopes()">'+L('Download envelope files (coordinator only)','Envelope files डाउनलोड करें (केवल coordinator)')+'</button></div>'+
   '<p class="desc">'+L('The master list and the seed together let anyone rebuild every arm. Keep them apart.','Master list और seed साथ हों तो कोई भी हर arm फिर से बना सकता है। दोनों को अलग रखें।')+'</p>'}
 function enMsg(t){const e=document.getElementById('enMsg');if(e)e.textContent=t}
 async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)return;const o=studyGet(),a=alGet(o),hi=studyHi(),L=(en,x)=>hi?x:en;
+  if(!(document.getElementById('enRoleAck')||{}).checked){enMsg(L('Tick the box above first: whoever loads the seed here can see every future assignment.','पहले ऊपर वाला box टिक करें: जो यहाँ seed लोड करे, वह हर आगे की assignment देख सकता है।'));input.value='';return}
   const txt=await f.text();const m=txt.match(/Seed \(hex\):\s*([0-9a-f]{64})/i)||txt.match(/^\s*([0-9a-f]{64})\s*$/im);
   if(!m){enMsg(L('No 64-character seed found in that file.','उस file में 64 अक्षरों वाला seed नहीं मिला।'));return}
-  if(!(await alCheckSeed(m[1].toLowerCase(),a.commit))){enMsg(L('This seed does not match the registered commitment. The list is not built.','यह seed registered commitment से मेल नहीं खाता। List नहीं बनी।'));AL_LIST=null;AL_SEED=null;alRender();return}
+  if(!(await alCheckSeed(m[1].toLowerCase(),a.commit))){enMsg(L('This seed does not match the registered commitment. The list is not built.','यह seed registered commitment से मेल नहीं खाता। List नहीं बनी।'));AL_SEED=null;AL_BUILT_N=0;alRender();return}
   const n=parseInt(alVal('enN'),10)||(a.card&&a.card.n)||0;const arms=String(a.plan.arms||'A,B').split(',').map(x=>x.trim()).filter(Boolean);
-  let list;try{list=await alBuildList(ALG.fromHex(m[1].toLowerCase()),a.plan.method,n,arms)}catch(e){enMsg(String(e.message||e));return}
+  /* review finding 11: reloading the seed with a smaller n than the number already enrolled left positions on record (e.g. position 15) outside the newly-built, shorter list, so Reveal silently returned no arm for them. Refuse instead of building a list that cannot cover everyone already enrolled. */
+  const enrolledSoFar=(a.enrol||[]).length;
+  if(n<enrolledSoFar){enMsg(L('There are already '+enrolledSoFar+' participants enrolled. The list cannot be rebuilt smaller than that.','पहले से '+enrolledSoFar+' participants enrol हो चुके हैं। List उससे छोटी नहीं बन सकती।'));return}
+  let list;try{list=await alBuildList(ALG.fromHex(m[1].toLowerCase()),a.plan.method,n,arms,{sizes:a.plan.blockSizes,probs:a.plan.probs})}catch(e){enMsg(String(e.message||e));return}
   if(!list||!n){enMsg(L('Set the number of participants first.','पहले participants की संख्या लिखें।'));return}
-  AL_SEED=m[1].toLowerCase();AL_LIST=list;
-  const lh=await alHash(new TextEncoder().encode(JSON.stringify(list))),at=new Date().toISOString();
-  o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'list built',text:'list of '+n+' · hash '+lh.slice(0,16),hash:lh,n}])});studySet(o);
-  enMsg(L('Seed matches the commitment. List built in memory.','Seed commitment से मेल खाता है। List memory में बनी।'));alRender()}
+  const lh=await alListHash(ALG.fromHex(m[1].toLowerCase()),list),at=new Date().toISOString();
+  list=null; /* built only to log its hash; not kept, so it is not a standing, inspectable variable between enrolments */
+  AL_SEED=m[1].toLowerCase();AL_BUILT_N=n;
+  /* Re-read the study right before this write: o/a were captured before several awaits (file read, hashing), and anything else writing to this study in the meantime - a deviation, an enrolment, a card edit - would otherwise be silently lost when this stale copy is written back. */
+  const o2=studyGet(),a2=alGet(o2);
+  const roleAck=(a2.log||[]).filter(x=>x.kind==='seed loaded for enrolment').length;
+  o2.alloc=Object.assign({},a2,{log:(a2.log||[]).concat([{at,kind:'list built',text:'list of '+n+' · hash '+lh.slice(0,16),hash:lh,n}],[{at,kind:'seed loaded for enrolment',text:'acknowledged the concealment risk before loading'+(roleAck?' (again, '+(roleAck+1)+' times so far)':'')}])});studySet(o2);
+  enMsg(L('Seed matches the commitment. Ready to enrol; the list is not kept on screen.','Seed commitment से मेल खाता है। Enrol के लिए तैयार; list screen पर नहीं रखी जाती।'));alRender()}
 function enEnrol(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),code=alVal('enCode').trim();
-  if(!AL_LIST){enMsg(L('Load the seed file first.','पहले seed file लोड करें।'));return}
+  if(!AL_SEED){enMsg(L('Load the seed file first.','पहले seed file लोड करें।'));return}
   if(code.length<2){enMsg(L('Enter a participant code.','Participant code लिखें।'));return}
   const en=(a.enrol||[]);if(en.some(x=>x.code===code)){enMsg(L('This code is already enrolled.','यह code पहले से enrol है।'));return}
-  if(en.length>=AL_LIST.length){enMsg(L('The list is used up. Make a new list with a larger number, under a deviation.','List पूरी हो चुकी है। बड़ी संख्या वाली नई list बनाएँ, deviation के साथ।'));return}
+  if(en.length>=AL_BUILT_N){enMsg(L('The list is used up. Make a new list with a larger number, under a deviation.','List पूरी हो चुकी है। बड़ी संख्या वाली नई list बनाएँ, deviation के साथ।'));return}
   const at=new Date().toISOString(),pos=en.length+1;
   o.alloc=Object.assign({},a,{enrol:en.concat([{code,pos,at}]),log:(a.log||[]).concat([{at,kind:'enrolled',text:code+' · position '+pos}])});
   studySet(o);alRender()}
-function enReveal(code){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),x=(a.enrol||[]).find(e=>e.code===code);
+async function enReveal(code){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),x=(a.enrol||[]).find(e=>e.code===code);
   if(!x){enMsg(L('Not enrolled.','Enrol नहीं है।'));return}
-  if(!AL_LIST){enMsg(L('Load the seed file to see the arm. The reveal is logged either way.','Arm देखने के लिए seed file लोड करें।'));return}
+  if(!AL_SEED){enMsg(L('Load the seed file to see the arm. The reveal is logged either way.','Arm देखने के लिए seed file लोड करें।'));return}
+  const arms=String(a.plan.arms||'A,B').split(',').map(s2=>s2.trim()).filter(Boolean),built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0];
+  let list=await alBuildList(ALG.fromHex(AL_SEED),a.plan.method,built?built.n:AL_BUILT_N,arms,{sizes:a.plan.blockSizes,probs:a.plan.probs});
+  const arm=list[x.pos-1];list=null; /* built fresh for this one reveal, discarded right after, never kept standing */
   const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'reveal',text:code+' · position '+x.pos}])});studySet(o);
-  enMsg(L('Arm for '+code+': ','"'+code+'" का arm: ')+AL_LIST[x.pos-1]);}
-function enEnvelopes(){if(!AL_LIST){enMsg(studyHi()?'पहले seed file लोड करें।':'Load the seed file first.');return}
+  enMsg(L('Arm for '+code+': ','"'+code+'" का arm: ')+arm);}
+async function enEnvelopes(){if(!AL_SEED){enMsg(studyHi()?'पहले seed file लोड करें।':'Load the seed file first.');return}
   const o=studyGet(),a=alGet(o),sid=String(o.id||o.title||'study').replace(/[^A-Za-z0-9_-]/g,'_');
-  const master='envelope_no,arm,study_id\n'+AL_LIST.map((arm,i)=>(i+1)+','+arm+','+sid).join('\n')+'\n';
-  const faces='envelope_no,face_en,face_hi\n'+AL_LIST.map((_,i)=>(i+1)+',Envelope '+(i+1)+',लिफ़ाफ़ा '+(i+1)).join('\n')+'\n';
+  const arms=String(a.plan.arms||'A,B').split(',').map(s2=>s2.trim()).filter(Boolean),built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0];
+  let list=await alBuildList(ALG.fromHex(AL_SEED),a.plan.method,built?built.n:AL_BUILT_N,arms,{sizes:a.plan.blockSizes,probs:a.plan.probs});
+  const master='envelope_no,arm,study_id\n'+list.map((arm,i)=>(i+1)+','+arm+','+sid).join('\n')+'\n';
+  const faces='envelope_no,face_en,face_hi\n'+list.map((_,i)=>(i+1)+',Envelope '+(i+1)+',लिफ़ाफ़ा '+(i+1)).join('\n')+'\n';
+  list=null;
   [['master_list.csv',master],['envelope_faces.csv',faces]].forEach(([n,t])=>{const u=URL.createObjectURL(new Blob([t],{type:'text/csv'})),x=document.createElement('a');x.href=u;x.download=n;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)});
-  const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'envelopes',text:'envelope files downloaded'}])});studySet(o)}
+  const at=new Date().toISOString();o.alloc=Object.assign({},a,{log:(a.log||[]).concat([{at,kind:'envelopes',text:'envelope files downloaded: every arm was exposed to whoever downloaded them'}])});studySet(o)}
 
 /* ---- Stage 8: reveal and verify, then the analysis lock. The verifier uploads the seed (and optionally the master list). The app rebuilds the list and compares it with the hash logged when the list was built. ---- */
 function alVerHTML(a,L){if(!a.commit)return'';const v=a.verify,lk=a.lock,fac=alFactors(a.card&&a.card.factors);
-  const vtxt=v?(v.ok?L('Last verification passed ','आख़िरी verification पास ')+escHTML(String(v.at).slice(0,16).replace('T',' ')):L('Last verification FAILED ','आख़िरी verification फेल ')+escHTML(String(v.at).slice(0,16).replace('T',' '))):L('Not verified yet.','अभी verify नहीं हुआ।');
+  const vtxt=v?(v.ok?L('Last verification passed ','आख़िरी verification पास ')+escHTML(String(v.at).slice(0,16).replace('T',' '))+(v.external?'':' · '+L('against the app\'s own record only, no master list was checked','केवल app के अपने record से, कोई master list नहीं जाँची गई')):L('Last verification FAILED ','आख़िरी verification फेल ')+escHTML(String(v.at).slice(0,16).replace('T',' '))):L('Not verified yet.','अभी verify नहीं हुआ।');
   return'<h4 style="margin:12px 0 4px">'+L('6. Reveal and verify (stage 8)','6. Reveal और verify (चरण 8)')+'</h4>'+
   '<p class="desc">'+vtxt+'</p>'+
   '<div class="fld"><label for="enVerSeed">'+L('Seed file (revealed for verification)','Seed file (verification के लिए)')+'</label><input id="enVerSeed" type="file" accept=".txt"></div>'+
@@ -18220,14 +18289,18 @@ async function enVerify(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(
   const seedOk=await alCheckSeed(seedHex,a.commit);
   let listOk=false,masterOk=null,rebuilt=null;
   if(seedOk){const arms=String(a.plan.arms||'A,B').split(',').map(x=>x.trim()).filter(Boolean);
-    try{rebuilt=await alBuildList(ALG.fromHex(seedHex),a.plan.method,built.n,arms)}catch(e){rebuilt=null}
-    listOk=!!rebuilt&&(await alHash(new TextEncoder().encode(JSON.stringify(rebuilt))))===built.hash}
+    try{rebuilt=await alBuildList(ALG.fromHex(seedHex),a.plan.method,built.n,arms,{sizes:a.plan.blockSizes,probs:a.plan.probs})}catch(e){rebuilt=null}
+    listOk=!!rebuilt&&(await alListHash(ALG.fromHex(seedHex),rebuilt))===built.hash}
   if(seedOk&&rebuilt&&mf&&mf.files&&mf.files[0]){const rows=(await mf.files[0].text()).trim().split(/\r?\n/).slice(1).map(l=>l.split(',')[1]);
     masterOk=JSON.stringify(rows)===JSON.stringify(rebuilt)}
   const ok=seedOk&&listOk&&masterOk!==false,at=new Date().toISOString();
-  const what=!seedOk?L('seed does not match the commitment','seed commitment से नहीं मिलता'):!listOk?L('rebuilt list differs from the logged list','दोबारा बनी list, दर्ज list से अलग है'):masterOk===false?L('master list differs from the seed','master list, seed से अलग है'):L('list matches','list मेल खाती है');
-  o.alloc=Object.assign({},a,{verify:{at,ok,seedOk,listOk,masterOk},log:(a.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
-  studySet(o);msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
+  /* review finding 11: listOk rebuilds from the very seed alCheckSeed just confirmed, using the app's own logged hash as the thing to match - under normal (non-tampered) use it cannot fail when seedOk already passed, so it adds no independent proof on its own. The master list is the only check here that comes from outside the app, so "ok" is only called a full verification when one was actually given; without one, the message says plainly that this only checked the app's own record against itself. */
+  const external=masterOk!==null;
+  const what=!seedOk?L('seed does not match the commitment','seed commitment से नहीं मिलता'):!listOk?L('rebuilt list differs from the logged list','दोबारा बनी list, दर्ज list से अलग है'):masterOk===false?L('master list differs from the seed','master list, seed से अलग है'):external?L('list matches the master list','list, master list से मेल खाती है'):L('seed reproduces the logged list, but no master list was given to check it against anything outside the app','seed से वही logged list बनती है, पर app के बाहर जाँचने के लिए कोई master list नहीं दी गई');
+  /* Re-read right before the write: o/a were captured before several file-read and hashing awaits, and this is otherwise a stale copy that could silently overwrite a concurrent change (an enrolment, a deviation). */
+  const o2=studyGet(),a2=alGet(o2);
+  o2.alloc=Object.assign({},a2,{verify:{at,ok,seedOk,listOk,masterOk,external},log:(a2.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
+  studySet(o2);msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
 async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('alMsg');if(e)e.textContent=t};
   if(a.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));return}
   if(!a.commit){msg(L('Register the commitment first.','पहले commitment दर्ज करें।'));return}
@@ -18237,8 +18310,11 @@ async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),
   const built=(a.log||[]).filter(e=>e.kind==='list built').slice(-1)[0],at=new Date().toISOString();
   const fingerprint=await alHash(new TextEncoder().encode(a.commit.planHash+'|'+a.commit.hash+'|'+(built?built.hash:'')));
   const verifiedAtLock=!!(a.verify&&a.verify.ok);
-  o.alloc=Object.assign({},a,{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before verification')}])});
-  studySet(o);alRender()}
+  /* Re-read right before the write: o/a were captured before a hashing await, and this is otherwise a stale copy that could silently overwrite a concurrent change, or even write a second lock if two lock attempts overlapped (the "already locked" check above only ever saw the state at the start of this call). */
+  const o2=studyGet(),a2=alGet(o2);
+  if(a2.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));alRender();return}
+  o2.alloc=Object.assign({},a2,{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a2.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before verification')}])});
+  studySet(o2);alRender()}
 
 /* ---- Stage 9: methods sentences drafted from the study record, and CONSORT 2025 items 17a, 17b, 18, 20a, 20b, 21a. The student edits the text. Only recorded values appear; anything missing is a bracketed placeholder. ---- */
 const AL_METHOD_TEXT={simple:'simple randomisation',perm:'permuted blocks with block sizes drawn at random from a fixed list',strat:'stratified permuted blocks',mini:'minimisation (Pocock and Simon) with a biased coin',cons:'constrained randomisation',xo:'a cross-over design with balanced Williams rows'};
@@ -18248,7 +18324,7 @@ function alWriteText(o){const a=alGet(o),c=a.card||{},p=a.plan||{},cm=a.commit,l
   if(!p.method||p.method==='none')return'This study did not randomise participants. [Describe the design and sampling here.]';
   const arms=String(p.arms||'').split(',').map(x=>x.trim()).filter(Boolean).join(' and ')||'[arm labels]',out=[];
   out.push('We randomised '+(AL_UNIT_TEXT[c.unit]||'[unit]')+' ('+(c.n||'[n]')+' planned) to '+arms+' using '+(AL_METHOD_TEXT[p.method]||'[method]')+(p.params?' ('+p.params+')':'')+'.');
-  if(cm)out.push('A 256-bit random seed generated the allocation sequence by computer. We registered a SHA-256 commitment to the seed and the plan on '+String(cm.at).slice(0,10)+', before enrolment.');
+  if(cm)out.push('A 256-bit random seed generated the allocation sequence by computer. We registered a SHA-256 commitment to the seed and the plan on '+String(cm.at).slice(0,10)+', before enrolment'+(cm.publishedTo?' ('+cm.publishedTo+')':' [say where this hash was sent or published outside the app, for outside proof of the date]')+'.');
   if(p.maker||p.holder)out.push('['+(p.maker||'Name')+'] made the list, and ['+(p.holder||'name')+'] held it.');
   if(AL_CONC_TEXT[p.conc])out.push('Allocation was concealed by '+AL_CONC_TEXT[p.conc]+'.');
   else out.push('[Allocation was not concealed. Say so and explain the risk of selection bias before you submit.]');
@@ -18274,7 +18350,9 @@ function alWriteHTML(a,L){if(!a.plan||!a.plan.method)return'';const o=studyGet()
 function alCopyText(){const t=document.getElementById('alWriteTxt');if(!t)return;t.select();try{navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}}
 function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
 function alOpen(){let d=document.getElementById('alDlg');
-  if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
+  if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d);
+    /* delegated once, on the dialog itself, so it survives every innerHTML re-render; the participant code is read from the attribute, never built into an executable string */
+    d.addEventListener('click',e=>{const b=e.target.closest('[data-reveal-code]');if(b){e.preventDefault();enReveal(b.getAttribute('data-reveal-code'))}})}
   d.innerHTML=alHTML();if(!d.open)d.showModal();alRefresh()}
 
 function statsOpen(){const d=document.getElementById('statsDlg');if(!d.open)d.showModal();try{studyStatsHint()}catch(e){}}
