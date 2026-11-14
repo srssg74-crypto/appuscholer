@@ -18005,7 +18005,7 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
   inp('alArms',L('Arm labels (comma separated, e.g. A,B)','Arm के नाम (कॉमा से, जैसे A,B)'),p.arms,'A,B')+
   inp('alMaker',L('Who makes the list','सूची कौन बनाएगा'),p.maker,L('name and role','नाम और भूमिका'))+inp('alHolder',L('Who holds the master list','Master list किसके पास रहेगी'),p.holder,L('name and role','नाम और भूमिका'))+
-  alCommitHTML(a,L)+alDevHTML(a,L)+alRunnerHTML()+alVerHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
+  alCommitHTML(a,L)+alDevHTML(a,L)+alRunnerHTML()+alVerHTML(a,L)+alWriteHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" style="flex:1" onclick="alSave()">'+L('Save to decision log','Decision log में सहेजें')+'</button></div>'+
   '<h4 style="margin:12px 0 4px">'+L('Decision log (read only)','Decision log (केवल पढ़ने के लिए)')+'</h4>'+
   (lg.length?'<ul class="desc" style="padding-left:18px;margin:0">'+lg.map(e=>'<li>'+escHTML(String(e.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(e.kind)+': '+escHTML(e.text)+(e.warn?' ⚠ '+escHTML(e.warn):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
@@ -18235,6 +18235,37 @@ async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),
   const verifiedAtLock=!!(a.verify&&a.verify.ok);
   o.alloc=Object.assign({},a,{lock:{at,fingerprint,covariates:cov,verifiedAtLock},log:(a.log||[]).concat([{at,kind:'analysis locked',text:'fingerprint '+fingerprint.slice(0,16)+(verifiedAtLock?'':' · before verification')}])});
   studySet(o);alRender()}
+
+/* ---- Stage 9: methods sentences drafted from the study record, and CONSORT 2025 items 17a, 17b, 18, 20a, 20b, 21a. The student edits the text. Only recorded values appear; anything missing is a bracketed placeholder. ---- */
+const AL_METHOD_TEXT={simple:'simple randomisation',perm:'permuted blocks with block sizes drawn at random from a fixed list',strat:'stratified permuted blocks',mini:'minimisation (Pocock and Simon) with a biased coin',cons:'constrained randomisation',xo:'a cross-over design with balanced Williams rows'};
+const AL_CONC_TEXT={central:'a central, computer-generated list held away from the site',env:'sealed, opaque, numbered envelopes'};
+const AL_UNIT_TEXT={ind:'individual participants',cl:'clusters',wi:'the same participants in both conditions'};
+function alWriteText(o){const a=alGet(o),c=a.card||{},p=a.plan||{},cm=a.commit,lk=a.lock,v=a.verify,en=a.enrol||[];
+  if(!p.method||p.method==='none')return'This study did not randomise participants. [Describe the design and sampling here.]';
+  const arms=String(p.arms||'').split(',').map(x=>x.trim()).filter(Boolean).join(' and ')||'[arm labels]',out=[];
+  out.push('We randomised '+(AL_UNIT_TEXT[c.unit]||'[unit]')+' ('+(c.n||'[n]')+' planned) to '+arms+' using '+(AL_METHOD_TEXT[p.method]||'[method]')+(p.params?' ('+p.params+')':'')+'.');
+  if(cm)out.push('A 256-bit random seed generated the allocation sequence by computer. We registered a SHA-256 commitment to the seed and the plan on '+String(cm.at).slice(0,10)+', before enrolment.');
+  if(p.maker||p.holder)out.push('['+(p.maker||'Name')+'] made the list, and ['+(p.holder||'name')+'] held it.');
+  if(AL_CONC_TEXT[p.conc])out.push('Allocation was concealed by '+AL_CONC_TEXT[p.conc]+'.');
+  else out.push('[Allocation was not concealed. Say so and explain the risk of selection bias before you submit.]');
+  if(en.length)out.push(en.length+' participants were enrolled, and each was assigned in the order of enrolment.');
+  if(v&&v.ok)out.push('After data collection, we checked the list against the revealed seed.');
+  if(lk)out.push('The analysis adjusted for '+(lk.covariates||'[covariates]')+'.');
+  return out.join(' ')}
+function alConsort(o){const a=alGet(o),p=a.plan||{},lk=a.lock;
+  return[['17a','Sequence generation: method stated',!!p.method&&p.method!=='none',p.method?'Method: '+p.method:'Save the plan'],
+    ['17b','Sequence generation: who generated it',!!p.maker,p.maker?'Maker recorded':'Name the list maker in the plan'],
+    ['18','Allocation concealment',!!p.conc&&p.conc!=='open',p.conc?'Concealment: '+p.conc:'Choose concealment in the plan'],
+    ['20a','Blinding of participants and personnel',false,'Not recorded in the app. Write it in the methods section.'],
+    ['20b','Blinding of outcome assessors',false,'Not recorded in the app. Write it in the methods section.'],
+    ['21a','Stratifying factors adjusted for in the analysis',!!lk,lk?'Covariates recorded at the lock':'Lock the analysis plan (stage 8)']]}
+function alWriteHTML(a,L){if(!a.plan||!a.plan.method)return'';const o=studyGet(),items=alConsort(o);
+  return'<h4 style="margin:12px 0 4px">'+L('8. Methods text and CONSORT (stage 9)','8. Methods text और CONSORT (चरण 9)')+'</h4>'+
+  '<p class="desc">'+L('Drafted from the record. Edit it. Brackets mark what the record does not hold. The text is in English, as journals expect.','रिकॉर्ड से बना है। इसे संपादित करें। कोष्ठक में वह है जो रिकॉर्ड में नहीं। यह text अंग्रेज़ी में है, जैसा journal चाहते हैं।')+'</p>'+
+  '<textarea id="alWriteTxt" rows="7" style="width:100%">'+escHTML(alWriteText(o))+'</textarea>'+
+  '<div class="row" style="gap:8px;margin:6px 0"><button type="button" class="btn btn-ghost btn-sm" onclick="alCopyText()">'+L('Copy text','Text कॉपी करें')+'</button></div>'+
+  '<ul class="desc" style="padding-left:18px;margin:0">'+items.map(x=>'<li>'+(x[2]?'✅':'⬜')+' CONSORT '+x[0]+' · '+escHTML(x[1])+' · '+escHTML(x[3])+'</li>').join('')+'</ul>'}
+function alCopyText(){const t=document.getElementById('alWriteTxt');if(!t)return;t.select();try{navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}}
 function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
 function alOpen(){let d=document.getElementById('alDlg');
   if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
