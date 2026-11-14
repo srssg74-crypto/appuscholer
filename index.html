@@ -18096,7 +18096,7 @@ async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.ge
 /* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
 function alDevHTML(a,L){if(!a.commit)return'';const d=(a.deviations||[]).slice().reverse();
   return'<h4 style="margin:12px 0 4px">'+L('4. Deviation log (append only)','4. Deviation log (केवल जोड़ें)')+'</h4>'+
-    (d.length?'<ul class="desc" style="padding-left:18px;margin:0 0 8px">'+d.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.what)+' · '+L('why: ','कारण: ')+escHTML(x.why)+(x.by?' · '+L('agreed by: ','किसने माना: ')+escHTML(x.by):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No deviations recorded.','कोई deviation दर्ज नहीं।')+'</p>')+
+    (d.length?'<ul class="desc" style="padding-left:18px;margin:0 0 8px">'+d.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.what)+' · '+L('why: ','कारण: ')+escHTML(x.why)+(x.by?' · '+L('agreed by: ','किसने माना: ')+escHTML(x.by):'')+(x.armWarn?' · <span style="color:#b45309">⚠ '+L('may name an arm','शायद arm का नाम है')+'</span>':'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No deviations recorded.','कोई deviation दर्ज नहीं।')+'</p>')+
     '<p class="desc">'+L('Record a change to the registered plan here. Entries cannot be edited or removed.','registered योजना में बदलाव यहाँ दर्ज करें। entries बदली या हटाई नहीं जातीं।')+'</p>'+
     '<div class="fld"><label for="alDevWhat">'+L('What changed','क्या बदला')+'</label><textarea id="alDevWhat" rows="2"></textarea></div>'+
     '<div class="fld"><label for="alDevWhy">'+L('Why (30+ characters)','कारण (30+ अक्षर)')+'</label><textarea id="alDevWhy" rows="2"></textarea></div>'+
@@ -18110,15 +18110,22 @@ function alDevSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElemen
   if(what.length<10){if(msg)msg.textContent=L('Describe what changed (10+ characters).','बताएँ क्या बदला (10+ अक्षर)।');return}
   if(why.length<30){if(msg)msg.textContent=L('Say why (30+ characters).','कारण लिखें (30+ अक्षर)।');return}
   const at=new Date().toISOString();
-  o.alloc=Object.assign({},a,{deviations:(a.deviations||[]).concat([{at,what,why,by}]),log:(a.log||[]).concat([{at,kind:'deviation',text:what.slice(0,80)}])});
-  studySet(o);alRender()}
+  /* review finding 14: "what changed" and "why" are free text with no check against an arm label slipping in - naming a participant's arm in a deviation note is a real way unblinding data enters this record. A soft flag (not a block) on the entry, same as the D7 reason field. */
+  const armWarn=crArmWarn(what)||crArmWarn(why);
+  o.alloc=Object.assign({},a,{deviations:(a.deviations||[]).concat([{at,what,why,by,armWarn}]),log:(a.log||[]).concat([{at,kind:'deviation',text:what.slice(0,80)}])});
+  studySet(o);alRender();
+  if(armWarn){const w=document.getElementById('alDevMsg');if(w)w.textContent=L('Saved, but this may name an allocation arm - check it does not unblind anyone reading this log.','सहेजा गया, पर इसमें शायद allocation arm का नाम है - देखें कि यह log पढ़ने वाले किसी को unblind न करे।')}}
 
 /* Out-of-range clinical reports (D7). The student or a clinician judges significance; the app only keeps the record. Append only. No participant names or values are stored. */
 const CR_DECISIONS=[['ns','Clinically not significant (I judged this)'],['rev','Needs a clinician to review'],['sig','Clinically significant (refer the participant)']];
 const CR_TESTS=[['blood','Blood test'],['pft','Lung function (PFT, spirometry)'],['urine','Urine test'],['liver','Liver or kidney test'],['thyroid','Thyroid test'],['other','Other report']];
-function crGet(o){return((o||studyGet()).cr)||{entries:[],none:false}}
+function crGet(o){return((o||studyGet()).cr)||{entries:[],none:false,log:[]}}
 function crOk(o){const c=crGet(o);if(c.none)return true;const e=c.entries||[];
   return e.length>0&&e.every(x=>x.decision&&x.reason&&x.reason.length>=30&&x.by&&(x.decision!=='rev'&&x.decision!=='sig'||x.clin))}
+/* review finding 14: a plan's arm labels (e.g. "Intervention,Control") showing up in a free-text reason is a real way unblinding/PII-adjacent data enters an append-only record meant to hold neither. This is a soft, best-effort check on whole words only - it cannot catch every way a value or name could appear in prose, and is not a reason to block saving (free text can't be perfectly policed), only to flag the entry for later review. */
+function crArmWarn(text){const o=studyGet(),a=(o.alloc&&o.alloc.plan&&o.alloc.plan.arms)||'';
+  const arms=a.split(',').map(x=>x.trim()).filter(Boolean),t=String(text||'');
+  return arms.some(arm=>arm&&new RegExp('\\b'+arm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(t))}
 function crHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,c=crGet(),list=(c.entries||[]).slice().reverse(),
   dec=(k)=>(CR_DECISIONS.find(x=>x[0]===k)||['',k])[1],tst=(k)=>(CR_TESTS.find(x=>x[0]===k)||['',k])[1];
   return'<div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">'+L('Out-of-range clinical reports','सीमा से बाहर clinical रिपोर्ट')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'crDlg\').close()">'+L('Close','बंद करें')+'</button></div>'+
@@ -18136,10 +18143,13 @@ function crHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,c=crGet(),list=(c.entries
   '<p class="desc" id="crMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row"><button type="button" class="btn btn-purple" style="flex:1" onclick="crSave()">'+L('Add to the log','Log में जोड़ें')+'</button></div>'+
   '<h4 style="margin:12px 0 4px">'+L('Log (append only)','Log (केवल जोड़ें)')+'</h4>'+
-  (list.length?'<ul class="desc" style="padding-left:18px;margin:0">'+list.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.code||'-')+' · '+escHTML(tst(x.test))+' ('+escHTML(x.name||'-')+', '+(x.dir==='high'?L('above','ऊपर'):L('below','नीचे'))+') · '+escHTML(dec(x.decision))+' · '+escHTML(x.reason)+(x.clin?' · '+L('clinician: ','clinician: ')+escHTML(x.clin):'')+' · '+L('by ','द्वारा ')+escHTML(x.by)+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
+  (list.length?'<ul class="desc" style="padding-left:18px;margin:0">'+list.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.code||'-')+' · '+escHTML(tst(x.test))+' ('+escHTML(x.name||'-')+', '+(x.dir==='high'?L('above','ऊपर'):L('below','नीचे'))+') · '+escHTML(dec(x.decision))+' · '+escHTML(x.reason)+(x.clin?' · '+L('clinician: ','clinician: ')+escHTML(x.clin):'')+' · '+L('by ','द्वारा ')+escHTML(x.by)+(x.armWarn?' · <span style="color:#b45309">⚠ '+L('may name an arm','शायद arm का नाम है')+'</span>':'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
 function crWarn(){const hi=studyHi(),L=(en,x)=>hi?x:en,v=alVal('crDec'),w=document.getElementById('crWarn');if(!w)return;
   w.textContent=v==='sig'?L('Significant: the participant\'s own doctor must be told now. This log does not replace their care.','Significant: participant के अपने doctor को अभी बताना होगा। यह log उनके इलाज की जगह नहीं लेता।'):v==='rev'?L('Review: a clinician must see this before the participant continues.','Review: participant आगे बढ़ने से पहले clinician इसे देखें।'):''}
-function crNoneSet(on){const o=studyGet(),c=crGet(o);o.cr=Object.assign({},c,{none:!!on});studySet(o);crRender()}
+function crNoneSet(on){const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),c=crGet(o),at=new Date().toISOString();
+  /* review finding 14: ticking "nothing out of range" while entries already exist contradicted the record, and the toggle itself was never logged - so a reviewer could not tell afterward whether it had been ticked, unticked, or ticked by mistake. */
+  if(on&&(c.entries||[]).length>0){const msg=document.getElementById('crMsg'),box=document.getElementById('crNone');if(box)box.checked=false;if(msg)msg.textContent=L('There are already '+c.entries.length+' entries logged. This cannot be ticked while entries exist.','पहले से '+c.entries.length+' entries दर्ज हैं। Entries रहते यह टिक नहीं हो सकता।');return}
+  o.cr=Object.assign({},c,{none:!!on,log:(c.log||[]).concat([{at,kind:on?'none ticked':'none unticked',text:on?'marked nothing out of range so far':'unmarked'}])});studySet(o);crRender()}
 function crSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('crMsg');
   const o=studyGet(),c=crGet(o),code=alVal('crCode').trim(),dec=alVal('crDec'),reason=alVal('crReason').trim(),by=alVal('crBy').trim(),clin=alVal('crClin').trim(),name=alVal('crName').trim();
   if(code.length<2){if(msg)msg.textContent=L('Enter a participant code.','Participant code लिखें।');return}
@@ -18147,9 +18157,11 @@ function crSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(reason.length<30){if(msg)msg.textContent=L('The reason needs 30+ characters.','कारण में 30+ अक्षर चाहिए।');return}
   if(!by){if(msg)msg.textContent=L('Write who judged it.','बताएँ फ़ैसला किसने किया।');return}
   if((dec==='rev'||dec==='sig')&&!clin){if(msg)msg.textContent=L('Name the clinician who was asked.','जिस clinician से पूछा, उसका नाम लिखें।');return}
-  const at=new Date().toISOString();
-  o.cr=Object.assign({},c,{none:false,entries:(c.entries||[]).concat([{at,code,test:alVal('crTest'),name,dir:alVal('crDir'),decision:dec,reason,by,clin}])});
-  studySet(o);crRender()}
+  const at=new Date().toISOString(),armWarn=crArmWarn(reason);
+  /* review finding 14: the reason field is free text with no check against an arm label slipping in - a real way unblinding data could enter this record. A soft flag on the entry (not a block: free text can't be perfectly policed) lets anyone reviewing the log see it was never checked for this. */
+  o.cr=Object.assign({},c,{none:false,entries:(c.entries||[]).concat([{at,code,test:alVal('crTest'),name,dir:alVal('crDir'),decision:dec,reason,by,clin,armWarn}])});
+  studySet(o);crRender();
+  if(armWarn){const w=document.getElementById('crMsg');if(w)w.textContent=L('Saved, but the reason may name an allocation arm - check it does not unblind anyone reading this log.','सहेजा गया, पर कारण में शायद allocation arm का नाम है - देखें कि यह log पढ़ने वाले किसी को unblind न करे।')}}
 function crRender(){const d=document.getElementById('crDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=crHTML();d.scrollTop=top;crWarn()}}
 function crOpen(){let d=document.getElementById('crDlg');
   if(!d){d=document.createElement('dialog');d.id='crDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
