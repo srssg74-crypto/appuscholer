@@ -47,7 +47,9 @@ with sync_playwright() as p:
     ok('not a positive' not in enmsg and 'multiple of' not in enmsg,'no block-size error on seed load: '+enmsg)
     # the built list is the engine's three-arm list for the default blocks, balanced across arms
     lst=J("(async()=>await alBuildList(ALG.fromHex(%s),'perm',30,['A','B','C'],{sizes:studyGet().alloc.plan.blockSizes}))()"%json.dumps(seed_hex))
-    ok(len(lst)==30 and lst.count('A')==lst.count('B')==lst.count('C')==10 and None not in lst,'the list is balanced 10/10/10 with no undefined positions')
+    # the last block is cut at n, so exact balance is not promised; within one block (max 12) of each other is
+    counts=[lst.count(a) for a in 'ABC']
+    ok(len(lst)==30 and None not in lst and min(counts)>0 and max(counts)-min(counts)<12,'the list has 30 real arms, all three present, counts within one block of each other: '+json.dumps(counts))
     # a two-arm plan with blank blocks still gets [4,6,8], so existing two-arm studies are unchanged
     J("const o=studyGet();o.alloc=null;studySet(o);alOpen()"); pg.wait_for_timeout(200)
     J("document.getElementById('alReason').value=%s;document.getElementById('alN').value='30';alRefresh()"%json.dumps(REASON))
