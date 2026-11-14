@@ -17973,6 +17973,7 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(c.reason.length<30){if(msg)msg.textContent=L('The reason needs 30+ characters.','कारण में 30+ अक्षर चाहिए।');return}
   if(!p.method){if(msg)msg.textContent=L('Choose a method.','एक method चुनें।');return}
   const randomised=p.method!=='none';
+  if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change as a deviation in your write-up instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव को अपने लेख में deviation के रूप में लिखें।');return}
   if(randomised&&(!p.conc||!p.maker||!p.holder)){if(msg)msg.textContent=L('For a randomised study, choose concealment and name who makes and who holds the list.','randomised study के लिए concealment चुनें और बताएँ कि सूची कौन बनाएगा और कौन रखेगा।');return}
   const ch=[];
   if(prev.plan&&prev.plan.method!==p.method)ch.push('method '+prev.plan.method+' → '+p.method);
@@ -17981,7 +17982,7 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(prev.card&&prev.card.unit!==c.unit)ch.push('unit '+prev.card.unit+' → '+c.unit);
   const log=(prev.log||[]).slice(),rec=alRec(c);
   log.push({at:new Date().toISOString(),kind:(prev.plan||prev.card)?'changed':'created',text:ch.length?ch.join('; '):'saved',suggested:rec.m,method:p.method,warn:(randomised&&p.conc==='open')?'not concealed':''});
-  o.alloc={card:c,plan:p,log};studySet(o);
+  o.alloc={card:c,plan:p,log,commit:prev.commit};studySet(o);
   if(msg)msg.textContent=L('Saved to the decision log.','decision log में सहेजा गया।');alRender()}
 function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=a.plan||{},lg=(a.log||[]).slice().reverse();
   const inp=(id,lab,v,ph,type)=>'<div class="fld"><label for="'+id+'">'+lab+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v||'')+'" placeholder="'+escHTML(ph||'')+'"></div>';
@@ -17999,10 +18000,44 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   inp('alParams',L('Parameters (block sizes, strata, factor levels, p for minimisation, balance rule)','Parameters (block size, strata, factor levels, minimisation के लिए p, balance नियम)'),p.params,'')+
   '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
   inp('alMaker',L('Who makes the list','सूची कौन बनाएगा'),p.maker,L('name and role','नाम और भूमिका'))+inp('alHolder',L('Who holds the master list','Master list किसके पास रहेगी'),p.holder,L('name and role','नाम और भूमिका'))+
-  '<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
+  alCommitHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" style="flex:1" onclick="alSave()">'+L('Save to decision log','Decision log में सहेजें')+'</button></div>'+
   '<h4 style="margin:12px 0 4px">'+L('Decision log (read only)','Decision log (केवल पढ़ने के लिए)')+'</h4>'+
   (lg.length?'<ul class="desc" style="padding-left:18px;margin:0">'+lg.map(e=>'<li>'+escHTML(String(e.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(e.kind)+': '+escHTML(e.text)+(e.warn?' ⚠ '+escHTML(e.warn):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
+
+/* Commitment (stage 5). Only the hash goes into the study record. The seed lives in memory until the student saves it to a file. */
+let AL_PENDING=null;
+async function alHash(bytes){const d=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+function alEnrolOK(o){return !!(alGet(o).commit)}
+function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
+  if(cm)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Registered ','दर्ज ')+escHTML(String(cm.at||'').slice(0,16).replace('T',' '))+'<br>'+L('Commitment: ','Commitment: ')+'<code style="word-break:break-all">'+escHTML(cm.hash)+'</code></p>'+
+    '<p class="desc">'+L('The plan is locked. Enrolment can start. A change now goes in as a deviation entry.','योजना बंद है। अब enrolment शुरू हो सकता है। बदलाव deviation entry के रूप में जाएगा।')+'</p>';
+  if(!alOk(o)||!a.plan||a.plan.method==='none')return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Save a complete randomised plan first. Non-randomised designs have nothing to register here.','पहले एक पूरी randomised योजना सहेजें। जो design randomised नहीं है, उसे यहाँ दर्ज करने को कुछ नहीं।')+'</p>';
+  if(!AL_PENDING)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Create the commitment before any participant is enrolled. You will get a seed file to keep away from this site.','किसी भी participant के enrol होने से पहले commitment बनाएँ। आपको एक seed file मिलेगी, जिसे इस site से दूर रखना है।')+'</p><div class="row"><button type="button" class="btn btn-purple" onclick="alMakeCommit()">'+L('Create commitment','Commitment बनाएँ')+'</button></div>';
+  return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Commitment (not yet registered): ','Commitment (अभी दर्ज नहीं): ')+'<code style="word-break:break-all">'+escHTML(AL_PENDING.hash)+'</code></p>'+
+    '<div class="row"><button type="button" class="btn btn-ghost btn-sm" onclick="alDownloadSeed()">'+L('Download seed file','Seed file डाउनलोड करें')+'</button></div>'+
+    '<label style="display:block;margin:8px 0;font-size:14px"><input type="checkbox" id="alSeedSaved"> '+L('I have saved the seed file somewhere other than this site.','मैंने seed file इस site के अलावा कहीं सहेज ली है।')+'</label>'+
+    '<div class="row"><button type="button" class="btn btn-purple" onclick="alRegister()">'+L('Register commitment','Commitment दर्ज करें')+'</button></div>'}
+async function alMakeCommit(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
+  const o=studyGet(),a=alGet(o);
+  if(a.commit||!alOk(o)||a.plan.method==='none'){if(msg)msg.textContent=L('Nothing to register.','दर्ज करने को कुछ नहीं।');return}
+  const seed=new Uint8Array(32);crypto.getRandomValues(seed);
+  const pre=new TextEncoder().encode('appuscholar-commit-v1:');
+  const buf=new Uint8Array(pre.length+32);buf.set(pre);buf.set(seed,pre.length);
+  AL_PENDING={hash:await alHash(buf),seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:JSON.stringify(a.plan)};
+  alRender()}
+function alDownloadSeed(){if(!AL_PENDING)return;
+  const txt=['Appuscholar randomisation seed','Commitment: '+AL_PENDING.hash,'Seed (hex): '+AL_PENDING.seedHex,'','Keep this file away from the app, away from the master list, and away from anyone who does not need it.'].join('\n');
+  const u=URL.createObjectURL(new Blob([txt],{type:'text/plain'})),x=document.createElement('a');x.href=u;x.download='appuscholar_seed_KEEP_SECRET.txt';document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
+  if(!AL_PENDING)return;
+  if(!(document.getElementById('alSeedSaved')||{}).checked){if(msg)msg.textContent=L('Save the seed file first, then tick the box.','पहले seed file सहेजें, फिर box पर टिक करें।');return}
+  const o=studyGet(),a=alGet(o);
+  if(a.commit){AL_PENDING=null;alRender();return}
+  if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
+  const planHash=await alHash(new TextEncoder().encode(AL_PENDING.plan)),at=new Date().toISOString();
+  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)}};
+  AL_PENDING=null;studySet(o);alRender()}
 function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
 function alOpen(){let d=document.getElementById('alDlg');
   if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
