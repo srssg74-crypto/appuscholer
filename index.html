@@ -17948,6 +17948,7 @@ function ecOpen(){const d=document.getElementById('ecDlg');if(!d.open)d.showModa
 const AL_UNITS=[['ind','Individual participants'],['cl','Clusters (school, clinic, ward)'],['wi','Same people in both conditions (within-subjects)']];
 const AL_METHODS=[['none','Not randomised (survey, qualitative or single group)'],['simple','Simple randomisation'],['perm','Permuted blocks'],['strat','Stratified permuted blocks'],['mini','Minimisation (Pocock and Simon)'],['cons','Constrained randomisation'],['xo','Cross-over (Williams rows)']];
 const AL_CONC=[['central','Central or computer-based list (best)'],['env','Sealed, opaque, numbered envelopes (enhanced)'],['open','Not concealed (not acceptable for a randomised trial)']];
+const AL_BLIND=[['open','Open label: everyone knows the group'],['part','Participants blinded only'],['ass','Outcome assessors blinded only'],['both','Participants and outcome assessors blinded (double blind)'],['nk','Blinding not possible or not attempted (say why in the plan)']];
 function alGet(o){return((o||studyGet()).alloc)||{}}
 function alFactors(s){return String(s||'').split(',').map(x=>x.trim()).filter(Boolean)}
 function alRec(c){const hi=studyHi(),L=(en,x)=>hi?x:en,f=alFactors(c.factors).length;
@@ -17959,7 +17960,7 @@ function alRec(c){const hi=studyHi(),L=(en,x)=>hi?x:en,f=alFactors(c.factors).le
   return{m:'perm',t:L('No factors and a small or medium sample: permuted blocks keep the groups close in size as you go.','कोई factor नहीं और छोटा या मध्यम sample: permuted blocks चलते-चलते groups का आकार पास रखते हैं।')}}
 function alOk(o){const a=alGet(o),c=a.card||{},p=a.plan||{};
   if(!(p.method&&String(c.reason||'').trim().length>=30))return false;
-  return p.method==='none'||!!(p.conc&&p.maker&&p.holder)}
+  return p.method==='none'||!!(p.conc&&p.maker&&p.holder&&p.blind)}
 function alOpt(list,cur){return list.map(x=>'<option value="'+x[0]+'"'+(x[0]===cur?' selected':'')+'>'+escHTML(x[1])+'</option>').join('')}
 function alVal(id){const e=document.getElementById(id);return e?String(e.value||''):''}
 function alReadCard(){return{unit:alVal('alUnit'),n:parseInt(alVal('alN'),10)||0,factors:alVal('alFactors').trim(),setting:alVal('alSetting'),sealed:alVal('alSealed'),reason:alVal('alReason').trim()}}
@@ -17979,6 +17980,8 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if(randomised&&(!p.conc||!p.maker||!p.holder)){if(msg)msg.textContent=L('For a randomised study, choose concealment and name who makes and who holds the list.','randomised study के लिए concealment चुनें और बताएँ कि सूची कौन बनाएगा और कौन रखेगा।');return}
   p.arms=alVal('alArms').trim();
   if(randomised&&!p.arms){if(msg)msg.textContent=L('List the arm labels, for example A,B.','Arm के नाम लिखें, जैसे A,B।');return}
+  p.blind=alVal('alBlind');
+  if(randomised&&!p.blind){if(msg)msg.textContent=L('Say who is blinded, or that blinding was not attempted.','बताएँ कौन blind है, या यह कि blinding नहीं की गई।');return}
   const ch=[];
   if(prev.plan&&prev.plan.method!==p.method)ch.push('method '+prev.plan.method+' → '+p.method);
   if(prev.plan&&prev.plan.conc!==p.conc)ch.push('concealment '+(prev.plan.conc||'-')+' → '+p.conc);
@@ -18004,6 +18007,7 @@ function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=
   inp('alParams',L('Parameters (block sizes, strata, factor levels, p for minimisation, balance rule)','Parameters (block size, strata, factor levels, minimisation के लिए p, balance नियम)'),p.params,'')+
   '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
   inp('alArms',L('Arm labels (comma separated, e.g. A,B)','Arm के नाम (कॉमा से, जैसे A,B)'),p.arms,'A,B')+
+  '<div class="fld"><label for="alBlind">'+L('Blinding','Blinding')+'</label><select id="alBlind"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_BLIND,p.blind||'')+'</select></div>'+
   inp('alMaker',L('Who makes the list','सूची कौन बनाएगा'),p.maker,L('name and role','नाम और भूमिका'))+inp('alHolder',L('Who holds the master list','Master list किसके पास रहेगी'),p.holder,L('name and role','नाम और भूमिका'))+
   alCommitHTML(a,L)+alDevHTML(a,L)+alRunnerHTML()+alVerHTML(a,L)+alWriteHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" style="flex:1" onclick="alSave()">'+L('Save to decision log','Decision log में सहेजें')+'</button></div>'+
@@ -18248,6 +18252,8 @@ function alWriteText(o){const a=alGet(o),c=a.card||{},p=a.plan||{},cm=a.commit,l
   if(p.maker||p.holder)out.push('['+(p.maker||'Name')+'] made the list, and ['+(p.holder||'name')+'] held it.');
   if(AL_CONC_TEXT[p.conc])out.push('Allocation was concealed by '+AL_CONC_TEXT[p.conc]+'.');
   else out.push('[Allocation was not concealed. Say so and explain the risk of selection bias before you submit.]');
+  const BLIND_TEXT={open:'This was an open-label study; everyone involved knew the group.',part:'Participants were blinded to their group.',ass:'Outcome assessors were blinded to group.',both:'Participants and outcome assessors were blinded to group (double blind).',nk:'[Blinding was not attempted. State why.]'};
+  if(BLIND_TEXT[p.blind])out.push(BLIND_TEXT[p.blind]);
   if(en.length)out.push(en.length+' participants were enrolled, and each was assigned in the order of enrolment.');
   if(v&&v.ok)out.push('After data collection, we checked the list against the revealed seed.');
   if(lk)out.push('The analysis adjusted for '+(lk.covariates||'[covariates]')+'.');
@@ -18256,8 +18262,8 @@ function alConsort(o){const a=alGet(o),p=a.plan||{},lk=a.lock;
   return[['17a','Sequence generation: method stated',!!p.method&&p.method!=='none',p.method?'Method: '+p.method:'Save the plan'],
     ['17b','Sequence generation: who generated it',!!p.maker,p.maker?'Maker recorded':'Name the list maker in the plan'],
     ['18','Allocation concealment',!!p.conc&&p.conc!=='open',p.conc?'Concealment: '+p.conc:'Choose concealment in the plan'],
-    ['20a','Blinding of participants and personnel',false,'Not recorded in the app. Write it in the methods section.'],
-    ['20b','Blinding of outcome assessors',false,'Not recorded in the app. Write it in the methods section.'],
+    ['20a','Blinding of participants and personnel',p.blind==='part'||p.blind==='both',p.blind?'Blinding: '+p.blind:'Choose blinding in the plan'],
+    ['20b','Blinding of outcome assessors',p.blind==='ass'||p.blind==='both',p.blind?'Blinding: '+p.blind:'Choose blinding in the plan'],
     ['21a','Stratifying factors adjusted for in the analysis',!!lk,lk?'Covariates recorded at the lock':'Lock the analysis plan (stage 8)']]}
 function alWriteHTML(a,L){if(!a.plan||!a.plan.method)return'';const o=studyGet(),items=alConsort(o);
   return'<h4 style="margin:12px 0 4px">'+L('8. Methods text and CONSORT (stage 9)','8. Methods text और CONSORT (चरण 9)')+'</h4>'+

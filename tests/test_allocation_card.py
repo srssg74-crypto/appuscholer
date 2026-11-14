@@ -28,7 +28,7 @@ with sync_playwright() as p:
     ok(J("document.getElementById('alRecBox').textContent.indexOf('Stratified')>=0 || document.getElementById('alRecBox').textContent.indexOf('stratified')>=0"),'one factor suggests stratified blocks after the reason')
     J("document.getElementById('alMethod').value='perm';document.getElementById('alConc').value='central';document.getElementById('alMaker').value='';alSave()")
     ok(not J("!!(studyGet().alloc&&studyGet().alloc.plan)"),'randomised plan without list maker is not saved')
-    J("document.getElementById('alMaker').value='Dr. Meena Sharma, supervisor';document.getElementById('alHolder').value='Project coordinator';document.getElementById('alArms').value='A,B';alSave()")
+    J("document.getElementById('alMaker').value='Dr. Meena Sharma, supervisor';document.getElementById('alHolder').value='Project coordinator';document.getElementById('alArms').value='A,B';document.getElementById('alBlind').value='both';alSave()")
     a=J("studyGet().alloc")
     ok(a and a['plan']['method']=='perm' and len(a['log'])==1 and a['log'][0]['kind']=='created','first save writes one created entry')
     ok(J("subState('C11').s")=='dn','C11 done with reason and plan')

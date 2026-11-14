@@ -18,7 +18,7 @@ with sync_playwright() as p:
     J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in first-year students'};o.design={type:'experimental',pop:'First-year students in two colleges',sampling:'Convenience'};designSet('ec',{status:'approved',apprNo:'IEC/2026/12',apprDate:'2026-11-01'});studySet(o)")
     J("alOpen()"); pg.wait_for_timeout(200)
     J("document.getElementById('alReason').value=%s;document.getElementById('alFactors').value='baseline anxiety';document.getElementById('alN').value='12';alRefresh()"%json.dumps(REASON))
-    J("document.getElementById('alMethod').value='perm';document.getElementById('alConc').value='central';document.getElementById('alMaker').value='Dr. Meena Sharma';document.getElementById('alHolder').value='Coordinator';document.getElementById('alArms').value='A,B';alSave()")
+    J("document.getElementById('alMethod').value='perm';document.getElementById('alConc').value='central';document.getElementById('alMaker').value='Dr. Meena Sharma';document.getElementById('alHolder').value='Coordinator';document.getElementById('alArms').value='A,B';document.getElementById('alBlind').value='both';alSave()")
     J("alMakeCommit()"); pg.wait_for_timeout(300)
     seed_hex=J("AL_PENDING.seedHex")
     J("document.getElementById('alSeedSaved').checked=true;alRegister()"); pg.wait_for_timeout(300)
