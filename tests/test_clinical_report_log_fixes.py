@@ -74,6 +74,33 @@ with sync_playwright() as p:
     devs=J("studyGet().alloc.deviations")
     ok(len(devs)==2 and devs[1].get('armWarn') is not True,'a deviation with no arm name is not flagged')
 
+    # --- second review, finding 14: the arm check itself ---
+    # crArmWarn reads the registered plan's arms; swap them in place to test each label set
+    def warn(arms,text):
+        return J("(()=>{const o=studyGet();o.alloc.plan.arms=%s;studySet(o);return crArmWarn(%s)})()"%(json.dumps(arms),json.dumps(text)))
+    ok(warn('A,B','Mildly high fasting sugar, a known vegetarian; clinician agreed it is not significant.')==False,'default arms A,B: an ordinary English sentence containing the word "a" is NOT flagged (this used to flag every sentence)')
+    ok(warn('A,B','Participant is in arm A and stressed about exams.')==True,'default arms: "arm A" is flagged')
+    ok(warn('A,B','He is in the B group, says the RA.')==True,'default arms: "B group" is flagged')
+    ok(warn('A,B','Took a BP reading at 9 am.')==False,'default arms: "a BP" is not flagged')
+    ok(warn('उपचार,नियंत्रण','प्रतिभागी उपचार समूह में है।')==True,'Hindi arm names are flagged when named (\\b without the u flag never matched Devanagari)')
+    ok(warn('उपचार,नियंत्रण','प्रतिभागी का उपचारक बदला।')==False,'a longer Hindi word that merely starts with the arm label is not flagged')
+    ok(warn('Drug+,Placebo','Switched to Drug+ after week 2.')==True,'a label ending in punctuation (Drug+) is flagged')
+    ok(warn('Intervention,Control','We controlled for age and sex.')==False,'"controlled" does not match the arm "Control"')
+    J("(()=>{const o=studyGet();o.alloc.plan.arms='Intervention,Control';studySet(o)})()")
+
+    # logging an entry while "none" is ticked clears it, and that clearing is logged
+    J("(()=>{const o=studyGet();o.cr={entries:[],none:true,log:[]};studySet(o);crRender()})()")
+    J("document.getElementById('crCode').value='P-040';document.getElementById('crName').value='TSH';document.getElementById('crReason').value='Slightly raised TSH, clinician reviewed, not relevant to the study question.';document.getElementById('crBy').value='Dr. Rao';crSave()")
+    cr=J("studyGet().cr")
+    ok(cr['none']==False and len(cr['entries'])==1,'an entry saved while none was ticked clears none')
+    ok(any(e['kind']=='none unticked' and 'automatically' in e['text'] for e in cr['log']),'the automatic clearing is logged, so the toggle history has no gap')
+
+    # an old record with none:true AND entries (made before the guard) is not accepted as complete
+    J("(()=>{const o=studyGet();o.cr.none=true;studySet(o)})()")
+    ok(J("crOk()")==False,'crOk refuses a record that has "nothing out of range" ticked alongside entries')
+    J("(()=>{const o=studyGet();o.cr.none=false;studySet(o)})()")
+    ok(J("crOk()")==True,'and accepts it once the tick is cleared')
+
     errs=[e for e in errors if e[0]=='pageerror']
     ok(not errs,'no page errors '+json.dumps(errs[:3]))
     b.close()

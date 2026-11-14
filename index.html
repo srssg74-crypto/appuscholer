@@ -18135,12 +18135,18 @@ function alDevSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElemen
 const CR_DECISIONS=[['ns','Clinically not significant (I judged this)'],['rev','Needs a clinician to review'],['sig','Clinically significant (refer the participant)']];
 const CR_TESTS=[['blood','Blood test'],['pft','Lung function (PFT, spirometry)'],['urine','Urine test'],['liver','Liver or kidney test'],['thyroid','Thyroid test'],['other','Other report']];
 function crGet(o){return((o||studyGet()).cr)||{entries:[],none:false,log:[]}}
-function crOk(o){const c=crGet(o);if(c.none)return true;const e=c.entries||[];
+/* Second review, finding 14: "nothing out of range" only counts when there really are no entries. A record that has both (possible before the toggle guard existed) is not complete until the tick is cleared. */
+function crOk(o){const c=crGet(o);const e=c.entries||[];if(c.none)return e.length===0;
   return e.length>0&&e.every(x=>x.decision&&x.reason&&x.reason.length>=30&&x.by&&(x.decision!=='rev'&&x.decision!=='sig'||x.clin))}
 /* review finding 14: a plan's arm labels (e.g. "Intervention,Control") showing up in a free-text reason is a real way unblinding/PII-adjacent data enters an append-only record meant to hold neither. This is a soft, best-effort check on whole words only - it cannot catch every way a value or name could appear in prose, and is not a reason to block saving (free text can't be perfectly policed), only to flag the entry for later review. */
 function crArmWarn(text){const o=studyGet(),a=(o.alloc&&o.alloc.plan&&o.alloc.plan.arms)||'';
-  const arms=a.split(',').map(x=>x.trim()).filter(Boolean),t=String(text||'');
-  return arms.some(arm=>arm&&new RegExp('\\b'+arm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(t))}
+  const arms=a.split(',').map(x=>x.trim().normalize('NFC')).filter(Boolean),t=String(text||'').normalize('NFC');
+  const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  /* Second review, finding 14. Two faults in the first version: `\b` without the `u` flag treats every Devanagari letter as a non-word character, so arms like "उपचार,नियंत्रण" could never match; and with the default arms "A,B", "\bA\b" matched the English word "a" in every sentence, so the badge was noise. Now: letter/digit boundaries by Unicode property (so Hindi labels match, and a label ending in punctuation such as "Drug+" matches too), and a one-character label only counts when the text names it as an arm or group ("arm A", "group B", "A arm", "समूह A"). */
+  const B='[\\p{L}\\p{N}_]',pre='(?<!'+B+')',post='(?!'+B+')',grp='(?:arm|arms|group|groups|condition|allocation|branch|समूह|ग्रुप|भुजा|आर्म)';
+  return arms.some(arm=>{if(!arm)return false;const e=esc(arm);
+    const re=arm.length>1?new RegExp(pre+e+post,'iu'):new RegExp('(?:'+grp+'\\s*[:\\-]?\\s*'+e+post+')|(?:'+pre+e+'\\s+'+grp+post+')','iu');
+    return re.test(t)})}
 function crHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,c=crGet(),list=(c.entries||[]).slice().reverse(),
   dec=(k)=>(CR_DECISIONS.find(x=>x[0]===k)||['',k])[1],tst=(k)=>(CR_TESTS.find(x=>x[0]===k)||['',k])[1];
   return'<div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">'+L('Out-of-range clinical reports','सीमा से बाहर clinical रिपोर्ट')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'crDlg\').close()">'+L('Close','बंद करें')+'</button></div>'+
@@ -18174,7 +18180,9 @@ function crSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   if((dec==='rev'||dec==='sig')&&!clin){if(msg)msg.textContent=L('Name the clinician who was asked.','जिस clinician से पूछा, उसका नाम लिखें।');return}
   const at=new Date().toISOString(),armWarn=crArmWarn(reason);
   /* review finding 14: the reason field is free text with no check against an arm label slipping in - a real way unblinding data could enter this record. A soft flag on the entry (not a block: free text can't be perfectly policed) lets anyone reviewing the log see it was never checked for this. */
-  o.cr=Object.assign({},c,{none:false,entries:(c.entries||[]).concat([{at,code,test:alVal('crTest'),name,dir:alVal('crDir'),decision:dec,reason,by,clin,armWarn}])});
+  /* Second review, finding 14: if "nothing out of range" was ticked, logging an entry clears it, and that clearing is itself logged, so the toggle history has no gaps. */
+  const log=(c.log||[]).concat(c.none?[{at,kind:'none unticked',text:'cleared automatically: an entry was logged for '+code}]:[]);
+  o.cr=Object.assign({},c,{none:false,log,entries:(c.entries||[]).concat([{at,code,test:alVal('crTest'),name,dir:alVal('crDir'),decision:dec,reason,by,clin,armWarn}])});
   studySet(o);crRender();
   if(armWarn){const w=document.getElementById('crMsg');if(w)w.textContent=L('Saved, but the reason may name an allocation arm - check it does not unblind anyone reading this log.','सहेजा गया, पर कारण में शायद allocation arm का नाम है - देखें कि यह log पढ़ने वाले किसी को unblind न करे।')}}
 function crRender(){const d=document.getElementById('crDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=crHTML();d.scrollTop=top;crWarn()}}
