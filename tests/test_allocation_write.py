@@ -1,4 +1,4 @@
-"""Stage 9: methods text is drafted from recorded values only, with brackets where the record is silent; CONSORT items reflect the record; 20a and 20b are never ticked."""
+"""Stage 9: methods text is drafted from recorded values only, with brackets where the record is silent; CONSORT items reflect the record, including 20a/20b from the plan's blinding field."""
 import sys, os, json
 sys.path.insert(0, os.path.dirname(__file__))
 from harness import new_page
@@ -18,7 +18,7 @@ with sync_playwright() as p:
     J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in first-year students'};o.design={type:'experimental',pop:'First-year students in two colleges',sampling:'Convenience'};designSet('ec',{status:'approved',apprNo:'IEC/2026/12',apprDate:'2026-11-01'});studySet(o)")
     J("alOpen()"); pg.wait_for_timeout(200)
     J("document.getElementById('alReason').value=%s;document.getElementById('alFactors').value='baseline anxiety';document.getElementById('alN').value='60';alRefresh()"%json.dumps(REASON))
-    J("document.getElementById('alMethod').value='perm';document.getElementById('alConc').value='central';document.getElementById('alMaker').value='Dr. Meena Sharma';document.getElementById('alHolder').value='Coordinator';document.getElementById('alArms').value='Intervention,Control';document.getElementById('alParams').value='blocks of 4, 6 and 8';alSave()")
+    J("document.getElementById('alMethod').value='perm';document.getElementById('alConc').value='central';document.getElementById('alMaker').value='Dr. Meena Sharma';document.getElementById('alHolder').value='Coordinator';document.getElementById('alArms').value='Intervention,Control';document.getElementById('alParams').value='blocks of 4, 6 and 8';document.getElementById('alBlind').value='both';alSave()")
     txt=J("alWriteText(studyGet())")
     ok('permuted blocks' in txt and 'Intervention and Control' in txt,'methods text names the method and the arms')
     ok('[Allocation was not concealed' not in txt and 'central, computer-generated list' in txt,'concealment sentence matches the plan')
@@ -27,7 +27,7 @@ with sync_playwright() as p:
     items=J("alConsort(studyGet())")
     st={i[0]:i[2] for i in items}
     ok(st['17a'] and st['17b'] and st['18'],'17a, 17b and 18 are ticked from the plan')
-    ok(st['20a'] is False and st['20b'] is False,'20a and 20b are never ticked by the app')
+    ok(st['20a'] and st['20b'],'20a and 20b tick when the plan records double blinding')
     ok(st['21a'] is False,'21a waits for the analysis lock')
     J("alMakeCommit()"); pg.wait_for_timeout(300)
     J("document.getElementById('alSeedSaved').checked=true;alRegister()"); pg.wait_for_timeout(300)
