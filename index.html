@@ -18012,11 +18012,19 @@ let AL_PENDING=null;
 async function alHash(bytes){const d=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')}
 /* Canonical JSON of a plan: sorted keys, no spaces. Matches the Python engine's plan_hash. */
 function alCanon(o){return JSON.stringify(Object.keys(o).sort().reduce((m,k)=>{m[k]=o[k];return m},{}))}
+/* Ethics hard stop: a commitment needs an approval number, or a written note that review is not needed. Reads the Design & Ethics record (designGet('ec')). */
+function alEthics(){const s=designGet('ec')||{};
+  if(s.status==='approved'&&String(s.apprNo||'').trim())return{ok:true};
+  if(s.status==='noreview')return{ok:true};
+  if(s.status==='approved')return{ok:false,en:'Approved, but the approval number is empty. Add it in Design & Ethics first.',hi:'Approved है, पर approval number खाली है। पहले Design & Ethics में उसे जोड़ें।'};
+  if(s.status==='nohuman')return{ok:false,en:'The ethics record says no human participants are involved. A randomised allocation of people needs a review first.',hi:'Ethics record में लिखा है कि कोई human participant नहीं। लोगों के randomised आवंटन के लिए पहले review चाहिए।'};
+  return{ok:false,en:'Record the ethics approval, or the committee\'s written note that review is not needed, in Design & Ethics before you register.',hi:'पंजीकरण से पहले Design & Ethics में ethics approval, या committee की लिखित सूचना कि review नहीं चाहिए, दर्ज करें।'}}
 function alEnrolOK(o){return !!(alGet(o).commit)}
 function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
   if(cm)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Registered ','दर्ज ')+escHTML(String(cm.at||'').slice(0,16).replace('T',' '))+'<br>'+L('Commitment: ','Commitment: ')+'<code style="word-break:break-all">'+escHTML(cm.hash)+'</code></p>'+
     '<p class="desc">'+L('The plan is locked. Enrolment can start. A change now goes in as a deviation entry.','योजना बंद है। अब enrolment शुरू हो सकता है। बदलाव deviation entry के रूप में जाएगा।')+'</p>';
   if(!alOk(o)||!a.plan||a.plan.method==='none')return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Save a complete randomised plan first. Non-randomised designs have nothing to register here.','पहले एक पूरी randomised योजना सहेजें। जो design randomised नहीं है, उसे यहाँ दर्ज करने को कुछ नहीं।')+'</p>';
+  if(!AL_PENDING&&!alEthics().ok)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc" style="color:#b45309">'+L(alEthics().en,alEthics().hi)+'</p>';
   if(!AL_PENDING)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Create the commitment before any participant is enrolled. You will get a seed file to keep away from this site.','किसी भी participant के enrol होने से पहले commitment बनाएँ। आपको एक seed file मिलेगी, जिसे इस site से दूर रखना है।')+'</p><p class="desc" style="color:#b45309">'+L('If you close this page before saving the seed, you will need to create a new commitment. Nothing in your study is lost, because nothing is registered yet.','अगर seed सहेजने से पहले यह page बंद करेंगे, तो नया commitment बनाना होगा। आपके study का कुछ नहीं जाता, क्योंकि अभी कुछ दर्ज नहीं हुआ है।')+'</p><div class="row"><button type="button" class="btn btn-purple" onclick="alMakeCommit()">'+L('Create commitment','Commitment बनाएँ')+'</button></div>';
   return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Commitment (not yet registered): ','Commitment (अभी दर्ज नहीं): ')+'<code style="word-break:break-all">'+escHTML(AL_PENDING.hash)+'</code></p>'+
     '<p class="desc" style="color:#b45309">'+L('Keep this page open until you have saved the seed. If you close it, this commitment is lost and you need a new one. Nothing is registered until you tick the box below.','Seed सहेजने तक यह page खुला रखें। बंद करने पर यह commitment खो जाएगा और नया बनाना होगा। box पर टिक करने तक कुछ भी दर्ज नहीं होता।')+'</p>'+
@@ -18026,6 +18034,7 @@ function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
 async function alMakeCommit(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
   const o=studyGet(),a=alGet(o);
   if(a.commit||!alOk(o)||a.plan.method==='none'){if(msg)msg.textContent=L('Nothing to register.','दर्ज करने को कुछ नहीं।');return}
+  const eth=alEthics();if(!eth.ok){if(msg)msg.textContent=L(eth.en,eth.hi);return}
   const seed=new Uint8Array(32);crypto.getRandomValues(seed);
   const planHex=await alHash(new TextEncoder().encode(alCanon(a.plan)));
   const planBytes=new Uint8Array(32);for(let i=0;i<32;i++)planBytes[i]=parseInt(planHex.substr(i*2,2),16);
