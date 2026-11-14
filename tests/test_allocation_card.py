@@ -1,5 +1,5 @@
 """C11 allocation card and plan: suggestion after the reason, validation, append-only log, sub-step state."""
-import sys, os, json
+import sys, os, json, tempfile
 sys.path.insert(0, os.path.dirname(__file__))
 from harness import new_page
 from playwright.sync_api import sync_playwright
@@ -7,7 +7,7 @@ fails=[]
 def ok(c,m):
     print(('PASS ' if c else 'FAIL ')+m)
     if not c: fails.append(m)
-S='/tmp/claude-0/-home-claude/d540b351-a2df-5fa6-9a88-226a4c6e6a4f/scratchpad/'
+S=tempfile.mkdtemp()+'/'
 REASON='Two intact sections of one college, so chance keeps the groups close on baseline anxiety.'
 with sync_playwright() as p:
     errors=[]
@@ -19,7 +19,10 @@ with sync_playwright() as p:
     J("const o=studyGet();o.idea={topic:'Sleep and exam anxiety in first-year students'};o.design={type:'experimental',pop:'First-year students in two colleges',sampling:'Convenience'};studySet(o)")
     J("subOpen('design','C11')"); pg.wait_for_timeout(200)
     ok(J("subState('C11').s")!='dn','C11 not done at start')
-    ok(J("!!document.getElementById('alDlg')") or True,'dialog reachable')
+    # review finding 13: this used to be `... or True`, an assertion that could never fail no
+    # matter what the page returned. The dialog is created lazily by alOpen() (called next), so
+    # the honest check at this point is that it does not exist yet.
+    ok(not J("!!document.getElementById('alDlg')"),'allocation dialog does not exist before alOpen() creates it')
     J("alOpen()"); pg.wait_for_timeout(200)
     ok(J("document.getElementById('alRecBox').textContent.indexOf('Write your reason first')>=0"),'no suggestion before the reason')
     J("document.getElementById('alReason').value='short';alRefresh()")
@@ -32,6 +35,7 @@ with sync_playwright() as p:
     a=J("studyGet().alloc")
     ok(a and a['plan']['method']=='perm' and len(a['log'])==1 and a['log'][0]['kind']=='created','first save writes one created entry')
     ok(J("subState('C11').s")=='dn','C11 done with reason and plan')
+    ok('Saved' in J("document.getElementById('alMsg').textContent"),'the "Saved to the decision log" message survives the re-render')
     J("document.getElementById('alMethod').value='strat';alSave()")
     a=J("studyGet().alloc")
     ok(len(a['log'])==2 and a['log'][1]['kind']=='changed' and 'method perm → strat' in a['log'][1]['text'],'a changed method appends a log entry, earlier entries stay')

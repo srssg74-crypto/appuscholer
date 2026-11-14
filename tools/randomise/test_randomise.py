@@ -91,4 +91,67 @@ st = R.HashStream(seed, "uniform-test")
 cnt = collections.Counter(st.randbelow(3) for _ in range(30000))
 assert all(abs(v - 10000) < 500 for v in cnt.values()), cnt
 
+# 12 plan_hash on non-ASCII text (fix for review finding 7): json.dumps defaults to
+# ensure_ascii=True, escaping Hindi text to \uXXXX, while JS's JSON.stringify (used by both
+# alloc.js's canonicalJSON and the app's lighter alCanon) keeps it as literal UTF-8. Before the
+# fix this engine could never reproduce a commitment made from a plan with Hindi maker/holder
+# names or notes - exactly the kind of plan this bilingual app expects. Cross-checked by hand
+# against alloc.js's planHash() and index.html's alCanon() for the identical plan dict; this
+# pins that known-good value so a regression is caught without needing node here.
+plan_unicode = {"method":"perm","maker":"डॉ. मीना शर्मा","holder":"समन्वयक","arms":"A,B",
+                "params":"blocks of 4,6,8","conc":"central","blind":"both"}
+assert R.plan_hash(plan_unicode) == "892b237f034c3d508750d98bf1e0cdf366a8573011daf5944fdc9e26986089db", R.plan_hash(plan_unicode)
+# an ASCII-only plan is unaffected either way (sanity check the fix didn't break the common case)
+plan_ascii = {"method":"simple","maker":"Dr. Rao","holder":"Coordinator","arms":"A,B","params":"","conc":"central","blind":"both"}
+assert R.plan_hash(plan_ascii) == R.plan_hash(dict(plan_ascii)), "plan_hash must be deterministic"
+
+# 13 engine edge cases (fix for review finding 12), cross-checked by hand against alloc.js for
+# the identical seed/inputs (see tools/randomise/README or the fix commit for the JS-side values
+# pinned here): a stratum label equal to a JS Object.prototype property name must not misbehave
+# (Python dicts have no such inherited keys, so this is really pinning the JS fix, run here too
+# so the Python engine's own output for the same scenario is tracked for drift); block size 0
+# must raise instead of hanging; numeric and string versions of the same label must be handled
+# in a way that matches the JS Map-based fix exactly.
+seed12 = bytes.fromhex("03" * 32)
+assert R.stratified_blocks(seed12, ["constructor","__proto__","toString","constructor","__proto__"], ["A","B"], (4,6,8)) == ["A","B","B","A","A"]
+try:
+    R.permuted_blocks(seed12, 4, ["A","B"], (0,)); raise SystemExit("block size 0 should raise")
+except ValueError:
+    pass
+# Second review: 1 and "1" used to be two strata that shared one stream key, i.e. two separate
+# generators yielding identical sequences (the old pinned value was six A's). They are now one
+# stratum in both engines (stratum_label / stratumLabel), so this is one balanced block of 6.
+assert R.stratified_blocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], (4,6,8)) == ["A","A","A","B","B","B"]
+# third review: labels that str() and String() render differently (floats, None, lists) are refused
+assert R.stratified_blocks(seed12, [1.0, 1, "1"], ["A","B"]) == R.stratified_blocks(seed12, ["1","1","1"], ["A","B"])
+for bad in [[1.5, 1.5], [None, None], [[1,2],[1,2]], [1e23, 1e23], [2**53, 2**53], [10**20, 10**20]]:
+    try:
+        R.stratified_blocks(seed12, bad, ["A","B"], (4,6,8)); raise SystemExit(f"strata {bad!r} should raise")
+    except ValueError:
+        pass
+# True and 1 are different strata in both engines ("true" vs "1"), and give the same output as JS.
+assert R.stratified_blocks(seed12, [True,1,True,1], ["A","B"], (4,6,8)) == R.stratified_blocks(seed12, ["true","1","true","1"], ["A","B"], (4,6,8))
+
+# 14 second review, findings 5 and 12: arm-count defaults and strict block-size validation.
+assert R.default_blocks(2) == [4, 6, 8] and R.default_blocks(3) == [6, 9, 12]
+# default blocks for two arms are still (4,6,8), so existing two-arm lists and vectors are unchanged
+assert R.permuted_blocks(seed, 40, ["A","B"]) == R.permuted_blocks(seed, 40, ["A","B"], (4,6,8))
+# a three-arm plan with default blocks must simply work (this used to raise "4 is not a multiple of 3")
+three = R.permuted_blocks(seed12, 30, ["A","B","C"])
+assert len(three) == 30 and sorted(set(three)) == ["A","B","C"] and three.count("A") == three.count("B") == three.count("C")
+# third review: 4.0 is 4 in both engines (JSON cannot tell them apart in JS); 6.5, NaN, True, an
+# empty list and anything over 10000 are refused in both.
+assert R.permuted_blocks(seed12, 8, ["A","B"], (4.0,)) == R.permuted_blocks(seed12, 8, ["A","B"], (4,))
+for bad in [(float("nan"),), (6.5,), (True,), (), (10002,), (float("inf"),)]:
+    try:
+        R.permuted_blocks(seed12, 4, ["A","B"], bad); raise SystemExit(f"block sizes {bad!r} should raise")
+    except ValueError:
+        pass
+# an arm named __proto__ must not break minimisation (pins the JS Map fix; Python never had the bug)
+mp = R.minimisation(seed12, [{"sex":"m"},{"sex":"f"},{"sex":"m"},{"sex":"f"}], ["__proto__","B"], ["sex"])
+assert len(mp) == 4 and set(mp) <= {"__proto__","B"}
+# matched pairs: a unit called __proto__ keeps its allocation
+pp = R.matched_pairs(seed12, [["__proto__","u2"],["c3","c4"]])
+assert set(pp) == {"__proto__","u2","c3","c4"}
+
 print("ALL TESTS PASSED")

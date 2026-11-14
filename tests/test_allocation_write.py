@@ -30,7 +30,7 @@ with sync_playwright() as p:
     ok(st['20a'] and st['20b'],'20a and 20b tick when the plan records double blinding')
     ok(st['21a'] is False,'21a waits for the analysis lock')
     J("alMakeCommit()"); pg.wait_for_timeout(300)
-    J("document.getElementById('alSeedSaved').checked=true;alRegister()"); pg.wait_for_timeout(300)
+    J("document.getElementById('alSeedSaved').checked=true;document.getElementById('alPubNote').value='Emailed the commitment hash to Dr. Gaur on registration day.';alRegister()"); pg.wait_for_timeout(300)
     txt2=J("alWriteText(studyGet())")
     ok('SHA-256 commitment' in txt2 and 'before enrolment' in txt2,'commitment sentence appears once registered')
     ok('did not randomise' in J("alWriteText({alloc:{plan:{method:'none'}}})"),'non-randomised study gets the no-randomisation text')

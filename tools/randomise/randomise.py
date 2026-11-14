@@ -104,7 +104,12 @@ def commitment_v2(seed: bytes, plan_sha256: str) -> str:
 
 
 def _canonical(obj) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    # ensure_ascii=False: a plan field in Hindi (maker/holder names, params notes) must hash the
+    # same way here as in the browser and alloc.js, which both keep non-ASCII text as literal
+    # UTF-8 bytes. json.dumps's default ensure_ascii=True instead escapes it to \uXXXX, which
+    # hashes to a different value for the exact same plan - a commitment made from a bilingual
+    # plan could never be reproduced from this engine.
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -136,14 +141,51 @@ def simple(seed: bytes, n: int, arms, probs=None):
     return out
 
 
+def default_blocks(k: int):
+    """Default block sizes for k arms: 2k, 3k, 4k. [4, 6, 8] for two arms, [6, 9, 12] for three.
+
+    A fixed (4, 6, 8) default only fits two arms (second review, finding 5)."""
+    return [2 * k, 3 * k, 4 * k]
+
+
+def stratum_label(s):
+    """One string per stratum, the same in both engines.
+
+    Third review: str(x) and JS String(x) differ for floats, None, lists and large numbers
+    (1.0 -> "1.0" vs "1"; None -> "None" vs "null"), and a different label keys a different
+    HMAC stream, so the engines would allocate differently. Only strings, ints and bools are
+    accepted; anything else is a protocol error, raised here and in alloc.js alike."""
+    if isinstance(s, bool):
+        return "true" if s else "false"
+    if isinstance(s, int) and abs(s) < 2 ** 53:
+        return str(s)  # JS refuses integers past 2**53 (Number.isSafeInteger), so this does too
+    if isinstance(s, float) and s.is_integer() and abs(s) < 2 ** 53:
+        return str(int(s))  # JSON "1.0" reaches JS as the number 1, so it is "1" here too
+    if isinstance(s, str):
+        return s
+    raise ValueError(f"stratum label must be a string or whole number, got {type(s).__name__}: {s!r}")
+
+
 def _block_generator(stream: HashStream, arms, block_sizes):
     """Endless stream of arm labels, in randomly ordered blocks of random size."""
     arms = list(arms)
     k = len(arms)
-    sizes = list(block_sizes)
+    sizes = list(block_sizes) if block_sizes is not None else default_blocks(k)
+    if not sizes:
+        raise ValueError("block sizes must be a non-empty list")
+    sizes = [int(b) if isinstance(b, float) and b.is_integer() else b for b in sizes]
     for b in sizes:
-        if b % k:
-            raise ValueError(f"block size {b} is not a multiple of {k} arms")
+        # review finding 12: 0 % k == 0, so a block size of 0 used to pass this check. With only
+        # size-0 blocks, the while loop below would then spin forever choosing size 0 and never
+        # reaching `yield` - a silent hang with no error, rather than failing fast at validation.
+        # Second review: NaN and floats must fail here too, as they now do in alloc.js.
+        # A float that is a whole number (6.0, as JSON may carry it) is accepted as that whole
+        # number, the same as JS, where 6.0 and 6 are one value. A cap of 10000 stops a typo from
+        # shuffling a block the size of a city.
+        if isinstance(b, float) and b.is_integer():
+            b = int(b)
+        if isinstance(b, bool) or not isinstance(b, int) or b <= 0 or b % k or b > 10000:
+            raise ValueError(f"block size {b} is not a positive whole multiple of {k} arms (max 10000)")
     while True:
         size = sizes[stream.randbelow(len(sizes))]
         block = [arms[i % k] for i in range(size)]
@@ -151,7 +193,7 @@ def _block_generator(stream: HashStream, arms, block_sizes):
             yield arm
 
 
-def permuted_blocks(seed: bytes, n: int, arms, block_sizes=(4, 6, 8)):
+def permuted_blocks(seed: bytes, n: int, arms, block_sizes=None):
     """Permuted-block randomisation with varying block sizes.
 
     Each block has equal numbers per arm. The block size changes at random,
@@ -161,7 +203,7 @@ def permuted_blocks(seed: bytes, n: int, arms, block_sizes=(4, 6, 8)):
     return [next(gen) for _ in range(n)]
 
 
-def stratified_blocks(seed: bytes, strata, arms, block_sizes=(4, 6, 8)):
+def stratified_blocks(seed: bytes, strata, arms, block_sizes=None):
     """Stratified permuted blocks. Each stratum has its own stream and its own blocks.
 
     `strata` is the stratum label for each participant, in enrolment order.
@@ -169,7 +211,8 @@ def stratified_blocks(seed: bytes, strata, arms, block_sizes=(4, 6, 8)):
     """
     gens = {}
     out = []
-    for s in strata:
+    for raw in strata:
+        s = stratum_label(raw)
         if s not in gens:
             gens[s] = _block_generator(
                 HashStream(seed, f"stratum:{s}"), arms, block_sizes
@@ -437,11 +480,12 @@ def run_config(config: dict, seed: bytes):
         params = {"n": config["n"], "arms": config["arms"], "probs": config.get("probs")}
         res = simple(seed, config["n"], config["arms"], config.get("probs"))
     elif m == "permuted_blocks":
-        bs = config.get("block_sizes", [4, 6, 8])
+        # third review: the audit params record the sizes actually used, never null
+        bs = config.get("block_sizes") or default_blocks(len(config["arms"]))
         params = {"n": config["n"], "arms": config["arms"], "block_sizes": bs}
         res = permuted_blocks(seed, config["n"], config["arms"], bs)
     elif m == "stratified":
-        bs = config.get("block_sizes", [4, 6, 8])
+        bs = config.get("block_sizes") or default_blocks(len(config["arms"]))
         params = {"strata": config["strata"], "arms": config["arms"], "block_sizes": bs}
         res = stratified_blocks(seed, config["strata"], config["arms"], bs)
     elif m == "minimisation":
