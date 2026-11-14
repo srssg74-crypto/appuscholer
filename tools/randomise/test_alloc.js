@@ -10,6 +10,10 @@ function check(name, got, want) {
 }
 check("commitment", A.commitment(seed), v.commitment);
 check("plan hash", A.planHash(v.plan_example), v.plan_sha256);
+// review finding 7: a plan with non-ASCII (Hindi) text must hash the same way here as in
+// randomise.py, now that randomise.py's _canonical() uses ensure_ascii=False to match
+// JSON.stringify's literal-UTF-8 behaviour. Pinned against the Python engine's own output.
+check("plan hash (unicode, cross-engine)", A.planHash({method:"perm",maker:"डॉ. मीना शर्मा",holder:"समन्वयक",arms:"A,B",params:"blocks of 4,6,8",conc:"central",blind:"both"}), "892b237f034c3d508750d98bf1e0cdf366a8573011daf5944fdc9e26986089db");
 check("commitment v2", A.commitmentV2(seed, v.plan_sha256), v.commitment_v2);
 check("simple 2 arms", A.simple(seed, 30, ["A","B"]), v.simple_A_B_30);
 check("simple 3 arms probs", A.simple(seed, 30, ["A","B","C"], [0.5,0.3,0.2]), v.simple_3arms_probs_30);

@@ -104,7 +104,12 @@ def commitment_v2(seed: bytes, plan_sha256: str) -> str:
 
 
 def _canonical(obj) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    # ensure_ascii=False: a plan field in Hindi (maker/holder names, params notes) must hash the
+    # same way here as in the browser and alloc.js, which both keep non-ASCII text as literal
+    # UTF-8 bytes. json.dumps's default ensure_ascii=True instead escapes it to \uXXXX, which
+    # hashes to a different value for the exact same plan - a commitment made from a bilingual
+    # plan could never be reproduced from this engine.
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
 # ---------------------------------------------------------------------------

@@ -91,4 +91,18 @@ st = R.HashStream(seed, "uniform-test")
 cnt = collections.Counter(st.randbelow(3) for _ in range(30000))
 assert all(abs(v - 10000) < 500 for v in cnt.values()), cnt
 
+# 12 plan_hash on non-ASCII text (fix for review finding 7): json.dumps defaults to
+# ensure_ascii=True, escaping Hindi text to \uXXXX, while JS's JSON.stringify (used by both
+# alloc.js's canonicalJSON and the app's lighter alCanon) keeps it as literal UTF-8. Before the
+# fix this engine could never reproduce a commitment made from a plan with Hindi maker/holder
+# names or notes - exactly the kind of plan this bilingual app expects. Cross-checked by hand
+# against alloc.js's planHash() and index.html's alCanon() for the identical plan dict; this
+# pins that known-good value so a regression is caught without needing node here.
+plan_unicode = {"method":"perm","maker":"डॉ. मीना शर्मा","holder":"समन्वयक","arms":"A,B",
+                "params":"blocks of 4,6,8","conc":"central","blind":"both"}
+assert R.plan_hash(plan_unicode) == "892b237f034c3d508750d98bf1e0cdf366a8573011daf5944fdc9e26986089db", R.plan_hash(plan_unicode)
+# an ASCII-only plan is unaffected either way (sanity check the fix didn't break the common case)
+plan_ascii = {"method":"simple","maker":"Dr. Rao","holder":"Coordinator","arms":"A,B","params":"","conc":"central","blind":"both"}
+assert R.plan_hash(plan_ascii) == R.plan_hash(dict(plan_ascii)), "plan_hash must be deterministic"
+
 print("ALL TESTS PASSED")
