@@ -18214,6 +18214,9 @@ async function enLoadSeed(input){const f=input.files&&input.files[0];if(!f)retur
   if(!m){enMsg(L('No 64-character seed found in that file.','उस file में 64 अक्षरों वाला seed नहीं मिला।'));return}
   if(!(await alCheckSeed(m[1].toLowerCase(),a.commit))){enMsg(L('This seed does not match the registered commitment. The list is not built.','यह seed registered commitment से मेल नहीं खाता। List नहीं बनी।'));AL_SEED=null;AL_BUILT_N=0;alRender();return}
   const n=parseInt(alVal('enN'),10)||(a.card&&a.card.n)||0;const arms=String(a.plan.arms||'A,B').split(',').map(x=>x.trim()).filter(Boolean);
+  /* review finding 11: reloading the seed with a smaller n than the number already enrolled left positions on record (e.g. position 15) outside the newly-built, shorter list, so Reveal silently returned no arm for them. Refuse instead of building a list that cannot cover everyone already enrolled. */
+  const enrolledSoFar=(a.enrol||[]).length;
+  if(n<enrolledSoFar){enMsg(L('There are already '+enrolledSoFar+' participants enrolled. The list cannot be rebuilt smaller than that.','पहले से '+enrolledSoFar+' participants enrol हो चुके हैं। List उससे छोटी नहीं बन सकती।'));return}
   let list;try{list=await alBuildList(ALG.fromHex(m[1].toLowerCase()),a.plan.method,n,arms,{sizes:a.plan.blockSizes,probs:a.plan.probs})}catch(e){enMsg(String(e.message||e));return}
   if(!list||!n){enMsg(L('Set the number of participants first.','पहले participants की संख्या लिखें।'));return}
   const lh=await alListHash(ALG.fromHex(m[1].toLowerCase()),list),at=new Date().toISOString();
@@ -18252,7 +18255,7 @@ async function enEnvelopes(){if(!AL_SEED){enMsg(studyHi()?'पहले seed fil
 
 /* ---- Stage 8: reveal and verify, then the analysis lock. The verifier uploads the seed (and optionally the master list). The app rebuilds the list and compares it with the hash logged when the list was built. ---- */
 function alVerHTML(a,L){if(!a.commit)return'';const v=a.verify,lk=a.lock,fac=alFactors(a.card&&a.card.factors);
-  const vtxt=v?(v.ok?L('Last verification passed ','आख़िरी verification पास ')+escHTML(String(v.at).slice(0,16).replace('T',' ')):L('Last verification FAILED ','आख़िरी verification फेल ')+escHTML(String(v.at).slice(0,16).replace('T',' '))):L('Not verified yet.','अभी verify नहीं हुआ।');
+  const vtxt=v?(v.ok?L('Last verification passed ','आख़िरी verification पास ')+escHTML(String(v.at).slice(0,16).replace('T',' '))+(v.external?'':' · '+L('against the app\'s own record only, no master list was checked','केवल app के अपने record से, कोई master list नहीं जाँची गई')):L('Last verification FAILED ','आख़िरी verification फेल ')+escHTML(String(v.at).slice(0,16).replace('T',' '))):L('Not verified yet.','अभी verify नहीं हुआ।');
   return'<h4 style="margin:12px 0 4px">'+L('6. Reveal and verify (stage 8)','6. Reveal और verify (चरण 8)')+'</h4>'+
   '<p class="desc">'+vtxt+'</p>'+
   '<div class="fld"><label for="enVerSeed">'+L('Seed file (revealed for verification)','Seed file (verification के लिए)')+'</label><input id="enVerSeed" type="file" accept=".txt"></div>'+
@@ -18278,10 +18281,12 @@ async function enVerify(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(
   if(seedOk&&rebuilt&&mf&&mf.files&&mf.files[0]){const rows=(await mf.files[0].text()).trim().split(/\r?\n/).slice(1).map(l=>l.split(',')[1]);
     masterOk=JSON.stringify(rows)===JSON.stringify(rebuilt)}
   const ok=seedOk&&listOk&&masterOk!==false,at=new Date().toISOString();
-  const what=!seedOk?L('seed does not match the commitment','seed commitment से नहीं मिलता'):!listOk?L('rebuilt list differs from the logged list','दोबारा बनी list, दर्ज list से अलग है'):masterOk===false?L('master list differs from the seed','master list, seed से अलग है'):L('list matches','list मेल खाती है');
+  /* review finding 11: listOk rebuilds from the very seed alCheckSeed just confirmed, using the app's own logged hash as the thing to match - under normal (non-tampered) use it cannot fail when seedOk already passed, so it adds no independent proof on its own. The master list is the only check here that comes from outside the app, so "ok" is only called a full verification when one was actually given; without one, the message says plainly that this only checked the app's own record against itself. */
+  const external=masterOk!==null;
+  const what=!seedOk?L('seed does not match the commitment','seed commitment से नहीं मिलता'):!listOk?L('rebuilt list differs from the logged list','दोबारा बनी list, दर्ज list से अलग है'):masterOk===false?L('master list differs from the seed','master list, seed से अलग है'):external?L('list matches the master list','list, master list से मेल खाती है'):L('seed reproduces the logged list, but no master list was given to check it against anything outside the app','seed से वही logged list बनती है, पर app के बाहर जाँचने के लिए कोई master list नहीं दी गई');
   /* Re-read right before the write: o/a were captured before several file-read and hashing awaits, and this is otherwise a stale copy that could silently overwrite a concurrent change (an enrolment, a deviation). */
   const o2=studyGet(),a2=alGet(o2);
-  o2.alloc=Object.assign({},a2,{verify:{at,ok,seedOk,listOk,masterOk},log:(a2.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
+  o2.alloc=Object.assign({},a2,{verify:{at,ok,seedOk,listOk,masterOk,external},log:(a2.log||[]).concat([{at,kind:ok?'verified':'verification failed',text:what}])});
   studySet(o2);msg(ok?L('Verified: '+what+'.','Verified: '+what+'।'):L('Verification failed: '+what+'.','Verification फेल: '+what+'।'));alRender()}
 async function alLock(){const hi=studyHi(),L=(en,x)=>hi?x:en;const o=studyGet(),a=alGet(o),msg=(t)=>{const e=document.getElementById('alMsg');if(e)e.textContent=t};
   if(a.lock){msg(L('Already locked. A second lock is not written.','पहले से lock है। दूसरा lock नहीं लिखा जाता।'));return}
