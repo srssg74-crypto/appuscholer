@@ -157,8 +157,8 @@ def stratum_label(s):
     accepted; anything else is a protocol error, raised here and in alloc.js alike."""
     if isinstance(s, bool):
         return "true" if s else "false"
-    if isinstance(s, int):
-        return str(s)
+    if isinstance(s, int) and abs(s) < 2 ** 53:
+        return str(s)  # JS refuses integers past 2**53 (Number.isSafeInteger), so this does too
     if isinstance(s, float) and s.is_integer() and abs(s) < 2 ** 53:
         return str(int(s))  # JSON "1.0" reaches JS as the number 1, so it is "1" here too
     if isinstance(s, str):

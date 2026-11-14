@@ -18006,7 +18006,7 @@ function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementBy
   const log=(prev.log||[]).slice(),rec=alRec(c);
   log.push({at:new Date().toISOString(),kind:(prev.plan||prev.card)?'changed':'created',text:ch.length?ch.join('; '):'saved',suggested:rec.m,method:p.method,warn:(randomised&&p.conc==='open')?'not concealed':''});
   o.alloc={card:c,plan:p,log,commit:prev.commit,deviations:prev.deviations||[],enrol:prev.enrol||[],verify:prev.verify,lock:prev.lock};studySet(o);
-  if(msg)msg.textContent=L('Saved to the decision log.','decision log में सहेजा गया।');alRender()}
+  alRender();const m2=document.getElementById('alMsg');if(m2)m2.textContent=L('Saved to the decision log.','decision log में सहेजा गया।')}
 function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=a.plan||{},lg=(a.log||[]).slice().reverse();
   const inp=(id,lab,v,ph,type)=>'<div class="fld"><label for="'+id+'">'+lab+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v||'')+'" placeholder="'+escHTML(ph||'')+'"></div>';
   return'<div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">'+L('Allocation','आवंटन')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'alDlg\').close()">'+L('Close','बंद करें')+'</button></div>'+

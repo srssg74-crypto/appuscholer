@@ -124,7 +124,7 @@ except ValueError:
 assert R.stratified_blocks(seed12, [1,"1",1,"1",1,"1"], ["A","B"], (4,6,8)) == ["A","A","A","B","B","B"]
 # third review: labels that str() and String() render differently (floats, None, lists) are refused
 assert R.stratified_blocks(seed12, [1.0, 1, "1"], ["A","B"]) == R.stratified_blocks(seed12, ["1","1","1"], ["A","B"])
-for bad in [[1.5, 1.5], [None, None], [[1,2],[1,2]], [1e23, 1e23]]:
+for bad in [[1.5, 1.5], [None, None], [[1,2],[1,2]], [1e23, 1e23], [2**53, 2**53], [10**20, 10**20]]:
     try:
         R.stratified_blocks(seed12, bad, ["A","B"], (4,6,8)); raise SystemExit(f"strata {bad!r} should raise")
     except ValueError:

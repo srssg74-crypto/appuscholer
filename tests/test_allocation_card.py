@@ -35,6 +35,7 @@ with sync_playwright() as p:
     a=J("studyGet().alloc")
     ok(a and a['plan']['method']=='perm' and len(a['log'])==1 and a['log'][0]['kind']=='created','first save writes one created entry')
     ok(J("subState('C11').s")=='dn','C11 done with reason and plan')
+    ok('Saved' in J("document.getElementById('alMsg').textContent"),'the "Saved to the decision log" message survives the re-render')
     J("document.getElementById('alMethod').value='strat';alSave()")
     a=J("studyGet().alloc")
     ok(len(a['log'])==2 and a['log'][1]['kind']=='changed' and 'method perm → strat' in a['log'][1]['text'],'a changed method appends a log entry, earlier entries stay')
