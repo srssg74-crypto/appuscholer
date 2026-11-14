@@ -18200,7 +18200,8 @@ function alRunnerHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),cm=a.comm
   '<div class="fld"><label for="enCode">'+L('Enrol: participant code (never a name)','Enrol: participant code (नाम नहीं)')+'</label><input id="enCode" type="text"></div>'+
   '<div class="row"><button type="button" class="btn btn-purple" onclick="enEnrol()">'+L('Enrol and show the position','Enrol करें और position दिखाएँ')+'</button></div>':'')+
   '<h4 style="margin:10px 0 4px">'+L('Enrolled (positions only, no arms)','Enrolled (केवल positions, arm नहीं)')+'</h4>'+
-  (en.length?'<ul class="desc" style="padding-left:18px;margin:0">'+en.map(x=>'<li>'+escHTML(x.code)+' · '+L('position ','position ')+x.pos+' · '+escHTML(String(x.at).slice(0,16).replace('T',' '))+' <button type="button" class="btn btn-ghost btn-sm" onclick="enReveal(\''+escHTML(x.code)+'\')">'+L('Reveal arm (logged)','Arm दिखाएँ (log होगा)')+'</button></li>').join('')+'</ul>':'<p class="desc">'+L('No one enrolled yet.','अभी कोई enrol नहीं।')+'</p>')+
+  /* data-reveal-code, not an inline onclick built from the participant code: HTML-entity escaping a quote inside onclick="enReveal('...')" does not stop it, because the browser decodes entities in the attribute value before handing the string to the JS parser, so a code containing a quote could still break out of the string and run arbitrary script. A delegated listener (attached once, in alOpen) reads the code from the attribute instead. */
+  (en.length?'<ul class="desc" style="padding-left:18px;margin:0">'+en.map(x=>'<li>'+escHTML(x.code)+' · '+L('position ','position ')+x.pos+' · '+escHTML(String(x.at).slice(0,16).replace('T',' '))+' <button type="button" class="btn btn-ghost btn-sm" data-reveal-code="'+escHTML(x.code)+'">'+L('Reveal arm (logged)','Arm दिखाएँ (log होगा)')+'</button></li>').join('')+'</ul>':'<p class="desc">'+L('No one enrolled yet.','अभी कोई enrol नहीं।')+'</p>')+
   '<p class="desc" id="enMsg" style="color:#b45309;min-height:1em"></p>'+
   '<div class="row" style="gap:8px"><button type="button" class="btn btn-ghost btn-sm" onclick="enEnvelopes()">'+L('Download envelope files (coordinator only)','Envelope files डाउनलोड करें (केवल coordinator)')+'</button></div>'+
   '<p class="desc">'+L('The master list and the seed together let anyone rebuild every arm. Keep them apart.','Master list और seed साथ हों तो कोई भी हर arm फिर से बना सकता है। दोनों को अलग रखें।')+'</p>'}
@@ -18322,7 +18323,9 @@ function alWriteHTML(a,L){if(!a.plan||!a.plan.method)return'';const o=studyGet()
 function alCopyText(){const t=document.getElementById('alWriteTxt');if(!t)return;t.select();try{navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}}
 function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
 function alOpen(){let d=document.getElementById('alDlg');
-  if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
+  if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d);
+    /* delegated once, on the dialog itself, so it survives every innerHTML re-render; the participant code is read from the attribute, never built into an executable string */
+    d.addEventListener('click',e=>{const b=e.target.closest('[data-reveal-code]');if(b){e.preventDefault();enReveal(b.getAttribute('data-reveal-code'))}})}
   d.innerHTML=alHTML();if(!d.open)d.showModal();alRefresh()}
 
 function statsOpen(){const d=document.getElementById('statsDlg');if(!d.open)d.showModal();try{studyStatsHint()}catch(e){}}
