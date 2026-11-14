@@ -18077,6 +18077,8 @@ function alDownloadSeed(){if(!AL_PENDING)return;
   const u=URL.createObjectURL(new Blob([txt],{type:'text/plain'})),x=document.createElement('a');x.href=u;x.download='appuscholar_seed_KEEP_SECRET.txt';document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
   if(!AL_PENDING)return;
+  /* alMakeCommit() checked ethics when the candidate was created, but ethics approval can be edited or withdrawn in Design & Ethics any time between that and registration (the commitment can sit unregistered for a while). Re-check here so registration itself never slips through without an approval that still holds. The pending commitment and its already-saved seed stay valid - fixing the ethics record and registering again needs no new seed. */
+  const eth=alEthics();if(!eth.ok){if(msg)msg.textContent=L(eth.en,eth.hi);return}
   if(!(document.getElementById('alSeedSaved')||{}).checked){if(msg)msg.textContent=L('Save the seed file first, then tick the box.','पहले seed file सहेजें, फिर box पर टिक करें।');return}
   const o=studyGet(),a=alGet(o);
   if(a.commit){AL_PENDING=null;alRender();return}
