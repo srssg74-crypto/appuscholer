@@ -3380,8 +3380,10 @@ const SUBSTAGES=[
  ['C8','design',["Synopsis or protocol","Synopsis या protocol"],["Write the synopsis in your university format, or a full protocol (ICMR format; SPIRIT 2025 for a trial).","Synopsis अपनी university के format में, या पूरा protocol (ICMR format; trial के लिए SPIRIT 2025)।"],["The version you send for approval is saved.","जो version मंज़ूरी के लिए गया, वह सहेजा हो।"],"SPIRIT 2025; university template",'design'],
  ['C9','design',["Ethics review","Ethics समीक्षा"],["Fill the ethics record: approval letter, exemption letter from the committee, or your own undertaking. Data collection opens only after this.","Ethics record भरें: approval letter, committee का exemption letter, या आपका undertaking। इसके बाद ही data collection खुलेगा।"],["Data collection stays locked until the record is complete.","Record पूरा होने तक data collection बंद रहेगा।"],"ICMR 2017 sec. 6; MHCA 2017 s.99; CTRI",null],
  ['C10','design',["Consent and participant information","Consent और participant जानकारी"],["Write the information sheet and consent form in the approved version, the assent route for minors, a contact for distress or questions, and how data will be handled, in plain words.","जानकारी पत्र और consent form उसी version में जो स्वीकृत हुआ, बच्चों के लिए assent का तरीका, परेशानी या सवाल के लिए संपर्क, और data कैसे रखा जाएगा, सरल शब्दों में।"],["The consent version used matches the approved one.","इस्तेमाल हुआ consent वही version हो जो स्वीकृत हुआ।"],"ICMR 2017 sec. 5 and 6.5",'@ecOpen()'],
+ ['C11','design',["Allocation: card and plan","आवंटन: card और योजना"],["Say whether chance decides who gets which condition. Write your reason first, then compare it with the suggestion. Then write the plan: method, parameters, concealment, and who makes and holds the list. A design that is not randomised can say so and stop here.","बताएँ कि क्या संयोग तय करेगा कि किसे कौन सी स्थिति मिले। पहले अपना कारण लिखें, फिर सुझाव से तुलना करें। फिर योजना लिखें: method, parameters, concealment, और सूची कौन बनाएगा व किसके पास रहेगी। जो design randomised नहीं है, वह यहीं कह कर रुक सकता है।"],["A reason of 30+ characters and a method. For a randomised study, also the concealment and who makes and holds the list.","30+ अक्षरों का कारण और एक method। randomised study के लिए concealment और सूची बनाने व रखने वाले भी।"],"CONSORT 2025 items 17a, 17b, 18",'@alOpen()'],
  ['D1','collect',["Pilot","Pilot"],["Decide before you start what the pilot tests and whether its data will be kept. Run it on a few people and revise the questionnaire.","शुरू करने से पहले तय करें कि pilot क्या जाँचेगा और उसका data रखा जाएगा या नहीं। कुछ लोगों पर चलाएँ और questionnaire सुधारें।"],["Pilot data is not mixed into the main data unless planned.","पहले से तय न हो तो pilot data मुख्य data में नहीं मिलेगा।"],"App rule; SPIRIT 2025 item 19",'design'],
  ['D2','collect',["Collect data","Data इकट्ठा करें"],["Send the secure form link or run it on this device. Keep a recruitment log: approached, agreed, completed, withdrew. Note any change from the plan.","Secure form का link भेजें या इसी device पर भरवाएँ। Recruitment log रखें: कितनों से पूछा, कितने माने, कितनों ने पूरा किया, कितने हटे। योजना में कोई बदलाव हो तो लिखें।"],["Locked until the ethics record (C9) is complete.","Ethics record (C9) पूरा होने तक बंद।"],"App rule",'@sfOpen()'],
+ ['D7','collect',["Out-of-range clinical reports","सीमा से बाहर clinical रिपोर्ट"],["When a participant's report (blood, lung function or another test) has a value outside its reference range, log it here. You or a clinician decide whether it is clinically significant, and you write why. The app never makes that judgement. It stores the test name, the direction, the decision and the reason, against a participant code. No name and no value is stored.","किसी participant की रिपोर्ट (blood, फेफड़ों की जाँच या कोई और test) की कोई value उसकी reference range से बाहर हो, तो यहाँ दर्ज करें। यह तय आप या clinician करेंगे कि वह clinically significant है या नहीं, और कारण लिखेंगे। App यह फ़ैसला खुद नहीं करता। App test का नाम, दिशा, फ़ैसला और कारण participant code के साथ रखता है। नाम या value नहीं रखी जाती।"],["Every out-of-range report has a decision and a reason. A significant or unclear one names the clinician who was asked.","हर बाहर की रिपोर्ट का फ़ैसला और कारण हो। significant या unclear वाली में उस clinician का नाम हो जिससे पूछा गया।"],"Study record: no participant data",'@crOpen()'],
  ['D3','collect',["Clean and score","सफ़ाई और scoring"],["Keep the raw data unchanged. Make a codebook. Check ranges and duplicates, describe missing data, score scales with the reverse items, and give a reason for every row you leave out.","कच्चा data जैसा है वैसा रखें। Codebook बनाएँ। Range और दोहराव जाँचें, missing data बताएँ, उल्टे items के साथ scoring करें, और जो row छोड़ें उसका कारण लिखें।"],["No row is removed without a written reason.","बिना लिखे कारण के कोई row नहीं हटेगी।"],"Rubin 1976; scale owners",'@statsOpen()'],
  ['D4','collect',["Quantitative analysis","Quantitative analysis"],["Run the planned analysis, check its assumptions, report the effect size with its confidence interval and the exact p-value. Mark extra analyses as exploratory.","तय analysis चलाएँ, उसकी शर्तें (assumptions) जाँचें, effect size, confidence interval और सही p-value लिखें। अतिरिक्त analysis को exploratory लिखें।"],["'Proved' or 'no effect' from a p-value alone is not allowed.","सिर्फ़ p-value से 'साबित' या 'कोई असर नहीं' नहीं लिखना।"],"ASA statement on p-values 2016",'@statsOpen()'],
  ['D5','collect',["Qualitative analysis (if any)","Qualitative analysis (हो तो)"],["Transcribe, code, build and review themes, and keep notes on your own role and assumptions.","Transcript बनाएँ, coding करें, themes बनाएँ और जाँचें, और अपनी भूमिका और धारणाओं पर notes रखें।"],["Each theme shows the quotes behind it, with names removed.","हर theme के पीछे के quotes दिखें, नाम हटाकर।"],"Braun & Clarke 2006",'qual'],
@@ -3418,8 +3420,10 @@ function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars|
     case'B7':return wFrameOk(o);
     case'C5':return wTransOk(o);
     case'D6':return wInterpOk(o)&&!wCausalFlags(o).length;
+    case'D7':return crOk(o);
     case'E8':return !!wGet(o).aiu;
     case'C8':return c8Ok(o);
+    case'C11':return alOk(o);
     case'F4':return f4Ok(o)&&packF4Ok(o);
     case'F1':return f1Ok(o);
     case'F7':return f7Ok(o);
@@ -3464,7 +3468,7 @@ function subRender(){const d=document.getElementById('subDlg');if(!d||!d.open&&!
 const SUB_SRC_CHECKED={_:'2026-10-27',F2:'2026-10-31',B1:'2026-10-31',B4:'2026-10-31',C7:'2026-10-31',D1:'2026-10-31'};
 function subSrcAge(id,now){const d=SUB_SRC_CHECKED[id]||SUB_SRC_CHECKED._,hi=studyHi(),t=new Date(d+'T00:00:00'),age=((now||Date.now())-t.getTime())/864e5,f=t.toLocaleDateString(hi?'hi-IN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   return' · '+(hi?'आख़िरी जाँच: ':'last checked: ')+f+(age>365?' <span style="color:#b45309">⚠️ '+(hi?'एक साल से पुरानी जाँच; नया version देखें':'checked over a year ago; look for a newer version')+'</span>':'')}
-const SUB_TOOL_LABEL={idea:['Open the Idea and Feasibility tool (AI feedback on your topic)','Idea और Feasibility tool खोलें (आपके विषय पर AI की राय)'],research:['Open paper search','Papers की खोज खोलें'],analyse:['Open the paper analysis tool','Paper analysis tool खोलें'],cite:['Open the Citation manager','Citation manager खोलें'],stats:['Open the Statistics lab','Statistics lab खोलें'],design:['Open the Design and Ethics tools','Design और Ethics tools खोलें'],qual:['Open qualitative coding','Qualitative coding खोलें'],slides:['Open the slides tool','Slides tool खोलें'],close:['Open the final checks','अंतिम जाँचें खोलें'],'@gapDlgOpen()':['Open the research gap finder','Research gap finder खोलें'],'@spOpen()':['Open the study plan','Study plan खोलें'],'@qnOpen()':['Open the questionnaire maker','Questionnaire maker खोलें'],'@ecOpen()':['Open the consent form maker','Consent form maker खोलें'],'@sfOpen()':['Open the secure form','Secure form खोलें'],'@statsOpen()':['Open the Statistics lab','Statistics lab खोलें'],'@bpOpen()':['Open the book plan','Book plan खोलें']};
+const SUB_TOOL_LABEL={idea:['Open the Idea and Feasibility tool (AI feedback on your topic)','Idea और Feasibility tool खोलें (आपके विषय पर AI की राय)'],research:['Open paper search','Papers की खोज खोलें'],analyse:['Open the paper analysis tool','Paper analysis tool खोलें'],cite:['Open the Citation manager','Citation manager खोलें'],stats:['Open the Statistics lab','Statistics lab खोलें'],design:['Open the Design and Ethics tools','Design और Ethics tools खोलें'],qual:['Open qualitative coding','Qualitative coding खोलें'],slides:['Open the slides tool','Slides tool खोलें'],close:['Open the final checks','अंतिम जाँचें खोलें'],'@gapDlgOpen()':['Open the research gap finder','Research gap finder खोलें'],'@spOpen()':['Open the study plan','Study plan खोलें'],'@qnOpen()':['Open the questionnaire maker','Questionnaire maker खोलें'],'@ecOpen()':['Open the consent form maker','Consent form maker खोलें'],'@alOpen()':['Open the allocation card and plan','Allocation card और plan खोलें'],'@crOpen()':['Open the out-of-range report log','सीमा से बाहर रिपोर्ट का log खोलें'],'@sfOpen()':['Open the secure form','Secure form खोलें'],'@statsOpen()':['Open the Statistics lab','Statistics lab खोलें'],'@bpOpen()':['Open the book plan','Book plan खोलें']};
 const SUB_STEP_BTN={A1:['Ask AI to check my topic','AI से मेरा विषय जँचवाएँ'],A2:['Ask AI to check my problem statement','AI से मेरा समस्या-कथन जँचवाएँ'],A3:['Ask AI to check my question and aim','AI से मेरा सवाल और उद्देश्य जँचवाएँ'],A4:['Ask AI for a go or stop opinion','AI से आगे बढ़ें या रुकें, राय लें']};
 function subToolLabel(k,id){if(id&&SUB_STEP_BTN[id]&&k==='idea')return SUB_STEP_BTN[id];return SUB_TOOL_LABEL[k]||['Open the tool for this step','इस step का tool खोलें']}
 /* A page-panel tool opens beside the step: the step stays on the left (instructions and what is still needed), the tool on the right. On a phone the tool takes the screen and a pill brings the step back. */
@@ -4517,9 +4521,9 @@ const STAGE_FLOW={
  lit:{n:['Stage 2 of 6','Stage 2 / 6'],t:['Read what is already known','जो पहले से पता है, उसे पढ़ें'],p:['Here you search the literature, pick the papers worth reading and find the gap your study fills.','यहाँ आप साहित्य खोजते हैं, पढ़ने लायक papers चुनते हैं और वह कमी ढूँढते हैं जिसे आपकी study भरेगी।'],w:['your question needs a gap to stand on. A search that is written down and can be repeated is also the first thing examiners and journals check.','आपके सवाल को एक कमी चाहिए जिस पर वह टिके। लिखी हुई और दोहराई जा सकने वाली खोज वही चीज़ है जिसे examiners और journals सबसे पहले जाँचते हैं।'],
   g:[[['Plan the search','खोज की योजना'],['B1','B2']],[['Screen and judge','छाँटें और परखें'],['B3','B4']],[['Make sense of it','अर्थ निकालें'],['B5','B6','B7']]]},
  design:{n:['Stage 3 of 6','Stage 3 / 6'],t:['Plan how you will find out','तय करें कि पता कैसे लगाएँगे'],p:['Here you fix the design, the sample, the measures and the ethics, so the plan is ready to defend.','यहाँ आप design, sample, measures और ethics तय करते हैं, ताकि योजना का बचाव किया जा सके।'],w:['changing the design after data collection starts costs the study. Ethics approval has to come before the first participant.','डेटा इकट्ठा होने लगे तो design बदलना पूरी study की क़ीमत माँगता है। Ethics की मंज़ूरी पहले participant से पहले चाहिए।'],
-  g:[[['Design and sample','Design और sample'],['C1','C2','C3']],[['Measures','मापन'],['C4','C5','C6']],[['Analysis and protocol','विश्लेषण और protocol'],['C7','C8']],[['Ethics and consent','Ethics और सहमति'],['C9','C10']]]},
+  g:[[['Design and sample','Design और sample'],['C1','C2','C3']],[['Measures','मापन'],['C4','C5','C6']],[['Analysis and protocol','विश्लेषण और protocol'],['C7','C8','C11']],[['Ethics and consent','Ethics और सहमति'],['C9','C10']]]},
  collect:{n:['Stage 4 of 6','Stage 4 / 6'],t:['Collect and analyse your data','डेटा इकट्ठा करें और विश्लेषण करें'],p:['Here you run a small pilot, collect the data, clean it and run the analysis you planned.','यहाँ आप छोटा pilot चलाते हैं, डेटा इकट्ठा करते हैं, उसे साफ़ करते हैं और तय विश्लेषण चलाते हैं।'],w:['choose the analysis in stage 3 and stay with it. A cleaning mistake made now shows up later as a wrong result.','विश्लेषण stage 3 में तय कीजिए और उसी पर टिकिए। अभी की सफ़ाई की ग़लती बाद में ग़लत नतीजे के रूप में दिखती है।'],
-  g:[[['Pilot and collect','Pilot और संग्रह'],['D1','D2']],[['Clean and score','सफ़ाई और scoring'],['D3']],[['Analyse','विश्लेषण'],['D4','D5']],[['Interpret','व्याख्या'],['D6']]]},
+  g:[[['Pilot and collect','Pilot और संग्रह'],['D1','D2','D7']],[['Clean and score','सफ़ाई और scoring'],['D3']],[['Analyse','विश्लेषण'],['D4','D5']],[['Interpret','व्याख्या'],['D6']]]},
  writing:{n:['Stage 5 of 6','Stage 5 / 6'],t:['Write it up','इसे लिखें'],p:['Here you turn the plan, the papers and the results into a thesis or paper, one section at a time.','यहाँ आप योजना, papers और नतीजों को थीसिस या paper में बदलते हैं, एक-एक हिस्सा करके।'],w:['each section builds on the one before it, so writing in this order saves rewrites.','हर हिस्सा पिछले पर टिकता है, इसलिए इसी क्रम में लिखने से दोबारा लिखना कम पड़ता है।'],
   g:[[['Chapter plan','अध्याय योजना'],['E1']],[['Introduction to methods','परिचय से methods'],['E2','E3','E4']],[['Results and discussion','नतीजे और चर्चा'],['E5','E6']],[['Abstract and references','सार और संदर्भ'],['E7','E8']]]},
  review:{n:['Stage 6 of 6','Stage 6 / 6'],t:['Check, submit and share','जाँचें, जमा करें और साझा करें'],p:['Here you check the work for honesty, send it for review, prepare for the viva and close the project.','यहाँ आप काम की ईमानदारी जाँचते हैं, उसे review के लिए भेजते हैं, viva की तैयारी करते हैं और project बंद करते हैं।'],w:['a problem you find yourself costs a day. The same problem found by a reviewer can cost the paper.','जो समस्या आप ख़ुद पकड़ते हैं वह एक दिन लेती है। वही समस्या reviewer पकड़े तो paper जा सकता है।'],
@@ -17939,6 +17943,171 @@ function bpOpen(focus){let d=document.getElementById('bpDlg');if(!d){d=document.
   window._bpFocus=focus||'';bpRender();if(!d.open)d.showModal();
   if(focus)setTimeout(()=>{const el=d.querySelector('[data-bp="'+focus+'"]');if(el){el.scrollIntoView({block:'center'});el.classList.add('just-inserted');setTimeout(()=>el.classList.remove('just-inserted'),2500)}},60)}
 function ecOpen(){const d=document.getElementById('ecDlg');if(!d.open)d.showModal();ecRender()}
+
+/* Allocation card (stage 3) and allocation plan (stage 4). Each save appends to an append-only log in the study record. No participant data is stored here. */
+const AL_UNITS=[['ind','Individual participants'],['cl','Clusters (school, clinic, ward)'],['wi','Same people in both conditions (within-subjects)']];
+const AL_METHODS=[['none','Not randomised (survey, qualitative or single group)'],['simple','Simple randomisation'],['perm','Permuted blocks'],['strat','Stratified permuted blocks'],['mini','Minimisation (Pocock and Simon)'],['cons','Constrained randomisation'],['xo','Cross-over (Williams rows)']];
+const AL_CONC=[['central','Central or computer-based list (best)'],['env','Sealed, opaque, numbered envelopes (enhanced)'],['open','Not concealed (not acceptable for a randomised trial)']];
+function alGet(o){return((o||studyGet()).alloc)||{}}
+function alFactors(s){return String(s||'').split(',').map(x=>x.trim()).filter(Boolean)}
+function alRec(c){const hi=studyHi(),L=(en,x)=>hi?x:en,f=alFactors(c.factors).length;
+  if(c.unit==='wi')return{m:'xo',t:L('Each person gets both conditions, so use a cross-over with Williams rows to balance the order.','हर व्यक्ति दोनों स्थितियों में रहता है, इसलिए क्रम संतुलित करने के लिए Williams rows वाला cross-over लें।')};
+  if(c.unit==='cl')return{m:'cons',t:L('Few clusters can end up unbalanced by chance, so use constrained randomisation and check the balance rule with a statistician.','कम clusters में संयोग से असंतुलन हो सकता है, इसलिए constrained randomisation लें और balance नियम को statistician के साथ जाँचें।')};
+  if(f>=2)return{m:'mini',t:L('Two or more prognostic factors: minimisation keeps the arms balanced on all of them without sparse strata.','दो या अधिक prognostic factors: minimisation सभी पर संतुलन रखता है और खाली strata नहीं बनते।')};
+  if(f===1)return{m:'strat',t:L('One prognostic factor: stratified permuted blocks balance it directly.','एक prognostic factor: stratified permuted blocks उस पर सीधा संतुलन देते हैं।')};
+  if(c.n>=200)return{m:'simple',t:L('No factors and a large sample: simple randomisation is enough, and blocks add little.','कोई factor नहीं और बड़ा sample: simple randomisation काफ़ी है, blocks से ज़्यादा फ़र्क नहीं पड़ता।')};
+  return{m:'perm',t:L('No factors and a small or medium sample: permuted blocks keep the groups close in size as you go.','कोई factor नहीं और छोटा या मध्यम sample: permuted blocks चलते-चलते groups का आकार पास रखते हैं।')}}
+function alOk(o){const a=alGet(o),c=a.card||{},p=a.plan||{};
+  if(!(p.method&&String(c.reason||'').trim().length>=30))return false;
+  return p.method==='none'||!!(p.conc&&p.maker&&p.holder)}
+function alOpt(list,cur){return list.map(x=>'<option value="'+x[0]+'"'+(x[0]===cur?' selected':'')+'>'+escHTML(x[1])+'</option>').join('')}
+function alVal(id){const e=document.getElementById(id);return e?String(e.value||''):''}
+function alReadCard(){return{unit:alVal('alUnit'),n:parseInt(alVal('alN'),10)||0,factors:alVal('alFactors').trim(),setting:alVal('alSetting'),sealed:alVal('alSealed'),reason:alVal('alReason').trim()}}
+function alRefresh(){const hi=studyHi(),L=(en,x)=>hi?x:en,box=document.getElementById('alRecBox');if(!box)return;
+  const c=alReadCard();
+  if(c.reason.length<30){box.innerHTML='<p class="desc" style="margin:6px 0">'+L('Write your reason first (30+ characters). The suggestion appears after that.','पहले अपना कारण लिखें (30+ अक्षर)। सुझाव उसके बाद दिखेगा।')+'</p>';return}
+  const r=alRec(c),name=(AL_METHODS.find(x=>x[0]===r.m)||[])[1];
+  box.innerHTML='<div class="sub-box" style="margin:6px 0"><b>'+L('Suggestion: ','सुझाव: ')+escHTML(name)+'</b><p class="desc" style="margin:4px 0">'+escHTML(r.t)+'</p>'+
+    '<p class="desc" style="margin:4px 0">'+L('Your choice can differ. Say why in the plan below and the log keeps both.','आपकी पसंद अलग हो सकती है। नीचे योजना में कारण लिखें, log दोनों रखेगा।')+'</p></div>';
+  const sel=document.getElementById('alMethod');if(sel&&!sel.value){sel.value=r.m}}
+function alSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
+  const o=studyGet(),prev=alGet(o),c=alReadCard(),p={method:alVal('alMethod'),params:alVal('alParams').trim(),conc:alVal('alConc'),maker:alVal('alMaker').trim(),holder:alVal('alHolder').trim()};
+  if(c.reason.length<30){if(msg)msg.textContent=L('The reason needs 30+ characters.','कारण में 30+ अक्षर चाहिए।');return}
+  if(!p.method){if(msg)msg.textContent=L('Choose a method.','एक method चुनें।');return}
+  const randomised=p.method!=='none';
+  if(prev.commit&&JSON.stringify(p)!==JSON.stringify(prev.commit.plan)){if(msg)msg.textContent=L('This plan was registered on '+prev.commit.at.slice(0,10)+'. It cannot be edited. Record the change in the deviation log below instead.','यह योजना '+prev.commit.at.slice(0,10)+' को दर्ज हो चुकी है। इसे बदला नहीं जा सकता। बदलाव नीचे deviation log में दर्ज करें।');return}
+  if(randomised&&(!p.conc||!p.maker||!p.holder)){if(msg)msg.textContent=L('For a randomised study, choose concealment and name who makes and who holds the list.','randomised study के लिए concealment चुनें और बताएँ कि सूची कौन बनाएगा और कौन रखेगा।');return}
+  const ch=[];
+  if(prev.plan&&prev.plan.method!==p.method)ch.push('method '+prev.plan.method+' → '+p.method);
+  if(prev.plan&&prev.plan.conc!==p.conc)ch.push('concealment '+(prev.plan.conc||'-')+' → '+p.conc);
+  if(prev.card&&prev.card.reason!==c.reason)ch.push('reason changed');
+  if(prev.card&&prev.card.unit!==c.unit)ch.push('unit '+prev.card.unit+' → '+c.unit);
+  const log=(prev.log||[]).slice(),rec=alRec(c);
+  log.push({at:new Date().toISOString(),kind:(prev.plan||prev.card)?'changed':'created',text:ch.length?ch.join('; '):'saved',suggested:rec.m,method:p.method,warn:(randomised&&p.conc==='open')?'not concealed':''});
+  o.alloc={card:c,plan:p,log,commit:prev.commit,deviations:prev.deviations||[]};studySet(o);
+  if(msg)msg.textContent=L('Saved to the decision log.','decision log में सहेजा गया।');alRender()}
+function alHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,a=alGet(),c=a.card||{},p=a.plan||{},lg=(a.log||[]).slice().reverse();
+  const inp=(id,lab,v,ph,type)=>'<div class="fld"><label for="'+id+'">'+lab+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v||'')+'" placeholder="'+escHTML(ph||'')+'"></div>';
+  return'<div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">'+L('Allocation','आवंटन')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'alDlg\').close()">'+L('Close','बंद करें')+'</button></div>'+
+  '<p class="desc">'+L('Stage 3 (card) and stage 4 (plan). Chance decides the arm only where you say so here; the log keeps every change.','चरण 3 (card) और चरण 4 (plan)। arm संयोग से तभी तय होगा जब आप यहाँ कहें; log हर बदलाव रखता है।')+'</p>'+
+  '<h4 style="margin:10px 0 4px">'+L('1. Card','1. Card')+'</h4>'+
+  '<div class="fld"><label for="alUnit">'+L('What is allocated','क्या आवंटित होगा')+'</label><select id="alUnit" onchange="alRefresh()">'+alOpt(AL_UNITS,c.unit||'ind')+'</select></div>'+
+  '<div class="row" style="gap:8px">'+inp('alN',L('Total sample (from C3)','कुल sample (C3 से)'),c.n||'','',"number")+inp('alFactors',L('Strong prognostic factors (comma separated)','मज़बूत prognostic factors (कॉमा से अलग)'),c.factors,L('e.g. baseline score, gender','जैसे baseline score, gender'))+'</div>'+
+  '<div class="row" style="gap:8px"><div class="fld" style="flex:1"><label for="alSetting">'+L('Setting','माहौल')+'</label><select id="alSetting" onchange="alRefresh()"><option value="person"'+(c.setting==='person'?' selected':'')+'>'+L('In person, on site','आमने-सामने, मौके पर')+'</option><option value="central"'+(c.setting==='central'?' selected':'')+'>'+L('Central or remote allocation','Central या remote आवंटन')+'</option></select></div>'+
+  '<div class="fld" style="flex:1"><label for="alSealed">'+L('Can the list be held away from staff?','क्या सूची staff से दूर रखी जा सकती है?')+'</label><select id="alSealed" onchange="alRefresh()"><option value="yes"'+(c.sealed==='yes'?' selected':'')+'>'+L('Yes','हाँ')+'</option><option value="no"'+(c.sealed==='no'?' selected':'')+'>'+L('No','नहीं')+'</option></select></div></div>'+
+  '<div class="fld"><label for="alReason">'+L('Why (write this first, one full sentence or more)','कारण (पहले यह लिखें, एक पूरा वाक्य या अधिक)')+'</label><textarea id="alReason" rows="3" oninput="alRefresh()">'+escHTML(c.reason||'')+'</textarea></div>'+
+  '<div id="alRecBox"></div>'+
+  '<h4 style="margin:10px 0 4px">'+L('2. Plan','2. Plan')+'</h4>'+
+  '<div class="fld"><label for="alMethod">'+L('Method','Method')+'</label><select id="alMethod"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_METHODS,p.method||'')+'</select></div>'+
+  inp('alParams',L('Parameters (block sizes, strata, factor levels, p for minimisation, balance rule)','Parameters (block size, strata, factor levels, minimisation के लिए p, balance नियम)'),p.params,'')+
+  '<div class="fld"><label for="alConc">'+L('Concealment','Concealment')+'</label><select id="alConc"><option value="">'+L('Choose','चुनें')+'</option>'+alOpt(AL_CONC,p.conc||'')+'</select></div>'+
+  inp('alMaker',L('Who makes the list','सूची कौन बनाएगा'),p.maker,L('name and role','नाम और भूमिका'))+inp('alHolder',L('Who holds the master list','Master list किसके पास रहेगी'),p.holder,L('name and role','नाम और भूमिका'))+
+  alCommitHTML(a,L)+alDevHTML(a,L)+'<p class="desc" id="alMsg" style="color:#b45309;min-height:1em"></p>'+
+  '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple" style="flex:1" onclick="alSave()">'+L('Save to decision log','Decision log में सहेजें')+'</button></div>'+
+  '<h4 style="margin:12px 0 4px">'+L('Decision log (read only)','Decision log (केवल पढ़ने के लिए)')+'</h4>'+
+  (lg.length?'<ul class="desc" style="padding-left:18px;margin:0">'+lg.map(e=>'<li>'+escHTML(String(e.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(e.kind)+': '+escHTML(e.text)+(e.warn?' ⚠ '+escHTML(e.warn):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
+
+/* Commitment (stage 5). Only the hash goes into the study record. The seed lives in memory until the student saves it to a file. */
+let AL_PENDING=null;
+async function alHash(bytes){const d=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+function alEnrolOK(o){return !!(alGet(o).commit)}
+function alCommitHTML(a,L){const cm=a.commit,o=studyGet();
+  if(cm)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Registered ','दर्ज ')+escHTML(String(cm.at||'').slice(0,16).replace('T',' '))+'<br>'+L('Commitment: ','Commitment: ')+'<code style="word-break:break-all">'+escHTML(cm.hash)+'</code></p>'+
+    '<p class="desc">'+L('The plan is locked. Enrolment can start. A change now goes in as a deviation entry.','योजना बंद है। अब enrolment शुरू हो सकता है। बदलाव deviation entry के रूप में जाएगा।')+'</p>';
+  if(!alOk(o)||!a.plan||a.plan.method==='none')return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Save a complete randomised plan first. Non-randomised designs have nothing to register here.','पहले एक पूरी randomised योजना सहेजें। जो design randomised नहीं है, उसे यहाँ दर्ज करने को कुछ नहीं।')+'</p>';
+  if(!AL_PENDING)return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Create the commitment before any participant is enrolled. You will get a seed file to keep away from this site.','किसी भी participant के enrol होने से पहले commitment बनाएँ। आपको एक seed file मिलेगी, जिसे इस site से दूर रखना है।')+'</p><p class="desc" style="color:#b45309">'+L('If you close this page before saving the seed, you will need to create a new commitment. Nothing in your study is lost, because nothing is registered yet.','अगर seed सहेजने से पहले यह page बंद करेंगे, तो नया commitment बनाना होगा। आपके study का कुछ नहीं जाता, क्योंकि अभी कुछ दर्ज नहीं हुआ है।')+'</p><div class="row"><button type="button" class="btn btn-purple" onclick="alMakeCommit()">'+L('Create commitment','Commitment बनाएँ')+'</button></div>';
+  return'<h4 style="margin:12px 0 4px">'+L('3. Registration','3. पंजीकरण')+'</h4><p class="desc">'+L('Commitment (not yet registered): ','Commitment (अभी दर्ज नहीं): ')+'<code style="word-break:break-all">'+escHTML(AL_PENDING.hash)+'</code></p>'+
+    '<p class="desc" style="color:#b45309">'+L('Keep this page open until you have saved the seed. If you close it, this commitment is lost and you need a new one. Nothing is registered until you tick the box below.','Seed सहेजने तक यह page खुला रखें। बंद करने पर यह commitment खो जाएगा और नया बनाना होगा। box पर टिक करने तक कुछ भी दर्ज नहीं होता।')+'</p>'+
+    '<div class="row"><button type="button" class="btn btn-ghost btn-sm" onclick="alDownloadSeed()">'+L('Download seed file','Seed file डाउनलोड करें')+'</button></div>'+
+    '<label style="display:block;margin:8px 0;font-size:14px"><input type="checkbox" id="alSeedSaved"> '+L('I have saved the seed file somewhere other than this site.','मैंने seed file इस site के अलावा कहीं सहेज ली है।')+'</label>'+
+    '<div class="row"><button type="button" class="btn btn-purple" onclick="alRegister()">'+L('Register commitment','Commitment दर्ज करें')+'</button></div>'}
+async function alMakeCommit(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
+  const o=studyGet(),a=alGet(o);
+  if(a.commit||!alOk(o)||a.plan.method==='none'){if(msg)msg.textContent=L('Nothing to register.','दर्ज करने को कुछ नहीं।');return}
+  const seed=new Uint8Array(32);crypto.getRandomValues(seed);
+  const pre=new TextEncoder().encode('appuscholar-commit-v1:');
+  const buf=new Uint8Array(pre.length+32);buf.set(pre);buf.set(seed,pre.length);
+  AL_PENDING={hash:await alHash(buf),seedHex:[...seed].map(b=>b.toString(16).padStart(2,'0')).join(''),plan:JSON.stringify(a.plan)};
+  alRender()}
+function alDownloadSeed(){if(!AL_PENDING)return;
+  const txt=['Appuscholar randomisation seed','Commitment: '+AL_PENDING.hash,'Seed (hex): '+AL_PENDING.seedHex,'','Keep this file away from the app, away from the master list, and away from anyone who does not need it.'].join('\n');
+  const u=URL.createObjectURL(new Blob([txt],{type:'text/plain'})),x=document.createElement('a');x.href=u;x.download='appuscholar_seed_KEEP_SECRET.txt';document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+async function alRegister(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alMsg');
+  if(!AL_PENDING)return;
+  if(!(document.getElementById('alSeedSaved')||{}).checked){if(msg)msg.textContent=L('Save the seed file first, then tick the box.','पहले seed file सहेजें, फिर box पर टिक करें।');return}
+  const o=studyGet(),a=alGet(o);
+  if(a.commit){AL_PENDING=null;alRender();return}
+  if(JSON.stringify(a.plan)!==AL_PENDING.plan){AL_PENDING=null;if(msg)msg.textContent=L('The plan changed after the commitment was made. Create a new one.','Commitment बनने के बाद योजना बदली। नया commitment बनाएँ।');alRender();return}
+  const planHash=await alHash(new TextEncoder().encode(AL_PENDING.plan)),at=new Date().toISOString();
+  o.alloc={card:a.card,plan:a.plan,log:(a.log||[]).concat([{at,kind:'registered',text:'commitment '+AL_PENDING.hash+' · plan '+planHash.slice(0,16),method:a.plan.method}]),commit:{hash:AL_PENDING.hash,at,planHash,plan:JSON.parse(AL_PENDING.plan)},deviations:a.deviations||[]};
+  AL_PENDING=null;studySet(o);alRender()}
+
+/* Deviation log (append only). Only available after registration. Entries are added, never edited or removed. */
+function alDevHTML(a,L){if(!a.commit)return'';const d=(a.deviations||[]).slice().reverse();
+  return'<h4 style="margin:12px 0 4px">'+L('4. Deviation log (append only)','4. Deviation log (केवल जोड़ें)')+'</h4>'+
+    (d.length?'<ul class="desc" style="padding-left:18px;margin:0 0 8px">'+d.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.what)+' · '+L('why: ','कारण: ')+escHTML(x.why)+(x.by?' · '+L('agreed by: ','किसने माना: ')+escHTML(x.by):'')+'</li>').join('')+'</ul>':'<p class="desc">'+L('No deviations recorded.','कोई deviation दर्ज नहीं।')+'</p>')+
+    '<p class="desc">'+L('Record a change to the registered plan here. Entries cannot be edited or removed.','registered योजना में बदलाव यहाँ दर्ज करें। entries बदली या हटाई नहीं जातीं।')+'</p>'+
+    '<div class="fld"><label for="alDevWhat">'+L('What changed','क्या बदला')+'</label><textarea id="alDevWhat" rows="2"></textarea></div>'+
+    '<div class="fld"><label for="alDevWhy">'+L('Why (30+ characters)','कारण (30+ अक्षर)')+'</label><textarea id="alDevWhy" rows="2"></textarea></div>'+
+    '<div class="fld"><label for="alDevBy">'+L('Who agreed (name and role)','किसने माना (नाम और भूमिका)')+'</label><input id="alDevBy" type="text"></div>'+
+    '<p class="desc" id="alDevMsg" style="color:#b45309;min-height:1em"></p>'+
+    '<div class="row"><button type="button" class="btn btn-gold" onclick="alDevSave()">'+L('Add deviation','Deviation जोड़ें')+'</button></div>'}
+function alDevSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('alDevMsg');
+  const o=studyGet(),a=alGet(o);
+  if(!a.commit){if(msg)msg.textContent=L('Deviations can be logged only after registration.','Deviation केवल registration के बाद दर्ज हो सकता है।');return}
+  const what=alVal('alDevWhat').trim(),why=alVal('alDevWhy').trim(),by=alVal('alDevBy').trim();
+  if(what.length<10){if(msg)msg.textContent=L('Describe what changed (10+ characters).','बताएँ क्या बदला (10+ अक्षर)।');return}
+  if(why.length<30){if(msg)msg.textContent=L('Say why (30+ characters).','कारण लिखें (30+ अक्षर)।');return}
+  const at=new Date().toISOString();
+  o.alloc=Object.assign({},a,{deviations:(a.deviations||[]).concat([{at,what,why,by}]),log:(a.log||[]).concat([{at,kind:'deviation',text:what.slice(0,80)}])});
+  studySet(o);alRender()}
+
+/* Out-of-range clinical reports (D7). The student or a clinician judges significance; the app only keeps the record. Append only. No participant names or values are stored. */
+const CR_DECISIONS=[['ns','Clinically not significant (I judged this)'],['rev','Needs a clinician to review'],['sig','Clinically significant (refer the participant)']];
+const CR_TESTS=[['blood','Blood test'],['pft','Lung function (PFT, spirometry)'],['urine','Urine test'],['liver','Liver or kidney test'],['thyroid','Thyroid test'],['other','Other report']];
+function crGet(o){return((o||studyGet()).cr)||{entries:[],none:false}}
+function crOk(o){const c=crGet(o);if(c.none)return true;const e=c.entries||[];
+  return e.length>0&&e.every(x=>x.decision&&x.reason&&x.reason.length>=30&&x.by&&(x.decision!=='rev'&&x.decision!=='sig'||x.clin))}
+function crHTML(){const hi=studyHi(),L=(en,x)=>hi?x:en,c=crGet(),list=(c.entries||[]).slice().reverse(),
+  dec=(k)=>(CR_DECISIONS.find(x=>x[0]===k)||['',k])[1],tst=(k)=>(CR_TESTS.find(x=>x[0]===k)||['',k])[1];
+  return'<div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">'+L('Out-of-range clinical reports','सीमा से बाहर clinical रिपोर्ट')+'</h3><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'crDlg\').close()">'+L('Close','बंद करें')+'</button></div>'+
+  '<p class="desc">'+L('The app does not judge significance. You or a clinician do, and this log keeps the decision and the reason. Do not write names or test values in the reason.','App महत्व (significance) का फ़ैसला नहीं करता। यह आप या clinician करते हैं, और यह log फ़ैसला व कारण रखता है। कारण में नाम या test value न लिखें।')+'</p>'+
+  '<label style="display:block;margin:8px 0;font-size:14px"><input type="checkbox" id="crNone" onchange="crNoneSet(this.checked)"'+(c.none?' checked':'')+'> '+L('No value was out of range in this study so far.','इस study में अब तक कोई value सीमा से बाहर नहीं।')+'</label>'+
+  '<div class="fld"><label for="crCode">'+L('Participant code (never a name)','Participant code (नाम नहीं)')+'</label><input id="crCode" type="text"></div>'+
+  '<div class="row" style="gap:8px"><div class="fld" style="flex:1"><label for="crTest">'+L('Report type','Report का प्रकार')+'</label><select id="crTest">'+CR_TESTS.map(x=>'<option value="'+x[0]+'">'+escHTML(x[1])+'</option>').join('')+'</select></div>'+
+  '<div class="fld" style="flex:1"><label for="crName">'+L('Test name (e.g. haemoglobin, FEV1)','Test का नाम (जैसे haemoglobin, FEV1)')+'</label><input id="crName" type="text"></div></div>'+
+  '<div class="fld"><label for="crDir">'+L('Value was','Value थी')+'</label><select id="crDir"><option value="low">'+L('below the reference range','reference range से नीचे')+'</option><option value="high">'+L('above the reference range','reference range से ऊपर')+'</option></select></div>'+
+  '<div class="fld"><label for="crDec">'+L('Decision','फ़ैसला')+'</label><select id="crDec" onchange="crWarn()">'+CR_DECISIONS.map(x=>'<option value="'+x[0]+'">'+escHTML(x[1])+'</option>').join('')+'</select></div>'+
+  '<div class="fld"><label for="crClin">'+L('Clinician asked (name and role), needed for review or significant','जिस clinician से पूछा (नाम और भूमिका), review या significant के लिए ज़रूरी')+'</label><input id="crClin" type="text"></div>'+
+  '<p class="desc" id="crWarn" style="color:#b45309;min-height:1em"></p>'+
+  '<div class="fld"><label for="crReason">'+L('Why (30+ characters)','कारण (30+ अक्षर)')+'</label><textarea id="crReason" rows="2"></textarea></div>'+
+  '<div class="fld"><label for="crBy">'+L('Judged by (name and role)','फ़ैसला किसने किया (नाम और भूमिका)')+'</label><input id="crBy" type="text"></div>'+
+  '<p class="desc" id="crMsg" style="color:#b45309;min-height:1em"></p>'+
+  '<div class="row"><button type="button" class="btn btn-purple" style="flex:1" onclick="crSave()">'+L('Add to the log','Log में जोड़ें')+'</button></div>'+
+  '<h4 style="margin:12px 0 4px">'+L('Log (append only)','Log (केवल जोड़ें)')+'</h4>'+
+  (list.length?'<ul class="desc" style="padding-left:18px;margin:0">'+list.map(x=>'<li>'+escHTML(String(x.at||'').slice(0,16).replace('T',' '))+' · '+escHTML(x.code||'-')+' · '+escHTML(tst(x.test))+' ('+escHTML(x.name||'-')+', '+(x.dir==='high'?L('above','ऊपर'):L('below','नीचे'))+') · '+escHTML(dec(x.decision))+' · '+escHTML(x.reason)+(x.clin?' · '+L('clinician: ','clinician: ')+escHTML(x.clin):'')+' · '+L('by ','द्वारा ')+escHTML(x.by)+'</li>').join('')+'</ul>':'<p class="desc">'+L('No entries yet.','अभी कोई entry नहीं।')+'</p>')}
+function crWarn(){const hi=studyHi(),L=(en,x)=>hi?x:en,v=alVal('crDec'),w=document.getElementById('crWarn');if(!w)return;
+  w.textContent=v==='sig'?L('Significant: the participant\'s own doctor must be told now. This log does not replace their care.','Significant: participant के अपने doctor को अभी बताना होगा। यह log उनके इलाज की जगह नहीं लेता।'):v==='rev'?L('Review: a clinician must see this before the participant continues.','Review: participant आगे बढ़ने से पहले clinician इसे देखें।'):''}
+function crNoneSet(on){const o=studyGet(),c=crGet(o);o.cr=Object.assign({},c,{none:!!on});studySet(o);crRender()}
+function crSave(){const hi=studyHi(),L=(en,x)=>hi?x:en,msg=document.getElementById('crMsg');
+  const o=studyGet(),c=crGet(o),code=alVal('crCode').trim(),dec=alVal('crDec'),reason=alVal('crReason').trim(),by=alVal('crBy').trim(),clin=alVal('crClin').trim(),name=alVal('crName').trim();
+  if(code.length<2){if(msg)msg.textContent=L('Enter a participant code.','Participant code लिखें।');return}
+  if(!name){if(msg)msg.textContent=L('Name the test.','Test का नाम लिखें।');return}
+  if(reason.length<30){if(msg)msg.textContent=L('The reason needs 30+ characters.','कारण में 30+ अक्षर चाहिए।');return}
+  if(!by){if(msg)msg.textContent=L('Write who judged it.','बताएँ फ़ैसला किसने किया।');return}
+  if((dec==='rev'||dec==='sig')&&!clin){if(msg)msg.textContent=L('Name the clinician who was asked.','जिस clinician से पूछा, उसका नाम लिखें।');return}
+  const at=new Date().toISOString();
+  o.cr=Object.assign({},c,{none:false,entries:(c.entries||[]).concat([{at,code,test:alVal('crTest'),name,dir:alVal('crDir'),decision:dec,reason,by,clin}])});
+  studySet(o);crRender()}
+function crRender(){const d=document.getElementById('crDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=crHTML();d.scrollTop=top;crWarn()}}
+function crOpen(){let d=document.getElementById('crDlg');
+  if(!d){d=document.createElement('dialog');d.id='crDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
+  d.innerHTML=crHTML();if(!d.open)d.showModal();crWarn()}
+function alRender(){const d=document.getElementById('alDlg');if(d&&d.open){const top=d.scrollTop;d.innerHTML=alHTML();d.scrollTop=top;alRefresh()}}
+function alOpen(){let d=document.getElementById('alDlg');
+  if(!d){d=document.createElement('dialog');d.id='alDlg';d.style.cssText='padding:18px 20px;border-radius:14px;border:1px solid var(--border,#ddd);max-width:760px;width:96vw';document.body.appendChild(d)}
+  d.innerHTML=alHTML();if(!d.open)d.showModal();alRefresh()}
+
 function statsOpen(){const d=document.getElementById('statsDlg');if(!d.open)d.showModal();try{studyStatsHint()}catch(e){}}
 function bpGoStep(step){try{document.getElementById('bpDlg').close()}catch(e){}const s=SUBSTAGES.find(x=>x[0]===step);if(s)subOpen(s[1],step)}
 function bpRowHTML(n,num,depth){const hi=studyHi(),m=BP_MODES[n.m]||BP_MODES.front,steps=(n.s||[]);
