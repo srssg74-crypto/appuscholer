@@ -20779,6 +20779,16 @@ function shPlOf(p){
 function shLabel(p,pg){const r=shPlOf(p);if(!r||r.same)return null;const l=r.labels[pg-1];return l?{label:l,how:r.how[pg-1]}:null}
 function shCitePage(p,pg){const x=p.plOff?null:shLabel(p,pg);return x?x.label:String(pg)}
 async function shPlToggle(){const p=SH.cur;if(!p)return;p.plOff=!p.plOff;await shPut(p);shRender();showToast(p.plOff?'Citations will use the PDF page number.':'Citations will use the printed page number.')}
+/* Words damaged by a scan or photo (stray ~ _ | { } marks, letters mixed with digits inside a word). Used to warn before a quote is trusted. */
+function shDamaged(text){
+  const w=String(text||'').split(/\s+/).filter(Boolean),bad=w.filter(x=>!/[:\/@]/.test(x)&&(/\w[~_|{}]|[~_|{}]\w/.test(x)||/[a-z]\d[a-z]/.test(x)));
+  return{n:w.length,bad:bad}}
+const SH_DMC=new WeakMap();
+function shDamageOf(p){
+  if(!p||!p.pages)return null;const k=p.pages.length+':'+(p.pages[0]||'').length,c=SH_DMC.get(p);if(c&&c.k===k)return c.r;
+  const d=shDamaged(p.pages.join(' ')),r={pct:d.n?100*d.bad.length/d.n:0,n:d.bad.length};SH_DMC.set(p,{k:k,r:r});return r}
+function shDamageNote(p){const d=shDamageOf(p);if(!d||d.pct<2||d.n<10)return'';
+  return'<div style="margin:4px 0;padding:5px 9px;border-left:4px solid #d97706;background:rgba(217,119,6,.08);font-size:12.5px">About '+Math.round(d.pct)+'% of the words on this paper look damaged by the scan (stray marks such as ~ or letters mixed with digits). Numbers, names and quotes may be wrong: check them against the page picture before you use them.</div>'}
 function shPlHTML(p){
   const r=shPlOf(p);if(!r||r.same)return'';
   const x=shLabel(p,SH.page);
@@ -20786,7 +20796,7 @@ function shPlHTML(p){
 function shReaderRender(b){
   const p=SH.cur;if(!p)return;const n=p.pages.length;
   const hl=p.notes.filter(x=>x.quote).sort((a,c)=>a.page-c.page);
-  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button>'+shPlHTML(p)+'</div>'+
+  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button>'+shPlHTML(p)+'</div>'+shDamageNote(p)+
    shMdNoteHTML(p)+
    shPageFlagHTML(p)+
    shSectionsHTML(p)+
@@ -21073,6 +21083,7 @@ function shQuoteInsert(q){
 function shQuoteToDraft(){
   const q=shSelQuote();if(!q){showToast('Select some text on the page first');return}
   const r=shQuoteInsert(q);
+  try{const d=shDamaged(q.text);if(r&&d.bad.length){showToast('This passage has '+d.bad.length+' damaged word'+(d.bad.length===1?'':'s')+' from the scan (for example \u201c'+d.bad[0].slice(0,24)+'\u201d). Check the quote against the page picture before you keep it.');return}}catch(e){}
   showToast(r==='cited'?'Quote and citation put in your draft'+(q.cited&&q.cited!==q.pdfPage?', page '+q.cited+' (PDF page '+q.pdfPage+'). Check the page number against the paper.':'. Check the page number: it is the PDF page.'):r==='bare'?'Quote put in your draft. This paper is not linked to your library, so there is no citation yet. Link it above.':'Could not put it in the draft')
 }
 function shPasteQuote(e){
