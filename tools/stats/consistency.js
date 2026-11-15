@@ -98,6 +98,33 @@
     });
     return out;
   }
-  var api = { check: check, pT: pT, pF: pF, pChi2: pChi2, pR: pR };
+  /* An estimate with its confidence interval and a p-value: the estimate must lie inside its interval, and the interval and p must agree
+     about significance (a 95% interval that excludes 1 for a ratio, or 0 for beta and d, goes with p below .05). */
+  function checkCI(pages, hits) {
+    var out = [], by = {};
+    hits.forEach(function (h) { (by[h.page] = by[h.page] || []).push(h); });
+    Object.keys(by).forEach(function (pg) {
+      var hs = by[pg].slice().sort(function (a, b) { return a.at - b.at; });
+      hs.forEach(function (h, i) {
+        var ratio = h.stat === "ratio", eff = h.stat === "effect" && /^(\u03b2|d\b|cohen)/i.test(h.text);
+        if (!ratio && !eff) return;
+        var c = hs[i + 1];
+        if (!c || c.stat !== "CI" || c.at - (h.at + h.text.length) > 40 || c.at < h.at) return;
+        var est = ratio ? h.v.value : h.v.value, lo = c.v.lo, hi = c.v.hi, dec = Math.max(decimals(c.text), decimals(h.text)), u = 0.5 * Math.pow(10, -dec) + 1e-12;
+        var nul = ratio ? 1 : 0, pp = hs[i + 2], res = { test: h.text + ", " + c.text, p: "", page: +pg, status: "ok", computed: null, range: null, note: "", kind: "ci" };
+        if (est < lo - u || est > hi + u) { res.status = "inconsistent"; res.note = "The estimate is outside its own confidence interval."; out.push(res); return; }
+        if (pp && pp.stat === "p" && pp.at - (c.at + c.text.length) <= 70 && pp.at >= c.at) {
+          var alpha = 1 - c.v.level / 100, op = pp.v.op, rep = pp.v.p, ph = 0.5 * Math.pow(10, -decimals(pp.text.replace(/^p\s*(<=|>=|<|>|=)\s*/i, "")));
+          res.p = pp.text;
+          var excl = lo > nul + u || hi < nul - u, incl = lo < nul - u && hi > nul + u;
+          var repSig = ((op === "=" && rep + ph <= alpha + 1e-12) || ((op === "<" || op === "<=") && rep <= alpha + 1e-12)), repNon = ((op === "=" && rep - ph >= alpha - 1e-12) || ((op === ">" || op === ">=") && rep >= alpha - 1e-12));
+          if ((excl && repNon) || (incl && repSig)) { res.status = "decision"; res.note = "The " + c.v.level + "% interval " + (excl ? "excludes " : "includes ") + nul + ", which goes with p " + (excl ? "below " : "above ") + alpha.toFixed(2).replace(/^0/, "") + "."; }
+        }
+        out.push(res);
+      });
+    });
+    return out;
+  }
+  var api = { check: check, checkCI: checkCI, pT: pT, pF: pF, pChi2: pChi2, pR: pR };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuConsistency = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

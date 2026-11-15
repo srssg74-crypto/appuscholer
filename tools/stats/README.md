@@ -25,3 +25,9 @@ The other three are chi-square comparisons of adherence rates whose printed p ma
 One-tailed tests are allowed for (t and r) when the page says one-tailed; without that word on the page a half-size p is flagged.
 That is a spot check on 106 pairs from 53 files; it is not a precision or recall figure. A mismatch is a reason to look at the page, not proof of an error.
 Not checked: correlations printed without df, t tests given as "t = x" without df, results in tables.
+
+### Confidence intervals beside estimates
+
+`checkCI` takes an OR, HR, RR or PR (null 1), or a beta or d (null 0), followed within 40 characters by its confidence interval and, within 70 more, a p-value.
+The estimate must lie inside its interval (rounding allowed for). An interval that excludes the null goes with p below 1 minus the level (.05 for 95%), one that includes it with p above. An interval that ends at the null (1.00) is borderline and is not flagged.
+On the 53 sample PDFs: 46 intervals checked (12 of them with a p beside), none flagged. Zero flags on 46 can mean clean papers or a check that is too lenient; the fixtures show it flags a wrong p and an estimate outside its interval.

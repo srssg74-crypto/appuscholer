@@ -20451,21 +20451,48 @@ function shMarked(p,page){
     });
     return out;
   }
-  var api = { check: check, pT: pT, pF: pF, pChi2: pChi2, pR: pR };
+  /* An estimate with its confidence interval and a p-value: the estimate must lie inside its interval, and the interval and p must agree
+     about significance (a 95% interval that excludes 1 for a ratio, or 0 for beta and d, goes with p below .05). */
+  function checkCI(pages, hits) {
+    var out = [], by = {};
+    hits.forEach(function (h) { (by[h.page] = by[h.page] || []).push(h); });
+    Object.keys(by).forEach(function (pg) {
+      var hs = by[pg].slice().sort(function (a, b) { return a.at - b.at; });
+      hs.forEach(function (h, i) {
+        var ratio = h.stat === "ratio", eff = h.stat === "effect" && /^(\u03b2|d\b|cohen)/i.test(h.text);
+        if (!ratio && !eff) return;
+        var c = hs[i + 1];
+        if (!c || c.stat !== "CI" || c.at - (h.at + h.text.length) > 40 || c.at < h.at) return;
+        var est = ratio ? h.v.value : h.v.value, lo = c.v.lo, hi = c.v.hi, dec = Math.max(decimals(c.text), decimals(h.text)), u = 0.5 * Math.pow(10, -dec) + 1e-12;
+        var nul = ratio ? 1 : 0, pp = hs[i + 2], res = { test: h.text + ", " + c.text, p: "", page: +pg, status: "ok", computed: null, range: null, note: "", kind: "ci" };
+        if (est < lo - u || est > hi + u) { res.status = "inconsistent"; res.note = "The estimate is outside its own confidence interval."; out.push(res); return; }
+        if (pp && pp.stat === "p" && pp.at - (c.at + c.text.length) <= 70 && pp.at >= c.at) {
+          var alpha = 1 - c.v.level / 100, op = pp.v.op, rep = pp.v.p, ph = 0.5 * Math.pow(10, -decimals(pp.text.replace(/^p\s*(<=|>=|<|>|=)\s*/i, "")));
+          res.p = pp.text;
+          var excl = lo > nul + u || hi < nul - u, incl = lo < nul - u && hi > nul + u;
+          var repSig = ((op === "=" && rep + ph <= alpha + 1e-12) || ((op === "<" || op === "<=") && rep <= alpha + 1e-12)), repNon = ((op === "=" && rep - ph >= alpha - 1e-12) || ((op === ">" || op === ">=") && rep >= alpha - 1e-12));
+          if ((excl && repNon) || (incl && repSig)) { res.status = "decision"; res.note = "The " + c.v.level + "% interval " + (excl ? "excludes " : "includes ") + nul + ", which goes with p " + (excl ? "below " : "above ") + alpha.toFixed(2).replace(/^0/, "") + "."; }
+        }
+        out.push(res);
+      });
+    });
+    return out;
+  }
+  var api = { check: check, checkCI: checkCI, pT: pT, pF: pF, pChi2: pChi2, pR: pR };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuConsistency = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
 /* END tools/stats/consistency.js */
 /* Statistics the paper prints, found from the page text with plain patterns (nothing leaves the device). A hit says what the paper prints, not that it is right. */
 const SH_STAT_NAME={p:'p-values',MSD:'Mean and SD',n:'Sample sizes',effect:'Effect sizes',CI:'Confidence intervals',r:'Correlations',t:'t tests',F:'F tests',chi2:'Chi-square',ratio:'Odds, hazard, risk ratios'};
-function shStatsOf(p){try{const th=p.tableHits||[],key=p.pages.length+':'+th.length;if(!SH.stats||SH.stats.id!==p.id||SH.stats.n!==key){const tx=AppuStats.find(p.pages),hits=tx.concat(th.map(x=>({stat:'MSD',text:'Table '+x.table+': '+x.text,page:x.page,table:x.table,v:x.v})));hits.sort((a,b)=>a.page-b.page);let cons=[];try{cons=AppuConsistency.check(p.pages,tx)}catch(e){}SH.stats={id:p.id,n:key,hits:hits,cons:cons}}return SH.stats.hits}catch(e){return[]}}
+function shStatsOf(p){try{const th=p.tableHits||[],key=p.pages.length+':'+th.length;if(!SH.stats||SH.stats.id!==p.id||SH.stats.n!==key){const tx=AppuStats.find(p.pages),hits=tx.concat(th.map(x=>({stat:'MSD',text:'Table '+x.table+': '+x.text,page:x.page,table:x.table,v:x.v})));hits.sort((a,b)=>a.page-b.page);let cons=[];try{cons=AppuConsistency.check(p.pages,tx).concat(AppuConsistency.checkCI(p.pages,tx))}catch(e){}SH.stats={id:p.id,n:key,hits:hits,cons:cons}}return SH.stats.hits}catch(e){return[]}}
 /* Reported statistics checked against each other: a t, F or chi-square with its degrees of freedom fixes its p-value. A mismatch is a reason to look at the page, not proof of an error. */
 function shConsHTML(p){
   shStatsOf(p);const c=(SH.stats&&SH.stats.id===p.id&&SH.stats.cons)||[];if(!c.length)return'';
   const bad=c.filter(x=>x.status==='inconsistent'||x.status==='decision'),adj=c.filter(x=>x.status==='adjusted');
-  const line=x=>'<div style="margin:3px 0;font-size:13px"><button class="btn btn-ghost" style="padding:1px 8px;font-size:12px" title="Go to page '+x.page+'" onclick="shGo('+x.page+')">p. '+x.page+'</button> <code>'+escHTML(x.test+', '+x.p)+'</code> <span style="color:var(--muted)">'+escHTML(x.note)+(x.status==='decision'?' This changes whether p is below .05.':'')+'</span></div>';
+  const line=x=>'<div style="margin:3px 0;font-size:13px"><button class="btn btn-ghost" style="padding:1px 8px;font-size:12px" title="Go to page '+x.page+'" onclick="shGo('+x.page+')">p. '+x.page+'</button> <code>'+escHTML(x.test+(x.p?', '+x.p:''))+'</code> <span style="color:var(--muted)">'+escHTML(x.note)+(x.status==='decision'?' This changes whether p is below .05.':'')+'</span></div>';
   return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Do the numbers agree?</b> ('+(bad.length?bad.length+' to look at, ':'')+c.length+' checked)</summary><div style="margin-top:4px">'+
-    (bad.length?bad.map(line).join(''):'<p style="font-size:13px;margin:2px 0">Every p-value printed beside a t, F or chi-square test agrees with that test statistic.</p>')+(adj.length?'<p style="font-size:12.5px;margin:4px 0 0">'+adj.length+' more '+(adj.length===1?'is':'are')+' described as adjusted, so a difference is expected.</p>':'')+
-    '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Each t, F or chi-square with its degrees of freedom is turned back into a p-value and compared with the p printed next to it. Rounding, cut-off decimals and one-tailed tests are allowed for. A mismatch can be a typo, an exact or corrected test the paper does not name, or a misread of the text, so look at the page before you say anything about the paper.</p></div></details>'}
+    (bad.length?bad.map(line).join(''):'<p style="font-size:13px;margin:2px 0">Everything checked agrees: each p-value printed beside a t, F, chi-square or r test matches its test statistic, and each confidence interval fits its estimate and its p.</p>')+(adj.length?'<p style="font-size:12.5px;margin:4px 0 0">'+adj.length+' more '+(adj.length===1?'is':'are')+' described as adjusted, so a difference is expected.</p>':'')+
+    '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Each t, F or chi-square with its degrees of freedom is turned back into a p-value and compared with the p printed next to it. Rounding, cut-off decimals and one-tailed tests are allowed for. An estimate with its confidence interval is checked too: the estimate must lie inside the interval, and an interval that excludes 1 (ratios) or 0 (beta, d) goes with a small p. A mismatch can be a typo, an exact or corrected test the paper does not name, or a misread of the text, so look at the page before you say anything about the paper.</p></div></details>'}
 function shTablesHTML(p){
   if(p.md)return'';const T=p.tables;
   if(!Array.isArray(T))return'<div class="row" style="gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap"><span style="font-size:12.5px;color:var(--muted)">Tables not read yet.</span><button class="btn btn-ghost" onclick="shFindSections()">Read the tables</button><span id="shSecMsg" style="font-size:12.5px"></span></div>';
