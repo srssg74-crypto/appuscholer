@@ -1,6 +1,7 @@
 """Process receipt: built from the app's own records, with a fingerprint the downloaded file checks itself (build 2026.11.02i)."""
 import sys, os, re, tempfile
 sys.path.insert(0, os.path.dirname(__file__))
+import harness
 from harness import new_page
 from playwright.sync_api import sync_playwright
 fails=[]
@@ -30,10 +31,10 @@ with sync_playwright() as p:
     ok(bool(re.fullmatch(r'[0-9a-f]{64}',h or '')),'a SHA-256 fingerprint is shown')
     html=J("prFileHTML()")
     d=os.path.dirname(os.path.abspath(__file__));f1=os.path.join(d,'_tmp_receipt.html');open(f1,'w').write(html)
-    pg2=b.contexts[0].new_page(); pg2.goto('http://localhost:8765/tests/_tmp_receipt.html'); pg2.wait_for_timeout(600)
+    pg2=b.contexts[0].new_page(); pg2.goto(harness.BASE.rsplit('/',1)[0]+'/tests/_tmp_receipt.html'); pg2.wait_for_timeout(600)
     ok('has not been edited' in pg2.inner_text('#v'),'the downloaded receipt confirms its own fingerprint')
     f2=os.path.join(d,'_tmp_receipt2.html');open(f2,'w').write(html.replace('var T="PROCESS RECEIPT','var T="PROCESS RECEIPT EDITED'))
-    pg2.goto('http://localhost:8765/tests/_tmp_receipt2.html'); pg2.wait_for_timeout(600)
+    pg2.goto(harness.BASE.rsplit('/',1)[0]+'/tests/_tmp_receipt2.html'); pg2.wait_for_timeout(600)
     ok('was changed' in pg2.inner_text('#v'),'an edited receipt says so')
     os.remove(f1);os.remove(f2)
     J("document.getElementById('prDlg').close();subOpen('review','F1')"); pg.wait_for_timeout(200)
