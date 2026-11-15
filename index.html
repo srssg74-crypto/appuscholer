@@ -8229,7 +8229,7 @@ function insertTable(){
   const m=spec.match(/(\d+)\s*[x×,]\s*(\d+)/i);
   const rows=m?Math.max(1,Math.min(30,parseInt(m[1],10))):3;
   const cols=m?Math.max(1,Math.min(12,parseInt(m[2],10))):3;
-  let html='<table>';
+  let html='<table data-newtbl="1">';
   for(let r=0;r<rows;r++){
     html+='<tr>';
     for(let c=0;c<cols;c++)html+=(r===0?'<th>Header</th>':'<td>&nbsp;</td>');
@@ -8237,6 +8237,7 @@ function insertTable(){
   }
   html+='</table><p>&nbsp;</p>';
   insertHTMLBlockIntoEditor(html);
+  try{const nt=editor.querySelector('table[data-newtbl]');if(nt){nt.removeAttribute('data-newtbl');const c=nt.rows[0]&&nt.rows[0].cells[0];if(c){const r=document.createRange();r.selectNodeContents(c);r.collapse(true);const sl=getSelection();sl.removeAllRanges();sl.addRange(r);savedRange=r.cloneRange()}upd();capOpen();return}}catch(e){}
   showToast('Table inserted ✓ — click into a cell, then use +Row / +Col to grow it');
 }
 function _nearestTable(){
