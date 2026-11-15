@@ -18,3 +18,5 @@ all 16 right); an 8-page English phone scan read with Tesseract (printed 148 to 
 in from the sequence, the cover left unlabelled). A Hindi image-only gazette scan could not be tested: no Hindi OCR data here.
 
 A third real scan, 3 phone photos of a printed book chapter with highlighter marks (printed 35 to 37, OCR layer read "37" as "87"), is labelled 35, 36, 37 from the margin lines; from the text order alone it was not.
+
+A fourth, a 7-page 1895 Indian Medical Gazette article with a text layer (head on odd pages "April 1895.] TITLE 155", on even pages "154 INDIAN MEDICAL GAZETTE"), is labelled 153 to 159; page 3 was checked by eye against the page picture (printed 155).
