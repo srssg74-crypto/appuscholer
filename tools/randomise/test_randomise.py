@@ -154,4 +154,175 @@ assert len(mp) == 4 and set(mp) <= {"__proto__","B"}
 pp = R.matched_pairs(seed12, [["__proto__","u2"],["c3","c4"]])
 assert set(pp) == {"__proto__","u2","c3","c4"}
 
+# ---- cluster trials ----
+import random as _rnd
+vec = json.load(open("vectors.json", encoding="utf-8"))["clusters"]
+vs = bytes.fromhex(vec["seed_hex"])
+a = (vec["arms"], vec["factors"], vec["bins"], vec["weight"])
+assert R.stratified_clusters(vs, vec["clusters"], *a) == vec["stratified"], "stratified vector"
+assert R.cluster_minimisation(vs, vec["clusters"], *a) == vec["minimisation"], "minimisation vector"
+
+# same clusters typed in another order give the identical result
+for fn in (R.stratified_clusters, R.cluster_minimisation):
+    base = fn(vs, vec["clusters"], *a)
+    shuf = list(vec["clusters"]); _rnd.Random(3).shuffle(shuf)
+    assert fn(vs, shuf, *a)["allocation"] == base["allocation"], fn.__name__ + " depends on input order"
+    assert fn(bytes.fromhex("06"*32), vec["clusters"], *a)["allocation"] != base["allocation"]
+
+# stratified: each stratum splits as evenly as it can, and the spare ones even out overall
+cl = [{"id": f"c{i:02d}", "reg": "N" if i < 15 else "S"} for i in range(30)]
+r = R.stratified_clusters(seed, cl, ["A","B","C"], ["reg"])
+for s in r["strata"]:
+    cnt = [n for _, n in s["counts"]]
+    assert max(cnt) - min(cnt) <= 1, s
+tot = [t["clusters"] for t in r["arm_totals"]]
+assert max(tot) - min(tot) <= 1, tot
+odd = [{"id": f"c{i}", "reg": str(i % 5)} for i in range(15)]   # five strata of 3, two arms
+ro = R.stratified_clusters(seed, odd, ["A","B"], ["reg"])
+t2 = [t["clusters"] for t in ro["arm_totals"]]
+assert max(t2) - min(t2) <= 1, "spare clusters should even out across strata: %s" % t2
+
+# warnings
+w = R.stratified_clusters(seed, [{"id":"a","g":1},{"id":"b","g":2},{"id":"c","g":2}], ["A","B"], ["g"])
+kinds = {x["kind"] for x in w["warnings"]}
+assert kinds == {"stratum_missing_arm", "strata_too_fine"}, kinds
+
+# minimisation: overall and within-level balance stay tight on a clean design
+big = [{"id": f"k{i:03d}", "reg": "NSEW"[i % 4], "size": 50 + (i * 37) % 400} for i in range(40)]
+m = R.cluster_minimisation(seed, big, ["A","B"], ["reg"], None, "size")
+assert abs(m["arm_totals"][0]["clusters"] - m["arm_totals"][1]["clusters"]) <= 2
+for b in m["balance"]:
+    c = [n for _, n in b["counts"]]
+    assert max(c) - min(c) <= 3, b
+assert sorted(m["processing_order"]) == sorted(c["id"] for c in big)
+
+# validation: each of these must raise
+bad = [
+    dict(clusters=[{"id":"a"}], arms=["A","B"], factors=[]),                      # one cluster
+    dict(clusters=[{"id":"a"},{"id":"a"}], arms=["A","B"], factors=[]),           # duplicate id
+    dict(clusters=[{"id":"a"},{"id":""}], arms=["A","B"], factors=[]),            # empty id
+    dict(clusters=[{"id":"a"},{"id":"b"}], arms=["A"], factors=[]),               # one arm
+    dict(clusters=[{"id":"a","g":1},{"id":"b"}], arms=["A","B"], factors=["g"]), # missing factor value
+    dict(clusters=[{"id":"a","g":1.5},{"id":"b","g":2}], arms=["A","B"], factors=["g"]),  # fractional label
+    dict(clusters=[{"id":"a","g":1},{"id":"b","g":2}], arms=["A","B"], factors=["g"], bins={"g":[5,5]}),  # cuts not increasing
+    dict(clusters=[{"id":"a","g":"x"},{"id":"b","g":2}], arms=["A","B"], factors=["g"], bins={"g":[1]}),  # non-number in binned factor
+    dict(clusters=[{"id":"a","s":0},{"id":"b","s":5}], arms=["A","B"], factors=[], weight="s"),          # weight too small
+    dict(clusters=[{"id":"a","s":True},{"id":"b","s":5}], arms=["A","B"], factors=[], weight="s"),       # bool weight
+]
+for kw in bad:
+    for fn in (R.stratified_clusters, R.cluster_minimisation):
+        try:
+            fn(seed, kw["clusters"], kw["arms"], kw["factors"], kw.get("bins"), kw.get("weight"))
+            raise SystemExit("should raise: %r" % (kw,))
+        except ValueError:
+            pass
+assert R.bin_level(100, [100, 200]) == 1 and R.bin_level(99.9, [100, 200]) == 0 and R.bin_level(200, [100, 200]) == 2
+try:
+    R.cluster_minimisation(seed, big, ["A","B"], [], None, None, 0.5); raise SystemExit("p_best 0.5 should raise")
+except ValueError: pass
+# an arm or id called __proto__ is only a name
+pr = R.stratified_clusters(seed, [{"id":"__proto__"},{"id":"constructor"}], ["__proto__","B"], [])
+assert {i for i, _ in pr["allocation"]} == {"__proto__","constructor"}
+
+# command line config path
+
+# ---- constrained clusters (rules as data) ----
+V = json.load(open("vectors.json", encoding="utf-8"))
+for key in ("constrained", "constrained_odd"):
+    cv = V[key]
+    got = R.constrained_clusters(bytes.fromhex(cv["seed_hex"]), cv["clusters"], cv["arms"], cv["constraints"], cv["tries"])
+    assert got == cv["result"], key
+    sz = {c["id"]: c["size"] for c in cv["clusters"]}
+    side = {"A": [], "B": []}
+    for i, a in got["allocation"]: side[a].append(sz[i])
+    assert abs(sum(side["A"])/len(side["A"]) - sum(side["B"])/len(side["B"])) <= 10, "constraint not met"
+    assert abs(len(side["A"]) - len(side["B"])) <= 1
+cv = V["constrained"]
+shuf = list(cv["clusters"]); _rnd.Random(9).shuffle(shuf)
+assert R.constrained_clusters(bytes.fromhex(cv["seed_hex"]), shuf, cv["arms"], cv["constraints"], cv["tries"]) == cv["result"], "input order"
+for kw in [dict(constraints=[]), dict(constraints=[{"type":"bogus","factor":"size","max":1}]),
+           dict(constraints=[{"type":"mean_diff","factor":"nope","max":1}]),
+           dict(constraints=[{"type":"mean_diff","factor":"size","max":-1}]),
+           dict(constraints=[{"type":"mean_diff","factor":"region","max":1}]),   # not numeric
+           dict(constraints=[{"type":"mean_diff","factor":"size","max":0.0001}], tries=20),   # unsatisfiable
+           dict(constraints=[{"type":"mean_diff","factor":"size","max":10}], tries=0),
+           dict(constraints=[{"type":"mean_diff","factor":"size","max":10}], arms=["A","B","C"])]:
+    try:
+        R.constrained_clusters(bytes.fromhex(cv["seed_hex"]), cv["clusters"], kw.get("arms", cv["arms"]), kw["constraints"], kw.get("tries", 100))
+        raise SystemExit("should raise: %r" % (kw,))
+    except ValueError:
+        pass
+
+# ---- review fixes: fractional weights, byte order, boundaries, ties, parity of refusals ----
+fv = json.load(open("vectors.json", encoding="utf-8"))["clusters_fractional"]
+fs = bytes.fromhex(fv["seed_hex"]); fa = (fv["arms"], fv["factors"], fv["bins"], fv["weight"])
+assert R.stratified_clusters(fs, fv["clusters"], *fa) == fv["stratified"], "fractional stratified vector"
+assert R.cluster_minimisation(fs, fv["clusters"], *fa) == fv["minimisation"], "fractional minimisation vector"
+# plain left-to-right sum, not Python's compensated sum: 0.1*1..10 adds to 3.3000000000000003 only left to right
+t = R.stratified_clusters(seed, [{"id": f"c{i}", "w": 0.1} for i in range(10)], ["A","B"], [], None, "w")
+tot = 0.0
+for _ in range(3): tot += 0.1
+assert R._fsum([0.1, 0.1, 0.1]) == tot, "_fsum must add left to right"
+# ids are ordered by UTF-8 bytes: U+E000 (3 bytes) sorts before an emoji (4 bytes) although UTF-16 says the opposite
+oc = R.stratified_clusters(seed, [{"id": "\U0001F600"}, {"id": "\ue000"}], ["A","B"], [])
+assert [i for i, _ in oc["allocation"]] == ["\ue000", "\U0001F600"], oc["allocation"]
+# boundaries
+ex = [{"id": "a", "s": 1}, {"id": "b", "s": 1}, {"id": "c", "s": 3}, {"id": "d", "s": 3}]
+assert R.cluster_minimisation(seed, ex, ["A","B"], [], None, "s")["method"] == "cluster_minimisation"
+for w in (0.001, 1e9):
+    R.cluster_minimisation(seed, [{"id": "a", "s": w}, {"id": "b", "s": w}], ["A","B"], [], None, "s")
+for w in (0.0009, 1e9 * 1.0000001):
+    try:
+        R.cluster_minimisation(seed, [{"id": "a", "s": w}, {"id": "b", "s": 5}], ["A","B"], [], None, "s"); raise SystemExit("weight %r should raise" % w)
+    except ValueError: pass
+c2 = [{"id": f"c{i}", "x": v} for i, v in enumerate([10, 20, 30, 50])]
+# the best possible split of these four sizes differs by exactly 5 ({10,50} against {20,30}):
+# a limit of 5 passes, a limit just under it finds nothing
+assert R.constrained_clusters(seed, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":5}], 300)["attempts"] >= 1
+try:
+    R.constrained_clusters(seed, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":4.99}], 300); raise SystemExit("should raise")
+except ValueError: pass
+# count_diff is a size, not a signed difference: 3 of level u in arm B and 1 in A fails max 1 whichever arm holds more
+c3 = [{"id": f"c{i}", "u": "p" if i < 3 else "q"} for i in range(4)]
+cr = R.constrained_clusters(seed, c3, ["A","B"], [{"type":"count_diff","factor":"u","max":1}], 300)
+cnt = {}
+for i, a in cr["allocation"]: cnt.setdefault(c3[int(i[1:])]["u"], []).append(a)
+assert abs(cnt["p"].count("A") - cnt["p"].count("B")) <= 1
+# narrow choice: six sizes, tight limit, few acceptable allocations
+nc = R.constrained_clusters(seed, [{"id": f"c{i}", "x": 10 * (i + 1)} for i in range(6)], ["A","B"], [{"type":"mean_diff","factor":"x","max":4}], 2000)
+assert any(w["kind"] == "narrow_choice" for w in nc["warnings"]) and nc["acceptable_seen"] < 20
+# ties: with no factor and equal clusters, minimisation uses both arms across seeds
+firsts = {R.cluster_minimisation(bytes([k]) * 32, [{"id": "a"}, {"id": "b"}], ["A","B"], [])["allocation"][0][1] for k in range(1, 40)}
+assert firsts == {"A", "B"}, firsts
+# strata_too_fine boundary: 2 strata x 2 arms = 4 slots with exactly 4 clusters is not too fine
+eq = R.stratified_clusters(seed, [{"id": f"c{i}", "g": i % 2} for i in range(4)], ["A","B"], ["g"])
+assert not any(w["kind"] == "strata_too_fine" for w in eq["warnings"])
+# a level with one cluster is flagged by minimisation; two is not
+lm = R.cluster_minimisation(seed, [{"id": "a", "g": "x"}, {"id": "b", "g": "y"}, {"id": "c", "g": "y"}], ["A","B"], ["g"])
+assert [w["level"] for w in lm["warnings"] if w["kind"] == "level_single_cluster"] == ["x"]
+# stratified with spare clusters in one stratum of 5 and three arms
+sp = R.stratified_clusters(seed, [{"id": f"c{i}", "g": "a"} for i in range(5)], ["A","B","C"], ["g"])
+assert sorted(n for _, n in sp["strata"][0]["counts"]) == [1, 2, 2]
+# inputs the two engines must refuse alike
+def refuses(fn, *a):
+    try: fn(seed, *a)
+    except ValueError: return True
+    return False
+base = [{"id": "a", "g": 1}, {"id": "b", "g": 2}]
+assert refuses(R.cluster_minimisation, base, ["A","B"], ["g"], None, None, "0.9")
+assert refuses(R.cluster_minimisation, base, ["A","B"], ["g"], None, None, None)
+assert refuses(R.cluster_minimisation, base, ["A","B"], ["g"], None, None, True)
+assert refuses(R.stratified_clusters, base, "AB", ["g"])
+assert refuses(R.stratified_clusters, [{"id": "\ud800", "g": 1}, {"id": "b", "g": 2}], ["A","B"], ["g"])
+assert refuses(R.stratified_clusters, [{"id": "a", "g": "\udfff"}, {"id": "b", "g": 2}], ["A","B"], ["g"])
+assert refuses(R.stratified_clusters, [{"id": "a", "g": 10**17}, {"id": "b", "g": 2}], ["A","B"], ["g"])
+assert refuses(R.stratified_clusters, [{"id": "a", "g": 1}, {"id": "b", "g": 2}], ["A","B"], ["g"], {"g": [9007199254740992, 9007199254740993]})
+assert refuses(R.stratified_clusters, [{"id": "a", "s": 5}, {"id": "b", "s": 5}], ["A","B"], [], None, "")
+assert refuses(R.constrained_clusters, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":10**400}], 100)
+assert R.constrained_clusters(seed, c2, ["A","B"], [{"type":"mean_diff","factor":"x","max":20}], 100.0)["method"] == "constrained_clusters"
+cfgres, cfgparams = R.run_config({"method": "cluster_minimisation", "clusters": big, "arms": ["A","B"], "factors": ["reg"], "weight": "size"}, seed)
+assert cfgres["method"] == "cluster_minimisation" and cfgparams["weight"] == "size" and cfgparams["p_best"] == 0.8
+cfgres, cfgparams = R.run_config({"method": "constrained_clusters", "clusters": c2, "arms": ["A","B"], "constraints": [{"type":"mean_diff","factor":"x","max":20}]}, seed)
+assert cfgres["method"] == "constrained_clusters" and cfgparams["tries"] == 10000
+
 print("ALL TESTS PASSED")

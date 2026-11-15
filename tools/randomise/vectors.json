@@ -522,5 +522,1616 @@
   "holder": "Coordinator"
  },
  "plan_sha256": "32b897991d865d1b40565967cb903cc46e9b88c8b86d403eff448f92319ea53f",
- "commitment_v2": "dac9490adcfa5a7c54cd5e11d2fc9a5cc26a9db92331ca545da34cb579048d88"
+ "commitment_v2": "dac9490adcfa5a7c54cd5e11d2fc9a5cc26a9db92331ca545da34cb579048d88",
+ "clusters": {
+  "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
+  "clusters": [
+   {
+    "id": "S00",
+    "size": 120,
+    "region": "N"
+   },
+   {
+    "id": "S01",
+    "size": 80,
+    "region": "N"
+   },
+   {
+    "id": "S02",
+    "size": 300,
+    "region": "S"
+   },
+   {
+    "id": "S03",
+    "size": 45,
+    "region": "S"
+   },
+   {
+    "id": "S04",
+    "size": 210,
+    "region": "N"
+   },
+   {
+    "id": "S05",
+    "size": 95,
+    "region": "S"
+   },
+   {
+    "id": "S06",
+    "size": 60,
+    "region": "N"
+   },
+   {
+    "id": "S07",
+    "size": 150,
+    "region": "S"
+   },
+   {
+    "id": "S08",
+    "size": 400,
+    "region": "N"
+   },
+   {
+    "id": "S09",
+    "size": 70,
+    "region": "S"
+   },
+   {
+    "id": "S10",
+    "size": 180,
+    "region": "N"
+   },
+   {
+    "id": "S11",
+    "size": 112.5,
+    "region": "S"
+   },
+   {
+    "id": "é1",
+    "size": 90,
+    "region": "东"
+   },
+   {
+    "id": "__proto__",
+    "size": 130,
+    "region": "东"
+   }
+  ],
+  "arms": [
+   "A",
+   "B"
+  ],
+  "factors": [
+   "region",
+   "size"
+  ],
+  "bins": {
+   "size": [
+    100,
+    200
+   ]
+  },
+  "weight": "size",
+  "stratified": {
+   "method": "stratified_clusters",
+   "allocation": [
+    [
+     "S00",
+     "B"
+    ],
+    [
+     "S01",
+     "B"
+    ],
+    [
+     "S02",
+     "A"
+    ],
+    [
+     "S03",
+     "B"
+    ],
+    [
+     "S04",
+     "A"
+    ],
+    [
+     "S05",
+     "A"
+    ],
+    [
+     "S06",
+     "A"
+    ],
+    [
+     "S07",
+     "A"
+    ],
+    [
+     "S08",
+     "B"
+    ],
+    [
+     "S09",
+     "B"
+    ],
+    [
+     "S10",
+     "A"
+    ],
+    [
+     "S11",
+     "B"
+    ],
+    [
+     "__proto__",
+     "A"
+    ],
+    [
+     "é1",
+     "B"
+    ]
+   ],
+   "strata": [
+    {
+     "levels": [
+      [
+       "region",
+       "N"
+      ],
+      [
+       "size",
+       "b0"
+      ]
+     ],
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "region",
+       "N"
+      ],
+      [
+       "size",
+       "b1"
+      ]
+     ],
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "region",
+       "N"
+      ],
+      [
+       "size",
+       "b2"
+      ]
+     ],
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "region",
+       "S"
+      ],
+      [
+       "size",
+       "b0"
+      ]
+     ],
+     "clusters": 3,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       2
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "region",
+       "S"
+      ],
+      [
+       "size",
+       "b1"
+      ]
+     ],
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "region",
+       "S"
+      ],
+      [
+       "size",
+       "b2"
+      ]
+     ],
+     "clusters": 1,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       0
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "region",
+       "东"
+      ],
+      [
+       "size",
+       "b0"
+      ]
+     ],
+     "clusters": 1,
+     "counts": [
+      [
+       "A",
+       0
+      ],
+      [
+       "B",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "region",
+       "东"
+      ],
+      [
+       "size",
+       "b1"
+      ]
+     ],
+     "clusters": 1,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       0
+      ]
+     ]
+    }
+   ],
+   "arm_totals": [
+    {
+     "arm": "A",
+     "clusters": 7,
+     "weight": 1125
+    },
+    {
+     "arm": "B",
+     "clusters": 7,
+     "weight": 917.5
+    }
+   ],
+   "warnings": [
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "region",
+       "S"
+      ],
+      [
+       "size",
+       "b2"
+      ]
+     ],
+     "clusters": 1
+    },
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "region",
+       "东"
+      ],
+      [
+       "size",
+       "b0"
+      ]
+     ],
+     "clusters": 1
+    },
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "region",
+       "东"
+      ],
+      [
+       "size",
+       "b1"
+      ]
+     ],
+     "clusters": 1
+    },
+    {
+     "kind": "strata_too_fine",
+     "strata": 8,
+     "clusters": 14,
+     "arms": 2
+    }
+   ]
+  },
+  "minimisation": {
+   "method": "cluster_minimisation",
+   "processing_order": [
+    "é1",
+    "S07",
+    "S00",
+    "S02",
+    "S03",
+    "S11",
+    "S05",
+    "S04",
+    "S08",
+    "S01",
+    "S09",
+    "S10",
+    "S06",
+    "__proto__"
+   ],
+   "allocation": [
+    [
+     "S00",
+     "A"
+    ],
+    [
+     "S01",
+     "A"
+    ],
+    [
+     "S02",
+     "A"
+    ],
+    [
+     "S03",
+     "B"
+    ],
+    [
+     "S04",
+     "B"
+    ],
+    [
+     "S05",
+     "A"
+    ],
+    [
+     "S06",
+     "A"
+    ],
+    [
+     "S07",
+     "B"
+    ],
+    [
+     "S08",
+     "B"
+    ],
+    [
+     "S09",
+     "B"
+    ],
+    [
+     "S10",
+     "A"
+    ],
+    [
+     "S11",
+     "B"
+    ],
+    [
+     "__proto__",
+     "B"
+    ],
+    [
+     "é1",
+     "A"
+    ]
+   ],
+   "arm_totals": [
+    {
+     "arm": "A",
+     "clusters": 7,
+     "weight": 925
+    },
+    {
+     "arm": "B",
+     "clusters": 7,
+     "weight": 1117.5
+    }
+   ],
+   "balance": [
+    {
+     "factor": "region",
+     "level": "N",
+     "clusters": 6,
+     "counts": [
+      [
+       "A",
+       4
+      ],
+      [
+       "B",
+       2
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       440
+      ],
+      [
+       "B",
+       610
+      ]
+     ]
+    },
+    {
+     "factor": "region",
+     "level": "S",
+     "clusters": 6,
+     "counts": [
+      [
+       "A",
+       2
+      ],
+      [
+       "B",
+       4
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       395
+      ],
+      [
+       "B",
+       377.5
+      ]
+     ]
+    },
+    {
+     "factor": "region",
+     "level": "东",
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       90
+      ],
+      [
+       "B",
+       130
+      ]
+     ]
+    },
+    {
+     "factor": "size",
+     "level": "b0",
+     "clusters": 6,
+     "counts": [
+      [
+       "A",
+       4
+      ],
+      [
+       "B",
+       2
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       325
+      ],
+      [
+       "B",
+       115
+      ]
+     ]
+    },
+    {
+     "factor": "size",
+     "level": "b1",
+     "clusters": 5,
+     "counts": [
+      [
+       "A",
+       2
+      ],
+      [
+       "B",
+       3
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       300
+      ],
+      [
+       "B",
+       392.5
+      ]
+     ]
+    },
+    {
+     "factor": "size",
+     "level": "b2",
+     "clusters": 3,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       2
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       300
+      ],
+      [
+       "B",
+       610
+      ]
+     ]
+    }
+   ],
+   "warnings": []
+  }
+ },
+ "constrained": {
+  "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
+  "clusters": [
+   {
+    "id": "W00",
+    "size": 50,
+    "region": "N"
+   },
+   {
+    "id": "W01",
+    "size": 103,
+    "region": "S"
+   },
+   {
+    "id": "W02",
+    "size": 156,
+    "region": "E"
+   },
+   {
+    "id": "W03",
+    "size": 209,
+    "region": "N"
+   },
+   {
+    "id": "W04",
+    "size": 262,
+    "region": "S"
+   },
+   {
+    "id": "W05",
+    "size": 315,
+    "region": "E"
+   },
+   {
+    "id": "W06",
+    "size": 68,
+    "region": "N"
+   },
+   {
+    "id": "W07",
+    "size": 121,
+    "region": "S"
+   },
+   {
+    "id": "W08",
+    "size": 174,
+    "region": "E"
+   },
+   {
+    "id": "W09",
+    "size": 227,
+    "region": "N"
+   },
+   {
+    "id": "W10",
+    "size": 280,
+    "region": "S"
+   },
+   {
+    "id": "W11",
+    "size": 333,
+    "region": "E"
+   },
+   {
+    "id": "W12",
+    "size": 86,
+    "region": "N"
+   },
+   {
+    "id": "é",
+    "size": 77.5,
+    "region": "N"
+   }
+  ],
+  "arms": [
+   "A",
+   "B"
+  ],
+  "constraints": [
+   {
+    "type": "mean_diff",
+    "factor": "size",
+    "max": 10
+   },
+   {
+    "type": "count_diff",
+    "factor": "region",
+    "max": 1
+   }
+  ],
+  "tries": 5000,
+  "result": {
+   "method": "constrained_clusters",
+   "allocation": [
+    [
+     "W00",
+     "A"
+    ],
+    [
+     "W01",
+     "B"
+    ],
+    [
+     "W02",
+     "B"
+    ],
+    [
+     "W03",
+     "B"
+    ],
+    [
+     "W04",
+     "A"
+    ],
+    [
+     "W05",
+     "A"
+    ],
+    [
+     "W06",
+     "A"
+    ],
+    [
+     "W07",
+     "A"
+    ],
+    [
+     "W08",
+     "B"
+    ],
+    [
+     "W09",
+     "B"
+    ],
+    [
+     "W10",
+     "B"
+    ],
+    [
+     "W11",
+     "A"
+    ],
+    [
+     "W12",
+     "A"
+    ],
+    [
+     "é",
+     "B"
+    ]
+   ],
+   "attempts": 7,
+   "acceptable_seen": 193,
+   "arm_totals": [
+    {
+     "arm": "A",
+     "clusters": 7
+    },
+    {
+     "arm": "B",
+     "clusters": 7
+    }
+   ],
+   "warnings": []
+  }
+ },
+ "constrained_odd": {
+  "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
+  "clusters": [
+   {
+    "id": "W00",
+    "size": 50,
+    "region": "N"
+   },
+   {
+    "id": "W01",
+    "size": 103,
+    "region": "S"
+   },
+   {
+    "id": "W02",
+    "size": 156,
+    "region": "E"
+   },
+   {
+    "id": "W03",
+    "size": 209,
+    "region": "N"
+   },
+   {
+    "id": "W04",
+    "size": 262,
+    "region": "S"
+   },
+   {
+    "id": "W05",
+    "size": 315,
+    "region": "E"
+   },
+   {
+    "id": "W06",
+    "size": 68,
+    "region": "N"
+   },
+   {
+    "id": "W07",
+    "size": 121,
+    "region": "S"
+   },
+   {
+    "id": "W08",
+    "size": 174,
+    "region": "E"
+   },
+   {
+    "id": "W09",
+    "size": 227,
+    "region": "N"
+   },
+   {
+    "id": "W10",
+    "size": 280,
+    "region": "S"
+   },
+   {
+    "id": "W11",
+    "size": 333,
+    "region": "E"
+   },
+   {
+    "id": "W12",
+    "size": 86,
+    "region": "N"
+   }
+  ],
+  "arms": [
+   "A",
+   "B"
+  ],
+  "constraints": [
+   {
+    "type": "mean_diff",
+    "factor": "size",
+    "max": 10
+   },
+   {
+    "type": "count_diff",
+    "factor": "region",
+    "max": 1
+   }
+  ],
+  "tries": 5000,
+  "result": {
+   "method": "constrained_clusters",
+   "allocation": [
+    [
+     "W00",
+     "B"
+    ],
+    [
+     "W01",
+     "A"
+    ],
+    [
+     "W02",
+     "B"
+    ],
+    [
+     "W03",
+     "B"
+    ],
+    [
+     "W04",
+     "B"
+    ],
+    [
+     "W05",
+     "A"
+    ],
+    [
+     "W06",
+     "A"
+    ],
+    [
+     "W07",
+     "A"
+    ],
+    [
+     "W08",
+     "B"
+    ],
+    [
+     "W09",
+     "A"
+    ],
+    [
+     "W10",
+     "B"
+    ],
+    [
+     "W11",
+     "A"
+    ],
+    [
+     "W12",
+     "A"
+    ]
+   ],
+   "attempts": 39,
+   "acceptable_seen": 29,
+   "arm_totals": [
+    {
+     "arm": "A",
+     "clusters": 7
+    },
+    {
+     "arm": "B",
+     "clusters": 6
+    }
+   ],
+   "warnings": [
+    {
+     "kind": "narrow_choice",
+     "distinct_acceptable": 29,
+     "tries": 5000
+    }
+   ]
+  }
+ },
+ "clusters_fractional": {
+  "seed_hex": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+  "clusters": [
+   {
+    "id": "a",
+    "w": 0.15,
+    "g": "x",
+    "h": 0
+   },
+   {
+    "id": "😀x",
+    "w": 0.2,
+    "g": "y",
+    "h": 2
+   },
+   {
+    "id": "y",
+    "w": 0.3,
+    "g": "z",
+    "h": 4
+   },
+   {
+    "id": "é",
+    "w": 0.45,
+    "g": "x",
+    "h": 1
+   },
+   {
+    "id": "Z",
+    "w": 0.5,
+    "g": "y",
+    "h": 3
+   },
+   {
+    "id": "z9",
+    "w": 0.6,
+    "g": "z",
+    "h": 0
+   },
+   {
+    "id": "東",
+    "w": 0.75,
+    "g": "x",
+    "h": 2
+   },
+   {
+    "id": "__proto__",
+    "w": 0.8,
+    "g": "y",
+    "h": 4
+   },
+   {
+    "id": "k10",
+    "w": 0.9,
+    "g": "z",
+    "h": 1
+   },
+   {
+    "id": "k2",
+    "w": 1.05,
+    "g": "x",
+    "h": 3
+   },
+   {
+    "id": "￿q",
+    "w": 1.1,
+    "g": "y",
+    "h": 0
+   }
+  ],
+  "arms": [
+   "A",
+   "B",
+   "C"
+  ],
+  "factors": [
+   "g",
+   "h"
+  ],
+  "bins": {
+   "h": [
+    2
+   ]
+  },
+  "weight": "w",
+  "stratified": {
+   "method": "stratified_clusters",
+   "allocation": [
+    [
+     "Z",
+     "C"
+    ],
+    [
+     "__proto__",
+     "A"
+    ],
+    [
+     "a",
+     "B"
+    ],
+    [
+     "k10",
+     "B"
+    ],
+    [
+     "k2",
+     "B"
+    ],
+    [
+     "z9",
+     "A"
+    ],
+    [
+     "é",
+     "C"
+    ],
+    [
+     "東",
+     "A"
+    ],
+    [
+     "y",
+     "A"
+    ],
+    [
+     "￿q",
+     "C"
+    ],
+    [
+     "😀x",
+     "B"
+    ]
+   ],
+   "strata": [
+    {
+     "levels": [
+      [
+       "g",
+       "x"
+      ],
+      [
+       "h",
+       "b0"
+      ]
+     ],
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       0
+      ],
+      [
+       "B",
+       1
+      ],
+      [
+       "C",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "g",
+       "x"
+      ],
+      [
+       "h",
+       "b1"
+      ]
+     ],
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ],
+      [
+       "C",
+       0
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "g",
+       "y"
+      ],
+      [
+       "h",
+       "b0"
+      ]
+     ],
+     "clusters": 1,
+     "counts": [
+      [
+       "A",
+       0
+      ],
+      [
+       "B",
+       0
+      ],
+      [
+       "C",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "g",
+       "y"
+      ],
+      [
+       "h",
+       "b1"
+      ]
+     ],
+     "clusters": 3,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ],
+      [
+       "C",
+       1
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "g",
+       "z"
+      ],
+      [
+       "h",
+       "b0"
+      ]
+     ],
+     "clusters": 2,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ],
+      [
+       "C",
+       0
+      ]
+     ]
+    },
+    {
+     "levels": [
+      [
+       "g",
+       "z"
+      ],
+      [
+       "h",
+       "b1"
+      ]
+     ],
+     "clusters": 1,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       0
+      ],
+      [
+       "C",
+       0
+      ]
+     ]
+    }
+   ],
+   "arm_totals": [
+    {
+     "arm": "A",
+     "clusters": 4,
+     "weight": 2.4499999999999997
+    },
+    {
+     "arm": "B",
+     "clusters": 4,
+     "weight": 2.3000000000000003
+    },
+    {
+     "arm": "C",
+     "clusters": 3,
+     "weight": 2.05
+    }
+   ],
+   "warnings": [
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "g",
+       "x"
+      ],
+      [
+       "h",
+       "b0"
+      ]
+     ],
+     "clusters": 2
+    },
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "g",
+       "x"
+      ],
+      [
+       "h",
+       "b1"
+      ]
+     ],
+     "clusters": 2
+    },
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "g",
+       "y"
+      ],
+      [
+       "h",
+       "b0"
+      ]
+     ],
+     "clusters": 1
+    },
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "g",
+       "z"
+      ],
+      [
+       "h",
+       "b0"
+      ]
+     ],
+     "clusters": 2
+    },
+    {
+     "kind": "stratum_missing_arm",
+     "levels": [
+      [
+       "g",
+       "z"
+      ],
+      [
+       "h",
+       "b1"
+      ]
+     ],
+     "clusters": 1
+    },
+    {
+     "kind": "strata_too_fine",
+     "strata": 6,
+     "clusters": 11,
+     "arms": 3
+    }
+   ]
+  },
+  "minimisation": {
+   "method": "cluster_minimisation",
+   "processing_order": [
+    "a",
+    "😀x",
+    "k10",
+    "￿q",
+    "é",
+    "__proto__",
+    "東",
+    "k2",
+    "z9",
+    "y",
+    "Z"
+   ],
+   "allocation": [
+    [
+     "Z",
+     "C"
+    ],
+    [
+     "__proto__",
+     "B"
+    ],
+    [
+     "a",
+     "B"
+    ],
+    [
+     "k10",
+     "A"
+    ],
+    [
+     "k2",
+     "C"
+    ],
+    [
+     "z9",
+     "A"
+    ],
+    [
+     "é",
+     "B"
+    ],
+    [
+     "東",
+     "A"
+    ],
+    [
+     "y",
+     "B"
+    ],
+    [
+     "￿q",
+     "C"
+    ],
+    [
+     "😀x",
+     "A"
+    ]
+   ],
+   "arm_totals": [
+    {
+     "arm": "A",
+     "clusters": 4,
+     "weight": 2.45
+    },
+    {
+     "arm": "B",
+     "clusters": 4,
+     "weight": 1.7000000000000002
+    },
+    {
+     "arm": "C",
+     "clusters": 3,
+     "weight": 2.6500000000000004
+    }
+   ],
+   "balance": [
+    {
+     "factor": "g",
+     "level": "x",
+     "clusters": 4,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       2
+      ],
+      [
+       "C",
+       1
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       0.75
+      ],
+      [
+       "B",
+       0.6
+      ],
+      [
+       "C",
+       1.05
+      ]
+     ]
+    },
+    {
+     "factor": "g",
+     "level": "y",
+     "clusters": 4,
+     "counts": [
+      [
+       "A",
+       1
+      ],
+      [
+       "B",
+       1
+      ],
+      [
+       "C",
+       2
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       0.2
+      ],
+      [
+       "B",
+       0.8
+      ],
+      [
+       "C",
+       1.6
+      ]
+     ]
+    },
+    {
+     "factor": "g",
+     "level": "z",
+     "clusters": 3,
+     "counts": [
+      [
+       "A",
+       2
+      ],
+      [
+       "B",
+       1
+      ],
+      [
+       "C",
+       0
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       1.5
+      ],
+      [
+       "B",
+       0.3
+      ],
+      [
+       "C",
+       0
+      ]
+     ]
+    },
+    {
+     "factor": "h",
+     "level": "b0",
+     "clusters": 5,
+     "counts": [
+      [
+       "A",
+       2
+      ],
+      [
+       "B",
+       2
+      ],
+      [
+       "C",
+       1
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       1.5
+      ],
+      [
+       "B",
+       0.6
+      ],
+      [
+       "C",
+       1.1
+      ]
+     ]
+    },
+    {
+     "factor": "h",
+     "level": "b1",
+     "clusters": 6,
+     "counts": [
+      [
+       "A",
+       2
+      ],
+      [
+       "B",
+       2
+      ],
+      [
+       "C",
+       2
+      ]
+     ],
+     "weights": [
+      [
+       "A",
+       0.95
+      ],
+      [
+       "B",
+       1.1
+      ],
+      [
+       "C",
+       1.55
+      ]
+     ]
+    }
+   ],
+   "warnings": []
+  }
+ }
 }
