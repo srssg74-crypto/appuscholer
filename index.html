@@ -19907,8 +19907,19 @@ async function shAddFiles(input){
   const have=await shAll();const msgs=[];
   for(const f of files){
     SH.status='Reading '+f.name+'…';shRender();
-    if(!/\.pdf$/i.test(f.name)){msgs.push(f.name+': not a PDF');continue}
+    const isMd=/\.(md|markdown|txt)$/i.test(f.name);
+    if(!isMd&&!/\.pdf$/i.test(f.name)){msgs.push(f.name+': not a PDF or a Markdown file');continue}
     if(have.some(p=>p.file===f.name&&p.size===f.size)){msgs.push(f.name+': already on the shelf');continue}
+    if(isMd){
+      try{
+        const r=AppuMd.parse(await f.text(),t=>AppuSections.kindOf(t)),chars=r.pages.reduce((x,y)=>x+y.length,0);
+        if(chars<200){msgs.push(f.name+': too little text. Not added.');continue}
+        const rec={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:r.title||shGuessTitle(r.pages,f.name.replace(/\.(md|markdown|txt)$/i,''),null),file:f.name,size:f.size,added:new Date().toISOString(),pages:r.pages,total:r.pages.length,notes:[],cells:{},sections:r.sections,md:r.how};
+        try{shLinkLib(rec)}catch(e){}
+        await shPut(rec);have.push(rec);
+        msgs.push(f.name+': added from Markdown, '+r.pages.length+(r.how==='none'?' parts':' pages')+'. '+(r.notes[0]||''))
+      }catch(e){msgs.push(f.name+': '+(e&&e.message?e.message:'could not be read'))}
+      continue}
     try{
       const r=await shExtractPdf(f),chars=r.pages.reduce((a,x)=>a+x.length,0);
       if(chars<200){msgs.push(f.name+': no readable text (it looks scanned). Not added.');continue}
@@ -19940,7 +19951,7 @@ function shStatusHTML(){return SH.status?'<p style="font-size:13px;margin:6px 0"
 async function shUsage(){try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();return Math.round((e.usage||0)/1048576)+' MB used of about '+Math.round((e.quota||0)/1048576)+' MB'}}catch(e){}return''}
 function shPapersRender(b){
   const L=SH.papers.map(p=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><input type="text" value="'+escHTML(p.title)+'" style="width:100%;font-weight:700" onchange="shRename(\''+p.id+'\',this.value)" aria-label="Title">'+shLibLine(p)+'<div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+escHTML(p.file)+' · '+p.pages.length+' pages · '+p.notes.length+' highlights</div><div class="row" style="gap:6px"><button class="btn btn-purple" onclick="shRead(\''+p.id+'\',1)">Read</button><button class="btn btn-ghost" id="shDel_'+p.id+'" onclick="shAskDel(\''+p.id+'\')">Remove from shelf</button></div></div>').join('');
-  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'shFile\').click()">➕ Add PDFs</button><input type="file" id="shFile" accept=".pdf,application/pdf" multiple style="display:none" onchange="shAddFiles(this)"><button class="btn btn-ghost" onclick="shPdfToolsOpen()">PDF tools</button><button class="btn btn-ghost" onclick="shBackup()">Back up the shelf</button><button class="btn btn-ghost" onclick="document.getElementById(\'shRest\').click()">Restore a shelf backup</button><input type="file" id="shRest" accept=".json" style="display:none" onchange="shRestore(this)"></div>'+shStatusHTML()+(SH.papers.length?L:'<p style="font-size:13.5px">The shelf is empty. Add a PDF to start.</p>')+'<p style="font-size:12.5px;color:var(--muted)" id="shUse"></p><p style="font-size:12.5px;color:var(--muted)">The shelf is kept apart from the normal backup. Press <b>Back up the shelf</b> now and then. Clearing your browser data erases the shelf.</p>';
+  b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'shFile\').click()">➕ Add PDFs or Markdown</button><input type="file" id="shFile" accept=".pdf,application/pdf,.md,.markdown,.txt,text/markdown,text/plain" multiple style="display:none" onchange="shAddFiles(this)"><button class="btn btn-ghost" onclick="shPdfToolsOpen()">PDF tools</button><button class="btn btn-ghost" onclick="shBackup()">Back up the shelf</button><button class="btn btn-ghost" onclick="document.getElementById(\'shRest\').click()">Restore a shelf backup</button><input type="file" id="shRest" accept=".json" style="display:none" onchange="shRestore(this)"></div>'+shStatusHTML()+(SH.papers.length?L:'<p style="font-size:13.5px">The shelf is empty. Add a PDF to start.</p>')+'<p style="font-size:12.5px;color:var(--muted)" id="shUse"></p><p style="font-size:12.5px;color:var(--muted)">The shelf is kept apart from the normal backup. Press <b>Back up the shelf</b> now and then. Clearing your browser data erases the shelf.</p>';
   shUsage().then(u=>{const e=document.getElementById('shUse');if(e&&u)e.textContent='Browser storage: '+u+'.'});
 }
 /* Reading shelf and library on one paper list (build 2026.11.08m): a shelf PDF is linked to a library paper by title
@@ -19993,6 +20004,95 @@ function shMarked(p,page){
   ranges.forEach(r=>{if(r[0]<pos)return;out+=escHTML(text.slice(pos,r[0]))+'<mark style="background:'+r[2]+'">'+escHTML(text.slice(r[0],r[1]))+'</mark>';pos=r[1]});
   return out+escHTML(text.slice(pos));
 }
+/* BEGIN tools/markdown/mdpages.js (a test checks this copy is identical to the file) */
+/* Markdown from an OCR or conversion tool -> pages and sections for the Reading shelf.
+   parse(md, kindOf) -> { pages, sections, how, title, notes }
+   how: "markers" (the file marks its pages), "formfeed" (page breaks), "none" (no page numbers in the file; the text is cut into parts).
+   Page markers understood: <!-- page 3 -->, --- Page 3 ---, [Page 3], # Page 3, {2}------ (zero-based, as some converters print), form feed.
+   Nothing here reads the network. kindOf(title) is optional and names a heading's kind (abstract, methods ...). */
+(function (root) {
+  "use strict";
+  var MAXP = 2000, PART = 3000;
+  var MARK = [
+    [/^\s*<!--\s*page[\s:_-]*(\d+)(?:\s*(?:of|\/)\s*\d+)?\s*-->\s*$/i, 0],
+    [/^\s*[-=_*]{2,}\s*page\s*(\d+)(?:\s*(?:of|\/)\s*\d+)?\s*[-=_*]{2,}\s*$/i, 0],
+    [/^\s*\[\s*page\s*(\d+)(?:\s*(?:of|\/)\s*\d+)?\s*\]\s*$/i, 0],
+    [/^\s*#{1,6}\s*page\s*(\d+)(?:\s*(?:of|\/)\s*\d+)?\s*$/i, 0],
+    [/^\s*\{(\d+)\}\s*-{8,}\s*$/, 1]
+  ];
+  function markerOf(line) {
+    for (var i = 0; i < MARK.length; i++) { var m = MARK[i][0].exec(line); if (m) return +m[1] + MARK[i][1]; }
+    return 0;
+  }
+  function clean(t) {
+    return String(t)
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+      .replace(/\[([^\]]+)\]\((?:[^)]*)\)/g, "$1")
+      .replace(/<\/?[a-zA-Z][^>]*>/g, "")
+      .replace(/\*\*|__/g, "")
+      .replace(/`/g, "")
+      .replace(/[ \t]+$/gm, "");
+  }
+  function splitPages(md) {
+    var lines = md.split(/\r?\n/), marked = [], seq = true, last = 0, any = false;
+    var cur = { n: 0, lines: [] }, parts = [cur];
+    lines.forEach(function (ln) {
+      var n = markerOf(ln);
+      if (n) { any = true; if (n <= last) seq = false; last = n; cur = { n: n, lines: [] }; parts.push(cur); }
+      else cur.lines.push(ln);
+    });
+    if (any && seq) {
+      var pages = [];
+      parts.forEach(function (p) {
+        if (!p.n) { if (p.lines.join("").trim()) { pages[0] = (pages[0] || "") + p.lines.join("\n"); } return; }
+        if (p.n > MAXP) return;
+        pages[p.n - 1] = (pages[p.n - 1] || "") + p.lines.join("\n");
+      });
+      for (var i = 0; i < pages.length; i++) if (pages[i] === undefined) pages[i] = "";
+      return { pages: pages, how: "markers" };
+    }
+    if (md.indexOf("\f") >= 0) return { pages: md.split("\f").slice(0, MAXP), how: "formfeed" };
+    return { pages: cut(md.replace(/<!--\s*page[^>]*-->/gi, "")), how: "none" };
+  }
+  function cut(md) {
+    var paras = md.split(/\n\s*\n/), out = [], buf = "";
+    paras.forEach(function (p) { if (buf.length + p.length > PART && buf) { out.push(buf); buf = ""; } buf += (buf ? "\n\n" : "") + p; });
+    if (buf) out.push(buf);
+    return out.slice(0, MAXP);
+  }
+  function parse(md, kindOf) {
+    md = String(md || "").replace(/^﻿/, "");
+    var sp = splitPages(md), heads = [];
+    sp.pages.forEach(function (pg, i) {
+      String(pg).split("\n").forEach(function (ln) {
+        var m = /^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/.exec(ln);
+        if (m) heads.push({ level: m[1].length, title: clean(m[2]).replace(/\s+/g, " ").trim(), page: i + 1 });
+      });
+    });
+    heads = heads.filter(function (h) { return h.title && !/^page\s*\d+/i.test(h.title); });
+    var l1 = heads.filter(function (h) { return h.level === 1; }).length, l2 = heads.filter(function (h) { return h.level === 2; }).length;
+    var top = (l1 === 1 && l2 >= 2) ? 2 : (heads.length ? Math.min.apply(null, heads.map(function (h) { return h.level; })) : 1);
+    var title = "";
+    if (l1 === 1 && l2 >= 2) title = heads.filter(function (h) { return h.level === 1; })[0].title;
+    var sections = [], cur = null;
+    heads.forEach(function (h) {
+      if (h.level < top) return;
+      if (h.level === top) {
+        var k = "other"; try { if (kindOf) k = kindOf(h.title) || "other"; } catch (e) {}
+        cur = { kind: k, title: h.title, page: h.page, subs: [] }; sections.push(cur);
+      } else if (cur && cur.subs.length < 40) cur.subs.push({ title: h.title, page: h.page });
+    });
+    var pages = sp.pages.map(function (pg) { return clean(String(pg).replace(/^\s{0,3}#{1,6}\s+/gm, "")).replace(/\n{3,}/g, "\n\n").trim(); });
+    var notes = [];
+    if (sp.how === "none") notes.push("This file has no page numbers. The text is cut into parts of about 3,000 characters; a part number is not a printed page.");
+    if (sp.how === "markers" && pages.some(function (p) { return !p; })) notes.push("Some pages in the file are empty.");
+    return { pages: pages, sections: sections.slice(0, 60), how: sp.how, title: title, notes: notes };
+  }
+  var api = { parse: parse, markerOf: markerOf };
+  if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuMd = api;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+/* END tools/markdown/mdpages.js */
 /* BEGIN tools/stats/statsfind.js (a test checks this copy is identical to the file) */
 /* Find reported statistics in a paper's page text: M and SD, t, F, chi-square, r, p, CI, effect sizes, n.
    Pure text patterns, no model. Every hit is a literal piece of the page text, so it can be shown beside the page and checked.
@@ -20065,7 +20165,7 @@ function shSectionsHTML(p){
   const S=p.sections;
   if(!S||!S.length)return'<div class="row" style="gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap"><span style="font-size:12.5px;color:var(--muted)">'+(Array.isArray(S)?'No headings could be found in this paper.':'Sections not found yet.')+'</span><button class="btn btn-ghost" onclick="shFindSections()">Find sections</button><span id="shSecMsg" style="font-size:12.5px"></span></div>';
   const chip=(x,sub)=>'<button class="btn btn-ghost" style="padding:2px 8px;font-size:'+(sub?'12':'13')+'px" title="Go to page '+x.page+'" onclick="shGo('+x.page+')">'+escHTML(x.title.length>40?x.title.slice(0,38)+'…':x.title)+' <span style="color:var(--muted)">p.'+x.page+'</span></button>';
-  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Sections</b> ('+S.length+')</summary><div style="margin-top:4px">'+S.map(x=>'<div style="margin:3px 0"><span style="display:inline-block;min-width:96px;font-size:12px;color:var(--muted)">'+escHTML(SH_KIND_NAME[x.kind]||'Other')+'</span>'+chip(x,false)+((x.subs&&x.subs.length)?' <span style="font-size:12px;color:var(--muted)">'+x.subs.slice(0,12).map(y=>chip(y,true)).join(' ')+(x.subs.length>12?' …':'')+'</span>':'')+'</div>').join('')+'<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Found from the paper\u2019s type sizes and fonts, so a heading set in body type can be missed. Check against the page.</p></div></details>';
+  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Sections</b> ('+S.length+')</summary><div style="margin-top:4px">'+S.map(x=>'<div style="margin:3px 0"><span style="display:inline-block;min-width:96px;font-size:12px;color:var(--muted)">'+escHTML(SH_KIND_NAME[x.kind]||'Other')+'</span>'+chip(x,false)+((x.subs&&x.subs.length)?' <span style="font-size:12px;color:var(--muted)">'+x.subs.slice(0,12).map(y=>chip(y,true)).join(' ')+(x.subs.length>12?' …':'')+'</span>':'')+'</div>').join('')+'<p style="font-size:12px;color:var(--muted);margin:4px 0 0">'+(p.md?'Found from the headings in the Markdown file.':'Found from the paper\u2019s type sizes and fonts, so a heading set in body type can be missed. Check against the page.')+'</p></div></details>';
 }
 async function shFindSections(){
   const p=SH.cur;if(!p)return;const m=document.getElementById('shSecMsg');if(m)m.textContent='Reading the headings…';
@@ -20100,6 +20200,8 @@ function shPaperText(p,limit){
 }
 /* A warning above the page text when the extracted text of this page looks unreliable: mostly numbers, nearly empty, or in fragments. */
 const SH_FLAG_TEXT={blank:'This page has almost no text. It may be a figure or a scan.',numbers:'This page is mostly numbers and symbols, so it is probably a table or a formula. The text may run together; check the figures against the page.',fragments:'This page is in many very short pieces (figure labels or a table read cell by cell). The order may be wrong.'};
+function shMdNoteHTML(p){if(!p.md)return'';
+  return'<div role="note" style="margin:6px 0;padding:6px 10px;border-left:4px solid #6d28d9;background:rgba(109,40,217,.07);font-size:13px">Imported from a Markdown file. '+(p.md==='none'?'The file has no page numbers, so the numbers here are parts of the text, not printed pages. Do not cite them as page numbers.':'Page numbers come from the markers in the file; check them against the printed paper before you cite them.')+' There is no page picture.</div>'}
 function shPageFlagHTML(p){
   let f;try{if(!SH.flags||SH.flags.id!==p.id||SH.flags.n!==p.pages.length)SH.flags={id:p.id,n:p.pages.length,list:AppuSections.pageFlags(p.pages)};f=SH.flags.list[SH.page-1]||[]}catch(e){return''}
   if(!f.length)return'';
@@ -20109,6 +20211,7 @@ function shReaderRender(b){
   const p=SH.cur;if(!p)return;const n=p.pages.length;
   const hl=p.notes.filter(x=>x.quote).sort((a,c)=>a.page-c.page);
   b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button></div>'+
+   shMdNoteHTML(p)+
    shPageFlagHTML(p)+
    shSectionsHTML(p)+
    shStatsHTML(p)+
@@ -20309,6 +20412,7 @@ async function ptPages(keep){const f=PT.files[0];if(!f)return;const r=ptRange(do
   try{const PL=await plibLoad(),s=await PL.PDFDocument.load(f.buf.slice(0)),out=await PL.PDFDocument.create(),pp=await out.copyPages(s,use.map(n=>n-1));pp.forEach(x=>out.addPage(x));
     const bytes=await out.save();await shareBlob(new Blob([bytes],{type:'application/pdf'}),f.name.replace(/\.pdf$/i,'')+(keep?' (pages '+document.getElementById('ptRange').value.replace(/\s+/g,'')+')':' (some pages removed)')+'.pdf','application/pdf');showToast(use.length+' page'+(use.length===1?'':'s')+' in the new file.')}catch(e){showToast('Could not make the file: '+((e&&e.message)||'error'))}}
 async function shDrawImg(){const box=document.getElementById('shImg'),p=SH.cur;if(!box||!p)return;
+  if(p.md){box.innerHTML='<span style="font-size:13px">This paper came from a Markdown file, so there is no page picture.</span>';return}
   try{const buf=await shFileGet(p.id);
     if(!buf){box.innerHTML='<span style="font-size:13px">The page picture is not kept for this paper (it was added before pictures were kept). Attach its PDF once: <label class="btn btn-ghost" style="cursor:pointer;display:inline-block">Attach the PDF<input type="file" accept=".pdf,application/pdf" style="display:none" onchange="shAttach(this)"></label> The text and highlights are not read again.</span>';return}
     if(typeof pdfjsLib==='undefined'){box.innerHTML='<span style="font-size:13px">The PDF viewer needs the internet once to load.</span>';return}
