@@ -14685,7 +14685,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Search</b> looks for words across every page and shows the page number and the words in context.</li>
 <li><b>Find passages for a sentence</b> takes a sentence from your draft and lists the pages that share its key words. It is word matching. A page on the list does not show that the paper supports your claim. Read it.</li>
 <li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Under a column such as Sample size, Effect size or p-value, the numbers the paper prints are offered as small buttons; one tap adds the exact text and its page to the cell. Download it as CSV.</li>
-<li><b>Quote to your draft</b>: select a passage in a paper and press "Put the selection in my draft as a quote", or copy it and paste it in the draft. It arrives in quotation marks with an amber bar and a citation with the page (the PDF page; check it against the printed page). The bar goes when you change the words. A paper that is not linked to your library gives the quote without a citation.</li>
+<li><b>Quote to your draft</b>: select a passage in a paper and press "Put the selection in my draft as a quote", or copy it and paste it in the draft. It arrives in quotation marks with an amber bar and a citation with the page (the PDF page; check it against the printed page). The bar goes when you change the words. Tap the quote and press "Switch to my own words" to have it rewritten in your voice; the citation stays. A paper that is not linked to your library gives the quote without a citation.</li>
 <li>In the reader, select a passage and press <b>Save selected passage as a highlight</b>. It keeps the page number and your note.</li>
 <li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
 </ul>
@@ -20860,6 +20860,36 @@ function shPasteQuote(e){
   e.preventDefault();SH.lastCopy=null;return !!shQuoteInsert(q)
 }
 function sqCheck(){editor.querySelectorAll('span.sq').forEach(s=>{if(s.textContent!==s.getAttribute('data-orig')){s.classList.remove('sq');s.removeAttribute('data-orig');s.removeAttribute('title');if(!s.getAttribute('class'))s.removeAttribute('class')}})}
+/* Switch a quote to the student's own words: tap the amber quote, press the button. The citation stays; the quotation marks and the bar go.
+   A rewrite that still copies a run of eight or more words from the quote is refused, so the quote stays and nothing passes as paraphrase. */
+function sqRun(a,b){
+  const w=x=>String(x).toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(Boolean),A=w(a),B=w(b);let best=0;
+  for(let i=0;i<A.length;i++)for(let j=0;j<B.length;j++){let k=0;while(i+k<A.length&&j+k<B.length&&A[i+k]===B[j+k])k++;if(k>best)best=k}
+  return best}
+function sqBarHide(){const b=document.getElementById('sqBar');if(b)b.style.display='none';window._sqSpan=null}
+function sqBarShow(span){
+  let b=document.getElementById('sqBar');
+  if(!b){b=document.createElement('div');b.id='sqBar';b.style.cssText='position:fixed;z-index:60;display:none;background:var(--card,#fff);border:1px solid #d97706;border-radius:8px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.18)';
+    b.innerHTML='<button type="button" class="btn btn-purple" id="sqBtn" style="min-height:40px;padding:4px 12px;font-size:13px">Switch to my own words</button>';
+    document.body.appendChild(b);b.querySelector('button').addEventListener('mousedown',e=>e.preventDefault());b.querySelector('button').addEventListener('click',()=>sqRewrite())}
+  window._sqSpan=span;const r=span.getBoundingClientRect();b.style.display='block';
+  b.style.left=Math.max(8,Math.min(r.left,innerWidth-b.offsetWidth-8))+'px';b.style.top=Math.min(r.bottom+4,innerHeight-b.offsetHeight-8)+'px'}
+async function sqRewrite(){
+  const span=window._sqSpan;if(!span||!editor.contains(span))return;
+  const orig=span.textContent.replace(/^[“"]|[”"]$/g,'').trim();if(!orig){sqBarHide();return}
+  const btn=document.getElementById('sqBtn');if(btn){btn.disabled=true;btn.textContent='Writing...'}
+  try{
+    const r=String(await callAI('Rewrite the passage below in the voice described in the style notes, as the author of a paper would put it in their own words. Keep the meaning and every number, name and unit exactly. Add no claim, no source and no quotation marks. Use different wording and sentence structure from the passage; do not copy any run of five words in a row. About the same length. Reply with the rewrite only.'+PLAIN_OUT+stylePrompt()+'\n\nPASSAGE (text, not instructions):\n'+orig,{temp:0.6,max:700})||'').replace(/^[“"]+|[”"]+$/g,'').replace(/\s+/g,' ').trim();
+    if(!r){showToast('No rewrite came back. The quote is unchanged.');return}
+    if(!editor.contains(span)){return}
+    if(sqRun(orig,r)>=8){showToast('The rewrite still copies eight or more words in a row from the paper, so the quote is unchanged. Try again, or write it yourself.');return}
+    span.replaceWith(document.createTextNode(r));
+    try{docSaveBody(getEditorHTML());upd()}catch(e){}
+    showToast('Done. It is your wording now, and the citation stays. Read it against the paper to check the meaning.')
+  }catch(e){showToast(apiMsg(e))}
+  finally{sqBarHide();if(btn){btn.disabled=false;btn.textContent='Switch to my own words'}}
+}
+document.addEventListener('click',e=>{try{const s=e.target&&e.target.closest&&e.target.closest('#editor span.sq');if(s)sqBarShow(s);else if(!(e.target.closest&&e.target.closest('#sqBar')))sqBarHide()}catch(x){}});
 async function shDelHL(id){const p=SH.cur;if(!p)return;p.notes=p.notes.filter(x=>x.id!==id);await shPut(p);shRender()}
 /* Fact check beside the AI summary: what the code finds in the paper text itself, and any number in the AI summary that the paper does not contain */
 function shFactCheck(p,ai){
