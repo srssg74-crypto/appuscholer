@@ -14,7 +14,7 @@
     ["t", new RegExp("\\bt\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*" + NUM, "g"), function (m) { return { df: +m[1], t: +m[2] }; }],
     ["F", new RegExp("\\bF\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*,\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*" + NUM, "g"), function (m) { return { df1: +m[1], df2: +m[2], F: +m[3] }; }],
     ["chi2", new RegExp("(?:chi2|chi-?square[d]?)\\s*\\(\\s*(\\d+)(?:\\s*,\\s*[nN]\\s*=\\s*[\\d,]+)?\\s*\\)\\s*=\\s*" + NUM, "gi"), function (m) { return { df: +m[1], chi2: +m[2] }; }],
-    ["r", new RegExp("\\br\\s*(?:\\(\\s*\\d+\\s*\\))?\\s*=\\s*" + NUM, "g"), function (m) { return { r: +m[1] }; }],
+    ["r", new RegExp("\\br\\s*(?:\\(\\s*(\\d+)\\s*\\))?\\s*=\\s*" + NUM, "g"), function (m) { var o = { r: +m[2] }; if (m[1]) o.df = +m[1]; return o; }],
     ["MSD", new RegExp("\\bM\\s*=\\s*" + NUM + "\\s*[,;]?\\s*SD\\s*=\\s*(\\d*\\.?\\d+)", "g"), function (m) { return { M: +m[1], SD: +m[2] }; }],
     ["MSD", new RegExp(NUM + "\\s*\\u00b1\\s*(\\d*\\.\\d+)", "g"), function (m) { return { M: +m[1], SD: +m[2] }; }],
     ["CI", new RegExp("(\\d{2})\\s*%\\s*(?:CI|confidence interval)\\s*[:=,]?\\s*[\\[(]?\\s*" + NUM + "\\s*(?:,|;|to|-)\\s*" + NUM + "\\s*[\\])]?", "gi"), function (m) { return { level: +m[1], lo: +m[2], hi: +m[3] }; }],

@@ -26,4 +26,9 @@ ok(st("t(48) = 2.31, p = .025") === "ok" && st("t(48) = 2.31, and a long stretch
 ok(st("p = .03 and t(48) = 2.31") === "none", "a p before the test is not paired with it");
 ok(st("t(48.5) = 2.31, p = .025") === "ok", "Welch (fractional) df works");
 ok(run("t(48) = 2.31, p = .025. F(2, 87) = 4.10, p = .5").length === 2, "two tests in one text give two checks");
+/* correlations with their df: scipy gives p = 0.007862 for r(58) = .34 and 0.012123 for r(98) = .25 (t from r, two-tailed) */
+ok(Math.abs(C.pR(0.34, 58) - 0.007862490245424127) < 1e-12 && Math.abs(C.pR(-0.25, 98) - 0.012123198389913784) < 1e-12, "p from r and df agrees with scipy");
+ok(st("r(58) = .34, p = .008") === "ok" && st("r(58) = .34, p = .08") === "decision" && st("r(58) = .34, p < .001") === "inconsistent", "r(58) = .34: p = .008 ok; .08 a decision error; < .001 inconsistent");
+ok(st("r(98) = -.25, p = .012") === "ok", "a negative r is checked by its size");
+ok(st("r = .34, p = .008") === "none", "r with no df cannot be checked");
 console.log(fails ? fails + " FAILED" : "ALL CONSISTENCY TESTS PASSED"); process.exit(fails ? 1 : 0);

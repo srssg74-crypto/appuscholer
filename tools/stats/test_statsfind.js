@@ -11,6 +11,7 @@ check("confidence interval", S.find(["OR = 1.8, 95% CI 1.2-2.7"]).map(h => h.sta
 check("CI level and bounds", S.find(["95% CI [0.12, 0.40]"])[0].v, { level: 95, lo: 0.12, hi: 0.4 });
 check("negative values use a unicode minus", S.find(["r = −.34, p < .001"]).map(h => h.v), [{ r: -0.34 }, { op: "<", p: 0.001 }]);
 check("chi-square with n", S.find(["χ²(3, N = 120) = 8.4, p = .04"]).map(h => h.stat), ["chi2", "p"]);
+check("r keeps its df when printed", S.find(["r(58) = .34, p = .008"]).map(h => h.v), [{ r: 0.34, df: 58 }, { op: "=", p: 0.008 }]);
 check("page numbers are not p-values", kinds("see p. 12 and pp. 3-4"), []);
 check("p above 1 is not a p-value", kinds("p = 12"), []);
 check("r above 1 is not a correlation", kinds("r = 4"), []);
