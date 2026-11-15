@@ -6299,6 +6299,7 @@ async function docImportFiles(files){
   });
   editor.addEventListener('paste',e=>{
     try{if(shPasteQuote(e))return}catch(x){}
+    try{if(tblPaste(e))return}catch(x){}
     const files=e.clipboardData&&e.clipboardData.files;
     if(files&&files.length&&Array.from(files).some(f=>/\.(docx|doc|pdf|txt|md|html?)$/i.test(f.name||''))){
       e.preventDefault();
@@ -8264,6 +8265,68 @@ function tableAddCol(){
   upd();
 }
 
+/* ---- Table bar: appears when the cursor is in a table of the draft. Cell position (Column B, row 2), add and delete rows and columns,
+   align a column, APA look (rules only at top, under the header and at the bottom), caption. Paste from Excel or Sheets fills cells or makes a table. ---- */
+function tblParse(text){
+  const t=String(text||'').replace(/\r\n?/g,'\n');if(t.indexOf('\t')<0)return null;
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c}
+    else if(c==='"'&&cell==='')q=true;
+    else if(c==='\t'){row.push(cell);cell=''}
+    else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}
+    else cell+=c}
+  if(cell!==''||row.length){row.push(cell);rows.push(row)}
+  while(rows.length&&rows[rows.length-1].every(x=>!String(x).trim()))rows.pop();
+  const w=Math.max(0,...rows.map(r=>r.length));if(rows.length<1||w<2||rows.length>200||w>30)return null;
+  return rows.map(r=>{const o=r.map(x=>String(x).replace(/\s+/g,' ').trim());while(o.length<w)o.push('');return o})}
+function tblColLetter(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s}
+function tblCell(){const sel=getSelection();let n=sel&&sel.anchorNode;if(!n||!editor.contains(n))return null;if(n.nodeType===3)n=n.parentNode;return n&&n.closest?n.closest('td,th'):null}
+function tblPasteInto(rows,cell){
+  const t=cell.closest('table'),r0=cell.parentNode.rowIndex,c0=cell.cellIndex;
+  rows.forEach((row,i)=>{while(t.rows.length<=r0+i){const nr=t.insertRow(-1),n=t.rows[0]?t.rows[0].cells.length:row.length;for(let c=0;c<n;c++)nr.insertCell(-1).innerHTML='&nbsp;'}
+    row.forEach((v,j)=>{const cc=c0+j;
+      for(let k=0;k<t.rows.length;k++)while(t.rows[k].cells.length<=cc){const row=t.rows[k],nc=document.createElement(row.cells.length&&row.cells[0].tagName==='TH'?'th':'td');nc.innerHTML='&nbsp;';row.appendChild(nc)}
+      t.rows[r0+i].cells[cc].textContent=v})});
+  return t}
+function tblPaste(e){
+  const dt=e.clipboardData;if(!dt)return false;
+  const rows=tblParse(dt.getData('text/plain'));if(!rows)return false;
+  const cell=tblCell();
+  if(cell){tblPasteInto(rows,cell);e.preventDefault();upd();showToast('Pasted '+rows.length+' row(s) into the table, from the cell you were in.');return true}
+  e.preventDefault();
+  insertHTMLBlockIntoEditor('<table><tr>'+rows[0].map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>'+rows.slice(1).map(r=>'<tr>'+r.map(c=>'<td>'+escHTML(c)+'</td>').join('')+'</tr>').join('')+'</table><p>&nbsp;</p>');
+  showToast('Table made from what you copied. The first row is the header.');return true}
+function tblBarHide(){const b=document.getElementById('tblBar');if(b)b.style.display='none'}
+function tblBarShow(){
+  const cell=tblCell();if(!cell){tblBarHide();return}
+  let b=document.getElementById('tblBar');
+  if(!b){b=document.createElement('div');b.id='tblBar';
+    b.style.cssText='position:fixed;z-index:60;display:none;background:var(--card,#fff);border:1px solid var(--line,#ccc);border-radius:8px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.18);gap:4px;flex-wrap:wrap;max-width:94vw;align-items:center';
+    b.innerHTML='<span id="tblPos" style="font-size:12.5px;padding:0 6px;color:var(--muted)"></span>'+
+      [['tblOp(\'addrow\')','+ Row'],['tblOp(\'addcol\')','+ Col'],['tblOp(\'delrow\')','− Row'],['tblOp(\'delcol\')','− Col'],['tblOp(\'align\')','Align'],['tblOp(\'apa\')','APA look'],['capOpen()','Caption']].map(x=>'<button type="button" class="btn btn-ghost" style="min-height:36px;padding:2px 9px;font-size:12.5px" onclick="'+x[0]+'">'+x[1]+'</button>').join('');
+    b.addEventListener('mousedown',e=>e.preventDefault());document.body.appendChild(b)}
+  const t=cell.closest('table');
+  document.getElementById('tblPos').textContent='Column '+tblColLetter(cell.cellIndex)+', row '+(cell.parentNode.rowIndex+1)+' of '+t.rows.length;
+  b.style.display='flex';const r=t.getBoundingClientRect();
+  b.style.left=Math.max(8,Math.min(r.left,innerWidth-b.offsetWidth-8))+'px';
+  b.style.top=Math.max(8,Math.min(r.top-b.offsetHeight-4>8?r.top-b.offsetHeight-4:r.bottom+4,innerHeight-b.offsetHeight-8))+'px'}
+function tblOp(op){
+  const cell=tblCell();if(!cell){showToast('Click inside a table first');return}
+  const t=cell.closest('table'),ri=cell.parentNode.rowIndex,ci=cell.cellIndex;
+  if(op==='addrow'){const nr=t.insertRow(ri+1);for(let c=0;c<t.rows[0].cells.length;c++)nr.insertCell(-1).innerHTML='&nbsp;'}
+  else if(op==='addcol'){for(let r=0;r<t.rows.length;r++){const row=t.rows[r],nc=row.insertCell(Math.min(ci+1,row.cells.length));if(r===0&&row.cells[0].tagName==='TH')nc.outerHTML='<th>&nbsp;</th>';else nc.innerHTML='&nbsp;'}}
+  else if(op==='delrow'){if(t.rows.length<2){showToast('A table needs at least one row. Delete the table instead.');return}t.deleteRow(ri)}
+  else if(op==='delcol'){if(t.rows[0].cells.length<2){showToast('A table needs at least one column.');return}for(let r=0;r<t.rows.length;r++)if(t.rows[r].cells[ci])t.rows[r].deleteCell(ci)}
+  else if(op==='align'){const cur=cell.style.textAlign||'left',nx=cur==='left'||cur===''?'center':cur==='center'?'right':'left';for(let r=0;r<t.rows.length;r++)if(t.rows[r].cells[ci])t.rows[r].cells[ci].style.textAlign=nx;showToast('Column '+tblColLetter(ci)+' aligned '+nx)}
+  else if(op==='apa'){const on=t.getAttribute('data-apa')==='1',line='1px solid #000';
+    Array.from(t.rows).forEach((row,r)=>Array.from(row.cells).forEach(c=>{c.style.border=on?'':'none';c.style.borderBottom=on?'':(r===0?line:'none');c.style.background=on?'':'none'}));
+    t.style.borderTop=on?'':line;t.style.borderBottom=on?'':line;t.style.borderCollapse='collapse';
+    if(on){t.removeAttribute('data-apa');t.removeAttribute('style');showToast('Back to the grid look')}else{t.setAttribute('data-apa','1');showToast('APA look: lines only at the top, under the header and at the bottom')}}
+  upd();tblBarShow()}
+document.addEventListener('keyup',e=>{try{if(e.target&&e.target.closest&&e.target.closest('#editor'))tblBarShow()}catch(x){}});
+document.addEventListener('click',e=>{try{if(e.target.closest&&e.target.closest('#tblBar'))return;if(e.target.closest&&e.target.closest('#editor td,#editor th'))setTimeout(tblBarShow,0);else tblBarHide()}catch(x){}});
+
 /* ============ Chart Maker: general bar/line charts + Venn diagrams ============ */
 let _chartMakerInstance=null,_chartMakerPendingHTML=null;
 function chartTypeChange(){
@@ -9627,8 +9690,9 @@ async function dxBuild(root,title,opts){
     if(t==='TABLE'){
       const nc=Math.max(1,...Array.from(n.rows).map(r=>Array.from(r.cells).reduce((k,c)=>k+(c.colSpan||1),0))),cw=Math.floor(9026/nc);
       const fr=n.rows[0]?Array.from(n.rows[0].cells):[],ws=fr.map(c=>parseFloat(c.getAttribute&&c.getAttribute('data-w'))||0),useW=fr.length===nc&&ws.every(v=>v>0),cwx=i=>useW?Math.floor(9026*ws[i]/ws.reduce((a,v)=>a+v,0)):cw;
-      let x='<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(s=>'<w:'+s+' w:val="single" w:sz="4" w:space="0" w:color="000000"/>').join('')+'</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'+Array.from({length:nc},(_,i)=>'<w:gridCol w:w="'+cwx(i)+'"/>').join('')+'</w:tblGrid>';
-      for(const tr of Array.from(n.rows)){x+='<w:tr>';let ci=0;for(const td of Array.from(tr.cells)){const sp=td.colSpan||1;let tw=0;for(let q=0;q<sp;q++)tw+=cwx(ci+q);ci+=sp;x+='<w:tc><w:tcPr><w:tcW w:w="'+tw+'" w:type="dxa"/>'+(sp>1?'<w:gridSpan w:val="'+sp+'"/>':'')+'</w:tcPr>'+para(await inline(td,td.tagName==='TH'?{b:true}:{}),'<w:spacing w:line="240" w:lineRule="auto" w:after="0"/>')+'</w:tc>'}x+='</w:tr>'}
+      const apa=n.getAttribute&&n.getAttribute('data-apa')==='1';
+      let x='<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(s=>apa&&s!=='top'&&s!=='bottom'?'<w:'+s+' w:val="nil"/>':'<w:'+s+' w:val="single" w:sz="4" w:space="0" w:color="000000"/>').join('')+'</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'+Array.from({length:nc},(_,i)=>'<w:gridCol w:w="'+cwx(i)+'"/>').join('')+'</w:tblGrid>';
+      for(const tr of Array.from(n.rows)){x+='<w:tr>';let ci=0;const hdr=tr===n.rows[0];for(const td of Array.from(tr.cells)){const sp=td.colSpan||1;let tw=0;for(let q=0;q<sp;q++)tw+=cwx(ci+q);ci+=sp;x+='<w:tc><w:tcPr><w:tcW w:w="'+tw+'" w:type="dxa"/>'+(sp>1?'<w:gridSpan w:val="'+sp+'"/>':'')+(apa&&hdr?'<w:tcBorders><w:bottom w:val="single" w:sz="4" w:space="0" w:color="000000"/></w:tcBorders>':'')+'</w:tcPr>'+para(await inline(td,td.tagName==='TH'?{b:true}:{}),'<w:spacing w:line="240" w:lineRule="auto" w:after="0"/>'+(/^(center|right)$/.test(td.style&&td.style.textAlign)?'<w:jc w:val="'+td.style.textAlign+'"/>':''))+'</w:tc>'}x+='</w:tr>'}
       P.push(x+'</w:tbl>');P.push(para('',''));return;
     }
     if(t==='BLOCKQUOTE'&&!Array.from(n.children).some(isBlock)){P.push(para(await inline(n,{}),'<w:ind w:left="720"/>'));return}
@@ -14686,6 +14750,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Find passages for a sentence</b> takes a sentence from your draft and lists the pages that share its key words. It is word matching. A page on the list does not show that the paper supports your claim. Read it.</li>
 <li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Under a column such as Sample size, Effect size or p-value, the numbers the paper prints are offered as small buttons; one tap adds the exact text and its page to the cell. Download it as CSV.</li>
 <li><b>Quote to your draft</b>: select a passage in a paper and press "Put the selection in my draft as a quote", or copy it and paste it in the draft. It arrives in quotation marks with an amber bar and a citation with the page (the PDF page; check it against the printed page). The bar goes when you change the words. Tap the quote and press "Switch to my own words" to have it rewritten in your voice; the citation stays. A paper that is not linked to your library gives the quote without a citation.</li>
+<li><b>Tables</b>: copy cells in Excel or Google Sheets and paste in the draft. Outside a table it makes a table (first row is the header); inside a table it fills from the cell you are in. Click any cell to see a bar with the cell position (Column B, row 2), add or delete a row or column, align a column, an APA look (lines only at the top, under the header and at the bottom; Word keeps it) and the caption.</li>
 <li>In the reader, select a passage and press <b>Save selected passage as a highlight</b>. It keeps the page number and your note.</li>
 <li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
 </ul>
