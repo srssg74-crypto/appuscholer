@@ -10,3 +10,17 @@ text, so it can be shown beside the page and checked. A hit means "the paper pri
 Run on 25 PDFs on 15 Nov 2026: 481 p-values, 375 mean and SD pairs, 266 sample sizes, 109 effect sizes, 85 CIs, 51 correlations,
 48 t, 23 F, 20 ratios, 10 chi-square. A sample of 46 hits (a few of each kind) was read by hand; all were real except one ratio, which is fixed. That is a spot check, not a precision figure.
 Not yet in the app. Tables that put M and SD in separate columns need the table reader, not this.
+
+## Do the numbers agree? (consistency.js)
+
+`consistency.js` turns each reported t, F or chi-square with its degrees of freedom back into a p-value and compares it with the p printed next to it (within 60 characters after the test).
+Allowed for: rounding of the test statistic and of p, a p cut off instead of rounded (.0289 printed as .02), "p = .001" printed for anything smaller, one-tailed tests when the page says so.
+A p described as adjusted (Bonferroni, Holm, corrected) is reported as "adjusted", not as a mismatch. "R 2 Adjusted" is not read as an adjusted p.
+Status: ok, inconsistent, decision (the mismatch changes whether p is below .05), adjusted.
+
+The p-value functions match scipy 1.18 on 150 cases (`dist_vectors.json`; relative 1e-9 or absolute 1e-12). `node test_consistency.js` runs them and the fixtures.
+Run on the 53 sample PDFs (`node run_consistency.mjs`, 15 Nov 2026): 96 pairs checked, 87 ok, 9 flagged. All 9 were read against the page text.
+Six look like real mismatches in the papers (for example F(1, 130) = 6.14 printed with p = .001 when the test statistic gives .0145; the same F(1,38) = 33.76 printed with two different p-values).
+The other three are chi-square comparisons of adherence rates whose printed p may come from an exact test the paper does not name.
+That is a spot check on 96 pairs from 53 files; it is not a precision or recall figure. A mismatch is a reason to look at the page, not proof of an error.
+Not checked: correlations (r with n), t tests given as "t = x" without df, results in tables.
