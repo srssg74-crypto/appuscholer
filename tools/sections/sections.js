@@ -225,6 +225,6 @@
     return { body: { size: body.size, font: body.font }, title: title, lines: lines, headings: heads, sections: sections, notes: notes };
   }
 
-  var api = { detect: detect, buildLines: buildLines, kindOf: kindOf, splitNumber: splitNumber };
+  var api = { detect: detect, buildLines: buildLines, kindOf: function (t) { var sp = splitNumber(t); return kindOf(sp.name, !!sp.num); }, splitNumber: splitNumber };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuSections = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
