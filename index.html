@@ -794,6 +794,133 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
 .ss-bar button{background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
 .ss-bar .ss-sp{flex:1}.ss-clock{opacity:.7;margin-left:6px}
 </style>
+<script>/* comfort settings applied before first paint */
+(function(){try{var c=JSON.parse(localStorage.getItem('appu_comfort')||'null');var d=document.documentElement;
+if(!c)return;
+if(c.size)d.setAttribute('data-size',c.size);if(c.contrast==='high')d.setAttribute('data-contrast','high');if(c.bold)d.setAttribute('data-bold','1');if(c.roomy)d.setAttribute('data-roomy','1');if(c.calm)d.setAttribute('data-calm','1')}catch(e){}})();
+</script>
+<style id="freshV2">
+/* ===== Fresh look v2: calmer surfaces, larger type, clearer focus, and the Comfort settings ===== */
+:root{--bg:#f7f5fc;--ink:#1d1833;--muted:#4d4764;--line:#e2dcef;--r-card:18px;--r-ctl:11px;--ctl:40px;--ctl-s:34px;--ease:cubic-bezier(.2,.7,.2,1);
+  --sh-1:0 1px 2px rgba(var(--shadow-ink),.06),0 8px 24px -12px rgba(var(--shadow-ink),.18);--sh-2:0 2px 4px rgba(var(--shadow-ink),.08),0 18px 40px -16px rgba(var(--shadow-ink),.28)}
+:root[data-theme="dark"]{--bg:#16121f;--card:#221c35;--ink:#f1edfa;--muted:#c3bad6;--line:#3a3252}
+body{font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.card,.hm-card,.rn-card{box-shadow:var(--sh-1);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+.hm-card:hover,.rn-card:hover{box-shadow:var(--sh-2);transform:translateY(-2px)}
+.btn,button.btn{min-height:var(--ctl);border-radius:var(--r-ctl);font-size:15px}
+.btn-sm{min-height:var(--ctl-s)}
+header{padding:10px 22px}
+.brand h1{font-size:22px}
+.stagebar{padding-top:8px;padding-bottom:8px;gap:8px}
+.stagebar button{font-size:14.5px;min-height:34px;padding:5px 14px;border-radius:18px}
+.tool-sidebar a,.tool-sidebar button,.tree-item{font-size:15px}
+:focus-visible{outline:3px solid #f0ad3f;outline-offset:2px;border-radius:6px}
+input,select,textarea{font-size:16px}
+.doc-pane,.ai-pane,.card{animation:freshIn .28s var(--ease) both}
+@keyframes freshIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* comfort: reading size (browser zoom keeps layout intact) */
+html[data-size="1"]{zoom:1.15}html[data-size="2"]{zoom:1.3}html[data-size="3"]{zoom:1.5}
+/* comfort: contrast */
+html[data-contrast="high"]{--bg:#fff;--card:#fff;--ink:#000;--muted:#1f1a33;--line:#4a4260;--ctl-line:#2b2540;--head-title:#2e1065;--accent-ink:#2e1065;--soft:#f3f0fb;--chip:#efeaf9;--chipline:#4a4260}
+html[data-contrast="high"][data-theme="dark"]{--bg:#000;--card:#0d0a16;--ink:#fff;--muted:#f1edfa;--line:#b7a9e6;--ctl-line:#d9ceff;--head-title:#ffe08a;--accent-ink:#ffe08a;--soft:#18122b;--chip:#1d1632;--chipline:#b7a9e6}
+html[data-contrast="high"] body::before{display:none}
+html[data-contrast="high"] .btn,html[data-contrast="high"] button,html[data-contrast="high"] input,html[data-contrast="high"] select,html[data-contrast="high"] textarea{border-width:2px;border-style:solid;border-color:var(--ctl-line,#2b2540)}
+html[data-contrast="high"] .btn-purple,html[data-contrast="high"] .btn-gold{border-color:#000}
+html[data-contrast="high"] a{text-decoration:underline}
+html[data-contrast="high"] .card,html[data-contrast="high"] .hm-card{border:2px solid var(--line);box-shadow:none}
+html[data-contrast="high"] :focus-visible{outline:4px solid #000;box-shadow:0 0 0 7px #ffd24a}
+html[data-contrast="high"][data-theme="dark"] :focus-visible{outline:4px solid #ffd24a;box-shadow:0 0 0 7px #000}
+/* comfort: heavier text, more room, calm motion */
+html[data-bold="1"] body{font-weight:500}html[data-bold="1"] .editor,html[data-bold="1"] #editor{font-weight:500}
+html[data-roomy="1"] body{line-height:1.8;letter-spacing:.012em;word-spacing:.06em}html[data-roomy="1"] #editor{line-height:2}
+html[data-roomy="1"] .btn,html[data-roomy="1"] button{min-height:44px}
+html[data-calm="1"] *,html[data-calm="1"] *::before,html[data-calm="1"] *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+@media (prefers-reduced-motion:reduce){.doc-pane,.ai-pane,.card{animation:none}}
+/* comfort panel */
+#comfortDlg{max-height:94vh;overflow-y:auto;border:0;border-radius:20px;padding:0;max-width:min(520px,94vw);width:100%;background:var(--card);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+#comfortDlg::backdrop{background:rgba(20,12,40,.5)}
+#comfortDlg .cf-in{padding:22px 24px 20px}
+#comfortDlg h2{margin:0 0 4px;font:600 24px var(--font-display);color:var(--head-title)}
+#comfortDlg .cf-sub{margin:0 0 16px;color:var(--muted);font-size:15px}
+#comfortDlg .cf-row{margin:16px 0}
+#comfortDlg .cf-lab{font-weight:700;font-size:15px;margin-bottom:8px;display:block}
+#comfortDlg .cf-seg{display:flex;gap:8px;flex-wrap:wrap}
+#comfortDlg .cf-seg button,#comfortDlg .cf-tog button{flex:1 1 0;min-width:72px;min-height:46px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:600 16px inherit;font-family:inherit;cursor:pointer}
+#comfortDlg .cf-seg button[aria-pressed="true"],#comfortDlg .cf-tog button[aria-pressed="true"]{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+#comfortDlg .cf-tog{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#comfortDlg .cf-prev{margin-top:14px;padding:14px 16px;border:2px dashed var(--dashed);border-radius:14px;font-size:16px}
+#comfortDlg .cf-foot{display:flex;gap:10px;justify-content:space-between;margin-top:18px}
+#comfortBtn{font-weight:700}
+#listenBtn{position:fixed;left:16px;bottom:16px;z-index:1500;min-height:52px;padding:0 20px;border-radius:26px;border:2px solid #fff;background:var(--purple-700);color:#fff;font:700 17px inherit;font-family:inherit;box-shadow:0 10px 28px rgba(0,0,0,.35);cursor:pointer}
+</style>
+<script>
+/* Comfort settings (opt-in): text size, contrast, bold, spacing, calm motion, and spoken directions. Nothing here is on unless a student turns it on. */
+const CF_T={
+ en:{title:'Comfort settings',sub:'For tired eyes, strong glasses or low vision. Nothing changes until you choose it. Saved on this device.',size:'Text size',sz:['Normal','Large','Larger','Largest'],con:'Contrast',cn:['Normal','High'],bold:'Heavier text',roomy:'Space between lines and letters',calm:'Calm motion (no sliding or fading)',off:'Off',on:'On',audio:'Spoken directions',audioHint:'Adds a Listen button. It reads the guidance on the screen aloud. Shortcut: Alt + L.',speed:'Voice speed',sp:['Slow','Normal','Faster'],prev:'Sample: Step 2 of 6. Find and read the papers for your topic.',reset:'Back to normal',done:'Done',
+  listen:'Listen',stop:'Stop',nothing:'There is nothing to read on this screen.',nohi:'This device has no Hindi voice. Install one in its speech settings, or switch the language to English.',novoice:'This browser cannot speak. Try Chrome or Edge.'},
+ hi:{title:'आराम की सेटिंग',sub:'थकी आँखों, मोटे चश्मे या कमज़ोर नज़र के लिए। आप चुनेंगे तभी कुछ बदलेगा। इसी डिवाइस पर सेव रहता है।',size:'अक्षर का आकार',sz:['सामान्य','बड़ा','और बड़ा','सबसे बड़ा'],con:'कंट्रास्ट',cn:['सामान्य','ज़्यादा'],bold:'गाढ़े अक्षर',roomy:'पंक्तियों और अक्षरों के बीच जगह',calm:'कम हलचल (सरकना और धुंधलाना बंद)',off:'बंद',on:'चालू',audio:'बोलकर निर्देश',audioHint:'एक सुनें बटन जुड़ेगा। वह स्क्रीन के निर्देश ज़ोर से पढ़ेगा। शॉर्टकट: Alt + L।',speed:'आवाज़ की गति',sp:['धीमी','सामान्य','तेज़'],prev:'नमूना: चरण 2 में से 6। अपने विषय के शोधपत्र खोजें और पढ़ें।',reset:'सामान्य पर वापस',done:'हो गया',
+  listen:'सुनें',stop:'रोकें',nothing:'इस स्क्रीन पर पढ़ने के लिए कुछ नहीं है।',nohi:'इस डिवाइस में हिंदी आवाज़ नहीं है। इसकी स्पीच सेटिंग में एक जोड़ें, या भाषा अंग्रेज़ी करें।',novoice:'यह ब्राउज़र बोल नहीं सकता। Chrome या Edge आज़माएँ।'}};
+function cfT(){let l='en';try{l=(typeof getLang==='function'&&getLang()==='hi')?'hi':'en'}catch(e){}return CF_T[l]}
+function cfGet(){try{return JSON.parse(localStorage.getItem('appu_comfort')||'null')||{}}catch(e){return{}}}
+function cfSave(c){try{localStorage.setItem('appu_comfort',JSON.stringify(c))}catch(e){}cfApply(c)}
+function cfApply(c){const d=document.documentElement,set=(k,v)=>v?d.setAttribute(k,v):d.removeAttribute(k);
+ set('data-size',c.size||'');set('data-contrast',c.contrast==='high'?'high':'');set('data-bold',c.bold?'1':'');set('data-roomy',c.roomy?'1':'');set('data-calm',c.calm?'1':'');
+ cfListenBtn(c)}
+function cfListenBtn(c){c=c||cfGet();let b=document.getElementById('listenBtn');
+ if(!c.audio){if(b)b.remove();try{cfStop()}catch(e){}return}
+ const T=cfT();
+ if(!b){b=document.createElement('button');b.id='listenBtn';b.type='button';b.onclick=cfListenToggle;document.body.appendChild(b)}
+ b.textContent='🔊 '+(CF_SPEAKING?T.stop:T.listen);b.setAttribute('aria-label',CF_SPEAKING?T.stop:T.listen)}
+let CF_SPEAKING=false,CF_RUN=0;
+function cfStop(){CF_RUN++;CF_SPEAKING=false;try{speechSynthesis.cancel()}catch(e){}cfListenBtn()}
+function cfPageText(){
+ const vis=e=>{if(!e||!e.getClientRects().length)return false;const s=getComputedStyle(e);return s.visibility!=='hidden'&&s.display!=='none'};
+ let root=document.querySelector('dialog[open]');
+ if(!root&&document.body.classList.contains('at-home'))root=document.getElementById('apHome');
+ if(!root)root=document.querySelector('.tool-main')||document.querySelector('.ai-pane')||document.querySelector('main');
+ if(!root)return'';
+ const out=[];root.querySelectorAll('h1,h2,h3,p,label,li,.hint,.sub,[role="heading"]').forEach(e=>{if(!vis(e))return;if(e.closest('button,select,textarea,input'))return;const t=(e.innerText||'').replace(/\s+/g,' ').trim();if(t.length>1&&!out.includes(t))out.push(t)});
+ return out.join('. ').slice(0,1400)}
+function cfListenToggle(){if(CF_SPEAKING){cfStop();return}
+ const T=cfT();let ok=false;try{ok=!!(window.speechSynthesis&&window.SpeechSynthesisUtterance)}catch(e){}
+ if(!ok){try{toast(T.novoice)}catch(e){alert(T.novoice)}return}
+ const txt=cfPageText();if(!txt){try{toast(T.nothing)}catch(e){}return}
+ const hi=T===CF_T.hi;let v=null;try{v=hi?apVoicePick('appu','hi'):apVoicePick('appu','en')}catch(e){}
+ if(hi&&!v){try{toast(T.nohi)}catch(e){}return}
+ const parts=(txt.match(/[^.!?।]+[.!?।]?/g)||[txt]).map(s=>s.trim()).filter(Boolean);
+ let rate=0.95;try{const r=parseFloat(localStorage.getItem('appu_voicerate'));if(r)rate=r}catch(e){}
+ const run=++CF_RUN;CF_SPEAKING=true;cfListenBtn();speechSynthesis.cancel();
+ parts.forEach((s,i)=>{const u=new SpeechSynthesisUtterance(s);if(v){u.voice=v;u.lang=v.lang}else u.lang=hi?'hi-IN':'en-IN';u.rate=rate;
+  if(i===parts.length-1)u.onend=u.onerror=()=>{if(CF_RUN===run){CF_SPEAKING=false;cfListenBtn()}};speechSynthesis.speak(u)})}
+function openComfort(){let d=document.getElementById('comfortDlg');if(d)d.remove();d=document.createElement('dialog');d.id='comfortDlg';document.body.appendChild(d);cfDraw(d);
+ try{document.getElementById('helpDlg').close()}catch(e){}d.showModal()}
+function cfDraw(d){const T=cfT(),c=cfGet();
+ const seg=(arr,cur,fn)=>'<div class="cf-seg" role="group">'+arr.map((x,i)=>'<button type="button" aria-pressed="'+(cur===i)+'" onclick="'+fn+'('+i+')">'+x+'</button>').join('')+'</div>';
+ const tog=(on,fn)=>'<div class="cf-tog" role="group"><button type="button" aria-pressed="'+(!on)+'" onclick="'+fn+'(0)">'+T.off+'</button><button type="button" aria-pressed="'+(!!on)+'" onclick="'+fn+'(1)">'+T.on+'</button></div>';
+ let sp=1;try{const r=parseFloat(localStorage.getItem('appu_voicerate'));sp=r<=0.85?0:(r>=1.1?2:1)}catch(e){}
+ d.innerHTML='<div class="cf-in"><h2>'+T.title+'</h2><p class="cf-sub">'+T.sub+'</p>'+
+ '<div class="cf-row"><span class="cf-lab">'+T.size+'</span>'+seg(T.sz,c.size?+c.size:0,'cfSet.size')+'</div>'+
+ '<div class="cf-row"><span class="cf-lab">'+T.con+'</span>'+seg(T.cn,c.contrast==='high'?1:0,'cfSet.con')+'</div>'+
+ '<div class="cf-row"><span class="cf-lab">'+T.bold+'</span>'+tog(c.bold,'cfSet.bold')+'</div>'+
+ '<div class="cf-row"><span class="cf-lab">'+T.roomy+'</span>'+tog(c.roomy,'cfSet.roomy')+'</div>'+
+ '<div class="cf-row"><span class="cf-lab">'+T.calm+'</span>'+tog(c.calm,'cfSet.calm')+'</div>'+
+ '<div class="cf-row"><span class="cf-lab">'+T.audio+'</span>'+tog(c.audio,'cfSet.audio')+'<p class="cf-sub" style="margin:8px 0 0">'+T.audioHint+'</p></div>'+
+ (c.audio?'<div class="cf-row"><span class="cf-lab">'+T.speed+'</span>'+seg(T.sp,sp,'cfSet.speed')+'</div>':'')+
+ '<div class="cf-prev">'+T.prev+'</div>'+
+ '<div class="cf-foot"><button type="button" class="btn btn-ghost" onclick="cfSet.reset()">'+T.reset+'</button><button type="button" class="btn btn-purple" onclick="document.getElementById(\'comfortDlg\').close()" autofocus>'+T.done+'</button></div></div>'}
+const cfSet={
+ size(i){const c=cfGet();c.size=i?String(i):'';cfSave(c);cfRe()},
+ con(i){const c=cfGet();c.contrast=i?'high':'';cfSave(c);cfRe()},
+ bold(i){const c=cfGet();c.bold=!!i;cfSave(c);cfRe()},
+ roomy(i){const c=cfGet();c.roomy=!!i;cfSave(c);cfRe()},
+ calm(i){const c=cfGet();c.calm=!!i;cfSave(c);cfRe()},
+ audio(i){const c=cfGet();c.audio=!!i;cfSave(c);cfRe()},
+ speed(i){try{localStorage.setItem('appu_voicerate',String([0.8,0.95,1.15][i]))}catch(e){}cfRe()},
+ reset(){try{localStorage.removeItem('appu_comfort')}catch(e){}cfApply({});cfRe()}};
+function cfRe(){const d=document.getElementById('comfortDlg');if(d)cfDraw(d)}
+document.addEventListener('keydown',e=>{if(e.altKey&&!e.ctrlKey&&!e.metaKey&&(e.key==='l'||e.key==='L')&&cfGet().audio){e.preventDefault();cfListenToggle()}});
+window.addEventListener('DOMContentLoaded',()=>{try{cfListenBtn()}catch(e){}});
+</script>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
@@ -1906,6 +2033,7 @@ body.sub-docked-on main .tool-main{border-top:5px solid #4B2E83}
     <button class="btn btn-purple" style="flex:1" onclick="document.getElementById('helpDlg').close();guideOpen()">📖 Open the Guide</button>
     <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();repOpen()">🛠 Report a problem</button>
   </div>
+  <div class="row" style="margin-top:8px"><button class="btn btn-ghost" style="flex:1" onclick="openComfort()" id="comfortBtn">👓 Comfort: larger text, strong contrast, spoken directions</button></div>
   <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" style="flex:1" onclick="tourStart()" id="helpDemoBtn" data-i18n="demo_again_btn">▶ Watch the demo again</button><button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('helpDlg').close();packOpen()" id="helpPackBtn" data-i18n="pack_btn">📦 University rules (packs)</button><button class="btn btn-ghost" style="flex:1" onclick="whyOn()" id="helpWhyBtn" data-i18n="why_again_btn">💡 Show the "why we ask" lines again</button>
   </div>
 
