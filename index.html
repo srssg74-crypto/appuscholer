@@ -590,6 +590,7 @@ body.at-home main>.split-row,body.at-home main>.dock-tabs,body.at-home main>.too
 .hm-foot{display:flex;gap:10px;flex-wrap:wrap}.hm-foot button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 13px;font-size:12.5px;color:var(--muted);cursor:pointer}
 @media (max-width:1000px){body.at-home #apHome{grid-template-columns:1fr}.hm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.hm-grid{grid-template-columns:1fr}}
+#editor span.sq{border-left:3px solid #d97706;padding-left:5px;background:rgba(217,119,6,.08)}
 #editor span.cit{border-bottom:1px dotted var(--purple-600,#6b3fd1);border-radius:2px;cursor:default}
 #editor span.cit-missing{color:#b91c1c;border-bottom:2px wavy #b91c1c}
 #editor [data-bib]{cursor:default}
@@ -6297,6 +6298,7 @@ async function docImportFiles(files){
     docImportFiles(e.dataTransfer.files);
   });
   editor.addEventListener('paste',e=>{
+    try{if(shPasteQuote(e))return}catch(x){}
     const files=e.clipboardData&&e.clipboardData.files;
     if(files&&files.length&&Array.from(files).some(f=>/\.(docx|doc|pdf|txt|md|html?)$/i.test(f.name||''))){
       e.preventDefault();
@@ -6335,6 +6337,7 @@ function updProjectBarStatus(){
   el.textContent=(title?title+' · ':'')+(n||'0 words');
 }
 function upd(){
+  try{sqCheck()}catch(e){}
   const v=getEditorText();
   stats.textContent=(v.trim()?v.trim().split(/\s+/).length:0)+' words';
   updProjectBarStatus();
@@ -14682,6 +14685,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Search</b> looks for words across every page and shows the page number and the words in context.</li>
 <li><b>Find passages for a sentence</b> takes a sentence from your draft and lists the pages that share its key words. It is word matching. A page on the list does not show that the paper supports your claim. Read it.</li>
 <li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Under a column such as Sample size, Effect size or p-value, the numbers the paper prints are offered as small buttons; one tap adds the exact text and its page to the cell. Download it as CSV.</li>
+<li><b>Quote to your draft</b>: select a passage in a paper and press "Put the selection in my draft as a quote", or copy it and paste it in the draft. It arrives in quotation marks with an amber bar and a citation with the page (the PDF page; check it against the printed page). The bar goes when you change the words. A paper that is not linked to your library gives the quote without a citation.</li>
 <li>In the reader, select a passage and press <b>Save selected passage as a highlight</b>. It keeps the page number and your note.</li>
 <li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
 </ul>
@@ -20572,7 +20576,7 @@ function shReaderRender(b){
      '<input type="search" id="shInQ" value="'+escAttr(SH.inq||'')+'" placeholder="Search in this paper" style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')shInSearch(this.value)" aria-label="Search in this paper"><button class="btn btn-ghost" onclick="shInSearch(document.getElementById(\'shInQ\').value)">Find</button></div>'+shInResHTML(p)+(SH.img?'<div id="shImg" style="border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;text-align:center;overflow:auto"><span style="font-size:13px">Loading the page…</span></div>':'')+
    '<div id="shText" style="white-space:pre-wrap;font-size:14px;line-height:1.65;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;user-select:text">'+shMarkTerms(shMarked(p,SH.page))+'</div>'+
    '<p style="font-size:12.5px;color:var(--muted);margin:0 0 6px">This is the text extracted from the PDF. Tables and columns may run together, so check the original for exact figures. Select a passage above to highlight it.</p>'+
-   '<textarea id="shNote" rows="2" style="width:100%" placeholder="Your note on the selected passage (optional)"></textarea><p style="font-size:12.5px;margin:6px 0 2px">Select a passage, then press the colour that says what it is:</p><div class="row" style="margin-top:2px;gap:6px;flex-wrap:wrap">'+SH_COLS.map(c=>'<button class="btn" style="background:'+c[2]+';color:#111;border:1px solid #888;min-height:40px" onclick="shSaveHL(\''+c[0]+'\')">'+c[1]+'</button>').join('')+'</div>'+
+   '<textarea id="shNote" rows="2" style="width:100%" placeholder="Your note on the selected passage (optional)"></textarea><div class="row" style="margin:8px 0 2px;gap:6px;flex-wrap:wrap;align-items:center"><button class="btn btn-purple" style="min-height:40px" onclick="shQuoteToDraft()">Put the selection in my draft as a quote</button><span style="font-size:12.5px;color:var(--muted)">Or copy it here and paste it in the draft: it arrives as a quote with its citation.</span></div><p style="font-size:12.5px;margin:6px 0 2px">Select a passage, then press the colour that says what it is:</p><div class="row" style="margin-top:2px;gap:6px;flex-wrap:wrap">'+SH_COLS.map(c=>'<button class="btn" style="background:'+c[2]+';color:#111;border:1px solid #888;min-height:40px" onclick="shSaveHL(\''+c[0]+'\')">'+c[1]+'</button>').join('')+'</div>'+
    '<h3 style="margin:12px 0 4px;font-size:14px">Highlights</h3>'+(hl.length?hl.map(x=>'<div style="border-left:5px solid '+shColOf(x)+';padding:2px 8px;margin:6px 0;font-size:13px"><b>p. '+x.page+'</b> “'+escHTML(x.quote.slice(0,300))+'”'+(x.note?'<br><i>'+escHTML(x.note)+'</i>':'')+'<br>'+shCardTapsHTML(x)+'<button class="btn btn-ghost" onclick="shRead(\''+p.id+'\','+x.page+')">Go to page</button> <button class="btn btn-ghost" onclick="shDelHL(\''+x.id+'\')">Delete</button>'+(SH.thought===x.id?'<br><textarea id="shTh" rows="2" style="width:100%;margin-top:4px" placeholder="Your own thought on this passage">'+escHTML(x.note||'')+'</textarea><button class="btn btn-purple" onclick="shThoughtSave(\''+x.id+'\')">Save my thought</button>':'')+'</div>').join(''):'<p style="font-size:13px">None yet.</p>')+
    '<h3 style="margin:12px 0 4px;font-size:14px">Summary, after you think first</h3><p style="font-size:13px;margin:0 0 4px">In your own words, in at least two lines: what do you think this paper says? The AI summary unlocks after that.</p><textarea id="shMine" rows="3" style="width:100%" oninput="shMineCheck()"></textarea><div class="row" style="margin-top:6px"><button class="btn btn-ghost" id="shAiBtn" onclick="shSummarise()" disabled>Summarise with AI</button></div><div id="shAi" style="margin-top:8px;font-size:13.5px;line-height:1.6;white-space:pre-wrap" aria-live="polite"></div>';
 }
@@ -20823,6 +20827,39 @@ async function shSaveHL(col){
   let tolib=false;try{tolib=shCardToLib(p,nt)}catch(e){}
   await shPut(p);shRender();showToast(tolib?'Highlight saved and added to your table':'Highlight saved')
 }
+/* Select in the paper, paste in the draft. The passage arrives as a quote with an amber bar and a live citation (the page is the PDF page);
+   the bar goes as soon as the student changes the words. A passage copied from the paper and pasted in the draft is recognised by its text. */
+function shSelQuote(){
+  const p=SH.cur;if(!p)return null;
+  const sel=window.getSelection(),txt=sel?String(sel.toString()).replace(/\s+/g,' ').trim():'';
+  const box=document.getElementById('shText'),pic=document.getElementById('shLayer');
+  if(!txt||!sel.anchorNode||!((box&&box.contains(sel.anchorNode))||(pic&&pic.contains(sel.anchorNode))))return null;
+  let m=null;try{m=shFindQuote(p.pages[SH.page-1]||'',txt)}catch(e){}
+  return{id:p.id,page:SH.page,text:m?m[0]:txt,t:Date.now()};
+}
+document.addEventListener('copy',()=>{try{const q=shSelQuote();if(q)SH.lastCopy=q}catch(e){}});
+function shQuoteInsert(q){
+  const p=SH.papers&&SH.papers.find(x=>x.id===q.id)||SH.cur;if(!p||typeof POPOUT!=='undefined'&&POPOUT)return false;
+  const clean=String(q.text).replace(/\s+/g,' ').trim();if(!clean)return false;
+  const shown='\u201c'+clean+'\u201d';
+  insertHTMLAtCursorSafe('<span class="sq" data-orig="'+escAttr(shown)+'" title="Quoted from the paper. The bar goes when you change the words.">'+escHTML(shown)+'</span>');
+  try{const s=getSelection();if(s.rangeCount)savedRange=s.getRangeAt(0).cloneRange()}catch(e){}
+  const m=p.lib?citGetLib().find(d=>d.cid===p.lib):shLibMatch(p.title),pg=(p.md==='none')?'':String(q.page);
+  if(m){citInsertSpan(m.cid,pg);citRefreshDoc()}
+  return m?'cited':'bare';
+}
+function shQuoteToDraft(){
+  const q=shSelQuote();if(!q){showToast('Select some text on the page first');return}
+  const r=shQuoteInsert(q);
+  showToast(r==='cited'?'Quote and citation put in your draft. Check the page number: it is the PDF page.':r==='bare'?'Quote put in your draft. This paper is not linked to your library, so there is no citation yet. Link it above.':'Could not put it in the draft')
+}
+function shPasteQuote(e){
+  const q=SH&&SH.lastCopy;if(!q||Date.now()-q.t>600000)return false;
+  const txt=String((e.clipboardData&&e.clipboardData.getData('text/plain'))||'').replace(/\s+/g,' ').trim();
+  if(!txt||txt!==String(q.text).replace(/\s+/g,' ').trim())return false;
+  e.preventDefault();SH.lastCopy=null;return !!shQuoteInsert(q)
+}
+function sqCheck(){editor.querySelectorAll('span.sq').forEach(s=>{if(s.textContent!==s.getAttribute('data-orig')){s.classList.remove('sq');s.removeAttribute('data-orig');s.removeAttribute('title');if(!s.getAttribute('class'))s.removeAttribute('class')}})}
 async function shDelHL(id){const p=SH.cur;if(!p)return;p.notes=p.notes.filter(x=>x.id!==id);await shPut(p);shRender()}
 /* Fact check beside the AI summary: what the code finds in the paper text itself, and any number in the AI summary that the paper does not contain */
 function shFactCheck(p,ai){
