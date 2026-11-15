@@ -28,7 +28,7 @@
     pick.forEach(function (ln) {
       var m = /^[\W_]*([0-9OolISB]{1,4})[\W_]*$/.exec(ln);
       if (m) { var v = digits(m[1]); if (v !== null && v > 0) out.push({ v: v, w: 2 }); return; }
-      var a = /^(\d{1,4})\s+[A-Za-z]/.exec(ln), b = /[A-Za-z.:)]\s+(\d{1,4})$/.exec(ln);
+      var a = /^(\d{1,4})\s+[A-Za-z]/.exec(ln), b = /[^\d\s]\s+(\d{1,4})$/.exec(ln);
       if (a) out.push({ v: parseInt(a[1], 10), w: 1 });
       if (b) out.push({ v: parseInt(b[1], 10), w: 1 });
     });
