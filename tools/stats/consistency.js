@@ -1,4 +1,4 @@
-/* Do the reported statistics agree with each other? A reported t, F or chi-square with its degrees of freedom fixes the p-value.
+/* Do the reported statistics agree with each other? A reported t, F, chi-square or r (with its degrees of freedom) fixes the p-value.
    check(pages, hits) -> [{ test, p, page, status, computed, range, note }]
    status: "ok", "inconsistent" (the printed p does not match the test statistic), "decision" (the mismatch changes whether p is below .05) or "adjusted" (the p is described as corrected, so a difference is expected).
    Allowed for: rounding of the test statistic and of p; one-tailed tests when the page says so. It checks what the paper prints against itself,
@@ -46,12 +46,14 @@
   }
   function pT(t, df) { return ibeta(df / (df + t * t), df / 2, 0.5); }               /* two-tailed */
   function pF(F, d1, d2) { return F <= 0 ? 1 : ibeta(d2 / (d2 + d1 * F), d2 / 2, d1 / 2); }   /* upper tail */
+  function pR(r, df) { r = Math.min(Math.abs(r), 1 - 1e-15); return pT(r * Math.sqrt(df / (1 - r * r)), df); }   /* two-tailed, from r and its df */
   function pChi2(x, df) { return gammaQ(df / 2, x / 2); }                             /* upper tail */
   function decimals(t) { var m = /\.(\d+)/.exec(t); return m ? m[1].length : 0; }
   function range(kind, v, dec) {
     var u = 0.5 * Math.pow(10, -dec), lo, hi;
-    function f(x) { return kind === "t" ? pT(Math.abs(x), v.df) : kind === "F" ? pF(x, v.df1, v.df2) : pChi2(x, v.df); }
-    var s = kind === "t" ? Math.abs(v.t) : kind === "F" ? v.F : v.chi2;
+    function f(x) { return kind === "t" ? pT(Math.abs(x), v.df) : kind === "F" ? pF(x, v.df1, v.df2) : kind === "r" ? pR(x, v.df) : pChi2(x, v.df); }
+    var s = kind === "t" ? Math.abs(v.t) : kind === "F" ? v.F : kind === "r" ? Math.abs(v.r) : v.chi2;
+    if (kind === "r") { var ra = f(Math.min(1, s + u)), rb = f(Math.max(0, s - u)); return [Math.min(ra, rb), Math.max(ra, rb)]; }
     var a = f(Math.max(0, s - u)), b = f(s + u);
     return [Math.min(a, b), Math.max(a, b)];
   }
@@ -61,16 +63,16 @@
     Object.keys(by).forEach(function (pg) {
       var hs = by[pg].slice().sort(function (a, b) { return a.at - b.at; });
       hs.forEach(function (h, i) {
-        if (h.stat !== "t" && h.stat !== "F" && h.stat !== "chi2") return;
+        if (h.stat !== "t" && h.stat !== "F" && h.stat !== "chi2" && !(h.stat === "r" && h.v.df > 0)) return;
         var n = hs[i + 1];
         if (!n || n.stat !== "p") return;
         var gap = n.at - (h.at + h.text.length);
         if (gap < 0 || gap > 60) return;
         var v = h.v;
-        if (h.stat === "t" && !(v.df > 0) || h.stat === "F" && !(v.df1 > 0 && v.df2 > 0) || h.stat === "chi2" && !(v.df > 0)) return;
+        if (h.stat === "t" && !(v.df > 0) || h.stat === "F" && !(v.df1 > 0 && v.df2 > 0) || h.stat === "chi2" && !(v.df > 0) || h.stat === "r" && !(v.df > 0)) return;
         var dec = decimals(h.text), r = range(h.stat, v, dec), pdec = decimals(n.text.replace(/^p\s*(<=|>=|<|>|=)\s*/i, ""));
         var one = /one[- ]?(tailed|sided)|1-tailed/.test(text[pg - 1] || "");
-        var cands = [r]; if (one && h.stat === "t") cands.push([r[0] / 2, r[1] / 2]);
+        var cands = [r]; if (one && (h.stat === "t" || h.stat === "r")) cands.push([r[0] / 2, r[1] / 2]);
         var rep = n.v.p, op = n.v.op, ph = 0.5 * Math.pow(10, -pdec), good = false, note = "";
         cands.forEach(function (c) {
           /* "=" : the printed p is the rounded value, or the value cut off after its last decimal (.0289 printed as .02) */
@@ -96,6 +98,6 @@
     });
     return out;
   }
-  var api = { check: check, pT: pT, pF: pF, pChi2: pChi2 };
+  var api = { check: check, pT: pT, pF: pF, pChi2: pChi2, pR: pR };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuConsistency = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

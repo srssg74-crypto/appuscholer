@@ -19,8 +19,9 @@ A p described as adjusted (Bonferroni, Holm, corrected) is reported as "adjusted
 Status: ok, inconsistent, decision (the mismatch changes whether p is below .05), adjusted.
 
 The p-value functions match scipy 1.18 on 150 cases (`dist_vectors.json`; relative 1e-9 or absolute 1e-12). `node test_consistency.js` runs them and the fixtures.
-Run on the 53 sample PDFs (`node run_consistency.mjs`, 15 Nov 2026): 96 pairs checked, 87 ok, 9 flagged. All 9 were read against the page text.
-Six look like real mismatches in the papers (for example F(1, 130) = 6.14 printed with p = .001 when the test statistic gives .0145; the same F(1,38) = 33.76 printed with two different p-values).
+Run on the 53 sample PDFs (`node run_consistency.mjs`, 15 Nov 2026): 106 pairs checked, 95 ok, 11 flagged. All 11 were read against the page text.
+Eight look like real mismatches in the papers (for example F(1, 130) = 6.14 printed with p = .001 when the test statistic gives .0145; the same F(1,38) = 33.76 printed with two different p-values; r(41) = 0.29 printed with p = .07 when it gives .059; r(79) = 0.31 printed with p = .002 when it gives .005, which would fit a one-tailed test the page does not name).
 The other three are chi-square comparisons of adherence rates whose printed p may come from an exact test the paper does not name.
-That is a spot check on 96 pairs from 53 files; it is not a precision or recall figure. A mismatch is a reason to look at the page, not proof of an error.
-Not checked: correlations (r with n), t tests given as "t = x" without df, results in tables.
+One-tailed tests are allowed for (t and r) when the page says one-tailed; without that word on the page a half-size p is flagged.
+That is a spot check on 106 pairs from 53 files; it is not a precision or recall figure. A mismatch is a reason to look at the page, not proof of an error.
+Not checked: correlations printed without df, t tests given as "t = x" without df, results in tables.
