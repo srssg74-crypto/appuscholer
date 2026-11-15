@@ -20335,7 +20335,7 @@ function shMarked(p,page){
           if (pat[0] === "r" && Math.abs(v.r) > 1) continue;
           if (pat[0] === "MSD" && (isNaN(v.M) || isNaN(v.SD))) continue;
           if (pat[0] === "CI" && (v.level < 50 || v.level > 99.9 || v.lo > v.hi)) continue;
-          got.push({ stat: pat[0], text: m[0].replace(/\s+/g, " ").trim(), page: pi + 1, at: m.index, v: v });
+          got.push({ stat: pat[0], text: m[0].replace(/\s+/g, " ").trim(), page: pi + 1, at: m.index, v: v, before: text.slice(Math.max(0, m.index - 60), m.index), after: text.slice(m.index + m[0].length, m.index + m[0].length + 100) });
         }
       });
       /* a longer hit swallows a shorter one that sits inside it (the n inside a chi-square, the number inside a CI) */
@@ -20350,9 +20350,120 @@ function shMarked(p,page){
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuStats = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
 /* END tools/stats/statsfind.js */
+/* BEGIN tools/stats/consistency.js (a test checks this copy is identical to the file) */
+/* Do the reported statistics agree with each other? A reported t, F or chi-square with its degrees of freedom fixes the p-value.
+   check(pages, hits) -> [{ test, p, page, status, computed, range, note }]
+   status: "ok", "inconsistent" (the printed p does not match the test statistic), "decision" (the mismatch changes whether p is below .05) or "adjusted" (the p is described as corrected, so a difference is expected).
+   Allowed for: rounding of the test statistic and of p; one-tailed tests when the page says so. It checks what the paper prints against itself,
+   not whether the analysis was right. A mismatch is a reason to look at the page, not proof of an error. */
+(function (root) {
+  "use strict";
+  /* log-gamma (Lanczos) */
+  function lg(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - lg(1 - x);
+    x -= 1; var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) a += c[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  function betacf(a, b, x) {
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap, FP = 1e-300;
+    if (Math.abs(d) < FP) d = FP; d = 1 / d; var h = d;
+    for (var m = 1; m <= 500; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FP) d = FP; c = 1 + aa / c; if (Math.abs(c) < FP) c = FP; d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FP) d = FP; c = 1 + aa / c; if (Math.abs(c) < FP) c = FP; d = 1 / d;
+      var del = d * c; h *= del; if (Math.abs(del - 1) < 3e-16) break;
+    }
+    return h;
+  }
+  function ibeta(x, a, b) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    var bt = Math.exp(lg(a + b) - lg(a) - lg(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  function gammaQ(a, x) {
+    if (x <= 0) return 1;
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 0; n < 1000; n++) { ap++; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 3e-16) break; }
+      return 1 - sum * Math.exp(-x + a * Math.log(x) - lg(a));
+    }
+    var b = x + 1 - a, c = 1 / 1e-300, d = 1 / b, h = d;
+    for (var i = 1; i < 1000; i++) {
+      var an = -i * (i - a); b += 2; d = an * d + b; if (Math.abs(d) < 1e-300) d = 1e-300; c = b + an / c; if (Math.abs(c) < 1e-300) c = 1e-300;
+      d = 1 / d; var del2 = d * c; h *= del2; if (Math.abs(del2 - 1) < 3e-16) break;
+    }
+    return Math.exp(-x + a * Math.log(x) - lg(a)) * h;
+  }
+  function pT(t, df) { return ibeta(df / (df + t * t), df / 2, 0.5); }               /* two-tailed */
+  function pF(F, d1, d2) { return F <= 0 ? 1 : ibeta(d2 / (d2 + d1 * F), d2 / 2, d1 / 2); }   /* upper tail */
+  function pChi2(x, df) { return gammaQ(df / 2, x / 2); }                             /* upper tail */
+  function decimals(t) { var m = /\.(\d+)/.exec(t); return m ? m[1].length : 0; }
+  function range(kind, v, dec) {
+    var u = 0.5 * Math.pow(10, -dec), lo, hi;
+    function f(x) { return kind === "t" ? pT(Math.abs(x), v.df) : kind === "F" ? pF(x, v.df1, v.df2) : pChi2(x, v.df); }
+    var s = kind === "t" ? Math.abs(v.t) : kind === "F" ? v.F : v.chi2;
+    var a = f(Math.max(0, s - u)), b = f(s + u);
+    return [Math.min(a, b), Math.max(a, b)];
+  }
+  function check(pages, hits) {
+    var out = [], text = (pages || []).map(function (t) { return String(t || "").toLowerCase(); });
+    var by = {}; hits.forEach(function (h) { (by[h.page] = by[h.page] || []).push(h); });
+    Object.keys(by).forEach(function (pg) {
+      var hs = by[pg].slice().sort(function (a, b) { return a.at - b.at; });
+      hs.forEach(function (h, i) {
+        if (h.stat !== "t" && h.stat !== "F" && h.stat !== "chi2") return;
+        var n = hs[i + 1];
+        if (!n || n.stat !== "p") return;
+        var gap = n.at - (h.at + h.text.length);
+        if (gap < 0 || gap > 60) return;
+        var v = h.v;
+        if (h.stat === "t" && !(v.df > 0) || h.stat === "F" && !(v.df1 > 0 && v.df2 > 0) || h.stat === "chi2" && !(v.df > 0)) return;
+        var dec = decimals(h.text), r = range(h.stat, v, dec), pdec = decimals(n.text.replace(/^p\s*(<=|>=|<|>|=)\s*/i, ""));
+        var one = /one[- ]?(tailed|sided)|1-tailed/.test(text[pg - 1] || "");
+        var cands = [r]; if (one && h.stat === "t") cands.push([r[0] / 2, r[1] / 2]);
+        var rep = n.v.p, op = n.v.op, ph = 0.5 * Math.pow(10, -pdec), good = false, note = "";
+        cands.forEach(function (c) {
+          /* "=" : the printed p is the rounded value, or the value cut off after its last decimal (.0289 printed as .02) */
+          if (op === "=") good = good || (c[1] >= rep - ph - 1e-12 && c[0] < rep + 2 * ph + 1e-12);
+          else if (op === "<") good = good || c[0] < rep;
+          else if (op === "<=") good = good || c[0] <= rep + 1e-12;
+          else if (op === ">") good = good || c[1] > rep;
+          else if (op === ">=") good = good || c[1] >= rep - 1e-12;
+        });
+        var mid = (r[0] + r[1]) / 2, status = "ok";
+        var win = ((n.after || "").slice(0, 100) + " " + (h.before || "").slice(-40)).replace(/\bR\s?(?:2|\u00b2)\s*adj\w*|\badj\w*\s*R\s?(?:2|\u00b2)/gi, ""), adj = /adjust|correct|bonferroni|holm|benjamini|\bfdr\b|greenhouse|geisser/i.test(win);
+        if (!good && op === "=" && pdec >= 3 && Math.abs(rep - Math.pow(10, -pdec)) < 1e-12 && r[1] < rep) { good = true; note = "Printed as the smallest value; the test statistic gives p below that. Write p < .001."; }
+        if (!good && op === "=" && rep === 0 && r[1] < 0.0005) { good = true; note = "p = .000 is printed; write p < .001."; }
+        if (!good) {
+          var sigComp = r[1] < 0.05, nonComp = r[0] >= 0.05;
+          var repSig = (op === "=" && rep < 0.05) || ((op === "<" || op === "<=") && rep <= 0.05);
+          var repNon = (op === "=" && rep >= 0.05) || ((op === ">" || op === ">=") && rep >= 0.05);
+          status = adj ? "adjusted" : ((repSig && nonComp) || (repNon && sigComp)) ? "decision" : "inconsistent";
+          note = adj ? "The printed p is described as adjusted, so it can differ from the raw p of the test statistic." : "The test statistic gives p about " + (mid < 0.001 ? "< .001" : mid.toFixed(3).replace(/^0/, ""));
+        }
+        out.push({ test: h.text, p: n.text, page: +pg, status: status, computed: mid, range: r, note: note });
+      });
+    });
+    return out;
+  }
+  var api = { check: check, pT: pT, pF: pF, pChi2: pChi2 };
+  if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuConsistency = api;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+/* END tools/stats/consistency.js */
 /* Statistics the paper prints, found from the page text with plain patterns (nothing leaves the device). A hit says what the paper prints, not that it is right. */
 const SH_STAT_NAME={p:'p-values',MSD:'Mean and SD',n:'Sample sizes',effect:'Effect sizes',CI:'Confidence intervals',r:'Correlations',t:'t tests',F:'F tests',chi2:'Chi-square',ratio:'Odds, hazard, risk ratios'};
-function shStatsOf(p){try{const th=p.tableHits||[],key=p.pages.length+':'+th.length;if(!SH.stats||SH.stats.id!==p.id||SH.stats.n!==key){const hits=AppuStats.find(p.pages).concat(th.map(x=>({stat:'MSD',text:'Table '+x.table+': '+x.text,page:x.page,table:x.table,v:x.v})));hits.sort((a,b)=>a.page-b.page);SH.stats={id:p.id,n:key,hits:hits}}return SH.stats.hits}catch(e){return[]}}
+function shStatsOf(p){try{const th=p.tableHits||[],key=p.pages.length+':'+th.length;if(!SH.stats||SH.stats.id!==p.id||SH.stats.n!==key){const tx=AppuStats.find(p.pages),hits=tx.concat(th.map(x=>({stat:'MSD',text:'Table '+x.table+': '+x.text,page:x.page,table:x.table,v:x.v})));hits.sort((a,b)=>a.page-b.page);let cons=[];try{cons=AppuConsistency.check(p.pages,tx)}catch(e){}SH.stats={id:p.id,n:key,hits:hits,cons:cons}}return SH.stats.hits}catch(e){return[]}}
+/* Reported statistics checked against each other: a t, F or chi-square with its degrees of freedom fixes its p-value. A mismatch is a reason to look at the page, not proof of an error. */
+function shConsHTML(p){
+  shStatsOf(p);const c=(SH.stats&&SH.stats.id===p.id&&SH.stats.cons)||[];if(!c.length)return'';
+  const bad=c.filter(x=>x.status==='inconsistent'||x.status==='decision'),adj=c.filter(x=>x.status==='adjusted');
+  const line=x=>'<div style="margin:3px 0;font-size:13px"><button class="btn btn-ghost" style="padding:1px 8px;font-size:12px" title="Go to page '+x.page+'" onclick="shGo('+x.page+')">p. '+x.page+'</button> <code>'+escHTML(x.test+', '+x.p)+'</code> <span style="color:var(--muted)">'+escHTML(x.note)+(x.status==='decision'?' This changes whether p is below .05.':'')+'</span></div>';
+  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Do the numbers agree?</b> ('+(bad.length?bad.length+' to look at, ':'')+c.length+' checked)</summary><div style="margin-top:4px">'+
+    (bad.length?bad.map(line).join(''):'<p style="font-size:13px;margin:2px 0">Every p-value printed beside a t, F or chi-square test agrees with that test statistic.</p>')+(adj.length?'<p style="font-size:12.5px;margin:4px 0 0">'+adj.length+' more '+(adj.length===1?'is':'are')+' described as adjusted, so a difference is expected.</p>':'')+
+    '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Each t, F or chi-square with its degrees of freedom is turned back into a p-value and compared with the p printed next to it. Rounding, cut-off decimals and one-tailed tests are allowed for. A mismatch can be a typo, an exact or corrected test the paper does not name, or a misread of the text, so look at the page before you say anything about the paper.</p></div></details>'}
 function shTablesHTML(p){
   if(p.md)return'';const T=p.tables;
   if(!Array.isArray(T))return'<div class="row" style="gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap"><span style="font-size:12.5px;color:var(--muted)">Tables not read yet.</span><button class="btn btn-ghost" onclick="shFindSections()">Read the tables</button><span id="shSecMsg" style="font-size:12.5px"></span></div>';
@@ -20426,6 +20537,7 @@ function shReaderRender(b){
    shPageFlagHTML(p)+
    shSectionsHTML(p)+
    shStatsHTML(p)+
+   shConsHTML(p)+
    shTablesHTML(p)+
    '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center"><button class="btn '+(SH.img?'btn-purple':'btn-ghost')+'" onclick="shImgToggle()">'+(SH.img?'Hide page picture':'Show page picture')+'</button>'+'<button class="btn btn-ghost" onclick="shWord()">Save as Word</button><button class="btn btn-ghost" onclick="shHlPdf()">Save PDF with my highlights</button>'+(SH.img?'<button class="btn btn-ghost" aria-label="Zoom out" onclick="shZoom(-0.25)">−</button><span style="font-size:13px">'+Math.round(SH.zoom*100)+'%</span><button class="btn btn-ghost" aria-label="Zoom in" onclick="shZoom(0.25)">+</button>':'')+
      '<input type="search" id="shInQ" value="'+escAttr(SH.inq||'')+'" placeholder="Search in this paper" style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')shInSearch(this.value)" aria-label="Search in this paper"><button class="btn btn-ghost" onclick="shInSearch(document.getElementById(\'shInQ\').value)">Find</button></div>'+shInResHTML(p)+(SH.img?'<div id="shImg" style="border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;text-align:center;overflow:auto"><span style="font-size:13px">Loading the page…</span></div>':'')+

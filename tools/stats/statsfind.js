@@ -35,7 +35,7 @@
           if (pat[0] === "r" && Math.abs(v.r) > 1) continue;
           if (pat[0] === "MSD" && (isNaN(v.M) || isNaN(v.SD))) continue;
           if (pat[0] === "CI" && (v.level < 50 || v.level > 99.9 || v.lo > v.hi)) continue;
-          got.push({ stat: pat[0], text: m[0].replace(/\s+/g, " ").trim(), page: pi + 1, at: m.index, v: v });
+          got.push({ stat: pat[0], text: m[0].replace(/\s+/g, " ").trim(), page: pi + 1, at: m.index, v: v, before: text.slice(Math.max(0, m.index - 60), m.index), after: text.slice(m.index + m[0].length, m.index + m[0].length + 100) });
         }
       });
       /* a longer hit swallows a shorter one that sits inside it (the n inside a chi-square, the number inside a CI) */
