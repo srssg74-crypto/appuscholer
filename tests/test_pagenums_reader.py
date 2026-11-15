@@ -44,6 +44,10 @@ with sync_playwright() as p:
     # a paper without numbers shows nothing extra
     J("(async()=>{await shPut({id:'q2',title:'Plain paper',file:'b.pdf',size:9,added:'2026-11-16',pages:['One page of text without numbers. '.repeat(5),'Another page. '.repeat(8)],total:2,notes:[],cells:{},sections:[]});await shRefresh();shRead('q2',1)})()"); pg.wait_for_timeout(500)
     ok('printed page' not in J("document.getElementById('shelfDlg').innerText"),'no numbers found: nothing is shown')
+    # margin lines found by position (edges) are used when the record has them
+    sc=["Line one\nbody a\nbody b\n%d\nbody c\nbody d\nbody e\nbody f"%(35+i) for i in range(3)]
+    J("(async()=>{await shPut({id:'q3',title:'Scrambled order',file:'c.pdf',size:9,added:'2026-11-16',pages:%s,edges:[['35'],['36'],['87']],total:3,notes:[],cells:{},sections:[]});await shRefresh();shRead('q3',3)})()"%json.dumps(sc)); pg.wait_for_timeout(500)
+    ok(re.search(r'printed page\s*37',J("document.getElementById('shelfDlg').innerText")) is not None,'record with edges: page 3 shows printed page 37 (87 misread, 35 and 36 agree)')
     ok(not [e for e in errors if e[0]=='pageerror'],'no page errors %s'%errors[:3])
     b.close()
 print('failures:',len(fails)); sys.exit(1 if fails else 0)

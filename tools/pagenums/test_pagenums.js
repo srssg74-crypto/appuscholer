@@ -36,4 +36,18 @@ pages=Array.from({length:8},(_,i)=>pg('Nineteenth-Century Art Worldwide 22, no. 
 // 12 empty and tiny input
 ok(P.label([]).confident===false&&P.label(['a']).labels.length===1,'empty and one-page inputs are safe');
 ok(P.label(['x','y','z']).confident===false,'three pages with nothing: no labels');
+
+// 13 positions: items in the margins are found by position, whatever order the text comes in
+const it=(str,x,y)=>({str:str,transform:[1,0,0,1,x,y]});
+let items=[it('Body words in the middle',100,400),it('149',300,30),it('Running head',100,760),it('more body',100,380)];
+let e=P.edgesOf(items,[0,0,600,800]);
+ok(e.join('|')==='Running head|149'||e.includes('149')&&!e.includes('Body words in the middle'),'edgesOf keeps margin lines and drops body lines: '+JSON.stringify(e));
+items=[it('CHAPTER 52: DISORDERS',50,770),it('1999',400,770)];e=P.edgesOf(items,[0,0,600,800]);ok(e[0]==='CHAPTER 52: DISORDERS 1999','items on one line are joined left to right: '+e[0]);
+// 14 scrambled OCR text order: the footer is not among the last lines of the text, but the edges find it
+pages=Array.from({length:6},(_,i)=>'Line one\nbody a\nbody b\n'+(60+i)+'\nbody c\nbody d\nbody e\nbody f');
+let edges=Array.from({length:6},(_,i)=>['Head',String(60+i)]);
+ok(!P.label(pages).confident,'text order alone misses a footer that the OCR layer put in the middle');
+r=P.label(pages,edges);ok(r.confident&&r.offset===59&&r.labels[5]==='65','edges give the footer numbers: '+r.labels.join());
+// 15 three pages, one number misread (35, 36, 87): the sequence puts it right
+edges=[['. 35'],['36'],['87']];r=P.label(['a','b','c'],edges);ok(r.confident&&r.labels.join()==='35,36,37'&&r.how[2]==='fixed','three pages with 35, 36 and a misread 87 give 35, 36, 37');
 console.log(f?'FAILED '+f:'ALL PAGE NUMBER TESTS PASSED');process.exit(f?1:0);

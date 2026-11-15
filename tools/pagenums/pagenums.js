@@ -1,6 +1,7 @@
 /* Printed page numbers for the Reading shelf.
-   label(pages) -> { confident, offset, same, votes, labels, how, notes }
+   label(pages, edges) -> { confident, offset, same, votes, labels, how, notes }
    pages: one text string per PDF page (the shelf's extracted text, with line breaks).
+   edges (optional): per page, the lines found in the top and bottom margins by position, from edgesOf(items, view); used when given.
    How it works: the first and last three lines of every page are searched for a number (alone on its line, or at the start or end of a
    running head or foot). Each number votes for "printed page = PDF page + offset". The offset with most pages behind it wins, and
    the label of every page is PDF page + offset. So a number the OCR misread ("200S", "lOlO") is put right, and a page whose number
@@ -22,8 +23,8 @@
     return out.length >= 1 && out.length <= 4 ? parseInt(out, 10) : null;
   }
   function candidates(text) {
-    var lines = String(text || "").split(/\n/).map(function (x) { return x.trim(); }).filter(Boolean);
-    var pick = lines.slice(0, 3).concat(lines.slice(-3)), out = [];
+    var lines = (Array.isArray(text) ? text : String(text || "").split(/\n/)).map(function (x) { return String(x).trim(); }).filter(Boolean);
+    var pick = Array.isArray(text) ? lines : lines.slice(0, 3).concat(lines.slice(-3)), out = [];
     pick.forEach(function (ln) {
       var m = /^[\W_]*([0-9OolISB]{1,4})[\W_]*$/.exec(ln);
       if (m) { var v = digits(m[1]); if (v !== null && v > 0) out.push({ v: v, w: 2 }); return; }
@@ -33,10 +34,26 @@
     });
     return out;
   }
-  function label(pages) {
+  /* Lines in the top and bottom margins of a page, found by position (pdf.js text items and the page view), top to bottom.
+     This is better than the first and last lines of the text, because an OCR layer often lists text out of order. */
+  function edgesOf(items, view) {
+    var y0 = view[1], H = view[3] - view[1], rows = {};
+    (items || []).forEach(function (it) {
+      var s = it && typeof it.str === "string" ? it.str.trim() : "";
+      if (!s || !it.transform) return;
+      var rel = (it.transform[5] - y0) / H;
+      if (rel > 0.12 && rel < 0.88) return;
+      var k = Math.round(it.transform[5] / 4);
+      (rows[k] || (rows[k] = { y: it.transform[5], p: [] })).p.push({ x: it.transform[4], s: s });
+    });
+    var lines = Object.keys(rows).map(function (k) { return rows[k]; }).sort(function (a, b) { return b.y - a.y; })
+      .map(function (r) { return r.p.sort(function (a, b) { return a.x - b.x; }).map(function (q) { return q.s; }).join(" "); });
+    return lines.slice(0, 3).concat(lines.length > 3 ? lines.slice(-3) : []);
+  }
+  function label(pages, edges) {
     var n = pages.length, notes = [], votes = {}, cand = [];
     for (var i = 0; i < n; i++) {
-      cand[i] = candidates(pages[i]);
+      cand[i] = candidates(edges && edges[i] && edges[i].length ? edges[i] : pages[i]);
       var seenOff = {};
       cand[i].forEach(function (c) { var o = c.v - (i + 1); if (!seenOff[o]) { seenOff[o] = 1; var e = votes[o] || (votes[o] = { w: 0, p: 0 }); e.w += c.w; e.p += 1; } });
     }
@@ -47,8 +64,7 @@
     if (!offs.length) { notes.push("No printed page numbers were found."); return res; }
     var best = offs[0], second = offs[1];
     res.offset = best.o; res.votes = best.p;
-    var need = Math.max(3, Math.ceil(n * 0.25));
-    if (n < 3) need = 2;
+    var need = n <= 4 ? 2 : Math.max(3, Math.ceil(n * 0.25));
     if (best.p < need) { notes.push("Too few pages agree on a numbering (" + best.p + " of " + n + ")."); return res; }
     if (second && second.p >= best.p * 0.8 && second.o !== best.o) { notes.push("Two page numberings are about equally common (offsets " + best.o + " and " + second.o + "), so none is used."); return res; }
     var first = -1, last = -1;
@@ -65,6 +81,6 @@
     res.confident = true;
     return res;
   }
-  var api = { label: label, candidates: candidates };
+  var api = { label: label, candidates: candidates, edgesOf: edgesOf };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuPageNums = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
