@@ -195,6 +195,8 @@
   #editor{width:100%;flex:1;min-height:0;border:none;outline:none;padding:22px;font-size:17px;line-height:1.8;font-family:Georgia,"Times New Roman","Noto Sans Devanagari",serif;color:var(--ink);background:var(--card);display:block;overflow-y:auto}
   #editor.drag-over{box-shadow:inset 0 0 0 3px var(--purple-600);background:var(--soft)}
   #editor table{border-collapse:collapse;margin:12px 0;width:100%}
+  #editor td[data-tsel],#editor th[data-tsel]{background:rgba(109,40,217,.18)!important;outline:1px solid var(--purple-600,#6d28d9)}
+  #editor table[data-selecting] ::selection{background:transparent}
   #editor table td,#editor table th{border:1px solid var(--chipline);padding:8px 10px;min-width:60px;vertical-align:top}
   #editor .img-wrap{position:relative;display:inline-block;max-width:100%;margin:8px 0}
   #editor .img-wrap img,#editor .img-wrap svg{max-width:100%;width:100%;height:auto;display:block;border-radius:6px}
@@ -6082,7 +6084,7 @@ function bodyToHTML(body){
   if(looksLikeStoredHTML(body))return body;
   return escHTML(body).replace(/\n/g,'<br>');
 }
-function getEditorHTML(){return editor.innerHTML}
+function getEditorHTML(){return editor.innerHTML.replace(/ data-tsel="1"/g,'').replace(/ data-selecting="1"/g,'')}
 function setEditorHTML(body){editor.innerHTML=bodyToHTML(body)}
 function getEditorText(){return editor.innerText||editor.textContent||''}
 function docIsSource(id){const d=docsGet().find(x=>x.id===(id||docCurrentId()));return !!(d&&d.origin==='source')}
@@ -8281,7 +8283,7 @@ function tblParse(text){
   const w=Math.max(0,...rows.map(r=>r.length));if(rows.length<1||w<2||rows.length>200||w>30)return null;
   return rows.map(r=>{const o=r.map(x=>String(x).replace(/\s+/g,' ').trim());while(o.length<w)o.push('');return o})}
 function tblColLetter(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s}
-function tblCell(){const sel=getSelection();let n=sel&&sel.anchorNode;if(!n||!editor.contains(n))return null;if(n.nodeType===3)n=n.parentNode;return n&&n.closest?n.closest('td,th'):null}
+function tblCell(){const sel=getSelection();let n=sel&&sel.anchorNode;if(n&&editor.contains(n)){if(n.nodeType===3)n=n.parentNode;const c=n&&n.closest?n.closest('td,th'):null;if(c)return c}return TB.a&&editor.contains(TB.a)&&TB.b&&TB.a!==TB.b?TB.a:null}
 function tblPasteInto(rows,cell){
   const t=cell.closest('table'),r0=cell.parentNode.rowIndex,c0=cell.cellIndex;
   rows.forEach((row,i)=>{while(t.rows.length<=r0+i){const nr=t.insertRow(-1),n=t.rows[0]?t.rows[0].cells.length:row.length;for(let c=0;c<n;c++)nr.insertCell(-1).innerHTML='&nbsp;'}
@@ -8293,6 +8295,7 @@ function tblPaste(e){
   const dt=e.clipboardData;if(!dt)return false;
   const rows=tblParse(dt.getData('text/plain'));if(!rows)return false;
   const cell=tblCell();
+  if(cell&&tblMerged(cell.closest('table')))return false;
   if(cell){tblPasteInto(rows,cell);e.preventDefault();upd();showToast('Pasted '+rows.length+' row(s) into the table, from the cell you were in.');return true}
   e.preventDefault();
   insertHTMLBlockIntoEditor('<table><tr>'+rows[0].map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>'+rows.slice(1).map(r=>'<tr>'+r.map(c=>'<td>'+escHTML(c)+'</td>').join('')+'</tr>').join('')+'</table><p>&nbsp;</p>');
@@ -8304,28 +8307,58 @@ function tblBarShow(){
   if(!b){b=document.createElement('div');b.id='tblBar';
     b.style.cssText='position:fixed;z-index:60;display:none;background:var(--card,#fff);border:1px solid var(--line,#ccc);border-radius:8px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.18);gap:4px;flex-wrap:wrap;max-width:94vw;align-items:center';
     b.innerHTML='<span id="tblPos" style="font-size:12.5px;padding:0 6px;color:var(--muted)"></span>'+
-      [['tblOp(\'addrow\')','+ Row'],['tblOp(\'addcol\')','+ Col'],['tblOp(\'delrow\')','− Row'],['tblOp(\'delcol\')','− Col'],['tblOp(\'align\')','Align'],['tblOp(\'apa\')','APA look'],['capOpen()','Caption']].map(x=>'<button type="button" class="btn btn-ghost" style="min-height:36px;padding:2px 9px;font-size:12.5px" onclick="'+x[0]+'">'+x[1]+'</button>').join('');
+      [['tblOp(\'addrow\')','+ Row'],['tblOp(\'addcol\')','+ Col'],['tblOp(\'delrow\')','− Row'],['tblOp(\'delcol\')','− Col'],['tblOp(\'align\')','Align'],['tblOp(\'pick\')','Select cells'],['tblOp(\'merge\')','Merge'],['tblOp(\'split\')','Split'],['tblOp(\'clear\')','Clear'],['tblOp(\'apa\')','APA look'],['capOpen()','Caption']].map(x=>'<button type="button" class="btn btn-ghost" style="min-height:36px;padding:2px 9px;font-size:12.5px" onclick="'+x[0]+'">'+x[1]+'</button>').join('');
     b.addEventListener('mousedown',e=>e.preventDefault());document.body.appendChild(b)}
   const t=cell.closest('table');
-  document.getElementById('tblPos').textContent='Column '+tblColLetter(cell.cellIndex)+', row '+(cell.parentNode.rowIndex+1)+' of '+t.rows.length;
+  document.getElementById('tblPos').textContent='Column '+tblColLetter(Array.from(cell.parentNode.cells).slice(0,cell.cellIndex).reduce((a,c)=>a+(c.colSpan||1),0))+', row '+(cell.parentNode.rowIndex+1)+' of '+t.rows.length;
   b.style.display='flex';const r=t.getBoundingClientRect();
   b.style.left=Math.max(8,Math.min(r.left,innerWidth-b.offsetWidth-8))+'px';
   b.style.top=Math.max(8,Math.min(r.top-b.offsetHeight-4>8?r.top-b.offsetHeight-4:r.bottom+4,innerHeight-b.offsetHeight-8))+'px'}
+/* ---- range: drag across cells (or Shift+click) to select; Merge joins cells of one row (Word keeps it), Split undoes it, Clear empties the range, Copy gives tab-separated cells ---- */
+const TB={a:null,b:null,drag:false};
+function tblMerged(t){return Array.from(t.querySelectorAll('td,th')).some(c=>(c.colSpan||1)>1||(c.rowSpan||1)>1)}
+function tblRangeCells(){
+  const a=TB.a,b=TB.b;if(!a||!b||!editor.contains(a)||!editor.contains(b))return[];const t=a.closest('table');if(!t||t!==b.closest('table'))return[];
+  const r1=Math.min(a.parentNode.rowIndex,b.parentNode.rowIndex),r2=Math.max(a.parentNode.rowIndex,b.parentNode.rowIndex),c1=Math.min(a.cellIndex,b.cellIndex),c2=Math.max(a.cellIndex,b.cellIndex),out=[];
+  for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++){const x=t.rows[r]&&t.rows[r].cells[c];if(x)out.push(x)}
+  return out}
+function tblMark(){
+  editor.querySelectorAll('[data-tsel]').forEach(x=>x.removeAttribute('data-tsel'));editor.querySelectorAll('table[data-selecting]').forEach(x=>x.removeAttribute('data-selecting'));
+  const cs=tblRangeCells();if(cs.length>1){cs.forEach(c=>c.setAttribute('data-tsel','1'));cs[0].closest('table').setAttribute('data-selecting','1')}}
+function tblRangeClear(){TB.a=TB.b=null;TB.drag=false;try{tblMark()}catch(e){}}
+editor.addEventListener('mousedown',e=>{const c=e.target.closest&&e.target.closest('td,th');if(!c||e.button!==0)return;
+  if(TB.pick&&TB.a&&TB.a.closest('table')===c.closest('table')){TB.pick=false;TB.b=c;e.preventDefault();tblMark();tblBarShow();return}
+  if(e.shiftKey&&TB.a&&TB.a.closest('table')===c.closest('table')){TB.b=c;e.preventDefault();tblMark();tblBarShow();return}
+  TB.a=TB.b=c;TB.drag=true;tblMark()});
+editor.addEventListener('mouseover',e=>{if(!TB.drag)return;const c=e.target.closest&&e.target.closest('td,th');if(c&&TB.a&&c.closest('table')===TB.a.closest('table')&&c!==TB.b){TB.b=c;tblMark()}});
+document.addEventListener('mouseup',()=>{if(TB.drag){TB.drag=false;try{tblBarShow()}catch(e){}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')tblRangeClear()});
+editor.addEventListener('copy',e=>{const cs=tblRangeCells();if(cs.length<2||!e.clipboardData)return;
+  const t=cs[0].closest('table'),rs=[];cs.forEach(c=>{const r=c.parentNode.rowIndex;(rs[r]=rs[r]||[]).push(c)});const rows=rs.filter(Boolean);
+  e.clipboardData.setData('text/plain',rows.map(r=>r.map(c=>c.textContent.replace(/\s+/g,' ').trim()).join('\t')).join('\n'));
+  e.clipboardData.setData('text/html','<table>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+escHTML(c.textContent.trim())+'</td>').join('')+'</tr>').join('')+'</table>');e.preventDefault()});
 function tblOp(op){
   const cell=tblCell();if(!cell){showToast('Click inside a table first');return}
   const t=cell.closest('table'),ri=cell.parentNode.rowIndex,ci=cell.cellIndex;
-  if(op==='addrow'){const nr=t.insertRow(ri+1);for(let c=0;c<t.rows[0].cells.length;c++)nr.insertCell(-1).innerHTML='&nbsp;'}
-  else if(op==='addcol'){for(let r=0;r<t.rows.length;r++){const row=t.rows[r],nc=row.insertCell(Math.min(ci+1,row.cells.length));if(r===0&&row.cells[0].tagName==='TH')nc.outerHTML='<th>&nbsp;</th>';else nc.innerHTML='&nbsp;'}}
+  if(op==='addrow'){const nr=t.insertRow(ri+1),w=Array.from(t.rows[0].cells).reduce((a,c)=>a+(c.colSpan||1),0);for(let c=0;c<w;c++)nr.insertCell(-1).innerHTML='&nbsp;'}
+  else if(op==='addcol'){if(tblMerged(t)){showToast('This table has merged cells. Split them first, then add a column.');return}for(let r=0;r<t.rows.length;r++){const row=t.rows[r],nc=row.insertCell(Math.min(ci+1,row.cells.length));if(r===0&&row.cells[0].tagName==='TH')nc.outerHTML='<th>&nbsp;</th>';else nc.innerHTML='&nbsp;'}}
   else if(op==='delrow'){if(t.rows.length<2){showToast('A table needs at least one row. Delete the table instead.');return}t.deleteRow(ri)}
-  else if(op==='delcol'){if(t.rows[0].cells.length<2){showToast('A table needs at least one column.');return}for(let r=0;r<t.rows.length;r++)if(t.rows[r].cells[ci])t.rows[r].deleteCell(ci)}
+  else if(op==='delcol'){if(tblMerged(t)){showToast('This table has merged cells. Split them first, then delete a column.');return}if(t.rows[0].cells.length<2){showToast('A table needs at least one column.');return}for(let r=0;r<t.rows.length;r++)if(t.rows[r].cells[ci])t.rows[r].deleteCell(ci)}
   else if(op==='align'){const cur=cell.style.textAlign||'left',nx=cur==='left'||cur===''?'center':cur==='center'?'right':'left';for(let r=0;r<t.rows.length;r++)if(t.rows[r].cells[ci])t.rows[r].cells[ci].style.textAlign=nx;showToast('Column '+tblColLetter(ci)+' aligned '+nx)}
+  else if(op==='pick'){TB.a=cell;TB.b=cell;TB.pick=true;tblMark();showToast('Now tap the last cell of the range. On a computer you can also drag, or Shift+click.');return}
+  else if(op==='merge'){const cs=tblRangeCells();if(cs.length<2){showToast('Drag across two or more cells in one row first, or click a cell and Shift+click another.');return}
+    if(new Set(cs.map(c=>c.parentNode.rowIndex)).size>1){showToast('Merge works along one row, for a heading that spans columns. Select cells in a single row.');return}
+    if(cs.some(c=>(c.colSpan||1)>1||(c.rowSpan||1)>1)){showToast('Some of these cells are already merged. Split them first.');return}
+    const txt=cs.map(c=>c.textContent.replace(/ /g,' ').trim()).filter(Boolean).join(' ');cs[0].textContent=txt;cs[0].colSpan=cs.length;cs[0].style.textAlign='center';cs.slice(1).forEach(c=>c.remove());tblRangeClear();showToast('Merged '+cs.length+' cells. Split puts them back.')}
+  else if(op==='split'){const n=(cell.colSpan||1);if(n<2){showToast('This cell is not merged.');return}cell.removeAttribute('colspan');cell.style.textAlign='';const tag=cell.tagName.toLowerCase();for(let i=1;i<n;i++){const nc=document.createElement(tag);nc.innerHTML='&nbsp;';cell.after(nc)}tblRangeClear();showToast('Split into '+n+' cells.')}
+  else if(op==='clear'){const cs=tblRangeCells();const list=cs.length>1?cs:[cell];list.forEach(c=>{c.innerHTML='&nbsp;'});tblRangeClear()}
   else if(op==='apa'){const on=t.getAttribute('data-apa')==='1',line='1px solid #000';
     Array.from(t.rows).forEach((row,r)=>Array.from(row.cells).forEach(c=>{c.style.border=on?'':'none';c.style.borderBottom=on?'':(r===0?line:'none');c.style.background=on?'':'none'}));
     t.style.borderTop=on?'':line;t.style.borderBottom=on?'':line;t.style.borderCollapse='collapse';
     if(on){t.removeAttribute('data-apa');t.removeAttribute('style');showToast('Back to the grid look')}else{t.setAttribute('data-apa','1');showToast('APA look: lines only at the top, under the header and at the bottom')}}
   upd();tblBarShow()}
 document.addEventListener('keyup',e=>{try{if(e.target&&e.target.closest&&e.target.closest('#editor'))tblBarShow()}catch(x){}});
-document.addEventListener('click',e=>{try{if(e.target.closest&&e.target.closest('#tblBar'))return;if(e.target.closest&&e.target.closest('#editor td,#editor th'))setTimeout(tblBarShow,0);else tblBarHide()}catch(x){}});
+document.addEventListener('click',e=>{try{if(e.target.closest&&e.target.closest('#tblBar'))return;if(e.target.closest&&e.target.closest('#editor table'))setTimeout(tblBarShow,0);else tblBarHide()}catch(x){}});
 
 /* ============ Chart Maker: general bar/line charts + Venn diagrams ============ */
 let _chartMakerInstance=null,_chartMakerPendingHTML=null;
@@ -14750,7 +14783,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Find passages for a sentence</b> takes a sentence from your draft and lists the pages that share its key words. It is word matching. A page on the list does not show that the paper supports your claim. Read it.</li>
 <li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Under a column such as Sample size, Effect size or p-value, the numbers the paper prints are offered as small buttons; one tap adds the exact text and its page to the cell. Download it as CSV.</li>
 <li><b>Quote to your draft</b>: select a passage in a paper and press "Put the selection in my draft as a quote", or copy it and paste it in the draft. It arrives in quotation marks with an amber bar and a citation with the page (the PDF page; check it against the printed page). The bar goes when you change the words. Tap the quote and press "Switch to my own words" to have it rewritten in your voice; the citation stays. A paper that is not linked to your library gives the quote without a citation.</li>
-<li><b>Tables</b>: copy cells in Excel or Google Sheets and paste in the draft. Outside a table it makes a table (first row is the header); inside a table it fills from the cell you are in. Click any cell to see a bar with the cell position (Column B, row 2), add or delete a row or column, align a column, an APA look (lines only at the top, under the header and at the bottom; Word keeps it) and the caption.</li>
+<li><b>Tables</b>: copy cells in Excel or Google Sheets and paste in the draft. Outside a table it makes a table (first row is the header); inside a table it fills from the cell you are in. Click any cell to see a bar with the cell position (Column B, row 2), add or delete a row or column, align a column, an APA look (lines only at the top, under the header and at the bottom; Word keeps it) and the caption. Drag across cells (or press Select cells, then tap the last one; on a computer Shift+click works too) to pick a range: Merge joins cells along one row for a heading that spans columns, Split undoes it, Clear empties them, and Ctrl+C copies them as tab-separated cells for Excel. Merging down a column is not offered yet.</li>
 <li>In the reader, select a passage and press <b>Save selected passage as a highlight</b>. It keeps the page number and your note.</li>
 <li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
 </ul>
