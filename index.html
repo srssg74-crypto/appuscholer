@@ -2564,7 +2564,7 @@ const I18N={
     rt_none:'No tagged results in the open document. Results inserted from the Statistics Lab from now on are tagged.', rt_sum:'{n} tagged results: {c} current, {s} out of date, {u} not checkable.',
     rt_cur:'Current', rt_stale:'Out of date', rt_unk:'Cannot check', rt_why_stale:'The data under this name changed on {d}. The number in the text was calculated before that.',
     rt_why_noset:'The dataset “{n}” has not been loaded in this browser, so there is nothing to compare with. Load it in the Statistics Lab under the same name.', rt_why_norec:'This tag has no record in this browser (the document came from another browser, or saved records were cleared).',
-    rt_rerun:'Re-run on current data', rt_all:'Re-run every out-of-date result', rt_edited:'You edited this sentence after inserting it. ', rt_edit_warn:'Re-running replaces your edited text with the new sentence. Continue?',
+    rt_tbl_lab:'Results table', rt_tbl_shape:'A table of this analysis was removed or changed shape. Insert the table again from the analysis.', rt_rerun:'Re-run on current data', rt_all:'Re-run every out-of-date result', rt_edited:'You edited this sentence after inserting it. ', rt_edit_warn:'Re-running replaces your edited text with the new sentence. Continue?',
     rt_load_first:'Load the changed data first: paste it in the Statistics Lab, name it “{n}” and press Parse data.', rt_col_gone:'The column “{c}” is not in the loaded data any more, so this test cannot be repeated.', rt_failed:'The test could not be run on the current data.',
     rt_done:'Updated.', rt_sig_flip:'The conclusion at .05 has changed. Read the paragraph around this sentence again.', rt_note:'The app cannot tell which words in your paragraph depended on a number. After a re-run, reread the text around it. Tables, charts and figures made earlier are not tagged and are not checked.',
     rt_inserted:'Inserted on', rt_dataset:'Dataset', rt_old:'Before', rt_new:'Now',
@@ -2807,7 +2807,7 @@ const I18N={
     rt_none:'खुले दस्तावेज़ में कोई टैग किया परिणाम नहीं है। अब से स्टैटिस्टिक्स लैब से डाले गए परिणाम टैग होंगे।', rt_sum:'{n} टैग किए परिणाम: {c} वर्तमान, {s} पुराने, {u} जाँचे नहीं जा सकते।',
     rt_cur:'वर्तमान', rt_stale:'पुराना', rt_unk:'जाँच नहीं हो सकती', rt_why_stale:'इस नाम का डेटा {d} को बदला। पाठ की संख्या उससे पहले निकाली गई थी।',
     rt_why_noset:'डेटासेट “{n}” इस ब्राउज़र में लोड नहीं हुआ है, इसलिए मिलान के लिए कुछ नहीं है। इसे उसी नाम से स्टैटिस्टिक्स लैब में लोड करें।', rt_why_norec:'इस टैग का इस ब्राउज़र में कोई रिकॉर्ड नहीं है (दस्तावेज़ दूसरे ब्राउज़र से आया या सहेजे रिकॉर्ड मिटा दिए गए)।',
-    rt_rerun:'मौजूदा डेटा पर फिर चलाएँ', rt_all:'हर पुराने परिणाम को फिर चलाएँ', rt_edited:'डालने के बाद आपने यह वाक्य बदला था। ', rt_edit_warn:'फिर चलाने पर आपका बदला पाठ नए वाक्य से बदल जाएगा। जारी रखें?',
+    rt_tbl_lab:'परिणाम की तालिका', rt_tbl_shape:'इस विश्लेषण की कोई तालिका हट गई या उसका आकार बदल गया। विश्लेषण से तालिका फिर डालें।', rt_rerun:'मौजूदा डेटा पर फिर चलाएँ', rt_all:'हर पुराने परिणाम को फिर चलाएँ', rt_edited:'डालने के बाद आपने यह वाक्य बदला था। ', rt_edit_warn:'फिर चलाने पर आपका बदला पाठ नए वाक्य से बदल जाएगा। जारी रखें?',
     rt_load_first:'पहले बदला डेटा लोड करें: उसे स्टैटिस्टिक्स लैब में चिपकाएँ, नाम “{n}” दें और Parse data दबाएँ।', rt_col_gone:'कॉलम “{c}” अब लोड डेटा में नहीं है, इसलिए यह जाँच दोहराई नहीं जा सकती।', rt_failed:'मौजूदा डेटा पर जाँच नहीं चल सकी।',
     rt_done:'बदल दिया गया।', rt_sig_flip:'.05 पर निष्कर्ष बदल गया है। इस वाक्य के आसपास का अनुच्छेद फिर पढ़ें।', rt_note:'ऐप यह नहीं जान सकता कि आपके अनुच्छेद के कौन-से शब्द किसी संख्या पर टिके थे। फिर चलाने के बाद आसपास का पाठ दोबारा पढ़ें। पहले बनाई तालिकाएँ, चार्ट और चित्र टैग नहीं होते और जाँचे नहीं जाते।',
     rt_inserted:'डाला गया', rt_dataset:'डेटासेट', rt_old:'पहले', rt_new:'अब',
@@ -8308,7 +8308,7 @@ function tblBarShow(){
   if(!b){b=document.createElement('div');b.id='tblBar';
     b.style.cssText='position:fixed;z-index:60;display:none;background:var(--card,#fff);border:1px solid var(--line,#ccc);border-radius:8px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.18);gap:4px;flex-wrap:wrap;max-width:94vw;align-items:center';
     b.innerHTML='<span id="tblPos" style="font-size:12.5px;padding:0 6px;color:var(--muted)"></span>'+
-      [['tblOp(\'addrow\')','+ Row'],['tblOp(\'addcol\')','+ Col'],['tblOp(\'delrow\')','− Row'],['tblOp(\'delcol\')','− Col'],['tblOp(\'align\')','Align'],['tblOp(\'pick\')','Select cells'],['tblOp(\'merge\')','Merge'],['tblOp(\'split\')','Split'],['tblOp(\'clear\')','Clear'],['tblOp(\'apa\')','APA look'],['capOpen()','Caption']].map(x=>'<button type="button" class="btn btn-ghost" style="min-height:36px;padding:2px 9px;font-size:12.5px" onclick="'+x[0]+'">'+x[1]+'</button>').join('');
+      [['tblOp(\'addrow\')','+ Row'],['tblOp(\'addcol\')','+ Col'],['tblOp(\'delrow\')','− Row'],['tblOp(\'delcol\')','− Col'],['tblOp(\'align\')','Align'],['tblOp(\'pick\')','Select cells'],['tblOp(\'merge\')','Merge'],['tblOp(\'split\')','Split'],['tblOp(\'clear\')','Clear'],['tblOp(\'apa\')','APA look'],['capOpen()','Caption'],['tblOp(\'fromrun\')','From analysis']].map(x=>'<button type="button" class="btn btn-ghost" style="min-height:36px;padding:2px 9px;font-size:12.5px" onclick="'+x[0]+'">'+x[1]+'</button>').join('');
     b.addEventListener('mousedown',e=>e.preventDefault());document.body.appendChild(b)}
   const t=cell.closest('table');
   document.getElementById('tblPos').textContent='Column '+tblColLetter(Array.from(cell.parentNode.cells).slice(0,cell.cellIndex).reduce((a,c)=>a+(c.colSpan||1),0))+', row '+(cell.parentNode.rowIndex+1)+' of '+t.rows.length;
@@ -8346,6 +8346,7 @@ function tblOp(op){
   else if(op==='delrow'){if(t.rows.length<2){showToast('A table needs at least one row. Delete the table instead.');return}t.deleteRow(ri)}
   else if(op==='delcol'){if(tblMerged(t)){showToast('This table has merged cells. Split them first, then delete a column.');return}if(t.rows[0].cells.length<2){showToast('A table needs at least one column.');return}for(let r=0;r<t.rows.length;r++)if(t.rows[r].cells[ci])t.rows[r].deleteCell(ci)}
   else if(op==='align'){const cur=cell.style.textAlign||'left',nx=cur==='left'||cur===''?'center':cur==='center'?'right':'left';for(let r=0;r<t.rows.length;r++)if(t.rows[r].cells[ci])t.rows[r].cells[ci].style.textAlign=nx;showToast('Column '+tblColLetter(ci)+' aligned '+nx)}
+  else if(op==='fromrun'){const rid=t.getAttribute('data-run');if(!rid){showToast('This table was not made from an analysis. Use Insert as table in the Statistics Lab to get one that can refresh.');return}rtOpen();return}
   else if(op==='pick'){TB.a=cell;TB.b=cell;TB.pick=true;tblMark();showToast('Now tap the last cell of the range. On a computer you can also drag, or Shift+click.');return}
   else if(op==='merge'){const cs=tblRangeCells();if(cs.length<2){showToast('Drag across two or more cells in one row first, or click a cell and Shift+click another.');return}
     if(new Set(cs.map(c=>c.parentNode.rowIndex)).size>1){showToast('Merge works along one row, for a heading that spans columns. Select cells in a single row.');return}
@@ -14785,6 +14786,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Under a column such as Sample size, Effect size or p-value, the numbers the paper prints are offered as small buttons; one tap adds the exact text and its page to the cell. Download it as CSV.</li>
 <li><b>Quote to your draft</b>: select a passage in a paper and press "Put the selection in my draft as a quote", or copy it and paste it in the draft. It arrives in quotation marks with an amber bar and a citation with the page (the PDF page; check it against the printed page). The bar goes when you change the words. Tap the quote and press "Switch to my own words" to have it rewritten in your voice; the citation stays. A paper that is not linked to your library gives the quote without a citation.</li>
 <li><b>Tables</b>: copy cells in Excel or Google Sheets and paste in the draft. Outside a table it makes a table (first row is the header); inside a table it fills from the cell you are in. Click any cell to see a bar with the cell position (Column B, row 2), add or delete a row or column, align a column, an APA look (lines only at the top, under the header and at the bottom; Word keeps it) and the caption. Drag across cells (or press Select cells, then tap the last one; on a computer Shift+click works too) to pick a range: Merge joins cells along one row for a heading that spans columns, Split undoes it, Clear empties them, and Ctrl+C copies them as tab-separated cells for Excel. Merging down a column is not offered yet.</li>
+<li><b>Results table that refreshes</b>: in the Statistics Lab press "Insert as table" after a test. The table goes in your draft with its caption dialog, and remembers the analysis and the dataset. When the data changes, click the table, press "From analysis", and re-run it on the new data; every table of that analysis updates together. If you edited the table by hand you get a warning first, because a refresh replaces its cells.</li>
 <li>In the reader, select a passage and press <b>Save selected passage as a highlight</b>. It keeps the page number and your note.</li>
 <li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
 </ul>
@@ -18741,7 +18743,7 @@ function hlItems(o){o=o||studyGet();const hi=studyHi(),L=(en,x)=>hi?x:en,out=[],
   const g=synGaps(o);if(g>0)add('todo',L(g+' yellow gap'+(g===1?'':'s')+' left in the synopsis.','Synopsis में '+g+' पीली जगहें बाक़ी।'),L('Next gap','अगली जगह'),'synOpen();setTimeout(synNextGap,400)');
   /* 5 results written from data that has changed since */
   const div=hlBookDiv(o);
-  if(div){const runs=rtLoad('appu_statruns'),sets=rtLoad('appu_statsets');let st=0;div.querySelectorAll('.stat-tag[data-run]').forEach(el=>{const r=runs[el.getAttribute('data-run')];if(r&&sets[r.ds]&&sets[r.ds].hash!==r.hash)st++});
+  if(div){const runs=rtLoad('appu_statruns'),sets=rtLoad('appu_statsets');let st=0;div.querySelectorAll('.stat-tag[data-run],table[data-run][data-ti="0"]').forEach(el=>{const r=runs[el.getAttribute('data-run')];if(r&&sets[r.ds]&&sets[r.ds].hash!==r.hash)st++});
     if(st)add('fix',L(st+' result'+(st===1?' in the book was':'s in the book were')+' worked out on data that has changed since.','किताब के '+st+' नतीजे ऐसे data से निकले थे जो बाद में बदल गया।'),L('Run them again','दोबारा चलाएँ'),"docSwitch(bbBookId());rtOpen()")}
   /* 6 retracted sources in the library */
   try{const c=retrCacheGet(),n=citGetLib().filter(d=>{const k=retrNormDoi(d.doi);return k&&c[k]&&c[k].r}).length;if(n)add('fix',L(n+' source'+(n===1?' in your library is':'s in your library are')+' marked as retracted.',n+' source retracted लिखे गए हैं।'),L('Show','दिखाएँ'),"showTool('cite')")}catch(e){}
@@ -21348,9 +21350,10 @@ function statsResultsShow(html,apa){
   /* Safety net: a result that contains an undefined number is never offered for the document. */
   if(/NaN|Infinity|undefined(?! \(an empty cell\))/.test(html+' '+apa)){
     document.getElementById('statsResults').innerHTML='<h3 style="margin-top:0">Results</h3><p class="desc"><b>This analysis produced a number that is undefined, so no result is shown.</b> It usually means a group has no spread (every value the same), a group is too small, or the data fit a line exactly. Look at the data and the groups, then try again.</p>';
-    window._statsAPA='';window._statsSummary='';window._statsRun=null;
+    window._statsAPA='';window._statsSummary='';window._statsRun=null;window._statsTables=[];
     return;
   }
+  try{window._statsTables=statsTablesFrom(html)}catch(e){window._statsTables=[]}
   html+=stkAssumpFor(document.getElementById('statsTest').value);
   try{window._statsRun=rtCapture()}catch(e){window._statsRun=null}
   {const em=Math.max(window._statsEmpty||0,window._statsEmptyG||0);if(em)html+='<p class="desc"><b>Missing data:</b> '+em+' row'+(em===1?' has':'s have')+' an empty cell in the columns used, so '+(em===1?'it was':'they were')+' left out of this test (complete cases only). Your data file is not changed. Say this in your Methods, and record how you handled missing data in step D3.</p>'}
@@ -21360,7 +21363,7 @@ function statsResultsShow(html,apa){
     '<h3 style="margin-top:0">Results</h3>'+html+
     '<div id="statsSentence">'+escHTML(apa)+'</div>'+
     '<div class="row" style="margin-top:8px">'+
-    '<button class="btn btn-purple" style="flex:1" onclick="statsInsert()">Insert into document</button>'+
+    '<button class="btn btn-purple" style="flex:1" onclick="statsInsert()">Insert into document</button>'+(window._statsTables&&window._statsTables.length?'<button class="btn btn-ghost" style="flex:1" onclick="statsInsertTable()" title="Puts the results table in your draft. It remembers the analysis, so it can be refreshed when your data changes.">Insert as table</button>':'')+
     '<button class="btn btn-ghost" style="flex:1" onclick="statsCopy()">Copy</button>'+
     '<button class="btn btn-ghost" style="flex:1" onclick="statsExplain()">💡 Explain in plain language</button>'+
     '</div>';
@@ -21395,6 +21398,23 @@ function statsCopy(){
   const t=window._statsAPA||'';if(!t){showToast('Run a test first');return}
   navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy — select the text instead'));
 }
+/* A results table in the draft that remembers its analysis: it can be refreshed from the data later (the same re-run that the result sentences use). */
+function statsTablesFrom(html){const d=document.createElement('div');d.innerHTML=html;
+  return Array.from(d.querySelectorAll('table')).map(t=>{['class','style','id'].forEach(a=>t.removeAttribute(a));t.querySelectorAll('[style],[class],[id]').forEach(x=>['class','style','id'].forEach(a=>x.removeAttribute(a)));return t.outerHTML})}
+function rtStr(x){let h=5381;for(let i=0;i<x.length;i++)h=((h<<5)+h+x.charCodeAt(i))|0;return x.length+':'+h}
+function statsInsertTable(){
+  const tb=window._statsTables||[];if(!tb.length){showToast('Run a test first');return}
+  let rid='';
+  try{const run=window._statsRun;if(run&&window._statsHash){rid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);run.sentence=window._statsAPA||'';run.ts=Date.now();run.tbl=tb.length;const runs=rtLoad('appu_statruns');runs[rid]=run;rtSave('appu_statruns',runs)}}catch(e){rid=''}
+  try{document.getElementById('statsDlg').close()}catch(e){}
+  const mark=' data-newtbl="1"';
+  insertHTMLBlockIntoEditor(tb.map((x,i)=>x.replace('<table','<table'+(rid?' data-run="'+rid+'" data-ti="'+i+'"':'')+mark)).join('<p>&nbsp;</p>')+'<p>&nbsp;</p>');
+  const news=Array.from(editor.querySelectorAll('table[data-newtbl]'));
+  news.forEach(t=>t.removeAttribute('data-newtbl'));
+  if(rid){try{const runs=rtLoad('appu_statruns');if(runs[rid]){runs[rid].th=news.map(t=>rtStr(t.innerHTML));rtSave('appu_statruns',runs)}}catch(e){}}
+  upd();
+  if(news[0]){const c=news[0].rows[0]&&news[0].rows[0].cells[0];if(c){const r=document.createRange();r.selectNodeContents(c);r.collapse(true);const sl=getSelection();sl.removeAllRanges();sl.addRange(r);savedRange=r.cloneRange()}try{capOpen()}catch(e){}}
+  showToast(rid?'Table put in your draft. It remembers its analysis: refresh it from the table bar when your data changes.':'Table put in your draft. It could not be tied to the data, so it will not refresh.')}
 function statsInsert(){
   const t=window._statsAPA||'';if(!t){showToast('Run a test first');return}
   document.getElementById('statsDlg').close();
@@ -21696,7 +21716,7 @@ function rtFirstP(str){var m=/p\s*([<=])\s*(\.\d+|0?\.\d+|1\.0+)/.exec(str||'');
 function rtSig(str){var q=rtFirstP(str);return q?(q.op==='<'?q.v<=0.05:q.v<0.05):null}
 function rtScan(){
   var runs=rtLoad('appu_statruns'),sets=rtLoad('appu_statsets'),out=[];
-  editor.querySelectorAll('.stat-tag').forEach(function(el){
+  editor.querySelectorAll('.stat-tag,table[data-run][data-ti="0"]').forEach(function(el){
     var id=el.getAttribute('data-run'),run=runs[id],it={el:el,id:id,run:run,status:'unk',why:'rt_why_norec'};
     if(run){
       var ds=sets[run.ds];
@@ -21704,11 +21724,13 @@ function rtScan(){
       else if(ds.hash===run.hash){it.status='cur';it.why=''}
       else{it.status='stale';it.why='rt_why_stale';it.when=ds.ts}
     }
-    el.classList.toggle('stat-stale',it.status==='stale');
+    if(el.tagName!=='TABLE')el.classList.toggle('stat-stale',it.status==='stale');
     out.push(it);
   });
   return out;
 }
+function rtItemText(it){if(it.el.tagName!=='TABLE')return it.el.textContent;const h=Array.from((it.el.rows[0]||{cells:[]}).cells).map(c=>c.textContent.trim()).filter(Boolean).join(' | ');return t('rt_tbl_lab')+': '+h+' ('+it.el.rows.length+' rows)'}
+function rtIsEdited(it){if(it.el.tagName==='TABLE'){const ts=Array.from(editor.querySelectorAll('table[data-run="'+it.id+'"]')).sort((a,b)=>a.getAttribute('data-ti')-b.getAttribute('data-ti')),th=(it.run&&it.run.th)||[];return !th.length||ts.length!==th.length||ts.some((x,i)=>rtStr(x.innerHTML)!==th[i])}return it.el.textContent!==it.run.sentence}
 function rtOpen(){
   var items=rtScan();window._rtItems=items;
   var c=items.filter(function(i){return i.status==='cur'}).length,s=items.filter(function(i){return i.status==='stale'}).length,u=items.length-c-s;
@@ -21716,7 +21738,7 @@ function rtOpen(){
   document.getElementById('rtAllBtn').style.display=s?'':'none';
   document.getElementById('rtList').innerHTML=items.map(function(it,i){
     var col=it.status==='cur'?'#15803d':(it.status==='stale'?'#b45309':'#6b7280'),lab=it.status==='cur'?t('rt_cur'):(it.status==='stale'?t('rt_stale'):t('rt_unk')),icon=it.status==='cur'?'✓':(it.status==='stale'?'⚠':'?');
-    var run=it.run,txt=it.el.textContent,edited=run&&txt!==run.sentence;
+    var run=it.run,txt=rtItemText(it),edited=run&&rtIsEdited(it);
     var why=it.why?t(it.why).replace('{d}',it.when?new Date(it.when).toLocaleString():'').replace('{n}',run?escHTML(run.ds):''):'';
     return '<div style="border:1px solid var(--line);border-left:4px solid '+col+';border-radius:8px;padding:8px 10px;margin:6px 0;font-size:13px">'+
       '<div><b style="color:'+col+'">'+icon+' '+lab+'</b>'+(run?' · '+escHTML(run.label)+' · '+t('rt_dataset')+': <i>'+escHTML(run.ds)+'</i> · '+t('rt_inserted')+' '+escHTML(new Date(run.ts).toLocaleDateString()):'')+'</div>'+
@@ -21747,6 +21769,12 @@ function rtRerunOne(it,silentEdit){
   window._statsRun=null;window._statsAPA='';
   statsRunNow();
   if(!window._statsRun||!window._statsAPA)return{ok:false,msg:t('rt_failed')};
+  if(it.el.tagName==='TABLE'){
+    var tbs=window._statsTables||[],els=Array.from(editor.querySelectorAll('table[data-run="'+it.id+'"]')).sort(function(a,b){return a.getAttribute('data-ti')-b.getAttribute('data-ti')});
+    if(!tbs.length||els.length!==tbs.length)return{ok:false,msg:t('rt_tbl_shape')};
+    els.forEach(function(el,i){var tmp=document.createElement('div');tmp.innerHTML=tbs[i];el.innerHTML=tmp.firstChild.innerHTML});
+    var rr=rtLoad('appu_statruns');rr[it.id]=Object.assign({},window._statsRun,{sentence:window._statsAPA,ts:Date.now(),tbl:tbs.length,th:els.map(function(el){return rtStr(el.innerHTML)})});rtSave('appu_statruns',rr);
+    upd();return{ok:true,old:'',neu:'',flip:false}}
   var neu=window._statsAPA,old=it.el.textContent,flip=rtSig(run.sentence)!==null&&rtSig(neu)!==null&&rtSig(run.sentence)!==rtSig(neu);
   it.el.textContent=neu;it.el.classList.remove('stat-stale');
   var runs=rtLoad('appu_statruns');runs[it.id]=Object.assign({},window._statsRun,{sentence:neu,ts:Date.now()});rtSave('appu_statruns',runs);
@@ -21755,7 +21783,7 @@ function rtRerunOne(it,silentEdit){
 }
 function rtRerun(i){
   var it=(window._rtItems||[])[i];if(!it||!it.run)return;
-  if(it.el.textContent!==it.run.sentence&&!confirm(t('rt_edit_warn')))return;
+  if(rtIsEdited(it)&&!confirm(t('rt_edit_warn')))return;
   var r=rtRerunOne(it);
   if(!r.ok){showToast(r.msg);return}
   showToast(t('rt_done')+(r.flip?' '+t('rt_sig_flip'):''));
@@ -21765,7 +21793,7 @@ function rtRerunAll(){
   var items=(window._rtItems||[]).filter(function(i){return i.status==='stale'}),done=0,flips=0,msg='';
   for(var j=0;j<items.length;j++){
     var it=items[j];
-    if(it.el.textContent!==it.run.sentence&&!confirm(t('rt_edit_warn')))continue;
+    if(rtIsEdited(it)&&!confirm(t('rt_edit_warn')))continue;
     var r=rtRerunOne(it);if(!r.ok){msg=r.msg;break}
     done++;if(r.flip)flips++;
   }
