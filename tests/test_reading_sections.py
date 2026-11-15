@@ -55,6 +55,14 @@ with sync_playwright() as p:
     # a paper whose headings cannot be found says so and does not offer a wrong list
     J("(async()=>{const r={id:'old2',title:'Flat',file:'f.pdf',size:9,added:'2026-11-02',pages:['x'],total:1,notes:[],cells:{},sections:[]};await shPut(r);await shRefresh();shRead('old2',1)})()"); pg.wait_for_timeout(500)
     ok('No headings could be found' in J("document.getElementById('shBody').innerText"),'an empty list says no headings were found')
+    # page warnings in the reader: a page of numbers says so and offers the page picture; a normal page shows nothing
+    prose="Participants were students from three colleges and completed the scale twice, a week apart, in class. "*18
+    digits="\\n".join("%d.%d  %d  %d.2"%(i*7%100,i%10,i*3%90,i%5) for i in range(30))
+    J("(async()=>{const r={id:'fl1',title:'Flags',file:'fl.pdf',size:9,added:'2026-11-03',pages:[%s,%s,%s],total:3,notes:[],cells:{},sections:[]};await shPut(r);await shRefresh();shRead('fl1',1)})()"%(json.dumps(prose),json.dumps(digits.replace("\\n","\n")),json.dumps(prose))); pg.wait_for_timeout(600)
+    ok('mostly numbers' not in J("document.getElementById('shBody').innerText"),'a normal page shows no warning')
+    J("shGo(2)"); pg.wait_for_timeout(300)
+    ok('mostly numbers' in J("document.getElementById('shBody').innerText"),'a page of numbers is flagged in the reader')
+    ok('Show page picture' in J("document.getElementById('shBody').innerText"),'and offers the page picture')
     ok(not [e for e in errors if e[0]=='pageerror'],'no page errors %s'%errors[:3])
     b.close()
 print('failures:',len(fails)); sys.exit(1 if fails else 0)

@@ -225,6 +225,29 @@
     return { body: { size: body.size, font: body.font }, title: title, lines: lines, headings: heads, sections: sections, notes: notes };
   }
 
-  var api = { detect: detect, buildLines: buildLines, kindOf: function (t) { var sp = splitNumber(t); return kindOf(sp.name, !!sp.num); }, splitNumber: splitNumber };
+
+  /* Per-page warnings from the extracted text, judged against the rest of the paper. A flag means "look at the page
+     picture", never "this page is wrong". kinds: blank (almost no text on a page where other pages have plenty),
+     numbers (mostly digits and symbols: a table, a formula page or a figure), fragments (many very short lines:
+     figure labels, a scrambled column or a table read cell by cell). */
+  function pageFlags(pageTexts) {
+    var stats = (pageTexts || []).map(function (t) {
+      t = String(t || "").replace(/[\uE012-\uE014]/g, "\n");
+      var lines = t.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+      var chars = t.replace(/\s/g, "").length, letters = (t.match(/\p{L}/gu) || []).length;
+      var short = lines.filter(function (x) { return x.length <= 4; }).length;
+      return { chars: chars, letterShare: chars ? letters / chars : 1, shortShare: lines.length ? short / lines.length : 0, lines: lines.length };
+    });
+    var med = stats.map(function (x) { return x.chars; }).sort(function (a, b) { return a - b; })[Math.floor(stats.length / 2)] || 0;
+    return stats.map(function (x, i) {
+      var f = [];
+      if (med > 1500 && x.chars < 0.08 * med) f.push("blank");
+      else if (x.chars >= 200 && x.letterShare < 0.5) f.push("numbers");
+      if (x.lines >= 20 && x.shortShare > 0.4 && x.chars >= 200) f.push("fragments");
+      return f;
+    });
+  }
+
+  var api = { detect: detect, pageFlags: pageFlags, buildLines: buildLines, kindOf: function (t) { var sp = splitNumber(t); return kindOf(sp.name, !!sp.num); }, splitNumber: splitNumber };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuSections = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
