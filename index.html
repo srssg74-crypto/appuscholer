@@ -14681,7 +14681,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li><b>Papers</b> lists what you have added. Rename a paper, read it page by page, or remove it. Removing asks you to press twice.</li>
 <li><b>Search</b> looks for words across every page and shows the page number and the words in context.</li>
 <li><b>Find passages for a sentence</b> takes a sentence from your draft and lists the pages that share its key words. It is word matching. A page on the list does not show that the paper supports your claim. Read it.</li>
-<li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Download it as CSV.</li>
+<li><b>Matrix</b> is a table with one row per paper and columns you choose, such as sample or method. You fill the cells. Under a column such as Sample size, Effect size or p-value, the numbers the paper prints are offered as small buttons; one tap adds the exact text and its page to the cell. Download it as CSV.</li>
 <li>In the reader, select a passage and press <b>Save selected passage as a highlight</b>. It keeps the page number and your note.</li>
 <li><b>Summarise with AI</b> unlocks after you write at least two lines of your own about the paper. Your two lines are saved first. The AI sees the paper text with email addresses removed.</li>
 </ul>
@@ -20383,10 +20383,27 @@ async function shSummarise(){
   }catch(e){let m='The summary could not be made.';try{m=String(apiMsg(e)).replace(/<[^>]+>/g,'')}catch(x){}out.textContent=m}
 }
 function shCols(){try{const c=JSON.parse(LS.get('appu_shelf_cols')||'null');if(Array.isArray(c)&&c.length)return c}catch(e){}return['Sample','Method','Key finding']}
+/* Matrix cells stay the student's own. Under a column that asks for a statistic (sample size, effect size, p-value...) the paper's printed statistics are offered as chips; a tap puts the exact text and its page into the cell. */
+function shColKinds(c){c=String(c||'');const k=[];
+  if(/sample|participants|\bn\b|respondents/i.test(c))k.push('n');
+  if(/effect|cohen|\bd\b|eta|beta|\u03b2|alpha|\u03b1|reliab/i.test(c))k.push('effect');
+  if(/\bp[- ]?values?\b|signific/i.test(c))k.push('p');
+  if(/correl|\br\b/i.test(c))k.push('r');
+  if(/mean|\bsd\b|descriptive/i.test(c))k.push('MSD');
+  if(/\bci\b|confidence|interval/i.test(c))k.push('CI');
+  if(/test|anova|\bt\b|\bf\b|chi/i.test(c))k.push('t','F','chi2');
+  if(/odds|hazard|risk ratio|\bor\b|\bhr\b/i.test(c))k.push('ratio');
+  return k}
+function shStatSuggest(p,c){const kinds=shColKinds(c);if(!kinds.length)return[];const seen={},out=[];
+  shStatsOf(p).forEach(h=>{if(kinds.indexOf(h.stat)<0)return;const key=h.text;if(seen[key])return;seen[key]=1;out.push(h)});return out}
+async function shStatTake(id,i,j){const p=SH.papers.find(x=>x.id===id);if(!p)return;const c=shCols()[i],h=shStatSuggest(p,c)[j];if(!h)return;
+  p.cells=p.cells||{};const add=h.text+' (p. '+h.page+')',cur=String(p.cells[c]||'').trim();if(cur.indexOf(add)>=0)return;p.cells[c]=cur?cur+'; '+add:add;await shPut(p);shRender()}
+function shStatChips(p,c,i){const s=shStatSuggest(p,c);if(!s.length)return'';
+  return'<div style="margin-top:3px;font-size:12px;color:var(--muted)">The paper prints:</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;max-width:260px">'+s.slice(0,5).map((h,j)=>'<button class="btn btn-ghost" style="padding:1px 6px;font-size:12px" title="Add to the cell, with page '+h.page+'" onclick="shStatTake(\''+p.id+'\','+i+','+j+')">'+escHTML(h.text.length>34?h.text.slice(0,32)+'\u2026':h.text)+' <span style="color:var(--muted)">p.'+h.page+'</span></button>').join('')+(s.length>5?'<span style="font-size:12px;color:var(--muted)">+'+(s.length-5)+' more in the reader</span>':'')+'</div>'}
 function shMatrixRender(b){
   const cols=shCols();
   const head='<tr><th style="text-align:left;padding:4px">Paper</th>'+cols.map((c,i)=>'<th style="text-align:left;padding:4px">'+escHTML(c)+' <button class="btn btn-ghost" style="padding:0 6px" title="Remove column" onclick="shColDel('+i+')">×</button></th>').join('')+'</tr>';
-  const rows=SH.papers.map(p=>'<tr><td style="vertical-align:top;padding:4px;font-weight:700;min-width:140px">'+escHTML(p.title)+'</td>'+cols.map((c,i)=>'<td style="vertical-align:top;padding:4px"><textarea rows="3" style="width:100%;min-width:130px" onchange="shCell(\''+p.id+'\','+i+',this.value)">'+escHTML((p.cells||{})[c]||'')+'</textarea></td>').join('')+'</tr>').join('');
+  const rows=SH.papers.map(p=>'<tr><td style="vertical-align:top;padding:4px;font-weight:700;min-width:140px">'+escHTML(p.title)+'</td>'+cols.map((c,i)=>'<td style="vertical-align:top;padding:4px"><textarea rows="3" style="width:100%;min-width:130px" onchange="shCell(\''+p.id+'\','+i+',this.value)">'+escHTML((p.cells||{})[c]||'')+'</textarea>'+shStatChips(p,c,i)+'</td>').join('')+'</tr>').join('');
   b.innerHTML='<p style="font-size:13.5px;margin:0 0 6px">One row per paper, one column per thing you compare. Fill it in from your reading. The cells are yours, not the AI\'s.</p><div class="row" style="gap:8px;flex-wrap:wrap"><input type="text" id="shCol" placeholder="New column, for example: Sample size" style="flex:1"><button class="btn btn-ghost" onclick="shColAdd()">Add column</button><button class="btn btn-purple" onclick="shMatrixCsv()">Download as CSV</button></div>'+(SH.papers.length?'<div style="overflow:auto;margin-top:8px"><table style="border-collapse:collapse;font-size:13px;width:100%">'+head+rows+'</table></div>':'<p style="font-size:13.5px">The shelf is empty.</p>');
 }
 function shColAdd(){const v=(document.getElementById('shCol').value||'').trim();if(!v)return;const c=shCols();if(c.indexOf(v)<0)c.push(v);LS.set('appu_shelf_cols',JSON.stringify(c));shRender()}
