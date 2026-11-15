@@ -45,5 +45,16 @@ check("letter-spaced capitals are recognised", S.detect(wiley).sections.map(s =>
 /* a page printed as images has almost no text */
 check("a scan is reported, not guessed at", S.detect([[L("13/11/26", 780, { size: 7 }), L("Page 1 of 1", 20, { size: 7 })]]).notes.length, 1);
 check("no pages gives an empty result", S.detect([]).sections, []);
+
+/* page warnings */
+const prose = "Participants were students from three colleges and completed the scale twice, a week apart, in class. ".repeat(18);
+const digits = Array.from({ length: 30 }, (_, i) => (i * 7 % 100) + "." + (i % 10) + "  " + (i * 3 % 90) + "  " + (i % 5) + ".2").join("\n");
+const frag = Array.from({ length: 40 }, (_, i) => (i % 3 ? "a" + i : "B")).join("\n") + "\n" + prose;
+check("a normal page has no warning", S.pageFlags([prose, prose, prose])[0], []);
+check("a page of numbers is flagged", S.pageFlags([prose, digits, prose, prose])[1], ["numbers"]);
+check("a nearly empty page among full ones is flagged blank", S.pageFlags([prose, "Fig 1", prose, prose, prose])[1], ["blank"]);
+check("many very short lines are flagged", S.pageFlags([prose, frag, prose, prose])[1], ["fragments"]);
+check("a short paper does not flag blank", S.pageFlags(["short note", "another short note"]).map(x => x.length), [0, 0]);
+check("no pages gives no flags", S.pageFlags([]), []);
 console.log(fails ? fails + " FAILED" : "ALL SECTION TESTS PASSED");
 process.exit(fails ? 1 : 0);

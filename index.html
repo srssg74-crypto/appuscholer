@@ -19824,7 +19824,30 @@ function splitLabel(str){const m=/^(.*[A-Za-z)])\s+(\d+(?:\.\d+)?\s*(?:\(.*\))?)
     return { body: { size: body.size, font: body.font }, title: title, lines: lines, headings: heads, sections: sections, notes: notes };
   }
 
-  var api = { detect: detect, buildLines: buildLines, kindOf: function (t) { var sp = splitNumber(t); return kindOf(sp.name, !!sp.num); }, splitNumber: splitNumber };
+
+  /* Per-page warnings from the extracted text, judged against the rest of the paper. A flag means "look at the page
+     picture", never "this page is wrong". kinds: blank (almost no text on a page where other pages have plenty),
+     numbers (mostly digits and symbols: a table, a formula page or a figure), fragments (many very short lines:
+     figure labels, a scrambled column or a table read cell by cell). */
+  function pageFlags(pageTexts) {
+    var stats = (pageTexts || []).map(function (t) {
+      t = String(t || "").replace(/[\uE012-\uE014]/g, "\n");
+      var lines = t.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+      var chars = t.replace(/\s/g, "").length, letters = (t.match(/\p{L}/gu) || []).length;
+      var short = lines.filter(function (x) { return x.length <= 4; }).length;
+      return { chars: chars, letterShare: chars ? letters / chars : 1, shortShare: lines.length ? short / lines.length : 0, lines: lines.length };
+    });
+    var med = stats.map(function (x) { return x.chars; }).sort(function (a, b) { return a - b; })[Math.floor(stats.length / 2)] || 0;
+    return stats.map(function (x, i) {
+      var f = [];
+      if (med > 1500 && x.chars < 0.08 * med) f.push("blank");
+      else if (x.chars >= 200 && x.letterShare < 0.5) f.push("numbers");
+      if (x.lines >= 20 && x.shortShare > 0.4 && x.chars >= 200) f.push("fragments");
+      return f;
+    });
+  }
+
+  var api = { detect: detect, pageFlags: pageFlags, buildLines: buildLines, kindOf: function (t) { var sp = splitNumber(t); return kindOf(sp.name, !!sp.num); }, splitNumber: splitNumber };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuSections = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
 /* END tools/sections/sections.js */
@@ -19987,10 +20010,18 @@ async function shFindSections(){
     p.sections=shSectionsOf(raw);await shPut(p);shRender();
   }catch(e){if(m)m.textContent='Could not read the headings: '+(e&&e.message?e.message:'error')}
 }
+/* A warning above the page text when the extracted text of this page looks unreliable: mostly numbers, nearly empty, or in fragments. */
+const SH_FLAG_TEXT={blank:'This page has almost no text. It may be a figure or a scan.',numbers:'This page is mostly numbers and symbols, so it is probably a table or a formula. The text may run together; check the figures against the page.',fragments:'This page is in many very short pieces (figure labels or a table read cell by cell). The order may be wrong.'};
+function shPageFlagHTML(p){
+  let f;try{if(!SH.flags||SH.flags.id!==p.id||SH.flags.n!==p.pages.length)SH.flags={id:p.id,n:p.pages.length,list:AppuSections.pageFlags(p.pages)};f=SH.flags.list[SH.page-1]||[]}catch(e){return''}
+  if(!f.length)return'';
+  return'<div role="note" style="margin:6px 0;padding:6px 10px;border-left:4px solid #d97706;background:rgba(217,119,6,.08);font-size:13px">'+f.map(k=>escHTML(SH_FLAG_TEXT[k]||'')).join(' ')+(SH.img?'':' <button class="btn btn-ghost" style="padding:2px 8px" onclick="shImgToggle()">Show page picture</button>')+'</div>';
+}
 function shReaderRender(b){
   const p=SH.cur;if(!p)return;const n=p.pages.length;
   const hl=p.notes.filter(x=>x.quote).sort((a,c)=>a.page-c.page);
   b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button></div>'+
+   shPageFlagHTML(p)+
    shSectionsHTML(p)+
    '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center"><button class="btn '+(SH.img?'btn-purple':'btn-ghost')+'" onclick="shImgToggle()">'+(SH.img?'Hide page picture':'Show page picture')+'</button>'+'<button class="btn btn-ghost" onclick="shWord()">Save as Word</button><button class="btn btn-ghost" onclick="shHlPdf()">Save PDF with my highlights</button>'+(SH.img?'<button class="btn btn-ghost" aria-label="Zoom out" onclick="shZoom(-0.25)">−</button><span style="font-size:13px">'+Math.round(SH.zoom*100)+'%</span><button class="btn btn-ghost" aria-label="Zoom in" onclick="shZoom(0.25)">+</button>':'')+
      '<input type="search" id="shInQ" value="'+escAttr(SH.inq||'')+'" placeholder="Search in this paper" style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')shInSearch(this.value)" aria-label="Search in this paper"><button class="btn btn-ghost" onclick="shInSearch(document.getElementById(\'shInQ\').value)">Find</button></div>'+shInResHTML(p)+(SH.img?'<div id="shImg" style="border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;text-align:center;overflow:auto"><span style="font-size:13px">Loading the page…</span></div>':'')+
