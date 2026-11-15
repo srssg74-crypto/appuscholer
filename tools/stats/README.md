@@ -20,7 +20,7 @@ Status: ok, inconsistent, decision (the mismatch changes whether p is below .05)
 
 The p-value functions match scipy 1.18 on 150 cases (`dist_vectors.json`; relative 1e-9 or absolute 1e-12). `node test_consistency.js` runs them and the fixtures.
 Run on the 53 sample PDFs (`node run_consistency.mjs`, 15 Nov 2026): 96 pairs checked, 87 ok, 9 flagged. All 9 were read against the page text.
-Seven look like real mismatches in the papers (for example F(1, 130) = 6.14 printed with p = .001 when the test statistic gives .0145; the same F(1,38) = 33.76 printed with two different p-values).
-The other two are chi-square comparisons of adherence rates whose printed p may come from an exact test the paper does not name.
+Six look like real mismatches in the papers (for example F(1, 130) = 6.14 printed with p = .001 when the test statistic gives .0145; the same F(1,38) = 33.76 printed with two different p-values).
+The other three are chi-square comparisons of adherence rates whose printed p may come from an exact test the paper does not name.
 That is a spot check on 96 pairs from 53 files; it is not a precision or recall figure. A mismatch is a reason to look at the page, not proof of an error.
 Not checked: correlations (r with n), t tests given as "t = x" without df, results in tables.
