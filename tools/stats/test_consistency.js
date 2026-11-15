@@ -31,4 +31,15 @@ ok(Math.abs(C.pR(0.34, 58) - 0.007862490245424127) < 1e-12 && Math.abs(C.pR(-0.2
 ok(st("r(58) = .34, p = .008") === "ok" && st("r(58) = .34, p = .08") === "decision" && st("r(58) = .34, p < .001") === "inconsistent", "r(58) = .34: p = .008 ok; .08 a decision error; < .001 inconsistent");
 ok(st("r(98) = -.25, p = .012") === "ok", "a negative r is checked by its size");
 ok(st("r = .34, p = .008") === "none", "r with no df cannot be checked");
+const ci = (t) => { const r = C.checkCI([t], S.find([t])); return r.length ? r[0].status : "none"; };
+ok(ci("OR = 1.8, 95% CI 1.2-2.7, p = .004") === "ok", "OR 1.8 (1.2-2.7) with p = .004 agree");
+ok(ci("OR = 1.8, 95% CI 1.2-2.7, p = .20") === "decision", "an interval that excludes 1 with p = .20 is a decision mismatch");
+ok(ci("OR = 1.5, 95% CI 0.9-2.4, p = .02") === "decision", "an interval that includes 1 with p = .02 is a decision mismatch");
+ok(ci("OR = 1.5, 95% CI 0.9-2.4, p = .12") === "ok", "OR 1.5 (0.9-2.4) with p = .12 agree");
+ok(ci("OR = 3.5, 95% CI 1.2-2.7") === "inconsistent", "an estimate outside its own interval is flagged");
+ok(ci("HR 0.62 (95% CI 0.45 to 0.85; p = 0.003)") === "ok", "hazard ratio below 1 with p = 0.003 agree");
+ok(ci("β = 0.21, 95% CI [0.05, 0.37], p = .01") === "ok" && ci("β = 0.21, 95% CI [-0.05, 0.47], p = .01") === "decision", "beta: an interval that excludes 0 goes with a small p, one that includes 0 does not");
+ok(ci("d = 0.42, 95% CI [0.10, 0.74]") === "ok", "d with an interval and no p is checked for the estimate only");
+ok(ci("OR = 1.8, 95% CI 1.00-2.7, p = .05") === "ok", "an interval ending at the null with p = .05 is borderline, not flagged");
+ok(ci("r = .34, 95% CI [0.1, 0.5]") === "none", "other measures are not checked");
 console.log(fails ? fails + " FAILED" : "ALL CONSISTENCY TESTS PASSED"); process.exit(fails ? 1 : 0);

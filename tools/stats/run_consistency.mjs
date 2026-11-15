@@ -11,7 +11,7 @@ for (const f of list) {
     const pdf = await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(dir + f)), useSystemFonts: true, verbosity: 0 }).promise;
     const pages = [];
     for (let k = 1; k <= Math.min(pdf.numPages, 60); k++) { const p = await pdf.getPage(k); pages.push((await p.getTextContent()).items.map(x => x.str).join(" ").replace(/\s+/g, " ")); }
-    const r = C.check(pages, S.find(pages));
+    const hh = S.find(pages), r = C.check(pages, hh).concat(C.checkCI(pages, hh));
     r.forEach(x => { checked++; if (x.status === "ok") ok++; else { x.status === "decision" ? dec++ : inc++; const t = pages[x.page - 1], i = t.indexOf(x.test); console.log(f.slice(9, 40) + " p" + x.page + " [" + x.status + "] " + x.test + " ... " + x.p + "  (computed " + x.computed.toFixed(4) + ")\n    ..." + t.slice(Math.max(0, i - 60), i + 130) + "..."); } });
   } catch (e) { }
 }
