@@ -1,0 +1,21 @@
+"use strict";
+const S = require("./statsfind.js");
+let fails = 0;
+function check(label, got, want) { const ok = JSON.stringify(got) === JSON.stringify(want); if (!ok) { fails++; console.log("FAIL " + label + "\n  got  " + JSON.stringify(got) + "\n  want " + JSON.stringify(want)); } else console.log("ok   " + label); }
+const kinds = (t) => S.find([t]).map(h => h.stat + ":" + h.text);
+check("t test with df and p", kinds("The groups differed, t(48) = 2.31, p = .025."), ["t:t(48) = 2.31", "p:p = .025"]);
+check("F test", kinds("F(2, 87) = 4.10, p < .05"), ["F:F(2, 87) = 4.10", "p:p < .05"]);
+check("M and SD", kinds("anxiety was high (M = 4.2, SD = 1.1)"), ["MSD:M = 4.2, SD = 1.1"]);
+check("mean plus-minus SD", S.find(["age 21.4 ± 2.3 years"]).map(h => h.v), [{ M: 21.4, SD: 2.3 }]);
+check("confidence interval", S.find(["OR = 1.8, 95% CI 1.2-2.7"]).map(h => h.stat), ["ratio", "CI"]);
+check("CI level and bounds", S.find(["95% CI [0.12, 0.40]"])[0].v, { level: 95, lo: 0.12, hi: 0.4 });
+check("negative values use a unicode minus", S.find(["r = −.34, p < .001"]).map(h => h.v), [{ r: -0.34 }, { op: "<", p: 0.001 }]);
+check("chi-square with n", S.find(["χ²(3, N = 120) = 8.4, p = .04"]).map(h => h.stat), ["chi2", "p"]);
+check("page numbers are not p-values", kinds("see p. 12 and pp. 3-4"), []);
+check("p above 1 is not a p-value", kinds("p = 12"), []);
+check("r above 1 is not a correlation", kinds("r = 4"), []);
+check("sample size", S.find(["N = 1,245 students, n = 30 per arm"]).map(h => h.v.n), [1245, 30]);
+check("page of each hit", S.find(["nothing here", "p < .01 on page two"]).map(h => h.page), [2]);
+check("summary counts", S.summarise(S.find(["p < .05, p = .2, t(10) = 1.5"])), { p: 2, t: 1 });
+check("a ratio needs an equals sign or a decimal", [kinds("PR 95 of the sample"), kinds("OR 1.8"), kinds("OR = 2")], [[], ["ratio:OR 1.8"], ["ratio:OR = 2"]]);
+console.log(fails ? fails + " FAILED" : "ALL STATS TESTS PASSED"); process.exit(fails ? 1 : 0);

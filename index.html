@@ -19993,6 +19993,72 @@ function shMarked(p,page){
   ranges.forEach(r=>{if(r[0]<pos)return;out+=escHTML(text.slice(pos,r[0]))+'<mark style="background:'+r[2]+'">'+escHTML(text.slice(r[0],r[1]))+'</mark>';pos=r[1]});
   return out+escHTML(text.slice(pos));
 }
+/* BEGIN tools/stats/statsfind.js (a test checks this copy is identical to the file) */
+/* Find reported statistics in a paper's page text: M and SD, t, F, chi-square, r, p, CI, effect sizes, n.
+   Pure text patterns, no model. Every hit is a literal piece of the page text, so it can be shown beside the page and checked.
+   find(pages) -> [{stat, text, page, at, v}] in page order; summarise(hits) -> counts by kind.
+   A hit says "the paper prints this", never "this result is right". */
+(function (root) {
+  "use strict";
+  var NUM = "(-?\\d*\\.?\\d+)";
+  function norm(t) {
+    return String(t || "").replace(/[   ]/g, " ").replace(/[−–—]/g, "-").replace(/≤/g, "<=").replace(/≥/g, ">=")
+      .replace(/[χх]\s*[²2]/g, "chi2").replace(/χ²/g, "chi2");
+  }
+  var P = [
+    ["p", new RegExp("\\bp\\s*(<=|>=|<|>|=)\\s*(\\d*\\.?\\d+(?:e-?\\d+)?)", "gi"), function (m) { return { op: m[1], p: +m[2] }; }],
+    ["t", new RegExp("\\bt\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*" + NUM, "g"), function (m) { return { df: +m[1], t: +m[2] }; }],
+    ["F", new RegExp("\\bF\\s*\\(\\s*(\\d+(?:\\.\\d+)?)\\s*,\\s*(\\d+(?:\\.\\d+)?)\\s*\\)\\s*=\\s*" + NUM, "g"), function (m) { return { df1: +m[1], df2: +m[2], F: +m[3] }; }],
+    ["chi2", new RegExp("(?:chi2|chi-?square[d]?)\\s*\\(\\s*(\\d+)(?:\\s*,\\s*[nN]\\s*=\\s*[\\d,]+)?\\s*\\)\\s*=\\s*" + NUM, "gi"), function (m) { return { df: +m[1], chi2: +m[2] }; }],
+    ["r", new RegExp("\\br\\s*(?:\\(\\s*\\d+\\s*\\))?\\s*=\\s*" + NUM, "g"), function (m) { return { r: +m[1] }; }],
+    ["MSD", new RegExp("\\bM\\s*=\\s*" + NUM + "\\s*[,;]?\\s*SD\\s*=\\s*(\\d*\\.?\\d+)", "g"), function (m) { return { M: +m[1], SD: +m[2] }; }],
+    ["MSD", new RegExp(NUM + "\\s*\\u00b1\\s*(\\d*\\.\\d+)", "g"), function (m) { return { M: +m[1], SD: +m[2] }; }],
+    ["CI", new RegExp("(\\d{2})\\s*%\\s*(?:CI|confidence interval)\\s*[:=,]?\\s*[\\[(]?\\s*" + NUM + "\\s*(?:,|;|to|-)\\s*" + NUM + "\\s*[\\])]?", "gi"), function (m) { return { level: +m[1], lo: +m[2], hi: +m[3] }; }],
+    ["ratio", new RegExp("\\b(OR|aOR|HR|aHR|RR|IRR|PR)\\s*(?:[=:]\\s*(\\d+\\.?\\d*)|(\\d+\\.\\d+))", "g"), function (m) { return { measure: m[1], value: +(m[2] || m[3]) }; }],
+    ["effect", new RegExp("(?:\\u03b2|\\bd|\\u03b7p?2|\\bR2|\\u03c9|Cohen['\\u2019]s d|Cronbach['\\u2019]s \\u03b1|\\u03b1)\\s*=\\s*" + NUM, "g"), function (m) { return { value: +m[1] }; }],
+    ["n", new RegExp("\\b[nN]\\s*=\\s*(\\d[\\d,]*)", "g"), function (m) { return { n: +m[1].replace(/,/g, "") }; }]
+  ];
+  function find(pages) {
+    var hits = [];
+    (pages || []).forEach(function (raw, pi) {
+      var text = norm(raw), got = [];
+      P.forEach(function (pat) {
+        var re = new RegExp(pat[1].source, pat[1].flags), m;
+        while ((m = re.exec(text))) {
+          if (!m[0].length) { re.lastIndex++; continue; }
+          var v = pat[2](m);
+          if (pat[0] === "p" && !(v.p >= 0 && v.p <= 1)) continue;
+          if (pat[0] === "r" && Math.abs(v.r) > 1) continue;
+          if (pat[0] === "MSD" && (isNaN(v.M) || isNaN(v.SD))) continue;
+          if (pat[0] === "CI" && (v.level < 50 || v.level > 99.9 || v.lo > v.hi)) continue;
+          got.push({ stat: pat[0], text: m[0].replace(/\s+/g, " ").trim(), page: pi + 1, at: m.index, v: v });
+        }
+      });
+      /* a longer hit swallows a shorter one that sits inside it (the n inside a chi-square, the number inside a CI) */
+      got.sort(function (a, b) { return a.at - b.at || b.text.length - a.text.length; });
+      var end = -1;
+      got.forEach(function (h) { var e = h.at + h.text.length; if (h.at >= end || e > end + 0) { if (h.at < end) return; hits.push(h); end = Math.max(end, e); } });
+    });
+    return hits;
+  }
+  function summarise(hits) { var o = {}; hits.forEach(function (h) { o[h.stat] = (o[h.stat] || 0) + 1; }); return o; }
+  var api = { find: find, summarise: summarise, norm: norm };
+  if (typeof module !== "undefined" && module.exports) module.exports = api; else root.AppuStats = api;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+/* END tools/stats/statsfind.js */
+/* Statistics the paper prints, found from the page text with plain patterns (nothing leaves the device). A hit says what the paper prints, not that it is right. */
+const SH_STAT_NAME={p:'p-values',MSD:'Mean and SD',n:'Sample sizes',effect:'Effect sizes',CI:'Confidence intervals',r:'Correlations',t:'t tests',F:'F tests',chi2:'Chi-square',ratio:'Odds, hazard, risk ratios'};
+function shStatsOf(p){try{if(!SH.stats||SH.stats.id!==p.id||SH.stats.n!==p.pages.length)SH.stats={id:p.id,n:p.pages.length,hits:AppuStats.find(p.pages)};return SH.stats.hits}catch(e){return[]}}
+function shStatKind(k){SH.statKind=(SH.statKind===k)?'':k;shRender()}
+function shStatsHTML(p){
+  const hits=shStatsOf(p);
+  if(!hits.length)return'<p style="font-size:12.5px;color:var(--muted);margin:6px 0">No reported statistics were found in the text. A scanned paper or a table set as a picture will show none.</p>';
+  const sum=AppuStats.summarise(hits),kinds=Object.keys(SH_STAT_NAME).filter(k=>sum[k]),k=kinds.indexOf(SH.statKind)>=0?SH.statKind:'';
+  const list=hits.filter(h=>!k||h.stat===k),show=list.slice(0,60);
+  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Statistics in this paper</b> ('+hits.length+')</summary><div style="margin-top:4px">'+
+    '<div class="row" style="gap:4px;flex-wrap:wrap;margin-bottom:4px">'+kinds.map(x=>'<button class="btn '+(k===x?'btn-purple':'btn-ghost')+'" style="padding:2px 8px;font-size:12px" aria-pressed="'+(k===x)+'" onclick="shStatKind(\''+x+'\')">'+escHTML(SH_STAT_NAME[x])+' '+sum[x]+'</button>').join('')+'</div>'+
+    '<div style="max-height:220px;overflow:auto">'+show.map(h=>'<div style="margin:2px 0;font-size:13px"><button class="btn btn-ghost" style="padding:1px 8px;font-size:12px" title="Go to page '+h.page+'" onclick="shGo('+h.page+')">p. '+h.page+'</button> <code>'+escHTML(h.text)+'</code></div>').join('')+(list.length>show.length?'<div style="font-size:12px;color:var(--muted)">… and '+(list.length-show.length)+' more. Pick a kind above to narrow the list.</div>':'')+'</div>'+
+    '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Found by text patterns. Each line is what the paper prints; it does not mean the result is right. Tables with separate columns for mean and SD are not read yet.</p></div></details>'}
 /* Sections of the open paper, found from the PDF's own type sizes and fonts (no AI, nothing leaves the device). Each chip jumps to its page. */
 const SH_KIND_NAME={abstract:'Abstract',keywords:'Keywords',introduction:'Introduction',methods:'Methods',results:'Results',discussion:'Discussion',limitations:'Limitations',conclusion:'Conclusion',references:'References',backmatter:'Back matter',other:'Other'};
 function shSectionsHTML(p){
@@ -20023,6 +20089,7 @@ function shReaderRender(b){
   b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-ghost" onclick="SH.cur=null;shRender()">← Back</button><b style="flex:1">'+escHTML(p.title)+'</b><button class="btn btn-ghost" onclick="shPage(-1)">‹</button><span style="font-size:13px">page <input type="number" id="shPg" min="1" max="'+n+'" value="'+SH.page+'" style="width:64px" onchange="shGo(this.value)"> of '+n+'</span><button class="btn btn-ghost" onclick="shPage(1)">›</button></div>'+
    shPageFlagHTML(p)+
    shSectionsHTML(p)+
+   shStatsHTML(p)+
    '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center"><button class="btn '+(SH.img?'btn-purple':'btn-ghost')+'" onclick="shImgToggle()">'+(SH.img?'Hide page picture':'Show page picture')+'</button>'+'<button class="btn btn-ghost" onclick="shWord()">Save as Word</button><button class="btn btn-ghost" onclick="shHlPdf()">Save PDF with my highlights</button>'+(SH.img?'<button class="btn btn-ghost" aria-label="Zoom out" onclick="shZoom(-0.25)">−</button><span style="font-size:13px">'+Math.round(SH.zoom*100)+'%</span><button class="btn btn-ghost" aria-label="Zoom in" onclick="shZoom(0.25)">+</button>':'')+
      '<input type="search" id="shInQ" value="'+escAttr(SH.inq||'')+'" placeholder="Search in this paper" style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')shInSearch(this.value)" aria-label="Search in this paper"><button class="btn btn-ghost" onclick="shInSearch(document.getElementById(\'shInQ\').value)">Find</button></div>'+shInResHTML(p)+(SH.img?'<div id="shImg" style="border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;text-align:center;overflow:auto"><span style="font-size:13px">Loading the page…</span></div>':'')+
    '<div id="shText" style="white-space:pre-wrap;font-size:14px;line-height:1.65;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;user-select:text">'+shMarkTerms(shMarked(p,SH.page))+'</div>'+
