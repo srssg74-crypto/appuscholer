@@ -83,6 +83,9 @@ with sync_playwright() as p:
     MED = {"runs":[{"from":1,"to":1,"move":"B1","label":"Anxiety predicts poor sleep","quote":"Anxiety predicted poor sleep"},{"from":2,"to":2,"move":"B3","label":"Unlike Delhi study","quote":"Unlike a Delhi study"},{"from":3,"to":3,"move":"B2","label":"Small single-college sample","quote":"Our sample was small"}]}
     v = pg.evaluate("r=>mmValidate(r,{title:'Discussion',sents:[{p:1,t:'Anxiety predicted poor sleep in students.'},{p:1,t:'Unlike a Delhi study, the link was strong.'},{p:1,t:'Our sample was small and from one college.'}]},'discmed')", MED)
     ok(v['back'] == 1 and v['missing'] == ['B4', 'B5'], 'medical order: out-of-order part and missing parts found: %s %s' % (v['back'], v['missing']))
+    D2 = {"runs":[{"from":1,"to":1,"move":"RES","label":"Main result","quote":"This is the first study to show"},{"from":2,"to":2,"move":"LIM","label":"Small sample","quote":"Our sample was small and may carry selection bias"}]}
+    v = pg.evaluate("r=>mmValidate(r,{title:'Discussion',sents:[{p:1,t:'This is the first study to show the link in India.'},{p:1,t:'Our sample was small and may carry selection bias.'}]},'disc')", D2)
+    ok(v['first'] == [1] and v['lim3'] == ['confound'], 'first-claim found; limitations missing confounding (small sample counts as chance): %s %s' % (v['first'], v['lim3']))
     bad = [e for e in errs if e[0] == 'pageerror']
     ok(not bad, 'no page errors %s' % bad[:3])
     b.close()
