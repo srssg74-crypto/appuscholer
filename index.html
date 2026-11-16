@@ -19367,7 +19367,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16j';
+const APP_BUILD='2026.11.16k';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23922,7 +23922,7 @@ function mmOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.get
    '<div id="mmOut" aria-live="polite"></div>'+
    '<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'mmDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
   if(!dlg.open)dlg.showModal();if(secs.length)mmSecChange()}
-function mmSecChange(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];if(!s)return;
+function mmSecChange(){window._mmQuiz=false;window._mmAns={};const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];if(!s)return;
   const g=mmGuess(s.title);if(g)document.getElementById('mmKind').value=g;
   let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}
   const out=document.getElementById('mmOut');if(out)out.innerHTML=v&&v.sig===mmSig(s)?mmRender(v,s):''}
@@ -23939,7 +23939,10 @@ async function mmRun(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,i=+document.get
   finally{if(btn)btn.disabled=false}}
 function mmMove(kind,id){const S=MM_SETS[kind];const k=S.moves.findIndex(m=>m[0]===id);return{m:S.moves[k],c:MM_COL[k%MM_COL.length]}}
 function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SETS[v.kind];
-  let h='<div class="desc" style="margin:10px 0 6px">'+escHTML(L('Moves after ','Moves का आधार: ')+S.src)+' · '+L(v.cover+' of '+v.n+' sentences have a note',v.n+' में से '+v.cover+' वाक्यों पर note')+'</div>';
+  const quiz=!forPage&&window._mmQuiz;
+  let h=(forPage?'':'<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" id="mmQuizBtn" onclick="mmQuizToggle()">'+(quiz?L('Show all notes','सारे notes दिखाएँ'):'🎯 '+L('Test myself: hide the notes','ख़ुद को परखें: notes छिपाएँ'))+'</button></div>')+
+   (quiz?'<p class="desc" id="mmScore" style="margin:6px 0">'+mmScoreText(v)+'</p>':'')+
+   '<div class="desc" style="margin:10px 0 6px">'+escHTML(L('Moves after ','Moves का आधार: ')+S.src)+' · '+L(v.cover+' of '+v.n+' sentences have a note',v.n+' में से '+v.cover+' वाक्यों पर note')+'</div>';
   if(v.missing.length)h+='<div style="border:1px solid #f59e0b;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:13px"><b>'+L('Not found in this section:','इस section में नहीं मिला:')+'</b> '+v.missing.map(id=>escHTML(id+' '+mmMove(v.kind,id).m[hi?2:1])).join('; ')+
     '<div class="desc">'+L('If this is your draft, consider adding these. If it is a published paper, notice what the authors chose to leave out.','अगर यह आपका draft है, तो इन्हें जोड़ने पर विचार करें। अगर यह छपा हुआ paper है, तो देखें कि लेखकों ने क्या छोड़ा।')+'</div></div>';
   if(v.back>1)h+='<p class="desc" style="color:#92400e">'+L('The parts jump back and forth '+v.back+' times. A reader follows a section more easily when each kind of part sits together.','हिस्से '+v.back+' बार आगे-पीछे होते हैं। एक तरह के हिस्से साथ रहें तो पाठक आसानी से समझता है।')+'</p>';
@@ -23947,7 +23950,10 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
   const at={};v.runs.forEach(r=>{at[r.from]=r});let i=1,rows='';
   while(i<=v.n){const r=at[i];
     if(r){const mv=mmMove(v.kind,r.move),txt=s.sents.slice(r.from-1,r.to).map((x,k)=>(k&&x.p!==s.sents[r.from-2+k].p?'<br><br>':' ')+escHTML(x.t)).join('');
-      rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;line-height:1.35;border-right:3px solid #64748b;padding-right:8px"><div style="font-family:Georgia,serif;font-style:italic">'+escHTML(r.label)+'</div><div class="desc" style="font-size:11px;margin-top:2px">'+escHTML(r.move+' · '+mv.m[hi?2:1])+'</div>'+(forPage?'':'<a href="#" style="font-size:11px" onclick="mmGo('+r.from+');return false">'+L('show in document','document में दिखाएँ')+'</a>')+'</div>'+
+      const qa=(window._mmAns||{})[r.from];
+      if(quiz&&!qa){rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;border-right:3px solid #64748b;padding-right:8px"><label class="desc" for="mmQ'+r.from+'">'+L('What does this part do?','यह हिस्सा क्या कर रहा है?')+'</label><select id="mmQ'+r.from+'" class="mm-q" onchange="mmAnswer('+r.from+',this.value)" style="width:100%;font-size:12px"><option value="">…</option>'+S.moves.map(m=>'<option value="'+m[0]+'">'+escHTML(m[hi?2:1])+'</option>').join('')+'</select></div>'+
+        '<div style="flex:1;min-width:220px;border:1px dashed #94a3b8;border-radius:6px;padding:4px 8px;font-size:13.5px;line-height:1.6">'+txt+'</div></div>';i=r.to+1;continue}
+      rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;line-height:1.35;border-right:3px solid #64748b;padding-right:8px">'+(quiz&&qa?'<div style="font-weight:700;color:'+(qa===r.move?'#166534':'#b91c1c')+'">'+(qa===r.move?'✓ '+L('Right','सही'):'✗ '+L('You chose: ','आपने चुना: ')+escHTML(mmMove(v.kind,qa).m[hi?2:1]))+'</div>':'')+'<div style="font-family:Georgia,serif;font-style:italic">'+escHTML(r.label)+'</div><div class="desc" style="font-size:11px;margin-top:2px">'+escHTML(r.move+' · '+mv.m[hi?2:1])+'</div>'+(forPage?'':'<a href="#" style="font-size:11px" onclick="mmGo('+r.from+');return false">'+L('show in document','document में दिखाएँ')+'</a>')+'</div>'+
         '<div style="flex:1;min-width:220px;background:'+mv.c+';border-radius:6px;padding:4px 8px;font-size:13.5px;line-height:1.6">'+txt+'</div></div>';i=r.to+1}
     else{rows+='<div class="mm-row" style="display:flex;gap:10px;margin:2px 0;flex-wrap:wrap"><div style="flex:0 0 190px"></div><div style="flex:1;min-width:220px;font-size:13.5px;line-height:1.6;padding:0 8px;color:var(--muted,#555)">'+escHTML(s.sents[i-1].t)+'</div></div>';i++}}
   h+='<div class="mm-page">'+rows+'</div>';
@@ -23955,6 +23961,11 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
     v.rejected.map(r=>escHTML((r.label||'—')+' ('+r.move+', '+(r.why==='quote'?L('quote not in the sentence','quote वाक्य में नहीं'):r.why==='move'?L('move not in the list','move सूची में नहीं'):r.why==='overlap'?L('overlaps another note','दूसरे note से टकराता है'):L('bad sentence numbers','ग़लत वाक्य संख्या'))+')')).join('<br>')+'</div></details>';
   h+='<p class="desc" style="margin-top:8px">'+L('Notes written by AI and checked by Appuscholar against your text. A guide to how the section is built, not a grade.','Notes AI ने लिखे और Appuscholar ने आपके text से जाँचे। यह बताता है कि section कैसे बना है, यह अंक नहीं है।')+'</p>';
   return h}
+function mmCur(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}return{s:s,v:v}}
+function mmQuizToggle(){window._mmQuiz=!window._mmQuiz;window._mmAns={};const c=mmCur();if(c.s&&c.v)document.getElementById('mmOut').innerHTML=mmRender(c.v,c.s)}
+function mmAnswer(from,id){if(!id)return;window._mmAns=window._mmAns||{};window._mmAns[from]=id;const c=mmCur();if(c.s&&c.v)document.getElementById('mmOut').innerHTML=mmRender(c.v,c.s)}
+function mmScoreText(v){const hi=getLang()==='hi',a=window._mmAns||{},done=v.runs.filter(r=>a[r.from]),right=done.filter(r=>a[r.from]===r.move).length;
+  return hi?v.runs.length+' में से '+done.length+' का जवाब दिया, '+right+' सही।'+(done.length===v.runs.length?' पूरा हुआ।':''):'Answered '+done.length+' of '+v.runs.length+', '+right+' right.'+(done.length===v.runs.length?' Done.':'')}
 function mmGo(from){try{const i=+document.getElementById('mmSec').value||0,s=window._mmSecs[i],t=s.sents[from-1].t.slice(0,60);document.getElementById('mmDlg').close();
   const tw=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT);let n;while((n=tw.nextNode())){const k=n.nodeValue.indexOf(t.slice(0,30));if(k>=0){const r=document.createRange();r.setStart(n,k);r.setEnd(n,Math.min(n.nodeValue.length,k+t.length));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);(n.parentElement||editor).scrollIntoView({block:'center'});return}}}catch(e){}}
 function mmSaveHtml(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}
