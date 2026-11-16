@@ -37,5 +37,11 @@ r=T.read([page(tbl(700,'Table 6','Counts',[[72,'Group'],[250,'n'],[320,'%']],[[[
 ok(r.tables.length===1&&r.hits.length===0,'a table with no mean and SD columns gives no mean and SD');
 r=T.read([page(para(700),para(688))]);ok(r.tables.length===0&&r.hits.length===0,'a page of prose has no table');
 r=T.read([]);ok(r.tables.length===0,'no pages is safe');
+// tall two-line header with spanning labels (single-cell rows) before the first data row: still a table
+(function(){const out=[];out.push(...row(700,[[72,'Table 1. Baseline characteristics of participants by group of the']]));out.push(...row(688,[[72,'study at baseline.']]));
+out.push(...row(670,[[72,'Statistical Difference']]));out.push(...row(658,[[72,'Characteristic'],[250,'Study Group']]));out.push(...row(646,[[72,'Between Groups']]));out.push(...row(634,[[72,'Inulin']]));
+out.push(...row(622,[[72,'Demographics'],[200,'Inulin'],[260,'PSE'],[320,'Placebo']]));out.push(...row(610,[[72,'& PSE']]));
+out.push(...row(598,[[72,'Sex (F%)'],[200,'53.85%'],[260,'65.00%'],[320,'51.85%']]));out.push(...row(584,[[72,'Age (years)'],[200,'66.54'],[260,'67.75'],[320,'69.59']]));
+const r2=T.read([out]);ok(r2.tables.length===1&&/^Table 1/.test(r2.tables[0].caption),'a table with a tall spanning header is found (got '+r2.tables.length+')');})();
 r=T.read([[{str:'Table 1',transform:[10,0,0,10,72,700]}]]);ok(r.tables.length===0,'a caption with nothing below it is not a table');
 console.log(f?'FAILED '+f:'ALL TABLE TESTS PASSED');process.exit(f?1:0);

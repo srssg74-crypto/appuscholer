@@ -41,7 +41,7 @@
     var r = rows[i], m = CAP.exec(r.text);
     if (!m || r.text.length > 140 || PROSE.test(r.text)) return null;
     var multi = 0;
-    for (var k = i + 1; k < Math.min(rows.length, i + 6); k++) if (rows[k].cells.length >= 3) multi++;
+    for (var k = i + 1; k < Math.min(rows.length, i + 11); k++) if (rows[k].cells.length >= 3) multi++;
     if (multi < 2) return null;
     return { num: m[1], rest: norm(m[2]), cont: /\b(continued|cont\.?)\b/i.test(r.text) };
   }
