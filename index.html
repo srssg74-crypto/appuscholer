@@ -19367,7 +19367,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16k';
+const APP_BUILD='2026.11.16l';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -20924,11 +20924,21 @@ function shStatsHTML(p){
     '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Found by text patterns. Each line is what the paper prints; it does not mean the result is right. Lines that start with Table come from the table\u2019s own columns; tables set as pictures are not read.</p></div></details>'}
 /* Sections of the open paper, found from the PDF's own type sizes and fonts (no AI, nothing leaves the device). Each chip jumps to its page. */
 const SH_KIND_NAME={abstract:'Abstract',keywords:'Keywords',introduction:'Introduction',methods:'Methods',results:'Results',discussion:'Discussion',limitations:'Limitations',conclusion:'Conclusion',references:'References',backmatter:'Back matter',other:'Other'};
+/* Text of one detected section of a shelf paper, for the margin map. Same page slicing as shPaperText. */
+function shSectionText(p,i){const S=p&&p.sections,pages=(p&&p.pages)||[];if(!S||!S[i]||!pages.length)return'';const s=S[i],next=S[i+1],last=Math.max(s.page,next?next.page:pages.length);let out='';
+  for(let pg=s.page;pg<=Math.min(last,pages.length);pg++){let t=String(pages[pg-1]||'');if(pg===s.page){const k=t.indexOf(s.title);if(k>=0)t=t.slice(k+s.title.length)}
+    if(next&&pg===next.page){const k=t.indexOf(next.title);if(k>=0)t=t.slice(0,k)}out+=' '+t}
+  return out.replace(/-\s*\n\s*/g,'').replace(/\s+/g,' ').trim()}
+const MM_SHELF_KIND={abstract:'abs',introduction:'intro',methods:'meth',results:'res',discussion:'disc'};
+function shMarginMap(i){const p=SH.cur;if(!p||!p.sections)return;const secs=[],idx=[];
+  p.sections.forEach((s,k)=>{if(!MM_SHELF_KIND[s.kind])return;const t=shSectionText(p,k);if(t.length<80)return;idx.push(k);secs.push({title:SH_KIND_NAME[s.kind]+': '+s.title,kind:MM_SHELF_KIND[s.kind],sents:mmSplit(t).map(x=>({p:1,t:x}))})});
+  if(!secs.length){showToast(getLang()==='hi'?'इस paper के sections का text नहीं मिला':'No section text could be read from this paper');return}
+  window._mmPaper=p.id;mmOpen({secs:secs,pick:Math.max(0,idx.indexOf(i))})}
 function shSectionsHTML(p){
   const S=p.sections;
   if(!S||!S.length)return'<div class="row" style="gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap"><span style="font-size:12.5px;color:var(--muted)">'+(Array.isArray(S)?'No headings could be found in this paper.':'Sections not found yet.')+'</span><button class="btn btn-ghost" onclick="shFindSections()">Find sections</button><span id="shSecMsg" style="font-size:12.5px"></span></div>';
   const chip=(x,sub)=>'<button class="btn btn-ghost" style="padding:2px 8px;font-size:'+(sub?'12':'13')+'px" title="Go to page '+x.page+'" onclick="shGo('+x.page+')">'+escHTML(x.title.length>40?x.title.slice(0,38)+'…':x.title)+' <span style="color:var(--muted)">p.'+x.page+'</span></button>';
-  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Sections</b> ('+S.length+')</summary><div style="margin-top:4px">'+S.map(x=>'<div style="margin:3px 0"><span style="display:inline-block;min-width:96px;font-size:12px;color:var(--muted)">'+escHTML(SH_KIND_NAME[x.kind]||'Other')+'</span>'+chip(x,false)+((x.subs&&x.subs.length)?' <span style="font-size:12px;color:var(--muted)">'+x.subs.slice(0,12).map(y=>chip(y,true)).join(' ')+(x.subs.length>12?' …':'')+'</span>':'')+'</div>').join('')+'<p style="font-size:12px;color:var(--muted);margin:4px 0 0">'+(p.md?'Found from the headings in the Markdown file.':'Found from the paper\u2019s type sizes and fonts, so a heading set in body type can be missed. Check against the page.')+'</p></div></details>';
+  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Sections</b> ('+S.length+')</summary><div style="margin-top:4px">'+S.map(x=>'<div style="margin:3px 0"><span style="display:inline-block;min-width:96px;font-size:12px;color:var(--muted)">'+escHTML(SH_KIND_NAME[x.kind]||'Other')+'</span>'+chip(x,false)+(MM_SHELF_KIND[x.kind]&&p.pages&&p.pages.length?' <button class="btn btn-ghost" style="padding:2px 8px;font-size:12px" title="Margin map" onclick="shMarginMap('+S.indexOf(x)+')">🖍</button>':'')+((x.subs&&x.subs.length)?' <span style="font-size:12px;color:var(--muted)">'+x.subs.slice(0,12).map(y=>chip(y,true)).join(' ')+(x.subs.length>12?' …':'')+'</span>':'')+'</div>').join('')+'<p style="font-size:12px;color:var(--muted);margin:4px 0 0">'+(p.md?'Found from the headings in the Markdown file.':'Found from the paper\u2019s type sizes and fonts, so a heading set in body type can be missed. Check against the page.')+'</p></div></details>';
 }
 async function shFindSections(){
   const p=SH.cur;if(!p)return;const m=document.getElementById('shSecMsg');if(m)m.textContent='Reading the headings…';
@@ -23873,6 +23883,13 @@ const MM_SETS={
   ['D1','Background or reminder of the aim','पृष्ठभूमि या लक्ष्य की याद',0],['D2','Main finding and why it matters','मुख्य नतीजा और उसका महत्व',1],['D3','Compares with earlier studies','पहले की studies से तुलना',1],
   ['D4','Explains or interprets the finding','नतीजे की व्याख्या',1],['D5','Strengths of the study','Study की ताक़त',0],['D6','Limitations','सीमाएँ',1],
   ['D7','Implications for practice or policy','काम या नीति के लिए अर्थ',1],['D8','What future research should do','आगे की रिसर्च क्या करे',1],['D9','Closing summary','समापन',0]]},
+ meth:{name:['Methods','Methods'],src:'Cotos, Huffman and Link (2017), methods moves, with the parts APA JARS (2018) asks for',moves:[
+  ['M1','Why this design or approach','यह design या तरीका क्यों',0],['M2','Participants or data source and how they were chosen','Participants या data का स्रोत, और चुनाव कैसे हुआ',1],
+  ['M3','Measures, tools and materials','Measures, tools और सामग्री',1],['M4','Procedure, step by step','Procedure, क़दम-दर-क़दम',1],['M5','Data analysis','Data analysis',1],
+  ['M6','Credibility: ethics, reliability, validity, checks','भरोसा: ethics, reliability, validity, जाँचें',1]]},
+ res:{name:['Results','Results'],src:'Yang and Allison (2003), results moves',moves:[
+  ['R1','Prepares the reader (what was analysed, which table)','पाठक को तैयार करना (क्या analyse हुआ, कौन-सी table)',0],['R2','Reports results with numbers','नतीजे संख्याओं के साथ',1],
+  ['R3','Comments on results','नतीजों पर टिप्पणी',0],['R4','Sums up the results','नतीजों का सार',0]]},
  abs:{name:['Abstract','Abstract'],src:'Hyland (2000), abstract moves',moves:[
   ['A1','Background','पृष्ठभूमि',0],['A2','Purpose','उद्देश्य',1],['A3','Method','Method',1],['A4','Results','Results',1],['A5','Conclusion','निष्कर्ष',1]]}};
 const MM_COL=['#ede9fe','#dcfce7','#fef3c7','#dbeafe','#fce7f3','#e0f2fe','#fee2e2','#f0fdf4','#f5f5f4'];
@@ -23885,7 +23902,7 @@ function mmSections(){const out=[];let cur={title:'',sents:[]};let pn=0;
     if(/^H[1-4]$/.test(el.tagName)){if(cur.sents.length||cur.title)out.push(cur);cur={title:tx,sents:[]};return}
     pn++;mmSplit(tx).forEach(t=>cur.sents.push({p:pn,t:t}))});
   if(cur.sents.length||cur.title)out.push(cur);return out.filter(s=>s.sents.length)}
-function mmGuess(title){const t=String(title||'').toLowerCase();if(/discussion|चर्चा/.test(t))return'disc';if(/abstract|सार/.test(t))return'abs';if(/introduction|background|भूमिका|परिचय/.test(t))return'intro';return''}
+function mmGuess(title){const t=String(title||'').toLowerCase();if(/discussion|चर्चा/.test(t))return'disc';if(/^(\d+[.)]?\s*)?(results?|findings)\b|परिणाम|नतीजे/.test(t))return'res';if(/method|procedure|participants|विधि|पद्धति/.test(t))return'meth';if(/abstract|सार/.test(t))return'abs';if(/introduction|background|भूमिका|परिचय/.test(t))return'intro';return''}
 function mmPrompt(sec,kind){const S=MM_SETS[kind];
   return 'Label what each part of this '+S.name[0]+' section does, the way a writing teacher writes notes in the margin of a model paper.\n'+
   'Use ONLY these moves ('+S.src+'):\n'+S.moves.map(m=>m[0]+' = '+m[1]).join('\n')+'\n\n'+
@@ -23906,12 +23923,16 @@ function mmValidate(res,sec,kind){const S=MM_SETS[kind],ids=S.moves.map(m=>m[0])
   /* order: moves that come back after a later move has started (for example limitations, then results again) */
   const seq=ok.map(r=>ids.indexOf(r.move));let back=0;for(let i=1;i<seq.length;i++)if(seq[i]<seq[i-1]-1)back++;
   const cover=ok.reduce((a,r)=>a+(r.to-r.from+1),0);
-  return{kind:kind,title:sec.title,runs:ok,rejected:rej,missing:missing,back:back,cover:cover,n:n}}
-function mmKey(i){let id='';try{id=docCurrentId()}catch(e){}return pkey('appu_mm_'+(id||'doc')+'_'+i)}
-function mmOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('mmDlg');
+  /* Results: a run that reports results must carry numbers; a sentence with a test result outside any run is counted */
+  const nonum=kind==='res'?ok.filter(r=>r.move==='R2'&&!sec.sents.slice(r.from-1,r.to).some(x=>/\d/.test(x.t))).map(r=>r.from):[];
+  const comments=kind==='res'&&ok.some(r=>r.move==='R3');
+  return{kind:kind,title:sec.title,runs:ok,rejected:rej,missing:missing,back:back,cover:cover,n:n,nonum:nonum,comments:comments}}
+function mmKey(i){if(window._mmPaper)return pkey('appu_mm_paper_'+window._mmPaper+'_'+i);let id='';try{id=docCurrentId()}catch(e){}return pkey('appu_mm_'+(id||'doc')+'_'+i)}
+function mmOpen(given){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('mmDlg');
   if(!dlg){dlg=document.createElement('dialog');dlg.id='mmDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
-  const secs=mmSections();window._mmSecs=secs;
-  const g=secs.map(x=>mmGuess(x.title));let pick=['disc','intro','abs'].map(k=>g.indexOf(k)).find(x=>x>=0);if(pick==null)pick=0;
+  if(!given)window._mmPaper=null;
+  const secs=given?given.secs:mmSections();window._mmSecs=secs;
+  const g=secs.map(x=>mmGuess(x.title));let pick=['disc','res','meth','intro','abs'].map(k=>g.indexOf(k)).find(x=>x>=0);if(pick==null)pick=0;
   const opts=secs.map((s,i)=>'<option value="'+i+'"'+(i===pick?' selected':'')+'>'+escHTML((s.title||L('Untitled part','बिना शीर्षक'))+' ('+s.sents.length+L(' sentences',' वाक्य')+')')+'</option>').join('');
   dlg.innerHTML='<div class="dlg-body"><h2>'+L('Margin map','Margin map')+'</h2>'+
    '<p class="desc">'+L('Like a teacher\'s notes in the margin of a model paper: each part of a section gets a note saying what it does here. Works on your own draft, or on a paper you brought in as a document. In your draft it also shows which parts are missing. Your text is not changed.','जैसे model paper के हाशिये पर शिक्षक के notes: section के हर हिस्से के साथ लिखा होता है कि वह यहाँ क्या कर रहा है। आपके अपने draft पर, या document के रूप में लाए गए paper पर चलता है। आपके draft में यह भी दिखाता है कि कौन-से हिस्से छूटे हैं। आपका text नहीं बदलता।')+'</p>'+
@@ -23921,9 +23942,10 @@ function mmOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.get
    :'<p class="desc" style="color:#92400e">'+L('The open document has no text yet.','खुले document में अभी text नहीं है।')+'</p>')+
    '<div id="mmOut" aria-live="polite"></div>'+
    '<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'mmDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  if(given&&given.pick!=null){const el=document.getElementById('mmSec');if(el)el.value=String(given.pick)}
   if(!dlg.open)dlg.showModal();if(secs.length)mmSecChange()}
 function mmSecChange(){window._mmQuiz=false;window._mmAns={};const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];if(!s)return;
-  const g=mmGuess(s.title);if(g)document.getElementById('mmKind').value=g;
+  const g=s.kind||mmGuess(s.title);if(g)document.getElementById('mmKind').value=g;
   let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}
   const out=document.getElementById('mmOut');if(out)out.innerHTML=v&&v.sig===mmSig(s)?mmRender(v,s):''}
 function mmSig(s){return s.sents.length+':'+cohNorm(s.sents.map(x=>x.t).join(' ')).length}
@@ -23945,6 +23967,8 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
    '<div class="desc" style="margin:10px 0 6px">'+escHTML(L('Moves after ','Moves का आधार: ')+S.src)+' · '+L(v.cover+' of '+v.n+' sentences have a note',v.n+' में से '+v.cover+' वाक्यों पर note')+'</div>';
   if(v.missing.length)h+='<div style="border:1px solid #f59e0b;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:13px"><b>'+L('Not found in this section:','इस section में नहीं मिला:')+'</b> '+v.missing.map(id=>escHTML(id+' '+mmMove(v.kind,id).m[hi?2:1])).join('; ')+
     '<div class="desc">'+L('If this is your draft, consider adding these. If it is a published paper, notice what the authors chose to leave out.','अगर यह आपका draft है, तो इन्हें जोड़ने पर विचार करें। अगर यह छपा हुआ paper है, तो देखें कि लेखकों ने क्या छोड़ा।')+'</div></div>';
+  if((v.nonum||[]).length)h+='<p class="desc" style="color:#92400e">'+L((v.nonum.length===1?'One part reports':v.nonum.length+' parts report')+' results without any number. Give the statistic, its exact value and the effect size.',v.nonum.length+' हिस्सों में नतीजे बिना किसी संख्या के हैं। Statistic, उसका सटीक मान और effect size दें।')+'</p>';
+  if(v.comments)h+='<p class="desc">'+L('This Results section also comments on the results. Many psychology and medical journals want comments only in the Discussion; check your target journal.','यह Results section नतीजों पर टिप्पणी भी करता है। कई psychology और medical journals टिप्पणी सिर्फ़ Discussion में चाहते हैं; अपने journal के नियम देखें।')+'</p>';
   if(v.back>1)h+='<p class="desc" style="color:#92400e">'+L('The parts jump back and forth '+v.back+' times. A reader follows a section more easily when each kind of part sits together.','हिस्से '+v.back+' बार आगे-पीछे होते हैं। एक तरह के हिस्से साथ रहें तो पाठक आसानी से समझता है।')+'</p>';
   /* the page: margin notes on the left, text on the right, a bracket bar joining them */
   const at={};v.runs.forEach(r=>{at[r.from]=r});let i=1,rows='';
@@ -23953,7 +23977,7 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
       const qa=(window._mmAns||{})[r.from];
       if(quiz&&!qa){rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;border-right:3px solid #64748b;padding-right:8px"><label class="desc" for="mmQ'+r.from+'">'+L('What does this part do?','यह हिस्सा क्या कर रहा है?')+'</label><select id="mmQ'+r.from+'" class="mm-q" onchange="mmAnswer('+r.from+',this.value)" style="width:100%;font-size:12px"><option value="">…</option>'+S.moves.map(m=>'<option value="'+m[0]+'">'+escHTML(m[hi?2:1])+'</option>').join('')+'</select></div>'+
         '<div style="flex:1;min-width:220px;border:1px dashed #94a3b8;border-radius:6px;padding:4px 8px;font-size:13.5px;line-height:1.6">'+txt+'</div></div>';i=r.to+1;continue}
-      rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;line-height:1.35;border-right:3px solid #64748b;padding-right:8px">'+(quiz&&qa?'<div style="font-weight:700;color:'+(qa===r.move?'#166534':'#b91c1c')+'">'+(qa===r.move?'✓ '+L('Right','सही'):'✗ '+L('You chose: ','आपने चुना: ')+escHTML(mmMove(v.kind,qa).m[hi?2:1]))+'</div>':'')+'<div style="font-family:Georgia,serif;font-style:italic">'+escHTML(r.label)+'</div><div class="desc" style="font-size:11px;margin-top:2px">'+escHTML(r.move+' · '+mv.m[hi?2:1])+'</div>'+(forPage?'':'<a href="#" style="font-size:11px" onclick="mmGo('+r.from+');return false">'+L('show in document','document में दिखाएँ')+'</a>')+'</div>'+
+      rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;line-height:1.35;border-right:3px solid #64748b;padding-right:8px">'+(quiz&&qa?'<div style="font-weight:700;color:'+(qa===r.move?'#166534':'#b91c1c')+'">'+(qa===r.move?'✓ '+L('Right','सही'):'✗ '+L('You chose: ','आपने चुना: ')+escHTML(mmMove(v.kind,qa).m[hi?2:1]))+'</div>':'')+'<div style="font-family:Georgia,serif;font-style:italic">'+escHTML(r.label)+'</div><div class="desc" style="font-size:11px;margin-top:2px">'+escHTML(r.move+' · '+mv.m[hi?2:1])+'</div>'+(forPage||window._mmPaper?'':'<a href="#" style="font-size:11px" onclick="mmGo('+r.from+');return false">'+L('show in document','document में दिखाएँ')+'</a>')+'</div>'+
         '<div style="flex:1;min-width:220px;background:'+mv.c+';border-radius:6px;padding:4px 8px;font-size:13.5px;line-height:1.6">'+txt+'</div></div>';i=r.to+1}
     else{rows+='<div class="mm-row" style="display:flex;gap:10px;margin:2px 0;flex-wrap:wrap"><div style="flex:0 0 190px"></div><div style="flex:1;min-width:220px;font-size:13.5px;line-height:1.6;padding:0 8px;color:var(--muted,#555)">'+escHTML(s.sents[i-1].t)+'</div></div>';i++}}
   h+='<div class="mm-page">'+rows+'</div>';
