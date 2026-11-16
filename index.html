@@ -19367,7 +19367,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16n';
+const APP_BUILD='2026.11.16o';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23883,13 +23883,13 @@ const MM_SETS={
   ['I3A','Outlines the purpose','उद्देश्य बताना',0,'T3'],['I3B','Announces the present study','इस study का परिचय',0,'T3'],['I3C','States research questions or hypotheses','रिसर्च सवाल या hypotheses',0,'T3'],
   ['I3D','Defines key terms','मुख्य शब्दों की परिभाषा',0,'T3'],['I3E','Summarises the methods','Methods का सार',0,'T3'],['I3F','Announces the main findings','मुख्य नतीजों की घोषणा',0,'T3'],
   ['I3G','States the value of the study','Study का महत्व',0,'T3'],['I3H','Outlines the paper','Paper की रूपरेखा',0,'T3']]},
- disc:{name:['Discussion','Discussion'],src:'Cotos, Link and Huffman (2016), four Discussion moves (900 articles, 30 disciplines); steps under each move are Appuscholar\'s own until the authors\' step list is checked',
-  groups:{D1:['Move 1, re-establishing the territory','Move 1, क्षेत्र को फिर से याद दिलाना',0],D2:['Move 2, framing the new knowledge','Move 2, नए ज्ञान को सामने रखना',1],D3:['Move 3, re-shaping the territory','Move 3, क्षेत्र को नए सिरे से गढ़ना',1],D4:['Move 4, establishing additional territory','Move 4, आगे का क्षेत्र खोलना',1]},moves:[
-  ['D1.1','Background or reminder of the aim','पृष्ठभूमि या लक्ष्य की याद',0,'D1'],
-  ['D2.1','Main finding and why it matters','मुख्य नतीजा और उसका महत्व',1,'D2'],['D2.2','Explains or interprets the finding','नतीजे की व्याख्या',1,'D2'],
-  ['D3.1','Compares with earlier studies (agrees or differs)','पहले की studies से तुलना (मेल या अंतर)',1,'D3'],
-  ['D4.1','Strengths of the study','Study की ताक़त',0,'D4'],['D4.2','Limitations','सीमाएँ',1,'D4'],['D4.3','Implications for practice or policy','काम या नीति के लिए अर्थ',1,'D4'],
-  ['D4.4','What future research should do','आगे की रिसर्च क्या करे',1,'D4'],['D4.5','Closing summary','समापन',0,'D4']]},
+ disc:{name:['Discussion','Discussion'],src:'Moreno and Swales (2018), coding scheme for Discussion sections (English for Specific Purposes 50, 40–63); must-haves are Appuscholar\'s choice for theses',
+  groups:{BGI:['Background information','पृष्ठभूमि',0],SUM:['Summarising key results','मुख्य नतीजों का सार',1],COMM:['Commenting on the results','नतीजों पर टिप्पणी',1],EV:['Evaluating the study or other research','Study या दूसरी रिसर्च का मूल्यांकन',1],IMP:['Drawing implications','निष्कर्ष से आगे के अर्थ',1]},moves:[
+  ['KFS','Restates key features of this study','इस study की मुख्य बातें दोहराना',0,'BGI'],['RWC','Background with citations','Citation के साथ पृष्ठभूमि',0,'BGI'],['POC','Background without citations','बिना citation पृष्ठभूमि',0,'BGI'],
+  ['RES','Presents results neutrally','नतीजे सीधे-सीधे बताना',0,'SUM'],['CRES','Contrasts results within the study','Study के भीतर नतीजों की तुलना',0,'SUM'],['HRES','Highlights a result','किसी नतीजे पर ज़ोर',0,'SUM'],
+  ['MEAN','Says what the results mean','नतीजों का अर्थ',0,'COMM'],['COMP','Compares with previous research','पहले की रिसर्च से तुलना',1,'COMM'],['EXPL','Explains results or their effects','नतीजों की व्याख्या या असर',0,'COMM'],['PRED','Makes predictions','अनुमान',0,'COMM'],['REACT','Reacts to results','नतीजों पर प्रतिक्रिया',0,'COMM'],
+  ['LIM','Limitations of this study','इस study की सीमाएँ',1,'EV'],['STATE','Judges the state of knowledge or practice','ज्ञान या चलन की स्थिति का आकलन',0,'EV'],['CONTR','States the contribution','Study का योगदान',0,'EV'],['POS','Strengths of this study','इस study की ताक़त',0,'EV'],['GAD','Gaps in knowledge or other research','ज्ञान या दूसरी रिसर्च में कमी',0,'EV'],
+  ['REC','Recommends future research or practice','आगे की रिसर्च या काम के सुझाव',0,'IMP'],['APP','Says where the results can be used','नतीजे कहाँ काम आएँगे',0,'IMP'],['HYP','Proposes hypotheses for future research','आगे की रिसर्च के लिए hypotheses',0,'IMP']]},
  lit:{name:['Review of literature','Review of literature'],src:'Harris (2016), four moves of writing with sources, as taught in the University of Tartu Communicating Science course',
   groups:{K1:['Telling the literature','Literature बताना',1],K2:['Taking your own stance','अपनी राय रखना',1]},moves:[
   ['L1','Coming to terms: summarises, paraphrases or quotes a source','Coming to terms: स्रोत का सार, अपने शब्दों में या quote',0,'K1'],
@@ -23903,9 +23903,9 @@ const MM_SETS={
   ['C2.1','Says how the data were acquired','Data कैसे मिला',1,'C2',96],['C2.2','Describes the data','Data का ब्योरा',0,'C2',84],['C2.3','Sets out the study procedure','Study की procedure',1,'C2',92],
   ['C2.4','Describes the tools','Tools का ब्योरा',0,'C2',84],['C2.5','Names the variables','Variables के नाम',0,'C2',84],['C2.6','Explains decisions made during the study','Study के दौरान के फ़ैसलों की वजह',0,'C2',80],['C2.7','Reports intermediate results','बीच के नतीजे',0,'C2',52],
   ['C3.1','Says how the data were prepared','Data कैसे तैयार हुआ',1,'C3',96],['C3.2','Describes the data analysis','Data analysis का ब्योरा',1,'C3',96],['C3.3','Justifies the processing or analysis','Analysis के चुनाव की वजह',0,'C3',68]]},
- res:{name:['Results','Results'],src:'Yang and Allison (2003), results moves',moves:[
-  ['R1','Prepares the reader (what was analysed, which table)','पाठक को तैयार करना (क्या analyse हुआ, कौन-सी table)',0],['R2','Reports results with numbers','नतीजे संख्याओं के साथ',1],
-  ['R3','Comments on results','नतीजों पर टिप्पणी',0],['R4','Sums up the results','नतीजों का सार',0]]},
+ res:{name:['Results','Results'],src:'Seven parts of a Results section from Masaryk University course slides (author not named in the file), close to Yang and Allison (2003)',moves:[
+  ['R1','Revisits the aim or earlier research','लक्ष्य या पहले की रिसर्च की याद',0],['R2','Gives a general overview of the results','नतीजों का सामान्य परिचय',0],['R3','Points the reader to a table or figure','पाठक को table या figure पर ले जाना',0],
+  ['R4','Reports specific key results in detail','मुख्य नतीजे विस्तार से',1],['R5','Compares with results of other research','दूसरी रिसर्च के नतीजों से तुलना',0],['R6','Deals with problems in the results','नतीजों की दिक़्क़तें',0],['R7','Suggests what the results might mean','नतीजों का संभावित अर्थ',0]]},
  abs:{name:['Abstract','Abstract'],src:'Hyland (2000), abstract moves',moves:[
   ['A1','Background','पृष्ठभूमि',0],['A2','Purpose','उद्देश्य',1],['A3','Method','Method',1],['A4','Results','Results',1],['A5','Conclusion','निष्कर्ष',1]]}};
 const MM_COL=['#ede9fe','#dcfce7','#fef3c7','#dbeafe','#fce7f3','#e0f2fe','#fee2e2','#f0fdf4','#f5f5f4'];
@@ -23943,9 +23943,11 @@ function mmValidate(res,sec,kind){const S=MM_SETS[kind],ids=S.moves.map(m=>m[0])
   const seq=ok.map(r=>gk?gk.indexOf((S.moves.find(m=>m[0]===r.move)||[])[4]):ids.indexOf(r.move));let back=0;for(let i=1;i<seq.length;i++)if(seq[i]<seq[i-1]-1)back++;
   const cover=ok.reduce((a,r)=>a+(r.to-r.from+1),0);
   /* Results: a run that reports results must carry numbers; a sentence with a test result outside any run is counted */
-  const nonum=kind==='res'?ok.filter(r=>r.move==='R2'&&!sec.sents.slice(r.from-1,r.to).some(x=>/\d/.test(x.t))).map(r=>r.from):[];
-  const comments=kind==='res'&&ok.some(r=>r.move==='R3');
-  return{kind:kind,title:sec.title,runs:ok,rejected:rej,missing:missing,back:back,cover:cover,n:n,nonum:nonum,comments:comments}}
+  const nonum=kind==='res'?ok.filter(r=>r.move==='R4'&&!sec.sents.slice(r.from-1,r.to).some(x=>/\d/.test(x.t))).map(r=>r.from):[];
+  const comments=kind==='res'&&ok.some(r=>['R5','R6','R7'].indexOf(r.move)>=0);
+  /* the slide's sunbathing example: "is related to" can be supported, "causes" usually cannot; flag strong causal words where the text draws meaning */
+  const strong=ok.filter(r=>(kind==='res'&&r.move==='R7'||kind==='disc'&&['MEAN','EXPL','APP'].indexOf(r.move)>=0)&&sec.sents.slice(r.from-1,r.to).some(x=>/\b(proves?|proved|causes?|caused|leads? to|results? in|determines?)\b/i.test(x.t))).map(r=>r.from);
+  return{kind:kind,title:sec.title,runs:ok,rejected:rej,missing:missing,back:back,cover:cover,n:n,nonum:nonum,comments:comments,strong:strong}}
 function mmKey(i){if(window._mmPaper)return pkey('appu_mm_paper_'+window._mmPaper+'_'+i);let id='';try{id=docCurrentId()}catch(e){}return pkey('appu_mm_'+(id||'doc')+'_'+i)}
 function mmOpen(given){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('mmDlg');
   if(!dlg){dlg=document.createElement('dialog');dlg.id='mmDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
@@ -23990,6 +23992,7 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
   if(v.missing.length)h+='<div style="border:1px solid #f59e0b;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:13px"><b>'+L('Not found in this section:','इस section में नहीं मिला:')+'</b> '+v.missing.map(id=>escHTML(mmMissName(v.kind,id,hi))).join('; ')+
     '<div class="desc">'+L('If this is your draft, consider adding these. If it is a published paper, notice what the authors chose to leave out.','अगर यह आपका draft है, तो इन्हें जोड़ने पर विचार करें। अगर यह छपा हुआ paper है, तो देखें कि लेखकों ने क्या छोड़ा।')+'</div></div>';
   if((v.nonum||[]).length)h+='<p class="desc" style="color:#92400e">'+L((v.nonum.length===1?'One part reports':v.nonum.length+' parts report')+' results without any number. Give the statistic, its exact value and the effect size.',v.nonum.length+' हिस्सों में नतीजे बिना किसी संख्या के हैं। Statistic, उसका सटीक मान और effect size दें।')+'</p>';
+  if((v.strong||[]).length)h+='<p class="desc" style="color:#92400e">'+L('Strong cause words ("causes", "proves", "leads to") where you say what the results mean. Unless the design was an experiment, write "is related to" or "suggests", and say how sure you are.','जहाँ आप नतीजों का अर्थ बताते हैं, वहाँ "causes", "proves", "leads to" जैसे पक्के कारण वाले शब्द हैं। Design experiment न हो तो "is related to" या "suggests" लिखें, और बताएँ कि आप कितने निश्चित हैं।')+'</p>';
   if(v.kind==='lit'&&(v.missing||[]).indexOf('K2')>=0&&v.runs.length)h+='<p class="desc" style="color:#92400e">'+L('This review only reports what others found. Examiners look for your own stance: where studies disagree, what they missed, and which approach your study builds on.','यह review सिर्फ़ बताता है कि दूसरों ने क्या पाया। Examiner आपकी अपनी राय देखते हैं: studies कहाँ असहमत हैं, उनसे क्या छूटा, और आपकी study किस तरीके पर खड़ी है।')+'</p>';
   if(v.comments)h+='<p class="desc">'+L('This Results section also comments on the results. That is allowed, and helps with an unexpected result, but keep what you found apart from what you think it means. Many psychology and medical journals want comments only in the Discussion; check your target journal.','यह Results section नतीजों पर टिप्पणी भी करता है। यह चलता है, और अनपेक्षित नतीजे में मदद करता है, पर जो मिला और जो आप उसका अर्थ समझते हैं, उन्हें अलग रखें। कई psychology और medical journals टिप्पणी सिर्फ़ Discussion में चाहते हैं; अपने journal के नियम देखें।')+'</p>';
   if(v.back>1)h+='<p class="desc" style="color:#92400e">'+L('The parts jump back and forth '+v.back+' times. A reader follows a section more easily when each kind of part sits together.','हिस्से '+v.back+' बार आगे-पीछे होते हैं। एक तरह के हिस्से साथ रहें तो पाठक आसानी से समझता है।')+'</p>';
@@ -24006,6 +24009,9 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
   h+='<div class="mm-page">'+rows+'</div>';
   if(v.rejected.length)h+='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">'+L('Set aside: '+v.rejected.length+' note'+(v.rejected.length===1?'':'s')+' that failed the checks','अलग रखे गए: '+v.rejected.length+' notes जो जाँच में नहीं टिके')+'</summary><div class="desc">'+
     v.rejected.map(r=>escHTML((r.label||'—')+' ('+r.move+', '+(r.why==='quote'?L('quote not in the sentence','quote वाक्य में नहीं'):r.why==='move'?L('move not in the list','move सूची में नहीं'):r.why==='overlap'?L('overlaps another note','दूसरे note से टकराता है'):L('bad sentence numbers','ग़लत वाक्य संख्या'))+')')).join('<br>')+'</div></details>';
+  /* model phrases: links to the sources only; their text is not copied into Appuscholar */
+  const PH={disc:['https://www.ub.edu/cub/criteri.php?id=3480','Universitat de Barcelona style book: phrases for commenting on results'],res:['https://www.ub.edu/cub/criteri.php?id=3480','Universitat de Barcelona style book: phrases for commenting on results'],meth:['http://www.phrasebank.manchester.ac.uk/describing-methods/','Academic Phrasebank, University of Manchester: describing methods']};
+  if(PH[v.kind]&&!forPage)h+='<p class="desc" style="margin-top:6px">'+L('Model phrases: ','नमूना वाक्यांश: ')+'<a href="'+PH[v.kind][0]+'" target="_blank" rel="noopener">'+escHTML(PH[v.kind][1])+'</a></p>';
   h+='<p class="desc" style="margin-top:8px">'+L('Notes written by AI and checked by Appuscholar against your text. A guide to how the section is built, not a grade.','Notes AI ने लिखे और Appuscholar ने आपके text से जाँचे। यह बताता है कि section कैसे बना है, यह अंक नहीं है।')+'</p>';
   return h}
 function mmCur(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}return{s:s,v:v}}

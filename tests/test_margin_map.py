@@ -16,13 +16,13 @@ DOC = ('<h1>Exam anxiety and sleep</h1><h2>Introduction</h2><p>Exam anxiety is c
        '<p>One reason may be noise and shared rooms in hostels. The sample came from one college only.</p>'
        '<p>Colleges could screen students for anxiety before exams. Future studies should follow students over a full year.</p>')
 AI = {"runs": [
-  {"from":1,"to":2,"move":"D2.1","label":"States anxiety predicts poor sleep, worse in hostels","quote":"Exam anxiety predicted poorer sleep"},
-  {"from":3,"to":4,"move":"D3.1","label":"Sets the result beside Delhi and Kerala studies","quote":"Our result agrees with Kumar et al. (2019)"},
-  {"from":4,"to":4,"move":"D2.2","label":"overlapping","quote":"It differs from a Kerala study"},
-  {"from":5,"to":5,"move":"D2.2","label":"Offers hostel noise as a reason","quote":"One reason may be noise"},
-  {"from":6,"to":6,"move":"D4.2","label":"Admits a single-college sample","quote":"The sample came from three colleges"},
+  {"from":1,"to":2,"move":"RES","label":"States anxiety predicts poor sleep, worse in hostels","quote":"Exam anxiety predicted poorer sleep"},
+  {"from":3,"to":4,"move":"COMP","label":"Sets the result beside Delhi and Kerala studies","quote":"Our result agrees with Kumar et al. (2019)"},
+  {"from":4,"to":4,"move":"EXPL","label":"overlapping","quote":"It differs from a Kerala study"},
+  {"from":5,"to":5,"move":"EXPL","label":"Offers hostel noise as a reason","quote":"One reason may be noise"},
+  {"from":6,"to":6,"move":"LIM","label":"Admits a single-college sample","quote":"The sample came from three colleges"},
   {"from":7,"to":7,"move":"X9","label":"bad move","quote":"Colleges could screen students"},
-  {"from":8,"to":8,"move":"D4.4","label":"Asks for a year-long follow-up","quote":"Future studies should follow students"}]}
+  {"from":8,"to":8,"move":"REC","label":"Asks for a year-long follow-up","quote":"Future studies should follow students"}]}
 
 with sync_playwright() as p:
     errs = []
@@ -39,23 +39,23 @@ with sync_playwright() as p:
     ok(pg.input_value('#mmSec') == '1' and pg.input_value('#mmKind') == 'disc', 'Discussion picked and recognised as a discussion')
     pg.click('#mmRunBtn'); pg.wait_for_timeout(500)
     pr = pg.evaluate("window.__p")
-    ok('Cotos, Link and Huffman (2016)' in pr and '[8] Future studies' in pr and '¶ [3]' in pr, 'prompt carries the move set, numbered sentences and paragraph marks')
+    ok('Moreno and Swales (2018)' in pr and '[8] Future studies' in pr and '¶ [3]' in pr, 'prompt carries the move set, numbered sentences and paragraph marks')
     v = pg.evaluate("JSON.parse(LS.get(mmKey(1)))")
-    ok([r['move'] for r in v['runs']] == ['D2.1', 'D3.1', 'D2.2', 'D4.4'], 'four notes pass: %s' % [r['move'] for r in v['runs']])
+    ok([r['move'] for r in v['runs']] == ['RES', 'COMP', 'EXPL', 'REC'], 'four notes pass: %s' % [r['move'] for r in v['runs']])
     why = sorted(r['why'] for r in v['rejected'])
     ok(why == ['move', 'overlap', 'quote'], 'bad quote, unknown move and overlap are set aside: %s' % why)
-    ok(v['missing'] == ['D4.2', 'D4.3'], 'missing moves come from code, including the limitation the AI claimed with a false quote: %s' % v['missing'])
+    ok(v['missing'] == ['LIM', 'EV'], 'missing moves come from code, including the limitation the AI claimed with a false quote: %s' % v['missing'])
     t = pg.inner_text('#mmOut')
-    ok('Not found in this section' in t and 'Limitations' in t and 'Sets the result beside Delhi and Kerala studies' in t, 'page shows notes and missing parts')
+    ok('Not found in this section' in t and 'Limitations of this study' in t and 'Sets the result beside Delhi and Kerala studies' in t, 'page shows notes and missing parts')
     ok(pg.evaluate("document.querySelectorAll('#mmOut .mm-note').length") == 4, 'four margin notes drawn')
     ok(pg.evaluate("editor.innerHTML") == before, 'document is not changed')
     # learning mode
     pg.click('#mmQuizBtn'); pg.wait_for_timeout(100)
     ok(pg.evaluate("document.querySelectorAll('#mmOut select.mm-q').length") == 4 and 'States anxiety predicts' not in pg.inner_text('#mmOut'), 'test mode hides the notes and asks')
-    pg.select_option('#mmQ1', 'D2.1'); pg.wait_for_timeout(100)
-    pg.select_option('#mmQ3', 'D2.2'); pg.wait_for_timeout(100)
+    pg.select_option('#mmQ1', 'RES'); pg.wait_for_timeout(100)
+    pg.select_option('#mmQ3', 'EXPL'); pg.wait_for_timeout(100)
     tq = pg.inner_text('#mmOut')
-    ok('Answered 2 of 4, 1 right.' in tq and 'You chose: Explains or interprets the finding' in tq and 'Sets the result beside Delhi' in tq, 'answers marked right and wrong, note revealed after answering')
+    ok('Answered 2 of 4, 1 right.' in tq and 'You chose: Explains results or their effects' in tq and 'Sets the result beside Delhi' in tq, 'answers marked right and wrong, note revealed after answering')
     pg.click('#mmQuizBtn'); pg.wait_for_timeout(100)
     ok(pg.evaluate("document.querySelectorAll('#mmOut .mm-q').length") == 0, 'back to all notes')
     pg.evaluate("mmGo(5)"); pg.wait_for_timeout(200)
