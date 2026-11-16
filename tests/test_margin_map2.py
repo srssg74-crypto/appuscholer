@@ -64,8 +64,8 @@ with sync_playwright() as p:
     ok(pg.evaluate("shSectionText(SH.cur,1)") == 'We sampled 80 adults. We used the PSQI.', 'methods text cut on the same page')
     html = pg.evaluate("shSectionsHTML(SH.cur)")
     ok(html.count('shMarginMap(') == 3, 'margin map button on introduction, methods and discussion only')
-    DISC = {"runs":[{"from":1,"to":1,"move":"D2","label":"States stress and sleep go together","quote":"Sleep and stress were linked"},
-                    {"from":3,"to":3,"move":"D6","label":"Admits the small sample","quote":"Our sample was small"}]}
+    DISC = {"runs":[{"from":1,"to":1,"move":"D2.1","label":"States stress and sleep go together","quote":"Sleep and stress were linked"},
+                    {"from":3,"to":3,"move":"D4.2","label":"Admits the small sample","quote":"Our sample was small"}]}
     pg.evaluate("r=>{window.callAI=async()=>JSON.stringify(r)}", DISC)
     pg.evaluate("shMarginMap(2)"); pg.wait_for_timeout(200)
     ok(pg.input_value('#mmKind') == 'disc' and 'Discussion: Discussion' in pg.inner_text('#mmSec'), 'shelf section opens as a discussion')
@@ -76,6 +76,9 @@ with sync_playwright() as p:
     pg.evaluate("document.getElementById('mmDlg').close()")
     pg.evaluate("mmOpen()"); pg.wait_for_timeout(200)
     ok(pg.evaluate("window._mmPaper") is None and 'Results' in pg.inner_text('#mmSec'), 'opening from the Words panel goes back to the document')
+    LIT = {"runs":[{"from":1,"to":2,"move":"L1","label":"Summarises Delhi and Kerala studies","quote":"Kumar (2019) found anxiety"}]}
+    v = pg.evaluate("r=>mmValidate(r,{title:'Review of literature',sents:[{p:1,t:'Kumar (2019) found anxiety in Delhi students.'},{p:1,t:'Rao (2020) found the same in Kerala.'},{p:1,t:'Both used the GAD-7.'}]},'lit')", LIT)
+    ok(pg.evaluate("mmGuess('Chapter 2: Review of Literature')") == 'lit' and v['missing'] == ['K2'], 'literature review recognised; summary-only review lacks a stance: %s' % v['missing'])
     bad = [e for e in errs if e[0] == 'pageerror']
     ok(not bad, 'no page errors %s' % bad[:3])
     b.close()

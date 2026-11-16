@@ -19367,7 +19367,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16m';
+const APP_BUILD='2026.11.16n';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23883,10 +23883,19 @@ const MM_SETS={
   ['I3A','Outlines the purpose','उद्देश्य बताना',0,'T3'],['I3B','Announces the present study','इस study का परिचय',0,'T3'],['I3C','States research questions or hypotheses','रिसर्च सवाल या hypotheses',0,'T3'],
   ['I3D','Defines key terms','मुख्य शब्दों की परिभाषा',0,'T3'],['I3E','Summarises the methods','Methods का सार',0,'T3'],['I3F','Announces the main findings','मुख्य नतीजों की घोषणा',0,'T3'],
   ['I3G','States the value of the study','Study का महत्व',0,'T3'],['I3H','Outlines the paper','Paper की रूपरेखा',0,'T3']]},
- disc:{name:['Discussion','Discussion'],src:'Yang and Allison (2003), Discussion moves',moves:[
-  ['D1','Background or reminder of the aim','पृष्ठभूमि या लक्ष्य की याद',0],['D2','Main finding and why it matters','मुख्य नतीजा और उसका महत्व',1],['D3','Compares with earlier studies','पहले की studies से तुलना',1],
-  ['D4','Explains or interprets the finding','नतीजे की व्याख्या',1],['D5','Strengths of the study','Study की ताक़त',0],['D6','Limitations','सीमाएँ',1],
-  ['D7','Implications for practice or policy','काम या नीति के लिए अर्थ',1],['D8','What future research should do','आगे की रिसर्च क्या करे',1],['D9','Closing summary','समापन',0]]},
+ disc:{name:['Discussion','Discussion'],src:'Cotos, Link and Huffman (2016), four Discussion moves (900 articles, 30 disciplines); steps under each move are Appuscholar\'s own until the authors\' step list is checked',
+  groups:{D1:['Move 1, re-establishing the territory','Move 1, क्षेत्र को फिर से याद दिलाना',0],D2:['Move 2, framing the new knowledge','Move 2, नए ज्ञान को सामने रखना',1],D3:['Move 3, re-shaping the territory','Move 3, क्षेत्र को नए सिरे से गढ़ना',1],D4:['Move 4, establishing additional territory','Move 4, आगे का क्षेत्र खोलना',1]},moves:[
+  ['D1.1','Background or reminder of the aim','पृष्ठभूमि या लक्ष्य की याद',0,'D1'],
+  ['D2.1','Main finding and why it matters','मुख्य नतीजा और उसका महत्व',1,'D2'],['D2.2','Explains or interprets the finding','नतीजे की व्याख्या',1,'D2'],
+  ['D3.1','Compares with earlier studies (agrees or differs)','पहले की studies से तुलना (मेल या अंतर)',1,'D3'],
+  ['D4.1','Strengths of the study','Study की ताक़त',0,'D4'],['D4.2','Limitations','सीमाएँ',1,'D4'],['D4.3','Implications for practice or policy','काम या नीति के लिए अर्थ',1,'D4'],
+  ['D4.4','What future research should do','आगे की रिसर्च क्या करे',1,'D4'],['D4.5','Closing summary','समापन',0,'D4']]},
+ lit:{name:['Review of literature','Review of literature'],src:'Harris (2016), four moves of writing with sources, as taught in the University of Tartu Communicating Science course',
+  groups:{K1:['Telling the literature','Literature बताना',1],K2:['Taking your own stance','अपनी राय रखना',1]},moves:[
+  ['L1','Coming to terms: summarises, paraphrases or quotes a source','Coming to terms: स्रोत का सार, अपने शब्दों में या quote',0,'K1'],
+  ['L2','Forwarding: uses a source to push an argument or as authority','Forwarding: तर्क आगे बढ़ाने या प्रमाण के लिए स्रोत',0,'K1'],
+  ['L3','Countering: questions a source or adds a new direction','Countering: स्रोत पर सवाल या नई दिशा',0,'K2'],
+  ['L4','Taking an approach: builds on an author\'s approach for this study','Taking an approach: किसी लेखक के तरीके पर इस study को खड़ा करना',0,'K2']]},
  meth:{name:['Methods','Methods'],src:'Cotos, Huffman and Link (2017), DRaC model: Demonstrating Rigour and Credibility (English for Specific Purposes 46, 90–106). Percentages: share of 25 experts in that study who said the step is present in their field',
   groups:{C1:['Move 1, contextualising the study methods','Move 1, methods का संदर्भ',0],C2:['Move 2, describing the study','Move 2, study का ब्योरा',0],C3:['Move 3, establishing credibility','Move 3, भरोसा क़ायम करना',0]},moves:[
   ['C1.1','Refers to previous works','पहले के कामों का हवाला',1,'C1',100],['C1.2','Gives general information','सामान्य जानकारी',1,'C1',96],['C1.3','Names the methodological approach','तरीके (approach) का नाम',0,'C1',84],
@@ -23909,7 +23918,7 @@ function mmSections(){const out=[];let cur={title:'',sents:[]};let pn=0;
     if(/^H[1-4]$/.test(el.tagName)){if(cur.sents.length||cur.title)out.push(cur);cur={title:tx,sents:[]};return}
     pn++;mmSplit(tx).forEach(t=>cur.sents.push({p:pn,t:t}))});
   if(cur.sents.length||cur.title)out.push(cur);return out.filter(s=>s.sents.length)}
-function mmGuess(title){const t=String(title||'').toLowerCase();if(/discussion|चर्चा/.test(t))return'disc';if(/^(\d+[.)]?\s*)?(results?|findings)\b|परिणाम|नतीजे/.test(t))return'res';if(/method|procedure|participants|विधि|पद्धति/.test(t))return'meth';if(/abstract|सार/.test(t))return'abs';if(/introduction|background|भूमिका|परिचय/.test(t))return'intro';return''}
+function mmGuess(title){const t=String(title||'').toLowerCase();if(/discussion|चर्चा/.test(t))return'disc';if(/^(\d+[.)]?\s*)?(results?|findings)\b|परिणाम|नतीजे/.test(t))return'res';if(/method|procedure|participants|विधि|पद्धति/.test(t))return'meth';if(/review of (the )?literature|literature review|related (studies|work|literature)|साहित्य/.test(t))return'lit';if(/abstract|सार/.test(t))return'abs';if(/introduction|background|भूमिका|परिचय/.test(t))return'intro';return''}
 function mmPrompt(sec,kind){const S=MM_SETS[kind];
   return 'Label what each part of this '+S.name[0]+' section does, the way a writing teacher writes notes in the margin of a model paper.\n'+
   'Use ONLY these '+(S.groups?'steps':'moves')+' ('+S.src+'):\n'+(S.groups?Object.keys(S.groups).map(g=>S.groups[g][0]+':\n'+S.moves.filter(m=>m[4]===g).map(m=>'  '+m[0]+' = '+m[1]).join('\n')).join('\n'):S.moves.map(m=>m[0]+' = '+m[1]).join('\n'))+'\n\n'+
@@ -23942,7 +23951,7 @@ function mmOpen(given){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=documen
   if(!dlg){dlg=document.createElement('dialog');dlg.id='mmDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
   if(!given)window._mmPaper=null;
   const secs=given?given.secs:mmSections();window._mmSecs=secs;
-  const g=secs.map(x=>mmGuess(x.title));let pick=['disc','res','meth','intro','abs'].map(k=>g.indexOf(k)).find(x=>x>=0);if(pick==null)pick=0;
+  const g=secs.map(x=>mmGuess(x.title));let pick=['disc','res','meth','lit','intro','abs'].map(k=>g.indexOf(k)).find(x=>x>=0);if(pick==null)pick=0;
   const opts=secs.map((s,i)=>'<option value="'+i+'"'+(i===pick?' selected':'')+'>'+escHTML((s.title||L('Untitled part','बिना शीर्षक'))+' ('+s.sents.length+L(' sentences',' वाक्य')+')')+'</option>').join('');
   dlg.innerHTML='<div class="dlg-body"><h2>'+L('Margin map','Margin map')+'</h2>'+
    '<p class="desc">'+L('Like a teacher\'s notes in the margin of a model paper: each part of a section gets a note saying what it does here. Works on your own draft, or on a paper you brought in as a document. In your draft it also shows which parts are missing. Your text is not changed.','जैसे model paper के हाशिये पर शिक्षक के notes: section के हर हिस्से के साथ लिखा होता है कि वह यहाँ क्या कर रहा है। आपके अपने draft पर, या document के रूप में लाए गए paper पर चलता है। आपके draft में यह भी दिखाता है कि कौन-से हिस्से छूटे हैं। आपका text नहीं बदलता।')+'</p>'+
@@ -23981,7 +23990,8 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
   if(v.missing.length)h+='<div style="border:1px solid #f59e0b;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:13px"><b>'+L('Not found in this section:','इस section में नहीं मिला:')+'</b> '+v.missing.map(id=>escHTML(mmMissName(v.kind,id,hi))).join('; ')+
     '<div class="desc">'+L('If this is your draft, consider adding these. If it is a published paper, notice what the authors chose to leave out.','अगर यह आपका draft है, तो इन्हें जोड़ने पर विचार करें। अगर यह छपा हुआ paper है, तो देखें कि लेखकों ने क्या छोड़ा।')+'</div></div>';
   if((v.nonum||[]).length)h+='<p class="desc" style="color:#92400e">'+L((v.nonum.length===1?'One part reports':v.nonum.length+' parts report')+' results without any number. Give the statistic, its exact value and the effect size.',v.nonum.length+' हिस्सों में नतीजे बिना किसी संख्या के हैं। Statistic, उसका सटीक मान और effect size दें।')+'</p>';
-  if(v.comments)h+='<p class="desc">'+L('This Results section also comments on the results. Many psychology and medical journals want comments only in the Discussion; check your target journal.','यह Results section नतीजों पर टिप्पणी भी करता है। कई psychology और medical journals टिप्पणी सिर्फ़ Discussion में चाहते हैं; अपने journal के नियम देखें।')+'</p>';
+  if(v.kind==='lit'&&(v.missing||[]).indexOf('K2')>=0&&v.runs.length)h+='<p class="desc" style="color:#92400e">'+L('This review only reports what others found. Examiners look for your own stance: where studies disagree, what they missed, and which approach your study builds on.','यह review सिर्फ़ बताता है कि दूसरों ने क्या पाया। Examiner आपकी अपनी राय देखते हैं: studies कहाँ असहमत हैं, उनसे क्या छूटा, और आपकी study किस तरीके पर खड़ी है।')+'</p>';
+  if(v.comments)h+='<p class="desc">'+L('This Results section also comments on the results. That is allowed, and helps with an unexpected result, but keep what you found apart from what you think it means. Many psychology and medical journals want comments only in the Discussion; check your target journal.','यह Results section नतीजों पर टिप्पणी भी करता है। यह चलता है, और अनपेक्षित नतीजे में मदद करता है, पर जो मिला और जो आप उसका अर्थ समझते हैं, उन्हें अलग रखें। कई psychology और medical journals टिप्पणी सिर्फ़ Discussion में चाहते हैं; अपने journal के नियम देखें।')+'</p>';
   if(v.back>1)h+='<p class="desc" style="color:#92400e">'+L('The parts jump back and forth '+v.back+' times. A reader follows a section more easily when each kind of part sits together.','हिस्से '+v.back+' बार आगे-पीछे होते हैं। एक तरह के हिस्से साथ रहें तो पाठक आसानी से समझता है।')+'</p>';
   /* the page: margin notes on the left, text on the right, a bracket bar joining them */
   const at={};v.runs.forEach(r=>{at[r.from]=r});let i=1,rows='';
