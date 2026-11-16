@@ -17,10 +17,10 @@ RES = {"runs":[{"from":1,"to":1,"move":"R1","label":"Points to the sample table"
                {"from":2,"to":2,"move":"R2","label":"Says anxiety links to sleep, no figures","quote":"Anxiety was linked with poor sleep"},
                {"from":3,"to":3,"move":"R3","label":"Reads meaning into hostels","quote":"This suggests hostels matter"},
                {"from":4,"to":4,"move":"R2","label":"Gives the correlation","quote":"Anxiety and sleep were correlated"}]}
-METH = {"runs":[{"from":1,"to":1,"move":"M1","label":"Justifies a cross-sectional design","quote":"A cross-sectional design suited"},
-                {"from":2,"to":2,"move":"M2","label":"Convenience sample of 120 students","quote":"We sampled 120 nursing students"},
-                {"from":3,"to":3,"move":"M3","label":"Names the GAD-7","quote":"Anxiety was measured with the GAD-7"},
-                {"from":4,"to":4,"move":"M4","label":"Forms filled in class","quote":"Students filled the forms in class"}]}
+METH = {"runs":[{"from":1,"to":1,"move":"C1.3","label":"Justifies a cross-sectional design","quote":"A cross-sectional design suited"},
+                {"from":2,"to":2,"move":"C2.1","label":"Convenience sample of 120 students","quote":"We sampled 120 nursing students"},
+                {"from":3,"to":3,"move":"C2.4","label":"Names the GAD-7","quote":"Anxiety was measured with the GAD-7"},
+                {"from":4,"to":4,"move":"C2.3","label":"Forms filled in class","quote":"Students filled the forms in class"}]}
 
 with sync_playwright() as p:
     errs = []
@@ -43,7 +43,15 @@ with sync_playwright() as p:
     ok(pg.input_value('#mmKind') == 'meth', 'Methods recognised')
     pg.click('#mmRunBtn'); pg.wait_for_timeout(400)
     t = pg.inner_text('#mmOut')
-    ok('M5 Data analysis' in t and 'M6 Credibility' in t, 'missing analysis and credibility parts are listed: %s' % t[:300])
+    ok('C3.2 Describes the data analysis (experts: present in 96%)' in t and 'C1.1 Refers to previous works (experts: present in 100%)' in t and 'C1.4' not in t.split('Not found')[1].split('If this')[0], 'missing DRaC steps listed with expert shares, optional steps not demanded')
+    ok('Move 2, describing the study · C2.4 · Describes the tools' in t, 'note names the move and step')
+    pg.click('#mmQuizBtn'); pg.wait_for_timeout(100)
+    ok(pg.evaluate("document.querySelectorAll('#mmOut select.mm-q optgroup').length") >= 3, 'test-myself options grouped by move')
+    pg.click('#mmQuizBtn')
+    # introduction groups
+    INTRO = {"runs":[{"from":1,"to":1,"move":"I1A","label":"Says exam anxiety is common","quote":"Exam anxiety is common"}]}
+    v = pg.evaluate("r=>mmValidate(r,{title:'Introduction',sents:[{p:1,t:'Exam anxiety is common in colleges.'},{p:1,t:'It harms sleep.'},{p:1,t:'We ask why.'}]},'intro')", INTRO)
+    ok(v['missing'] == ['T2', 'T3'], 'introduction needs one step from each CARS move: %s' % v['missing'])
     pg.evaluate("document.getElementById('mmDlg').close()")
 
     # reading shelf paper
