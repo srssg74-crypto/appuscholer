@@ -9250,7 +9250,35 @@ function apiMsg(e){
 }
 
 /* ============ FIX 3: suggestion state always in sync ============ */
-function setSug(t){window._sug=t;aiOut.textContent=t;try{aiNoteSet('')}catch(e){}try{dockShow('ai')}catch(e){}if(t)try{aiReveal()}catch(e){}}
+function setSug(t){window._sug=t;window._trk=null;aiOut.textContent=t;try{trkShow(t)}catch(e){}try{aiNoteSet('')}catch(e){}try{dockShow('ai')}catch(e){}if(t)try{aiReveal()}catch(e){}}
+/* Tracked changes for an AI rewrite (idea from GenOffice, our own code). When the student selected text and the AI
+   rewrote it, the panel shows the rewrite as changes against the original: removed words struck through, new words
+   underlined. Each change is a button: press it to keep the original words there instead. Accept puts in only the
+   changes still switched on. Nothing is shown this way when nothing was selected (Continue writing). */
+function trkTok(x){return String(x||'').match(/\s+|[^\s]+/g)||[]}
+function trkDiff(a,b){const A=trkTok(a),B=trkTok(b),n=A.length,m=B.length;if(n*m>4e6)return null;
+  const L=Array.from({length:n+1},()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  const out=[];let i=0,j=0,cur=null;const push=(k,x)=>{if(k==='eq'){if(cur){out.push(cur);cur=null}const l=out[out.length-1];if(l&&l.k==='eq')l.t+=x;else out.push({k:'eq',t:x})}else{if(!cur)cur={k:'ch',del:'',ins:'',on:true};cur[k]+=x}};
+  while(i<n&&j<m){if(A[i]===B[j]){push('eq',A[i]);i++;j++}else if(L[i+1][j]>=L[i][j+1]){push('del',A[i]);i++}else{push('ins',B[j]);j++}}
+  while(i<n)push('del',A[i++]);while(j<m)push('ins',B[j++]);if(cur)out.push(cur);
+  /* a change made only of spaces is not worth a button */
+  return out.map(h=>h.k==='ch'&&!h.del.trim()&&!h.ins.trim()?{k:'eq',t:h.ins}:h)}
+function trkText(h){return h.map(x=>x.k==='eq'?x.t:(x.on?x.ins:x.del)).join('')}
+function trkShow(t){let orig='';try{if(hasSelection())orig=savedRange.toString()}catch(e){}
+  if(!t||orig.trim().length<20||t.length>orig.length*4)return;
+  const h=trkDiff(orig,t);if(!h)return;const n=h.filter(x=>x.k==='ch').length;if(!n)return;
+  window._trk=h;trkRender()}
+function trkRender(){const h=window._trk;if(!h)return;const hi=getLang()==='hi';
+  const n=h.filter(x=>x.k==='ch').length,on=h.filter(x=>x.k==='ch'&&x.on).length;
+  aiOut.innerHTML='<div class="desc" style="white-space:normal;margin-bottom:6px">'+(hi?n+' बदलाव, '+on+' चालू। किसी बदलाव को दबाएँ तो वहाँ आपके मूल शब्द रहेंगे।':n+' change'+(n===1?'':'s')+', '+on+' on. Press a change to keep your original words there.')+
+   ' <a href="#" onclick="trkAll(true);return false">'+(hi?'सब चालू':'All on')+'</a> · <a href="#" onclick="trkAll(false);return false">'+(hi?'सब बंद':'All off')+'</a></div>'+
+   h.map((x,i)=>x.k==='eq'?escHTML(x.t):'<button type="button" class="trk" data-i="'+i+'" aria-pressed="'+x.on+'" onclick="trkToggle('+i+')" title="'+escAttr(x.on?(hi?'दबाएँ: मूल शब्द रखें':'Press to keep your original words'):(hi?'दबाएँ: AI का बदलाव लें':'Press to take the AI change'))+'" style="all:unset;cursor:pointer;border-radius:4px;padding:0 1px;'+(x.on?'':'outline:1px dashed #94a3b8;')+'">'+
+     (x.del?'<del style="color:#b91c1c;'+(x.on?'':'text-decoration:none;color:inherit')+'">'+escHTML(x.del)+'</del>':'')+
+     (x.ins?'<ins style="color:#15803d;text-decoration:underline;'+(x.on?'':'opacity:.45;text-decoration:line-through')+'">'+escHTML(x.ins)+'</ins>':'')+'</button>').join('');
+  window._sug=trkText(h)}
+function trkToggle(i){const h=window._trk;if(!h||!h[i])return;h[i].on=!h[i].on;trkRender()}
+function trkAll(v){const h=window._trk;if(!h)return;h.forEach(x=>{if(x.k==='ch')x.on=v});trkRender()}
 /* Shows an AI error where the student is looking: the AI pane stays open and a toast repeats it. */
 /* Settings button: one tiny call whose exact result is printed inside the Settings window itself. */
 async function aiTest(){
@@ -9278,13 +9306,14 @@ async function aiTest(){
 function showAIError(e){const m=apiMsg(e);window._sug=null;aiOut.textContent=m;try{dockShow('ai')}catch(x){}try{showToast(m)}catch(x){}}
 /* An AI error used to land in the AI suggestion tab while the Tools tab stayed in front, so the student saw nothing. Show it and say it. */
 function sugFail(e){const m=apiMsg(e);clearSug('⚠️ '+m);try{dockShow('ai')}catch(x){}showToast(m)}
-function clearSug(msg){window._sug=null;aiOut.textContent=msg;try{aiNoteSet('')}catch(e){}try{dockShow('tools')}catch(e){}}
+function clearSug(msg){window._sug=null;window._trk=null;aiOut.textContent=msg;try{aiNoteSet('')}catch(e){}try{dockShow('tools')}catch(e){}}
 function copyAI(){
   const t=window._sug||'';if(!t){showToast('Nothing to copy yet');return}
   navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy — select the text instead'));
 }
 function acceptAI(){
   const s=window._sug;if(!s){showToast('No suggestion to accept yet');return}
+  if(window._trk&&!window._trk.some(x=>x.k==='ch'&&x.on)){clearSug(t('ai_pane_placeholder'));showToast(getLang()==='hi'?'सारे बदलाव बंद थे; आपका text जैसा था वैसा है':'All changes were off; your text is unchanged');return}
   insertIntoEditor(s,hasSelection(),true);
   clearSug('Your AI suggestion will appear here…');
   showToast('Inserted ✓ — Ctrl+Z to undo');
@@ -19331,7 +19360,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16h';
+const APP_BUILD='2026.11.16i';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
