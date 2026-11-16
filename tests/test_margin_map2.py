@@ -80,6 +80,9 @@ with sync_playwright() as p:
     LIT = {"runs":[{"from":1,"to":2,"move":"L1","label":"Summarises Delhi and Kerala studies","quote":"Kumar (2019) found anxiety"}]}
     v = pg.evaluate("r=>mmValidate(r,{title:'Review of literature',sents:[{p:1,t:'Kumar (2019) found anxiety in Delhi students.'},{p:1,t:'Rao (2020) found the same in Kerala.'},{p:1,t:'Both used the GAD-7.'}]},'lit')", LIT)
     ok(pg.evaluate("mmGuess('Chapter 2: Review of Literature')") == 'lit' and v['missing'] == ['K2'], 'literature review recognised; summary-only review lacks a stance: %s' % v['missing'])
+    MED = {"runs":[{"from":1,"to":1,"move":"B1","label":"Anxiety predicts poor sleep","quote":"Anxiety predicted poor sleep"},{"from":2,"to":2,"move":"B3","label":"Unlike Delhi study","quote":"Unlike a Delhi study"},{"from":3,"to":3,"move":"B2","label":"Small single-college sample","quote":"Our sample was small"}]}
+    v = pg.evaluate("r=>mmValidate(r,{title:'Discussion',sents:[{p:1,t:'Anxiety predicted poor sleep in students.'},{p:1,t:'Unlike a Delhi study, the link was strong.'},{p:1,t:'Our sample was small and from one college.'}]},'discmed')", MED)
+    ok(v['back'] == 1 and v['missing'] == ['B4', 'B5'], 'medical order: out-of-order part and missing parts found: %s %s' % (v['back'], v['missing']))
     bad = [e for e in errs if e[0] == 'pageerror']
     ok(not bad, 'no page errors %s' % bad[:3])
     b.close()

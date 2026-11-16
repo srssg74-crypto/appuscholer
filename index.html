@@ -19367,7 +19367,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16o';
+const APP_BUILD='2026.11.16p';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23890,6 +23890,10 @@ const MM_SETS={
   ['MEAN','Says what the results mean','नतीजों का अर्थ',0,'COMM'],['COMP','Compares with previous research','पहले की रिसर्च से तुलना',1,'COMM'],['EXPL','Explains results or their effects','नतीजों की व्याख्या या असर',0,'COMM'],['PRED','Makes predictions','अनुमान',0,'COMM'],['REACT','Reacts to results','नतीजों पर प्रतिक्रिया',0,'COMM'],
   ['LIM','Limitations of this study','इस study की सीमाएँ',1,'EV'],['STATE','Judges the state of knowledge or practice','ज्ञान या चलन की स्थिति का आकलन',0,'EV'],['CONTR','States the contribution','Study का योगदान',0,'EV'],['POS','Strengths of this study','इस study की ताक़त',0,'EV'],['GAD','Gaps in knowledge or other research','ज्ञान या दूसरी रिसर्च में कमी',0,'EV'],
   ['REC','Recommends future research or practice','आगे की रिसर्च या काम के सुझाव',0,'IMP'],['APP','Says where the results can be used','नतीजे कहाँ काम आएँगे',0,'IMP'],['HYP','Proposes hypotheses for future research','आगे की रिसर्च के लिए hypotheses',0,'IMP']]},
+ discmed:{name:['Discussion, medical journal order','Discussion, medical journal का क्रम'],src:'Docherty and Smith (1999), BMJ 318, 1224–1225, the order explained by Vieira, de Lima and Mizubuti (2019), Acta Scientiarum Agronomy 41, e42621 (CC BY)',moves:[
+  ['B1','Statement of principal findings','मुख्य नतीजों का कथन',1],['B2','Strengths and weaknesses of the study','Study की ताक़त और कमज़ोरियाँ',1],
+  ['B3','Strengths and weaknesses beside other studies, especially differences in results','दूसरी studies के मुक़ाबले ताक़त और कमज़ोरियाँ, ख़ासकर नतीजों में अंतर',1],
+  ['B4','Meaning of the study: possible mechanisms and implications','Study का अर्थ: संभावित कारण-तंत्र और निहितार्थ',1],['B5','Unanswered questions and future research','अनुत्तरित सवाल और आगे की रिसर्च',1]]},
  lit:{name:['Review of literature','Review of literature'],src:'Harris (2016), four moves of writing with sources, as taught in the University of Tartu Communicating Science course',
   groups:{K1:['Telling the literature','Literature बताना',1],K2:['Taking your own stance','अपनी राय रखना',1]},moves:[
   ['L1','Coming to terms: summarises, paraphrases or quotes a source','Coming to terms: स्रोत का सार, अपने शब्दों में या quote',0,'K1'],
@@ -23940,7 +23944,7 @@ function mmValidate(res,sec,kind){const S=MM_SETS[kind],ids=S.moves.map(m=>m[0])
   /* order is judged by move group when the set has groups (below) */
   /* order: moves that come back after a later move has started (for example limitations, then results again) */
   const gk=S.groups?Object.keys(S.groups):null;
-  const seq=ok.map(r=>gk?gk.indexOf((S.moves.find(m=>m[0]===r.move)||[])[4]):ids.indexOf(r.move));let back=0;for(let i=1;i<seq.length;i++)if(seq[i]<seq[i-1]-1)back++;
+  const seq=ok.map(r=>gk?gk.indexOf((S.moves.find(m=>m[0]===r.move)||[])[4]):ids.indexOf(r.move));let back=0;for(let i=1;i<seq.length;i++)if(seq[i]<seq[i-1]-(kind==='discmed'?0:1))back++;
   const cover=ok.reduce((a,r)=>a+(r.to-r.from+1),0);
   /* Results: a run that reports results must carry numbers; a sentence with a test result outside any run is counted */
   const nonum=kind==='res'?ok.filter(r=>r.move==='R4'&&!sec.sents.slice(r.from-1,r.to).some(x=>/\d/.test(x.t))).map(r=>r.from):[];
@@ -23993,6 +23997,7 @@ function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SE
     '<div class="desc">'+L('If this is your draft, consider adding these. If it is a published paper, notice what the authors chose to leave out.','अगर यह आपका draft है, तो इन्हें जोड़ने पर विचार करें। अगर यह छपा हुआ paper है, तो देखें कि लेखकों ने क्या छोड़ा।')+'</div></div>';
   if((v.nonum||[]).length)h+='<p class="desc" style="color:#92400e">'+L((v.nonum.length===1?'One part reports':v.nonum.length+' parts report')+' results without any number. Give the statistic, its exact value and the effect size.',v.nonum.length+' हिस्सों में नतीजे बिना किसी संख्या के हैं। Statistic, उसका सटीक मान और effect size दें।')+'</p>';
   if((v.strong||[]).length)h+='<p class="desc" style="color:#92400e">'+L('Strong cause words ("causes", "proves", "leads to") where you say what the results mean. Unless the design was an experiment, write "is related to" or "suggests", and say how sure you are.','जहाँ आप नतीजों का अर्थ बताते हैं, वहाँ "causes", "proves", "leads to" जैसे पक्के कारण वाले शब्द हैं। Design experiment न हो तो "is related to" या "suggests" लिखें, और बताएँ कि आप कितने निश्चित हैं।')+'</p>';
+  if(v.kind==='discmed'&&v.back>0)h+='<p class="desc" style="color:#92400e">'+L('The five parts are out of the order BMJ asks for: principal findings, strengths and weaknesses, comparison with other studies, meaning, then unanswered questions.','पाँचों हिस्से BMJ के क्रम में नहीं हैं: मुख्य नतीजे, ताक़त और कमज़ोरियाँ, दूसरी studies से तुलना, अर्थ, फिर अनुत्तरित सवाल।')+'</p>';
   if(v.kind==='lit'&&(v.missing||[]).indexOf('K2')>=0&&v.runs.length)h+='<p class="desc" style="color:#92400e">'+L('This review only reports what others found. Examiners look for your own stance: where studies disagree, what they missed, and which approach your study builds on.','यह review सिर्फ़ बताता है कि दूसरों ने क्या पाया। Examiner आपकी अपनी राय देखते हैं: studies कहाँ असहमत हैं, उनसे क्या छूटा, और आपकी study किस तरीके पर खड़ी है।')+'</p>';
   if(v.comments)h+='<p class="desc">'+L('This Results section also comments on the results. That is allowed, and helps with an unexpected result, but keep what you found apart from what you think it means. Many psychology and medical journals want comments only in the Discussion; check your target journal.','यह Results section नतीजों पर टिप्पणी भी करता है। यह चलता है, और अनपेक्षित नतीजे में मदद करता है, पर जो मिला और जो आप उसका अर्थ समझते हैं, उन्हें अलग रखें। कई psychology और medical journals टिप्पणी सिर्फ़ Discussion में चाहते हैं; अपने journal के नियम देखें।')+'</p>';
   if(v.back>1)h+='<p class="desc" style="color:#92400e">'+L('The parts jump back and forth '+v.back+' times. A reader follows a section more easily when each kind of part sits together.','हिस्से '+v.back+' बार आगे-पीछे होते हैं। एक तरह के हिस्से साथ रहें तो पाठक आसानी से समझता है।')+'</p>';
