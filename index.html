@@ -1439,6 +1439,8 @@ window.addEventListener('DOMContentLoaded',()=>{try{cfListenBtn()}catch(e){}});
       <p class="desc" id="citRealSummary" style="margin-top:2px"></p>
       <p class="desc" id="citNumMissing" style="margin-top:2px;font-weight:600"></p>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="rcRun(true)" data-i18n="rc_btn">🔎 Check that sources exist (Crossref)</button></div>
+      <p class="desc" id="citDupSummary" style="margin-top:2px;font-weight:600;color:#b45309"></p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="dupOpen()" data-i18n="dup_btn">🧹 Find the same paper saved twice</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ccOpen()" data-i18n="cc_btn">📚 Cross-check citations and references</button></div>
       <div id="citLib" style="margin-top:8px"><p class="desc" data-i18n="cite_no_sources">No sources yet.</p></div>
       <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()" data-i18n="cite_insertbib_btn">Insert reference list</button></div>
@@ -2723,7 +2725,7 @@ const I18N={
     retr_badge:'Retracted', retr_tip:"OpenAlex marks this paper as retracted. Check the publisher's notice before you cite it.",
     retr_lib_warn:"OpenAlex marks this source as retracted. Check the publisher's notice before you cite it.",
     retr_summary_fmt:'Checked {c} sources with a DOI for retractions: {r} flagged. {n} without a DOI could not be checked. No flag does not prove a paper is sound.',
-    rc_btn:'🔎 Check that sources exist (Crossref)', rc_busy:'Checking your sources against Crossref…', rc_done:'Source check done', rc_fail:'Could not reach Crossref right now. Try again in a moment.', rc_empty:'Add a source to your library first.',
+    dup_btn:'🧹 Find the same paper saved twice', rc_btn:'🔎 Check that sources exist (Crossref)', rc_busy:'Checking your sources against Crossref…', rc_done:'Source check done', rc_fail:'Could not reach Crossref right now. Try again in a moment.', rc_empty:'Add a source to your library first.',
     rc_summary_fmt:'Checked {n} sources against Crossref: {o} match, {d} differ, {f} not found. Books, reports, theses and Hindi sources are often not in Crossref, so "not found" is a prompt to look again, not proof the source is wrong.',
     rc_ok:'Found in Crossref and the details match.', rc_nf:'Not found in Crossref. Check the DOI, title and author, or the source may simply not be indexed there.', rc_doi_missing:'No DOI saved. The match below came from a title search:',
     rc_title:'Title differs. Crossref has:', rc_year:'Year differs. Crossref has:', rc_author:'First author differs. Crossref has:', rc_doi_found:'DOI found:', rc_err:'Could not check this one.',
@@ -2966,7 +2968,7 @@ const I18N={
     retr_badge:'वापस लिया गया', retr_tip:'OpenAlex इस शोध-पत्र को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_lib_warn:'OpenAlex इस स्रोत को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_summary_fmt:'DOI वाले {c} स्रोतों की वापसी (retraction) जांच की गई: {r} चिह्नित। DOI के बिना {n} स्रोतों की जांच नहीं हो सकी। कोई चिह्न न होना यह साबित नहीं करता कि शोध-पत्र भरोसेमंद है।',
-    rc_btn:'🔎 जांचें कि स्रोत मौजूद हैं (Crossref)', rc_busy:'आपके स्रोत Crossref से मिलाए जा रहे हैं…', rc_done:'स्रोतों की जांच पूरी हुई', rc_fail:'अभी Crossref तक नहीं पहुँच सके। थोड़ी देर बाद फिर कोशिश करें।', rc_empty:'पहले लाइब्रेरी में कोई स्रोत जोड़ें।',
+    dup_btn:'🧹 दो बार save हुए paper ढूँढें', rc_btn:'🔎 जांचें कि स्रोत मौजूद हैं (Crossref)', rc_busy:'आपके स्रोत Crossref से मिलाए जा रहे हैं…', rc_done:'स्रोतों की जांच पूरी हुई', rc_fail:'अभी Crossref तक नहीं पहुँच सके। थोड़ी देर बाद फिर कोशिश करें।', rc_empty:'पहले लाइब्रेरी में कोई स्रोत जोड़ें।',
     rc_summary_fmt:'{n} स्रोत Crossref से मिलाए गए: {o} मेल खाते हैं, {d} में अंतर है, {f} नहीं मिले। किताबें, रिपोर्ट, शोध-प्रबंध और हिन्दी स्रोत अक्सर Crossref में नहीं होते, इसलिए "नहीं मिला" का मतलब दोबारा देखना है, स्रोत गलत होना नहीं।', rc_ok:'Crossref में मिला और विवरण मेल खाते हैं।', rc_nf:'Crossref में नहीं मिला। DOI, शीर्षक और लेखक जाँचें, या हो सकता है यह स्रोत वहाँ दर्ज ही न हो।', rc_doi_missing:'कोई DOI सहेजा नहीं है। नीचे का मिलान शीर्षक की खोज से आया:',
     rc_title:'शीर्षक अलग है। Crossref में है:', rc_year:'वर्ष अलग है। Crossref में है:', rc_author:'पहला लेखक अलग है। Crossref में है:', rc_doi_found:'DOI मिला:', rc_err:'इसकी जांच नहीं हो सकी।',
     num_missing_fmt:'इस दस्तावेज़ में ऐसी संख्याएँ हैं जिनका आपकी लाइब्रेरी में कोई स्रोत नहीं: {n}।',
@@ -9215,7 +9217,7 @@ function removeKey(){
   refreshProvUI();
   showToast(PROVIDERS[p].short+' key removed ✓');
 }
-function openHelp(){document.getElementById('helpDlg').showModal()}
+function openHelp(){try{a11yInit()}catch(e){}document.getElementById('helpDlg').showModal()}
 
 /* ============ FIX 4: readable error messages ============ */
 function showRateLimitAlert(){
@@ -12325,6 +12327,7 @@ function citStyleNoteUpdate(){
 function citRender(){
   citStyleNoteUpdate();
   const l=citGetLib(),box=document.getElementById('citLib');
+  try{dupSummaryRender(l)}catch(e){}
   document.getElementById('citCount').textContent=l.length+(l.some(d=>d.scr)?' ('+citScrSummary(l)+')':'');
   const sumEl=document.getElementById('citUsageSummary');
   const retrEl=document.getElementById('citRetractSummary');
@@ -12511,7 +12514,7 @@ function citCrRecord(it){const ctype=String(it.type||''),dp=((it.issued||{})['da
     volume:it.volume||'',issue:it.issue||'',pages:it.page||(it['article-number']?'Article '+it['article-number']:''),doi:it.DOI||'',url:'',
     type:isCh?'Book chapter':isConf?'Conference paper':isRep?'Report':isThesis?'Thesis':isBook?'Book':'Journal article',style:(document.getElementById('citStyle')||{}).value||'apa',lang:'en'}}
 async function citDoiRecord(doi){const r=await fetch('https://api.crossref.org/works/'+encodeURIComponent(doi));if(!r.ok)return null;return citCrRecord((await r.json()).message)}
-function citLibHas(rec){const l=citGetLib(),k=citKey(rec);return l.some(e=>citKey(e)===k||(rec.doi&&e.doi&&e.doi.toLowerCase()===rec.doi.toLowerCase()))}
+function citLibHas(rec){const l=citGetLib(),k=citKey(rec);return l.some(e=>citKey(e)===k||(rec.doi&&e.doi&&e.doi.toLowerCase()===rec.doi.toLowerCase())||(typeof dupSameWork==='function'&&dupSameWork(e,rec)))}
 function citLibPush(recs){const l=citGetLib();let n=0;recs.forEach(r=>{if(r&&!citLibHas(r)){l.push(r);n++}});if(n)citSaveLib(l);return n}
 /* Website check: the four questions a reader asks of any page before trusting it. */
 const CIT_WC=[['who',['Who wrote it?','किसने लिखा?'],[['person','A named expert','नामित विशेषज्ञ'],['org','A known organisation','जानी-मानी संस्था'],['none','No author shown','लेखक नहीं दिखा']]],
@@ -19291,8 +19294,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=118;
-const APP_BUILD='2026.11.10y';
+const APP_VERSION=119;
+const APP_BUILD='2026.11.16f';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23379,6 +23382,200 @@ async function licenseGate(){
   return licensePromptLoop(null);
 }
 
+/* ============ Library duplicates, My prompts, shared links, accessibility (build 2026.11.16f) ============
+   Ideas taken from NotebookLM add-ons (NotebookLM Tools' duplicate scanner and saved /prompts, FolderLM's
+   source merge, the exporters) and from the INFLIBNET accessibility page. Our own code. Nothing leaves the device. */
+
+/* ---- 1. Duplicate finder for the citation library ----
+   Import already skips exact copies. This finds the near ones: the same DOI written two ways, a title with
+   different punctuation or case, a title with a small change. The student decides every pair; nothing is
+   merged on its own. A preprint and its published version often share a title but have different DOIs, so
+   such pairs carry a warning and "Not the same" is always offered. */
+function dupNormTitle(t){return String(t||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase()
+  .replace(/<[^>]*>/g,' ').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim().replace(/^(the|a|an) /,'')}
+function dupNormDoi(d){return String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'').replace(/^doi:\s*/i,'').replace(/[.,;:)\]]+$/,'').toLowerCase()}
+function dupSurname(a){const s=String(a||'').split(';')[0].trim();if(!s)return'';const p=s.includes(',')?s.split(',')[0]:s.split(/\s+/).pop();return dupNormTitle(p)}
+function dupWords(t){return new Set(dupNormTitle(t).split(' ').filter(w=>w.length>1))}
+function dupDice(a,b){if(!a.size||!b.size)return 0;let n=0;a.forEach(w=>{if(b.has(w))n++});return 2*n/(a.size+b.size)}
+function dupNotKey(a,b){return[a,b].sort().join('|')}
+function dupNotGet(){try{const v=JSON.parse(LS.get(pkey('appu_cit_notdup'))||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+/* Returns pairs [i,j,reason,warn]. fuzzy=false is the cheap check used on every library render. */
+function dupScan(l,fuzzy){
+  const out=[],seen=new Set(),not=new Set(dupNotGet());
+  const add=(i,j,why,warn)=>{if(i===j)return;const a=Math.min(i,j),b=Math.max(i,j),k=a+'|'+b;if(seen.has(k))return;
+    const ca=l[a].cid||'',cb=l[b].cid||'';if(ca&&cb&&not.has(dupNotKey(ca,cb)))return;seen.add(k);out.push([a,b,why,warn||''])};
+  const byDoi={},byTitle={},byAY={};
+  l.forEach((d,i)=>{if(!d)return;const doi=dupNormDoi(d.doi);if(/^10\.\d{4,9}\//.test(doi))(byDoi[doi]=byDoi[doi]||[]).push(i);
+    const t=dupNormTitle(d.title);if(t.length>=12)(byTitle[t]=byTitle[t]||[]).push(i);
+    if(fuzzy){const k=dupSurname(d.author)+'|'+String(d.year||'').trim();(byAY[k]=byAY[k]||[]).push(i)}});
+  Object.values(byDoi).forEach(g=>{for(let x=1;x<g.length;x++)add(g[0],g[x],'doi')});
+  Object.values(byTitle).forEach(g=>{for(let x=0;x<g.length;x++)for(let y=x+1;y<g.length;y++){const A=l[g[x]],B=l[g[y]];
+    const ya=parseInt(A.year,10),yb=parseInt(B.year,10),sa=dupSurname(A.author),sb=dupSurname(B.author);
+    if(ya&&yb&&Math.abs(ya-yb)>1)continue;if(sa&&sb&&sa!==sb)continue;
+    const da=dupNormDoi(A.doi),db=dupNormDoi(B.doi);add(g[x],g[y],'title',(da&&db&&da!==db)?'twodoi':(ya&&yb&&ya!==yb)?'year':'')}});
+  if(fuzzy)Object.entries(byAY).forEach(([k,g])=>{if(k.startsWith('|')||k.endsWith('|')||g.length<2||g.length>400)return;
+    const w=g.map(i=>dupWords(l[i].title));
+    for(let x=0;x<g.length;x++)for(let y=x+1;y<g.length;y++){if(dupDice(w[x],w[y])>=0.85){const da=dupNormDoi(l[g[x]].doi),db=dupNormDoi(l[g[y]].doi);add(g[x],g[y],'close',(da&&db&&da!==db)?'twodoi':'')}}});
+  return out}
+/* Same work for the import check: normalised DOI, or normalised title with the same surname and year. */
+function dupSameWork(a,b){const da=dupNormDoi(a.doi),db=dupNormDoi(b.doi);if(da&&db)return da===db;
+  const ta=dupNormTitle(a.title);return ta.length>=12&&ta===dupNormTitle(b.title)&&dupSurname(a.author)===dupSurname(b.author)&&String(a.year||'').trim()===String(b.year||'').trim()}
+function dupSummaryRender(l){const el=document.getElementById('citDupSummary');if(!el)return;const hi=getLang()==='hi';
+  let n=0;try{n=dupScan(l||citGetLib(),false).length}catch(e){}
+  el.innerHTML=n?'⚠ '+(hi?n+' जोड़े एक ही paper जैसे दिखते हैं। ':n+' pair'+(n===1?'':'s')+' look like the same paper. ')+'<a href="#" onclick="dupOpen();return false">'+(hi?'जाँचें':'Check them')+'</a>':'';}
+const DUP_FIELDS=[['author','Authors','लेखक'],['year','Year','वर्ष'],['title','Title','शीर्षक'],['source','Journal or source','Journal या स्रोत'],['volume','Volume','Volume'],['issue','Issue','Issue'],['pages','Pages','Pages'],['doi','DOI','DOI'],['url','Link','Link'],['type','Type','प्रकार']];
+function dupEmpty(v){return v==null||v===''||(Array.isArray(v)&&!v.length)||(typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length)}
+function dupUses(d,docs,i){try{return(citUsage(d,docs,i)||[]).length}catch(e){return 0}}
+function dupOpen(){
+  const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('dupDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='dupDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  const l=citGetLib(),pairs=dupScan(l,true);let docs=[];try{docs=citPlainDocs()}catch(e){}
+  const why={doi:L('Same DOI','एक ही DOI'),title:L('Same title','एक ही शीर्षक'),close:L('Nearly the same title, same first author and year','लगभग एक ही शीर्षक, वही पहले लेखक और वर्ष')};
+  const warn={twodoi:L('The two DOIs differ. This is often a preprint and the published paper. If so, choose "Not the same" and cite the published one.','दोनों DOI अलग हैं। अक्सर यह preprint और छपा हुआ paper होता है। ऐसा हो तो "एक नहीं हैं" चुनें और छपे हुए को cite करें।'),
+    year:L('The years differ by one. Check which is the final publication year.','वर्ष में एक का अंतर है। देखें कि अंतिम प्रकाशन वर्ष कौन-सा है।')};
+  const card=(d,i)=>{const u=dupUses(d,docs,i),sc=d.scr&&d.scr.st?d.scr.st:'';
+    return'<div style="flex:1;min-width:220px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px">'+
+      DUP_FIELDS.map(f=>dupEmpty(d[f[0]])?'':'<div><span class="desc">'+escHTML(hi?f[2]:f[1])+':</span> '+escHTML(String(d[f[0]]).slice(0,300))+'</div>').join('')+
+      '<div class="desc" style="margin-top:4px">'+[u?L('Cited ','Cite हुआ ')+u+L(' time'+(u===1?'':'s'),' बार'):L('Not cited yet','अभी cite नहीं'),d.shelf?L('PDF on shelf','Shelf पर PDF'):'',sc?L('Screening: ','Screening: ')+escHTML(sc):'',(d.notes||d.note)?L('Has notes','Notes हैं'):''].filter(Boolean).join(' · ')+'</div></div>'};
+  const fills=(k,r)=>DUP_FIELDS.filter(f=>dupEmpty(k[f[0]])&&!dupEmpty(r[f[0]])).map(f=>hi?f[2]:f[1]);
+  let h='<div class="dlg-body"><h2>'+L('Possible duplicates in your library','आपकी library में संभावित दोहराव')+'</h2>'+
+    '<p class="desc">'+L('Each pair below looks like one paper saved twice. You decide. "Keep" saves that copy and fills its empty fields from the other; citations in your documents, notes and the reading shelf move to the copy you keep. Nothing is merged unless you press a button.','नीचे हर जोड़ा एक ही paper जैसा लगता है जो दो बार save हुआ। फ़ैसला आपका है। "रखें" उस copy को रखता है और उसके खाली खाने दूसरी से भरता है; documents, notes और reading shelf के citations रखी गई copy पर चले जाते हैं। बटन दबाए बिना कुछ नहीं जुड़ता।')+'</p>';
+  if(!pairs.length)h+='<p style="font-weight:600;margin:14px 0">'+L('No likely duplicates found.','कोई संभावित दोहराव नहीं मिला।')+'</p>';
+  pairs.slice(0,60).forEach(([a,b,w,wn])=>{const A=l[a],B=l[b],fa=fills(A,B),fb=fills(B,A);
+    h+='<div class="dup-pair" style="border-top:1px solid var(--line);padding:10px 0"><b style="font-size:13px">'+escHTML(why[w]||'')+'</b>'+(wn?'<p class="desc" style="color:#b45309;margin:4px 0">⚠ '+escHTML(warn[wn])+'</p>':'')+
+      '<div class="row" style="gap:8px;align-items:stretch;flex-wrap:wrap;margin-top:6px">'+card(A,a)+card(B,b)+'</div>'+
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">'+
+      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+escAttr(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Keep the first','पहली रखें')+(fa.length?' (+'+escHTML(fa.join(', '))+')':'')+'</button>'+
+      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+escAttr(B.cid)+'\',\''+escAttr(A.cid)+'\')">'+L('Keep the second','दूसरी रखें')+(fb.length?' (+'+escHTML(fb.join(', '))+')':'')+'</button>'+
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="dupNotSame(\''+escAttr(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Not the same','एक नहीं हैं')+'</button></div></div>'});
+  if(pairs.length>60)h+='<p class="desc">'+L('Showing the first 60. Resolve these and open the check again for the rest.','पहले 60 दिखाए गए हैं। इन्हें निपटाकर बाकी के लिए फिर खोलें।')+'</p>';
+  h+='<div class="row" style="margin-top:12px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'dupDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  dlg.innerHTML=h;if(!dlg.open)dlg.showModal()}
+function dupNotSame(a,b){const v=dupNotGet(),k=dupNotKey(a,b);if(v.indexOf(k)<0){v.push(k);LS.set(pkey('appu_cit_notdup'),JSON.stringify(v))}
+  try{citRender()}catch(e){}dupOpen()}
+/* Moves every reference to drop onto keep: documents (stored and the open editor), study records, notes,
+   the reading shelf. Citation ids are unique random strings, so a plain text swap inside stored values is exact. */
+async function dupMerge(keep,drop){
+  const hi=getLang()==='hi',l=citGetLib(),K=l.find(d=>d.cid===keep),R=l.find(d=>d.cid===drop);if(!K||!R||keep===drop)return;
+  const m=Object.assign({},K);Object.keys(R).forEach(k=>{if(k==='cid')return;
+    if(dupEmpty(m[k])&&!dupEmpty(R[k]))m[k]=R[k];
+    else if((k==='notes'||k==='note')&&typeof m[k]==='string'&&typeof R[k]==='string'&&R[k].trim()&&m[k].indexOf(R[k].trim())<0)m[k]=m[k]+'\n— \n'+R[k]});
+  const scrClash=K.scr&&R.scr&&K.scr.st&&R.scr.st&&K.scr.st!==R.scr.st;
+  const fix=v=>v.split(drop).join(keep).replace(/(data-cid=\\?")([^"\\]*)(\\?")/g,(x,a,b,c)=>a+[...new Set(b.split(','))].join(',')+c);
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.indexOf(drop)>=0){try{localStorage.setItem(k,fix(v))}catch(e){}}}}catch(e){}
+  try{if(typeof sessionKeys==='object')Object.keys(sessionKeys).forEach(k=>{const v=sessionKeys[k];if(typeof v==='string'&&v.indexOf(drop)>=0)sessionKeys[k]=fix(v)})}catch(e){}
+  try{if(typeof editor!=='undefined'&&editor)editor.querySelectorAll('span.cit[data-cid]').forEach(s=>{const c=s.getAttribute('data-cid')||'';if(c.split(',').indexOf(drop)>=0)s.setAttribute('data-cid',[...new Set(c.split(',').map(x=>x===drop?keep:x))].join(','))})}catch(e){}
+  const nl=citGetLib().filter(d=>d.cid!==drop&&d.cid!==keep);const at=l.findIndex(d=>d.cid===keep);nl.splice(Math.min(at,nl.length),0,m);citSaveLib(nl);
+  try{const ps=await shAll();for(const p of ps){if(p&&p.lib===drop){p.lib=keep;await shPut(p)}}}catch(e){}
+  try{citRefreshDoc()}catch(e){}try{citRender()}catch(e){}
+  showToast(scrClash?(hi?'जुड़ गया। दोनों के screening फ़ैसले अलग थे; रखी गई copy का फ़ैसला बचा है, उसे जाँच लें।':'Merged. The two screening decisions differed; the kept copy\'s decision stays, so check it.'):(hi?'जुड़ गया ✓':'Merged ✓'));
+  if(document.getElementById('dupDlg')&&document.getElementById('dupDlg').open)dupOpen()}
+
+/* ---- 2. My prompts in Ask Appuscholar ----
+   Type / in the Ask box to pick a saved prompt; the text goes into the box for the student to finish. Kept on this
+   device for this student, across projects. Starters are written to fit the coaching rule of the Ask panel. */
+const MP_START=[
+  {id:'s1',name:['Explain simply','सरल शब्दों में'],text:['Explain this idea in simple words with one everyday example: ','इस बात को सरल शब्दों में, रोज़ की एक मिसाल के साथ समझाइए: ']},
+  {id:'s2',name:['Weak points of my method','मेरे method की कमज़ोरियाँ'],text:['What are the weak points in this method, and how could I fix each one? Method: ','इस method में कमज़ोर बातें क्या हैं, और हर एक को कैसे सुधारूँ? Method: ']},
+  {id:'s3',name:['Find my variables','मेरे variables'],text:['In this study idea, which is the independent variable, which is the dependent variable, and what could confound it? Idea: ','इस study के idea में independent variable कौन-सा है, dependent variable कौन-सा, और कौन-सी बात नतीजे को बिगाड़ सकती है (confounder)? Idea: ']},
+  {id:'s4',name:['Questions my examiner may ask','Examiner के संभावित सवाल'],text:['Ask me three questions an examiner might ask about this, one at a time, and wait for my answer: ','इस पर examiner जो तीन सवाल पूछ सकता है, वे एक-एक करके पूछिए और मेरे जवाब का इंतज़ार कीजिए: ']}];
+function mpGet(){try{const v=JSON.parse(LS.get('appu_myprompts')||'null');if(Array.isArray(v))return v}catch(e){}
+  const hi=getLang()==='hi';return MP_START.map(p=>({id:p.id,name:p.name[hi?1:0],text:p.text[hi?1:0],starter:1}))}
+function mpSave(v){LS.set('appu_myprompts',JSON.stringify(v.slice(0,100)))}
+function mpMenuEl(){let m=document.getElementById('mpMenu');if(!m){const inp=document.getElementById('chatIn');if(!inp)return null;m=document.createElement('div');m.id='mpMenu';m.setAttribute('role','listbox');
+  m.style.cssText='display:none;border:1px solid var(--line);border-radius:10px;background:var(--card,#fff);box-shadow:0 6px 20px rgba(0,0,0,.12);max-height:220px;overflow:auto;margin:4px 0;font-size:13px';inp.insertAdjacentElement('afterend',m)}return m}
+let MP_SEL=0,MP_LIST=[];
+function mpMenuUpdate(){const inp=document.getElementById('chatIn'),m=mpMenuEl();if(!inp||!m)return;const v=inp.value;
+  if(!/^\/[^\n]*$/.test(v)||v.length>40){m.style.display='none';MP_LIST=[];return}
+  const q=dupNormTitle(v.slice(1));MP_LIST=mpGet().filter(p=>!q||dupNormTitle(p.name+' '+p.text).indexOf(q)>=0);
+  if(MP_SEL>=MP_LIST.length)MP_SEL=0;
+  m.innerHTML=MP_LIST.length?MP_LIST.map((p,i)=>'<div role="option" aria-selected="'+(i===MP_SEL)+'" data-i="'+i+'" style="padding:6px 10px;cursor:pointer;'+(i===MP_SEL?'background:var(--soft,#ede9fe)':'')+'"><b>/'+escHTML(p.name)+'</b> <span class="desc">'+escHTML(p.text.slice(0,70))+'</span></div>').join(''):
+    '<div style="padding:6px 10px" class="desc">'+(getLang()==='hi'?'कोई saved prompt नहीं मिला':'No saved prompt matches')+'</div>';
+  m.style.display='block';m.querySelectorAll('[data-i]').forEach(el=>el.onmousedown=e=>{e.preventDefault();mpPick(+el.dataset.i)})}
+function mpPick(i){const p=MP_LIST[i],inp=document.getElementById('chatIn');if(!p||!inp)return;inp.value=p.text;const m=mpMenuEl();if(m)m.style.display='none';MP_LIST=[];inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length)}catch(e){}}
+function mpSaveCurrent(){const hi=getLang()==='hi',inp=document.getElementById('chatIn');let t=inp?inp.value.trim():'';
+  if(!t){const u=[...document.querySelectorAll('#chatLog .msg.user')].pop();t=u?u.textContent.trim():''}
+  if(!t||t[0]==='/'){showToast(hi?'पहले Ask box में सवाल लिखें':'Type a question in the Ask box first');return}
+  const name=prompt(hi?'इस prompt का छोटा नाम:':'A short name for this prompt:',t.slice(0,30));if(name==null)return;
+  const v=mpGet();v.unshift({id:'p'+Date.now().toString(36),name:String(name).trim().slice(0,40)||t.slice(0,30),text:t.slice(0,1500)});mpSave(v);
+  showToast(hi?'Save हुआ। Ask box में / लिखकर चुनें।':'Saved. Type / in the Ask box to use it.')}
+function mpManage(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('mpDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='mpDlg';document.body.appendChild(dlg)}
+  const v=mpGet();
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('My prompts','मेरे prompts')+'</h2><p class="desc">'+L('Questions you ask again and again. In the Ask box, type / and pick one. They stay on this device.','जो सवाल आप बार-बार पूछते हैं। Ask box में / लिखें और चुनें। ये इसी device पर रहते हैं।')+'</p>'+
+    v.map((p,i)=>'<div style="border-top:1px solid var(--line);padding:8px 0"><input type="text" class="mp-n" data-i="'+i+'" value="'+escAttr(p.name)+'" aria-label="'+escAttr(L('Name','नाम'))+'" style="font-weight:600;margin-bottom:4px"><textarea class="mp-t" data-i="'+i+'" rows="2" aria-label="'+escAttr(L('Prompt text','Prompt का text'))+'">'+escHTML(p.text)+'</textarea><button type="button" class="btn btn-ghost btn-sm" onclick="mpDel('+i+')">'+L('Delete','हटाएँ')+'</button></div>').join('')+
+    '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" style="flex:1" onclick="mpAdd()">+ '+L('New prompt','नया prompt')+'</button><button type="button" class="btn btn-purple" style="flex:1" onclick="mpStore();document.getElementById(\'mpDlg\').close()">'+L('Save and close','Save करके बंद करें')+'</button></div></div>';
+  if(!dlg.open)dlg.showModal()}
+function mpStore(){const v=mpGet(),dlg=document.getElementById('mpDlg');if(!dlg)return v;
+  dlg.querySelectorAll('.mp-n').forEach(el=>{const p=v[+el.dataset.i];if(p){p.name=el.value.trim().slice(0,40)||p.name;delete p.starter}});
+  dlg.querySelectorAll('.mp-t').forEach(el=>{const p=v[+el.dataset.i];if(p)p.text=el.value.slice(0,1500)});
+  const out=v.filter(p=>p.text.trim());mpSave(out);return out}
+function mpAdd(){const v=mpStore();v.push({id:'p'+Date.now().toString(36),name:getLang()==='hi'?'नया prompt':'New prompt',text:' '});mpSave(v);mpManage()}
+function mpDel(i){const v=mpStore();v.splice(i,1);mpSave(v);mpManage()}
+/* Chat as notes: the questions and answers of this sitting, as a Markdown file. */
+function chatSaveMd(){const hi=getLang()==='hi',ms=[...document.querySelectorAll('#chatLog .msg')];
+  if(!ms.some(m=>m.classList.contains('ai')&&m.dataset.reply)){showToast(hi?'Save करने को कोई जवाब नहीं है':'No answers to save yet');return}
+  const d=new Date().toISOString().slice(0,10);let md='# Ask Appuscholar, '+d+'\n\n_'+(hi?'AI के जवाब। Cite करने से पहले असली स्रोत से जाँचें।':'AI answers. Check them against a real source before you cite anything.')+'_\n\n';
+  ms.forEach(m=>{if(m.classList.contains('user'))md+='## '+m.textContent.trim().replace(/\n+/g,' ')+'\n\n';else if(m.dataset.reply)md+=m.dataset.reply.trim()+'\n\n'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download='ask-appuscholar-'+d+'.md';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function mpInit(){const inp=document.getElementById('chatIn');if(!inp||inp.dataset.mp)return;inp.dataset.mp='1';
+  const hi=getLang()==='hi';inp.setAttribute('aria-autocomplete','list');
+  inp.addEventListener('input',mpMenuUpdate);
+  inp.addEventListener('blur',()=>setTimeout(()=>{const m=document.getElementById('mpMenu');if(m)m.style.display='none'},150));
+  inp.addEventListener('keydown',e=>{if(!MP_LIST.length)return;const m=document.getElementById('mpMenu');if(!m||m.style.display==='none')return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();MP_SEL=(MP_SEL+(e.key==='ArrowDown'?1:MP_LIST.length-1))%MP_LIST.length;mpMenuUpdate()}
+    else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();e.stopImmediatePropagation();mpPick(MP_SEL)}
+    else if(e.key==='Escape'){m.style.display='none';MP_LIST=[]}},true);
+  const row=document.createElement('div');row.className='row';row.id='mpRow';row.style.cssText='gap:8px;flex-wrap:wrap;margin-top:6px';
+  row.innerHTML='<button type="button" class="btn btn-ghost btn-sm" style="flex:1" onclick="mpSaveCurrent()">⭐ '+(hi?'यह सवाल save करें':'Save this question')+'</button><button type="button" class="btn btn-ghost btn-sm" style="flex:1" onclick="mpManage()">/ '+(hi?'मेरे prompts':'My prompts')+'</button><button type="button" class="btn btn-ghost btn-sm" style="flex:1" onclick="chatSaveMd()">⬇ '+(hi?'बातचीत notes में (.md)':'Save chat as notes (.md)')+'</button>';
+  const send=inp.parentNode.querySelector('.row');(send||inp).insertAdjacentElement('afterend',row);
+  const tip=document.createElement('p');tip.className='desc';tip.style.marginTop='4px';tip.textContent=hi?'सुझाव: Ask box में / लिखें और अपना saved prompt चुनें।':'Tip: type / in the Ask box to pick a saved prompt.';row.insertAdjacentElement('afterend',tip)}
+
+/* ---- 3. A link shared from another app (Android share sheet) ----
+   The installed app is offered in the phone's Share menu (share_target in the manifest). The shared link lands in
+   the Citation Manager and the usual Crossref or PubMed lookup runs. iPhone has no web share target; there the
+   student pastes the link into the DOI or link box. */
+function shareTargetCheck(){
+  let q;try{q=new URLSearchParams(location.search)}catch(e){return false}
+  if(!q.has('sh_url')&&!q.has('sh_text')&&!q.has('sh_title'))return false;
+  const url=(q.get('sh_url')||'').trim(),text=(q.get('sh_text')||'').trim(),title=(q.get('sh_title')||'').trim();
+  try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+  const all=[url,text,title].join(' ');const link=url||((text.match(/https?:\/\/\S+/)||[])[0]||'');
+  const doi=citExtractDoi(all),pmid=citExtractPmid(all);
+  if(!doi&&!pmid&&!link&&!title&&!text)return false;
+  try{showTool('cite')}catch(e){}
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v};
+  set('citDOI',doi||(pmid?'PMID '+pmid:''));set('citURL',link);
+  const tt=title&&!/^https?:/.test(title)?title:(text&&!/^https?:\/\/\S+$/.test(text)?text.replace(/https?:\/\/\S+/g,'').trim():'');set('citTitle',tt.slice(0,300));
+  showToast(getLang()==='hi'?'Share किया गया link मिला। Details ढूँढ रहे हैं…':'Shared link received. Looking up its details…');
+  if(doi||pmid||tt)setTimeout(()=>{try{citLookup()}catch(e){}},400);
+  return true}
+
+/* ---- 4. Accessibility statement (Help) ----
+   Inspired by the "Screen Reader Access" page Indian government and university sites carry. It names only what is
+   true today, says what has not been tested, and gives a way to report a barrier. */
+function a11yHTML(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;
+  return'<summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">♿ '+L('Accessibility and screen readers','Accessibility और screen reader')+'</summary>'+
+  '<div style="font-size:13px;line-height:1.7;margin-top:8px">'+
+  '<p><b>'+L('What works now','अभी क्या चलता है')+'</b></p><ul style="margin:0 0 6px 18px;padding:0">'+
+  '<li>'+L('Comfort settings (above): four text sizes, strong contrast, heavier text, roomy spacing, calm motion. All are off until you turn them on.','Comfort settings (ऊपर): text के चार आकार, तेज़ contrast, मोटा text, खुली spacing, धीमी हलचल। आप चालू न करें तो सब बंद रहते हैं।')+'</li>'+
+  '<li>'+L('Listen button (Alt+L) reads the open window, the Home screen or the current tool aloud, in English or Hindi.','Listen बटन (Alt+L) खुली window, Home screen या चालू tool को English या हिंदी में पढ़कर सुनाता है।')+'</li>'+
+  '<li>'+L('Language switch: English or Hindi for the interface.','भाषा: interface English या हिंदी में।')+'</li>'+
+  '<li>'+L('Keyboard: Tab and Shift+Tab move between controls; Enter sends in the Ask box; Esc closes a window; in the Ask box, / opens your saved prompts.','Keyboard: Tab और Shift+Tab से controls के बीच चलें; Ask box में Enter से भेजें; Esc से window बंद; Ask box में / से saved prompts खुलते हैं।')+'</li></ul>'+
+  '<p><b>'+L('Free screen readers','मुफ़्त screen reader')+'</b></p><ul style="margin:0 0 6px 18px;padding:0">'+
+  '<li>NVDA '+L('for Windows (free, nvaccess.org)','Windows के लिए (मुफ़्त, nvaccess.org)')+'</li>'+
+  '<li>TalkBack '+L('on Android (built in: Settings, Accessibility)','Android पर (पहले से है: Settings, Accessibility)')+'</li>'+
+  '<li>VoiceOver '+L('on iPhone and Mac (built in)','iPhone और Mac पर (पहले से है)')+'</li></ul>'+
+  '<p><b>'+L('Honest status','सच्ची स्थिति')+'</b><br>'+L('Appuscholar has not yet been tested by a person who uses a screen reader. Charts, large statistics tables and pages of a PDF shown as pictures are the hardest parts: a chart has a written result beside it, but a table may be slow to read aloud. If anything blocks you, tell us and we fix that first.','Appuscholar को अभी तक किसी screen reader इस्तेमाल करने वाले व्यक्ति ने नहीं जाँचा है। Charts, बड़ी statistics tables और तस्वीर की तरह दिखे PDF पन्ने सबसे कठिन हैं: chart के पास लिखा हुआ नतीजा है, पर table को सुनना धीमा हो सकता है। कोई भी चीज़ रोके तो बताइए, हम उसे पहले ठीक करेंगे।')+'</p>'+
+  '<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'helpDlg\').close();repOpen()">'+L('Report an accessibility barrier','Accessibility की रुकावट बताएँ')+'</button></div></div>'}
+function a11yInit(){const dlg=document.getElementById('helpDlg');if(!dlg)return;let d=document.getElementById('a11yBox');
+  if(!d){d=document.createElement('details');d.id='a11yBox';d.style.marginTop='12px';const first=dlg.querySelector('.dlg-body details');if(first)first.insertAdjacentElement('beforebegin',d);else dlg.querySelector('.dlg-body').appendChild(d)}
+  d.innerHTML=a11yHTML()}
+function libToolsInit(){try{mpInit()}catch(e){}try{a11yInit()}catch(e){}
+  try{const h=document.getElementById('helpDlg');if(h&&!h.dataset.a11y){h.dataset.a11y='1';h.addEventListener('toggle',a11yInit)}}catch(e){}}
+
+
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
    A bookmarklet reads the citation_* meta tags most journals, PubMed and
@@ -23418,7 +23615,7 @@ function citCheckCaptureHash(){
     if(!confirm('Add this to your citation library?\n\n"'+d.title+'"\n'+(d.author||'(no author found)')+(d.year?' ('+d.year+')':'')))return;
     const rec={author:d.author||'',year:d.year||'',title:d.title,source:d.source||'',volume:'',issue:'',pages:'',doi:d.doi||'',url:d.doi?'':(d.url||''),type:'Journal article',style:'apa'};
     const l=citGetLib();
-    if(l.some(e=>e.title===rec.title&&e.author===rec.author)){showToast('Already in your library');return}
+    if(citLibHas(rec)){showToast(getLang()==='hi'?'यह पहले से आपकी library में है':'Already in your library');return}
     l.push(rec);citSaveLib(l);
     showToast('Captured "'+d.title+'" into your citation library ✓');
   }catch(e){showToast('Could not read that captured citation')}
@@ -23454,6 +23651,7 @@ function citCheckCaptureHash(){
   try{citRefreshDoc()}catch(e){}
   citSetupBookmarklet();
   citCheckCaptureHash();try{ideaInboxHash()}catch(e){}
+  try{libToolsInit()}catch(e){}try{shareTargetCheck()}catch(e){}
   refreshProvUI();
   upd();
   if(!POPOUT){
