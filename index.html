@@ -3996,6 +3996,7 @@ function wExtra2HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
      dgPlanHTML(o)+(c.syn?'<p class="desc" style="margin:6px 0 0">'+L('Synopsis made on ','Synopsis बना: ')+new Date(c.synAt).toLocaleDateString()+'. '+(synGaps(o)>0?L(synGaps(o)+' yellow [ ] gap'+(synGaps(o)===1?'':'s')+' still to fill. This step is done when none are left.',synGaps(o)+' पीली [ ] जगहें अभी भरनी हैं। कोई जगह बाक़ी न रहे, तब यह कदम पूरा होगा।'):synGaps(o)<0?L('The synopsis document was deleted; make it again.','Synopsis का document हटा दिया गया; फिर से बनाएँ।'):L('No gaps left ✓','कोई जगह बाक़ी नहीं ✓'))+' <a href="#" onclick="synOpen();return false">'+L('Open it','खोलें')+'</a></p>':''))}
   if(id==='F1'){const f=(w.F1||{}).done||{},row=(k,t,act,btn)=>'<div style="display:flex;gap:8px;align-items:center;margin:5px 0;font-size:14px"><input type="checkbox"'+(f[k]?' checked':'')+' onchange="f1Tick(\''+k+'\',this.checked)"><span style="flex:1">'+t+'</span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();'+act+'">'+btn+'</button></div>';
     return box(f1Ok(o),L('Integrity checks','ईमानदारी की जाँच'),'<p class="desc" style="margin:4px 0">'+L('Run each check on the finished book, fix what it finds, then tick it.','पूरी किताब पर हर जाँच चलाएँ, जो मिले उसे ठीक करें, फिर tick करें।')+'</p>'+
+     row('coh',L('The study holds together, problem to conclusion (recommended)','Study समस्या से निष्कर्ष तक एक सूत्र में है (सुझाया गया)'),'cohOpen()',L('Check','जाँचें'))+
      row('sim',L('Closeness to your sources (similarity)','आपके स्रोतों से मिलान (similarity)'),"showTool('close')",L('Open','खोलें'))+
      row('cite',L('Every citation is real and in the reference list','हर citation असली है और reference list में है'),'ccOpen()',L('Check','जाँचें'))+
      row('retr',L('No retracted paper cited without saying so','कोई retracted paper बिना बताए cite नहीं'),"showTool('cite');try{citRetractionRefresh(true)}catch(e){}",L('Check','जाँचें'))+
@@ -19330,7 +19331,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16g';
+const APP_BUILD='2026.11.16h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23679,6 +23680,145 @@ function jfRender(g,total,kw){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,out=docu
       '<div style="margin-top:3px;font-size:12.5px">'+(s.home&&/^https?:\/\//.test(s.home)?'<a href="'+escAttr(s.home)+'" target="_blank" rel="noopener">'+L('Journal site','Journal की site')+'</a> · ':'')+
       '<a href="https://www.scimagojr.com/journalsearch.php?q='+q+'" target="_blank" rel="noopener">SJR</a>'+'</div></div>'}).join('')+
    '<p class="desc" style="margin-top:8px">'+L('Counts depend on the words you gave. A journal near the top is a match in topic, not proof of quality. Before you submit, tick the "Choosing a journal" list in stage 6.','गिनती आपके दिए शब्दों पर निर्भर है। ऊपर वाला journal विषय में मेल खाता है, अच्छी quality का सबूत नहीं। भेजने से पहले stage 6 की "Journal चुनना" list पूरी करें।')+'</p>'}
+
+/* ============ Does my study hold together? (coherence audit, build 2026.11.16h) ============
+   Idea and check list from academic-writing-skills by Muhammad Nabil Deja (MIT licence, github.com/Nbill27/
+   academic-writing-skills, v1.2.0): the research chain, ten dimensions RC01 to RC10, five reviewer lenses,
+   severity rules and quote validation. Our own code and wording.
+   The AI reads the student's own document once, through five lenses (one call, not five independent reviewers,
+   and the screen says so). Code then checks every finding: the quote must appear word for word in the
+   document, the line number comes from where the quote is found, and the severity rules are applied. Findings
+   whose quote is not in the document are shown apart, never mixed with the checked ones. Nothing in the
+   document is changed. */
+const COH_DIMS=[['RC01','Problem and gap','समस्या और गैप'],['RC02','Questions, objectives, hypotheses and conclusions match','सवाल, उद्देश्य, hypotheses और निष्कर्ष आपस में मेल खाते हैं'],
+ ['RC03','Theory is used, not only described','Theory का इस्तेमाल हुआ है, सिर्फ़ वर्णन नहीं'],['RC04','Variables, definitions and instruments agree','Variables, परिभाषाएँ और tools आपस में मेल खाते हैं'],
+ ['RC05','The design can answer the questions','Design सवालों का जवाब दे सकता है'],['RC06','Sample, tools, data collection and analysis fit','Sample, tools, data collection और analysis आपस में ठीक बैठते हैं'],
+ ['RC07','Discussion matches the results obtained','Discussion मिले हुए results से मेल खाता है'],['RC08','Claims stay within the evidence','दावे सबूत की सीमा में हैं'],
+ ['RC09','Terms, numbers, samples and places agree across sections','Terms, संख्याएँ, sample और जगहें हर section में एक जैसी हैं'],['RC10','No leaps, circles, broken promises or drift','कोई छलाँग, गोल तर्क, अधूरा वादा या भटकाव नहीं']];
+const COH_CHAIN=[['problem','Problem','समस्या'],['gap','Gap','गैप'],['question','Question','सवाल'],['objective','Objective or hypothesis','उद्देश्य या hypothesis'],['method','Method','Method'],['results','Results','Results'],['conclusion','Conclusion','निष्कर्ष']];
+const COH_LENS={logic:['Logic','तर्क'],consistency:['Consistency','एकरूपता'],method:['Method','Method'],evidence:['Evidence','सबूत'],devil:["Devil's advocate",'उलटा पक्ष']};
+const COH_MAX=45000;
+function cohNorm(x){return String(x||'').replace(/[‘’‚′]/g,"'").replace(/[“”„″]/g,'"').replace(/[–—−]/g,'-').replace(/ /g,' ').replace(/\s+/g,' ').trim()}
+function cohLines(text){return String(text||'').split(/\n+/).map(s=>s.trim()).filter(Boolean)}
+/* Where a quote sits: the line number (1-based) or 0 when the words are not in the document. */
+function cohFind(lines,quote){const q=cohNorm(quote);if(q.length<8||/\.\.\.|…/.test(String(quote||'')))return 0;
+  for(let i=0;i<lines.length;i++){if(cohNorm(lines[i]).indexOf(q)>=0)return i+1}
+  const all=cohNorm(lines.join(' '));const at=all.indexOf(q);if(at<0)return 0;
+  let n=0;for(let i=0;i<lines.length;i++){n+=cohNorm(lines[i]).length+1;if(n>at)return i+1}return 0}
+function cohPrompt(numbered,design){
+  return 'You are reviewing a student\'s own research manuscript before they show it to a supervisor. Read ALL of it. Test whether the research holds together as one chain of reasoning, not whether it follows a format.\n\n'+
+  'Trace the chain the manuscript actually uses: problem and its evidence, gap, research question, objective or hypothesis, theory and constructs, design and method, sample and data, instrument and procedure, analysis, results, discussion, conclusion, contribution. For each link ask whether the next part answers, operationalises or depends on the previous one. One objective may answer several questions if the mapping is clear; do not demand equal counts.\n'+
+  (design?'The student says the design is: '+design+'. Judge it by that design (for qualitative work do not use statistical validity terms; for a review check the search, criteria, screening counts and synthesis).\n':'Work out the design from the text.\n')+
+  '\nCheck these ten dimensions: RC01 problem and gap; RC02 questions, objectives, hypotheses and conclusions match; RC03 theory is used, not only presented; RC04 constructs, definitions, indicators and instruments agree; RC05 the design can answer the questions; RC06 sample, instruments, collection and analysis fit each other; RC07 discussion matches the results actually obtained (association is not causation, significance is not effect size); RC08 claims and contributions stay within the evidence; RC09 terms, numbers, samples, places, periods and methods agree across sections; RC10 logical leaps, circular reasoning, unfulfilled promises, scope drift.\n'+
+  'Read through five lenses, one after another: logic, consistency, method, evidence, devil (alternative explanations, confounders, boundary conditions; never invent objections).\n\n'+
+  'RULES. Every finding must quote the manuscript EXACTLY, copied character for character from one line, 8 to 200 characters, no ellipsis, no paraphrase. If you cannot quote it, do not report it. Look for an innocent explanation before giving high severity. Merge findings with one root cause and report the most upstream cause. Missing material (an appendix, the data, an instrument) is "not_assessable", not a defect. Do not rewrite the manuscript.\n'+
+  'severity: critical (a central conclusion is shown to be invalid or contradicted), major (question, design, measurement, analysis or evidence chain materially broken), moderate (bounded inconsistency or unsupported interpretation), minor (local clarification). status: confirmed, likely, potential. confidence: high, medium, low. critical needs confirmed and high; potential cannot be critical or major.\n'+
+  'type: contradiction, misalignment, unsupported_inference, missing_bridge, terminology_drift, scope_drift.\n\n'+
+  'Answer with JSON only, no other text:\n{"design":"...","chain":[{"step":"problem|gap|question|objective|method|results|conclusion","line":N,"quote":"exact words or empty","status":"clear|weak|missing","note":"one sentence"}],'+
+  '"checks":[{"id":"RC01","status":"found|not_found|not_assessable|not_applicable","basis":"one sentence"}],'+
+  '"findings":[{"id":"F01","check":"RC05","lens":"logic|consistency|method|evidence|devil","type":"...","title":"short","severity":"...","status":"...","confidence":"...","line":N,"quote":"exact words","related":"other section or line","problem":"why it is a problem","impact":"what it does to the study","recommendation":"what the student should do"}]}\n'+
+  (getLang()==='hi'?'Write title, note, basis, problem, impact and recommendation in natural Hindi (Devanagari), keeping technical terms in English. Quotes stay exactly as in the manuscript. Keep JSON keys and the fixed values in English.\n':'')+
+  '"found" means the dimension has at least one problem and needs a finding; "not_found" means no problem. Give all ten checks. At most 15 findings.\n\nMANUSCRIPT (line numbers in brackets):\n'+numbered}
+function cohParse(raw){let s=String(raw||'').trim().replace(/^```(?:json)?/i,'').replace(/```\s*$/,'');const a=s.indexOf('{'),b=s.lastIndexOf('}');if(a<0||b<a)return null;
+  try{return JSON.parse(s.slice(a,b+1))}catch(e){try{return JSON.parse(s.slice(a,b+1).replace(/,\s*([}\]])/g,'$1'))}catch(e2){return null}}}
+/* Code checks on what the AI returned. Pure function, so it is tested without a network. */
+function cohValidate(res,lines){const out={design:String((res&&res.design)||''),chain:[],checks:[],ok:[],rejected:[],notes:[]};if(!res)return out;
+  const SEV=['critical','major','moderate','minor'],ST=['confirmed','likely','potential'],CF=['high','medium','low'];
+  (Array.isArray(res.chain)?res.chain:[]).forEach(c=>{if(!c)return;const ln=c.quote?cohFind(lines,c.quote):0;
+    out.chain.push({step:String(c.step||''),status:['clear','weak','missing'].indexOf(c.status)>=0?c.status:'weak',note:String(c.note||'').slice(0,300),quote:ln?String(c.quote):'',line:ln})});
+  const seenId=new Set();
+  (Array.isArray(res.findings)?res.findings:[]).slice(0,25).forEach((f,i)=>{if(!f)return;
+    const g={id:String(f.id||('F'+(i+1))),check:String(f.check||'').toUpperCase(),lens:String(f.lens||''),type:String(f.type||''),title:String(f.title||'').slice(0,160),
+      severity:SEV.indexOf(f.severity)>=0?f.severity:'moderate',status:ST.indexOf(f.status)>=0?f.status:'potential',confidence:CF.indexOf(f.confidence)>=0?f.confidence:'low',
+      quote:String(f.quote||''),related:String(f.related||'').slice(0,200),problem:String(f.problem||'').slice(0,800),impact:String(f.impact||'').slice(0,500),rec:String(f.recommendation||'').slice(0,800),rule:''};
+    if(seenId.has(g.id))g.id=g.id+'-'+(i+1);seenId.add(g.id);
+    if(g.severity==='critical'&&!(g.status==='confirmed'&&g.confidence==='high')){g.severity='major';g.rule='critical_needs'}
+    if(g.status==='potential'&&(g.severity==='critical'||g.severity==='major')){g.severity='moderate';g.rule='potential_cap'}
+    const ln=cohFind(lines,g.quote);
+    if(!ln){g.why=g.quote.trim().length<8?'short':/\.\.\.|…/.test(g.quote)?'ellipsis':'notfound';out.rejected.push(g);return}
+    g.line=ln;out.ok.push(g)});
+  out.ok.sort((a,b)=>SEV.indexOf(a.severity)-SEV.indexOf(b.severity)||a.line-b.line);
+  const ck={};(Array.isArray(res.checks)?res.checks:[]).forEach(c=>{if(c&&c.id)ck[String(c.id).toUpperCase()]=c});
+  COH_DIMS.forEach(d=>{const c=ck[d[0]];let st=c&&['found','not_found','not_assessable','not_applicable'].indexOf(c.status)>=0?c.status:'missing';
+    const n=out.ok.filter(f=>f.check===d[0]).length;
+    if(st==='found'&&!n)st='found_unquoted';if((st==='not_found'||st==='missing')&&n)st='found';
+    out.checks.push({id:d[0],status:st,basis:c?String(c.basis||'').slice(0,300):'',n:n})});
+  return out}
+function cohKey(){let id='';try{id=docCurrentId()}catch(e){}return pkey('appu_coh_'+(id||'doc'))}
+function cohOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('cohDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='cohDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  let last=null;try{last=JSON.parse(LS.get(cohKey())||'null')}catch(e){}
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('Does my study hold together?','क्या मेरी study एक सूत्र में बँधी है?')+'</h2>'+
+   '<p class="desc">'+L('The AI reads your open document and follows the chain from problem to gap, question, method, results and conclusion. It checks ten points and reads with five lenses: logic, consistency, method, evidence and a devil\'s advocate. Then Appuscholar checks every finding: its quote must appear word for word in your document. Your document is not changed.','AI आपका खुला document पढ़ता है और समस्या से गैप, सवाल, method, results और निष्कर्ष तक की कड़ी देखता है। यह दस बातें जाँचता है और पाँच नज़रियों से पढ़ता है: तर्क, एकरूपता, method, सबूत और उलटा पक्ष। फिर Appuscholar हर बात जाँचता है: उसका quote आपके document में शब्दशः होना चाहिए। आपका document नहीं बदलता।')+'</p>'+
+   '<div class="fld"><label for="cohDesign">'+L('Design of the study','Study का design')+'</label><select id="cohDesign"><option value="">'+L('Let the AI work it out','AI ख़ुद पहचाने')+'</option>'+
+   [['quantitative survey or correlational','Quantitative: survey or correlational','Quantitative: survey या correlational'],['experimental or quasi-experimental','Experimental or quasi-experimental','Experimental या quasi-experimental'],['qualitative','Qualitative','Qualitative'],['mixed methods','Mixed methods','Mixed methods'],['systematic or scoping review','Systematic or scoping review','Systematic या scoping review'],['case study','Case study','Case study']].map(x=>'<option value="'+escAttr(x[0])+'">'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" style="flex:1" id="cohRunBtn" onclick="cohRun()">🔗 '+L('Check my open document','मेरा खुला document जाँचें')+'</button>'+
+   '<button type="button" class="btn btn-ghost" style="flex:1" onclick="cohSaveMd()">⬇ '+L('Save report (.md)','Report save करें (.md)')+'</button></div>'+
+   '<div id="cohOut" aria-live="polite">'+(last?cohRender(last,true):'')+'</div>'+
+   '<p class="desc" style="margin-top:10px">'+L('An AI review of your own draft, not approval by a supervisor, university or journal. One AI call reads through all five lenses; they are not five separate reviewers. Credit: the check list follows academic-writing-skills by Muhammad Nabil Deja (MIT licence).','आपके अपने draft की AI review, supervisor, university या journal की मंज़ूरी नहीं। एक ही AI call पाँचों नज़रियों से पढ़ती है; ये पाँच अलग reviewers नहीं हैं। श्रेय: जाँच-सूची academic-writing-skills (Muhammad Nabil Deja, MIT licence) पर आधारित।')+'</p>'+
+   '<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'cohDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  if(!dlg.open)dlg.showModal()}
+async function cohRun(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,out=document.getElementById('cohOut'),btn=document.getElementById('cohRunBtn');
+  let text='';try{text=editor.innerText||''}catch(e){}
+  const lines=cohLines(text);const words=text.split(/\s+/).filter(Boolean).length;
+  if(words<300){out.innerHTML='<p class="desc" style="color:#92400e">'+L('Your open document is too short to check ('+words+' words). Open the full draft: at least the introduction, method and results.','आपका खुला document जाँचने के लिए छोटा है ('+words+' शब्द)। पूरा draft खोलें: कम से कम introduction, method और results।')+'</p>';return}
+  let numbered='',cut=0;for(let i=0;i<lines.length;i++){const ln='['+(i+1)+'] '+lines[i]+'\n';if(numbered.length+ln.length>COH_MAX){cut=lines.length-i;break}numbered+=ln}
+  const design=(document.getElementById('cohDesign')||{}).value||'';
+  if(btn)btn.disabled=true;out.innerHTML='<p class="desc">'+L('Reading your document… this can take a minute.','आपका document पढ़ रहे हैं… इसमें एक मिनट लग सकता है।')+'</p>';
+  try{const raw=await callAI(cohPrompt(numbered,design),{temp:0.2,max:6000,noLang:true});
+    const res=cohParse(raw);if(!res){out.innerHTML='<p class="desc" style="color:#b91c1c">'+L('The AI did not answer in the expected form. Try again, or switch to another AI provider.','AI ने तय रूप में जवाब नहीं दिया। फिर कोशिश करें, या दूसरा AI provider चुनें।')+'</p>';return}
+    const v=cohValidate(res,lines);v.at=Date.now();v.cut=cut;v.lines=lines.length;v.words=words;
+    try{LS.set(cohKey(),JSON.stringify(v))}catch(e){}
+    out.innerHTML=cohRender(v,false)}
+  catch(e){out.innerHTML='<p class="desc" style="color:#b91c1c">'+escHTML(String(e&&e.message||e).slice(0,200))+'</p>'}
+  finally{if(btn)btn.disabled=false}}
+function cohRender(v,old){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;
+  const sevC={critical:'#b91c1c',major:'#c2410c',moderate:'#92400e',minor:'#475569'},sevT={critical:L('Critical','गंभीर'),major:L('Major','बड़ी'),moderate:L('Moderate','मध्यम'),minor:L('Minor','छोटी')};
+  const stT={confirmed:L('confirmed','पक्की'),likely:L('likely','संभावित'),potential:L('possible','शायद')};
+  const ckT={found:['⚠',L('Needs work','सुधार चाहिए'),'#92400e'],not_found:['✓',L('No problem seen','कोई दिक़्क़त नहीं दिखी'),'#166534'],not_assessable:['?',L('Cannot judge from the text','Text से तय नहीं हो सकता'),'#475569'],not_applicable:['–',L('Does not apply','लागू नहीं'),'#475569'],found_unquoted:['?',L('AI saw a problem but gave no checked quote','AI को दिक़्क़त दिखी पर जाँचा हुआ quote नहीं दिया'),'#475569'],missing:['?',L('Not answered by the AI','AI ने जवाब नहीं दिया'),'#475569']};
+  let h=old?'<p class="desc" style="margin-top:8px">'+L('Last check: ','पिछली जाँच: ')+new Date(v.at).toLocaleString()+'</p>':'';
+  if(v.cut)h+='<p class="desc" style="color:#92400e">⚠ '+L('The document was long; the last '+v.cut+' lines were not sent and were not checked.','Document लंबा था; आख़िरी '+v.cut+' lines नहीं भेजी गईं और जाँची नहीं गईं।')+'</p>';
+  if(v.design)h+='<p class="desc">'+L('Design read as: ','Design समझा गया: ')+escHTML(v.design)+'</p>';
+  /* the chain */
+  const byStep={};(v.chain||[]).forEach(c=>{if(!byStep[c.step])byStep[c.step]=c});
+  h+='<h3 style="margin:12px 0 6px;font-size:15px">'+L('The chain','कड़ी')+'</h3><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:stretch">'+
+   COH_CHAIN.map((s,i)=>{const c=byStep[s[0]],st=c?c.status:'missing',col=st==='clear'?'#166534':st==='weak'?'#92400e':'#b91c1c',ic=st==='clear'?'✓':st==='weak'?'⚠':'✗';
+     return(i?'<span aria-hidden="true" style="align-self:center;color:var(--muted,#888)">→</span>':'')+'<div style="border:1px solid '+col+';border-radius:8px;padding:5px 8px;font-size:12.5px;max-width:220px" title="'+escAttr(c?c.note:'')+'"><b style="color:'+col+'">'+ic+' '+escHTML(hi?s[2]:s[1])+'</b>'+(c&&c.note?'<div class="desc" style="font-size:11.5px">'+escHTML(c.note)+'</div>':(!c?'<div class="desc" style="font-size:11.5px">'+L('Not found in the text','Text में नहीं मिला')+'</div>':''))+(c&&c.line?'<a href="#" style="font-size:11.5px" onclick="cohGo('+c.line+');return false">'+L('line ','line ')+c.line+'</a>':'')+'</div>'}).join('')+'</div>';
+  /* ten checks */
+  h+='<h3 style="margin:14px 0 6px;font-size:15px">'+L('Ten checks','दस जाँचें')+'</h3><div style="font-size:13px">'+
+   (v.checks||[]).map(c=>{const d=COH_DIMS.find(x=>x[0]===c.id)||[c.id,c.id,c.id],t=ckT[c.status]||ckT.missing;
+     return'<div style="display:flex;gap:8px;padding:3px 0;border-top:1px solid var(--line)"><span style="color:'+t[2]+';font-weight:700;min-width:16px">'+t[0]+'</span><span style="flex:1"><b>'+escHTML(hi?d[2]:d[1])+'</b> <span style="color:'+t[2]+'">'+escHTML(t[1])+(c.n?' ('+c.n+')':'')+'</span>'+(c.basis?'<br><span class="desc">'+escHTML(c.basis)+'</span>':'')+'</span></div>'}).join('')+'</div>';
+  /* findings */
+  h+='<h3 style="margin:14px 0 6px;font-size:15px">'+L('Findings checked against your text','आपके text से जाँची गई बातें')+' ('+(v.ok||[]).length+')</h3>';
+  if(!(v.ok||[]).length)h+='<p class="desc">'+L('No finding with a quote from your document.','आपके document के quote वाली कोई बात नहीं।')+'</p>';
+  (v.ok||[]).forEach(f=>{const lens=COH_LENS[f.lens];h+='<div style="border-top:1px solid var(--line);padding:8px 0;font-size:13px">'+
+    '<div><b style="color:'+sevC[f.severity]+'">'+escHTML(sevT[f.severity])+'</b> · '+escHTML(stT[f.status]||f.status)+' · '+escHTML(f.check)+(lens?' · '+escHTML(hi?lens[1]:lens[0]):'')+'</div>'+
+    '<div style="font-weight:600;margin:2px 0">'+escHTML(f.title)+'</div>'+
+    '<blockquote style="margin:4px 0;padding:4px 8px;border-left:3px solid #d97706;background:var(--soft,#faf5ff)">“'+escHTML(f.quote)+'” <a href="#" onclick="cohGo('+f.line+');return false">'+L('line ','line ')+f.line+'</a></blockquote>'+
+    (f.problem?'<div>'+escHTML(f.problem)+'</div>':'')+(f.impact?'<div class="desc">'+L('Effect: ','असर: ')+escHTML(f.impact)+'</div>':'')+(f.rec?'<div><b>'+L('What to do: ','क्या करें: ')+'</b>'+escHTML(f.rec)+'</div>':'')+(f.related?'<div class="desc">'+L('Related: ','जुड़ा हुआ: ')+escHTML(f.related)+'</div>':'')+
+    (f.rule?'<div class="desc">'+(f.rule==='critical_needs'?L('Lowered to major: "critical" needs a confirmed finding with high confidence.','Major किया गया: "गंभीर" के लिए पक्की बात और ऊँचा भरोसा चाहिए।'):L('Lowered to moderate: a possible finding cannot be major or critical.','मध्यम किया गया: "शायद" वाली बात बड़ी या गंभीर नहीं हो सकती।'))+'</div>':'')+'</div>'});
+  if((v.rejected||[]).length)h+='<details style="margin-top:10px"><summary style="cursor:pointer">'+L('Set aside: '+v.rejected.length+' finding'+(v.rejected.length===1?'':'s')+' whose quote is not in your document','अलग रखी गईं: '+v.rejected.length+' बातें जिनका quote आपके document में नहीं है')+'</summary><p class="desc">'+L('The AI may have paraphrased or made these up. Read them as unchecked ideas only.','AI ने इन्हें अपने शब्दों में लिखा या गढ़ा हो सकता है। इन्हें सिर्फ़ बिना जाँचे विचार मानें।')+'</p>'+
+    v.rejected.map(f=>'<div style="font-size:12.5px;padding:4px 0;border-top:1px solid var(--line)"><b>'+escHTML(f.title)+'</b> <span class="desc">('+escHTML(f.check)+')</span><br><span class="desc">“'+escHTML(f.quote.slice(0,200))+'”</span></div>').join('')+'</details>';
+  return h}
+/* Put the cursor on the quoted line in the editor, select it and scroll to it. */
+function cohGo(line){try{const dlg=document.getElementById('cohDlg');let v=null;try{v=JSON.parse(LS.get(cohKey())||'null')}catch(e){}
+  const f=v&&((v.ok||[]).find(x=>x.line===line)||(v.chain||[]).find(x=>x.line===line));const q=f?cohNorm(f.quote):'';
+  if(dlg&&dlg.open)dlg.close();
+  const tw=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT);let n;while((n=tw.nextNode())){const tx=cohNorm(n.nodeValue);if(q&&tx.indexOf(q.slice(0,40))>=0){
+    const i=n.nodeValue.indexOf(f.quote.slice(0,40).trim());const r=document.createRange();
+    if(i>=0){r.setStart(n,i);r.setEnd(n,Math.min(n.nodeValue.length,i+f.quote.length))}else r.selectNodeContents(n);
+    const s=getSelection();s.removeAllRanges();s.addRange(r);(n.parentElement||editor).scrollIntoView({block:'center'});return}}
+  showToast(getLang()==='hi'?'यह line अब document में नहीं मिली; शायद बदल दी गई है':'That line is no longer in the document; it may have been changed')}catch(e){}}
+function cohSaveMd(){let v=null;try{v=JSON.parse(LS.get(cohKey())||'null')}catch(e){}
+  if(!v){showToast(getLang()==='hi'?'पहले जाँच चलाएँ':'Run the check first');return}
+  const d=new Date(v.at).toISOString().slice(0,10);let md='# Does my study hold together? '+d+'\n\n_AI review of the student\'s own draft, quotes checked by Appuscholar. Not approval by a supervisor, university or journal._\n\n';
+  if(v.design)md+='Design: '+v.design+'\n\n';if(v.cut)md+='Not checked: the last '+v.cut+' lines (document too long).\n\n';
+  md+='## Chain\n\n'+COH_CHAIN.map(s=>{const c=(v.chain||[]).find(x=>x.step===s[0]);return'- '+s[1]+': '+(c?c.status+(c.note?' — '+c.note:''):'missing')}).join('\n')+'\n\n## Ten checks\n\n'+
+   (v.checks||[]).map(c=>{const dd=COH_DIMS.find(x=>x[0]===c.id);return'- '+c.id+' '+(dd?dd[1]:'')+': '+c.status+(c.basis?' — '+c.basis:'')}).join('\n')+'\n\n## Findings\n\n'+
+   (v.ok||[]).map(f=>'### '+f.id+' ('+f.severity+', '+f.status+', '+f.check+') '+f.title+'\n\n> '+f.quote+' (line '+f.line+')\n\n'+f.problem+'\n\nEffect: '+f.impact+'\n\nWhat to do: '+f.rec+'\n').join('\n')+
+   ((v.rejected||[]).length?'\n## Set aside (quote not found in the document)\n\n'+v.rejected.map(f=>'- '+f.title+' ('+f.check+')').join('\n')+'\n':'')+
+   '\nCheck list after academic-writing-skills by Muhammad Nabil Deja (MIT licence).\n';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download='study-coherence-'+d+'.md';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
