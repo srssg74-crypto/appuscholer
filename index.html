@@ -2728,6 +2728,8 @@ const I18N={
     dup_btn:'🧹 Find the same paper saved twice', rc_btn:'🔎 Check that sources exist (Crossref)', rc_busy:'Checking your sources against Crossref…', rc_done:'Source check done', rc_fail:'Could not reach Crossref right now. Try again in a moment.', rc_empty:'Add a source to your library first.',
     rc_summary_fmt:'Checked {n} sources against Crossref: {o} match, {d} differ, {f} not found. Books, reports, theses and Hindi sources are often not in Crossref, so "not found" is a prompt to look again, not proof the source is wrong.',
     rc_ok:'Found in Crossref and the details match.', rc_nf:'Not found in Crossref. Check the DOI, title and author, or the source may simply not be indexed there.', rc_doi_missing:'No DOI saved. The match below came from a title search:',
+    rc_source:'Journal differs. Crossref has:', rc_volume:'Volume differs. Crossref has:', rc_issue:'Issue differs. Crossref has:', rc_pages:'Pages differ. Crossref has:',
+    rc_upd_retr:'Retracted. Do not cite it as evidence.', rc_upd_corr:'A correction was published. Read it before you cite.', rc_upd_eoc:'Expression of concern published. Read it before you cite.', rc_upd_rein:'Reinstated after a retraction.', rc_upd_other:'An editorial update was published.', rc_upd_notice:'notice', rc_upd_pub:'publisher',
     rc_title:'Title differs. Crossref has:', rc_year:'Year differs. Crossref has:', rc_author:'First author differs. Crossref has:', rc_doi_found:'DOI found:', rc_err:'Could not check this one.',
     num_missing_fmt:'Numbers cited in this document with no source in your library: {n}.',
     cite_retract_btn:'🛡 Check for retractions', retr_done:'Retraction check done', retr_failed:'Could not run the retraction check right now. Try again in a moment.',
@@ -2970,6 +2972,8 @@ const I18N={
     retr_summary_fmt:'DOI वाले {c} स्रोतों की वापसी (retraction) जांच की गई: {r} चिह्नित। DOI के बिना {n} स्रोतों की जांच नहीं हो सकी। कोई चिह्न न होना यह साबित नहीं करता कि शोध-पत्र भरोसेमंद है।',
     dup_btn:'🧹 दो बार save हुए paper ढूँढें', rc_btn:'🔎 जांचें कि स्रोत मौजूद हैं (Crossref)', rc_busy:'आपके स्रोत Crossref से मिलाए जा रहे हैं…', rc_done:'स्रोतों की जांच पूरी हुई', rc_fail:'अभी Crossref तक नहीं पहुँच सके। थोड़ी देर बाद फिर कोशिश करें।', rc_empty:'पहले लाइब्रेरी में कोई स्रोत जोड़ें।',
     rc_summary_fmt:'{n} स्रोत Crossref से मिलाए गए: {o} मेल खाते हैं, {d} में अंतर है, {f} नहीं मिले। किताबें, रिपोर्ट, शोध-प्रबंध और हिन्दी स्रोत अक्सर Crossref में नहीं होते, इसलिए "नहीं मिला" का मतलब दोबारा देखना है, स्रोत गलत होना नहीं।', rc_ok:'Crossref में मिला और विवरण मेल खाते हैं।', rc_nf:'Crossref में नहीं मिला। DOI, शीर्षक और लेखक जाँचें, या हो सकता है यह स्रोत वहाँ दर्ज ही न हो।', rc_doi_missing:'कोई DOI सहेजा नहीं है। नीचे का मिलान शीर्षक की खोज से आया:',
+    rc_source:'Journal अलग है। Crossref में है:', rc_volume:'Volume अलग है। Crossref में है:', rc_issue:'Issue अलग है। Crossref में है:', rc_pages:'Pages अलग हैं। Crossref में है:',
+    rc_upd_retr:'यह paper वापस लिया गया (retracted)। इसे सबूत की तरह cite न करें।', rc_upd_corr:'इसका correction छपा है। Cite करने से पहले उसे पढ़ें।', rc_upd_eoc:'इस पर expression of concern छपा है। Cite करने से पहले पढ़ें।', rc_upd_rein:'वापस लेने के बाद फिर बहाल किया गया।', rc_upd_other:'इस पर editorial update छपा है।', rc_upd_notice:'सूचना', rc_upd_pub:'publisher',
     rc_title:'शीर्षक अलग है। Crossref में है:', rc_year:'वर्ष अलग है। Crossref में है:', rc_author:'पहला लेखक अलग है। Crossref में है:', rc_doi_found:'DOI मिला:', rc_err:'इसकी जांच नहीं हो सकी।',
     num_missing_fmt:'इस दस्तावेज़ में ऐसी संख्याएँ हैं जिनका आपकी लाइब्रेरी में कोई स्रोत नहीं: {n}।',
     cite_retract_btn:'🛡 वापसी (retraction) जांचें', retr_done:'वापसी की जांच पूरी हुई', retr_failed:'अभी वापसी की जांच नहीं हो सकी। थोड़ी देर बाद फिर कोशिश करें।',
@@ -4000,7 +4004,7 @@ function wExtra2HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
      '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple btn-sm" onclick="prOpen()">🧾 '+L('Make my process receipt','मेरे काम की रसीद बनाएँ')+'</button></div>'+
      '<p class="desc" style="margin:6px 0 0">'+L('A detector score alone is never proof of misconduct. Your university\'s own similarity report (UGC 2018) is the one that counts.','अकेला detector score कभी गड़बड़ी का सबूत नहीं। आपकी university की अपनी similarity report (UGC 2018) ही मानी जाती है।')+'</p>')}
   if(id==='F4'){const f=w.F4||{},ck=(g,list)=>list.map(x=>'<label style="display:block;margin:3px 0;font-size:14px"><input type="checkbox"'+((f[g]||{})[x[0]]?' checked':'')+' onchange="f4Tick(\''+g+'\',\''+x[0]+'\',this.checked)"> '+escHTML(hi?x[2]:x[1])+'</label>').join('');
-    return box(f4Ok(o),L('Submission','जमा करना'),'<p style="margin:8px 0 2px"><b>'+L('Thesis to the university','University को thesis')+'</b></p>'+ck('thesis',F4_THESIS)+'<p style="margin:10px 0 2px"><b>'+L('Choosing a journal','Journal चुनना')+'</b> <span class="desc">'+L('(UGC suggestive parameters, 2025; Think.Check.Submit.)','(UGC के सुझाए मानदंड, 2025; Think.Check.Submit.)')+'</span></p>'+ck('journal',F4_JOURNAL)+'<p class="desc" style="margin:6px 0 0">'+L('Done when one list is complete and a submission is recorded below.','एक list पूरी हो और नीचे एक submission दर्ज हो, तब पूरा।')+'</p>')}
+    return box(f4Ok(o),L('Submission','जमा करना'),'<p style="margin:8px 0 2px"><b>'+L('Thesis to the university','University को thesis')+'</b></p>'+ck('thesis',F4_THESIS)+'<p style="margin:10px 0 2px"><b>'+L('Choosing a journal','Journal चुनना')+'</b> <span class="desc">'+L('(UGC suggestive parameters, 2025; Think.Check.Submit.)','(UGC के सुझाए मानदंड, 2025; Think.Check.Submit.)')+'</span></p>'+'<div class="row" style="margin:6px 0"><button type="button" class="btn btn-ghost btn-sm" onclick="jfOpen()">🔎 '+L('Find journals that publish work like mine','मेरे जैसे काम छापने वाले journal ढूँढें')+'</button></div>'+ck('journal',F4_JOURNAL)+'<p class="desc" style="margin:6px 0 0">'+L('Done when one list is complete and a submission is recorded below.','एक list पूरी हो और नीचे एक submission दर्ज हो, तब पूरा।')+'</p>')}
   if(id==='F7'){const c=w.F7||{},s=k=>escAttr(c[k]||''),ch=(k,v)=>'onchange="f7Set(\''+k+'\','+v+')"';const e=ethicsState(o);
     return box(f7Ok(o),L('Closure record','समापन का record'),
      '<label class="desc" style="display:block;margin-top:4px">'+L('How long the data is kept','Data कितने समय रखा जाएगा')+'</label><input type="text" value="'+s('keep')+'" placeholder="'+escAttr(L('e.g. 5 years after the award','जैसे: degree के 5 साल बाद तक'))+'" '+ch('keep','this.value')+'>'+
@@ -12234,6 +12238,27 @@ function rcSim(a,b){
   let n=0;A.forEach(w=>{if(B.has(w))n++});
   return n/(A.size+B.size-n);
 }
+/* Journal names: equal after tidying, one inside the other, or one an abbreviation of the other
+   ("J Pers Soc Psychol" and "Journal of Personality and Social Psychology"). */
+function rcJNorm(x){return String(x||'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim().replace(/^the /,'')}
+function rcJAbbr(a,b){const sw=new Set(['of','and','the','in','for','on','de','la','und','fur','a','an']);
+  const A=a.split(' ').filter(w=>!sw.has(w)),B=b.split(' ').filter(w=>!sw.has(w));if(!A.length||A.length!==B.length)return false;
+  return A.every((w,i)=>B[i].indexOf(w)===0)}
+function rcJMatch(a,b){const x=rcJNorm(a),y=rcJNorm(b);if(!x||!y)return true;if(x===y||x.indexOf(y)>=0||y.indexOf(x)>=0)return true;return rcJAbbr(x,y)||rcJAbbr(y,x)}
+/* Crossref lists editorial updates on the original record under "updated-by", from the publisher or from
+   Retraction Watch. Corrections and expressions of concern are covered less fully than retractions. */
+function rcUpdates(it){const out=[],seen=new Set();
+  (it['updated-by']||[]).forEach(u=>{const ty=String(u.type||'').toLowerCase().replace(/[\s-]+/g,'_');
+    const k=/retract|withdraw|remov/.test(ty)?'retr':/concern/.test(ty)?'eoc':/correct|errat|corrig|addend/.test(ty)?'corr':/reinstat/.test(ty)?'rein':'other';
+    const key=k+'|'+String(u.DOI||'').toLowerCase();
+    if(seen.has(key)){const o=out.find(x=>x.key===key);if(o&&u.source&&o.src.split(',').indexOf(u.source)<0)o.src+=','+u.source;return}seen.add(key);
+    const dp=((u.updated||{})['date-parts']||[[]])[0]||[];
+    out.push({key:key,k:k,doi:u.DOI||'',src:u.source||'',y:dp[0]||'',label:u.label||u.type||''})});
+  return out}
+function rcUpdLine(c){if(!c||!c.upd||!c.upd.length)return'';
+  return c.upd.map(u=>{const col=u.k==='retr'?'#b91c1c':u.k==='rein'?'#166534':'#92400e',ic=u.k==='retr'?'⛔':u.k==='rein'?'↺':'⚠';
+    return'<div class="desc" style="margin-top:4px;color:'+col+';font-weight:600">'+ic+' '+escHTML(t('rc_upd_'+u.k))+(u.y?' ('+escHTML(String(u.y))+')':'')+
+      (u.doi?' · '+escHTML(t('rc_upd_notice'))+' '+escHTML(u.doi):'')+(u.src?' · '+u.src.split(',').filter(Boolean).map(x=>escHTML(x==='retraction-watch'?'Retraction Watch':t('rc_upd_pub'))).join(', '):'')+'</div>'}).join('')}
 function rcCompare(d,it){
   const msgs=[];
   const ct=(it.title||[''])[0]||'';
@@ -12245,7 +12270,17 @@ function rcCompare(d,it){
   if(cy&&/^\d{4}$/.test(ty)&&Math.abs(+ty-cy)>1)msgs.push({k:'year',v:String(cy)});
   const ln=citLastName(d.author);
   if(ca&&ln&&ln!=='Author'&&!citNames(d.author)[0].org&&ca.toLowerCase()!==ln.toLowerCase())msgs.push({k:'author',v:ca});
-  return{msgs:msgs,found:{title:ct,year:cy,author:ca,doi:it.DOI||''}};
+  /* Journal, volume, issue and first page, checked only when both sides have them and the source is a journal
+     article (for a chapter Crossref's container is the book). Abbreviated journal names count as a match. */
+  const jt=(it['container-title']||[''])[0]||'',js=(it['short-container-title']||[''])[0]||'';
+  let isJ=true;try{isJ=citKind(d.type)==='journal'}catch(e){}
+  if(isJ&&d.source&&jt&&!rcJMatch(d.source,jt)&&!(js&&rcJMatch(d.source,js)))msgs.push({k:'source',v:jt});
+  const nv=x=>String(x||'').trim().toLowerCase().replace(/^(vol|volume|no|issue)\.?\s*/,'');
+  if(isJ&&d.volume&&it.volume&&nv(d.volume)!==nv(it.volume))msgs.push({k:'volume',v:String(it.volume)});
+  if(isJ&&d.issue&&it.issue&&nv(d.issue)!==nv(it.issue))msgs.push({k:'issue',v:String(it.issue)});
+  const fp=x=>((String(x||'').match(/[A-Za-z]?\d+/)||[''])[0]).toLowerCase();
+  if(isJ&&d.pages&&it.page&&fp(d.pages)&&fp(it.page)&&fp(d.pages)!==fp(it.page))msgs.push({k:'pages',v:String(it.page)});
+  return{msgs:msgs,found:{title:ct,year:cy,author:ca,doi:it.DOI||'',source:jt},upd:rcUpdates(it)};
 }
 async function rcCheckOne(d){
   const doi=retrNormDoi(d.doi);
@@ -12256,7 +12291,7 @@ async function rcCheckOne(d){
       if(!r.ok)throw new Error('HTTP '+r.status);
       const it=(await r.json()).message;
       const c=rcCompare(d,it);
-      return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,t:Date.now()};
+      return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,upd:c.upd,t:Date.now()};
     }
     const q=(d.title||'')+' '+citLastName(d.author);
     const r=await fetch('https://api.crossref.org/works?rows=3&query.bibliographic='+encodeURIComponent(q.slice(0,300)));
@@ -12266,7 +12301,7 @@ async function rcCheckOne(d){
     items.forEach(it=>{const sc=rcSim(d.title,(it.title||[''])[0]);if(sc>bs){bs=sc;best=it}});
     if(!best||bs<0.6)return{s:'nf',t:Date.now()};
     const c=rcCompare(d,best);
-    return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,viaTitle:true,t:Date.now()};
+    return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,upd:c.upd,viaTitle:true,t:Date.now()};
   }catch(e){return{s:'err',t:Date.now()}}
 }
 async function rcRun(force){
@@ -12291,9 +12326,9 @@ async function rcRun(force){
 }
 function rcLine(d,c){
   if(!c||c.s==='err')return c&&c.s==='err'?'<div class="desc" style="margin-top:4px">'+escHTML(t('rc_err'))+'</div>':'';
-  if(c.s==='ok')return'<div class="desc" style="margin-top:4px;color:#166534">✓ '+escHTML(t('rc_ok'))+(c.viaTitle&&c.f&&c.f.doi?' '+escHTML(t('rc_doi_found'))+' '+escHTML(c.f.doi):'')+'</div>';
+  if(c.s==='ok')return'<div class="desc" style="margin-top:4px;color:#166534">✓ '+escHTML(t('rc_ok'))+(c.viaTitle&&c.f&&c.f.doi?' '+escHTML(t('rc_doi_found'))+' '+escHTML(c.f.doi):'')+'</div>'+rcUpdLine(c);
   if(c.s==='nf')return'<div class="desc" style="margin-top:4px;color:#92400e">? '+escHTML(t('rc_nf'))+'</div>';
-  return'<div class="desc" style="margin-top:4px;color:#92400e;font-weight:600">⚠ '+(c.m||[]).map(x=>escHTML(t('rc_'+x.k))+' '+escHTML(x.v)).join(' &nbsp;·&nbsp; ')+(c.viaTitle?'<br><span style="font-weight:400">'+escHTML(t('rc_doi_missing'))+(c.f&&c.f.doi?' '+escHTML(c.f.doi):'')+'</span>':'')+'</div>';
+  return'<div class="desc" style="margin-top:4px;color:#92400e;font-weight:600">⚠ '+(c.m||[]).map(x=>escHTML(t('rc_'+x.k))+' '+escHTML(x.v)).join(' &nbsp;·&nbsp; ')+(c.viaTitle?'<br><span style="font-weight:400">'+escHTML(t('rc_doi_missing'))+(c.f&&c.f.doi?' '+escHTML(c.f.doi):'')+'</span>':'')+'</div>'+rcUpdLine(c);
 }
 /* Numbers in the open document that point at no source in the library (numbered styles only). */
 function citMissingNumbers(docs,libLen){
@@ -19295,7 +19330,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16f';
+const APP_BUILD='2026.11.16g';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23575,6 +23610,75 @@ function a11yInit(){const dlg=document.getElementById('helpDlg');if(!dlg)return;
 function libToolsInit(){try{mpInit()}catch(e){}try{a11yInit()}catch(e){}
   try{const h=document.getElementById('helpDlg');if(h&&!h.dataset.a11y){h.dataset.a11y='1';h.addEventListener('toggle',a11yInit)}}catch(e){}}
 
+
+/* ============ Journal finder (build 2026.11.16g) ============
+   The idea is JANE's: journals that already publish papers like yours are the likely homes. The student's
+   title and abstract become a keyword query to OpenAlex; the 200 closest articles of the last five years are
+   grouped by journal. Publisher finders (Elsevier, Springer, Wiley, Taylor & Francis, MDPI) suggest only their
+   own journals, so they are offered as links beside this neutral list. Nothing here is a recommendation:
+   indexing is checked on the database itself, as the stage-6 checklist says. */
+const JF_STOP=new Set(('a an the and or of in on for to with by from at as is are was were be been this that these those it its into than then '+
+ 'we our their there which who whom whose what when where how why not no can may might will would should could study studies paper research '+
+ 'results result method methods using use used based among between effect effects role analysis data sample participants findings aim aims '+
+ 'present current also however both each more most other such only one two three new high low level levels significant significantly '+
+ 'relationship association associated relation related factors factor').split(' '));
+function jfKeywords(txt){const f={};String(txt||'').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu,' ').split(/\s+/).forEach(w=>{
+  w=w.replace(/^-+|-+$/g,'');if(w.length<4||JF_STOP.has(w)||/^\d+$/.test(w))return;f[w]=(f[w]||0)+1});
+  return Object.entries(f).sort((a,b)=>b[1]-a[1]||b[0].length-a[0].length).slice(0,10).map(x=>x[0])}
+function jfGroup(works){const m={};(works||[]).forEach(w=>{const s=((w||{}).primary_location||{}).source;if(!s||!s.id||(s.type&&s.type!=='journal'))return;
+  const k=s.id;if(!m[k])m[k]={id:k,name:s.display_name||'',pub:s.host_organization_name||'',issn:s.issn_l||'',oa:!!s.is_oa,doaj:!!s.is_in_doaj,n:0};m[k].n++});
+  return Object.values(m).sort((a,b)=>b.n-a.n)}
+const JF_LINKS=[['Elsevier JournalFinder','https://journalfinder.elsevier.com/','Elsevier'],['Springer Nature Journal Suggester','https://journalsuggester.springer.com/','Springer Nature'],
+ ['Wiley Journal Finder','https://journalfinder.wiley.com/','Wiley'],['Taylor & Francis Journal Suggester','https://authorservices.taylorandfrancis.com/publishing-your-research/choosing-a-journal/journal-suggester/','Taylor & Francis'],
+ ['MDPI Journal Finder','https://www.mdpi.com/about/journalfinder','MDPI'],['JANE (biomedical, from PubMed)','https://jane.biosemantics.org/',''],
+ ['SCImago Journal Rank','https://www.scimagojr.com/',''],['DOAJ','https://doaj.org/',''],['Think. Check. Submit.','https://thinkchecksubmit.org/','']];
+function jfOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('jfDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='jfDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  let pre='';try{const v=LS.get(pkey('appu_jf_text'));if(v)pre=v}catch(e){}
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('Find journals that publish work like yours','ऐसे journal ढूँढें जो आपके जैसा काम छापते हैं')+'</h2>'+
+   '<p class="desc">'+L('Paste your title and abstract. Appuscholar looks at the 200 closest articles of the last five years in OpenAlex and counts the journals they appeared in. A journal that already publishes your kind of study is a likely home. This list is not a recommendation: check scope, fees and indexing on the journal and the database itself.','अपना title और abstract डालें। Appuscholar OpenAlex में पिछले पाँच साल के 200 सबसे मिलते-जुलते articles देखता है और गिनता है कि वे किन journals में छपे। जो journal पहले से आपके जैसी study छापता है, वहाँ भेजना ठीक रहता है। यह list सिफ़ारिश नहीं है: scope, fees और indexing journal और database पर ख़ुद जाँचें।')+'</p>'+
+   '<div class="fld"><label for="jfText">'+L('Title and abstract','Title और abstract')+'</label><textarea id="jfText" rows="5" placeholder="'+escAttr(L('Exam anxiety and sleep among first-year nursing students in Jaipur…','जयपुर के first-year nursing students में exam anxiety और नींद…'))+'">'+escHTML(pre)+'</textarea></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" style="flex:1" id="jfRunBtn" onclick="jfRun()">🔎 '+L('Find journals','Journal ढूँढें')+'</button><button type="button" class="btn btn-ghost" style="flex:1" onclick="jfFromDoc()">'+L('Use my open document','मेरा खुला document लें')+'</button></div>'+
+   '<div id="jfOut" aria-live="polite"></div>'+
+   '<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:600">'+L('Publisher finders and journal lists','Publishers के finder और journal lists')+'</summary><p class="desc">'+L('A publisher\'s finder suggests only that publisher\'s journals. Paste the same title and abstract there to compare.','हर publisher का finder सिर्फ़ अपने journals सुझाता है। तुलना के लिए वही title और abstract वहाँ डालें।')+'</p><ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.8">'+
+   JF_LINKS.map(x=>'<li><a href="'+escAttr(x[1])+'" target="_blank" rel="noopener">'+escHTML(x[0])+'</a>'+(x[2]?' <span class="desc">('+escHTML(L('own journals only','सिर्फ़ अपने journals'))+')</span>':'')+'</li>').join('')+'</ul></details>'+
+   '<div class="row" style="margin-top:12px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'jfDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  if(!dlg.open)dlg.showModal()}
+function jfFromDoc(){let tx='';try{tx=(editor.innerText||'').trim()}catch(e){}
+  const ab=tx.match(/abstract\s*[:\n]([\s\S]{50,2500}?)(\n\s*(keywords|key words|introduction|1\.)\b|$)/i);
+  const first=tx.split('\n').map(x=>x.trim()).filter(Boolean)[0]||'';
+  const v=(first+'\n'+(ab?ab[1]:tx.slice(0,1500))).trim();const el=document.getElementById('jfText');if(el)el.value=v.slice(0,3000)}
+async function jfRun(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,el=document.getElementById('jfText'),out=document.getElementById('jfOut');if(!el||!out)return;
+  const txt=el.value.trim();try{LS.set(pkey('appu_jf_text'),txt.slice(0,3000))}catch(e){}
+  const kw=jfKeywords(txt);
+  if(kw.length<3){out.innerHTML='<p class="desc" style="color:#92400e">'+L('Add a few more words: a title and two or three sentences of the abstract.','थोड़ा और लिखें: title और abstract की दो-तीन पंक्तियाँ।')+'</p>';return}
+  const btn=document.getElementById('jfRunBtn');if(btn)btn.disabled=true;
+  out.innerHTML='<p class="desc">'+L('Searching OpenAlex…','OpenAlex में ढूँढ रहे हैं…')+' <span style="font-size:11px">('+escHTML(kw.join(', '))+')</span></p>';
+  try{const y=new Date().getFullYear()-5;
+    const url=oaUrl('https://api.openalex.org/works?search='+encodeURIComponent(kw.join(' OR '))+'&filter=from_publication_date:'+y+'-01-01,type:article&per-page=200&select=primary_location');
+    const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();
+    const g=jfGroup(j.results).slice(0,12);
+    if(!g.length){out.innerHTML='<p class="desc">'+L('No journals found. Try other words.','कोई journal नहीं मिला। दूसरे शब्द आज़माएँ।')+'</p>';return}
+    await Promise.all(g.map(async s=>{try{const sid=s.id.split('/').pop();
+      const rr=await fetch(oaUrl('https://api.openalex.org/sources/'+encodeURIComponent(sid)+'?select=homepage_url,apc_usd,summary_stats,works_count'));
+      if(rr.ok){const d=await rr.json();s.home=d.homepage_url||'';s.apc=d.apc_usd;s.h=(d.summary_stats||{}).h_index;s.works=d.works_count}}catch(e){}}));
+    jfRender(g,(j.results||[]).length,kw)}
+  catch(e){out.innerHTML='<p class="desc" style="color:#b91c1c">'+L('Could not reach OpenAlex. Check the internet and try again.','OpenAlex तक नहीं पहुँच सके। Internet जाँचकर फिर कोशिश करें।')+'</p>'}
+  finally{if(btn)btn.disabled=false}}
+function jfRender(g,total,kw){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,out=document.getElementById('jfOut');if(!out)return;
+  out.innerHTML='<p class="desc" style="margin-top:10px">'+L('From the '+total+' closest articles since '+(new Date().getFullYear()-5)+', the journals that published most of them:','पिछले पाँच साल के '+total+' सबसे मिलते-जुलते articles में से, जिन journals में इनमें से सबसे ज़्यादा छपे:')+'</p>'+
+   g.map(s=>{const flags=[];
+     if(s.oa)flags.push(s.doaj?'<span style="color:#166534">✓ '+L('Open access, listed in DOAJ','Open access, DOAJ में दर्ज')+'</span>':'<span style="color:#b45309">⚠ '+L('Open access but not in DOAJ: check it carefully','Open access पर DOAJ में नहीं: ध्यान से जाँचें')+'</span>');
+     else flags.push(L('Subscription or hybrid','Subscription या hybrid'));
+     if(typeof s.apc==='number'&&s.apc>0)flags.push(L('Fee recorded in OpenAlex: about US$','OpenAlex में दर्ज fee: लगभग US$')+s.apc+L(' (confirm on the journal site)',' (journal की site पर पक्का करें)'));
+     if(typeof s.h==='number')flags.push('h-index '+s.h);
+     const q=encodeURIComponent(s.name);
+     return'<div style="border-top:1px solid var(--line);padding:8px 0;font-size:13px"><b>'+escHTML(s.name)+'</b>'+(s.pub?' <span class="desc">· '+escHTML(s.pub)+'</span>':'')+
+      '<div class="desc">'+escHTML(L(s.n+' of the closest articles','मिलते-जुलते articles में से '+s.n))+(s.issn?' · ISSN '+escHTML(s.issn):'')+'</div>'+
+      '<div class="desc">'+flags.join(' · ')+'</div>'+
+      '<div style="margin-top:3px;font-size:12.5px">'+(s.home&&/^https?:\/\//.test(s.home)?'<a href="'+escAttr(s.home)+'" target="_blank" rel="noopener">'+L('Journal site','Journal की site')+'</a> · ':'')+
+      '<a href="https://www.scimagojr.com/journalsearch.php?q='+q+'" target="_blank" rel="noopener">SJR</a>'+'</div></div>'}).join('')+
+   '<p class="desc" style="margin-top:8px">'+L('Counts depend on the words you gave. A journal near the top is a match in topic, not proof of quality. Before you submit, tick the "Choosing a journal" list in stage 6.','गिनती आपके दिए शब्दों पर निर्भर है। ऊपर वाला journal विषय में मेल खाता है, अच्छी quality का सबूत नहीं। भेजने से पहले stage 6 की "Journal चुनना" list पूरी करें।')+'</p>'}
 
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
