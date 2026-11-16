@@ -1318,6 +1318,11 @@ window.addEventListener('DOMContentLoaded',()=>{try{cfListenBtn()}catch(e){}});
         <div id="gramTop" class="desc" style="margin-top:6px"></div>
         <div id="gramOut" style="margin-top:6px"></div>
       </div>
+      <div class="fld" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:10px">
+        <b data-i18n="mm_h">Margin map</b>
+        <p class="desc" style="margin:4px 0" data-i18n="mm_desc">Notes in the margin saying what each part of a section does, like a teacher's notes on a model paper. For your draft or a paper you brought in. Shows missing parts too.</p>
+        <button type="button" class="btn btn-purple" onclick="mmOpen()" data-i18n="mm_btn">🖍 Open the margin map</button>
+      </div>
     </div></section>
 
     <section class="card tool-panel" data-panel="style"><div class="panel">
@@ -2725,6 +2730,7 @@ const I18N={
     retr_badge:'Retracted', retr_tip:"OpenAlex marks this paper as retracted. Check the publisher's notice before you cite it.",
     retr_lib_warn:"OpenAlex marks this source as retracted. Check the publisher's notice before you cite it.",
     retr_summary_fmt:'Checked {c} sources with a DOI for retractions: {r} flagged. {n} without a DOI could not be checked. No flag does not prove a paper is sound.',
+    mm_h:'Margin map', mm_desc:'Notes in the margin saying what each part of a section does, like a teacher\'s notes on a model paper. For your draft or a paper you brought in. Shows missing parts too.', mm_btn:'🖍 Open the margin map',
     dup_btn:'🧹 Find the same paper saved twice', rc_btn:'🔎 Check that sources exist (Crossref)', rc_busy:'Checking your sources against Crossref…', rc_done:'Source check done', rc_fail:'Could not reach Crossref right now. Try again in a moment.', rc_empty:'Add a source to your library first.',
     rc_summary_fmt:'Checked {n} sources against Crossref: {o} match, {d} differ, {f} not found. Books, reports, theses and Hindi sources are often not in Crossref, so "not found" is a prompt to look again, not proof the source is wrong.',
     rc_ok:'Found in Crossref and the details match.', rc_nf:'Not found in Crossref. Check the DOI, title and author, or the source may simply not be indexed there.', rc_doi_missing:'No DOI saved. The match below came from a title search:',
@@ -2970,6 +2976,7 @@ const I18N={
     retr_badge:'वापस लिया गया', retr_tip:'OpenAlex इस शोध-पत्र को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_lib_warn:'OpenAlex इस स्रोत को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_summary_fmt:'DOI वाले {c} स्रोतों की वापसी (retraction) जांच की गई: {r} चिह्नित। DOI के बिना {n} स्रोतों की जांच नहीं हो सकी। कोई चिह्न न होना यह साबित नहीं करता कि शोध-पत्र भरोसेमंद है।',
+    mm_h:'Margin map', mm_desc:'हाशिये पर notes कि section का हर हिस्सा क्या कर रहा है, जैसे model paper पर शिक्षक के notes। आपके draft या लाए गए paper के लिए। छूटे हिस्से भी दिखाता है।', mm_btn:'🖍 Margin map खोलें',
     dup_btn:'🧹 दो बार save हुए paper ढूँढें', rc_btn:'🔎 जांचें कि स्रोत मौजूद हैं (Crossref)', rc_busy:'आपके स्रोत Crossref से मिलाए जा रहे हैं…', rc_done:'स्रोतों की जांच पूरी हुई', rc_fail:'अभी Crossref तक नहीं पहुँच सके। थोड़ी देर बाद फिर कोशिश करें।', rc_empty:'पहले लाइब्रेरी में कोई स्रोत जोड़ें।',
     rc_summary_fmt:'{n} स्रोत Crossref से मिलाए गए: {o} मेल खाते हैं, {d} में अंतर है, {f} नहीं मिले। किताबें, रिपोर्ट, शोध-प्रबंध और हिन्दी स्रोत अक्सर Crossref में नहीं होते, इसलिए "नहीं मिला" का मतलब दोबारा देखना है, स्रोत गलत होना नहीं।', rc_ok:'Crossref में मिला और विवरण मेल खाते हैं।', rc_nf:'Crossref में नहीं मिला। DOI, शीर्षक और लेखक जाँचें, या हो सकता है यह स्रोत वहाँ दर्ज ही न हो।', rc_doi_missing:'कोई DOI सहेजा नहीं है। नीचे का मिलान शीर्षक की खोज से आया:',
     rc_source:'Journal अलग है। Crossref में है:', rc_volume:'Volume अलग है। Crossref में है:', rc_issue:'Issue अलग है। Crossref में है:', rc_pages:'Pages अलग हैं। Crossref में है:',
@@ -19360,7 +19367,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=119;
-const APP_BUILD='2026.11.16i';
+const APP_BUILD='2026.11.16j';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23848,6 +23855,112 @@ function cohSaveMd(){let v=null;try{v=JSON.parse(LS.get(cohKey())||'null')}catch
    ((v.rejected||[]).length?'\n## Set aside (quote not found in the document)\n\n'+v.rejected.map(f=>'- '+f.title+' ('+f.check+')').join('\n')+'\n':'')+
    '\nCheck list after academic-writing-skills by Muhammad Nabil Deja (MIT licence).\n';
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download='study-coherence-'+d+'.md';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
+/* ============ Margin map (build 2026.11.16j) ============
+   Dr. Sharma's find (16 Nov): a teaching copy of a Discussion (Faith et al., Sci Transl Med 2014) with hand-written
+   margin notes naming what each part of the text does. Here the same for any section of the open document, a
+   student's own draft or a paper brought in as a document. The AI labels each run of sentences with one move from
+   a fixed, published move set and writes a short label tailored to this text. Code then checks: the move must be
+   in the set, the anchor quote must sit word for word in the first sentence of the run, runs may not overlap, and
+   the list of missing moves is worked out by code from the checked runs, never taken from the AI.
+   Move sets: Introduction, Swales (1990) CARS model; Discussion, Yang and Allison (2003) moves, with the
+   limitation and implication steps split out because students most often leave them out; Abstract, Hyland (2000). */
+const MM_SETS={
+ intro:{name:['Introduction','Introduction'],src:'Swales (1990), Create a Research Space',moves:[
+  ['I1','Claims the topic matters','विषय क्यों ज़रूरी है',1],['I2','Reviews earlier work','पहले के काम का ब्योरा',1],['I3','Shows the gap or problem left open','रिसर्च गैप या अधूरी समस्या',1],
+  ['I4','States the aim or question','लक्ष्य या सवाल',1],['I5','Says what this study adds or how it is done','यह study क्या जोड़ती है या कैसे होगी',0],['I6','Outlines the paper','Paper की रूपरेखा',0]]},
+ disc:{name:['Discussion','Discussion'],src:'Yang and Allison (2003), Discussion moves',moves:[
+  ['D1','Background or reminder of the aim','पृष्ठभूमि या लक्ष्य की याद',0],['D2','Main finding and why it matters','मुख्य नतीजा और उसका महत्व',1],['D3','Compares with earlier studies','पहले की studies से तुलना',1],
+  ['D4','Explains or interprets the finding','नतीजे की व्याख्या',1],['D5','Strengths of the study','Study की ताक़त',0],['D6','Limitations','सीमाएँ',1],
+  ['D7','Implications for practice or policy','काम या नीति के लिए अर्थ',1],['D8','What future research should do','आगे की रिसर्च क्या करे',1],['D9','Closing summary','समापन',0]]},
+ abs:{name:['Abstract','Abstract'],src:'Hyland (2000), abstract moves',moves:[
+  ['A1','Background','पृष्ठभूमि',0],['A2','Purpose','उद्देश्य',1],['A3','Method','Method',1],['A4','Results','Results',1],['A5','Conclusion','निष्कर्ष',1]]}};
+const MM_COL=['#ede9fe','#dcfce7','#fef3c7','#dbeafe','#fce7f3','#e0f2fe','#fee2e2','#f0fdf4','#f5f5f4'];
+/* The open document as sections: [{title,sents:[{p,t}]}] where p is the paragraph number. */
+function mmSplit(par){const prot=par.replace(/\b(et al|e\.g|i\.e|vs|Fig|Figs|Dr|Prof|approx|cf|No|Vol|pp)\./g,(m)=>m.replace(/\./g,'․'));
+  return prot.split(/(?<=[.!?।])["'”]?\s+(?=[A-Z0-9(\["'“ऀ-ॿ])/).map(s=>s.replace(/․/g,'.').trim()).filter(Boolean)}
+function mmSections(){const out=[];let cur={title:'',sents:[]};let pn=0;
+  [...editor.querySelectorAll('h1,h2,h3,h4,p,li,blockquote')].forEach(el=>{if(el.closest('li')&&el.tagName!=='LI')return;
+    const tx=(el.innerText||'').replace(/\s+/g,' ').trim();if(!tx)return;
+    if(/^H[1-4]$/.test(el.tagName)){if(cur.sents.length||cur.title)out.push(cur);cur={title:tx,sents:[]};return}
+    pn++;mmSplit(tx).forEach(t=>cur.sents.push({p:pn,t:t}))});
+  if(cur.sents.length||cur.title)out.push(cur);return out.filter(s=>s.sents.length)}
+function mmGuess(title){const t=String(title||'').toLowerCase();if(/discussion|चर्चा/.test(t))return'disc';if(/abstract|सार/.test(t))return'abs';if(/introduction|background|भूमिका|परिचय/.test(t))return'intro';return''}
+function mmPrompt(sec,kind){const S=MM_SETS[kind];
+  return 'Label what each part of this '+S.name[0]+' section does, the way a writing teacher writes notes in the margin of a model paper.\n'+
+  'Use ONLY these moves ('+S.src+'):\n'+S.moves.map(m=>m[0]+' = '+m[1]).join('\n')+'\n\n'+
+  'Group neighbouring sentences that do the same job into one run. Every sentence may belong to at most one run; a sentence that does none of these jobs is left out.\n'+
+  'For each run give: from and to (sentence numbers), move (one id from the list), label (6 to 12 words, specific to THIS text, saying what this part does here, for example "shows the mouse platform cuts cost for other labs", never just the move name), quote (the first 5 to 12 words of the "from" sentence, copied exactly).\n'+
+  (getLang()==='hi'?'Write each label in natural Hindi (Devanagari), keeping technical terms in English. Quotes stay exactly as in the text.\n':'')+
+  'Answer with JSON only: {"runs":[{"from":1,"to":2,"move":"D2","label":"...","quote":"..."}]}\n\nSECTION "'+sec.title+'" (sentence numbers in brackets; ¶ marks a new paragraph):\n'+
+  sec.sents.map((s,i)=>(i&&s.p!==sec.sents[i-1].p?'¶ ':'')+'['+(i+1)+'] '+s.t).join('\n')}
+function mmValidate(res,sec,kind){const S=MM_SETS[kind],ids=S.moves.map(m=>m[0]),n=sec.sents.length,runs=[],rej=[];
+  const raw=Array.isArray(res&&res.runs)?res.runs:[];
+  raw.forEach(r=>{if(!r)return;const f=parseInt(r.from,10),t=parseInt(r.to,10)||f,mv=String(r.move||'').toUpperCase(),q=String(r.quote||''),lb=String(r.label||'').trim().slice(0,140);
+    const bad=ids.indexOf(mv)<0?'move':!(f>=1&&t>=f&&t<=n)?'range':(()=>{const s=cohNorm(sec.sents[f-1].t),qq=cohNorm(q);return qq.length<8||s.indexOf(qq)<0})()?'quote':!lb?'label':'';
+    if(bad){rej.push({from:f,to:t,move:mv,label:lb,why:bad});return}
+    runs.push({from:f,to:t,move:mv,label:lb})});
+  runs.sort((a,b)=>a.from-b.from);const ok=[];let last=0;runs.forEach(r=>{if(r.from>last){ok.push(r);last=r.to}else rej.push(Object.assign({},r,{why:'overlap'}))});
+  const have=new Set(ok.map(r=>r.move));
+  const missing=S.moves.filter(m=>m[3]&&!have.has(m[0])).map(m=>m[0]);
+  /* order: moves that come back after a later move has started (for example limitations, then results again) */
+  const seq=ok.map(r=>ids.indexOf(r.move));let back=0;for(let i=1;i<seq.length;i++)if(seq[i]<seq[i-1]-1)back++;
+  const cover=ok.reduce((a,r)=>a+(r.to-r.from+1),0);
+  return{kind:kind,title:sec.title,runs:ok,rejected:rej,missing:missing,back:back,cover:cover,n:n}}
+function mmKey(i){let id='';try{id=docCurrentId()}catch(e){}return pkey('appu_mm_'+(id||'doc')+'_'+i)}
+function mmOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('mmDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='mmDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  const secs=mmSections();window._mmSecs=secs;
+  const g=secs.map(x=>mmGuess(x.title));let pick=['disc','intro','abs'].map(k=>g.indexOf(k)).find(x=>x>=0);if(pick==null)pick=0;
+  const opts=secs.map((s,i)=>'<option value="'+i+'"'+(i===pick?' selected':'')+'>'+escHTML((s.title||L('Untitled part','बिना शीर्षक'))+' ('+s.sents.length+L(' sentences',' वाक्य')+')')+'</option>').join('');
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('Margin map','Margin map')+'</h2>'+
+   '<p class="desc">'+L('Like a teacher\'s notes in the margin of a model paper: each part of a section gets a note saying what it does here. Works on your own draft, or on a paper you brought in as a document. In your draft it also shows which parts are missing. Your text is not changed.','जैसे model paper के हाशिये पर शिक्षक के notes: section के हर हिस्से के साथ लिखा होता है कि वह यहाँ क्या कर रहा है। आपके अपने draft पर, या document के रूप में लाए गए paper पर चलता है। आपके draft में यह भी दिखाता है कि कौन-से हिस्से छूटे हैं। आपका text नहीं बदलता।')+'</p>'+
+   (secs.length?'<div class="row" style="gap:8px;flex-wrap:wrap"><div class="fld" style="flex:2;min-width:200px"><label for="mmSec">'+L('Section','Section')+'</label><select id="mmSec" onchange="mmSecChange()">'+opts+'</select></div>'+
+   '<div class="fld" style="flex:1;min-width:160px"><label for="mmKind">'+L('It is a','यह है')+'</label><select id="mmKind">'+Object.keys(MM_SETS).map(k=>'<option value="'+k+'">'+escHTML(MM_SETS[k].name[hi?1:0])+'</option>').join('')+'</select></div></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" style="flex:1" id="mmRunBtn" onclick="mmRun()">🖍 '+L('Make the margin map','Margin map बनाएँ')+'</button><button type="button" class="btn btn-ghost" style="flex:1" onclick="mmSaveHtml()">⬇ '+L('Save as a page to print or share','Print या share के लिए page save करें')+'</button></div>'
+   :'<p class="desc" style="color:#92400e">'+L('The open document has no text yet.','खुले document में अभी text नहीं है।')+'</p>')+
+   '<div id="mmOut" aria-live="polite"></div>'+
+   '<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'mmDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  if(!dlg.open)dlg.showModal();if(secs.length)mmSecChange()}
+function mmSecChange(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];if(!s)return;
+  const g=mmGuess(s.title);if(g)document.getElementById('mmKind').value=g;
+  let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}
+  const out=document.getElementById('mmOut');if(out)out.innerHTML=v&&v.sig===mmSig(s)?mmRender(v,s):''}
+function mmSig(s){return s.sents.length+':'+cohNorm(s.sents.map(x=>x.t).join(' ')).length}
+async function mmRun(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,i=+document.getElementById('mmSec').value||0,s=(window._mmSecs||[])[i],kind=document.getElementById('mmKind').value,out=document.getElementById('mmOut'),btn=document.getElementById('mmRunBtn');
+  if(!s)return;if(s.sents.length<3){out.innerHTML='<p class="desc" style="color:#92400e">'+L('This section is too short to map.','यह section map के लिए छोटा है।')+'</p>';return}
+  if(s.sents.length>220){out.innerHTML='<p class="desc" style="color:#92400e">'+L('This section is too long for one map ('+s.sents.length+' sentences). Split it with sub-headings.','एक map के लिए यह section बहुत लंबा है ('+s.sents.length+' वाक्य)। Sub-headings से बाँटें।')+'</p>';return}
+  if(btn)btn.disabled=true;out.innerHTML='<p class="desc">'+L('Reading the section…','Section पढ़ रहे हैं…')+'</p>';
+  try{const raw=await callAI(mmPrompt(s,kind),{temp:0.2,max:4000,noLang:true});const res=cohParse(raw);
+    if(!res){out.innerHTML='<p class="desc" style="color:#b91c1c">'+L('The AI did not answer in the expected form. Try again, or switch to another AI provider.','AI ने तय रूप में जवाब नहीं दिया। फिर कोशिश करें, या दूसरा AI provider चुनें।')+'</p>';return}
+    const v=mmValidate(res,s,kind);v.sig=mmSig(s);v.at=Date.now();try{LS.set(mmKey(i),JSON.stringify(v))}catch(e){}
+    out.innerHTML=mmRender(v,s)}
+  catch(e){out.innerHTML='<p class="desc" style="color:#b91c1c">'+escHTML(String(e&&e.message||e).slice(0,200))+'</p>'}
+  finally{if(btn)btn.disabled=false}}
+function mmMove(kind,id){const S=MM_SETS[kind];const k=S.moves.findIndex(m=>m[0]===id);return{m:S.moves[k],c:MM_COL[k%MM_COL.length]}}
+function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SETS[v.kind];
+  let h='<div class="desc" style="margin:10px 0 6px">'+escHTML(L('Moves after ','Moves का आधार: ')+S.src)+' · '+L(v.cover+' of '+v.n+' sentences have a note',v.n+' में से '+v.cover+' वाक्यों पर note')+'</div>';
+  if(v.missing.length)h+='<div style="border:1px solid #f59e0b;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:13px"><b>'+L('Not found in this section:','इस section में नहीं मिला:')+'</b> '+v.missing.map(id=>escHTML(id+' '+mmMove(v.kind,id).m[hi?2:1])).join('; ')+
+    '<div class="desc">'+L('If this is your draft, consider adding these. If it is a published paper, notice what the authors chose to leave out.','अगर यह आपका draft है, तो इन्हें जोड़ने पर विचार करें। अगर यह छपा हुआ paper है, तो देखें कि लेखकों ने क्या छोड़ा।')+'</div></div>';
+  if(v.back>1)h+='<p class="desc" style="color:#92400e">'+L('The parts jump back and forth '+v.back+' times. A reader follows a section more easily when each kind of part sits together.','हिस्से '+v.back+' बार आगे-पीछे होते हैं। एक तरह के हिस्से साथ रहें तो पाठक आसानी से समझता है।')+'</p>';
+  /* the page: margin notes on the left, text on the right, a bracket bar joining them */
+  const at={};v.runs.forEach(r=>{at[r.from]=r});let i=1,rows='';
+  while(i<=v.n){const r=at[i];
+    if(r){const mv=mmMove(v.kind,r.move),txt=s.sents.slice(r.from-1,r.to).map((x,k)=>(k&&x.p!==s.sents[r.from-2+k].p?'<br><br>':' ')+escHTML(x.t)).join('');
+      rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;line-height:1.35;border-right:3px solid #64748b;padding-right:8px"><div style="font-family:Georgia,serif;font-style:italic">'+escHTML(r.label)+'</div><div class="desc" style="font-size:11px;margin-top:2px">'+escHTML(r.move+' · '+mv.m[hi?2:1])+'</div>'+(forPage?'':'<a href="#" style="font-size:11px" onclick="mmGo('+r.from+');return false">'+L('show in document','document में दिखाएँ')+'</a>')+'</div>'+
+        '<div style="flex:1;min-width:220px;background:'+mv.c+';border-radius:6px;padding:4px 8px;font-size:13.5px;line-height:1.6">'+txt+'</div></div>';i=r.to+1}
+    else{rows+='<div class="mm-row" style="display:flex;gap:10px;margin:2px 0;flex-wrap:wrap"><div style="flex:0 0 190px"></div><div style="flex:1;min-width:220px;font-size:13.5px;line-height:1.6;padding:0 8px;color:var(--muted,#555)">'+escHTML(s.sents[i-1].t)+'</div></div>';i++}}
+  h+='<div class="mm-page">'+rows+'</div>';
+  if(v.rejected.length)h+='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">'+L('Set aside: '+v.rejected.length+' note'+(v.rejected.length===1?'':'s')+' that failed the checks','अलग रखे गए: '+v.rejected.length+' notes जो जाँच में नहीं टिके')+'</summary><div class="desc">'+
+    v.rejected.map(r=>escHTML((r.label||'—')+' ('+r.move+', '+(r.why==='quote'?L('quote not in the sentence','quote वाक्य में नहीं'):r.why==='move'?L('move not in the list','move सूची में नहीं'):r.why==='overlap'?L('overlaps another note','दूसरे note से टकराता है'):L('bad sentence numbers','ग़लत वाक्य संख्या'))+')')).join('<br>')+'</div></details>';
+  h+='<p class="desc" style="margin-top:8px">'+L('Notes written by AI and checked by Appuscholar against your text. A guide to how the section is built, not a grade.','Notes AI ने लिखे और Appuscholar ने आपके text से जाँचे। यह बताता है कि section कैसे बना है, यह अंक नहीं है।')+'</p>';
+  return h}
+function mmGo(from){try{const i=+document.getElementById('mmSec').value||0,s=window._mmSecs[i],t=s.sents[from-1].t.slice(0,60);document.getElementById('mmDlg').close();
+  const tw=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT);let n;while((n=tw.nextNode())){const k=n.nodeValue.indexOf(t.slice(0,30));if(k>=0){const r=document.createRange();r.setStart(n,k);r.setEnd(n,Math.min(n.nodeValue.length,k+t.length));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);(n.parentElement||editor).scrollIntoView({block:'center'});return}}}catch(e){}}
+function mmSaveHtml(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}
+  if(!s||!v){showToast(getLang()==='hi'?'पहले margin map बनाएँ':'Make the margin map first');return}
+  const page='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Margin map: '+escHTML(s.title||'section')+'</title><style>body{font-family:system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#1f2937;background:#fff}.desc{color:#64748b;font-size:12px}h1{font-size:20px}</style></head><body><h1>'+escHTML(s.title||'Section')+'</h1>'+mmRender(v,s,true)+'<p class="desc">Made with Appuscholar.</p></body></html>';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([page],{type:'text/html'}));a.download='margin-map.html';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
