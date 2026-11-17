@@ -50,4 +50,10 @@ ok(!P.label(pages).confident,'text order alone misses a footer that the OCR laye
 r=P.label(pages,edges);ok(r.confident&&r.offset===59&&r.labels[5]==='65','edges give the footer numbers: '+r.labels.join());
 // 15 three pages, one number misread (35, 36, 87): the sequence puts it right
 edges=[['. 35'],['36'],['87']];r=P.label(['a','b','c'],edges);ok(r.confident&&r.labels.join()==='35,36,37'&&r.how[2]==='fixed','three pages with 35, 36 and a misread 87 give 35, 36, 37');
+// 16 "N of M" running heads (MDPI style): the number before "of" is the page, the total is not
+pages=Array.from({length:12},(_,i)=>'body a\nbody b');
+edges=Array.from({length:12},(_,i)=>i===0?['Cover']:['Nutrients 2026 , 18 , 714 '+i+' of 11']);
+r=P.label(pages,edges);ok(r.confident&&r.offset===-1&&r.labels[3]==='3'&&r.labels[11]==='11','"N of M" heads give N, not M: '+r.labels.join());
+edges=Array.from({length:6},(_,i)=>['Journal '+(i+7)+' / 20']);
+r=P.label(Array.from({length:6},()=>'x\ny'),edges);ok(r.confident&&r.labels[0]==='7','"N / M" heads give N');
 console.log(f?'FAILED '+f:'ALL PAGE NUMBER TESTS PASSED');process.exit(f?1:0);
