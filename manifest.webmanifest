@@ -40,5 +40,14 @@
         }
       ]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "title": "sh_title",
+      "text": "sh_text",
+      "url": "sh_url"
+    }
+  }
 }

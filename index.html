@@ -853,6 +853,15 @@ html[data-calm="1"] *,html[data-calm="1"] *::before,html[data-calm="1"] *::after
 #comfortBtn{font-weight:700}
 #listenBtn{position:fixed;left:16px;bottom:16px;z-index:1500;min-height:52px;padding:0 20px;border-radius:26px;border:2px solid #fff;background:var(--purple-700);color:#fff;font:700 17px inherit;font-family:inherit;box-shadow:0 10px 28px rgba(0,0,0,.35);cursor:pointer}
 </style>
+<script>/* Polite use of the free scholarly services (build 2026.11.17a). Every request to Crossref and OpenAlex carries a contact
+   address (their documented "mailto" parameter; a browser cannot set its own User-Agent), and requests to each service are
+   spaced out: Crossref 5 a second, OpenAlex 9 a second, PubMed (NCBI E-utilities, no key) under 3 a second. */
+(function(){if(!window.fetch||window._apiPolite)return;window._apiPolite=1;const of=window.fetch.bind(window),MAIL='contact@appuscholar.com';
+ const RULES=[{h:'api.crossref.org',gap:200,mail:1},{h:'api.openalex.org',gap:110,mail:1},{h:'eutils.ncbi.nlm.nih.gov',gap:350}],next={};
+ window.apiPoliteUrl=function(u){const r=RULES.find(x=>u.indexOf('://'+x.h+'/')>=0);if(!r||!r.mail||/[?&]mailto=/.test(u))return u;const i=u.indexOf('#'),base=i>=0?u.slice(0,i):u,hash=i>=0?u.slice(i):'';return base+(base.indexOf('?')>=0?'&':'?')+'mailto='+encodeURIComponent(MAIL)+hash};
+ window.fetch=function(input,init){const u=typeof input==='string'?input:(input&&input.url)||String(input||'');const r=RULES.find(x=>u.indexOf('://'+x.h+'/')>=0);
+  if(!r)return of(input,init);if(typeof input==='string')input=window.apiPoliteUrl(input);
+  const now=Date.now(),t=Math.max(now,next[r.h]||0);next[r.h]=t+r.gap;const go=()=>of(input,init);return t>now?new Promise(res=>setTimeout(res,t-now)).then(go):go()}})();</script>
 <script>
 /* Comfort settings (opt-in): text size, contrast, bold, spacing, calm motion, and spoken directions. Nothing here is on unless a student turns it on. */
 const CF_T={
@@ -1318,6 +1327,11 @@ window.addEventListener('DOMContentLoaded',()=>{try{cfListenBtn()}catch(e){}});
         <div id="gramTop" class="desc" style="margin-top:6px"></div>
         <div id="gramOut" style="margin-top:6px"></div>
       </div>
+      <div class="fld" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:10px">
+        <b data-i18n="mm_h">Margin map</b>
+        <p class="desc" style="margin:4px 0" data-i18n="mm_desc">Notes in the margin saying what each part of a section does, like a teacher's notes on a model paper. For your draft or a paper you brought in. Shows missing parts too.</p>
+        <button type="button" class="btn btn-purple" onclick="mmOpen()" data-i18n="mm_btn">🖍 Open the margin map</button>
+      </div>
     </div></section>
 
     <section class="card tool-panel" data-panel="style"><div class="panel">
@@ -1439,6 +1453,8 @@ window.addEventListener('DOMContentLoaded',()=>{try{cfListenBtn()}catch(e){}});
       <p class="desc" id="citRealSummary" style="margin-top:2px"></p>
       <p class="desc" id="citNumMissing" style="margin-top:2px;font-weight:600"></p>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="rcRun(true)" data-i18n="rc_btn">🔎 Check that sources exist (Crossref)</button></div>
+      <p class="desc" id="citDupSummary" style="margin-top:2px;font-weight:600;color:#b45309"></p>
+      <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="dupOpen()" data-i18n="dup_btn">🧹 Find the same paper saved twice</button></div>
       <div class="row"><button class="btn btn-ghost" style="flex:1" onclick="ccOpen()" data-i18n="cc_btn">📚 Cross-check citations and references</button></div>
       <div id="citLib" style="margin-top:8px"><p class="desc" data-i18n="cite_no_sources">No sources yet.</p></div>
       <div class="row"><button class="btn btn-gold" style="flex:1" onclick="citInsertBib()" data-i18n="cite_insertbib_btn">Insert reference list</button></div>
@@ -2723,9 +2739,12 @@ const I18N={
     retr_badge:'Retracted', retr_tip:"OpenAlex marks this paper as retracted. Check the publisher's notice before you cite it.",
     retr_lib_warn:"OpenAlex marks this source as retracted. Check the publisher's notice before you cite it.",
     retr_summary_fmt:'Checked {c} sources with a DOI for retractions: {r} flagged. {n} without a DOI could not be checked. No flag does not prove a paper is sound.',
-    rc_btn:'🔎 Check that sources exist (Crossref)', rc_busy:'Checking your sources against Crossref…', rc_done:'Source check done', rc_fail:'Could not reach Crossref right now. Try again in a moment.', rc_empty:'Add a source to your library first.',
+    mm_h:'Margin map', mm_desc:'Notes in the margin saying what each part of a section does, like a teacher\'s notes on a model paper. For your draft or a paper you brought in. Shows missing parts too.', mm_btn:'🖍 Open the margin map',
+    dup_btn:'🧹 Find the same paper saved twice', rc_btn:'🔎 Check that sources exist (Crossref)', rc_busy:'Checking your sources against Crossref…', rc_done:'Source check done', rc_fail:'Could not reach Crossref right now. Try again in a moment.', rc_empty:'Add a source to your library first.',
     rc_summary_fmt:'Checked {n} sources against Crossref: {o} match, {d} differ, {f} not found. Books, reports, theses and Hindi sources are often not in Crossref, so "not found" is a prompt to look again, not proof the source is wrong.',
     rc_ok:'Found in Crossref and the details match.', rc_nf:'Not found in Crossref. Check the DOI, title and author, or the source may simply not be indexed there.', rc_doi_missing:'No DOI saved. The match below came from a title search:',
+    rc_source:'Journal differs. Crossref has:', rc_volume:'Volume differs. Crossref has:', rc_issue:'Issue differs. Crossref has:', rc_pages:'Pages differ. Crossref has:',
+    rc_upd_retr:'Retracted. Do not cite it as evidence.', rc_upd_corr:'A correction was published. Read it before you cite.', rc_upd_eoc:'Expression of concern published. Read it before you cite.', rc_upd_rein:'Reinstated after a retraction.', rc_upd_other:'An editorial update was published.', rc_upd_notice:'notice', rc_upd_pub:'publisher',
     rc_title:'Title differs. Crossref has:', rc_year:'Year differs. Crossref has:', rc_author:'First author differs. Crossref has:', rc_doi_found:'DOI found:', rc_err:'Could not check this one.',
     num_missing_fmt:'Numbers cited in this document with no source in your library: {n}.',
     cite_retract_btn:'🛡 Check for retractions', retr_done:'Retraction check done', retr_failed:'Could not run the retraction check right now. Try again in a moment.',
@@ -2966,8 +2985,11 @@ const I18N={
     retr_badge:'वापस लिया गया', retr_tip:'OpenAlex इस शोध-पत्र को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_lib_warn:'OpenAlex इस स्रोत को वापस लिया गया (retracted) बताता है। उद्धृत करने से पहले प्रकाशक की सूचना जांचें।',
     retr_summary_fmt:'DOI वाले {c} स्रोतों की वापसी (retraction) जांच की गई: {r} चिह्नित। DOI के बिना {n} स्रोतों की जांच नहीं हो सकी। कोई चिह्न न होना यह साबित नहीं करता कि शोध-पत्र भरोसेमंद है।',
-    rc_btn:'🔎 जांचें कि स्रोत मौजूद हैं (Crossref)', rc_busy:'आपके स्रोत Crossref से मिलाए जा रहे हैं…', rc_done:'स्रोतों की जांच पूरी हुई', rc_fail:'अभी Crossref तक नहीं पहुँच सके। थोड़ी देर बाद फिर कोशिश करें।', rc_empty:'पहले लाइब्रेरी में कोई स्रोत जोड़ें।',
+    mm_h:'Margin map', mm_desc:'हाशिये पर notes कि section का हर हिस्सा क्या कर रहा है, जैसे model paper पर शिक्षक के notes। आपके draft या लाए गए paper के लिए। छूटे हिस्से भी दिखाता है।', mm_btn:'🖍 Margin map खोलें',
+    dup_btn:'🧹 दो बार save हुए paper ढूँढें', rc_btn:'🔎 जांचें कि स्रोत मौजूद हैं (Crossref)', rc_busy:'आपके स्रोत Crossref से मिलाए जा रहे हैं…', rc_done:'स्रोतों की जांच पूरी हुई', rc_fail:'अभी Crossref तक नहीं पहुँच सके। थोड़ी देर बाद फिर कोशिश करें।', rc_empty:'पहले लाइब्रेरी में कोई स्रोत जोड़ें।',
     rc_summary_fmt:'{n} स्रोत Crossref से मिलाए गए: {o} मेल खाते हैं, {d} में अंतर है, {f} नहीं मिले। किताबें, रिपोर्ट, शोध-प्रबंध और हिन्दी स्रोत अक्सर Crossref में नहीं होते, इसलिए "नहीं मिला" का मतलब दोबारा देखना है, स्रोत गलत होना नहीं।', rc_ok:'Crossref में मिला और विवरण मेल खाते हैं।', rc_nf:'Crossref में नहीं मिला। DOI, शीर्षक और लेखक जाँचें, या हो सकता है यह स्रोत वहाँ दर्ज ही न हो।', rc_doi_missing:'कोई DOI सहेजा नहीं है। नीचे का मिलान शीर्षक की खोज से आया:',
+    rc_source:'Journal अलग है। Crossref में है:', rc_volume:'Volume अलग है। Crossref में है:', rc_issue:'Issue अलग है। Crossref में है:', rc_pages:'Pages अलग हैं। Crossref में है:',
+    rc_upd_retr:'यह paper वापस लिया गया (retracted)। इसे सबूत की तरह cite न करें।', rc_upd_corr:'इसका correction छपा है। Cite करने से पहले उसे पढ़ें।', rc_upd_eoc:'इस पर expression of concern छपा है। Cite करने से पहले पढ़ें।', rc_upd_rein:'वापस लेने के बाद फिर बहाल किया गया।', rc_upd_other:'इस पर editorial update छपा है।', rc_upd_notice:'सूचना', rc_upd_pub:'publisher',
     rc_title:'शीर्षक अलग है। Crossref में है:', rc_year:'वर्ष अलग है। Crossref में है:', rc_author:'पहला लेखक अलग है। Crossref में है:', rc_doi_found:'DOI मिला:', rc_err:'इसकी जांच नहीं हो सकी।',
     num_missing_fmt:'इस दस्तावेज़ में ऐसी संख्याएँ हैं जिनका आपकी लाइब्रेरी में कोई स्रोत नहीं: {n}।',
     cite_retract_btn:'🛡 वापसी (retraction) जांचें', retr_done:'वापसी की जांच पूरी हुई', retr_failed:'अभी वापसी की जांच नहीं हो सकी। थोड़ी देर बाद फिर कोशिश करें।',
@@ -3990,6 +4012,7 @@ function wExtra2HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
      dgPlanHTML(o)+(c.syn?'<p class="desc" style="margin:6px 0 0">'+L('Synopsis made on ','Synopsis बना: ')+new Date(c.synAt).toLocaleDateString()+'. '+(synGaps(o)>0?L(synGaps(o)+' yellow [ ] gap'+(synGaps(o)===1?'':'s')+' still to fill. This step is done when none are left.',synGaps(o)+' पीली [ ] जगहें अभी भरनी हैं। कोई जगह बाक़ी न रहे, तब यह कदम पूरा होगा।'):synGaps(o)<0?L('The synopsis document was deleted; make it again.','Synopsis का document हटा दिया गया; फिर से बनाएँ।'):L('No gaps left ✓','कोई जगह बाक़ी नहीं ✓'))+' <a href="#" onclick="synOpen();return false">'+L('Open it','खोलें')+'</a></p>':''))}
   if(id==='F1'){const f=(w.F1||{}).done||{},row=(k,t,act,btn)=>'<div style="display:flex;gap:8px;align-items:center;margin:5px 0;font-size:14px"><input type="checkbox"'+(f[k]?' checked':'')+' onchange="f1Tick(\''+k+'\',this.checked)"><span style="flex:1">'+t+'</span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close();'+act+'">'+btn+'</button></div>';
     return box(f1Ok(o),L('Integrity checks','ईमानदारी की जाँच'),'<p class="desc" style="margin:4px 0">'+L('Run each check on the finished book, fix what it finds, then tick it.','पूरी किताब पर हर जाँच चलाएँ, जो मिले उसे ठीक करें, फिर tick करें।')+'</p>'+
+     row('coh',L('The study holds together, problem to conclusion (recommended)','Study समस्या से निष्कर्ष तक एक सूत्र में है (सुझाया गया)'),'cohOpen()',L('Check','जाँचें'))+
      row('sim',L('Closeness to your sources (similarity)','आपके स्रोतों से मिलान (similarity)'),"showTool('close')",L('Open','खोलें'))+
      row('cite',L('Every citation is real and in the reference list','हर citation असली है और reference list में है'),'ccOpen()',L('Check','जाँचें'))+
      row('retr',L('No retracted paper cited without saying so','कोई retracted paper बिना बताए cite नहीं'),"showTool('cite');try{citRetractionRefresh(true)}catch(e){}",L('Check','जाँचें'))+
@@ -3998,7 +4021,7 @@ function wExtra2HTML(id,o){const hi=studyHi(),L=(en,h)=>hi?h:en,w=wGet(o),box=(o
      '<div class="row" style="margin-top:8px"><button type="button" class="btn btn-purple btn-sm" onclick="prOpen()">🧾 '+L('Make my process receipt','मेरे काम की रसीद बनाएँ')+'</button></div>'+
      '<p class="desc" style="margin:6px 0 0">'+L('A detector score alone is never proof of misconduct. Your university\'s own similarity report (UGC 2018) is the one that counts.','अकेला detector score कभी गड़बड़ी का सबूत नहीं। आपकी university की अपनी similarity report (UGC 2018) ही मानी जाती है।')+'</p>')}
   if(id==='F4'){const f=w.F4||{},ck=(g,list)=>list.map(x=>'<label style="display:block;margin:3px 0;font-size:14px"><input type="checkbox"'+((f[g]||{})[x[0]]?' checked':'')+' onchange="f4Tick(\''+g+'\',\''+x[0]+'\',this.checked)"> '+escHTML(hi?x[2]:x[1])+'</label>').join('');
-    return box(f4Ok(o),L('Submission','जमा करना'),'<p style="margin:8px 0 2px"><b>'+L('Thesis to the university','University को thesis')+'</b></p>'+ck('thesis',F4_THESIS)+'<p style="margin:10px 0 2px"><b>'+L('Choosing a journal','Journal चुनना')+'</b> <span class="desc">'+L('(UGC suggestive parameters, 2025; Think.Check.Submit.)','(UGC के सुझाए मानदंड, 2025; Think.Check.Submit.)')+'</span></p>'+ck('journal',F4_JOURNAL)+'<p class="desc" style="margin:6px 0 0">'+L('Done when one list is complete and a submission is recorded below.','एक list पूरी हो और नीचे एक submission दर्ज हो, तब पूरा।')+'</p>')}
+    return box(f4Ok(o),L('Submission','जमा करना'),'<p style="margin:8px 0 2px"><b>'+L('Thesis to the university','University को thesis')+'</b></p>'+ck('thesis',F4_THESIS)+'<p style="margin:10px 0 2px"><b>'+L('Choosing a journal','Journal चुनना')+'</b> <span class="desc">'+L('(UGC suggestive parameters, 2025; Think.Check.Submit.)','(UGC के सुझाए मानदंड, 2025; Think.Check.Submit.)')+'</span></p>'+'<div class="row" style="margin:6px 0"><button type="button" class="btn btn-ghost btn-sm" onclick="jfOpen()">🔎 '+L('Find journals that publish work like mine','मेरे जैसे काम छापने वाले journal ढूँढें')+'</button></div>'+ck('journal',F4_JOURNAL)+'<p class="desc" style="margin:6px 0 0">'+L('Done when one list is complete and a submission is recorded below.','एक list पूरी हो और नीचे एक submission दर्ज हो, तब पूरा।')+'</p>')}
   if(id==='F7'){const c=w.F7||{},s=k=>escAttr(c[k]||''),ch=(k,v)=>'onchange="f7Set(\''+k+'\','+v+')"';const e=ethicsState(o);
     return box(f7Ok(o),L('Closure record','समापन का record'),
      '<label class="desc" style="display:block;margin-top:4px">'+L('How long the data is kept','Data कितने समय रखा जाएगा')+'</label><input type="text" value="'+s('keep')+'" placeholder="'+escAttr(L('e.g. 5 years after the award','जैसे: degree के 5 साल बाद तक'))+'" '+ch('keep','this.value')+'>'+
@@ -9215,7 +9238,7 @@ function removeKey(){
   refreshProvUI();
   showToast(PROVIDERS[p].short+' key removed ✓');
 }
-function openHelp(){document.getElementById('helpDlg').showModal()}
+function openHelp(){try{a11yInit()}catch(e){}document.getElementById('helpDlg').showModal()}
 
 /* ============ FIX 4: readable error messages ============ */
 function showRateLimitAlert(){
@@ -9243,7 +9266,35 @@ function apiMsg(e){
 }
 
 /* ============ FIX 3: suggestion state always in sync ============ */
-function setSug(t){window._sug=t;aiOut.textContent=t;try{aiNoteSet('')}catch(e){}try{dockShow('ai')}catch(e){}if(t)try{aiReveal()}catch(e){}}
+function setSug(t){window._sug=t;window._trk=null;aiOut.textContent=t;try{trkShow(t)}catch(e){}try{aiNoteSet('')}catch(e){}try{dockShow('ai')}catch(e){}if(t)try{aiReveal()}catch(e){}}
+/* Tracked changes for an AI rewrite (idea from GenOffice, our own code). When the student selected text and the AI
+   rewrote it, the panel shows the rewrite as changes against the original: removed words struck through, new words
+   underlined. Each change is a button: press it to keep the original words there instead. Accept puts in only the
+   changes still switched on. Nothing is shown this way when nothing was selected (Continue writing). */
+function trkTok(x){return String(x||'').match(/\s+|[^\s]+/g)||[]}
+function trkDiff(a,b){const A=trkTok(a),B=trkTok(b),n=A.length,m=B.length;if(n*m>4e6)return null;
+  const L=Array.from({length:n+1},()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  const out=[];let i=0,j=0,cur=null;const push=(k,x)=>{if(k==='eq'){if(cur){out.push(cur);cur=null}const l=out[out.length-1];if(l&&l.k==='eq')l.t+=x;else out.push({k:'eq',t:x})}else{if(!cur)cur={k:'ch',del:'',ins:'',on:true};cur[k]+=x}};
+  while(i<n&&j<m){if(A[i]===B[j]){push('eq',A[i]);i++;j++}else if(L[i+1][j]>=L[i][j+1]){push('del',A[i]);i++}else{push('ins',B[j]);j++}}
+  while(i<n)push('del',A[i++]);while(j<m)push('ins',B[j++]);if(cur)out.push(cur);
+  /* a change made only of spaces is not worth a button */
+  return out.map(h=>h.k==='ch'&&!h.del.trim()&&!h.ins.trim()?{k:'eq',t:h.ins}:h)}
+function trkText(h){return h.map(x=>x.k==='eq'?x.t:(x.on?x.ins:x.del)).join('')}
+function trkShow(t){let orig='';try{if(hasSelection())orig=savedRange.toString()}catch(e){}
+  if(!t||orig.trim().length<20||t.length>orig.length*4)return;
+  const h=trkDiff(orig,t);if(!h)return;const n=h.filter(x=>x.k==='ch').length;if(!n)return;
+  window._trk=h;trkRender()}
+function trkRender(){const h=window._trk;if(!h)return;const hi=getLang()==='hi';
+  const n=h.filter(x=>x.k==='ch').length,on=h.filter(x=>x.k==='ch'&&x.on).length;
+  aiOut.innerHTML='<div class="desc" style="white-space:normal;margin-bottom:6px">'+(hi?n+' बदलाव, '+on+' चालू। किसी बदलाव को दबाएँ तो वहाँ आपके मूल शब्द रहेंगे।':n+' change'+(n===1?'':'s')+', '+on+' on. Press a change to keep your original words there.')+
+   ' <a href="#" onclick="trkAll(true);return false">'+(hi?'सब चालू':'All on')+'</a> · <a href="#" onclick="trkAll(false);return false">'+(hi?'सब बंद':'All off')+'</a></div>'+
+   h.map((x,i)=>x.k==='eq'?escHTML(x.t):'<button type="button" class="trk" data-i="'+i+'" aria-pressed="'+x.on+'" onclick="trkToggle('+i+')" title="'+escAttr(x.on?(hi?'दबाएँ: मूल शब्द रखें':'Press to keep your original words'):(hi?'दबाएँ: AI का बदलाव लें':'Press to take the AI change'))+'" style="all:unset;cursor:pointer;border-radius:4px;padding:0 1px;'+(x.on?'':'outline:1px dashed #94a3b8;')+'">'+
+     (x.del?'<del style="color:#b91c1c;'+(x.on?'':'text-decoration:none;color:inherit')+'">'+escHTML(x.del)+'</del>':'')+
+     (x.ins?'<ins style="color:#15803d;text-decoration:underline;'+(x.on?'':'opacity:.45;text-decoration:line-through')+'">'+escHTML(x.ins)+'</ins>':'')+'</button>').join('');
+  window._sug=trkText(h)}
+function trkToggle(i){const h=window._trk;if(!h||!h[i])return;h[i].on=!h[i].on;trkRender()}
+function trkAll(v){const h=window._trk;if(!h)return;h.forEach(x=>{if(x.k==='ch')x.on=v});trkRender()}
 /* Shows an AI error where the student is looking: the AI pane stays open and a toast repeats it. */
 /* Settings button: one tiny call whose exact result is printed inside the Settings window itself. */
 async function aiTest(){
@@ -9271,13 +9322,14 @@ async function aiTest(){
 function showAIError(e){const m=apiMsg(e);window._sug=null;aiOut.textContent=m;try{dockShow('ai')}catch(x){}try{showToast(m)}catch(x){}}
 /* An AI error used to land in the AI suggestion tab while the Tools tab stayed in front, so the student saw nothing. Show it and say it. */
 function sugFail(e){const m=apiMsg(e);clearSug('⚠️ '+m);try{dockShow('ai')}catch(x){}showToast(m)}
-function clearSug(msg){window._sug=null;aiOut.textContent=msg;try{aiNoteSet('')}catch(e){}try{dockShow('tools')}catch(e){}}
+function clearSug(msg){window._sug=null;window._trk=null;aiOut.textContent=msg;try{aiNoteSet('')}catch(e){}try{dockShow('tools')}catch(e){}}
 function copyAI(){
   const t=window._sug||'';if(!t){showToast('Nothing to copy yet');return}
   navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>showToast('Copied ✓'),()=>showToast('Could not copy — select the text instead'));
 }
 function acceptAI(){
   const s=window._sug;if(!s){showToast('No suggestion to accept yet');return}
+  if(window._trk&&!window._trk.some(x=>x.k==='ch'&&x.on)){clearSug(t('ai_pane_placeholder'));showToast(getLang()==='hi'?'सारे बदलाव बंद थे; आपका text जैसा था वैसा है':'All changes were off; your text is unchanged');return}
   insertIntoEditor(s,hasSelection(),true);
   clearSug('Your AI suggestion will appear here…');
   showToast('Inserted ✓ — Ctrl+Z to undo');
@@ -12232,6 +12284,27 @@ function rcSim(a,b){
   let n=0;A.forEach(w=>{if(B.has(w))n++});
   return n/(A.size+B.size-n);
 }
+/* Journal names: equal after tidying, one inside the other, or one an abbreviation of the other
+   ("J Pers Soc Psychol" and "Journal of Personality and Social Psychology"). */
+function rcJNorm(x){return String(x||'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim().replace(/^the /,'')}
+function rcJAbbr(a,b){const sw=new Set(['of','and','the','in','for','on','de','la','und','fur','a','an']);
+  const A=a.split(' ').filter(w=>!sw.has(w)),B=b.split(' ').filter(w=>!sw.has(w));if(!A.length||A.length!==B.length)return false;
+  return A.every((w,i)=>B[i].indexOf(w)===0)}
+function rcJMatch(a,b){const x=rcJNorm(a),y=rcJNorm(b);if(!x||!y)return true;if(x===y||x.indexOf(y)>=0||y.indexOf(x)>=0)return true;return rcJAbbr(x,y)||rcJAbbr(y,x)}
+/* Crossref lists editorial updates on the original record under "updated-by", from the publisher or from
+   Retraction Watch. Corrections and expressions of concern are covered less fully than retractions. */
+function rcUpdates(it){const out=[],seen=new Set();
+  (it['updated-by']||[]).forEach(u=>{const ty=String(u.type||'').toLowerCase().replace(/[\s-]+/g,'_');
+    const k=/retract|withdraw|remov/.test(ty)?'retr':/concern/.test(ty)?'eoc':/correct|errat|corrig|addend/.test(ty)?'corr':/reinstat/.test(ty)?'rein':'other';
+    const key=k+'|'+String(u.DOI||'').toLowerCase();
+    if(seen.has(key)){const o=out.find(x=>x.key===key);if(o&&u.source&&o.src.split(',').indexOf(u.source)<0)o.src+=','+u.source;return}seen.add(key);
+    const dp=((u.updated||{})['date-parts']||[[]])[0]||[];
+    out.push({key:key,k:k,doi:u.DOI||'',src:u.source||'',y:dp[0]||'',label:u.label||u.type||''})});
+  return out}
+function rcUpdLine(c){if(!c||!c.upd||!c.upd.length)return'';
+  return c.upd.map(u=>{const col=u.k==='retr'?'#b91c1c':u.k==='rein'?'#166534':'#92400e',ic=u.k==='retr'?'⛔':u.k==='rein'?'↺':'⚠';
+    return'<div class="desc" style="margin-top:4px;color:'+col+';font-weight:600">'+ic+' '+escHTML(t('rc_upd_'+u.k))+(u.y?' ('+escHTML(String(u.y))+')':'')+
+      (u.doi?' · '+escHTML(t('rc_upd_notice'))+' '+escHTML(u.doi):'')+(u.src?' · '+u.src.split(',').filter(Boolean).map(x=>escHTML(x==='retraction-watch'?'Retraction Watch':t('rc_upd_pub'))).join(', '):'')+'</div>'}).join('')}
 function rcCompare(d,it){
   const msgs=[];
   const ct=(it.title||[''])[0]||'';
@@ -12243,7 +12316,17 @@ function rcCompare(d,it){
   if(cy&&/^\d{4}$/.test(ty)&&Math.abs(+ty-cy)>1)msgs.push({k:'year',v:String(cy)});
   const ln=citLastName(d.author);
   if(ca&&ln&&ln!=='Author'&&!citNames(d.author)[0].org&&ca.toLowerCase()!==ln.toLowerCase())msgs.push({k:'author',v:ca});
-  return{msgs:msgs,found:{title:ct,year:cy,author:ca,doi:it.DOI||''}};
+  /* Journal, volume, issue and first page, checked only when both sides have them and the source is a journal
+     article (for a chapter Crossref's container is the book). Abbreviated journal names count as a match. */
+  const jt=(it['container-title']||[''])[0]||'',js=(it['short-container-title']||[''])[0]||'';
+  let isJ=true;try{isJ=citKind(d.type)==='journal'}catch(e){}
+  if(isJ&&d.source&&jt&&!rcJMatch(d.source,jt)&&!(js&&rcJMatch(d.source,js)))msgs.push({k:'source',v:jt});
+  const nv=x=>String(x||'').trim().toLowerCase().replace(/^(vol|volume|no|issue)\.?\s*/,'');
+  if(isJ&&d.volume&&it.volume&&nv(d.volume)!==nv(it.volume))msgs.push({k:'volume',v:String(it.volume)});
+  if(isJ&&d.issue&&it.issue&&nv(d.issue)!==nv(it.issue))msgs.push({k:'issue',v:String(it.issue)});
+  const fp=x=>((String(x||'').match(/[A-Za-z]?\d+/)||[''])[0]).toLowerCase();
+  if(isJ&&d.pages&&it.page&&fp(d.pages)&&fp(it.page)&&fp(d.pages)!==fp(it.page))msgs.push({k:'pages',v:String(it.page)});
+  return{msgs:msgs,found:{title:ct,year:cy,author:ca,doi:it.DOI||'',source:jt},upd:rcUpdates(it)};
 }
 async function rcCheckOne(d){
   const doi=retrNormDoi(d.doi);
@@ -12254,7 +12337,7 @@ async function rcCheckOne(d){
       if(!r.ok)throw new Error('HTTP '+r.status);
       const it=(await r.json()).message;
       const c=rcCompare(d,it);
-      return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,t:Date.now()};
+      return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,upd:c.upd,t:Date.now()};
     }
     const q=(d.title||'')+' '+citLastName(d.author);
     const r=await fetch('https://api.crossref.org/works?rows=3&query.bibliographic='+encodeURIComponent(q.slice(0,300)));
@@ -12264,7 +12347,7 @@ async function rcCheckOne(d){
     items.forEach(it=>{const sc=rcSim(d.title,(it.title||[''])[0]);if(sc>bs){bs=sc;best=it}});
     if(!best||bs<0.6)return{s:'nf',t:Date.now()};
     const c=rcCompare(d,best);
-    return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,viaTitle:true,t:Date.now()};
+    return{s:c.msgs.length?'diff':'ok',m:c.msgs,f:c.found,upd:c.upd,viaTitle:true,t:Date.now()};
   }catch(e){return{s:'err',t:Date.now()}}
 }
 async function rcRun(force){
@@ -12289,9 +12372,9 @@ async function rcRun(force){
 }
 function rcLine(d,c){
   if(!c||c.s==='err')return c&&c.s==='err'?'<div class="desc" style="margin-top:4px">'+escHTML(t('rc_err'))+'</div>':'';
-  if(c.s==='ok')return'<div class="desc" style="margin-top:4px;color:#166534">✓ '+escHTML(t('rc_ok'))+(c.viaTitle&&c.f&&c.f.doi?' '+escHTML(t('rc_doi_found'))+' '+escHTML(c.f.doi):'')+'</div>';
+  if(c.s==='ok')return'<div class="desc" style="margin-top:4px;color:#166534">✓ '+escHTML(t('rc_ok'))+(c.viaTitle&&c.f&&c.f.doi?' '+escHTML(t('rc_doi_found'))+' '+escHTML(c.f.doi):'')+'</div>'+rcUpdLine(c);
   if(c.s==='nf')return'<div class="desc" style="margin-top:4px;color:#92400e">? '+escHTML(t('rc_nf'))+'</div>';
-  return'<div class="desc" style="margin-top:4px;color:#92400e;font-weight:600">⚠ '+(c.m||[]).map(x=>escHTML(t('rc_'+x.k))+' '+escHTML(x.v)).join(' &nbsp;·&nbsp; ')+(c.viaTitle?'<br><span style="font-weight:400">'+escHTML(t('rc_doi_missing'))+(c.f&&c.f.doi?' '+escHTML(c.f.doi):'')+'</span>':'')+'</div>';
+  return'<div class="desc" style="margin-top:4px;color:#92400e;font-weight:600">⚠ '+(c.m||[]).map(x=>escHTML(t('rc_'+x.k))+' '+escHTML(x.v)).join(' &nbsp;·&nbsp; ')+(c.viaTitle?'<br><span style="font-weight:400">'+escHTML(t('rc_doi_missing'))+(c.f&&c.f.doi?' '+escHTML(c.f.doi):'')+'</span>':'')+'</div>'+rcUpdLine(c);
 }
 /* Numbers in the open document that point at no source in the library (numbered styles only). */
 function citMissingNumbers(docs,libLen){
@@ -12325,6 +12408,7 @@ function citStyleNoteUpdate(){
 function citRender(){
   citStyleNoteUpdate();
   const l=citGetLib(),box=document.getElementById('citLib');
+  try{dupSummaryRender(l)}catch(e){}
   document.getElementById('citCount').textContent=l.length+(l.some(d=>d.scr)?' ('+citScrSummary(l)+')':'');
   const sumEl=document.getElementById('citUsageSummary');
   const retrEl=document.getElementById('citRetractSummary');
@@ -12511,7 +12595,7 @@ function citCrRecord(it){const ctype=String(it.type||''),dp=((it.issued||{})['da
     volume:it.volume||'',issue:it.issue||'',pages:it.page||(it['article-number']?'Article '+it['article-number']:''),doi:it.DOI||'',url:'',
     type:isCh?'Book chapter':isConf?'Conference paper':isRep?'Report':isThesis?'Thesis':isBook?'Book':'Journal article',style:(document.getElementById('citStyle')||{}).value||'apa',lang:'en'}}
 async function citDoiRecord(doi){const r=await fetch('https://api.crossref.org/works/'+encodeURIComponent(doi));if(!r.ok)return null;return citCrRecord((await r.json()).message)}
-function citLibHas(rec){const l=citGetLib(),k=citKey(rec);return l.some(e=>citKey(e)===k||(rec.doi&&e.doi&&e.doi.toLowerCase()===rec.doi.toLowerCase()))}
+function citLibHas(rec){const l=citGetLib(),k=citKey(rec);return l.some(e=>citKey(e)===k||(rec.doi&&e.doi&&e.doi.toLowerCase()===rec.doi.toLowerCase())||(typeof dupSameWork==='function'&&dupSameWork(e,rec)))}
 function citLibPush(recs){const l=citGetLib();let n=0;recs.forEach(r=>{if(r&&!citLibHas(r)){l.push(r);n++}});if(n)citSaveLib(l);return n}
 /* Website check: the four questions a reader asks of any page before trusting it. */
 const CIT_WC=[['who',['Who wrote it?','किसने लिखा?'],[['person','A named expert','नामित विशेषज्ञ'],['org','A known organisation','जानी-मानी संस्था'],['none','No author shown','लेखक नहीं दिखा']]],
@@ -19291,8 +19375,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=118;
-const APP_BUILD='2026.11.10y';
+const APP_VERSION=119;
+const APP_BUILD='2026.11.17b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -20851,11 +20935,21 @@ function shStatsHTML(p){
     '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Found by text patterns. Each line is what the paper prints; it does not mean the result is right. Lines that start with Table come from the table\u2019s own columns; tables set as pictures are not read.</p></div></details>'}
 /* Sections of the open paper, found from the PDF's own type sizes and fonts (no AI, nothing leaves the device). Each chip jumps to its page. */
 const SH_KIND_NAME={abstract:'Abstract',keywords:'Keywords',introduction:'Introduction',methods:'Methods',results:'Results',discussion:'Discussion',limitations:'Limitations',conclusion:'Conclusion',references:'References',backmatter:'Back matter',other:'Other'};
+/* Text of one detected section of a shelf paper, for the margin map. Same page slicing as shPaperText. */
+function shSectionText(p,i){const S=p&&p.sections,pages=(p&&p.pages)||[];if(!S||!S[i]||!pages.length)return'';const s=S[i],next=S[i+1],last=Math.max(s.page,next?next.page:pages.length);let out='';
+  for(let pg=s.page;pg<=Math.min(last,pages.length);pg++){let t=String(pages[pg-1]||'');if(pg===s.page){const k=t.indexOf(s.title);if(k>=0)t=t.slice(k+s.title.length)}
+    if(next&&pg===next.page){const k=t.indexOf(next.title);if(k>=0)t=t.slice(0,k)}out+=' '+t}
+  return out.replace(/-\s*\n\s*/g,'').replace(/\s+/g,' ').trim()}
+const MM_SHELF_KIND={abstract:'abs',introduction:'intro',methods:'meth',results:'res',discussion:'disc'};
+function shMarginMap(i){const p=SH.cur;if(!p||!p.sections)return;const secs=[],idx=[];
+  p.sections.forEach((s,k)=>{if(!MM_SHELF_KIND[s.kind])return;const t=shSectionText(p,k);if(t.length<80)return;idx.push(k);secs.push({title:SH_KIND_NAME[s.kind]+': '+s.title,kind:MM_SHELF_KIND[s.kind],sents:mmSplit(t).map(x=>({p:1,t:x}))})});
+  if(!secs.length){showToast(getLang()==='hi'?'इस paper के sections का text नहीं मिला':'No section text could be read from this paper');return}
+  window._mmPaper=p.id;mmOpen({secs:secs,pick:Math.max(0,idx.indexOf(i))})}
 function shSectionsHTML(p){
   const S=p.sections;
   if(!S||!S.length)return'<div class="row" style="gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap"><span style="font-size:12.5px;color:var(--muted)">'+(Array.isArray(S)?'No headings could be found in this paper.':'Sections not found yet.')+'</span><button class="btn btn-ghost" onclick="shFindSections()">Find sections</button><span id="shSecMsg" style="font-size:12.5px"></span></div>';
   const chip=(x,sub)=>'<button class="btn btn-ghost" style="padding:2px 8px;font-size:'+(sub?'12':'13')+'px" title="Go to page '+x.page+'" onclick="shGo('+x.page+')">'+escHTML(x.title.length>40?x.title.slice(0,38)+'…':x.title)+' <span style="color:var(--muted)">p.'+x.page+'</span></button>';
-  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Sections</b> ('+S.length+')</summary><div style="margin-top:4px">'+S.map(x=>'<div style="margin:3px 0"><span style="display:inline-block;min-width:96px;font-size:12px;color:var(--muted)">'+escHTML(SH_KIND_NAME[x.kind]||'Other')+'</span>'+chip(x,false)+((x.subs&&x.subs.length)?' <span style="font-size:12px;color:var(--muted)">'+x.subs.slice(0,12).map(y=>chip(y,true)).join(' ')+(x.subs.length>12?' …':'')+'</span>':'')+'</div>').join('')+'<p style="font-size:12px;color:var(--muted);margin:4px 0 0">'+(p.md?'Found from the headings in the Markdown file.':'Found from the paper\u2019s type sizes and fonts, so a heading set in body type can be missed. Check against the page.')+'</p></div></details>';
+  return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Sections</b> ('+S.length+')</summary><div style="margin-top:4px">'+S.map(x=>'<div style="margin:3px 0"><span style="display:inline-block;min-width:96px;font-size:12px;color:var(--muted)">'+escHTML(SH_KIND_NAME[x.kind]||'Other')+'</span>'+chip(x,false)+(MM_SHELF_KIND[x.kind]&&p.pages&&p.pages.length?' <button class="btn btn-ghost" style="padding:2px 8px;font-size:12px" title="Margin map" onclick="shMarginMap('+S.indexOf(x)+')">🖍</button>':'')+((x.subs&&x.subs.length)?' <span style="font-size:12px;color:var(--muted)">'+x.subs.slice(0,12).map(y=>chip(y,true)).join(' ')+(x.subs.length>12?' …':'')+'</span>':'')+'</div>').join('')+'<p style="font-size:12px;color:var(--muted);margin:4px 0 0">'+(p.md?'Found from the headings in the Markdown file.':'Found from the paper\u2019s type sizes and fonts, so a heading set in body type can be missed. Check against the page.')+'</p></div></details>';
 }
 async function shFindSections(){
   const p=SH.cur;if(!p)return;const m=document.getElementById('shSecMsg');if(m)m.textContent='Reading the headings…';
@@ -23381,6 +23475,738 @@ async function licenseGate(){
   return licensePromptLoop(null);
 }
 
+/* ============ Library duplicates, My prompts, shared links, accessibility (build 2026.11.16f) ============
+   Ideas taken from NotebookLM add-ons (NotebookLM Tools' duplicate scanner and saved /prompts, FolderLM's
+   source merge, the exporters) and from the INFLIBNET accessibility page. Our own code. Nothing leaves the device. */
+
+/* ---- 1. Duplicate finder for the citation library ----
+   Import already skips exact copies. This finds the near ones: the same DOI written two ways, a title with
+   different punctuation or case, a title with a small change. The student decides every pair; nothing is
+   merged on its own. A preprint and its published version often share a title but have different DOIs, so
+   such pairs carry a warning and "Not the same" is always offered. */
+function dupNormTitle(t){return String(t||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase()
+  .replace(/<[^>]*>/g,' ').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim().replace(/^(the|a|an) /,'')}
+function dupNormDoi(d){return String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'').replace(/^doi:\s*/i,'').replace(/[.,;:)\]]+$/,'').toLowerCase()}
+function dupSurname(a){const s=String(a||'').split(';')[0].trim();if(!s)return'';const p=s.includes(',')?s.split(',')[0]:s.split(/\s+/).pop();return dupNormTitle(p)}
+function dupWords(t){return new Set(dupNormTitle(t).split(' ').filter(w=>w.length>1))}
+function dupDice(a,b){if(!a.size||!b.size)return 0;let n=0;a.forEach(w=>{if(b.has(w))n++});return 2*n/(a.size+b.size)}
+function dupNotKey(a,b){return[a,b].sort().join('|')}
+function dupNotGet(){try{const v=JSON.parse(LS.get(pkey('appu_cit_notdup'))||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+/* Returns pairs [i,j,reason,warn]. fuzzy=false is the cheap check used on every library render. */
+function dupScan(l,fuzzy){
+  const out=[],seen=new Set(),not=new Set(dupNotGet());
+  const add=(i,j,why,warn)=>{if(i===j)return;const a=Math.min(i,j),b=Math.max(i,j),k=a+'|'+b;if(seen.has(k))return;
+    const ca=l[a].cid||'',cb=l[b].cid||'';if(ca&&cb&&not.has(dupNotKey(ca,cb)))return;seen.add(k);out.push([a,b,why,warn||''])};
+  const byDoi={},byTitle={},byAY={};
+  l.forEach((d,i)=>{if(!d)return;const doi=dupNormDoi(d.doi);if(/^10\.\d{4,9}\//.test(doi))(byDoi[doi]=byDoi[doi]||[]).push(i);
+    const t=dupNormTitle(d.title);if(t.length>=12)(byTitle[t]=byTitle[t]||[]).push(i);
+    if(fuzzy){const k=dupSurname(d.author)+'|'+String(d.year||'').trim();(byAY[k]=byAY[k]||[]).push(i)}});
+  Object.values(byDoi).forEach(g=>{for(let x=1;x<g.length;x++)add(g[0],g[x],'doi')});
+  Object.values(byTitle).forEach(g=>{for(let x=0;x<g.length;x++)for(let y=x+1;y<g.length;y++){const A=l[g[x]],B=l[g[y]];
+    const ya=parseInt(A.year,10),yb=parseInt(B.year,10),sa=dupSurname(A.author),sb=dupSurname(B.author);
+    if(ya&&yb&&Math.abs(ya-yb)>1)continue;if(sa&&sb&&sa!==sb)continue;
+    const da=dupNormDoi(A.doi),db=dupNormDoi(B.doi);add(g[x],g[y],'title',(da&&db&&da!==db)?'twodoi':(ya&&yb&&ya!==yb)?'year':'')}});
+  if(fuzzy)Object.entries(byAY).forEach(([k,g])=>{if(k.startsWith('|')||k.endsWith('|')||g.length<2||g.length>400)return;
+    const w=g.map(i=>dupWords(l[i].title));
+    for(let x=0;x<g.length;x++)for(let y=x+1;y<g.length;y++){if(dupDice(w[x],w[y])>=0.85){const da=dupNormDoi(l[g[x]].doi),db=dupNormDoi(l[g[y]].doi);add(g[x],g[y],'close',(da&&db&&da!==db)?'twodoi':'')}}});
+  return out}
+/* Same work for the import check: normalised DOI, or normalised title with the same surname and year. */
+function dupSameWork(a,b){const da=dupNormDoi(a.doi),db=dupNormDoi(b.doi);if(da&&db)return da===db;
+  const ta=dupNormTitle(a.title);return ta.length>=12&&ta===dupNormTitle(b.title)&&dupSurname(a.author)===dupSurname(b.author)&&String(a.year||'').trim()===String(b.year||'').trim()}
+function dupSummaryRender(l){const el=document.getElementById('citDupSummary');if(!el)return;const hi=getLang()==='hi';
+  let n=0;try{n=dupScan(l||citGetLib(),false).length}catch(e){}
+  el.innerHTML=n?'⚠ '+(hi?n+' जोड़े एक ही paper जैसे दिखते हैं। ':n+' pair'+(n===1?'':'s')+' look like the same paper. ')+'<a href="#" onclick="dupOpen();return false">'+(hi?'जाँचें':'Check them')+'</a>':'';}
+const DUP_FIELDS=[['author','Authors','लेखक'],['year','Year','वर्ष'],['title','Title','शीर्षक'],['source','Journal or source','Journal या स्रोत'],['volume','Volume','Volume'],['issue','Issue','Issue'],['pages','Pages','Pages'],['doi','DOI','DOI'],['url','Link','Link'],['type','Type','प्रकार']];
+function dupEmpty(v){return v==null||v===''||(Array.isArray(v)&&!v.length)||(typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length)}
+function dupUses(d,docs,i){try{return(citUsage(d,docs,i)||[]).length}catch(e){return 0}}
+function dupOpen(){
+  const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('dupDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='dupDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  const l=citGetLib(),pairs=dupScan(l,true);let docs=[];try{docs=citPlainDocs()}catch(e){}
+  const why={doi:L('Same DOI','एक ही DOI'),title:L('Same title','एक ही शीर्षक'),close:L('Nearly the same title, same first author and year','लगभग एक ही शीर्षक, वही पहले लेखक और वर्ष')};
+  const warn={twodoi:L('The two DOIs differ. This is often a preprint and the published paper. If so, choose "Not the same" and cite the published one.','दोनों DOI अलग हैं। अक्सर यह preprint और छपा हुआ paper होता है। ऐसा हो तो "एक नहीं हैं" चुनें और छपे हुए को cite करें।'),
+    year:L('The years differ by one. Check which is the final publication year.','वर्ष में एक का अंतर है। देखें कि अंतिम प्रकाशन वर्ष कौन-सा है।')};
+  const card=(d,i)=>{const u=dupUses(d,docs,i),sc=d.scr&&d.scr.st?d.scr.st:'';
+    return'<div style="flex:1;min-width:220px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px">'+
+      DUP_FIELDS.map(f=>dupEmpty(d[f[0]])?'':'<div><span class="desc">'+escHTML(hi?f[2]:f[1])+':</span> '+escHTML(String(d[f[0]]).slice(0,300))+'</div>').join('')+
+      '<div class="desc" style="margin-top:4px">'+[u?L('Cited ','Cite हुआ ')+u+L(' time'+(u===1?'':'s'),' बार'):L('Not cited yet','अभी cite नहीं'),d.shelf?L('PDF on shelf','Shelf पर PDF'):'',sc?L('Screening: ','Screening: ')+escHTML(sc):'',(d.notes||d.note)?L('Has notes','Notes हैं'):''].filter(Boolean).join(' · ')+'</div></div>'};
+  const fills=(k,r)=>DUP_FIELDS.filter(f=>dupEmpty(k[f[0]])&&!dupEmpty(r[f[0]])).map(f=>hi?f[2]:f[1]);
+  let h='<div class="dlg-body"><h2>'+L('Possible duplicates in your library','आपकी library में संभावित दोहराव')+'</h2>'+
+    '<p class="desc">'+L('Each pair below looks like one paper saved twice. You decide. "Keep" saves that copy and fills its empty fields from the other; citations in your documents, notes and the reading shelf move to the copy you keep. Nothing is merged unless you press a button.','नीचे हर जोड़ा एक ही paper जैसा लगता है जो दो बार save हुआ। फ़ैसला आपका है। "रखें" उस copy को रखता है और उसके खाली खाने दूसरी से भरता है; documents, notes और reading shelf के citations रखी गई copy पर चले जाते हैं। बटन दबाए बिना कुछ नहीं जुड़ता।')+'</p>';
+  if(!pairs.length)h+='<p style="font-weight:600;margin:14px 0">'+L('No likely duplicates found.','कोई संभावित दोहराव नहीं मिला।')+'</p>';
+  pairs.slice(0,60).forEach(([a,b,w,wn])=>{const A=l[a],B=l[b],fa=fills(A,B),fb=fills(B,A);
+    h+='<div class="dup-pair" style="border-top:1px solid var(--line);padding:10px 0"><b style="font-size:13px">'+escHTML(why[w]||'')+'</b>'+(wn?'<p class="desc" style="color:#b45309;margin:4px 0">⚠ '+escHTML(warn[wn])+'</p>':'')+
+      '<div class="row" style="gap:8px;align-items:stretch;flex-wrap:wrap;margin-top:6px">'+card(A,a)+card(B,b)+'</div>'+
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">'+
+      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+escAttr(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Keep the first','पहली रखें')+(fa.length?' (+'+escHTML(fa.join(', '))+')':'')+'</button>'+
+      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+escAttr(B.cid)+'\',\''+escAttr(A.cid)+'\')">'+L('Keep the second','दूसरी रखें')+(fb.length?' (+'+escHTML(fb.join(', '))+')':'')+'</button>'+
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="dupNotSame(\''+escAttr(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Not the same','एक नहीं हैं')+'</button></div></div>'});
+  if(pairs.length>60)h+='<p class="desc">'+L('Showing the first 60. Resolve these and open the check again for the rest.','पहले 60 दिखाए गए हैं। इन्हें निपटाकर बाकी के लिए फिर खोलें।')+'</p>';
+  h+='<div class="row" style="margin-top:12px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'dupDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  dlg.innerHTML=h;if(!dlg.open)dlg.showModal()}
+function dupNotSame(a,b){const v=dupNotGet(),k=dupNotKey(a,b);if(v.indexOf(k)<0){v.push(k);LS.set(pkey('appu_cit_notdup'),JSON.stringify(v))}
+  try{citRender()}catch(e){}dupOpen()}
+/* Moves every reference to drop onto keep: documents (stored and the open editor), study records, notes,
+   the reading shelf. Citation ids are unique random strings, so a plain text swap inside stored values is exact. */
+async function dupMerge(keep,drop){
+  const hi=getLang()==='hi',l=citGetLib(),K=l.find(d=>d.cid===keep),R=l.find(d=>d.cid===drop);if(!K||!R||keep===drop)return;
+  const m=Object.assign({},K);Object.keys(R).forEach(k=>{if(k==='cid')return;
+    if(dupEmpty(m[k])&&!dupEmpty(R[k]))m[k]=R[k];
+    else if((k==='notes'||k==='note')&&typeof m[k]==='string'&&typeof R[k]==='string'&&R[k].trim()&&m[k].indexOf(R[k].trim())<0)m[k]=m[k]+'\n— \n'+R[k]});
+  const scrClash=K.scr&&R.scr&&K.scr.st&&R.scr.st&&K.scr.st!==R.scr.st;
+  const fix=v=>v.split(drop).join(keep).replace(/(data-cid=\\?")([^"\\]*)(\\?")/g,(x,a,b,c)=>a+[...new Set(b.split(','))].join(',')+c);
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.indexOf(drop)>=0){try{localStorage.setItem(k,fix(v))}catch(e){}}}}catch(e){}
+  try{if(typeof sessionKeys==='object')Object.keys(sessionKeys).forEach(k=>{const v=sessionKeys[k];if(typeof v==='string'&&v.indexOf(drop)>=0)sessionKeys[k]=fix(v)})}catch(e){}
+  try{if(typeof editor!=='undefined'&&editor)editor.querySelectorAll('span.cit[data-cid]').forEach(s=>{const c=s.getAttribute('data-cid')||'';if(c.split(',').indexOf(drop)>=0)s.setAttribute('data-cid',[...new Set(c.split(',').map(x=>x===drop?keep:x))].join(','))})}catch(e){}
+  const nl=citGetLib().filter(d=>d.cid!==drop&&d.cid!==keep);const at=l.findIndex(d=>d.cid===keep);nl.splice(Math.min(at,nl.length),0,m);citSaveLib(nl);
+  try{const ps=await shAll();for(const p of ps){if(p&&p.lib===drop){p.lib=keep;await shPut(p)}}}catch(e){}
+  try{citRefreshDoc()}catch(e){}try{citRender()}catch(e){}
+  showToast(scrClash?(hi?'जुड़ गया। दोनों के screening फ़ैसले अलग थे; रखी गई copy का फ़ैसला बचा है, उसे जाँच लें।':'Merged. The two screening decisions differed; the kept copy\'s decision stays, so check it.'):(hi?'जुड़ गया ✓':'Merged ✓'));
+  if(document.getElementById('dupDlg')&&document.getElementById('dupDlg').open)dupOpen()}
+
+/* ---- 2. My prompts in Ask Appuscholar ----
+   Type / in the Ask box to pick a saved prompt; the text goes into the box for the student to finish. Kept on this
+   device for this student, across projects. Starters are written to fit the coaching rule of the Ask panel. */
+const MP_START=[
+  {id:'s1',name:['Explain simply','सरल शब्दों में'],text:['Explain this idea in simple words with one everyday example: ','इस बात को सरल शब्दों में, रोज़ की एक मिसाल के साथ समझाइए: ']},
+  {id:'s2',name:['Weak points of my method','मेरे method की कमज़ोरियाँ'],text:['What are the weak points in this method, and how could I fix each one? Method: ','इस method में कमज़ोर बातें क्या हैं, और हर एक को कैसे सुधारूँ? Method: ']},
+  {id:'s3',name:['Find my variables','मेरे variables'],text:['In this study idea, which is the independent variable, which is the dependent variable, and what could confound it? Idea: ','इस study के idea में independent variable कौन-सा है, dependent variable कौन-सा, और कौन-सी बात नतीजे को बिगाड़ सकती है (confounder)? Idea: ']},
+  {id:'s4',name:['Questions my examiner may ask','Examiner के संभावित सवाल'],text:['Ask me three questions an examiner might ask about this, one at a time, and wait for my answer: ','इस पर examiner जो तीन सवाल पूछ सकता है, वे एक-एक करके पूछिए और मेरे जवाब का इंतज़ार कीजिए: ']}];
+function mpGet(){try{const v=JSON.parse(LS.get('appu_myprompts')||'null');if(Array.isArray(v))return v}catch(e){}
+  const hi=getLang()==='hi';return MP_START.map(p=>({id:p.id,name:p.name[hi?1:0],text:p.text[hi?1:0],starter:1}))}
+function mpSave(v){LS.set('appu_myprompts',JSON.stringify(v.slice(0,100)))}
+function mpMenuEl(){let m=document.getElementById('mpMenu');if(!m){const inp=document.getElementById('chatIn');if(!inp)return null;m=document.createElement('div');m.id='mpMenu';m.setAttribute('role','listbox');
+  m.style.cssText='display:none;border:1px solid var(--line);border-radius:10px;background:var(--card,#fff);box-shadow:0 6px 20px rgba(0,0,0,.12);max-height:220px;overflow:auto;margin:4px 0;font-size:13px';inp.insertAdjacentElement('afterend',m)}return m}
+let MP_SEL=0,MP_LIST=[];
+function mpMenuUpdate(){const inp=document.getElementById('chatIn'),m=mpMenuEl();if(!inp||!m)return;const v=inp.value;
+  if(!/^\/[^\n]*$/.test(v)||v.length>40){m.style.display='none';MP_LIST=[];return}
+  const q=dupNormTitle(v.slice(1));MP_LIST=mpGet().filter(p=>!q||dupNormTitle(p.name+' '+p.text).indexOf(q)>=0);
+  if(MP_SEL>=MP_LIST.length)MP_SEL=0;
+  m.innerHTML=MP_LIST.length?MP_LIST.map((p,i)=>'<div role="option" aria-selected="'+(i===MP_SEL)+'" data-i="'+i+'" style="padding:6px 10px;cursor:pointer;'+(i===MP_SEL?'background:var(--soft,#ede9fe)':'')+'"><b>/'+escHTML(p.name)+'</b> <span class="desc">'+escHTML(p.text.slice(0,70))+'</span></div>').join(''):
+    '<div style="padding:6px 10px" class="desc">'+(getLang()==='hi'?'कोई saved prompt नहीं मिला':'No saved prompt matches')+'</div>';
+  m.style.display='block';m.querySelectorAll('[data-i]').forEach(el=>el.onmousedown=e=>{e.preventDefault();mpPick(+el.dataset.i)})}
+function mpPick(i){const p=MP_LIST[i],inp=document.getElementById('chatIn');if(!p||!inp)return;inp.value=p.text;const m=mpMenuEl();if(m)m.style.display='none';MP_LIST=[];inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length)}catch(e){}}
+function mpSaveCurrent(){const hi=getLang()==='hi',inp=document.getElementById('chatIn');let t=inp?inp.value.trim():'';
+  if(!t){const u=[...document.querySelectorAll('#chatLog .msg.user')].pop();t=u?u.textContent.trim():''}
+  if(!t||t[0]==='/'){showToast(hi?'पहले Ask box में सवाल लिखें':'Type a question in the Ask box first');return}
+  const name=prompt(hi?'इस prompt का छोटा नाम:':'A short name for this prompt:',t.slice(0,30));if(name==null)return;
+  const v=mpGet();v.unshift({id:'p'+Date.now().toString(36),name:String(name).trim().slice(0,40)||t.slice(0,30),text:t.slice(0,1500)});mpSave(v);
+  showToast(hi?'Save हुआ। Ask box में / लिखकर चुनें।':'Saved. Type / in the Ask box to use it.')}
+function mpManage(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('mpDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='mpDlg';document.body.appendChild(dlg)}
+  const v=mpGet();
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('My prompts','मेरे prompts')+'</h2><p class="desc">'+L('Questions you ask again and again. In the Ask box, type / and pick one. They stay on this device.','जो सवाल आप बार-बार पूछते हैं। Ask box में / लिखें और चुनें। ये इसी device पर रहते हैं।')+'</p>'+
+    v.map((p,i)=>'<div style="border-top:1px solid var(--line);padding:8px 0"><input type="text" class="mp-n" data-i="'+i+'" value="'+escAttr(p.name)+'" aria-label="'+escAttr(L('Name','नाम'))+'" style="font-weight:600;margin-bottom:4px"><textarea class="mp-t" data-i="'+i+'" rows="2" aria-label="'+escAttr(L('Prompt text','Prompt का text'))+'">'+escHTML(p.text)+'</textarea><button type="button" class="btn btn-ghost btn-sm" onclick="mpDel('+i+')">'+L('Delete','हटाएँ')+'</button></div>').join('')+
+    '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" style="flex:1" onclick="mpAdd()">+ '+L('New prompt','नया prompt')+'</button><button type="button" class="btn btn-purple" style="flex:1" onclick="mpStore();document.getElementById(\'mpDlg\').close()">'+L('Save and close','Save करके बंद करें')+'</button></div></div>';
+  if(!dlg.open)dlg.showModal()}
+function mpStore(){const v=mpGet(),dlg=document.getElementById('mpDlg');if(!dlg)return v;
+  dlg.querySelectorAll('.mp-n').forEach(el=>{const p=v[+el.dataset.i];if(p){p.name=el.value.trim().slice(0,40)||p.name;delete p.starter}});
+  dlg.querySelectorAll('.mp-t').forEach(el=>{const p=v[+el.dataset.i];if(p)p.text=el.value.slice(0,1500)});
+  const out=v.filter(p=>p.text.trim());mpSave(out);return out}
+function mpAdd(){const v=mpStore();v.push({id:'p'+Date.now().toString(36),name:getLang()==='hi'?'नया prompt':'New prompt',text:' '});mpSave(v);mpManage()}
+function mpDel(i){const v=mpStore();v.splice(i,1);mpSave(v);mpManage()}
+/* Chat as notes: the questions and answers of this sitting, as a Markdown file. */
+function chatSaveMd(){const hi=getLang()==='hi',ms=[...document.querySelectorAll('#chatLog .msg')];
+  if(!ms.some(m=>m.classList.contains('ai')&&m.dataset.reply)){showToast(hi?'Save करने को कोई जवाब नहीं है':'No answers to save yet');return}
+  const d=new Date().toISOString().slice(0,10);let md='# Ask Appuscholar, '+d+'\n\n_'+(hi?'AI के जवाब। Cite करने से पहले असली स्रोत से जाँचें।':'AI answers. Check them against a real source before you cite anything.')+'_\n\n';
+  ms.forEach(m=>{if(m.classList.contains('user'))md+='## '+m.textContent.trim().replace(/\n+/g,' ')+'\n\n';else if(m.dataset.reply)md+=m.dataset.reply.trim()+'\n\n'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download='ask-appuscholar-'+d+'.md';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function mpInit(){const inp=document.getElementById('chatIn');if(!inp||inp.dataset.mp)return;inp.dataset.mp='1';
+  const hi=getLang()==='hi';inp.setAttribute('aria-autocomplete','list');
+  inp.addEventListener('input',mpMenuUpdate);
+  inp.addEventListener('blur',()=>setTimeout(()=>{const m=document.getElementById('mpMenu');if(m)m.style.display='none'},150));
+  inp.addEventListener('keydown',e=>{if(!MP_LIST.length)return;const m=document.getElementById('mpMenu');if(!m||m.style.display==='none')return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();MP_SEL=(MP_SEL+(e.key==='ArrowDown'?1:MP_LIST.length-1))%MP_LIST.length;mpMenuUpdate()}
+    else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();e.stopImmediatePropagation();mpPick(MP_SEL)}
+    else if(e.key==='Escape'){m.style.display='none';MP_LIST=[]}},true);
+  const row=document.createElement('div');row.className='row';row.id='mpRow';row.style.cssText='gap:8px;flex-wrap:wrap;margin-top:6px';
+  row.innerHTML='<button type="button" class="btn btn-ghost btn-sm" style="flex:1" onclick="mpSaveCurrent()">⭐ '+(hi?'यह सवाल save करें':'Save this question')+'</button><button type="button" class="btn btn-ghost btn-sm" style="flex:1" onclick="mpManage()">/ '+(hi?'मेरे prompts':'My prompts')+'</button><button type="button" class="btn btn-ghost btn-sm" style="flex:1" onclick="chatSaveMd()">⬇ '+(hi?'बातचीत notes में (.md)':'Save chat as notes (.md)')+'</button>';
+  const send=inp.parentNode.querySelector('.row');(send||inp).insertAdjacentElement('afterend',row);
+  const tip=document.createElement('p');tip.className='desc';tip.style.marginTop='4px';tip.textContent=hi?'सुझाव: Ask box में / लिखें और अपना saved prompt चुनें।':'Tip: type / in the Ask box to pick a saved prompt.';row.insertAdjacentElement('afterend',tip)}
+
+/* ---- 3. A link shared from another app (Android share sheet) ----
+   The installed app is offered in the phone's Share menu (share_target in the manifest). The shared link lands in
+   the Citation Manager and the usual Crossref or PubMed lookup runs. iPhone has no web share target; there the
+   student pastes the link into the DOI or link box. */
+function shareTargetCheck(){
+  let q;try{q=new URLSearchParams(location.search)}catch(e){return false}
+  if(!q.has('sh_url')&&!q.has('sh_text')&&!q.has('sh_title'))return false;
+  const url=(q.get('sh_url')||'').trim(),text=(q.get('sh_text')||'').trim(),title=(q.get('sh_title')||'').trim();
+  try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+  const all=[url,text,title].join(' ');const link=url||((text.match(/https?:\/\/\S+/)||[])[0]||'');
+  const doi=citExtractDoi(all),pmid=citExtractPmid(all);
+  if(!doi&&!pmid&&!link&&!title&&!text)return false;
+  try{showTool('cite')}catch(e){}
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v};
+  set('citDOI',doi||(pmid?'PMID '+pmid:''));set('citURL',link);
+  const tt=title&&!/^https?:/.test(title)?title:(text&&!/^https?:\/\/\S+$/.test(text)?text.replace(/https?:\/\/\S+/g,'').trim():'');set('citTitle',tt.slice(0,300));
+  showToast(getLang()==='hi'?'Share किया गया link मिला। Details ढूँढ रहे हैं…':'Shared link received. Looking up its details…');
+  if(doi||pmid||tt)setTimeout(()=>{try{citLookup()}catch(e){}},400);
+  return true}
+
+/* ---- 4. Accessibility statement (Help) ----
+   Inspired by the "Screen Reader Access" page Indian government and university sites carry. It names only what is
+   true today, says what has not been tested, and gives a way to report a barrier. */
+function a11yHTML(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;
+  return'<summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px">♿ '+L('Accessibility and screen readers','Accessibility और screen reader')+'</summary>'+
+  '<div style="font-size:13px;line-height:1.7;margin-top:8px">'+
+  '<p><b>'+L('What works now','अभी क्या चलता है')+'</b></p><ul style="margin:0 0 6px 18px;padding:0">'+
+  '<li>'+L('Comfort settings (above): four text sizes, strong contrast, heavier text, roomy spacing, calm motion. All are off until you turn them on.','Comfort settings (ऊपर): text के चार आकार, तेज़ contrast, मोटा text, खुली spacing, धीमी हलचल। आप चालू न करें तो सब बंद रहते हैं।')+'</li>'+
+  '<li>'+L('Listen button (Alt+L) reads the open window, the Home screen or the current tool aloud, in English or Hindi.','Listen बटन (Alt+L) खुली window, Home screen या चालू tool को English या हिंदी में पढ़कर सुनाता है।')+'</li>'+
+  '<li>'+L('Language switch: English or Hindi for the interface.','भाषा: interface English या हिंदी में।')+'</li>'+
+  '<li>'+L('Keyboard: Tab and Shift+Tab move between controls; Enter sends in the Ask box; Esc closes a window; in the Ask box, / opens your saved prompts.','Keyboard: Tab और Shift+Tab से controls के बीच चलें; Ask box में Enter से भेजें; Esc से window बंद; Ask box में / से saved prompts खुलते हैं।')+'</li></ul>'+
+  '<p><b>'+L('Free screen readers','मुफ़्त screen reader')+'</b></p><ul style="margin:0 0 6px 18px;padding:0">'+
+  '<li>NVDA '+L('for Windows (free, nvaccess.org)','Windows के लिए (मुफ़्त, nvaccess.org)')+'</li>'+
+  '<li>TalkBack '+L('on Android (built in: Settings, Accessibility)','Android पर (पहले से है: Settings, Accessibility)')+'</li>'+
+  '<li>VoiceOver '+L('on iPhone and Mac (built in)','iPhone और Mac पर (पहले से है)')+'</li></ul>'+
+  '<p><b>'+L('Honest status','सच्ची स्थिति')+'</b><br>'+L('Appuscholar has not yet been tested by a person who uses a screen reader. Charts, large statistics tables and pages of a PDF shown as pictures are the hardest parts: a chart has a written result beside it, but a table may be slow to read aloud. If anything blocks you, tell us and we fix that first.','Appuscholar को अभी तक किसी screen reader इस्तेमाल करने वाले व्यक्ति ने नहीं जाँचा है। Charts, बड़ी statistics tables और तस्वीर की तरह दिखे PDF पन्ने सबसे कठिन हैं: chart के पास लिखा हुआ नतीजा है, पर table को सुनना धीमा हो सकता है। कोई भी चीज़ रोके तो बताइए, हम उसे पहले ठीक करेंगे।')+'</p>'+
+  '<div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'helpDlg\').close();repOpen()">'+L('Report an accessibility barrier','Accessibility की रुकावट बताएँ')+'</button></div></div>'}
+function a11yInit(){const dlg=document.getElementById('helpDlg');if(!dlg)return;let d=document.getElementById('a11yBox');
+  if(!d){d=document.createElement('details');d.id='a11yBox';d.style.marginTop='12px';const first=dlg.querySelector('.dlg-body details');if(first)first.insertAdjacentElement('beforebegin',d);else dlg.querySelector('.dlg-body').appendChild(d)}
+  d.innerHTML=a11yHTML()}
+function libToolsInit(){try{mpInit()}catch(e){}try{a11yInit()}catch(e){}
+  try{const h=document.getElementById('helpDlg');if(h&&!h.dataset.a11y){h.dataset.a11y='1';h.addEventListener('toggle',a11yInit)}}catch(e){}}
+
+
+/* ============ Journal finder (build 2026.11.16g) ============
+   The idea is JANE's: journals that already publish papers like yours are the likely homes. The student's
+   title and abstract become a keyword query to OpenAlex; the 200 closest articles of the last five years are
+   grouped by journal. Publisher finders (Elsevier, Springer, Wiley, Taylor & Francis, MDPI) suggest only their
+   own journals, so they are offered as links beside this neutral list. Nothing here is a recommendation:
+   indexing is checked on the database itself, as the stage-6 checklist says. */
+const JF_STOP=new Set(('a an the and or of in on for to with by from at as is are was were be been this that these those it its into than then '+
+ 'we our their there which who whom whose what when where how why not no can may might will would should could study studies paper research '+
+ 'results result method methods using use used based among between effect effects role analysis data sample participants findings aim aims '+
+ 'present current also however both each more most other such only one two three new high low level levels significant significantly '+
+ 'relationship association associated relation related factors factor').split(' '));
+function jfKeywords(txt){const f={};String(txt||'').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu,' ').split(/\s+/).forEach(w=>{
+  w=w.replace(/^-+|-+$/g,'');if(w.length<4||JF_STOP.has(w)||/^\d+$/.test(w))return;f[w]=(f[w]||0)+1});
+  return Object.entries(f).sort((a,b)=>b[1]-a[1]||b[0].length-a[0].length).slice(0,10).map(x=>x[0])}
+function jfGroup(works){const m={};(works||[]).forEach(w=>{const s=((w||{}).primary_location||{}).source;if(!s||!s.id||(s.type&&s.type!=='journal'))return;
+  const k=s.id;if(!m[k])m[k]={id:k,name:s.display_name||'',pub:s.host_organization_name||'',issn:s.issn_l||'',oa:!!s.is_oa,doaj:!!s.is_in_doaj,n:0};m[k].n++});
+  return Object.values(m).sort((a,b)=>b.n-a.n)}
+const JF_LINKS=[['Elsevier JournalFinder','https://journalfinder.elsevier.com/','Elsevier'],['Springer Nature Journal Suggester','https://journalsuggester.springer.com/','Springer Nature'],
+ ['Wiley Journal Finder','https://journalfinder.wiley.com/','Wiley'],['Taylor & Francis Journal Suggester','https://authorservices.taylorandfrancis.com/publishing-your-research/choosing-a-journal/journal-suggester/','Taylor & Francis'],
+ ['MDPI Journal Finder','https://www.mdpi.com/about/journalfinder','MDPI'],['JANE (biomedical, from PubMed)','https://jane.biosemantics.org/',''],
+ ['SCImago Journal Rank','https://www.scimagojr.com/',''],['DOAJ','https://doaj.org/',''],['Think. Check. Submit.','https://thinkchecksubmit.org/','']];
+function jfOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('jfDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='jfDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  let pre='';try{const v=LS.get(pkey('appu_jf_text'));if(v)pre=v}catch(e){}
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('Find journals that publish work like yours','ऐसे journal ढूँढें जो आपके जैसा काम छापते हैं')+'</h2>'+
+   '<p class="desc">'+L('Paste your title and abstract. Appuscholar looks at the 200 closest articles of the last five years in OpenAlex and counts the journals they appeared in. A journal that already publishes your kind of study is a likely home. This list is not a recommendation: check scope, fees and indexing on the journal and the database itself.','अपना title और abstract डालें। Appuscholar OpenAlex में पिछले पाँच साल के 200 सबसे मिलते-जुलते articles देखता है और गिनता है कि वे किन journals में छपे। जो journal पहले से आपके जैसी study छापता है, वहाँ भेजना ठीक रहता है। यह list सिफ़ारिश नहीं है: scope, fees और indexing journal और database पर ख़ुद जाँचें।')+'</p>'+
+   '<div class="fld"><label for="jfText">'+L('Title and abstract','Title और abstract')+'</label><textarea id="jfText" rows="5" placeholder="'+escAttr(L('Exam anxiety and sleep among first-year nursing students in Jaipur…','जयपुर के first-year nursing students में exam anxiety और नींद…'))+'">'+escHTML(pre)+'</textarea></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" style="flex:1" id="jfRunBtn" onclick="jfRun()">🔎 '+L('Find journals','Journal ढूँढें')+'</button><button type="button" class="btn btn-ghost" style="flex:1" onclick="jfFromDoc()">'+L('Use my open document','मेरा खुला document लें')+'</button></div>'+
+   '<div id="jfOut" aria-live="polite"></div>'+
+   '<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:600">'+L('Publisher finders and journal lists','Publishers के finder और journal lists')+'</summary><p class="desc">'+L('A publisher\'s finder suggests only that publisher\'s journals. Paste the same title and abstract there to compare.','हर publisher का finder सिर्फ़ अपने journals सुझाता है। तुलना के लिए वही title और abstract वहाँ डालें।')+'</p><ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.8">'+
+   JF_LINKS.map(x=>'<li><a href="'+escAttr(x[1])+'" target="_blank" rel="noopener">'+escHTML(x[0])+'</a>'+(x[2]?' <span class="desc">('+escHTML(L('own journals only','सिर्फ़ अपने journals'))+')</span>':'')+'</li>').join('')+'</ul></details>'+
+   '<div class="row" style="margin-top:12px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'jfDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  if(!dlg.open)dlg.showModal()}
+function jfFromDoc(){let tx='';try{tx=(editor.innerText||'').trim()}catch(e){}
+  const ab=tx.match(/abstract\s*[:\n]([\s\S]{50,2500}?)(\n\s*(keywords|key words|introduction|1\.)\b|$)/i);
+  const first=tx.split('\n').map(x=>x.trim()).filter(Boolean)[0]||'';
+  const v=(first+'\n'+(ab?ab[1]:tx.slice(0,1500))).trim();const el=document.getElementById('jfText');if(el)el.value=v.slice(0,3000)}
+async function jfRun(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,el=document.getElementById('jfText'),out=document.getElementById('jfOut');if(!el||!out)return;
+  const txt=el.value.trim();try{LS.set(pkey('appu_jf_text'),txt.slice(0,3000))}catch(e){}
+  const kw=jfKeywords(txt);
+  if(kw.length<3){out.innerHTML='<p class="desc" style="color:#92400e">'+L('Add a few more words: a title and two or three sentences of the abstract.','थोड़ा और लिखें: title और abstract की दो-तीन पंक्तियाँ।')+'</p>';return}
+  const btn=document.getElementById('jfRunBtn');if(btn)btn.disabled=true;
+  out.innerHTML='<p class="desc">'+L('Searching OpenAlex…','OpenAlex में ढूँढ रहे हैं…')+' <span style="font-size:11px">('+escHTML(kw.join(', '))+')</span></p>';
+  try{const y=new Date().getFullYear()-5;
+    const url=oaUrl('https://api.openalex.org/works?search='+encodeURIComponent(kw.join(' OR '))+'&filter=from_publication_date:'+y+'-01-01,type:article&per-page=200&select=primary_location');
+    const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();
+    const g=jfGroup(j.results).slice(0,12);
+    if(!g.length){out.innerHTML='<p class="desc">'+L('No journals found. Try other words.','कोई journal नहीं मिला। दूसरे शब्द आज़माएँ।')+'</p>';return}
+    await Promise.all(g.map(async s=>{try{const sid=s.id.split('/').pop();
+      const rr=await fetch(oaUrl('https://api.openalex.org/sources/'+encodeURIComponent(sid)+'?select=homepage_url,apc_usd,summary_stats,works_count'));
+      if(rr.ok){const d=await rr.json();s.home=d.homepage_url||'';s.apc=d.apc_usd;s.h=(d.summary_stats||{}).h_index;s.works=d.works_count}}catch(e){}}));
+    jfRender(g,(j.results||[]).length,kw)}
+  catch(e){out.innerHTML='<p class="desc" style="color:#b91c1c">'+L('Could not reach OpenAlex. Check the internet and try again.','OpenAlex तक नहीं पहुँच सके। Internet जाँचकर फिर कोशिश करें।')+'</p>'}
+  finally{if(btn)btn.disabled=false}}
+function jfRender(g,total,kw){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,out=document.getElementById('jfOut');if(!out)return;
+  out.innerHTML='<p class="desc" style="margin-top:10px">'+L('From the '+total+' closest articles since '+(new Date().getFullYear()-5)+', the journals that published most of them:','पिछले पाँच साल के '+total+' सबसे मिलते-जुलते articles में से, जिन journals में इनमें से सबसे ज़्यादा छपे:')+'</p>'+
+   g.map(s=>{const flags=[];
+     if(s.oa)flags.push(s.doaj?'<span style="color:#166534">✓ '+L('Open access, listed in DOAJ','Open access, DOAJ में दर्ज')+'</span>':'<span style="color:#b45309">⚠ '+L('Open access but not in DOAJ: check it carefully','Open access पर DOAJ में नहीं: ध्यान से जाँचें')+'</span>');
+     else flags.push(L('Subscription or hybrid','Subscription या hybrid'));
+     if(typeof s.apc==='number'&&s.apc>0)flags.push(L('Fee recorded in OpenAlex: about US$','OpenAlex में दर्ज fee: लगभग US$')+s.apc+L(' (confirm on the journal site)',' (journal की site पर पक्का करें)'));
+     if(typeof s.h==='number')flags.push('h-index '+s.h);
+     const q=encodeURIComponent(s.name);
+     return'<div style="border-top:1px solid var(--line);padding:8px 0;font-size:13px"><b>'+escHTML(s.name)+'</b>'+(s.pub?' <span class="desc">· '+escHTML(s.pub)+'</span>':'')+
+      '<div class="desc">'+escHTML(L(s.n+' of the closest articles','मिलते-जुलते articles में से '+s.n))+(s.issn?' · ISSN '+escHTML(s.issn):'')+'</div>'+
+      '<div class="desc">'+flags.join(' · ')+'</div>'+
+      '<div style="margin-top:3px;font-size:12.5px">'+(s.home&&/^https?:\/\//.test(s.home)?'<a href="'+escAttr(s.home)+'" target="_blank" rel="noopener">'+L('Journal site','Journal की site')+'</a> · ':'')+
+      '<a href="https://www.scimagojr.com/journalsearch.php?q='+q+'" target="_blank" rel="noopener">SJR</a>'+'</div></div>'}).join('')+
+   '<p class="desc" style="margin-top:8px">'+L('Counts depend on the words you gave. A journal near the top is a match in topic, not proof of quality. Before you submit, tick the "Choosing a journal" list in stage 6.','गिनती आपके दिए शब्दों पर निर्भर है। ऊपर वाला journal विषय में मेल खाता है, अच्छी quality का सबूत नहीं। भेजने से पहले stage 6 की "Journal चुनना" list पूरी करें।')+'</p>'}
+
+/* ============ Does my study hold together? (coherence audit, build 2026.11.16h) ============
+   Idea and check list from academic-writing-skills by Muhammad Nabil Deja (MIT licence, github.com/Nbill27/
+   academic-writing-skills, v1.2.0): the research chain, ten dimensions RC01 to RC10, five reviewer lenses,
+   severity rules and quote validation. Our own code and wording.
+   The AI reads the student's own document once, through five lenses (one call, not five independent reviewers,
+   and the screen says so). Code then checks every finding: the quote must appear word for word in the
+   document, the line number comes from where the quote is found, and the severity rules are applied. Findings
+   whose quote is not in the document are shown apart, never mixed with the checked ones. Nothing in the
+   document is changed. */
+const COH_DIMS=[['RC01','Problem and gap','समस्या और गैप'],['RC02','Questions, objectives, hypotheses and conclusions match','सवाल, उद्देश्य, hypotheses और निष्कर्ष आपस में मेल खाते हैं'],
+ ['RC03','Theory is used, not only described','Theory का इस्तेमाल हुआ है, सिर्फ़ वर्णन नहीं'],['RC04','Variables, definitions and instruments agree','Variables, परिभाषाएँ और tools आपस में मेल खाते हैं'],
+ ['RC05','The design can answer the questions','Design सवालों का जवाब दे सकता है'],['RC06','Sample, tools, data collection and analysis fit','Sample, tools, data collection और analysis आपस में ठीक बैठते हैं'],
+ ['RC07','Discussion matches the results obtained','Discussion मिले हुए results से मेल खाता है'],['RC08','Claims stay within the evidence','दावे सबूत की सीमा में हैं'],
+ ['RC09','Terms, numbers, samples and places agree across sections','Terms, संख्याएँ, sample और जगहें हर section में एक जैसी हैं'],['RC10','No leaps, circles, broken promises or drift','कोई छलाँग, गोल तर्क, अधूरा वादा या भटकाव नहीं']];
+const COH_CHAIN=[['problem','Problem','समस्या'],['gap','Gap','गैप'],['question','Question','सवाल'],['objective','Objective or hypothesis','उद्देश्य या hypothesis'],['method','Method','Method'],['results','Results','Results'],['conclusion','Conclusion','निष्कर्ष']];
+const COH_LENS={logic:['Logic','तर्क'],consistency:['Consistency','एकरूपता'],method:['Method','Method'],evidence:['Evidence','सबूत'],devil:["Devil's advocate",'उलटा पक्ष']};
+const COH_MAX=45000;
+function cohNorm(x){return String(x||'').replace(/[‘’‚′]/g,"'").replace(/[“”„″]/g,'"').replace(/[–—−]/g,'-').replace(/ /g,' ').replace(/\s+/g,' ').trim()}
+function cohLines(text){return String(text||'').split(/\n+/).map(s=>s.trim()).filter(Boolean)}
+/* Where a quote sits: the line number (1-based) or 0 when the words are not in the document. */
+function cohFind(lines,quote){const q=cohNorm(quote);if(q.length<8||/\.\.\.|…/.test(String(quote||'')))return 0;
+  for(let i=0;i<lines.length;i++){if(cohNorm(lines[i]).indexOf(q)>=0)return i+1}
+  const all=cohNorm(lines.join(' '));const at=all.indexOf(q);if(at<0)return 0;
+  let n=0;for(let i=0;i<lines.length;i++){n+=cohNorm(lines[i]).length+1;if(n>at)return i+1}return 0}
+function cohPrompt(numbered,design){
+  return 'You are reviewing a student\'s own research manuscript before they show it to a supervisor. Read ALL of it. Test whether the research holds together as one chain of reasoning, not whether it follows a format.\n\n'+
+  'Trace the chain the manuscript actually uses: problem and its evidence, gap, research question, objective or hypothesis, theory and constructs, design and method, sample and data, instrument and procedure, analysis, results, discussion, conclusion, contribution. For each link ask whether the next part answers, operationalises or depends on the previous one. One objective may answer several questions if the mapping is clear; do not demand equal counts.\n'+
+  (design?'The student says the design is: '+design+'. Judge it by that design (for qualitative work do not use statistical validity terms; for a review check the search, criteria, screening counts and synthesis).\n':'Work out the design from the text.\n')+
+  '\nCheck these ten dimensions: RC01 problem and gap; RC02 questions, objectives, hypotheses and conclusions match; RC03 theory is used, not only presented; RC04 constructs, definitions, indicators and instruments agree; RC05 the design can answer the questions; RC06 sample, instruments, collection and analysis fit each other; RC07 discussion matches the results actually obtained (association is not causation, significance is not effect size); RC08 claims and contributions stay within the evidence; RC09 terms, numbers, samples, places, periods and methods agree across sections; RC10 logical leaps, circular reasoning, unfulfilled promises, scope drift.\n'+
+  'Read through five lenses, one after another: logic, consistency, method, evidence, devil (alternative explanations, confounders, boundary conditions; never invent objections).\n\n'+
+  'RULES. Every finding must quote the manuscript EXACTLY, copied character for character from one line, 8 to 200 characters, no ellipsis, no paraphrase. If you cannot quote it, do not report it. Look for an innocent explanation before giving high severity. Merge findings with one root cause and report the most upstream cause. Missing material (an appendix, the data, an instrument) is "not_assessable", not a defect. Do not rewrite the manuscript.\n'+
+  'severity: critical (a central conclusion is shown to be invalid or contradicted), major (question, design, measurement, analysis or evidence chain materially broken), moderate (bounded inconsistency or unsupported interpretation), minor (local clarification). status: confirmed, likely, potential. confidence: high, medium, low. critical needs confirmed and high; potential cannot be critical or major.\n'+
+  'type: contradiction, misalignment, unsupported_inference, missing_bridge, terminology_drift, scope_drift.\n\n'+
+  'Answer with JSON only, no other text:\n{"design":"...","chain":[{"step":"problem|gap|question|objective|method|results|conclusion","line":N,"quote":"exact words or empty","status":"clear|weak|missing","note":"one sentence"}],'+
+  '"checks":[{"id":"RC01","status":"found|not_found|not_assessable|not_applicable","basis":"one sentence"}],'+
+  '"findings":[{"id":"F01","check":"RC05","lens":"logic|consistency|method|evidence|devil","type":"...","title":"short","severity":"...","status":"...","confidence":"...","line":N,"quote":"exact words","related":"other section or line","problem":"why it is a problem","impact":"what it does to the study","recommendation":"what the student should do"}]}\n'+
+  (getLang()==='hi'?'Write title, note, basis, problem, impact and recommendation in natural Hindi (Devanagari), keeping technical terms in English. Quotes stay exactly as in the manuscript. Keep JSON keys and the fixed values in English.\n':'')+
+  '"found" means the dimension has at least one problem and needs a finding; "not_found" means no problem. Give all ten checks. At most 15 findings.\n\nMANUSCRIPT (line numbers in brackets):\n'+numbered}
+function cohParse(raw){let s=String(raw||'').trim().replace(/^```(?:json)?/i,'').replace(/```\s*$/,'');const a=s.indexOf('{'),b=s.lastIndexOf('}');if(a<0||b<a)return null;
+  try{return JSON.parse(s.slice(a,b+1))}catch(e){try{return JSON.parse(s.slice(a,b+1).replace(/,\s*([}\]])/g,'$1'))}catch(e2){return null}}}
+/* Code checks on what the AI returned. Pure function, so it is tested without a network. */
+function cohValidate(res,lines){const out={design:String((res&&res.design)||''),chain:[],checks:[],ok:[],rejected:[],notes:[]};if(!res)return out;
+  const SEV=['critical','major','moderate','minor'],ST=['confirmed','likely','potential'],CF=['high','medium','low'];
+  (Array.isArray(res.chain)?res.chain:[]).forEach(c=>{if(!c)return;const ln=c.quote?cohFind(lines,c.quote):0;
+    out.chain.push({step:String(c.step||''),status:['clear','weak','missing'].indexOf(c.status)>=0?c.status:'weak',note:String(c.note||'').slice(0,300),quote:ln?String(c.quote):'',line:ln})});
+  const seenId=new Set();
+  (Array.isArray(res.findings)?res.findings:[]).slice(0,25).forEach((f,i)=>{if(!f)return;
+    const g={id:String(f.id||('F'+(i+1))),check:String(f.check||'').toUpperCase(),lens:String(f.lens||''),type:String(f.type||''),title:String(f.title||'').slice(0,160),
+      severity:SEV.indexOf(f.severity)>=0?f.severity:'moderate',status:ST.indexOf(f.status)>=0?f.status:'potential',confidence:CF.indexOf(f.confidence)>=0?f.confidence:'low',
+      quote:String(f.quote||''),related:String(f.related||'').slice(0,200),problem:String(f.problem||'').slice(0,800),impact:String(f.impact||'').slice(0,500),rec:String(f.recommendation||'').slice(0,800),rule:''};
+    if(seenId.has(g.id))g.id=g.id+'-'+(i+1);seenId.add(g.id);
+    if(g.severity==='critical'&&!(g.status==='confirmed'&&g.confidence==='high')){g.severity='major';g.rule='critical_needs'}
+    if(g.status==='potential'&&(g.severity==='critical'||g.severity==='major')){g.severity='moderate';g.rule='potential_cap'}
+    const ln=cohFind(lines,g.quote);
+    if(!ln){g.why=g.quote.trim().length<8?'short':/\.\.\.|…/.test(g.quote)?'ellipsis':'notfound';out.rejected.push(g);return}
+    g.line=ln;out.ok.push(g)});
+  out.ok.sort((a,b)=>SEV.indexOf(a.severity)-SEV.indexOf(b.severity)||a.line-b.line);
+  const ck={};(Array.isArray(res.checks)?res.checks:[]).forEach(c=>{if(c&&c.id)ck[String(c.id).toUpperCase()]=c});
+  COH_DIMS.forEach(d=>{const c=ck[d[0]];let st=c&&['found','not_found','not_assessable','not_applicable'].indexOf(c.status)>=0?c.status:'missing';
+    const n=out.ok.filter(f=>f.check===d[0]).length;
+    if(st==='found'&&!n)st='found_unquoted';if((st==='not_found'||st==='missing')&&n)st='found';
+    out.checks.push({id:d[0],status:st,basis:c?String(c.basis||'').slice(0,300):'',n:n})});
+  return out}
+function cohKey(){let id='';try{id=docCurrentId()}catch(e){}return pkey('appu_coh_'+(id||'doc'))}
+function cohOpen(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('cohDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='cohDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  let last=null;try{last=JSON.parse(LS.get(cohKey())||'null')}catch(e){}
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('Does my study hold together?','क्या मेरी study एक सूत्र में बँधी है?')+'</h2>'+
+   '<p class="desc">'+L('The AI reads your open document and follows the chain from problem to gap, question, method, results and conclusion. It checks ten points and reads with five lenses: logic, consistency, method, evidence and a devil\'s advocate. Then Appuscholar checks every finding: its quote must appear word for word in your document. Your document is not changed.','AI आपका खुला document पढ़ता है और समस्या से गैप, सवाल, method, results और निष्कर्ष तक की कड़ी देखता है। यह दस बातें जाँचता है और पाँच नज़रियों से पढ़ता है: तर्क, एकरूपता, method, सबूत और उलटा पक्ष। फिर Appuscholar हर बात जाँचता है: उसका quote आपके document में शब्दशः होना चाहिए। आपका document नहीं बदलता।')+'</p>'+
+   '<div class="fld"><label for="cohDesign">'+L('Design of the study','Study का design')+'</label><select id="cohDesign"><option value="">'+L('Let the AI work it out','AI ख़ुद पहचाने')+'</option>'+
+   [['quantitative survey or correlational','Quantitative: survey or correlational','Quantitative: survey या correlational'],['experimental or quasi-experimental','Experimental or quasi-experimental','Experimental या quasi-experimental'],['qualitative','Qualitative','Qualitative'],['mixed methods','Mixed methods','Mixed methods'],['systematic or scoping review','Systematic or scoping review','Systematic या scoping review'],['case study','Case study','Case study']].map(x=>'<option value="'+escAttr(x[0])+'">'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" style="flex:1" id="cohRunBtn" onclick="cohRun()">🔗 '+L('Check my open document','मेरा खुला document जाँचें')+'</button>'+
+   '<button type="button" class="btn btn-ghost" style="flex:1" onclick="cohSaveMd()">⬇ '+L('Save report (.md)','Report save करें (.md)')+'</button></div>'+
+   '<div id="cohOut" aria-live="polite">'+(last?cohRender(last,true):'')+'</div>'+
+   '<p class="desc" style="margin-top:10px">'+L('An AI review of your own draft, not approval by a supervisor, university or journal. One AI call reads through all five lenses; they are not five separate reviewers. Credit: the check list follows academic-writing-skills by Muhammad Nabil Deja (MIT licence).','आपके अपने draft की AI review, supervisor, university या journal की मंज़ूरी नहीं। एक ही AI call पाँचों नज़रियों से पढ़ती है; ये पाँच अलग reviewers नहीं हैं। श्रेय: जाँच-सूची academic-writing-skills (Muhammad Nabil Deja, MIT licence) पर आधारित।')+'</p>'+
+   '<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'cohDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  if(!dlg.open)dlg.showModal()}
+async function cohRun(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,out=document.getElementById('cohOut'),btn=document.getElementById('cohRunBtn');
+  let text='';try{text=editor.innerText||''}catch(e){}
+  const lines=cohLines(text);const words=text.split(/\s+/).filter(Boolean).length;
+  if(words<300){out.innerHTML='<p class="desc" style="color:#92400e">'+L('Your open document is too short to check ('+words+' words). Open the full draft: at least the introduction, method and results.','आपका खुला document जाँचने के लिए छोटा है ('+words+' शब्द)। पूरा draft खोलें: कम से कम introduction, method और results।')+'</p>';return}
+  let numbered='',cut=0;for(let i=0;i<lines.length;i++){const ln='['+(i+1)+'] '+lines[i]+'\n';if(numbered.length+ln.length>COH_MAX){cut=lines.length-i;break}numbered+=ln}
+  const design=(document.getElementById('cohDesign')||{}).value||'';
+  if(btn)btn.disabled=true;out.innerHTML='<p class="desc">'+L('Reading your document… this can take a minute.','आपका document पढ़ रहे हैं… इसमें एक मिनट लग सकता है।')+'</p>';
+  try{const raw=await callAI(cohPrompt(numbered,design),{temp:0.2,max:6000,noLang:true});
+    const res=cohParse(raw);if(!res){out.innerHTML='<p class="desc" style="color:#b91c1c">'+L('The AI did not answer in the expected form. Try again, or switch to another AI provider.','AI ने तय रूप में जवाब नहीं दिया। फिर कोशिश करें, या दूसरा AI provider चुनें।')+'</p>';return}
+    const v=cohValidate(res,lines);v.at=Date.now();v.cut=cut;v.lines=lines.length;v.words=words;
+    try{LS.set(cohKey(),JSON.stringify(v))}catch(e){}
+    out.innerHTML=cohRender(v,false)}
+  catch(e){out.innerHTML='<p class="desc" style="color:#b91c1c">'+escHTML(String(e&&e.message||e).slice(0,200))+'</p>'}
+  finally{if(btn)btn.disabled=false}}
+function cohRender(v,old){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;
+  const sevC={critical:'#b91c1c',major:'#c2410c',moderate:'#92400e',minor:'#475569'},sevT={critical:L('Critical','गंभीर'),major:L('Major','बड़ी'),moderate:L('Moderate','मध्यम'),minor:L('Minor','छोटी')};
+  const stT={confirmed:L('confirmed','पक्की'),likely:L('likely','संभावित'),potential:L('possible','शायद')};
+  const ckT={found:['⚠',L('Needs work','सुधार चाहिए'),'#92400e'],not_found:['✓',L('No problem seen','कोई दिक़्क़त नहीं दिखी'),'#166534'],not_assessable:['?',L('Cannot judge from the text','Text से तय नहीं हो सकता'),'#475569'],not_applicable:['–',L('Does not apply','लागू नहीं'),'#475569'],found_unquoted:['?',L('AI saw a problem but gave no checked quote','AI को दिक़्क़त दिखी पर जाँचा हुआ quote नहीं दिया'),'#475569'],missing:['?',L('Not answered by the AI','AI ने जवाब नहीं दिया'),'#475569']};
+  let h=old?'<p class="desc" style="margin-top:8px">'+L('Last check: ','पिछली जाँच: ')+new Date(v.at).toLocaleString()+'</p>':'';
+  if(v.cut)h+='<p class="desc" style="color:#92400e">⚠ '+L('The document was long; the last '+v.cut+' lines were not sent and were not checked.','Document लंबा था; आख़िरी '+v.cut+' lines नहीं भेजी गईं और जाँची नहीं गईं।')+'</p>';
+  if(v.design)h+='<p class="desc">'+L('Design read as: ','Design समझा गया: ')+escHTML(v.design)+'</p>';
+  /* the chain */
+  const byStep={};(v.chain||[]).forEach(c=>{if(!byStep[c.step])byStep[c.step]=c});
+  h+='<h3 style="margin:12px 0 6px;font-size:15px">'+L('The chain','कड़ी')+'</h3><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:stretch">'+
+   COH_CHAIN.map((s,i)=>{const c=byStep[s[0]],st=c?c.status:'missing',col=st==='clear'?'#166534':st==='weak'?'#92400e':'#b91c1c',ic=st==='clear'?'✓':st==='weak'?'⚠':'✗';
+     return(i?'<span aria-hidden="true" style="align-self:center;color:var(--muted,#888)">→</span>':'')+'<div style="border:1px solid '+col+';border-radius:8px;padding:5px 8px;font-size:12.5px;max-width:220px" title="'+escAttr(c?c.note:'')+'"><b style="color:'+col+'">'+ic+' '+escHTML(hi?s[2]:s[1])+'</b>'+(c&&c.note?'<div class="desc" style="font-size:11.5px">'+escHTML(c.note)+'</div>':(!c?'<div class="desc" style="font-size:11.5px">'+L('Not found in the text','Text में नहीं मिला')+'</div>':''))+(c&&c.line?'<a href="#" style="font-size:11.5px" onclick="cohGo('+c.line+');return false">'+L('line ','line ')+c.line+'</a>':'')+'</div>'}).join('')+'</div>';
+  /* ten checks */
+  h+='<h3 style="margin:14px 0 6px;font-size:15px">'+L('Ten checks','दस जाँचें')+'</h3><div style="font-size:13px">'+
+   (v.checks||[]).map(c=>{const d=COH_DIMS.find(x=>x[0]===c.id)||[c.id,c.id,c.id],t=ckT[c.status]||ckT.missing;
+     return'<div style="display:flex;gap:8px;padding:3px 0;border-top:1px solid var(--line)"><span style="color:'+t[2]+';font-weight:700;min-width:16px">'+t[0]+'</span><span style="flex:1"><b>'+escHTML(hi?d[2]:d[1])+'</b> <span style="color:'+t[2]+'">'+escHTML(t[1])+(c.n?' ('+c.n+')':'')+'</span>'+(c.basis?'<br><span class="desc">'+escHTML(c.basis)+'</span>':'')+'</span></div>'}).join('')+'</div>';
+  /* findings */
+  h+='<h3 style="margin:14px 0 6px;font-size:15px">'+L('Findings checked against your text','आपके text से जाँची गई बातें')+' ('+(v.ok||[]).length+')</h3>';
+  if(!(v.ok||[]).length)h+='<p class="desc">'+L('No finding with a quote from your document.','आपके document के quote वाली कोई बात नहीं।')+'</p>';
+  (v.ok||[]).forEach(f=>{const lens=COH_LENS[f.lens];h+='<div style="border-top:1px solid var(--line);padding:8px 0;font-size:13px">'+
+    '<div><b style="color:'+sevC[f.severity]+'">'+escHTML(sevT[f.severity])+'</b> · '+escHTML(stT[f.status]||f.status)+' · '+escHTML(f.check)+(lens?' · '+escHTML(hi?lens[1]:lens[0]):'')+'</div>'+
+    '<div style="font-weight:600;margin:2px 0">'+escHTML(f.title)+'</div>'+
+    '<blockquote style="margin:4px 0;padding:4px 8px;border-left:3px solid #d97706;background:var(--soft,#faf5ff)">“'+escHTML(f.quote)+'” <a href="#" onclick="cohGo('+f.line+');return false">'+L('line ','line ')+f.line+'</a></blockquote>'+
+    (f.problem?'<div>'+escHTML(f.problem)+'</div>':'')+(f.impact?'<div class="desc">'+L('Effect: ','असर: ')+escHTML(f.impact)+'</div>':'')+(f.rec?'<div><b>'+L('What to do: ','क्या करें: ')+'</b>'+escHTML(f.rec)+'</div>':'')+(f.related?'<div class="desc">'+L('Related: ','जुड़ा हुआ: ')+escHTML(f.related)+'</div>':'')+
+    (f.rule?'<div class="desc">'+(f.rule==='critical_needs'?L('Lowered to major: "critical" needs a confirmed finding with high confidence.','Major किया गया: "गंभीर" के लिए पक्की बात और ऊँचा भरोसा चाहिए।'):L('Lowered to moderate: a possible finding cannot be major or critical.','मध्यम किया गया: "शायद" वाली बात बड़ी या गंभीर नहीं हो सकती।'))+'</div>':'')+'</div>'});
+  if((v.rejected||[]).length)h+='<details style="margin-top:10px"><summary style="cursor:pointer">'+L('Set aside: '+v.rejected.length+' finding'+(v.rejected.length===1?'':'s')+' whose quote is not in your document','अलग रखी गईं: '+v.rejected.length+' बातें जिनका quote आपके document में नहीं है')+'</summary><p class="desc">'+L('The AI may have paraphrased or made these up. Read them as unchecked ideas only.','AI ने इन्हें अपने शब्दों में लिखा या गढ़ा हो सकता है। इन्हें सिर्फ़ बिना जाँचे विचार मानें।')+'</p>'+
+    v.rejected.map(f=>'<div style="font-size:12.5px;padding:4px 0;border-top:1px solid var(--line)"><b>'+escHTML(f.title)+'</b> <span class="desc">('+escHTML(f.check)+')</span><br><span class="desc">“'+escHTML(f.quote.slice(0,200))+'”</span></div>').join('')+'</details>';
+  return h}
+/* Put the cursor on the quoted line in the editor, select it and scroll to it. */
+function cohGo(line){try{const dlg=document.getElementById('cohDlg');let v=null;try{v=JSON.parse(LS.get(cohKey())||'null')}catch(e){}
+  const f=v&&((v.ok||[]).find(x=>x.line===line)||(v.chain||[]).find(x=>x.line===line));const q=f?cohNorm(f.quote):'';
+  if(dlg&&dlg.open)dlg.close();
+  const tw=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT);let n;while((n=tw.nextNode())){const tx=cohNorm(n.nodeValue);if(q&&tx.indexOf(q.slice(0,40))>=0){
+    const i=n.nodeValue.indexOf(f.quote.slice(0,40).trim());const r=document.createRange();
+    if(i>=0){r.setStart(n,i);r.setEnd(n,Math.min(n.nodeValue.length,i+f.quote.length))}else r.selectNodeContents(n);
+    const s=getSelection();s.removeAllRanges();s.addRange(r);(n.parentElement||editor).scrollIntoView({block:'center'});return}}
+  showToast(getLang()==='hi'?'यह line अब document में नहीं मिली; शायद बदल दी गई है':'That line is no longer in the document; it may have been changed')}catch(e){}}
+function cohSaveMd(){let v=null;try{v=JSON.parse(LS.get(cohKey())||'null')}catch(e){}
+  if(!v){showToast(getLang()==='hi'?'पहले जाँच चलाएँ':'Run the check first');return}
+  const d=new Date(v.at).toISOString().slice(0,10);let md='# Does my study hold together? '+d+'\n\n_AI review of the student\'s own draft, quotes checked by Appuscholar. Not approval by a supervisor, university or journal._\n\n';
+  if(v.design)md+='Design: '+v.design+'\n\n';if(v.cut)md+='Not checked: the last '+v.cut+' lines (document too long).\n\n';
+  md+='## Chain\n\n'+COH_CHAIN.map(s=>{const c=(v.chain||[]).find(x=>x.step===s[0]);return'- '+s[1]+': '+(c?c.status+(c.note?' — '+c.note:''):'missing')}).join('\n')+'\n\n## Ten checks\n\n'+
+   (v.checks||[]).map(c=>{const dd=COH_DIMS.find(x=>x[0]===c.id);return'- '+c.id+' '+(dd?dd[1]:'')+': '+c.status+(c.basis?' — '+c.basis:'')}).join('\n')+'\n\n## Findings\n\n'+
+   (v.ok||[]).map(f=>'### '+f.id+' ('+f.severity+', '+f.status+', '+f.check+') '+f.title+'\n\n> '+f.quote+' (line '+f.line+')\n\n'+f.problem+'\n\nEffect: '+f.impact+'\n\nWhat to do: '+f.rec+'\n').join('\n')+
+   ((v.rejected||[]).length?'\n## Set aside (quote not found in the document)\n\n'+v.rejected.map(f=>'- '+f.title+' ('+f.check+')').join('\n')+'\n':'')+
+   '\nCheck list after academic-writing-skills by Muhammad Nabil Deja (MIT licence).\n';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download='study-coherence-'+d+'.md';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
+/* ============ Margin map (build 2026.11.16j) ============
+   Dr. Sharma's find (16 Nov): a teaching copy of a Discussion (Faith et al., Sci Transl Med 2014) with hand-written
+   margin notes naming what each part of the text does. Here the same for any section of the open document, a
+   student's own draft or a paper brought in as a document. The AI labels each run of sentences with one move from
+   a fixed, published move set and writes a short label tailored to this text. Code then checks: the move must be
+   in the set, the anchor quote must sit word for word in the first sentence of the run, runs may not overlap, and
+   the list of missing moves is worked out by code from the checked runs, never taken from the AI.
+   Move sets: Introduction, Swales (1990) CARS model; Discussion, Yang and Allison (2003) moves, with the
+   limitation and implication steps split out because students most often leave them out; Abstract, Hyland (2000). */
+const MM_SETS={
+ intro:{name:['Introduction','Introduction'],src:'Swales (1990, 2014) and Cortes (2013), Create a Research Space',
+  groups:{T1:['Move 1, establishing a territory','Move 1, क्षेत्र तय करना',1],T2:['Move 2, establishing a niche','Move 2, ख़ाली जगह दिखाना',1],T3:['Move 3, occupying the niche','Move 3, ख़ाली जगह भरना',1]},moves:[
+  ['I1A','Claims the topic matters','विषय क्यों ज़रूरी है',0,'T1'],['I1B','Makes general statements about the topic','विषय के बारे में सामान्य बातें',0,'T1'],['I1C','Reviews earlier research','पहले की रिसर्च का ब्योरा',0,'T1'],
+  ['I2A','Counter-claims against earlier work','पहले के काम से असहमति',0,'T2'],['I2B','Points to the gap','रिसर्च गैप दिखाना',0,'T2'],['I2C','Raises a question','सवाल उठाना',0,'T2'],['I2D','Continues a line of earlier work','पहले के काम को आगे बढ़ाना',0,'T2'],
+  ['I3A','Outlines the purpose','उद्देश्य बताना',0,'T3'],['I3B','Announces the present study','इस study का परिचय',0,'T3'],['I3C','States research questions or hypotheses','रिसर्च सवाल या hypotheses',0,'T3'],
+  ['I3D','Defines key terms','मुख्य शब्दों की परिभाषा',0,'T3'],['I3E','Summarises the methods','Methods का सार',0,'T3'],['I3F','Announces the main findings','मुख्य नतीजों की घोषणा',0,'T3'],
+  ['I3G','States the value of the study','Study का महत्व',0,'T3'],['I3H','Outlines the paper','Paper की रूपरेखा',0,'T3']]},
+ disc:{name:['Discussion','Discussion'],src:'Moreno and Swales (2018), coding scheme for Discussion sections (English for Specific Purposes 50, 40–63); must-haves are Appuscholar\'s choice for theses',
+  groups:{BGI:['Background information','पृष्ठभूमि',0],SUM:['Summarising key results','मुख्य नतीजों का सार',1],COMM:['Commenting on the results','नतीजों पर टिप्पणी',1],EV:['Evaluating the study or other research','Study या दूसरी रिसर्च का मूल्यांकन',1],IMP:['Drawing implications','निष्कर्ष से आगे के अर्थ',1]},moves:[
+  ['KFS','Restates key features of this study','इस study की मुख्य बातें दोहराना',0,'BGI'],['RWC','Background with citations','Citation के साथ पृष्ठभूमि',0,'BGI'],['POC','Background without citations','बिना citation पृष्ठभूमि',0,'BGI'],
+  ['RES','Presents results neutrally','नतीजे सीधे-सीधे बताना',0,'SUM'],['CRES','Contrasts results within the study','Study के भीतर नतीजों की तुलना',0,'SUM'],['HRES','Highlights a result','किसी नतीजे पर ज़ोर',0,'SUM'],
+  ['MEAN','Says what the results mean','नतीजों का अर्थ',0,'COMM'],['COMP','Compares with previous research','पहले की रिसर्च से तुलना',1,'COMM'],['EXPL','Explains results or their effects','नतीजों की व्याख्या या असर',0,'COMM'],['PRED','Makes predictions','अनुमान',0,'COMM'],['REACT','Reacts to results','नतीजों पर प्रतिक्रिया',0,'COMM'],
+  ['LIM','Limitations of this study','इस study की सीमाएँ',1,'EV'],['STATE','Judges the state of knowledge or practice','ज्ञान या चलन की स्थिति का आकलन',0,'EV'],['CONTR','States the contribution','Study का योगदान',0,'EV'],['POS','Strengths of this study','इस study की ताक़त',0,'EV'],['GAD','Gaps in knowledge or other research','ज्ञान या दूसरी रिसर्च में कमी',0,'EV'],
+  ['REC','Recommends future research or practice','आगे की रिसर्च या काम के सुझाव',0,'IMP'],['APP','Says where the results can be used','नतीजे कहाँ काम आएँगे',0,'IMP'],['HYP','Proposes hypotheses for future research','आगे की रिसर्च के लिए hypotheses',0,'IMP']]},
+ discmed:{name:['Discussion, medical journal order','Discussion, medical journal का क्रम'],src:'Docherty and Smith (1999), BMJ 318, 1224–1225, the order explained by Vieira, de Lima and Mizubuti (2019), Acta Scientiarum Agronomy 41, e42621 (CC BY)',moves:[
+  ['B1','Statement of principal findings','मुख्य नतीजों का कथन',1],['B2','Strengths and weaknesses of the study','Study की ताक़त और कमज़ोरियाँ',1],
+  ['B3','Strengths and weaknesses beside other studies, especially differences in results','दूसरी studies के मुक़ाबले ताक़त और कमज़ोरियाँ, ख़ासकर नतीजों में अंतर',1],
+  ['B4','Meaning of the study: possible mechanisms and implications','Study का अर्थ: संभावित कारण-तंत्र और निहितार्थ',1],['B5','Unanswered questions and future research','अनुत्तरित सवाल और आगे की रिसर्च',1]]},
+ lit:{name:['Review of literature','Review of literature'],src:'Harris (2016), four moves of writing with sources, as taught in the University of Tartu Communicating Science course',
+  groups:{K1:['Telling the literature','Literature बताना',1],K2:['Taking your own stance','अपनी राय रखना',1]},moves:[
+  ['L1','Coming to terms: summarises, paraphrases or quotes a source','Coming to terms: स्रोत का सार, अपने शब्दों में या quote',0,'K1'],
+  ['L2','Forwarding: uses a source to push an argument or as authority','Forwarding: तर्क आगे बढ़ाने या प्रमाण के लिए स्रोत',0,'K1'],
+  ['L3','Countering: questions a source or adds a new direction','Countering: स्रोत पर सवाल या नई दिशा',0,'K2'],
+  ['L4','Taking an approach: builds on an author\'s approach for this study','Taking an approach: किसी लेखक के तरीके पर इस study को खड़ा करना',0,'K2']]},
+ meth:{name:['Methods','Methods'],src:'Cotos, Huffman and Link (2017), DRaC model: Demonstrating Rigour and Credibility (English for Specific Purposes 46, 90–106). Percentages: share of 25 experts in that study who said the step is present in their field',
+  groups:{C1:['Move 1, contextualising the study methods','Move 1, methods का संदर्भ',0],C2:['Move 2, describing the study','Move 2, study का ब्योरा',0],C3:['Move 3, establishing credibility','Move 3, भरोसा क़ायम करना',0]},moves:[
+  ['C1.1','Refers to previous works','पहले के कामों का हवाला',1,'C1',100],['C1.2','Gives general information','सामान्य जानकारी',1,'C1',96],['C1.3','Names the methodological approach','तरीके (approach) का नाम',0,'C1',84],
+  ['C1.4','Describes the setting','जगह और माहौल',0,'C1',72],['C1.5','Introduces the participants','Participants का परिचय',0,'C1',56],['C1.6','Explains decisions made before the study','Study से पहले के फ़ैसलों की वजह',0,'C1',60],
+  ['C2.1','Says how the data were acquired','Data कैसे मिला',1,'C2',96],['C2.2','Describes the data','Data का ब्योरा',0,'C2',84],['C2.3','Sets out the study procedure','Study की procedure',1,'C2',92],
+  ['C2.4','Describes the tools','Tools का ब्योरा',0,'C2',84],['C2.5','Names the variables','Variables के नाम',0,'C2',84],['C2.6','Explains decisions made during the study','Study के दौरान के फ़ैसलों की वजह',0,'C2',80],['C2.7','Reports intermediate results','बीच के नतीजे',0,'C2',52],
+  ['C3.1','Says how the data were prepared','Data कैसे तैयार हुआ',1,'C3',96],['C3.2','Describes the data analysis','Data analysis का ब्योरा',1,'C3',96],['C3.3','Justifies the processing or analysis','Analysis के चुनाव की वजह',0,'C3',68]]},
+ res:{name:['Results','Results'],src:'Seven parts of a Results section from Masaryk University course slides (author not named in the file), close to Yang and Allison (2003)',moves:[
+  ['R1','Revisits the aim or earlier research','लक्ष्य या पहले की रिसर्च की याद',0],['R2','Gives a general overview of the results','नतीजों का सामान्य परिचय',0],['R3','Points the reader to a table or figure','पाठक को table या figure पर ले जाना',0],
+  ['R4','Reports specific key results in detail','मुख्य नतीजे विस्तार से',1],['R5','Compares with results of other research','दूसरी रिसर्च के नतीजों से तुलना',0],['R6','Deals with problems in the results','नतीजों की दिक़्क़तें',0],['R7','Suggests what the results might mean','नतीजों का संभावित अर्थ',0]]},
+ abs:{name:['Abstract','Abstract'],src:'Hyland (2000), abstract moves',moves:[
+  ['A1','Background','पृष्ठभूमि',0],['A2','Purpose','उद्देश्य',1],['A3','Method','Method',1],['A4','Results','Results',1],['A5','Conclusion','निष्कर्ष',1]]}};
+const MM_COL=['#ede9fe','#dcfce7','#fef3c7','#dbeafe','#fce7f3','#e0f2fe','#fee2e2','#f0fdf4','#f5f5f4'];
+/* The open document as sections: [{title,sents:[{p,t}]}] where p is the paragraph number. */
+function mmSplit(par){const prot=par.replace(/\b(et al|e\.g|i\.e|vs|Fig|Figs|Dr|Prof|approx|cf|No|Vol|pp)\./g,(m)=>m.replace(/\./g,'․'));
+  return prot.split(/(?<=[.!?।])["'”]?\s+(?=[A-Z0-9(\["'“ऀ-ॿ])/).map(s=>s.replace(/․/g,'.').trim()).filter(Boolean)}
+function mmSections(){const out=[];let cur={title:'',sents:[]};let pn=0;
+  [...editor.querySelectorAll('h1,h2,h3,h4,p,li,blockquote')].forEach(el=>{if(el.closest('li')&&el.tagName!=='LI')return;
+    const tx=(el.innerText||'').replace(/\s+/g,' ').trim();if(!tx)return;
+    if(/^H[1-4]$/.test(el.tagName)){if(cur.sents.length||cur.title)out.push(cur);cur={title:tx,sents:[]};return}
+    pn++;mmSplit(tx).forEach(t=>cur.sents.push({p:pn,t:t}))});
+  if(cur.sents.length||cur.title)out.push(cur);return out.filter(s=>s.sents.length)}
+function mmGuess(title){const t=String(title||'').toLowerCase();if(/discussion|चर्चा/.test(t))return'disc';if(/^(\d+[.)]?\s*)?(results?|findings)\b|परिणाम|नतीजे/.test(t))return'res';if(/method|procedure|participants|विधि|पद्धति/.test(t))return'meth';if(/review of (the )?literature|literature review|related (studies|work|literature)|साहित्य/.test(t))return'lit';if(/abstract|सार/.test(t))return'abs';if(/introduction|background|भूमिका|परिचय/.test(t))return'intro';return''}
+function mmPrompt(sec,kind){const S=MM_SETS[kind];
+  return 'Label what each part of this '+S.name[0]+' section does, the way a writing teacher writes notes in the margin of a model paper.\n'+
+  'Use ONLY these '+(S.groups?'steps':'moves')+' ('+S.src+'):\n'+(S.groups?Object.keys(S.groups).map(g=>S.groups[g][0]+':\n'+S.moves.filter(m=>m[4]===g).map(m=>'  '+m[0]+' = '+m[1]).join('\n')).join('\n'):S.moves.map(m=>m[0]+' = '+m[1]).join('\n'))+'\n\n'+
+  'Group neighbouring sentences that do the same job into one run. Every sentence may belong to at most one run; a sentence that does none of these jobs is left out.\n'+
+  'For each run give: from and to (sentence numbers), move (one id from the list), label (6 to 12 words, specific to THIS text, saying what this part does here, for example "shows the mouse platform cuts cost for other labs", never just the move name), quote (the first 5 to 12 words of the "from" sentence, copied exactly).\n'+
+  (getLang()==='hi'?'Write each label in natural Hindi (Devanagari), keeping technical terms in English. Quotes stay exactly as in the text.\n':'')+
+  'Answer with JSON only: {"runs":[{"from":1,"to":2,"move":"D2","label":"...","quote":"..."}]}\n\nSECTION "'+sec.title+'" (sentence numbers in brackets; ¶ marks a new paragraph):\n'+
+  sec.sents.map((s,i)=>(i&&s.p!==sec.sents[i-1].p?'¶ ':'')+'['+(i+1)+'] '+s.t).join('\n')}
+function mmValidate(res,sec,kind){const S=MM_SETS[kind],ids=S.moves.map(m=>m[0]),n=sec.sents.length,runs=[],rej=[];
+  const raw=Array.isArray(res&&res.runs)?res.runs:[];
+  raw.forEach(r=>{if(!r)return;const f=parseInt(r.from,10),t=parseInt(r.to,10)||f,mv=String(r.move||'').toUpperCase(),q=String(r.quote||''),lb=String(r.label||'').trim().slice(0,140);
+    const bad=ids.indexOf(mv)<0?'move':!(f>=1&&t>=f&&t<=n)?'range':(()=>{const s=cohNorm(sec.sents[f-1].t),qq=cohNorm(q);return qq.length<8||s.indexOf(qq)<0})()?'quote':!lb?'label':'';
+    if(bad){rej.push({from:f,to:t,move:mv,label:lb,why:bad});return}
+    runs.push({from:f,to:t,move:mv,label:lb})});
+  runs.sort((a,b)=>a.from-b.from);const ok=[];let last=0;runs.forEach(r=>{if(r.from>last){ok.push(r);last=r.to}else rej.push(Object.assign({},r,{why:'overlap'}))});
+  const have=new Set(ok.map(r=>r.move));
+  const missing=S.moves.filter(m=>m[3]&&!have.has(m[0])).map(m=>m[0]);
+  Object.keys(S.groups||{}).forEach(g=>{if(S.groups[g][2]&&!S.moves.some(m=>m[4]===g&&have.has(m[0])))missing.push(g)});
+  /* order is judged by move group when the set has groups (below) */
+  /* order: moves that come back after a later move has started (for example limitations, then results again) */
+  const gk=S.groups?Object.keys(S.groups):null;
+  const seq=ok.map(r=>gk?gk.indexOf((S.moves.find(m=>m[0]===r.move)||[])[4]):ids.indexOf(r.move));let back=0;for(let i=1;i<seq.length;i++)if(seq[i]<seq[i-1]-(kind==='discmed'?0:1))back++;
+  const cover=ok.reduce((a,r)=>a+(r.to-r.from+1),0);
+  /* Results: a run that reports results must carry numbers; a sentence with a test result outside any run is counted */
+  const nonum=kind==='res'?ok.filter(r=>r.move==='R4'&&!sec.sents.slice(r.from-1,r.to).some(x=>/\d/.test(x.t))).map(r=>r.from):[];
+  const comments=kind==='res'&&ok.some(r=>['R5','R6','R7'].indexOf(r.move)>=0);
+  /* the slide's sunbathing example: "is related to" can be supported, "causes" usually cannot; flag strong causal words where the text draws meaning */
+  const strong=ok.filter(r=>(kind==='res'&&r.move==='R7'||kind==='disc'&&['MEAN','EXPL','APP'].indexOf(r.move)>=0)&&sec.sents.slice(r.from-1,r.to).some(x=>/\b(proves?|proved|causes?|caused|leads? to|results? in|determines?)\b/i.test(x.t))).map(r=>r.from);
+  return{kind:kind,title:sec.title,runs:ok,rejected:rej,missing:missing,back:back,cover:cover,n:n,nonum:nonum,comments:comments,strong:strong,
+    /* Gangaraju and Cushman (2023, RPTH): limitations must weigh bias, confounding and chance; a "first to" claim needs a fresh search */
+    lim3:(kind==='disc'||kind==='discmed')?(()=>{const lr=ok.filter(r=>r.move==='LIM'||r.move==='B2');if(!lr.length)return null;const tx=lr.map(r=>sec.sents.slice(r.from-1,r.to).map(x=>x.t).join(' ')).join(' ').toLowerCase();
+      return['bias','confound','chance'].filter(w=>tx.indexOf(w)<0&&!(w==='chance'&&/random error|by chance|type i|false positive|power|sample size|small sample|sample was small|few participants|precision|confidence interval/.test(tx)))})():null,
+    first:(kind==='disc'||kind==='discmed'||kind==='intro')?sec.sents.map((x,i)=>/\b(first (study|to (report|show|examine|investigate|describe))|never (been )?(studied|reported)|no (previous|prior|other) stud(y|ies))\b/i.test(x.t)?i+1:0).filter(Boolean):[]}}
+function mmKey(i){if(window._mmPaper)return pkey('appu_mm_paper_'+window._mmPaper+'_'+i);let id='';try{id=docCurrentId()}catch(e){}return pkey('appu_mm_'+(id||'doc')+'_'+i)}
+function mmOpen(given){const hi=getLang()==='hi',L=(e,h)=>hi?h:e;let dlg=document.getElementById('mmDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='mmDlg';dlg.className='dlg-wide';document.body.appendChild(dlg)}
+  if(!given)window._mmPaper=null;
+  const secs=given?given.secs:mmSections();window._mmSecs=secs;
+  const g=secs.map(x=>mmGuess(x.title));let pick=['disc','res','meth','lit','intro','abs'].map(k=>g.indexOf(k)).find(x=>x>=0);if(pick==null)pick=0;
+  const opts=secs.map((s,i)=>'<option value="'+i+'"'+(i===pick?' selected':'')+'>'+escHTML((s.title||L('Untitled part','बिना शीर्षक'))+' ('+s.sents.length+L(' sentences',' वाक्य')+')')+'</option>').join('');
+  dlg.innerHTML='<div class="dlg-body"><h2>'+L('Margin map','Margin map')+'</h2>'+
+   '<p class="desc">'+L('Like a teacher\'s notes in the margin of a model paper: each part of a section gets a note saying what it does here. Works on your own draft, or on a paper you brought in as a document. In your draft it also shows which parts are missing. Your text is not changed.','जैसे model paper के हाशिये पर शिक्षक के notes: section के हर हिस्से के साथ लिखा होता है कि वह यहाँ क्या कर रहा है। आपके अपने draft पर, या document के रूप में लाए गए paper पर चलता है। आपके draft में यह भी दिखाता है कि कौन-से हिस्से छूटे हैं। आपका text नहीं बदलता।')+'</p>'+
+   (secs.length?'<div class="row" style="gap:8px;flex-wrap:wrap"><div class="fld" style="flex:2;min-width:200px"><label for="mmSec">'+L('Section','Section')+'</label><select id="mmSec" onchange="mmSecChange()">'+opts+'</select></div>'+
+   '<div class="fld" style="flex:1;min-width:160px"><label for="mmKind">'+L('It is a','यह है')+'</label><select id="mmKind">'+Object.keys(MM_SETS).map(k=>'<option value="'+k+'">'+escHTML(MM_SETS[k].name[hi?1:0])+'</option>').join('')+'</select></div></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-purple" style="flex:1" id="mmRunBtn" onclick="mmRun()">🖍 '+L('Make the margin map','Margin map बनाएँ')+'</button><button type="button" class="btn btn-ghost" style="flex:1" onclick="mmSaveHtml()">⬇ '+L('Save as a page to print or share','Print या share के लिए page save करें')+'</button></div>'
+   :'<p class="desc" style="color:#92400e">'+L('The open document has no text yet.','खुले document में अभी text नहीं है।')+'</p>')+
+   '<div id="mmOut" aria-live="polite"></div>'+
+   '<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'mmDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
+  if(given&&given.pick!=null){const el=document.getElementById('mmSec');if(el)el.value=String(given.pick)}
+  if(!dlg.open)dlg.showModal();if(secs.length)mmSecChange()}
+function mmSecChange(){window._mmQuiz=false;window._mmAns={};const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];if(!s)return;
+  const g=s.kind||mmGuess(s.title);if(g)document.getElementById('mmKind').value=g;
+  let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}
+  const out=document.getElementById('mmOut');if(out)out.innerHTML=v&&v.sig===mmSig(s)?mmRender(v,s):''}
+function mmSig(s){return s.sents.length+':'+cohNorm(s.sents.map(x=>x.t).join(' ')).length}
+async function mmRun(){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,i=+document.getElementById('mmSec').value||0,s=(window._mmSecs||[])[i],kind=document.getElementById('mmKind').value,out=document.getElementById('mmOut'),btn=document.getElementById('mmRunBtn');
+  if(!s)return;if(s.sents.length<3){out.innerHTML='<p class="desc" style="color:#92400e">'+L('This section is too short to map.','यह section map के लिए छोटा है।')+'</p>';return}
+  if(s.sents.length>220){out.innerHTML='<p class="desc" style="color:#92400e">'+L('This section is too long for one map ('+s.sents.length+' sentences). Split it with sub-headings.','एक map के लिए यह section बहुत लंबा है ('+s.sents.length+' वाक्य)। Sub-headings से बाँटें।')+'</p>';return}
+  if(btn)btn.disabled=true;out.innerHTML='<p class="desc">'+L('Reading the section…','Section पढ़ रहे हैं…')+'</p>';
+  try{const raw=await callAI(mmPrompt(s,kind),{temp:0.2,max:4000,noLang:true});const res=cohParse(raw);
+    if(!res){out.innerHTML='<p class="desc" style="color:#b91c1c">'+L('The AI did not answer in the expected form. Try again, or switch to another AI provider.','AI ने तय रूप में जवाब नहीं दिया। फिर कोशिश करें, या दूसरा AI provider चुनें।')+'</p>';return}
+    const v=mmValidate(res,s,kind);v.sig=mmSig(s);v.at=Date.now();try{LS.set(mmKey(i),JSON.stringify(v))}catch(e){}
+    out.innerHTML=mmRender(v,s)}
+  catch(e){out.innerHTML='<p class="desc" style="color:#b91c1c">'+escHTML(String(e&&e.message||e).slice(0,200))+'</p>'}
+  finally{if(btn)btn.disabled=false}}
+function mmMove(kind,id){const S=MM_SETS[kind];const k=S.moves.findIndex(m=>m[0]===id);const m=S.moves[k]||[id,id,id,0];
+  const gi=S.groups&&m[4]?Object.keys(S.groups).indexOf(m[4]):k;return{m:m,c:MM_COL[(gi<0?0:gi)%MM_COL.length],g:S.groups&&m[4]?S.groups[m[4]]:null}}
+function mmMissName(kind,id,hi){const S=MM_SETS[kind];if(S.groups&&S.groups[id])return S.groups[id][hi?1:0]+(hi?': इसका कोई step नहीं मिला':': none of its steps found');
+  const x=mmMove(kind,id);return id+' '+x.m[hi?2:1]+(x.m[5]?(hi?' (विशेषज्ञ: '+x.m[5]+'% papers में)':' (experts: present in '+x.m[5]+'%)'):'')}
+function mmRender(v,s,forPage){const hi=getLang()==='hi',L=(e,h)=>hi?h:e,S=MM_SETS[v.kind];
+  const quiz=!forPage&&window._mmQuiz;
+  let h=(forPage?'':'<div class="row" style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" id="mmQuizBtn" onclick="mmQuizToggle()">'+(quiz?L('Show all notes','सारे notes दिखाएँ'):'🎯 '+L('Test myself: hide the notes','ख़ुद को परखें: notes छिपाएँ'))+'</button></div>')+
+   (quiz?'<p class="desc" id="mmScore" style="margin:6px 0">'+mmScoreText(v)+'</p>':'')+
+   '<div class="desc" style="margin:10px 0 6px">'+escHTML(L('Moves after ','Moves का आधार: ')+S.src)+' · '+L(v.cover+' of '+v.n+' sentences have a note',v.n+' में से '+v.cover+' वाक्यों पर note')+'</div>';
+  if(v.missing.length)h+='<div style="border:1px solid #f59e0b;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:13px"><b>'+L('Not found in this section:','इस section में नहीं मिला:')+'</b> '+v.missing.map(id=>escHTML(mmMissName(v.kind,id,hi))).join('; ')+
+    '<div class="desc">'+L('If this is your draft, consider adding these. If it is a published paper, notice what the authors chose to leave out.','अगर यह आपका draft है, तो इन्हें जोड़ने पर विचार करें। अगर यह छपा हुआ paper है, तो देखें कि लेखकों ने क्या छोड़ा।')+'</div></div>';
+  if((v.nonum||[]).length)h+='<p class="desc" style="color:#92400e">'+L((v.nonum.length===1?'One part reports':v.nonum.length+' parts report')+' results without any number. Give the statistic, its exact value and the effect size.',v.nonum.length+' हिस्सों में नतीजे बिना किसी संख्या के हैं। Statistic, उसका सटीक मान और effect size दें।')+'</p>';
+  if((v.strong||[]).length)h+='<p class="desc" style="color:#92400e">'+L('Strong cause words ("causes", "proves", "leads to") where you say what the results mean. Unless the design was an experiment, write "is related to" or "suggests", and say how sure you are.','जहाँ आप नतीजों का अर्थ बताते हैं, वहाँ "causes", "proves", "leads to" जैसे पक्के कारण वाले शब्द हैं। Design experiment न हो तो "is related to" या "suggests" लिखें, और बताएँ कि आप कितने निश्चित हैं।')+'</p>';
+  if(v.kind==='discmed'&&v.back>0)h+='<p class="desc" style="color:#92400e">'+L('The five parts are out of the order BMJ asks for: principal findings, strengths and weaknesses, comparison with other studies, meaning, then unanswered questions.','पाँचों हिस्से BMJ के क्रम में नहीं हैं: मुख्य नतीजे, ताक़त और कमज़ोरियाँ, दूसरी studies से तुलना, अर्थ, फिर अनुत्तरित सवाल।')+'</p>';
+  if(v.lim3&&v.lim3.length)h+='<p class="desc" style="color:#92400e">'+L('The limitations do not mention: '+v.lim3.join(', ')+'. Weigh bias, confounding and chance, and say which way each could have pushed the result (Gangaraju and Cushman 2023).','सीमाओं में इनका ज़िक्र नहीं: '+v.lim3.join(', ')+'। Bias, confounding और chance तीनों पर बात करें, और बताएँ कि हर एक ने नतीजे को किस दिशा में खींचा होगा (Gangaraju और Cushman 2023)।')+'</p>';
+  if((v.first||[]).length)h+='<p class="desc" style="color:#92400e">'+L('A "first study" or "never studied" claim (sentence '+v.first.join(', ')+'). Run the literature search again just before submission and qualify it: "we found no other study that…".','"पहली study" या "कभी नहीं हुआ" वाला दावा (वाक्य '+v.first.join(', ')+')। भेजने से ठीक पहले literature search फिर चलाएँ और नरम करें: "हमें ऐसी कोई और study नहीं मिली जो…"।')+'</p>';
+  if(v.kind==='lit'&&(v.missing||[]).indexOf('K2')>=0&&v.runs.length)h+='<p class="desc" style="color:#92400e">'+L('This review only reports what others found. Examiners look for your own stance: where studies disagree, what they missed, and which approach your study builds on.','यह review सिर्फ़ बताता है कि दूसरों ने क्या पाया। Examiner आपकी अपनी राय देखते हैं: studies कहाँ असहमत हैं, उनसे क्या छूटा, और आपकी study किस तरीके पर खड़ी है।')+'</p>';
+  if(v.comments)h+='<p class="desc">'+L('This Results section also comments on the results. That is allowed, and helps with an unexpected result, but keep what you found apart from what you think it means. Many psychology and medical journals want comments only in the Discussion; check your target journal.','यह Results section नतीजों पर टिप्पणी भी करता है। यह चलता है, और अनपेक्षित नतीजे में मदद करता है, पर जो मिला और जो आप उसका अर्थ समझते हैं, उन्हें अलग रखें। कई psychology और medical journals टिप्पणी सिर्फ़ Discussion में चाहते हैं; अपने journal के नियम देखें।')+'</p>';
+  if(v.back>1)h+='<p class="desc" style="color:#92400e">'+L('The parts jump back and forth '+v.back+' times. A reader follows a section more easily when each kind of part sits together.','हिस्से '+v.back+' बार आगे-पीछे होते हैं। एक तरह के हिस्से साथ रहें तो पाठक आसानी से समझता है।')+'</p>';
+  /* the page: margin notes on the left, text on the right, a bracket bar joining them */
+  const at={};v.runs.forEach(r=>{at[r.from]=r});let i=1,rows='';
+  while(i<=v.n){const r=at[i];
+    if(r){const mv=mmMove(v.kind,r.move),txt=s.sents.slice(r.from-1,r.to).map((x,k)=>(k&&x.p!==s.sents[r.from-2+k].p?'<br><br>':' ')+escHTML(x.t)).join('');
+      const qa=(window._mmAns||{})[r.from];
+      if(quiz&&!qa){rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;border-right:3px solid #64748b;padding-right:8px"><label class="desc" for="mmQ'+r.from+'">'+L('What does this part do?','यह हिस्सा क्या कर रहा है?')+'</label><select id="mmQ'+r.from+'" class="mm-q" onchange="mmAnswer('+r.from+',this.value)" style="width:100%;font-size:12px"><option value="">…</option>'+(S.groups?Object.keys(S.groups).map(g=>'<optgroup label="'+escAttr(S.groups[g][hi?1:0])+'">'+S.moves.filter(m=>m[4]===g).map(m=>'<option value="'+m[0]+'">'+escHTML(m[hi?2:1])+'</option>').join('')+'</optgroup>').join(''):S.moves.map(m=>'<option value="'+m[0]+'">'+escHTML(m[hi?2:1])+'</option>').join(''))+'</select></div>'+
+        '<div style="flex:1;min-width:220px;border:1px dashed #94a3b8;border-radius:6px;padding:4px 8px;font-size:13.5px;line-height:1.6">'+txt+'</div></div>';i=r.to+1;continue}
+      rows+='<div class="mm-row" style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap"><div class="mm-note" style="flex:0 0 190px;max-width:100%;font-size:12.5px;line-height:1.35;border-right:3px solid #64748b;padding-right:8px">'+(quiz&&qa?'<div style="font-weight:700;color:'+(qa===r.move?'#166534':'#b91c1c')+'">'+(qa===r.move?'✓ '+L('Right','सही'):'✗ '+L('You chose: ','आपने चुना: ')+escHTML(mmMove(v.kind,qa).m[hi?2:1]))+'</div>':'')+'<div style="font-family:Georgia,serif;font-style:italic">'+escHTML(r.label)+'</div><div class="desc" style="font-size:11px;margin-top:2px">'+escHTML((mv.g?mv.g[hi?1:0]+' · ':'')+r.move+' · '+mv.m[hi?2:1])+'</div>'+(forPage||window._mmPaper?'':'<a href="#" style="font-size:11px" onclick="mmGo('+r.from+');return false">'+L('show in document','document में दिखाएँ')+'</a>')+'</div>'+
+        '<div style="flex:1;min-width:220px;background:'+mv.c+';border-radius:6px;padding:4px 8px;font-size:13.5px;line-height:1.6">'+txt+'</div></div>';i=r.to+1}
+    else{rows+='<div class="mm-row" style="display:flex;gap:10px;margin:2px 0;flex-wrap:wrap"><div style="flex:0 0 190px"></div><div style="flex:1;min-width:220px;font-size:13.5px;line-height:1.6;padding:0 8px;color:var(--muted,#555)">'+escHTML(s.sents[i-1].t)+'</div></div>';i++}}
+  h+='<div class="mm-page">'+rows+'</div>';
+  if(v.rejected.length)h+='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">'+L('Set aside: '+v.rejected.length+' note'+(v.rejected.length===1?'':'s')+' that failed the checks','अलग रखे गए: '+v.rejected.length+' notes जो जाँच में नहीं टिके')+'</summary><div class="desc">'+
+    v.rejected.map(r=>escHTML((r.label||'—')+' ('+r.move+', '+(r.why==='quote'?L('quote not in the sentence','quote वाक्य में नहीं'):r.why==='move'?L('move not in the list','move सूची में नहीं'):r.why==='overlap'?L('overlaps another note','दूसरे note से टकराता है'):L('bad sentence numbers','ग़लत वाक्य संख्या'))+')')).join('<br>')+'</div></details>';
+  /* model phrases: links to the sources only; their text is not copied into Appuscholar */
+  const PH={disc:['https://www.ub.edu/cub/criteri.php?id=3480','Universitat de Barcelona style book: phrases for commenting on results'],res:['https://www.ub.edu/cub/criteri.php?id=3480','Universitat de Barcelona style book: phrases for commenting on results'],meth:['http://www.phrasebank.manchester.ac.uk/describing-methods/','Academic Phrasebank, University of Manchester: describing methods']};
+  if(PH[v.kind]&&!forPage)h+='<p class="desc" style="margin-top:6px">'+L('Model phrases: ','नमूना वाक्यांश: ')+'<a href="'+PH[v.kind][0]+'" target="_blank" rel="noopener">'+escHTML(PH[v.kind][1])+'</a></p>';
+  h+='<p class="desc" style="margin-top:8px">'+L('Notes written by AI and checked by Appuscholar against your text. A guide to how the section is built, not a grade.','Notes AI ने लिखे और Appuscholar ने आपके text से जाँचे। यह बताता है कि section कैसे बना है, यह अंक नहीं है।')+'</p>';
+  return h}
+function mmCur(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}return{s:s,v:v}}
+function mmQuizToggle(){window._mmQuiz=!window._mmQuiz;window._mmAns={};const c=mmCur();if(c.s&&c.v)document.getElementById('mmOut').innerHTML=mmRender(c.v,c.s)}
+function mmAnswer(from,id){if(!id)return;window._mmAns=window._mmAns||{};window._mmAns[from]=id;const c=mmCur();if(c.s&&c.v)document.getElementById('mmOut').innerHTML=mmRender(c.v,c.s)}
+function mmScoreText(v){const hi=getLang()==='hi',a=window._mmAns||{},done=v.runs.filter(r=>a[r.from]),right=done.filter(r=>a[r.from]===r.move).length;
+  return hi?v.runs.length+' में से '+done.length+' का जवाब दिया, '+right+' सही।'+(done.length===v.runs.length?' पूरा हुआ।':''):'Answered '+done.length+' of '+v.runs.length+', '+right+' right.'+(done.length===v.runs.length?' Done.':'')}
+function mmGo(from){try{const i=+document.getElementById('mmSec').value||0,s=window._mmSecs[i],t=s.sents[from-1].t.slice(0,60);document.getElementById('mmDlg').close();
+  const tw=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT);let n;while((n=tw.nextNode())){const k=n.nodeValue.indexOf(t.slice(0,30));if(k>=0){const r=document.createRange();r.setStart(n,k);r.setEnd(n,Math.min(n.nodeValue.length,k+t.length));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);(n.parentElement||editor).scrollIntoView({block:'center'});return}}}catch(e){}}
+function mmSaveHtml(){const i=+(document.getElementById('mmSec')||{}).value||0,s=(window._mmSecs||[])[i];let v=null;try{v=JSON.parse(LS.get(mmKey(i))||'null')}catch(e){}
+  if(!s||!v){showToast(getLang()==='hi'?'पहले margin map बनाएँ':'Make the margin map first');return}
+  const page='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Margin map: '+escHTML(s.title||'section')+'</title><style>body{font-family:system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#1f2937;background:#fff}.desc{color:#64748b;font-size:12px}h1{font-size:20px}</style></head><body><h1>'+escHTML(s.title||'Section')+'</h1>'+mmRender(v,s,true)+'<p class="desc">Made with Appuscholar.</p></body></html>';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([page],{type:'text/html'}));a.download='margin-map.html';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
+/* ============ Icon rail, command search, "Stays on this device" (build 2026.11.17a) ============
+   From the 11 Nov design pass. The rail shows on screens 1440 px and wider, where it costs the draft no room; on smaller
+   laptops the header Search button and Ctrl+K reach the same places. The rail holds places a student returns to from anywhere; the stage bar above the page still
+   shows where they are in the study, so the rail does not repeat the six stages. Ctrl+K (Cmd+K on a Mac) opens a search over
+   every stage, tool and action, in English and Hindi. The chip says plainly what stays on the device and what leaves it.
+   Icons are our own outline drawings on a 24-unit grid, 1.8 stroke. */
+const RL_ICO={
+ home:'<path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/>',
+ search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+ lec:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M10 8l5 2.5-5 2.5z"/>',
+ shelf:'<path d="M5 4h4v16H5zM10 4h4v16h-4z"/><path d="M15.5 5.2l3.8-1 3.2 15.3-3.8 1z"/>',
+ cite:'<path d="M7 7h4v4c0 3-1.5 5-4 6M14 7h4v4c0 3-1.5 5-4 6"/>',
+ ask:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+ proj:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+ comfort:'<circle cx="12" cy="12" r="3"/><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>',
+ help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 1-1 1.7v.5"/><path d="M12 17h.01"/>',
+ lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+ stage:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+ tool:'<path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17l3 3 5.2-5.2a4 4 0 0 0 5.3-5.3l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+ act:'<path d="M5 12h14M13 6l6 6-6 6"/>'};
+function rlIco(k,s){return '<svg class="rl-ico" viewBox="0 0 24 24" width="'+(s||22)+'" height="'+(s||22)+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(RL_ICO[k]||RL_ICO.act)+'</svg>'}
+const RL_T={
+ en:{home:'Home',search:'Search',lec:'Lectures',shelf:'Reading shelf',cite:'Citations',ask:'Ask',proj:'Projects',comfort:'Comfort',help:'Help',
+  ph:'Search stages, tools and actions',none:'Nothing matches. Try another word, or Help.',recent:'Recent',stage:'Stage',tool:'Tool',act:'Action',
+  hint:'↑ ↓ to move, Enter to open, Esc to close',kbd:'Ctrl K',chip:'Stays on this device',
+  dev_h:'Where your work is kept',
+  dev_1:'Your documents, library, data, notes and settings are saved only in this browser, on this device. Appuscholar has no server copy of them.',
+  dev_2h:'Two things leave the device, and only when you use them:',
+  dev_ai:'AI features. The text you send goes straight from your browser to the AI company you chose ({p}), under your own key. That company may process it outside India. Do not send names, phone numbers, hospital numbers or anything else that identifies a participant or patient.',
+  dev_net:'Searches. Paper, reference, book and word searches send the search words or DOIs to public services such as Crossref, OpenAlex, PubMed, Open Library and online dictionaries.',
+  dev_3:'If this browser\'s data is cleared, your work goes with it. Keep a backup.',
+  dev_bk:'Save a backup now',close:'Close',
+  ai_once:'Your text now goes to {p}, the AI service you chose, under your own key. It may be processed outside India, so leave out names and anything that identifies a participant or patient.',
+  a_new:'New document',a_dl:'Download as Word',a_bk:'Save a backup of all my work',a_mm:'Margin map of a section',a_coh:'Does my study hold together?',a_jf:'Find a journal for this paper',
+  a_rc:'Check that my references exist',a_dup:'Find the same paper saved twice',a_focus:'Focus: hide the side panels',a_theme:'Light or dark',a_lang:'हिंदी में बदलें',a_keys:'AI provider and key',a_dev:'Where my work is kept'},
+ hi:{home:'होम',search:'खोजें',lec:'व्याख्यान',shelf:'पढ़ने की शेल्फ़',cite:'संदर्भ',ask:'पूछें',proj:'प्रोजेक्ट',comfort:'आराम',help:'सहायता',
+  ph:'चरण, टूल और काम खोजें',none:'कुछ नहीं मिला। कोई और शब्द लिखें, या सहायता देखें।',recent:'हाल में',stage:'चरण',tool:'टूल',act:'काम',
+  hint:'↑ ↓ से चुनें, Enter से खोलें, Esc से बंद करें',kbd:'Ctrl K',chip:'इसी डिवाइस पर रहता है',
+  dev_h:'आपका काम कहाँ रखा जाता है',
+  dev_1:'आपके दस्तावेज़, लाइब्रेरी, डेटा, नोट्स और सेटिंग केवल इसी ब्राउज़र में, इसी डिवाइस पर सहेजे जाते हैं। Appuscholar के किसी सर्वर पर इनकी कोई प्रति नहीं है।',
+  dev_2h:'दो चीज़ें डिवाइस से बाहर जाती हैं, और तभी जब आप उनका उपयोग करते हैं:',
+  dev_ai:'AI सुविधाएँ। आप जो text भेजते हैं, वह आपके ब्राउज़र से सीधे आपकी चुनी हुई AI कंपनी ({p}) के पास आपकी अपनी key से जाता है। वह कंपनी इसे भारत से बाहर process कर सकती है। प्रतिभागी या मरीज़ के नाम, फ़ोन नंबर, अस्पताल नंबर या पहचान बताने वाली कोई बात न भेजें।',
+  dev_net:'खोज। Paper, reference, किताब और शब्दों की खोज में खोज के शब्द या DOI सार्वजनिक सेवाओं को जाते हैं, जैसे Crossref, OpenAlex, PubMed, Open Library और ऑनलाइन शब्दकोश।',
+  dev_3:'अगर इस ब्राउज़र का डेटा मिटाया गया, तो आपका काम भी मिट जाएगा। बैकअप रखें।',
+  dev_bk:'अभी बैकअप सहेजें',close:'बंद करें',
+  ai_once:'अब आपका text आपकी चुनी हुई AI सेवा {p} को आपकी अपनी key से जा रहा है। इसे भारत से बाहर process किया जा सकता है, इसलिए नाम और प्रतिभागी या मरीज़ की पहचान बताने वाली बातें न भेजें।',
+  a_new:'नया दस्तावेज़',a_dl:'Word में डाउनलोड करें',a_bk:'अपने सारे काम का बैकअप सहेजें',a_mm:'किसी section का मार्जिन मैप',a_coh:'क्या मेरा study एक सूत्र में है?',a_jf:'इस paper के लिए journal खोजें',
+  a_rc:'जाँचें कि मेरे references सच में हैं',a_dup:'दो बार सहेजा गया paper खोजें',a_focus:'फ़ोकस: साइड पैनल छिपाएँ',a_theme:'हल्का या गहरा रंग',a_lang:'Switch to English',a_keys:'AI provider और key',a_dev:'मेरा काम कहाँ रखा है'}};
+function rlT(k){const l=(typeof getLang==='function'&&getLang()==='hi')?'hi':'en';return (RL_T[l][k]!=null?RL_T[l][k]:RL_T.en[k])}
+const RL_ITEMS=[['home','apHomeShow()'],['search','cmdOpen()'],['lec','apLibOpen()'],['shelf','shOpen()'],['cite',"apGoTool('cite')"],['ask',"apGoTool('chat')"],['proj','openProjectsDlg()'],['comfort','openComfort()'],['help','openHelp()']];
+function rlStyle(){if(document.getElementById('rlStyle'))return;const s=document.createElement('style');s.id='rlStyle';s.textContent=
+ '#iconRail{display:none}'
++'@media (min-width:1440px){body.has-rail{padding-left:60px}#iconRail{display:flex;flex-direction:column;align-items:center;gap:4px;position:fixed;left:0;top:0;bottom:0;width:60px;padding:10px 0;background:var(--card,#fff);border-right:1px solid var(--line,#e5e7eb);z-index:9}}'
++'#iconRail button{display:flex;flex-direction:column;align-items:center;gap:2px;width:52px;padding:7px 0 5px;border:0;border-radius:10px;background:none;color:var(--muted,#555);font:600 10px/1.15 inherit;cursor:pointer}'
++'#iconRail button:hover{background:rgba(124,58,237,.08);color:var(--purple-700,#6d28d9)}#iconRail button.on{background:rgba(124,58,237,.14);color:var(--purple-700,#6d28d9)}'
++'#iconRail button:focus-visible{outline:2px solid var(--purple-600,#7c3aed);outline-offset:1px}#iconRail .rl-gap{flex:1}'
++'.cmd-btn{display:inline-flex;align-items:center;gap:6px}.cmd-btn kbd{font:600 10px/1 inherit;border:1px solid currentColor;border-radius:5px;padding:2px 4px;opacity:.75}'
++'@media (max-width:640px){.cmd-btn kbd{display:none}}'
++'#cmdDlg{width:min(640px,94vw);padding:0;border:1px solid var(--line,#ddd);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.25);margin-top:10vh;background:var(--card,#fff);color:var(--ink,#111)}'
++'#cmdDlg::backdrop{background:rgba(20,10,40,.35)}#cmdDlg .cmd-top{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line,#eee)}'
++'#cmdQ{flex:1;border:0;outline:0;font-size:17px;background:none;color:inherit;min-width:0}#cmdList{list-style:none;margin:0;padding:6px;max-height:min(60vh,460px);overflow:auto}'
++'#cmdList li{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer}#cmdList li[aria-selected="true"]{background:rgba(124,58,237,.12)}'
++'#cmdList .cmd-l{flex:1;min-width:0}#cmdList .cmd-h{display:block;font-size:12px;color:var(--muted,#666);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
++'#cmdList .cmd-k{font-size:11px;color:var(--muted,#666);border:1px solid var(--line,#ddd);border-radius:6px;padding:1px 6px}#cmdList .cmd-sec{font-size:11px;font-weight:700;color:var(--muted,#666);padding:6px 10px 2px;cursor:default}'
++'#cmdDlg .cmd-foot{font-size:12px;color:var(--muted,#666);padding:8px 14px;border-top:1px solid var(--line,#eee)}'
++'.dev-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(187,247,208,.55);background:rgba(22,163,74,.22);color:#dcfce7;border-radius:999px;padding:3px 10px;font:600 12px/1.3 inherit;cursor:pointer;white-space:nowrap}'
++'@media (max-width:1099px){.dev-chip span{display:none}.dev-chip{padding:3px 6px}}'
++'#devDlg{max-width:560px;padding:22px 24px;border:1px solid var(--line,#ddd);border-radius:14px;line-height:1.55}#devDlg li{margin:6px 0}'
++'@media print{#iconRail,.dev-chip{display:none!important}body.has-rail{padding-left:0}}';
+ document.head.appendChild(s)}
+function rlRender(){let r=document.getElementById('iconRail');
+ if(!r){r=document.createElement('nav');r.id='iconRail';r.setAttribute('aria-label','Quick places');document.body.insertBefore(r,document.body.firstChild);document.body.classList.add('has-rail')}
+ r.innerHTML=RL_ITEMS.map(([k,fn],i)=>(k==='comfort'?'<span class="rl-gap"></span>':'')+'<button type="button" data-rl="'+k+'" onclick="'+fn+'" title="'+escAttr(rlT(k)+(k==='search'?' (Ctrl+K)':''))+'">'+rlIco(k)+'<span>'+escHTML(rlT(k))+'</span></button>').join('');
+ rlMark()}
+function rlMark(){const r=document.getElementById('iconRail');if(!r)return;let cur='';
+ try{if(apHomeIs())cur='home';else{const tb=document.querySelector('.tool-tab.active');if(tb&&tb.dataset.tool==='cite')cur='cite';else if(tb&&tb.dataset.tool==='chat')cur='ask'}}catch(e){}
+ r.querySelectorAll('button').forEach(b=>{const on=b.dataset.rl===cur;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')})}
+function rlHeaderBtn(){const h=document.querySelector('header');if(!h||document.getElementById('cmdBtn'))return;const b=document.createElement('button');b.type='button';b.id='cmdBtn';b.className='btn btn-ghost cmd-btn';b.onclick=cmdOpen;
+ const lb=document.getElementById('langBtn');h.insertBefore(b,lb||null);rlHeaderLabel()}
+function rlHeaderLabel(){const b=document.getElementById('cmdBtn');if(b){b.innerHTML=rlIco('search',16)+'<span>'+escHTML(rlT('search'))+'</span><kbd>'+rlT('kbd')+'</kbd>';b.title=rlT('ph')+' (Ctrl+K)'}}
+
+/* ---- command search ---- */
+function cmdNorm(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^\p{L}\p{N}\p{M}]+/gu,' ').trim()}
+function cmdItems(){const out=[],hi=getLang()==='hi',seen={};
+ const add=(id,kind,label,hint,run,keys)=>{if(seen[id])return;seen[id]=1;out.push({id,kind,label:String(label||'').replace(/\s+/g,' ').trim(),hint:String(hint||'').replace(/\s+/g,' ').trim(),run,keys:keys||''})};
+ add('home','act',rlT('home'),'',()=>apHomeShow(),'home होम start');
+ try{STAGES.forEach((s,i)=>add('st_'+s,'stage',(i+1)+'. '+ht('s_'+s),rlT('stage')+' '+(i+1),()=>apGoStage(s),'stage चरण '+s+' '+(AP_HT.en&&AP_HT.en['s_'+s]||'')+' '+(AP_HT.hi&&AP_HT.hi['s_'+s]||'')))}catch(e){}
+ document.querySelectorAll('.tool-tab[data-tool]').forEach(b=>{if(b.closest('[hidden]')||b.style.display==='none')return;const tl=b.dataset.tool;
+  add('t_'+tl,'tool',b.textContent.replace(/^[^\p{L}\p{N}]+/u,''),b.title,()=>apGoTool(tl),tl)});
+ const A=(k,fn,ico,keys)=>add('a_'+k,'act',rlT(k),'',fn,keys);
+ A('lec',()=>apLibOpen(),'lec','lecture video व्याख्यान');A('shelf',()=>shOpen(),'shelf','pdf read reader shelf');A('proj',()=>openProjectsDlg(),'proj','project');
+ A('a_new',()=>docNew(),'','document doc new');A('a_dl',()=>downloadDoc(),'','word docx download export');A('a_bk',()=>backupExport(),'','backup save export');
+ A('a_mm',()=>mmOpen(),'','margin map moves swales discussion introduction');A('a_coh',()=>cohOpen(),'','coherence audit chain');A('a_jf',()=>jfOpen(),'','journal finder publish');
+ A('a_rc',()=>{apGoTool('cite');setTimeout(()=>{try{rcRun(true)}catch(e){}},50)},'','reference crossref doi check verify');A('a_dup',()=>dupOpen(),'','duplicate library');
+ A('a_focus',()=>{apHomeHide();focusToggle()},'','focus full screen');A('a_theme',()=>toggleTheme(),'','dark light theme');A('a_lang',()=>toggleLang(),'','hindi english language भाषा');
+ A('a_keys',()=>openSettings(),'','api key provider gemini groq settings');A('a_dev',()=>devOpen(),'','privacy data device dpdp');A('comfort',()=>openComfort(),'','text size contrast listen voice');A('help',()=>openHelp(),'','help guide');
+ return out}
+function cmdScore(it,words){if(!words.length)return 0;const L=cmdNorm(it.label),H=cmdNorm(it.hint),K=cmdNorm(it.keys);let sc=0;
+ for(const w of words){if(L.split(' ').some(x=>x.startsWith(w)))sc+=10;else if(L.indexOf(w)>=0)sc+=6;else if(K.indexOf(w)>=0)sc+=4;else if(H.indexOf(w)>=0)sc+=2;else return -1}
+ return sc+(L.startsWith(words[0])?5:0)+(it.kind==='stage'?1:0)}
+function cmdRecent(){try{return JSON.parse(LS.get('appu_cmd_recent')||'[]').slice(0,5)}catch(e){return[]}}
+function cmdFilter(q){const all=cmdItems(),words=cmdNorm(q).split(' ').filter(Boolean);
+ if(!words.length){const rc=cmdRecent().map(id=>all.find(x=>x.id===id)).filter(Boolean);const rest=all.filter(x=>rc.indexOf(x)<0);return {recent:rc,list:rest}}
+ return {recent:[],list:all.map(it=>({it,s:cmdScore(it,words)})).filter(x=>x.s>=0).sort((a,b)=>b.s-a.s).slice(0,12).map(x=>x.it)}}
+function cmdOpen(){let d=document.getElementById('cmdDlg');
+ if(!d){d=document.createElement('dialog');d.id='cmdDlg';d.setAttribute('aria-label',rlT('search'));document.body.appendChild(d);
+  d.addEventListener('click',e=>{if(e.target===d)d.close()});}
+ d.innerHTML='<div class="cmd-top">'+rlIco('search',20)+'<input id="cmdQ" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="cmdList" placeholder="'+escAttr(rlT('ph'))+'"></div><ul id="cmdList" role="listbox"></ul><div class="cmd-foot">'+escHTML(rlT('hint'))+'</div>';
+ const q=d.querySelector('#cmdQ');q.addEventListener('input',()=>{window._cmdSel=0;cmdDraw()});q.addEventListener('keydown',cmdKey);
+ window._cmdSel=0;if(!d.open)d.showModal();cmdDraw();q.focus()}
+function cmdDraw(){const d=document.getElementById('cmdDlg'),ul=d&&d.querySelector('#cmdList');if(!ul)return;const r=cmdFilter(d.querySelector('#cmdQ').value);
+ const rows=r.recent.concat(r.list);window._cmdRows=rows;if(window._cmdSel>=rows.length)window._cmdSel=Math.max(0,rows.length-1);
+ const ico=it=>it.kind==='stage'?'stage':it.kind==='tool'?'tool':(RL_ICO[it.id.replace(/^a_/,'')]?it.id.replace(/^a_/,''):'act');
+ const li=(it,i)=>'<li role="option" id="cmdo'+i+'" aria-selected="'+(i===window._cmdSel)+'" data-i="'+i+'">'+rlIco(ico(it),18)+'<span class="cmd-l">'+escHTML(it.label)+(it.hint?'<span class="cmd-h">'+escHTML(it.hint)+'</span>':'')+'</span><span class="cmd-k">'+escHTML(rlT(it.kind))+'</span></li>';
+ let h='';if(!rows.length)h='<li class="cmd-sec">'+escHTML(rlT('none'))+'</li>';
+ else{if(r.recent.length)h+='<li class="cmd-sec" role="presentation">'+escHTML(rlT('recent'))+'</li>';h+=rows.map(li).join('')}
+ ul.innerHTML=h;ul.querySelectorAll('li[data-i]').forEach(x=>{x.onmousemove=()=>{if(window._cmdSel!==+x.dataset.i){window._cmdSel=+x.dataset.i;cmdMarkSel()}};x.onclick=()=>cmdRun(+x.dataset.i)});cmdMarkSel()}
+function cmdMarkSel(){const d=document.getElementById('cmdDlg');if(!d)return;d.querySelectorAll('#cmdList li[data-i]').forEach(x=>x.setAttribute('aria-selected',String(+x.dataset.i===window._cmdSel)));
+ const q=d.querySelector('#cmdQ'),cur=d.querySelector('#cmdo'+window._cmdSel);if(q)q.setAttribute('aria-activedescendant',cur?cur.id:'');if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:'nearest'})}
+function cmdKey(e){const n=(window._cmdRows||[]).length;
+ if(e.key==='ArrowDown'){e.preventDefault();if(n)window._cmdSel=(window._cmdSel+1)%n;cmdMarkSel()}
+ else if(e.key==='ArrowUp'){e.preventDefault();if(n)window._cmdSel=(window._cmdSel-1+n)%n;cmdMarkSel()}
+ else if(e.key==='Enter'){e.preventDefault();if(n)cmdRun(window._cmdSel)}
+ else if(e.key==='Escape'){e.preventDefault();const d=document.getElementById('cmdDlg');if(d&&d.open)d.close()}}
+function cmdRun(i){const it=(window._cmdRows||[])[i];if(!it)return;const d=document.getElementById('cmdDlg');if(d&&d.open)d.close();
+ try{const rc=cmdRecent().filter(x=>x!==it.id);rc.unshift(it.id);LS.set('appu_cmd_recent',JSON.stringify(rc.slice(0,5)))}catch(e){}
+ try{it.run()}catch(e){try{showToast(String(e&&e.message||e))}catch(x){}}}
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey&&(e.key==='k'||e.key==='K')){e.preventDefault();const d=document.getElementById('cmdDlg');if(d&&d.open)d.close();else cmdOpen()}});
+
+/* ---- "Stays on this device" chip and the one-time AI notice ---- */
+function devProv(){try{return (PROVIDERS[getProv()]||{}).short||(PROVIDERS[getProv()]||{}).name||getProv()}catch(e){return 'the AI service'}}
+function devChip(){const br=document.querySelector('header .brand');if(!br)return;let c=document.getElementById('devChip');
+ if(!c){c=document.createElement('button');c.type='button';c.id='devChip';c.className='dev-chip';c.onclick=devOpen;br.insertAdjacentElement('afterend',c)}
+ c.innerHTML=rlIco('lock',14)+'<span>'+escHTML(rlT('chip'))+'</span>';c.title=rlT('chip')+'. '+rlT('dev_h');c.setAttribute('aria-label',rlT('chip'))}
+function devOpen(){let d=document.getElementById('devDlg');if(!d){d=document.createElement('dialog');d.id='devDlg';document.body.appendChild(d)}
+ const p=escHTML(devProv());
+ d.innerHTML='<h3 style="display:flex;align-items:center;gap:8px;margin-top:0">'+rlIco('lock',20)+escHTML(rlT('dev_h'))+'</h3><p>'+escHTML(rlT('dev_1'))+'</p><p style="margin-bottom:4px">'+escHTML(rlT('dev_2h'))+'</p><ol style="padding-left:20px;margin-top:0"><li>'+escHTML(rlT('dev_ai')).replace('{p}','<b>'+p+'</b>')+'</li><li>'+escHTML(rlT('dev_net'))+'</li></ol><p>'+escHTML(rlT('dev_3'))+'</p>'
+ +'<div class="row" style="gap:8px;justify-content:flex-end"><button type="button" class="btn btn-purple" onclick="document.getElementById(\'devDlg\').close();backupExport()">'+escHTML(rlT('dev_bk'))+'</button><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'devDlg\').close()">'+escHTML(rlT('close'))+'</button></div>';
+ if(!d.open)d.showModal()}
+function devAiNoticeOnce(){try{if(LS.get('appu_ai_notice_seen'))return;LS.set('appu_ai_notice_seen','1');showToast(rlT('ai_once').replace('{p}',devProv()))}catch(e){}}
+(function(){const f=window.callAIRaw;if(typeof f!=='function'||f._dev)return;const w=async function(){devAiNoticeOnce();return f.apply(this,arguments)};w._dev=1;window.callAIRaw=w;try{callAIRaw=w}catch(e){}})();
+
+/* ---- one gesture from the gesture board: on a tablet (wide screens, where Tools and the AI suggestion share one side panel), swipe sideways across the side panel to move between Tools and the AI
+   suggestion. The tabs above do the same by tap. Swipes that start near the screen edge, in a text box, or mostly
+   up-and-down are left to the browser. ---- */
+(function(){let sx=0,sy=0,ok=false;
+ document.addEventListener('touchstart',e=>{ok=false;if(e.touches.length!==1)return;try{if(!dockOn())return}catch(x){return}
+  const t=e.target,tc=e.touches[0];if(!t.closest||!t.closest('#toolShell,.ai-pane'))return;if(t.closest('input,textarea,select,[contenteditable="true"],table,canvas,.no-swipe'))return;
+  if(tc.clientX<28||tc.clientX>window.innerWidth-28)return;sx=tc.clientX;sy=tc.clientY;ok=true},{passive:true});
+ document.addEventListener('touchend',e=>{if(!ok)return;ok=false;const tc=e.changedTouches[0],dx=tc.clientX-sx,dy=tc.clientY-sy;
+  if(Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.5)return;const m=document.querySelector('main'),onAi=m&&m.classList.contains('dock-ai');
+  if(dx<0&&!onAi)dockShow('ai');else if(dx>0&&onAi)dockShow('tools')},{passive:true})})();
+
+function rlInit(){try{rlStyle();rlRender();rlHeaderBtn();devChip()}catch(e){}}
+function rlRelabel(){try{rlRender();rlHeaderLabel();devChip()}catch(e){}}
+(function(){const sb=window.apStageBarRender;if(typeof sb==='function'&&!sb._rl){const w=function(){const r=sb.apply(this,arguments);try{rlMark()}catch(e){}return r};w._rl=1;window.apStageBarRender=w;try{apStageBarRender=w}catch(e){}}
+ const tl=window.toggleLang;if(typeof tl==='function'&&!tl._rl){const w=function(){const r=tl.apply(this,arguments);rlRelabel();return r};w._rl=1;window.toggleLang=w;try{toggleLang=w}catch(e){}}})();
+rlInit();
+
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
    A bookmarklet reads the citation_* meta tags most journals, PubMed and
@@ -23420,7 +24246,7 @@ function citCheckCaptureHash(){
     if(!confirm('Add this to your citation library?\n\n"'+d.title+'"\n'+(d.author||'(no author found)')+(d.year?' ('+d.year+')':'')))return;
     const rec={author:d.author||'',year:d.year||'',title:d.title,source:d.source||'',volume:'',issue:'',pages:'',doi:d.doi||'',url:d.doi?'':(d.url||''),type:'Journal article',style:'apa'};
     const l=citGetLib();
-    if(l.some(e=>e.title===rec.title&&e.author===rec.author)){showToast('Already in your library');return}
+    if(citLibHas(rec)){showToast(getLang()==='hi'?'यह पहले से आपकी library में है':'Already in your library');return}
     l.push(rec);citSaveLib(l);
     showToast('Captured "'+d.title+'" into your citation library ✓');
   }catch(e){showToast('Could not read that captured citation')}
@@ -23456,6 +24282,7 @@ function citCheckCaptureHash(){
   try{citRefreshDoc()}catch(e){}
   citSetupBookmarklet();
   citCheckCaptureHash();try{ideaInboxHash()}catch(e){}
+  try{libToolsInit()}catch(e){}try{shareTargetCheck()}catch(e){}
   refreshProvUI();
   upd();
   if(!POPOUT){
