@@ -1055,7 +1055,7 @@ body.at-home .project-bar .btn-new{display:none}
 :root[data-theme="dark"] .st-step.on .st-dot{color:#15181C}
 .st-step.proj .st-dot{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--saffron)}
 .st-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-@media (max-width:760px){.st-steps{min-width:0}.st-lbl{display:none}.st-step.on .st-lbl{display:block;position:absolute;top:38px;white-space:nowrap}.stagebar{padding-bottom:26px}}
+@media (max-width:760px){.st-steps{min-width:0}.st-lbl{display:none}.st-step.on .st-lbl{display:block;position:absolute;top:38px;white-space:nowrap;max-width:none;overflow:visible}.stagebar{padding-bottom:28px}.project-bar{flex-wrap:wrap;row-gap:8px}.project-bar #projectBarLabel{flex:1 1 100%}.doc-pane .toolbar{flex-wrap:wrap}#popBtn,#tbBtn{display:none}.dock-tabs .dock-tab{flex:1 1 0;min-width:0;white-space:normal;line-height:1.25}}
 
 /* left list: numbered stages, their parts on a branch line, no heavy pill */
 .tool-sidebar{counter-reset:stg;background:transparent;border:0;box-shadow:none}
@@ -1088,7 +1088,7 @@ body.at-home .project-bar .btn-new{display:none}
 #editor::-webkit-scrollbar{width:10px}
 #editor::-webkit-scrollbar-thumb{background:#C9C2B6;border-radius:6px;border:2px solid var(--card)}
 #editor::-webkit-scrollbar-track{background:transparent}
-.fmtbar{flex-wrap:nowrap;background:var(--card)}.fmtbar button,.fmtbar select{white-space:nowrap;flex:none}.fmtbar .fmt-more-btn{margin-left:auto}.fmtbar>.fmt-sep:last-of-type{display:none}
+.fmtbar{flex-wrap:wrap;background:var(--card)}.fmtbar button,.fmtbar select{white-space:nowrap;flex:none}.fmtbar .fmt-more-btn{margin-left:auto}.fmtbar>.fmt-sep:last-of-type{display:none}
 #editor{box-shadow:none!important;margin-left:0!important;margin-right:0!important}
 .doc-pane .toolbar .btn-purple{background:var(--card);color:var(--ink);border:1px solid var(--chipline)}
 .doc-pane .toolbar .btn-purple kbd{background:var(--chip);color:var(--muted)}
@@ -1101,6 +1101,7 @@ body.at-home .project-bar .btn-new{display:none}
 .tool-sidebar .tool-tab.active::after,.tool-sidebar .calm-sub[data-st="done"]::after{background:var(--accent-ink);border-color:var(--accent-ink)}
 .tool-sidebar .tool-tab.calm-hidden-tab{display:none}
 .calm-subs{display:flex;flex-direction:column;gap:1px}
+.calm-subs-nested .calm-sub{counter-increment:none}
 .calm-subs-nested{margin:2px 0 6px 18px;padding-left:12px;border-left:1px dashed var(--ctl-line)}
 .calm-subs-nested .calm-sub::after{left:-19px;width:8px;height:8px;top:13px}
 .tool-sidebar .calm-sub{counter-increment:sub;display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:7px 10px;color:var(--ink);font:500 14px/1.35 var(--font-ui);cursor:pointer}
@@ -1112,6 +1113,8 @@ body.at-home .project-bar .btn-new{display:none}
 @media(min-width:1100px){body.calm-wide-page main{grid-template-columns:auto minmax(0,1fr) 330px!important}main .tool-sidebar{width:250px}
   body.calm-wide-page .dock-tabs .dock-tab{font-size:13.5px;padding:10px 8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   body.calm-wide-page #dockTabAi{flex:none}
+  body.calm-wide-page #tbBtn{display:none}
+  body.calm-wide-page #popBtn{margin-left:auto}
   body.calm-wide-page #popBtn{font-size:0;width:34px;padding:0}
   body.calm-wide-page #popBtn::before{content:"⧉";font-size:15px}}
 /* a roomier page */
@@ -2839,7 +2842,7 @@ const I18N={
     tab_close:'🔍 Closeness check', tab_close_title:'Compare your document with your own sources and mark passages that match word for word',
     tab_words:'📖 Words and grammar', tab_words_title:'Look up words, keep a word bank, and check your grammar',
     tab_psych:'🧰 Research helpers', tab_psych_title:'Summarize a paper, analyze a case study, explain a concept, format results in APA, or have your argument challenged',
-    tab_design_tool:'Plan, approvals and consent', tab_design:'⚖ Design &amp; Ethics', tab_design_title:'Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts',
+    tab_design_tool:'Plan and approvals', tab_design:'⚖ Design &amp; Ethics', tab_design_title:'Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts',
     tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
     tab_qual:'🏷 Qualitative Coding', tab_qual_title:"Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents",
     qual_panel_desc:'Select a passage in your document, then tap a code below to tag it. Build codes under other codes to group related ideas. Works across every document you have, not just the one that\'s open.',
@@ -3085,7 +3088,7 @@ const I18N={
     tab_close:'🔍 समानता जांच', tab_close_title:'अपने दस्तावेज़ को अपने स्रोतों से मिलाएँ और शब्दशः मिलते अंश चिह्नित करें',
     tab_words:'📖 शब्द और व्याकरण', tab_words_title:'शब्दों के अर्थ देखें, शब्द-बैंक बनाएँ और व्याकरण जाँचें',
     tab_psych:'🧰 शोध सहायक', tab_psych_title:'शोध-पत्र का सारांश, केस स्टडी का विश्लेषण, अवधारणा की व्याख्या, APA प्रारूप, या अपने तर्क की परीक्षा',
-    tab_design_tool:'योजना, अनुमति और सहमति', tab_design:'⚖ डिज़ाइन और नैतिकता', tab_design_title:'डेटा संग्रह शुरू होने से पहले अपनी विधि की योजना बनाएं, सही नियामक मार्ग चुनें, और सहमति, नैतिकता समिति तथा पंजीकरण के कागज़ात तैयार करें',
+    tab_design_tool:'योजना और अनुमति', tab_design:'⚖ डिज़ाइन और नैतिकता', tab_design_title:'डेटा संग्रह शुरू होने से पहले अपनी विधि की योजना बनाएं, सही नियामक मार्ग चुनें, और सहमति, नैतिकता समिति तथा पंजीकरण के कागज़ात तैयार करें',
     tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
     tab_qual:'🏷 गुणात्मक कोडिंग', tab_qual_title:'अपने टेक्स्ट के हिस्सों को अपने खुद के कोड से टैग करें (साक्षात्कार या खुले प्रश्नों के उत्तर), एक कोड ट्री बनाएं, और अपने सभी दस्तावेज़ों में किसी कोड के हर हिस्से को एक साथ देखें',
     qual_panel_desc:'अपने दस्तावेज़ में एक हिस्सा चुनें, फिर उसे टैग करने के लिए नीचे किसी कोड पर टैप करें। जुड़े विचारों को समूहित करने के लिए कोड के नीचे उप-कोड बनाएं। यह सिर्फ खुले दस्तावेज़ में ही नहीं, आपके सभी दस्तावेज़ों में काम करता है।',
@@ -24941,7 +24944,10 @@ let calmMirrorSig='';
 function calmMirror(){
   const side=document.getElementById('toolSidebar'),p=document.querySelector('.tool-panel.active'),tab=document.querySelector('.tool-sidebar .tool-tab.active');
   const wide=window.innerWidth>=1100&&side&&getComputedStyle(side).display!=='none'&&!side.classList.contains('collapsed');
-  const rows=p&&wide?[...p.querySelectorAll('.panel > .row > .tl-main, .panel > .row.tl-wrap > .tl-row')]:[];
+  const pn0=p&&p.querySelector('.panel');
+  const listOnly=!!pn0&&[...pn0.children].every(c=>c.tagName==='H3'||c.tagName==='INPUT'||c.id==='designDash'||(c.classList&&(c.classList.contains('desc')||c.classList.contains('tl-wrap')))||(c.classList&&c.classList.contains('row')&&c.querySelector(':scope > .tl-main')));
+  /* only a panel that is just a list of tools moves left; a panel with its own form stays whole */
+  const rows=p&&wide&&listOnly?[...p.querySelectorAll('.panel > .row > .tl-main, .panel > .row.tl-wrap > .tl-row')]:[];
   const sig=(p?p.dataset.panel:'')+'|'+rows.map(b=>b.textContent.trim()+':'+(b.getAttribute('data-st')||'')).join('|')+'|'+wide;
   if(sig===calmMirrorSig)return;calmMirrorSig=sig;
   document.querySelectorAll('.calm-subs').forEach(x=>x.remove());
@@ -24958,9 +24964,7 @@ function calmMirror(){
   tab.insertAdjacentElement('afterend',box);
   if(only)tab.classList.add('calm-hidden-tab');
   p.classList.add('calm-mirrored');
-  const pn=p.querySelector('.panel');
-  const listOnly=pn&&[...pn.children].every(c=>c.tagName==='H3'||c.tagName==='INPUT'||c.id==='designDash'||(c.classList&&(c.classList.contains('desc')||c.classList.contains('tl-wrap')))||(c.classList&&c.classList.contains('row')&&c.querySelector(':scope > .tl-main')));
-  if(listOnly)document.body.classList.add('calm-wide-page');
+  document.body.classList.add('calm-wide-page');
 }
 window.addEventListener('resize',()=>{clearTimeout(calmTimer);calmTimer=setTimeout(()=>calmPass(document),120)});
 function calmPass(root){

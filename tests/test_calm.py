@@ -38,7 +38,7 @@ with sync_playwright() as p:
     # stepper, numbered parts, one toolbar row, clean page
     ok(pg.evaluate("document.querySelectorAll('#stageBar .st-step').length") == 6 and pg.evaluate("!!document.querySelector('#stageBar .st-step.on .st-dot')"), 'stage stepper with six numbered circles and the current one marked')
     ok('counter(sub)' in pg.evaluate("getComputedStyle(document.querySelector('.tool-tab[data-tool=design]'),'::before').content") and pg.evaluate("getComputedStyle(document.querySelector('.stage-group[data-stage=design] .stage-tools')).borderLeftStyle") == 'solid', 'sub-stage numbered under its stage, on a branch line')
-    ok('Plan, approvals' in pg.inner_text('.tool-tab[data-tool=design]'), 'the part no longer repeats its stage name')
+    ok('Plan and approvals' in pg.evaluate("document.querySelector('.tool-tab[data-tool=design]').textContent"), 'the part no longer repeats its stage name')
     ok(pg.evaluate("document.getElementById('fmtMore').contains(document.getElementById('dictBtn'))"), 'Dictate moved into the More menu')
     tops = pg.evaluate("[...document.getElementById('fmtBar').children].filter(c=>c.offsetParent&&!c.classList.contains('fmt-more')).map(c=>Math.round(c.getBoundingClientRect().top))")
     ok(max(tops) - min(tops) < 12, 'formatting tools fit on one row: %s' % sorted(set(tops)))
