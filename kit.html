@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Try Appuscholar · student test</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Student test kit (22 Nov 2026). One page, nothing is sent anywhere by the page itself: answers stay in this
+   browser until the student chooses to send the summary on WhatsApp or by email. Same look as Appuscholar. */
+:root{--bg:#FAF8F4;--card:#FFFFFF;--ink:#1E2226;--muted:#5F6368;--line:#E8E4DC;--chip:#F1EEE7;--chipline:#E3DED4;--accent:#2E5B8A;--accent-dark:#24496F;--accent-soft:#EAF0F7;--saffron:#F0A33C;--ok:#2F6B3F;--warn:#8A3B12}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181C;--card:#1E2227;--ink:#ECEEF0;--muted:#A9AFB6;--line:#2E343B;--chip:#262B31;--chipline:#363C44;--accent:#8DB4E0;--accent-dark:#A9C7EA;--accent-soft:#1D2A38;--ok:#8FD0A0;--warn:#F2B38A}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Inter,"Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.hd{max-width:720px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.hd img{width:32px;height:32px}
+.hd b{font-size:16px;font-weight:600}
+.hd .sp{flex:1}
+.bar{height:4px;background:var(--chip)}.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+main{max-width:720px;margin:0 auto;padding:20px 16px 120px}
+h1{font-size:24px;line-height:1.3;font-weight:600;letter-spacing:-.015em;margin:4px 0 10px}
+h2{font-size:18px;font-weight:600;margin:0 0 8px}
+p{margin:0 0 12px}
+.muted{color:var(--muted);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 14px}
+.step{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:2px}
+button,.btn{font:600 15px Inter,"Noto Sans Devanagari",sans-serif;min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+:root[data-dark] button{color:#15181C}
+button:hover,.btn:hover{background:var(--accent-dark)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.ghost,.btn.ghost{background:var(--card);color:var(--accent);border:1.5px solid var(--accent)}
+button.ghost:hover{background:var(--accent-soft)}
+button.link{background:none;color:var(--accent);min-height:36px;padding:0;border:0}
+button.small{min-height:36px;padding:0 14px;font-size:14px}
+.lang{min-height:36px;padding:0 12px;border:1px solid var(--chipline);background:var(--card);color:var(--ink);font-weight:500;border-radius:18px}
+.lang:hover{background:var(--chip)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.full{width:100%}
+label.check{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin:8px 0;cursor:pointer;font-size:15px}
+label.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
+textarea,input[type=text]{width:100%;font:15px/1.5 Inter,"Noto Sans Devanagari",sans-serif;color:var(--ink);background:var(--card);border:1px solid var(--chipline);border-radius:10px;padding:10px 12px}
+textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+.task{font-size:18px;font-weight:600;line-height:1.4;margin:6px 0 10px}
+.done-when{font-size:14px;color:var(--muted);margin:0 0 14px}
+.timer{font:600 14px Inter,sans-serif;color:var(--muted);font-variant-numeric:tabular-nums}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.choices button{background:var(--card);color:var(--ink);border:1.5px solid var(--chipline);font-weight:500;padding:0 8px;text-align:center}
+.choices button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.choices button:hover{border-color:var(--accent);background:var(--card)}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--chip);border-radius:10px;padding:10px 12px;white-space:pre;overflow-x:auto;margin:8px 0}
+.sus{margin:0 0 16px}
+.sus .q{font-size:15.5px;margin:0 0 8px}
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.scale button{min-height:44px;padding:0;background:var(--card);color:var(--ink);border:1.5px solid var(--chipline);font-weight:600}
+.scale button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.scale-ends{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:4px}
+.note{background:var(--accent-soft);border-radius:12px;padding:12px 14px;font-size:14px;margin:0 0 14px}
+.big{font-size:40px;font-weight:700;line-height:1}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px}
+.tablewrap{overflow-x:auto}
+[hidden]{display:none!important}
+@media (max-width:480px){.choices{grid-template-columns:1fr}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <img src="logo.svg" alt="">
+    <b id="hdTitle">Try Appuscholar</b>
+    <span class="sp"></span>
+    <button type="button" class="lang" id="langBtn" onclick="toggleLang()" aria-label="हिंदी में देखें">हिं</button>
+  </div>
+  <div class="bar" aria-hidden="true"><i id="prog" style="width:0"></i></div>
+</header>
+<main id="main" aria-live="polite"></main>
+
+<script>
+'use strict';
+const APP='https://srssg74-crypto.github.io/appuscholer/';
+const ROUND=(new URLSearchParams(location.search).get('r')||'1').replace(/[^0-9]/g,'')||'1';
+const KEY='appu_kit_v1';
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.v===1)return s}catch(e){}
+  return {v:1,lang:'en',page:'welcome',code:'S'+Math.random().toString(36).slice(2,6).toUpperCase(),tasks:{},sus:{},open:{},info:{}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const hi=()=>S.lang==='hi';
+const T=(en,h)=>hi()?h:en;
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ---------- content ---------- */
+const TASKS=[
+ {en:'Start a new research project called “Sleep and exam stress”.',hi:'“नींद और परीक्षा का तनाव” नाम से एक नया research project शुरू करें।',
+  wen:'Done when the project name shows on the home screen or at the top.',whi:'पूरा तब, जब project का नाम home screen पर या ऊपर दिखने लगे।'},
+ {en:'Write your research question in Stage 1, then ask the app whether the idea is realistic.',hi:'चरण 1 में अपना research प्रश्न लिखें, फिर ऐप से पूछें कि यह विचार व्यावहारिक है या नहीं।',
+  wen:'Done when your question is saved and you get a feasibility answer, or you find where to add an AI key.',whi:'पूरा तब, जब प्रश्न सहेज लिया जाए और व्यावहारिकता पर उत्तर मिले, या आप ढूँढ लें कि AI key कहाँ डालनी है।'},
+ {en:'Find two recent papers on your topic and save one to your library.',hi:'अपने विषय पर हाल के दो papers खोजें और एक को अपनी library में सहेजें।',
+  wen:'Done when one paper is in your library.',whi:'पूरा तब, जब एक paper आपकी library में आ जाए।'},
+ {en:'Load the sample data below into the Statistics Lab and find out whether hostel and home students differ in stress score.',hi:'नीचे दिया नमूना डेटा Statistics Lab में डालें और पता करें कि हॉस्टल और घर में रहने वाले विद्यार्थियों के तनाव स्कोर में अंतर है या नहीं।',
+  wen:'Done when a test result appears and you put it into your document.',whi:'पूरा तब, जब test का परिणाम दिखे और आप उसे अपने document में डाल दें।',data:true},
+ {en:'Write two sentences in your Introduction, add one citation, and download the document as a Word file.',hi:'अपनी Introduction में दो वाक्य लिखें, एक citation जोड़ें, और document को Word file के रूप में download करें।',
+  wen:'Done when a .docx file is downloaded.',whi:'पूरा तब, जब .docx file download हो जाए।'}];
+const DATA='group,stress\nHostel,27\nHome,22\nHostel,31\nHome,20\nHostel,25\nHome,24\nHostel,29\nHome,19\nHostel,26\nHome,23';
+/* SUS: English is Brooke's original wording, not changed. The Hindi is our own translation and has not been validated. */
+const SUS=[
+ ['I think that I would like to use this system frequently.','मुझे लगता है कि मैं इस ऐप का उपयोग अक्सर करना चाहूँगा/चाहूँगी।'],
+ ['I found the system unnecessarily complex.','मुझे यह ऐप बेवजह उलझा हुआ लगा।'],
+ ['I thought the system was easy to use.','मुझे यह ऐप उपयोग में आसान लगा।'],
+ ['I think that I would need the support of a technical person to be able to use this system.','मुझे लगता है कि इसे चलाने के लिए मुझे किसी तकनीकी व्यक्ति की मदद चाहिए होगी।'],
+ ['I found the various functions in this system were well integrated.','इस ऐप के अलग-अलग हिस्से आपस में अच्छी तरह जुड़े हुए लगे।'],
+ ['I thought there was too much inconsistency in this system.','मुझे इस ऐप में बहुत असंगति लगी; एक जैसी चीज़ें अलग-अलग तरह से काम करती हैं।'],
+ ['I would imagine that most people would learn to use this system very quickly.','मुझे लगता है कि ज़्यादातर लोग इसे बहुत जल्दी चलाना सीख लेंगे।'],
+ ['I found the system very cumbersome to use.','इस ऐप का उपयोग मुझे बहुत भारी और अटपटा लगा।'],
+ ['I felt very confident using the system.','इस ऐप का उपयोग करते समय मैंने खुद को बहुत आत्मविश्वासी महसूस किया।'],
+ ['I needed to learn a lot of things before I could get going with this system.','इस ऐप का उपयोग शुरू करने से पहले मुझे बहुत कुछ सीखना पड़ा।']];
+const OPEN=[
+ ['hard','What was the hardest moment today, and why?','आज सबसे कठिन पल कौन-सा था, और क्यों?'],
+ ['use','What would make you use Appuscholar for your own thesis or paper?','आप अपनी thesis या paper के लिए Appuscholar का उपयोग किस बात से करेंगे?'],
+ ['change','What would you remove, rename or move?','आप क्या हटाएँगे, किसका नाम बदलेंगे, या किसे कहीं और रखेंगे?']];
+const OPEN2=[
+ ['most','Which part did you use most during the week? Which part did you never open?','हफ़्ते भर में आपने कौन-सा हिस्सा सबसे ज़्यादा उपयोग किया? कौन-सा कभी नहीं खोला?'],
+ ['lost','Did the app ever lose your work or surprise you?','क्या ऐप ने कभी आपका काम खोया या आपको चौंकाया?']];
+
+/* ---------- pages ---------- */
+const PAGES=['welcome','about','t0','t1','t2','t3','t4','sus','open','end'];
+function go(p){S.page=p;save();render();window.scrollTo(0,0)}
+function next(){const i=PAGES.indexOf(S.page);go(PAGES[Math.min(i+1,PAGES.length-1)])}
+function back(){const i=PAGES.indexOf(S.page);go(PAGES[Math.max(i-1,0)])}
+function toggleLang(){S.lang=hi()?'en':'hi';save();render()}
+
+let tick=0;
+function render(){
+  document.documentElement.lang=hi()?'hi':'en';
+  document.getElementById('langBtn').textContent=hi()?'EN':'हिं';
+  document.getElementById('langBtn').setAttribute('aria-label',hi()?'View in English':'हिंदी में देखें');
+  document.getElementById('hdTitle').textContent=T('Try Appuscholar','Appuscholar आज़माएँ');
+  document.title=T('Try Appuscholar · student test','Appuscholar आज़माएँ · विद्यार्थी परीक्षण');
+  if(location.hash==='#results'){renderResults();document.getElementById('prog').style.width='0';return}
+  const i=PAGES.indexOf(S.page);document.getElementById('prog').style.width=Math.round(100*i/(PAGES.length-1))+'%';
+  clearInterval(tick);
+  const m=document.getElementById('main');
+  const p=S.page;
+  if(p==='welcome')m.innerHTML=welcome();
+  else if(p==='about')m.innerHTML=about();
+  else if(p[0]==='t')m.innerHTML=task(+p.slice(1));
+  else if(p==='sus')m.innerHTML=sus();
+  else if(p==='open')m.innerHTML=openQ();
+  else m.innerHTML=end();
+  if(p[0]==='t')startTimer(+p.slice(1));
+}
+
+function welcome(){return`
+<p class="step">${T('About 30 minutes','लगभग 30 मिनट')}</p>
+<h1>${T('Help us test Appuscholar','Appuscholar की जाँच में हमारी मदद करें')}</h1>
+<p>${T('Appuscholar is an app for research students. We want to find where it is hard to use. We are testing the app, not you. There are no wrong answers.','Appuscholar शोध करने वाले विद्यार्थियों के लिए एक ऐप है। हम देखना चाहते हैं कि इसमें कहाँ उलझन होती है। जाँच ऐप की है, आपकी नहीं। कोई उत्तर गलत नहीं है।')}</p>
+<div class="card">
+<h2>${T('What you will do','आप क्या करेंगे')}</h2>
+<p>${T('Five small tasks in the app, one at a time. Then ten quick statements to rate, and three short questions.','ऐप में पाँच छोटे काम, एक-एक करके। फिर दस छोटे कथनों पर अपनी राय, और तीन छोटे प्रश्न।')}</p>
+<h2>${T('What we keep','हम क्या रखते हैं')}</h2>
+<p>${T('Only what you choose to send at the end: whether each task worked, how long it took, your ratings and your comments. No name, no screen recording, nothing from your research.','केवल वही जो आप अंत में भेजना चुनें: हर काम हुआ या नहीं, कितना समय लगा, आपकी रेटिंग और आपकी टिप्पणियाँ। न नाम, न screen recording, न आपके शोध की कोई चीज़।')}</p>
+<p class="muted">${T('Your answers stay in this browser until you press Send. You can stop at any time.','Send दबाने तक आपके उत्तर इसी browser में रहते हैं। आप कभी भी रुक सकते हैं।')}</p>
+</div>
+<label class="check"><input type="checkbox" id="c18" ${S.info.adult?'checked':''} onchange="S.info.adult=this.checked;save();gate()"><span>${T('I am 18 years old or older.','मेरी आयु 18 वर्ष या उससे अधिक है।')}</span></label>
+<label class="check"><input type="checkbox" id="cok" ${S.info.consent?'checked':''} onchange="S.info.consent=this.checked;save();gate()"><span>${T('I have read this and I agree to take part.','मैंने यह पढ़ लिया है और मैं भाग लेने के लिए सहमत हूँ।')}</span></label>
+<p class="muted" id="u18" ${S.info.adult===false?'':'hidden'}>${T('Thank you. This test is only for students aged 18 or over.','धन्यवाद। यह परीक्षण केवल 18 वर्ष या उससे अधिक आयु के विद्यार्थियों के लिए है।')}</p>
+<button type="button" class="full" id="startBtn" onclick="next()" ${S.info.adult&&S.info.consent?'':'disabled'}>${T('Start','शुरू करें')}</button>`}
+function gate(){document.getElementById('startBtn').disabled=!(S.info.adult&&S.info.consent)}
+
+function pick(group,key,val){S.info[key]=val;save();document.querySelectorAll('[data-g="'+group+'"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===val));document.querySelectorAll('[data-g="'+group+'"] button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===val))}
+function choices(group,key,opts){return'<div class="choices" data-g="'+group+'">'+opts.map(o=>'<button type="button" data-v="'+o[0]+'" class="'+(S.info[key]===o[0]?'on':'')+'" aria-pressed="'+(S.info[key]===o[0])+'" onclick="pick(\''+group+'\',\''+key+'\',\''+o[0]+'\')">'+o[1]+'</button>').join('')+'</div>'}
+function about(){return`
+<p class="step">${T('Before you begin','शुरू करने से पहले')}</p>
+<h1>${T('A little about you','आपके बारे में थोड़ा')}</h1>
+<div class="card">
+<h2>${T('Your subject','आपका विषय')}</h2>${choices('subj','subject',[['psy',T('Psychology','मनोविज्ञान')],['med',T('Medicine','चिकित्सा')],['oth',T('Other','अन्य')]])}
+<h2>${T('Your level','आपका स्तर')}</h2>${choices('lvl','level',[['ug','UG'],['pg','PG'],['phd','PhD']])}
+<h2>${T('You are using','आप उपयोग कर रहे हैं')}</h2>${choices('dev','device',[['phone',T('Phone','फ़ोन')],['laptop',T('Laptop','लैपटॉप')],['tablet',T('Tablet','टैबलेट')]])}
+<h2>${T('Your college','आपका कॉलेज')}</h2>${choices('col','college',[['govt',T('Government','सरकारी')],['pvt',T('Private','निजी')],['na',T('Prefer not to say','नहीं बताना')]])}
+</div>
+<div class="note">${T('Open the app in a new tab now and keep this page open. Switch between the two.','अब ऐप को नए tab में खोलें और यह page भी खुला रखें। दोनों के बीच आते-जाते रहें।')}</div>
+<div class="row"><a class="btn ghost" href="${APP}" target="_blank" rel="noopener">${T('Open Appuscholar','Appuscholar खोलें')}</a>
+<button type="button" onclick="next()">${T('Go to task 1','काम 1 पर जाएँ')}</button></div>`}
+
+function startTimer(i){const t=S.tasks[i]=S.tasks[i]||{};if(!t.start&&!t.result){t.start=Date.now();save()}
+  const el=document.getElementById('tm');if(!el)return;
+  const draw=()=>{const ms=(t.result?t.ms:Date.now()-t.start)||0,s=Math.floor(ms/1000);el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+  draw();if(!t.result)tick=setInterval(draw,1000)}
+function taskResult(i,r){const t=S.tasks[i];if(!t.result)t.ms=Date.now()-(t.start||Date.now());t.result=r;save();render()}
+function taskRedo(i){S.tasks[i]={start:Date.now()};save();render()}
+function copyData(){const done=()=>{const b=document.getElementById('cpBtn');if(b)b.textContent=T('Copied ✓','कॉपी हो गया ✓')};
+  if(navigator.clipboard)navigator.clipboard.writeText(DATA).then(done,()=>{});else{const ta=document.createElement('textarea');ta.value=DATA;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}}
+function task(i){const x=TASKS[i],t=S.tasks[i]||{},r=t.result;
+  const res=[['done',T('I did it','हो गया')],['help',T('Did it with help','मदद से हुआ')],['stuck',T('Could not do it','नहीं हो पाया')]];
+  return`
+<div class="row" style="justify-content:space-between"><p class="step">${T('Task','काम')} ${i+1} / 5</p><span class="timer" id="tm" aria-label="${T('Time on this task','इस काम पर समय')}"></span></div>
+<p class="task">${esc(hi()?x.hi:x.en)}</p>
+<p class="done-when">${esc(hi()?x.whi:x.wen)}</p>
+${x.data?`<div class="card"><h2>${T('Sample data','नमूना डेटा')}</h2><p class="muted">${T('Copy it, then paste it into the data box in the Statistics Lab.','इसे कॉपी करें, फिर Statistics Lab के डेटा वाले box में paste करें।')}</p><div class="code">${esc(DATA)}</div><button type="button" class="ghost small" id="cpBtn" onclick="copyData()">${T('Copy the data','डेटा कॉपी करें')}</button></div>`:''}
+<div class="row" style="margin-bottom:14px"><a class="btn ghost small" href="${APP}" target="_blank" rel="noopener">${T('Open Appuscholar','Appuscholar खोलें')}</a></div>
+<div class="card">
+<h2>${T('How did it go?','कैसा रहा?')}</h2>
+<p class="muted">${T('If you are stuck for more than 3 minutes, choose “Could not do it” and move on. That is useful for us too.','अगर 3 मिनट से ज़्यादा अटके रहें, तो “नहीं हो पाया” चुनें और आगे बढ़ें। यह भी हमारे लिए उपयोगी है।')}</p>
+<div class="choices">${res.map(o=>'<button type="button" class="'+(r===o[0]?'on':'')+'" aria-pressed="'+(r===o[0])+'" onclick="taskResult('+i+',\''+o[0]+'\')">'+o[1]+'</button>').join('')}</div>
+<label for="tn" style="font-weight:600;font-size:14.5px;display:block;margin:6px 0">${T('Where did you pause or get confused? (optional)','आप कहाँ रुके या उलझे? (वैकल्पिक)')}</label>
+<textarea id="tn" rows="3" oninput="S.tasks[${i}].note=this.value;save()" placeholder="${T('For example: I could not find where to save the paper','उदाहरण: मुझे नहीं मिला कि paper कहाँ सहेजूँ')}">${esc(t.note||'')}</textarea>
+${r?`<button type="button" class="link" onclick="taskRedo(${i})">${T('Start the timer again','टाइमर फिर से शुरू करें')}</button>`:''}
+</div>
+<div class="row" style="justify-content:space-between"><button type="button" class="ghost" onclick="back()">${T('Back','पीछे')}</button>
+<button type="button" onclick="next()" ${r?'':'disabled'}>${i<4?T('Next task','अगला काम'):T('Next: your opinion','अगला: आपकी राय')}</button></div>`}
+
+function susPick(i,v){S.sus[i]=v;save();document.querySelectorAll('[data-s="'+i+'"] button').forEach(b=>{const on=+b.dataset.v===v;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+  document.getElementById('susNext').disabled=SUS.some((_,k)=>!S.sus[k])}
+function sus(){return`
+<p class="step">${T('Your opinion · 10 statements','आपकी राय · 10 कथन')}</p>
+<h1>${T('How much do you agree?','आप कितना सहमत हैं?')}</h1>
+<p class="muted">${T('1 = strongly disagree, 5 = strongly agree. Answer every statement; if unsure, choose 3.','1 = पूरी तरह असहमत, 5 = पूरी तरह सहमत। हर कथन का उत्तर दें; अगर पक्का न हो, तो 3 चुनें।')}</p>
+${hi()?'<p class="muted">यह हिंदी पाठ हमारा अपना अनुवाद है।</p>':''}
+${SUS.map((q,i)=>`<div class="card sus"><p class="q"><b>${i+1}.</b> ${esc(hi()?q[1]:q[0])}</p>
+<div class="scale" data-s="${i}" role="group" aria-label="${esc(hi()?q[1]:q[0])}">${[1,2,3,4,5].map(v=>'<button type="button" data-v="'+v+'" class="'+(S.sus[i]===v?'on':'')+'" aria-pressed="'+(S.sus[i]===v)+'" onclick="susPick('+i+','+v+')">'+v+'</button>').join('')}</div>
+<div class="scale-ends"><span>${T('Strongly disagree','पूरी तरह असहमत')}</span><span>${T('Strongly agree','पूरी तरह सहमत')}</span></div></div>`).join('')}
+<div class="row" style="justify-content:space-between"><button type="button" class="ghost" onclick="back()">${T('Back','पीछे')}</button>
+<button type="button" id="susNext" onclick="S.info.susLang=S.lang;save();next()" ${SUS.some((_,k)=>!S.sus[k])?'disabled':''}>${T('Next','आगे')}</button></div>`}
+
+function openQ(){const qs=ROUND==='2'?OPEN.concat(OPEN2):OPEN;return`
+<p class="step">${T('Last step','आख़िरी कदम')}</p>
+<h1>${T('In your own words','अपने शब्दों में')}</h1>
+<p class="muted">${T('Short answers are fine. You can write in Hindi or English.','छोटे उत्तर भी ठीक हैं। हिंदी या अंग्रेज़ी, किसी में भी लिखें।')}</p>
+${qs.map(q=>`<div class="card"><label for="o_${q[0]}" style="font-weight:600;display:block;margin-bottom:8px">${esc(hi()?q[2]:q[1])}</label><textarea id="o_${q[0]}" rows="3" oninput="S.open['${q[0]}']=this.value;save()">${esc(S.open[q[0]]||'')}</textarea></div>`).join('')}
+<div class="row" style="justify-content:space-between"><button type="button" class="ghost" onclick="back()">${T('Back','पीछे')}</button>
+<button type="button" onclick="next()">${T('See my summary','मेरा सारांश देखें')}</button></div>`}
+
+/* SUS scoring, Brooke (1996): odd items minus 1, even items 5 minus the answer, sum times 2.5 */
+function susScore(s){if(SUS.some((_,k)=>!s[k]))return null;let t=0;for(let k=0;k<10;k++)t+=(k%2===0)?(s[k]-1):(5-s[k]);return t*2.5}
+const RLAB={done:['done','हो गया'],help:['with help','मदद से'],stuck:['not done','नहीं हुआ']};
+function summary(){const sc=susScore(S.sus),pack={k:1,c:S.code,r:ROUND,l:S.info.susLang||S.lang,i:{s:S.info.subject||'',v:S.info.level||'',d:S.info.device||'',g:S.info.college||''},
+  t:TASKS.map((_,i)=>{const t=S.tasks[i]||{};return[t.result||'',Math.round((t.ms||0)/1000),(t.note||'').slice(0,400)]}),u:SUS.map((_,k)=>S.sus[k]||0),o:S.open};
+  const lines=[T('Appuscholar test','Appuscholar परीक्षण')+' · '+S.code+' · '+T('round','राउंड')+' '+ROUND,
+    T('Tasks','काम')+': '+TASKS.map((_,i)=>{const t=S.tasks[i]||{};return(i+1)+' '+(t.result?RLAB[t.result][hi()?1:0]:'–')+' ('+Math.round((t.ms||0)/60000*10)/10+' min)'}).join(', '),
+    'SUS: '+(sc==null?'–':sc)];
+  return{text:lines.join('\n')+'\n\nAPPUKIT:'+btoa(unescape(encodeURIComponent(JSON.stringify(pack)))),sc}}
+function end(){const s=summary(),enc=encodeURIComponent(s.text);return`
+<p class="step">${T('Thank you','धन्यवाद')}</p>
+<h1>${T('Send your answers','अपने उत्तर भेजें')}</h1>
+<div class="card"><p class="muted" style="margin:0">${T('Your usability score','आपका usability स्कोर')}</p><p class="big">${s.sc==null?'–':s.sc}<span class="muted" style="font-size:16px;font-weight:500"> / 100</span></p>
+<p class="muted" style="margin:6px 0 0">${T('68 is about average across many products. This is not a mark for you; it is a mark for the app.','कई products में औसत लगभग 68 है। यह आपके अंक नहीं, ऐप के अंक हैं।')}</p></div>
+<div class="card"><h2>${T('What will be sent','क्या भेजा जाएगा')}</h2><div class="code" style="white-space:pre-wrap">${esc(s.text)}</div>
+<p class="muted">${T('The long line at the end holds the same answers in a form the researcher can read with the results page. It has no name in it.','अंत वाली लंबी पंक्ति में यही उत्तर ऐसे रूप में हैं जिसे शोधकर्ता परिणाम page से पढ़ सकते हैं। इसमें कोई नाम नहीं है।')}</p></div>
+<div class="row"><a class="btn" href="https://wa.me/?text=${enc}" target="_blank" rel="noopener">${T('Send on WhatsApp','WhatsApp पर भेजें')}</a>
+<a class="btn ghost" href="mailto:?subject=${encodeURIComponent('Appuscholar test '+S.code)}&body=${enc}">${T('Send by email','ईमेल से भेजें')}</a>
+<button type="button" class="ghost" id="cpS" onclick="copyText()">${T('Copy','कॉपी करें')}</button></div>
+<p class="muted" style="margin-top:14px">${T('Send it to the person who gave you this link.','इसे उसी व्यक्ति को भेजें जिसने आपको यह link दिया था।')}</p>
+<button type="button" class="link" onclick="back()">${T('Back to change an answer','कोई उत्तर बदलने के लिए पीछे जाएँ')}</button>
+<button type="button" class="link" style="display:block" onclick="if(confirmClear())location.reload()">${T('Clear my answers from this browser','इस browser से मेरे उत्तर मिटाएँ')}</button>`}
+function copyText(){const t=summary().text,b=document.getElementById('cpS');const ok=()=>{if(b)b.textContent=T('Copied ✓','कॉपी हो गया ✓')};
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,()=>{});else{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){}ta.remove()}}
+function confirmClear(){const b=document.querySelectorAll('.link')[1];if(!b)return false;if(b.dataset.sure){try{localStorage.removeItem(KEY)}catch(e){}return true}
+  b.dataset.sure='1';b.textContent=T('Tap again to clear everything','सब मिटाने के लिए फिर tap करें');return false}
+
+/* ---------- researcher view: kit.html#results ---------- */
+function parseAll(txt){const out=[];(txt.match(/APPUKIT:[A-Za-z0-9+/=]+/g)||[]).forEach(m=>{try{const o=JSON.parse(decodeURIComponent(escape(atob(m.slice(8)))));if(o&&o.k===1&&o.c&&!out.some(x=>x.c===o.c))out.push(o)}catch(e){}});return out}
+function median(a){const s=a.slice().sort((x,y)=>x-y),n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):null}
+function renderResults(){const m=document.getElementById('main');m.innerHTML=`
+<p class="step">${T('For the researcher','शोधकर्ता के लिए')}</p>
+<h1>${T('Collect the results','परिणाम इकट्ठे करें')}</h1>
+<p class="muted">${T('Paste every message the students sent you, all together. The page reads the APPUKIT lines and builds the table here in your browser; nothing is uploaded.','विद्यार्थियों के भेजे सारे संदेश एक साथ यहाँ paste करें। यह page APPUKIT वाली पंक्तियाँ पढ़कर आपके browser में ही तालिका बनाता है; कुछ भी upload नहीं होता।')}</p>
+<textarea id="rIn" rows="8" placeholder="APPUKIT:…"></textarea>
+<div class="row" style="margin:10px 0 18px"><button type="button" onclick="resultsRun()">${T('Build the table','तालिका बनाएँ')}</button></div>
+<div id="rOut"></div>`}
+function resultsRun(){const all=parseAll(document.getElementById('rIn').value),out=document.getElementById('rOut');
+  if(!all.length){out.innerHTML='<p class="muted">'+T('No APPUKIT lines found.','कोई APPUKIT पंक्ति नहीं मिली।')+'</p>';return}
+  const sc=all.map(o=>susScore(o.u)).filter(x=>x!=null),mean=sc.length?Math.round(10*sc.reduce((a,b)=>a+b,0)/sc.length)/10:null;
+  const byLang=l=>{const v=all.filter(o=>o.l===l).map(o=>susScore(o.u)).filter(x=>x!=null);return v.length?(Math.round(10*v.reduce((a,b)=>a+b,0)/v.length)/10)+' (n='+v.length+')':'–'};
+  const taskRows=TASKS.map((_,i)=>{const r=all.map(o=>o.t[i]||[]),n=r.length,c=k=>r.filter(x=>x[0]===k).length,tm=median(r.filter(x=>x[1]).map(x=>x[1]/60));
+    return'<tr><td>'+(i+1)+'</td><td>'+c('done')+'/'+n+'</td><td>'+c('help')+'/'+n+'</td><td>'+c('stuck')+'/'+n+'</td><td>'+(tm==null?'–':Math.round(tm*10)/10)+'</td></tr>'}).join('');
+  out.innerHTML='<div class="card"><p class="muted" style="margin:0">'+T('Students','विद्यार्थी')+': '+all.length+'</p><p class="big">'+(mean==null?'–':mean)+'</p><p class="muted">'+T('Mean SUS','औसत SUS')+' · '+T('median','माध्यिका')+' '+(median(sc)??'–')+' · English '+byLang('en')+' · हिंदी '+byLang('hi')+'</p>'
+   +'<p class="muted" style="margin:0">'+T('The Hindi SUS is our own unvalidated translation, so report the two languages separately.','हिंदी SUS हमारा अपना असत्यापित अनुवाद है, इसलिए दोनों भाषाओं के परिणाम अलग-अलग बताएँ।')+'</p></div>'
+   +'<div class="card tablewrap"><h2>'+T('Tasks','काम')+'</h2><table><tr><th>'+T('Task','काम')+'</th><th>'+T('Done','हुआ')+'</th><th>'+T('With help','मदद से')+'</th><th>'+T('Not done','नहीं हुआ')+'</th><th>'+T('Median min','माध्यिका मिनट')+'</th></tr>'+taskRows+'</table></div>'
+   +'<div class="card tablewrap"><h2>'+T('Each student','हर विद्यार्थी')+'</h2><table><tr><th>Code</th><th>R</th><th>'+T('Lang','भाषा')+'</th><th>'+T('Subject · level · device','विषय · स्तर · डिवाइस')+'</th><th>SUS</th><th>'+T('Notes and answers','टिप्पणियाँ और उत्तर')+'</th></tr>'
+   +all.map(o=>'<tr><td>'+esc(o.c)+'</td><td>'+esc(o.r)+'</td><td>'+esc(o.l)+'</td><td>'+esc([o.i.s,o.i.v,o.i.d,o.i.g].filter(Boolean).join(' · '))+'</td><td>'+(susScore(o.u)??'–')+'</td><td>'
+     +o.t.map((t,i)=>t[2]?'<div><b>'+(i+1)+':</b> '+esc(t[2])+'</div>':'').join('')+Object.keys(o.o||{}).map(k=>o.o[k]?'<div><b>'+esc(k)+':</b> '+esc(o.o[k])+'</div>':'').join('')+'</td></tr>').join('')+'</table></div>'
+   +'<button type="button" class="ghost" onclick="resultsCsv()">'+T('Download as CSV','CSV के रूप में download करें')+'</button>';
+  window._kitAll=all}
+function resultsCsv(){const all=window._kitAll||[],q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const head=['code','round','sus_language','subject','level','device','college','sus_score'].concat(TASKS.flatMap((_,i)=>['task'+(i+1)+'_result','task'+(i+1)+'_seconds','task'+(i+1)+'_note'])).concat(SUS.map((_,k)=>'sus'+(k+1))).concat(['hard','use','change','most','lost']);
+  const rows=all.map(o=>[o.c,o.r,o.l,o.i.s,o.i.v,o.i.d,o.i.g,susScore(o.u)].concat(o.t.flat()).concat(o.u).concat(['hard','use','change','most','lost'].map(k=>(o.o||{})[k]||'')));
+  const csv='﻿'+[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='appuscholar-test-results.csv';document.body.appendChild(a);a.click();a.remove()}
+
+window.addEventListener('hashchange',render);
+render();
+</script>
+</body>
+</html>
