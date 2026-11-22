@@ -12,6 +12,7 @@ setup = "saveProjectsList([{id:'p1',name:'Sleep quality and exam stress in first
 cases = [('home', "apHomeShow()"), ('lit', "apGoTool('research')"), ('design', "apGoTool('design')"), ('stats', "apGoTool('stats')"), ('writing', "apGoTool('style')"), ('review', "apGoStage('review')")]
 CHECK = """(()=>{const o=[];if(document.documentElement.scrollWidth>innerWidth+1)o.push('page scrolls sideways');
   document.querySelectorAll('header button, .stagebar button, .dock-tabs button, .project-bar button, .tool-sidebar button, .fmtbar button, .doc-pane .toolbar button').forEach(e=>{if(!e.offsetParent)return;const r=e.getBoundingClientRect();if(r.right>innerWidth+1)o.push('off-screen: '+e.textContent.trim().slice(0,30));if(e.scrollWidth>e.clientWidth+2&&getComputedStyle(e).overflow!=='visible')o.push('cut text: '+e.textContent.trim().slice(0,30))});
+  const fb=document.getElementById('fmtBar'),fm=document.getElementById('fmtMoreBtn');if(fb&&fm&&fm.offsetParent&&fm.getBoundingClientRect().right>fb.getBoundingClientRect().right+1)o.push('toolbar More button clipped');
   return o})()"""
 with sync_playwright() as p:
     for (w, h, tag) in [(1366, 768, 'laptop'), (1180, 820, 'tablet'), (400, 860, 'phone')]:

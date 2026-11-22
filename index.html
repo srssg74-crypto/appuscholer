@@ -1136,6 +1136,54 @@ body.st-folded .stagebar .st-step.on{background:var(--card);padding:0 10px;borde
   .stage-guide>span:first-child,.stage-guide>.back-btn:not(#subBtn),.stage-guide>.next-btn{display:none!important}
   .stage-guide{padding:8px 2px 4px}
 }
+
+/* round 6: laptop revamp */
+.tool-sidebar .tool-tab::before,.calm-subs-top .calm-sub::before{content:attr(data-n)!important}
+.card-head::before{display:none}
+.card-head{background:var(--card);padding:10px 16px;gap:8px}
+#docPane .card-head h2,#docPane .docbar>label{display:none}
+#docPane .card-head .badge{background:transparent;color:var(--muted);font-weight:500;padding:0}
+#docPane .docbar{order:-1;flex:1 1 auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#docPane .docbar select{font-weight:600;min-width:180px;max-width:320px}
+.ai-pane .tool-panel.card{border:0;border-radius:0;background:transparent;padding:0}
+.hm-hk,.tool-panel h3.tl-sub{text-transform:none;letter-spacing:0;font-size:13px}
+.hm-tile .hm-n{letter-spacing:0;text-transform:none}
+body.calm-onebar .project-bar{display:none}
+body.calm-onebar .subbar{display:none}
+body.calm-onebar header .st-steps{display:flex}
+body.calm-onebar header .st-steps li{flex:1 1 0;min-width:0}
+body.calm-onebar header .st-steps li.cur{flex:0 0 auto}
+body.calm-onebar header .st-step.on .st-lbl{max-width:170px}
+body.calm-onebar header #projMenu summary{display:block!important;line-height:34px;max-width:190px}
+body.calm-onebar header #provTabs{box-shadow:none!important}
+#docPane .card-head{flex-wrap:nowrap}
+#docPane .docbar{flex-wrap:nowrap;min-width:0}
+#docPane .docbar select{min-width:0;flex:0 1 240px}
+.calm-docmore-box{position:absolute;left:0;top:100%;z-index:30;display:flex;flex-direction:column;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:190px;box-shadow:var(--sh-2)}
+.calm-docmore-box button{text-align:left;justify-content:flex-start}
+#docPane .card-head .btn,#docPane .card-head summary{white-space:nowrap}
+@media(min-width:1100px){.fmtbar{gap:2px;padding:6px 10px}.fmtbar .fmt-btn{padding:6px 8px;min-width:32px}.fmtbar>.fmt-sep{margin:0 3px}}
+.doc-pane .toolbar #saveBadge{margin-left:auto;background:transparent;color:var(--muted);font-weight:500;padding:0 6px}
+body.calm-onebar header{flex-wrap:nowrap;gap:10px;padding:8px 18px}
+body.calm-onebar header .stagebar{flex:1 1 auto;min-width:0;border:0;background:transparent;padding:0 8px;gap:10px}
+body.calm-onebar header .st-steps{min-width:0}
+body.calm-onebar header .st-lbl{display:none}
+body.calm-onebar header .st-step.on .st-lbl{display:block;position:static;max-width:150px}
+body.calm-onebar header .stagebar .st-step{flex-direction:row;gap:7px}
+body.calm-onebar header .st-dot{width:26px;height:26px;font-size:12px}
+body.calm-onebar header .st-steps li+li::before{top:12px;left:calc(-50% + 15px);right:calc(50% + 15px)}
+body.calm-onebar header .stagebar .st-step.on{background:var(--card);padding:0 8px}
+body.calm-onebar header .st-fold{display:none}
+body.calm-onebar header .stagebar .st-home{min-height:34px;padding:0 12px}
+body.calm-onebar header .dev-chip span{display:none}
+body.calm-onebar header .dev-chip{padding:6px 8px}
+body.calm-onebar header #projMenu summary{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:36px;display:flex;align-items:center}
+body.calm-onebar header #provTabs{flex:none}
+body.calm-onebar header #cmdBtn kbd{display:none}
+body.calm-onebar #licenseBadge{display:none!important}
+body.calm-onebar.focus-write header{display:none}
+@media (max-height:760px){body.calm-onebar header .btn,body.calm-onebar header #projMenu summary{min-height:34px;height:34px;line-height:32px;padding-top:0;padding-bottom:0}body.calm-onebar header{padding-top:5px;padding-bottom:5px}body.calm-onebar .brand-hi,body.calm-onebar #verBadge{display:none}body.calm-onebar header .logo{width:32px;height:32px;flex-basis:32px}}
+@media(min-width:1100px){.fmtbar{flex-wrap:wrap}.fmtbar .fmt-more-btn{flex:none}}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:600px){
@@ -19848,7 +19896,7 @@ function apHomeRender(){
   let docs=0,src=0;try{docs=docsGetRaw().length}catch(e){}try{src=citGetLib().length}catch(e){}
   const stNow=active?active.stage:null,pk=(function(){try{return PACKS[getPack()].label}catch(e){return ''}})();
   let cards='';
-  if(active)cards+='<div class="hm-resume"><b>'+escHTML(ht('projcont'))+'</b>'+escHTML(active.name)+' · '+escHTML(stageLabel(active.stage))+'<br><button type="button" onclick="apGoStage(\''+active.stage+'\')">'+escHTML(ht('go'))+'</button></div>';
+  if(false&&active)cards+='<div class="hm-resume"><b>'+escHTML(ht('projcont'))+'</b>'+escHTML(active.name)+' · '+escHTML(stageLabel(active.stage))+'<br><button type="button" onclick="apGoStage(\''+active.stage+'\')">'+escHTML(ht('go'))+'</button></div>';
   if(active)try{cards+=nfyHTML()}catch(e){}
   if(active)try{cards+=apSynCard()}catch(e){}
   const lk=LS.get('appu_lastlec');
@@ -24967,6 +25015,51 @@ function calmMirror(){
   document.body.classList.add('calm-wide-page');
 }
 window.addEventListener('resize',()=>{clearTimeout(calmTimer);calmTimer=setTimeout(()=>calmPass(document),120)});
+/* Version 121, round 6 (laptop revamp): one top bar instead of three. On wide screens the stage stepper and the
+   project menu move into the header (same elements, same handlers) and the project bar row is hidden.
+   Below 1100 px everything goes back to where it was. */
+function calmLayout(){
+  const hd=document.querySelector('header'),sb=document.getElementById('stageBar'),pm=document.getElementById('projMenu'),pv=document.getElementById('provTabs');
+  if(!hd||!sb)return;
+  let anchor=document.getElementById('calmSbAnchor');
+  if(!anchor){anchor=document.createElement('span');anchor.id='calmSbAnchor';anchor.hidden=true;sb.parentNode.insertBefore(anchor,sb)}
+  let pmA=document.getElementById('calmPmAnchor');
+  if(pm&&!pmA){pmA=document.createElement('span');pmA.id='calmPmAnchor';pmA.hidden=true;pm.parentNode.insertBefore(pmA,pm)}
+  let pvA=document.getElementById('calmPvAnchor');
+  if(pv&&!pvA){pvA=document.createElement('span');pvA.id='calmPvAnchor';pvA.hidden=true;pv.parentNode.insertBefore(pvA,pv)}
+  const wide=window.innerWidth>=1100&&!document.body.classList.contains('popout');
+  document.body.classList.toggle('calm-onebar',wide);
+  const cmd=document.getElementById('cmdBtn')||document.getElementById('langBtn');
+  if(wide){
+    const after=document.getElementById('devChip')||hd.querySelector('.brand');
+    if(sb.parentNode!==hd)after.insertAdjacentElement('afterend',sb);
+    if(pv&&pv.parentNode!==hd)hd.insertBefore(pv,cmd);
+    if(pm&&pm.parentNode!==hd)hd.insertBefore(pm,cmd);
+  }else{
+    if(sb.parentNode===hd)anchor.parentNode.insertBefore(sb,anchor.nextSibling);
+    if(pv&&pvA&&pv.parentNode===hd)pvA.parentNode.insertBefore(pv,pvA.nextSibling);
+    if(pm&&pmA&&pm.parentNode===hd)pmA.parentNode.insertBefore(pm,pmA.nextSibling);
+  }
+  /* the menu button names the open project, so the student always sees which study is open */
+  if(pm){const s=pm.querySelector('summary'),a=getActiveProject(),want=wide?((a?a.name:(getLang()==='hi'?'प्रोजेक्ट':'Projects'))+' ▾'):null;
+    if(s&&want&&s.textContent!==want){s.textContent=want;s.title=a?a.name:''}
+    const nb=pm.querySelector('.calm-newproj');
+    if(!nb){const b=document.createElement('button');b.type='button';b.className='btn btn-ghost btn-sm calm-newproj';b.onclick=()=>{pm.open=false;openNewProjectDirect()};pm.querySelector('div').insertBefore(b,pm.querySelector('div').firstChild)}
+    const nb2=pm.querySelector('.calm-newproj'),nt=getLang()==='hi'?'नया प्रोजेक्ट':'New project';if(nb2&&nb2.textContent!==nt)nb2.textContent=nt}
+}
+/* The document row keeps the everyday actions; rename, delete, import and "mark as source" go into one "More" menu
+   (same buttons, same handlers). The save status moves down beside the word count. */
+function calmDocBar(){const bar=document.querySelector('#docPane .docbar');if(!bar||bar.querySelector('.calm-docmore'))return;
+  const d=document.createElement('details');d.className='dl-menu calm-docmore';d.style.cssText='position:relative;display:inline-block';
+  const s=document.createElement('summary');s.className='icon-btn';s.style.listStyle='none';s.style.cursor='pointer';s.setAttribute('aria-label','More document actions');s.title='More document actions';s.textContent='⋯';
+  const box=document.createElement('div');box.className='calm-docmore-box';d.append(s,box);
+  [...bar.querySelectorAll('button')].filter(b=>/docRename|docDelete|docImportInput|docOriginToggle/.test(b.getAttribute('onclick')||'')).forEach(b=>{box.appendChild(b);b.addEventListener('click',()=>{d.open=false})});
+  bar.appendChild(d);
+  const sv=document.getElementById('saveBadge'),st=document.getElementById('stats');if(sv&&st)st.parentNode.insertBefore(sv,st);
+  const fb=document.getElementById('focusBtn');if(fb&&!fb.dataset.calm){fb.dataset.calm='1';fb.setAttribute('aria-label','Focus')}}
+/* Sub-stage numbers are written by code, so a hidden item can never leave a gap such as 2.1, 2.2, 2.9. */
+function calmNumber(){document.querySelectorAll('.tool-sidebar .stage-group').forEach((g,gi)=>{let n=0;
+  g.querySelectorAll('.stage-tools > .tool-tab, .stage-tools > .calm-subs-top > .calm-sub').forEach(x=>{const vis=getComputedStyle(x).display!=='none';if(vis){n++;const v=(gi+1)+'.'+n;if(x.getAttribute('data-n')!==v)x.setAttribute('data-n',v)}})})}
 function calmPass(root){
   try{
     const r=root&&root.querySelectorAll?root:document;
@@ -24975,6 +25068,9 @@ function calmPass(root){
     calmPanels();
     calmFmtBar();
     calmMirror();
+    calmLayout();
+    calmDocBar();
+    calmNumber();
   }catch(e){}
 }
 let calmTimer=0;

@@ -13,7 +13,7 @@ with sync_playwright() as p:
     vis=lambda sel: J("[...document.querySelectorAll('%s')].filter(e=>e.offsetParent).length"%sel)
     ok(J("document.querySelectorAll('.sidebar-pin').length")==0,'sidebar no longer repeats the project buttons')
     ok(J("!document.getElementById('aiKeyBtn')"),'gold AI button gone; one AI control left')
-    ok(vis('#projectBar .btn-new')==1 and vis('#projectBar > button')==1,'project bar: one visible button plus the menu')
+    ok((vis('#projectBar .btn-new')==1 and vis('#projectBar > button')==1) or (J("document.body.classList.contains('calm-onebar')") and J("!!document.querySelector('header #projMenu .calm-newproj')")),'project bar: one visible button plus the menu (on wide screens: New project inside the header project menu)')
     pg.click('#projMenu summary'); pg.wait_for_timeout(200)
     t=J("document.getElementById('projMenu').innerText")
     ok('Research Projects' in t and 'Save as research project' in t and 'Backup' in t,'menu holds the three actions')

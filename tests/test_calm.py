@@ -37,7 +37,7 @@ with sync_playwright() as p:
     ok(pg.evaluate("document.querySelectorAll('.tool-panel[data-panel=design] .tl-main').length") == 1, 'one main button in the stage')
     # stepper, numbered parts, one toolbar row, clean page
     ok(pg.evaluate("document.querySelectorAll('#stageBar .st-step').length") == 6 and pg.evaluate("!!document.querySelector('#stageBar .st-step.on .st-dot')"), 'stage stepper with six numbered circles and the current one marked')
-    ok('counter(sub)' in pg.evaluate("getComputedStyle(document.querySelector('.tool-tab[data-tool=design]'),'::before').content") and pg.evaluate("getComputedStyle(document.querySelector('.stage-group[data-stage=design] .stage-tools')).borderLeftStyle") == 'solid', 'sub-stage numbered under its stage, on a branch line')
+    ok(pg.evaluate("document.querySelector('.tool-tab[data-tool=design]').getAttribute('data-n')||document.querySelector('.stage-group[data-stage=design] .calm-sub').getAttribute('data-n')").startswith('3.') and pg.evaluate("getComputedStyle(document.querySelector('.stage-group[data-stage=design] .stage-tools')).borderLeftStyle") == 'solid', 'sub-stage numbered under its stage, on a branch line')
     ok('Plan and approvals' in pg.evaluate("document.querySelector('.tool-tab[data-tool=design]').textContent"), 'the part no longer repeats its stage name')
     ok(pg.evaluate("document.getElementById('fmtMore').contains(document.getElementById('dictBtn'))"), 'Dictate moved into the More menu')
     tops = pg.evaluate("[...document.getElementById('fmtBar').children].filter(c=>c.offsetParent&&!c.classList.contains('fmt-more')).map(c=>Math.round(c.getBoundingClientRect().top))")
