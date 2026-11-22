@@ -1137,7 +1137,7 @@ body.st-folded .stagebar .st-step.on{background:var(--card);padding:0 10px;borde
   .stage-guide{padding:8px 2px 4px}
 }
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
-footer{color:var(--muted)}
+footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:600px){
   header{gap:6px;padding:8px 12px}
   header .btn,header .btn-ghost{min-height:40px;padding:0 10px}
@@ -1327,15 +1327,15 @@ footer{color:var(--muted)}
 
   <div id="backupNudge" style="display:none;position:fixed;left:16px;bottom:16px;z-index:70;max-width:360px;background:#2b1553;color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px rgba(30,10,70,.4);font-size:13px;line-height:1.5"><div id="backupNudgeText"></div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" onclick="backupExport()" id="backupNudgeYes" style="border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;background:#fbbf24;color:#3b0764;font-family:inherit"></button><button type="button" onclick="backupSnooze()" id="backupNudgeNo" style="border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 12px;cursor:pointer;background:none;color:#fff;font-family:inherit"></button></div></div>
 <div id="selBubble" role="toolbar" aria-label="Selected text"><button type="button" onclick="selFind()" data-i18n="sel_find">🔎 Find papers</button><button type="button" onclick="selCite()" data-i18n="sel_cite">📚 Cite</button><button type="button" onclick="selImprove()" data-i18n="sel_improve">💜 Improve</button><button type="button" onclick="selShorten()">✂ Shorten</button><button type="button" onclick="selExtend()">➕ Extend</button><button type="button" onclick="vidMake()" data-i18n="sel_video">🎬 Explain as a video</button></div>
-  <div class="dock-tabs" id="dockTabs" role="tablist" aria-label="Side panel">
-    <button type="button" class="dock-tab active" id="dockTabTools" role="tab" onclick="dockShow('tools')">Tools</button>
-    <button type="button" class="dock-tab" id="dockTabAi" role="tab" onclick="dockShow('ai')"><span data-i18n="dock_ai_tab">✨ AI suggestion</span><span class="dock-dot" id="dockDot" style="display:none"></span></button>
+  <div class="dock-tabs" id="dockTabs" role="group" aria-label="Side panel">
+    <button type="button" class="dock-tab active" id="dockTabTools" onclick="dockShow('tools')">Tools</button>
+    <button type="button" class="dock-tab" id="dockTabAi" onclick="dockShow('ai')"><span data-i18n="dock_ai_tab">✨ AI suggestion</span><span class="dock-dot" id="dockDot" style="display:none"></span></button>
     <button type="button" class="pop-btn" id="tbBtn" onclick="tbToggle()" title="Make the tool panel bigger while you fill it">⤢</button>
     <button type="button" class="pop-btn" id="popBtn" onclick="popOutTool()" data-i18n="pop_btn" data-i18n-title="pop_btn_title" title="Open this tool in its own window, for a second screen">⧉ Pop out</button>
   </div>
 
   <div class="tool-shell" id="toolShell">
-  <nav class="tool-sidebar" id="toolSidebar" role="tablist" aria-label="Writing tools">
+  <nav class="tool-sidebar" id="toolSidebar" aria-label="Writing tools">
     <button type="button" class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Collapse the tool panel" aria-label="Collapse or expand the tool panel">☰</button>
 
     <div class="stage-group" data-stage="idea">
@@ -18615,7 +18615,7 @@ function apStageBarRender(){
   const pk=ps?STAGES.indexOf(ps):-1;
   el.innerHTML='<button type="button" class="st-home'+(home?' on':'')+'" onclick="apHomeShow()" '+(home?'aria-current="page"':'')+'>'+escHTML(ht('home'))+'</button>'
    +'<ol class="st-steps">'+STAGES.map((s,i)=>{const on=cur===s,done=i<pk;
-     return'<li class="'+(done?'done':'')+(on?' cur':'')+'"><button type="button" class="st-step'+(on?' on':'')+(ps===s?' proj':'')+(done?' done':'')+'" onclick="apGoStage(\''+s+'\')" '+(on?'aria-current="page"':'')+'>'
+     return'<li class="'+(done?'done':'')+(on?' cur':'')+'"><button type="button" aria-label="'+escAttr((i+1)+'. '+ht('s_'+s)+(done?(getLang()==='hi'?' (पूरा)':' (done)'):''))+'" class="st-step'+(on?' on':'')+(ps===s?' proj':'')+(done?' done':'')+'" onclick="apGoStage(\''+s+'\')" '+(on?'aria-current="page"':'')+'>'
       +'<span class="st-dot" aria-hidden="true">'+(done?'✓':(i+1))+'</span><span class="st-lbl">'+escHTML(ht('s_'+s))+'</span></button></li>'}).join('')+'</ol>'
    +'<button type="button" class="st-fold" onclick="stFold()" aria-expanded="'+(document.body.classList.contains('st-folded')?'false':'true')+'" title="'+(getLang()==='hi'?'चरण पट्टी छोटी/बड़ी करें':'Make the stage bar smaller or larger')+'" aria-label="'+(getLang()==='hi'?'चरण पट्टी छोटी/बड़ी करें':'Fold the stage bar')+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>';
 }
