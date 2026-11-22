@@ -1347,6 +1347,47 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent-ink)!important}
 .tool-panel .panel > div:not(.row):not(.fld):not(.calm-next):has(> h4),.tool-panel .panel > section{border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:none}
 .tool-panel h4{font:600 15px var(--font-ui);color:var(--ink);margin:0 0 6px}
 .tool-panel .ap-box{border:1px solid var(--line)!important;background:var(--soft2)!important;border-radius:12px!important}
+
+/* ===== Version 129: the windows (dialogs) and the research steps window ===== */
+dialog .dlg-body{padding:28px 30px}
+dialog .dlg-body>h2:first-child,dialog h2{font:600 22px/1.3 var(--font-ui);letter-spacing:-.01em;color:var(--ink);margin:0 0 8px}
+dialog .dlg-body>p:first-of-type,dialog .dlg-body>.desc:first-of-type{font-size:14px;line-height:1.55;color:var(--muted);max-width:72ch}
+dialog label{font:600 14px/1.35 var(--font-ui);color:var(--ink)}
+dialog textarea,dialog input[type=text],dialog input[type=number],dialog input[type=email],dialog input[type=date],dialog input[type=search],dialog select{border:1px solid var(--chipline);border-radius:10px;background:var(--card);font:15px/1.45 var(--font-ui);color:var(--ink);padding:9px 12px}
+dialog textarea:focus,dialog input:focus,dialog select:focus{outline:none;border-color:var(--accent-ink);box-shadow:0 0 0 3px var(--accent-soft)}
+dialog label:has(> input[type=checkbox]),dialog label:has(> input[type=radio]){display:flex;align-items:flex-start;gap:10px;font-weight:500;font-size:14.5px;padding:3px 0;cursor:pointer}
+dialog label:has(> input[type=checkbox]) input,dialog label:has(> input[type=radio]) input{margin-top:3px}
+dialog .btn.dl-second{background:var(--card)!important;color:var(--accent-ink)!important;border:1.5px solid var(--accent-ink)!important}
+dialog .btn.dl-second:hover{background:var(--accent-soft)!important}
+dialog details>summary{font:600 14.5px var(--font-ui);cursor:pointer;padding:6px 0}
+dialog .warn{background:var(--soft2);border:1px solid var(--line);color:var(--muted);border-radius:10px}
+#spDlg table{table-layout:auto;width:100%}
+#spDlg td:has(> .spName){min-width:170px;width:30%}
+#spDlg table input,#spDlg table select{font-size:14px;padding:7px 9px}
+#statsSentence{border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;background:var(--soft2)!important;border-radius:12px!important;padding:14px 16px!important;font:15px/1.6 'Noto Serif','Noto Serif Devanagari',Georgia,serif}
+/* steps window */
+.sub-head{padding:12px 18px;gap:6px;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:thin}
+.sub-head>*{flex:none}
+.sub-head>span:empty{flex:1}
+.sub-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--chipline);background:var(--card);border-radius:999px;padding:6px 12px 6px 6px;font:500 13.5px var(--font-ui);color:var(--ink);box-shadow:none}
+.sub-tab .sub-tn{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--chip);color:var(--muted);font:600 12px var(--font-ui)}
+.sub-tab .sub-tc{color:var(--muted);font-size:12.5px}
+.sub-tab.on{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
+.sub-tab.on .sub-tn{background:#fff;color:var(--accent-ink)}.sub-tab.on .sub-tc{color:#DCE6F1}
+.sub-tab[class*=proj],.sub-tab.proj{box-shadow:0 0 0 2px var(--saffron)}
+.s1-top{grid-template-columns:1fr!important}
+.s1-vid{display:none!important}
+.s1-k{text-transform:none;letter-spacing:0;font:500 13px var(--font-ui)}
+.s1-intro h1{font:600 22px/1.3 var(--font-ui)!important;color:var(--ink)!important}
+.s1-node.cur .s1-c{border-color:var(--accent-ink)!important;box-shadow:0 0 0 4px var(--accent-soft)!important;color:var(--accent-ink)!important}
+.s1-node.done .s1-c{background:var(--accent-ink)!important;border-color:var(--accent-ink)!important}
+.s1-node.done::after{background:var(--accent-ink)!important}
+.s1-sp{border:1px solid var(--chipline)!important;background:var(--card)!important;color:var(--ink)!important;font:500 13.5px var(--font-ui)!important;padding:6px 12px!important}
+.s1-sp.on{background:var(--accent-soft)!important;border-color:var(--accent-ink)!important;color:var(--accent-ink)!important;box-shadow:none!important;font-weight:600!important}
+.s1-dec.ready .s1-dc{border-color:var(--saffron)!important;background:#FFF4E2!important}
+.sub-box{border:1px solid var(--line)!important;border-radius:12px!important;background:var(--card)!important;padding:14px 16px!important}
+.sub-main h2,.sub-main h3{font-family:var(--font-ui)}
+:root[data-theme="dark"] .sub-tab.on .sub-tn{background:#15181C}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:600px){
@@ -4034,7 +4075,7 @@ function subOpen(stage,id){stage=stage||'idea';const list=SUBSTAGES.filter(x=>x[
   subBackPill(false);subRender();if(!d.open)d.showModal()}
 function subRender(){const d=document.getElementById('subDlg');if(!d||!d.open&&!d.innerHTML&&!SUB_CUR.stage)return;if(!d)return;const hi=studyHi(),o=studyGet(),stage=SUB_CUR.stage;
   if(SUB_DOCK_ON){d.innerHTML=subTaskbarHTML(o);return}
-  const tabs=STAGES.map(s=>{const c=subCount(s,o);return'<button type="button" class="sub-tab'+(s===stage?' on':'')+'" onclick="subOpen(\''+s+'\')">'+SUB_STAGE_LETTER[s]+' · '+escHTML(stageLabel(s))+' '+c.done+'/'+c.total+'</button>'}).join('');
+  const tabs=STAGES.map(s=>{const c=subCount(s,o);return'<button type="button" class="sub-tab'+(s===stage?' on':'')+'" onclick="subOpen(\''+s+'\')"><span class="sub-tn">'+(STAGES.indexOf(s)+1)+'</span>'+escHTML(stageLabel(s))+' <span class="sub-tc">'+c.done+'/'+c.total+'</span></button>'}).join('');
   const list=SUBSTAGES.filter(x=>x[1]===stage).map(x=>{const st=subState(x[0],o);return'<button type="button" class="sub-item'+(x[0]===SUB_CUR.id?' on':'')+'" onclick="SUB_CUR.id=\''+x[0]+'\';subRender()">'+SUB_ICON[st.s]+' <b>'+x[0]+'</b> '+escHTML(subL(x[2]))+'</button>'}).join('');
   d.innerHTML='<div class="sub-wrap"><div class="sub-dockbar"><b>'+escHTML(SUB_CUR.id+' · '+((SUBSTAGES.find(y=>y[0]===SUB_CUR.id)||[0,0,['','']])[2][hi?1:0]))+'</b><button type="button" class="btn btn-ghost btn-sm" onclick="subUndock()">↔ '+(hi?'सभी steps':'All steps')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕</button></div><div class="sub-head"><b style="margin-right:6px">🧭 '+(hi?'Research के कदम':'Research steps')+'</b>'+tabs+'<span style="flex:1"></span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕ '+(hi?'बंद करें':'Close')+'</button></div>'+s1HeaderHTML()+'<div class="sub-body s1-body"><div class="sub-list">'+list+'</div><div class="sub-main" id="subMain">'+subDetailHTML(SUB_CUR.id,o)+'</div></div></div>'}
 /* When each step's source was last checked against the original (register v6, TST-018). Review every 12 months. */
@@ -20283,8 +20324,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=128;
-const APP_BUILD='2026.11.22h';
+const APP_VERSION=129;
+const APP_BUILD='2026.11.22i';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -25322,6 +25363,12 @@ function calmPhApply(){const ph=window.innerWidth<760&&!document.body.classList.
 function calmPh(){const p=document.querySelector('.tool-main .tool-panel.active'),k=p?p.dataset.panel:'';
   if(k&&k!==calmPhLastPanel){if(calmPhLastPanel)calmPhView='stage';calmPhLastPanel=k}
   calmPhApply()}
+/* Version 129: in a window's button row only the last filled button stays filled (it is the goal, such as
+   "Generate consent form"); an earlier one, such as Save, becomes an outlined button. */
+function calmDialogs(){document.querySelectorAll('dialog[open] .row').forEach(r=>{const f=[...r.children].filter(b=>b.tagName==='BUTTON'&&(b.classList.contains('btn-purple')||b.classList.contains('btn-gold')));
+  f.forEach((b,i)=>b.classList.toggle('dl-second',i<f.length-1))})}
+document.addEventListener('toggle',()=>{},true);
+(function(){const o=HTMLDialogElement.prototype.showModal;HTMLDialogElement.prototype.showModal=function(){const r=o.apply(this,arguments);try{setTimeout(calmDialogs,0)}catch(e){}return r}})();
 function calmPass(root){
   try{
     const r=root&&root.querySelectorAll?root:document;
@@ -25336,6 +25383,7 @@ function calmPass(root){
     calmNumber();
     calmTree();
     calmPh();
+    calmDialogs();
     if(document.getElementById('statsDlg')&&document.getElementById('statsDlg').open&&!document.getElementById('slAims'))slAimsRender();
   }catch(e){}
 }

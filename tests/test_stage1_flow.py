@@ -13,7 +13,7 @@ with sync_playwright() as p:
     J("openSaveAsProject();document.getElementById('sapName').value='Flow';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
     J("subOpen('idea','A1')"); pg.wait_for_timeout(300)
     t=J("document.getElementById('subDlg').innerText")
-    ok('Find your idea and test it' in t and 'video coming soon' in t,'stage header with purpose and a video slot')
+    ok('Find your idea and test it' in t,'stage header with purpose (Version 129: the empty video placeholder is hidden until a real video exists)')
     ok(J("document.querySelectorAll('#s1Flow .s1-node').length")==4 and 'Decision' in t,'flow strip: four steps and the decision')
     ok(J("getComputedStyle(document.querySelector('#subDlg .sub-list')).display")=='none','the old left list is gone for stage 1')
     ok('Ask AI to check my topic' in t,'step button is named by its result')
