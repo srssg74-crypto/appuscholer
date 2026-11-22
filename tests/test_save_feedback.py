@@ -14,13 +14,14 @@ with sync_playwright() as p:
     pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
     ok(J("document.body.classList.contains('no-ai-key')"),'no key: the AI key button pulses')
     J("openNewProjectDirect();document.getElementById('sapName').value='Sleep';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){};showTool('idea')"); pg.wait_for_timeout(300)
-    ok(J("document.querySelectorAll('.fs-wrap .fs-go').length")==4,'each Idea box has a save arrow inside it')
+    ok(J("document.querySelectorAll('.tool-panel[data-panel=idea] .fs-wrap').length")==4,'each Idea box saves itself')
     pg.fill('#ideaResources','Two colleges agreed; 150 students')
     pg.press('#ideaResources','Enter'); pg.wait_for_timeout(150)
     ok(J("document.getElementById('ideaResources').value")=='Two colleges agreed; 150 students','Enter saves instead of adding a new line')
     ok('Saved' in J("document.querySelector('label[for=ideaResources]').innerText"),'a saved time shows on the label line')
-    pg.fill('#ideaTimeframe','Five months'); pg.locator('#ideaTimeframe + .fs-go').click(); pg.wait_for_timeout(150)
-    ok(J("studyGet().idea.timeframe")=='Five months','the Save button stores the box')
+    pg.click('#ideaTimeframe'); pg.keyboard.type('Five months'); pg.wait_for_timeout(1300)
+    ok(J("studyGet().idea.timeframe")=='Five months','Version 126: the box saves by itself a moment after typing stops')
+    ok(J("getComputedStyle(document.querySelector('#ideaTimeframe + .fs-go')).opacity")=='0','no save arrow is shown')
     # a very wide line must not push the panel sideways
     J("const d=document.createElement('pre');d.textContent='Screener-NIFTY50-'+'x'.repeat(400);document.querySelector('.tool-panel.active .panel').appendChild(d);const t=document.createElement('table');t.innerHTML='<tr>'+'<td>wide cell content</td>'.repeat(30)+'</tr>';document.querySelector('.tool-panel.active .panel').appendChild(t)")
     pg.wait_for_timeout(100)
@@ -33,11 +34,12 @@ with sync_playwright() as p:
     J("subOpen('idea','A3')"); pg.wait_for_timeout(200)
     loc=pg.locator("#subMain textarea[onchange*=\"'aim'\"],#subMain textarea[oninput*=\"'aim'\"]").first
     loc.fill('To examine sleep and exam anxiety in first-year students'); loc.dispatch_event('change'); pg.wait_for_timeout(100)
-    ok(J("document.querySelectorAll('#subMain .fs-go').length")>=2,'step boxes have the save arrow too')
+    ok(J("document.querySelectorAll('#subMain .fs-wrap').length")>=2,'step boxes save the same way')
     ok('one aim' not in J("document.querySelector('#subMain .ls-head').innerText"),'Still needed updates as soon as the box saves')
     q=pg.locator("#subMain textarea[onchange*=\"'q'\"],#subMain textarea[oninput*=\"'q'\"]").first
-    q.fill('Is shorter sleep linked with higher exam anxiety?'); pg.locator("#subMain .fs-wrap:has(textarea[onchange*=\"'q'\"]) .fs-go, #subMain .fs-wrap:has(textarea[oninput*=\"'q'\"]) .fs-go").first.click(); pg.wait_for_timeout(200)
-    ok(J("((studyGet().write||{}).A3||{}).q")=='Is shorter sleep linked with higher exam anxiety?','the arrow in a step box saves it')
+    q.click(); pg.keyboard.type('Is shorter sleep linked with higher exam anxiety?'); pg.wait_for_timeout(1300)
+    ok(J("((studyGet().write||{}).A3||{}).q")=='Is shorter sleep linked with higher exam anxiety?','a step box saves by itself after typing stops')
+    ok(J("!!document.querySelector('#subMain .fs-saved.on')") and 'Saved' in J("document.querySelector('#subMain .fs-saved.on').textContent"),'a quiet Saved line appears under the box')
     J("document.getElementById('subDlg').close()")
     # the tool panel grows while a box is filled and returns afterwards
     pg.click('#ideaTimeframe'); pg.wait_for_timeout(300)
