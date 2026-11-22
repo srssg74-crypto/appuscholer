@@ -1036,6 +1036,62 @@ body.no-ai-key #provTabs{animation:none;box-shadow:0 0 0 2px var(--saffron)}
 .hm-foot button{border-radius:10px}
 body.at-home .project-bar .btn-new{display:none}
 @media (max-width:1000px){body.at-home .hm-me{order:2}body.at-home .hm-main{order:1}}
+
+/* ---- Version 121, round 2 (22 Nov): stepper, numbered sub-stages, clean page, tidy side panel ---- */
+.stagebar{display:flex;align-items:center;gap:18px;background:var(--card);border-bottom:1px solid var(--line);padding-top:10px;padding-bottom:10px}
+.stagebar .st-home{flex:none;background:transparent;border:1px solid var(--chipline);color:var(--ink);border-radius:10px;font:600 14px var(--font-ui);padding:0 14px;min-height:40px}
+.stagebar .st-home.on{background:var(--accent-soft);border-color:transparent;color:var(--accent-ink)}
+.st-steps{list-style:none;margin:0;padding:0;flex:1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));min-width:640px}
+.st-steps li{position:relative;display:flex;justify-content:center}
+.st-steps li+li::before{content:"";position:absolute;top:15px;right:calc(50% + 18px);left:calc(-50% + 18px);height:2px;background:var(--line);border-radius:1px}
+.st-steps li.done+li::before,.st-steps li.done::before{background:var(--accent-ink)}
+.stagebar .st-step{display:flex;flex-direction:column;align-items:center;gap:5px;background:transparent;border:0;padding:0 4px;min-height:0;color:var(--muted);font:500 13px var(--font-ui);border-radius:10px;cursor:pointer;max-width:100%}
+.stagebar .st-step:hover{background:transparent;color:var(--ink)}
+.stagebar .st-step:hover .st-dot{border-color:var(--accent-ink)}
+.st-dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--chipline);background:var(--card);color:var(--muted);font:600 14px var(--font-ui);box-sizing:border-box}
+.st-step.done .st-dot{background:var(--accent-soft);border-color:var(--accent-ink);color:var(--accent-ink)}
+.stagebar .st-step.on{background:transparent;color:var(--ink);font-weight:600}
+.st-step.on .st-dot{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
+:root[data-theme="dark"] .st-step.on .st-dot{color:#15181C}
+.st-step.proj .st-dot{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--saffron)}
+.st-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media (max-width:760px){.st-steps{min-width:0}.st-lbl{display:none}.st-step.on .st-lbl{display:block;position:absolute;top:38px;white-space:nowrap}.stagebar{padding-bottom:26px}}
+
+/* left list: numbered stages, their parts on a branch line, no heavy pill */
+.tool-sidebar{counter-reset:stg;background:transparent;border:0;box-shadow:none}
+.tool-sidebar .stage-group{counter-increment:stg}
+.tool-sidebar .stage-header{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--ink)}
+.tool-sidebar .stage-header::before{content:counter(stg);flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:600 12px var(--font-ui);background:var(--chip);color:var(--muted)}
+.tool-sidebar .stage-group.stage-group-current .stage-header::before{background:var(--accent-ink);color:#fff}
+.tool-sidebar .stage-tools{counter-reset:sub;margin:2px 0 8px 11px;padding-left:16px;border-left:2px solid var(--line)}
+.tool-sidebar .stage-group.stage-group-current .stage-tools{border-left-color:var(--accent-ink)}
+.tool-sidebar .tool-tab{counter-increment:sub;display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:7px 10px;color:var(--muted);font-weight:500}
+.tool-sidebar .tool-tab::before{content:counter(stg) "." counter(sub);flex:none;font:600 12px var(--font-ui);color:var(--muted);min-width:24px}
+.tool-sidebar .tool-tab:hover{background:var(--soft);color:var(--ink)}
+.tool-sidebar .tool-tab.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.tool-sidebar .tool-tab.active::before{color:var(--accent-ink)}
+.tool-sidebar .stage-dot{display:none}
+
+/* side panel: two quiet tabs with an underline, two equal icon buttons */
+.dock-tabs{display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--line);padding:0 2px}
+.dock-tabs .dock-tab{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;padding:10px 12px;color:var(--muted);font:500 14px var(--font-ui);box-shadow:none;margin-bottom:-1px}
+.dock-tabs .dock-tab.active{color:var(--ink);font-weight:600;border-bottom-color:var(--accent-ink);background:transparent}
+.dock-tabs .pop-btn{align-self:center;height:34px;min-width:34px;padding:0 10px;border:1px solid var(--chipline);background:var(--card);color:var(--ink);border-radius:9px;font:500 13px var(--font-ui)}
+.dock-tabs #tbBtn{margin-left:auto}
+.stage-guide{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;border:0;background:transparent;padding:10px 2px 6px;font-size:13px;color:var(--muted)}
+.stage-guide>span:first-child{flex:1 1 auto}
+.stage-guide button,.stage-guide .next-btn,.stage-guide .back-btn{background:transparent!important;border:0!important;padding:4px 0;min-height:0;color:var(--accent-ink);font:600 13px var(--font-ui);box-shadow:none}
+
+/* the page: white sheet, no grey frame, one toolbar row, a visible scroll bar */
+#docPane.doc-pane,.doc-pane .editor-wrap{background:var(--card)!important}
+#editor{box-shadow:none;border-top:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#C9C2B6 transparent}
+#editor::-webkit-scrollbar{width:10px}
+#editor::-webkit-scrollbar-thumb{background:#C9C2B6;border-radius:6px;border:2px solid var(--card)}
+#editor::-webkit-scrollbar-track{background:transparent}
+.fmtbar{flex-wrap:nowrap;background:var(--card)}.fmtbar button,.fmtbar select{white-space:nowrap;flex:none}.fmtbar .fmt-more-btn{margin-left:auto}.fmtbar>.fmt-sep:last-of-type{display:none}
+#editor{box-shadow:none!important;margin-left:0!important;margin-right:0!important}
+.doc-pane .toolbar .btn-purple{background:var(--card);color:var(--ink);border:1px solid var(--chipline)}
+.doc-pane .toolbar .btn-purple kbd{background:var(--chip);color:var(--muted)}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer{color:var(--muted)}
 @media (max-width:600px){
@@ -1258,7 +1314,7 @@ footer{color:var(--muted)}
     <div class="stage-group" data-stage="design">
       <button type="button" class="stage-header" onclick="toggleStageGroup('design')">⚖ <span class="stage-header-label" data-i18n="stage_design">Design &amp; Ethics</span><span class="stage-dot" data-stagedot="design"></span><span class="chev">▾</span></button>
       <div class="stage-tools" data-stagetools="design">
-        <button type="button" class="tool-tab" data-tool="design" onclick="showTool('design')" data-i18n="tab_design" data-i18n-title="tab_design_title" title="Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts">⚖ Design &amp; Ethics</button>
+        <button type="button" class="tool-tab" data-tool="design" onclick="showTool('design')" data-i18n="tab_design_tool" data-i18n-title="tab_design_title" title="Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts">⚖ Design &amp; Ethics</button>
       </div>
     </div>
 
@@ -2705,7 +2761,7 @@ const I18N={
     download_menu:'⬇ Download ▾', download_btn:'⬇ Download (Word)', latex_btn:'⬇ LaTeX file', latex_btn_title:"Download as a LaTeX file (.tex), the format some universities and journals ask for. It opens in Overleaf. Skip this unless you have been told you need it.",
     doc_label:'Doc', doc_new_btn:'＋ New', doc_new_title:'New document', doc_delete_title:'Delete this document',
     doc_import_btn:'📂 Import', doc_import_title:'Import a .docx, .pdf, .txt or .html file as a new document — or just drag one onto the editor',
-    editor_placeholder:'Start writing here… Select text and press Improve, or just write and let AI continue.',
+    editor_placeholder:'Start writing here. Select any text for options.',
     continue_btn:'✨ Continue Writing <kbd>Tab</kbd>', continue_btn_title:'AI writes the next ~120 words for you',
     improve_btn:'💜 Improve selection', improve_btn_title:'Select some text first, then click to polish its grammar',
     extend_btn:'➕ Extend', extend_btn_title:'Select some text first, then click to extend it',
@@ -2742,7 +2798,7 @@ const I18N={
     tab_close:'🔍 Closeness check', tab_close_title:'Compare your document with your own sources and mark passages that match word for word',
     tab_words:'📖 Words and grammar', tab_words_title:'Look up words, keep a word bank, and check your grammar',
     tab_psych:'🧰 Research helpers', tab_psych_title:'Summarize a paper, analyze a case study, explain a concept, format results in APA, or have your argument challenged',
-    tab_design:'⚖ Design &amp; Ethics', tab_design_title:'Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts',
+    tab_design_tool:'Plan, approvals and consent', tab_design:'⚖ Design &amp; Ethics', tab_design_title:'Plan your method, pick the right regulatory path, and prepare consent, ethics committee and registration paperwork before data collection starts',
     tab_stats:'📊 Statistics &amp; Charts', tab_stats_title:'Run statistical tests on your data and get results in plain language plus APA write-ups',
     tab_qual:'🏷 Qualitative Coding', tab_qual_title:"Tag passages of text with your own codes (interview or open-ended answers), build a code tree, and pull out every passage for a code across all your documents",
     qual_panel_desc:'Select a passage in your document, then tap a code below to tag it. Build codes under other codes to group related ideas. Works across every document you have, not just the one that\'s open.',
@@ -2951,7 +3007,7 @@ const I18N={
     download_menu:'⬇ डाउनलोड ▾', download_btn:'⬇ डाउनलोड (Word)', latex_btn:'⬇ LaTeX फ़ाइल', latex_btn_title:'कुछ विश्वविद्यालयों या जर्नलों को चाहिए होने वाला एक विशेष प्रारूप (LaTeX, Overleaf नाम की साइट के ज़रिए)। जब तक आपको यह ज़रूरी न बताया गया हो, इसे छोड़ दें।',
     doc_label:'दस्तावेज़', doc_new_btn:'＋ नया', doc_new_title:'नया दस्तावेज़', doc_delete_title:'यह दस्तावेज़ हटाएं',
     doc_import_btn:'📂 आयात करें', doc_import_title:'.docx, .pdf, .txt या .html फ़ाइल को नए दस्तावेज़ के रूप में आयात करें — या एडिटर पर खींच कर छोड़ें',
-    editor_placeholder:'यहाँ लिखना शुरू करें… टेक्स्ट चुनें और "सुधारें" दबाएँ, या बस लिखें और AI को आगे बढ़ाने दें।',
+    editor_placeholder:'यहाँ लिखना शुरू करें। विकल्पों के लिए कोई भी पाठ चुनें।',
     continue_btn:'✨ लिखना जारी रखें <kbd>Tab</kbd>', continue_btn_title:'AI अगले लगभग 120 शब्द आपके लिए लिखता है',
     improve_btn:'💜 चयन सुधारें', improve_btn_title:'पहले कुछ टेक्स्ट चुनें, फिर व्याकरण सुधारने के लिए क्लिक करें',
     extend_btn:'➕ विस्तार करें', extend_btn_title:'पहले कुछ टेक्स्ट चुनें, फिर उसे बढ़ाने के लिए क्लिक करें',
@@ -2988,7 +3044,7 @@ const I18N={
     tab_close:'🔍 समानता जांच', tab_close_title:'अपने दस्तावेज़ को अपने स्रोतों से मिलाएँ और शब्दशः मिलते अंश चिह्नित करें',
     tab_words:'📖 शब्द और व्याकरण', tab_words_title:'शब्दों के अर्थ देखें, शब्द-बैंक बनाएँ और व्याकरण जाँचें',
     tab_psych:'🧰 शोध सहायक', tab_psych_title:'शोध-पत्र का सारांश, केस स्टडी का विश्लेषण, अवधारणा की व्याख्या, APA प्रारूप, या अपने तर्क की परीक्षा',
-    tab_design:'⚖ डिज़ाइन और नैतिकता', tab_design_title:'डेटा संग्रह शुरू होने से पहले अपनी विधि की योजना बनाएं, सही नियामक मार्ग चुनें, और सहमति, नैतिकता समिति तथा पंजीकरण के कागज़ात तैयार करें',
+    tab_design_tool:'योजना, अनुमति और सहमति', tab_design:'⚖ डिज़ाइन और नैतिकता', tab_design_title:'डेटा संग्रह शुरू होने से पहले अपनी विधि की योजना बनाएं, सही नियामक मार्ग चुनें, और सहमति, नैतिकता समिति तथा पंजीकरण के कागज़ात तैयार करें',
     tab_stats:'📊 सांख्यिकी और चार्ट', tab_stats_title:'अपने डेटा पर सांख्यिकीय परीक्षण चलाएँ और सरल भाषा के साथ-साथ APA लेखन में परिणाम पाएँ',
     tab_qual:'🏷 गुणात्मक कोडिंग', tab_qual_title:'अपने टेक्स्ट के हिस्सों को अपने खुद के कोड से टैग करें (साक्षात्कार या खुले प्रश्नों के उत्तर), एक कोड ट्री बनाएं, और अपने सभी दस्तावेज़ों में किसी कोड के हर हिस्से को एक साथ देखें',
     qual_panel_desc:'अपने दस्तावेज़ में एक हिस्सा चुनें, फिर उसे टैग करने के लिए नीचे किसी कोड पर टैप करें। जुड़े विचारों को समूहित करने के लिए कोड के नीचे उप-कोड बनाएं। यह सिर्फ खुले दस्तावेज़ में ही नहीं, आपके सभी दस्तावेज़ों में काम करता है।',
@@ -18510,8 +18566,12 @@ function apStageBarRender(){
   const home=apHomeIs(),cur=home?null:apStageOfNow(),p=getActiveProject(),ps=(p&&p.status!=='complete')?p.stage:null;
   try{treeFocusStage(cur)}catch(e){}
   try{dockLayout()}catch(e){}
-  el.innerHTML='<button type="button" class="'+(home?'on':'')+'" onclick="apHomeShow()">⌂ '+escHTML(ht('home'))+'</button><span class="sb-sep">|</span>'
-   +STAGES.map((s,i)=>'<button type="button" class="'+(cur===s?'on':'')+(ps===s?' proj':'')+'" onclick="apGoStage(\''+s+'\')" '+(cur===s?'aria-current="page"':'')+'>'+(i+1)+' '+escHTML(ht('s_'+s))+'</button>'+(i<STAGES.length-1?'<span class="sb-sep">›</span>':'')).join('');
+  /* Version 121: a stepper. Numbered circles joined by a line; stages before the project's stage show a tick. */
+  const pk=ps?STAGES.indexOf(ps):-1;
+  el.innerHTML='<button type="button" class="st-home'+(home?' on':'')+'" onclick="apHomeShow()" '+(home?'aria-current="page"':'')+'>'+escHTML(ht('home'))+'</button>'
+   +'<ol class="st-steps">'+STAGES.map((s,i)=>{const on=cur===s,done=i<pk;
+     return'<li class="'+(done?'done':'')+(on?' cur':'')+'"><button type="button" class="st-step'+(on?' on':'')+(ps===s?' proj':'')+(done?' done':'')+'" onclick="apGoStage(\''+s+'\')" '+(on?'aria-current="page"':'')+'>'
+      +'<span class="st-dot" aria-hidden="true">'+(done?'✓':(i+1))+'</span><span class="st-lbl">'+escHTML(ht('s_'+s))+'</span></button></li>'}).join('')+'</ol>';
 }
 /* The left tree shows the tools of the stage the student is in; the other stages stay folded until opened by hand. */
 function treeFocusStage(cur){if(!cur)return;STAGES.forEach(st=>{const g=document.querySelector('.stage-group[data-stage="'+st+'"]');if(g)g.classList.toggle('collapsed',st!==cur)})}
@@ -24795,7 +24855,7 @@ const CALM_SCOPE=['header button','.stagebar button','.project-bar button','.pro
   '.tool-panel summary','.doc-pane button','.doc-pane summary','.doc-pane label','.doc-pane h2','.doc-pane h3',
   '.subbar button','.ai-pane button','.ai-pane h3','#apHome button','#apHome h3','#apHome b','dialog h2','dialog h3','dialog .btn','dialog summary'].join(',');
 function calmStrip(el){
-  if(!el||el.closest('[contenteditable="true"],#editor'))return;
+  if(!el||el.closest('[contenteditable="true"],#editor,.st-steps'))return;
   const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.data.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP});
   const n=w.nextNode();if(!n)return;
   const m=n.data.match(CALM_EMOJI);if(!m||!m[0].trim())return;
@@ -24821,12 +24881,21 @@ function calmPanels(){
     });
   });
 }
+/* One toolbar row above the page: Caption, Find and Dictate move into the formatting "More" menu (same buttons, same handlers). */
+function calmFmtBar(){const bar=document.getElementById('fmtBar'),more=document.getElementById('fmtMore');if(!bar||!more||more.querySelector('.calm-moved'))return;
+  const grp=document.createElement('div');grp.className='calm-moved';grp.style.cssText='display:flex;flex-wrap:wrap;gap:4px;align-items:center;width:100%;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--line)';
+  const cap=[...bar.children].find(c=>c.tagName==='BUTTON'&&/caption/i.test((c.getAttribute('onclick')||'')+' '+c.textContent));
+  const find=[...bar.children].find(c=>c.tagName==='BUTTON'&&/find/i.test(c.getAttribute('onclick')||''));
+  [cap,find,document.getElementById('dictBtn'),document.getElementById('dictLang'),document.getElementById('dictStatus')].forEach(x=>{if(x&&x.parentElement===bar)grp.appendChild(x)});
+  [...bar.children].forEach(c=>{if(c.classList.contains('fmt-sep')&&c.nextElementSibling&&c.nextElementSibling.classList.contains('fmt-sep'))c.remove()});
+  if(grp.children.length)more.insertBefore(grp,more.firstChild)}
 function calmPass(root){
   try{
     const r=root&&root.querySelectorAll?root:document;
     if(r.matches&&r.matches(CALM_SCOPE))calmStrip(r);
     r.querySelectorAll(CALM_SCOPE).forEach(calmStrip);
     calmPanels();
+    calmFmtBar();
   }catch(e){}
 }
 let calmTimer=0;

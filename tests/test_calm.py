@@ -35,6 +35,14 @@ with sync_playwright() as p:
     pg.evaluate("designSet('reg',{done:true});designRenderDash()"); pg.wait_for_timeout(100)
     ok(pg.evaluate("document.querySelector('.tool-panel[data-panel=design] .tl-row[data-st=done]')!==null") and '1 of 6' in pg.inner_text('#designDash'), 'finished tool marked done and counted')
     ok(pg.evaluate("document.querySelectorAll('.tool-panel[data-panel=design] .tl-main').length") == 1, 'one main button in the stage')
+    # stepper, numbered parts, one toolbar row, clean page
+    ok(pg.evaluate("document.querySelectorAll('#stageBar .st-step').length") == 6 and pg.evaluate("!!document.querySelector('#stageBar .st-step.on .st-dot')"), 'stage stepper with six numbered circles and the current one marked')
+    ok('counter(sub)' in pg.evaluate("getComputedStyle(document.querySelector('.tool-tab[data-tool=design]'),'::before').content") and pg.evaluate("getComputedStyle(document.querySelector('.stage-group[data-stage=design] .stage-tools')).borderLeftStyle") == 'solid', 'sub-stage numbered under its stage, on a branch line')
+    ok('Plan, approvals' in pg.inner_text('.tool-tab[data-tool=design]'), 'the part no longer repeats its stage name')
+    ok(pg.evaluate("document.getElementById('fmtMore').contains(document.getElementById('dictBtn'))"), 'Dictate moved into the More menu')
+    tops = pg.evaluate("[...document.getElementById('fmtBar').children].filter(c=>c.offsetParent&&!c.classList.contains('fmt-more')).map(c=>Math.round(c.getBoundingClientRect().top))")
+    ok(max(tops) - min(tops) < 12, 'formatting tools fit on one row: %s' % sorted(set(tops)))
+    ok(pg.evaluate("getComputedStyle(document.getElementById('docPane')).backgroundColor") == 'rgb(255, 255, 255)' and pg.evaluate("getComputedStyle(document.getElementById('editor')).boxShadow") == 'none', 'no grey frame around the page')
     # editor text is never changed by the emoji pass
     pg.evaluate("document.getElementById('editor').innerHTML='<p>✅ my own text</p>'"); pg.wait_for_timeout(300)
     ok('✅ my own text' in pg.inner_text('#editor'), 'student text keeps its symbols')
