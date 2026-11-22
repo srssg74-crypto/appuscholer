@@ -37,7 +37,7 @@ with sync_playwright() as p:
     ok(pg.evaluate("document.querySelectorAll('.tool-panel[data-panel=design] .tl-main').length") == 1, 'one main button in the stage')
     # stepper, numbered parts, one toolbar row, clean page
     ok(pg.evaluate("document.querySelectorAll('#stageBar .st-step').length") == 6 and pg.evaluate("!!document.querySelector('#stageBar .st-step.on .st-dot')"), 'stage stepper with six numbered circles and the current one marked')
-    ok(pg.evaluate("document.querySelector('.tool-tab[data-tool=design]').getAttribute('data-n')||document.querySelector('.stage-group[data-stage=design] .calm-sub').getAttribute('data-n')").startswith('3.') and pg.evaluate("getComputedStyle(document.querySelector('.stage-group[data-stage=design] .stage-tools')).borderLeftStyle") == 'solid', 'sub-stage numbered under its stage, on a branch line')
+    ok(pg.evaluate("document.querySelector('.tool-tab[data-tool=design]').getAttribute('data-n')||document.querySelector('.stage-group[data-stage=design] .calm-sub').getAttribute('data-n')").startswith('3.') and pg.evaluate("document.querySelector('.stage-group[data-stage=design]').classList.contains('calm-cur')"), 'sub-stage numbered and held inside its stage block')
     ok('Plan and approvals' in pg.evaluate("document.querySelector('.tool-tab[data-tool=design]').textContent"), 'the part no longer repeats its stage name')
     ok(pg.evaluate("document.getElementById('fmtMore').contains(document.getElementById('dictBtn'))"), 'Dictate moved into the More menu')
     tops = pg.evaluate("[...document.getElementById('fmtBar').children].filter(c=>c.offsetParent&&!c.classList.contains('fmt-more')).map(c=>Math.round(c.getBoundingClientRect().top))")
@@ -54,6 +54,10 @@ with sync_playwright() as p:
     ok(pg.evaluate("!!document.querySelector('.tool-panel.active .calm-next .calm-next-go')"), 'next-step card with an Open button in the right column')
     pg.evaluate("LS.set('appu_bb_out','1');try{bbOutlineToggle();bbOutlineToggle()}catch(e){}"); pg.wait_for_timeout(300)
     ok(pg.evaluate("!document.getElementById('bbOutline')||document.getElementById('bbOutline').closest('.tool-panel')!==null"), 'outline sits in the right column, not above the page')
+    # round 8: steps numbered inside the stage block, finished steps ticked, progress shown, short names with full tooltip
+    pg.evaluate("designSet('reg',{done:true});apGoTool('design')"); pg.wait_for_timeout(400)
+    ok(pg.evaluate("document.querySelector('.stage-group[data-stage=design] .calm-sub[data-st=done]')!==null") and 'done' in pg.inner_text('.stage-group[data-stage=design] .calm-prog'), 'finished step ticked and progress shown in the tree')
+    ok(pg.evaluate("[...document.querySelectorAll('.calm-sub')].some(x=>x.textContent==='My study plan'&&x.title.startsWith('My study plan:'))"), 'long names shortened, full name kept as tooltip')
     # editor text is never changed by the emoji pass
     pg.evaluate("document.getElementById('editor').innerHTML='<p>✅ my own text</p>'"); pg.wait_for_timeout(300)
     ok('✅ my own text' in pg.inner_text('#editor'), 'student text keeps its symbols')

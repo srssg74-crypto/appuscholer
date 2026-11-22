@@ -1198,6 +1198,53 @@ body.calm-onebar.focus-write header{display:none}
 .tool-sidebar .tool-tab::after,.tool-sidebar .calm-sub::after{left:-23px}
 .calm-subs-nested{margin-left:12px;padding-left:10px}
 .calm-subs-nested .calm-sub::after{left:-15px}
+
+/* ===== round 8 (Version 123): the stage tree. Containment shows what belongs to what: the open stage is one tinted
+   block; its parts and steps sit inside it; finished steps carry a tick. No connector lines. ===== */
+:root{--tree-block:#EDF2F8;--tree-row:#FFFFFF}
+:root[data-theme="dark"]{--tree-block:#1C2632;--tree-row:#232C37}
+.tool-sidebar{padding:12px 10px 16px}
+.tool-sidebar .stage-group{margin:0 0 2px;border-radius:14px}
+.tool-sidebar .stage-tools,.tool-sidebar .stage-group.stage-group-current .stage-tools{border-left:0!important;margin:0!important;padding:0!important}
+.tool-sidebar .tool-tab::after,.tool-sidebar .calm-sub::after{display:none!important}
+.calm-subs-nested{border-left:0!important;margin:0!important;padding:0!important}
+/* stage rows */
+.tool-sidebar .stage-header{width:100%;min-height:42px;padding:8px 10px;border-radius:12px;gap:10px;font:600 14.5px/1.25 var(--font-ui);color:var(--ink);background:transparent;border:0;text-align:left}
+.tool-sidebar .stage-header:hover{background:var(--soft)}
+.tool-sidebar .stage-header::before{width:26px;height:26px;font-size:12.5px;background:var(--card);border:1.5px solid var(--chipline);color:var(--muted)}
+.tool-sidebar .stage-group.calm-done .stage-header::before{content:"✓"!important;background:var(--accent-soft);border-color:var(--accent-ink);color:var(--accent-ink);font-size:13px}
+.tool-sidebar .stage-group.calm-proj:not(.calm-cur) .stage-header::before{border-color:var(--saffron);border-width:2px}
+.tool-sidebar .stage-header .stage-header-label{flex:1;min-width:0;white-space:normal;overflow:visible}
+.tool-sidebar .stage-header .chev{font-size:11px;color:var(--muted);transition:transform .15s}
+.tool-sidebar .stage-group.collapsed .stage-header .chev{transform:rotate(-90deg)}
+/* the open stage: one tinted block */
+.tool-sidebar .stage-group.calm-cur{background:var(--tree-block);padding:6px 6px 8px;margin:6px 0 8px}
+.tool-sidebar .stage-group.calm-cur .stage-header:hover{background:transparent}
+.tool-sidebar .stage-group.calm-cur .stage-header::before{content:counter(stg)!important;background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
+:root[data-theme="dark"] .tool-sidebar .stage-group.calm-cur .stage-header::before{color:#15181C}
+.calm-prog{display:flex;align-items:center;gap:8px;padding:0 10px 8px 46px;font-size:12.5px;color:var(--muted)}
+.calm-prog i{flex:1;height:4px;border-radius:2px;background:rgba(46,91,138,.15);overflow:hidden}
+.calm-prog b{display:block;height:100%;background:var(--accent-ink);border-radius:2px}
+/* parts (4.1, 4.2): rows inside the block */
+.tool-sidebar .tool-tab{min-height:36px;padding:7px 10px;margin:1px 0;border-radius:10px;font:500 14px/1.3 var(--font-ui);color:var(--ink)}
+.tool-sidebar .tool-tab::before{color:var(--muted);font-weight:600;font-size:12px;min-width:26px}
+.tool-sidebar .tool-tab:hover{background:rgba(255,255,255,.6)}
+.tool-sidebar .tool-tab.active{background:var(--tree-row);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(30,34,38,.08)}
+.tool-sidebar .tool-tab.active::before{color:var(--accent-ink)}
+/* the open part and its tools share one white card */
+.tool-sidebar .tool-tab.active:has(+ .calm-subs-nested){border-radius:10px 10px 0 0;margin-bottom:0;box-shadow:none}
+.calm-subs-nested{background:var(--tree-row);border-radius:0 0 10px 10px;padding:2px 6px 6px!important;margin:0 0 4px!important;box-shadow:0 1px 2px rgba(30,34,38,.08)}
+/* steps */
+.tool-sidebar .calm-sub{display:flex;align-items:flex-start;gap:10px;min-height:34px;padding:7px 8px;border-radius:9px;font:500 13.5px/1.35 var(--font-ui);color:var(--ink)}
+.tool-sidebar .calm-sub:hover{background:var(--soft)}
+.calm-subs-top{background:var(--tree-row);border-radius:10px;padding:4px!important;margin-top:2px;box-shadow:0 1px 2px rgba(30,34,38,.08)}
+.calm-subs-top .calm-sub::before{content:attr(data-k)!important;flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;box-sizing:border-box;border:1.5px solid var(--chipline);font:600 11px/1 var(--font-ui);color:var(--muted);margin-top:-1px;min-width:0}
+.calm-subs-top .calm-sub[data-st="done"]::before{content:"✓"!important;background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
+.calm-subs-top .calm-sub.calm-sub-main::before{border-color:var(--accent-ink);color:var(--accent-ink)}
+.calm-subs-nested .calm-sub::before{content:""!important;flex:none;width:6px;height:6px;border-radius:50%;background:var(--ctl-line);margin:7px 7px 0 7px}
+.tool-sidebar .calm-sub-main{color:var(--accent-ink);font-weight:600}
+.tool-sidebar .calm-sub{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tool-sidebar .calm-sub{display:flex}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:600px){
@@ -20120,8 +20167,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=122;
-const APP_BUILD='2026.11.22b';
+const APP_VERSION=123;
+const APP_BUILD='2026.11.22c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -25000,12 +25047,19 @@ function calmFmtBar(){const bar=document.getElementById('fmtBar'),more=document.
   [cap,find,document.getElementById('dictBtn'),document.getElementById('dictLang'),document.getElementById('dictStatus')].forEach(x=>{if(x&&x.parentElement===bar)grp.appendChild(x)});
   [...bar.children].forEach(c=>{if(c.classList.contains('fmt-sep')&&c.nextElementSibling&&c.nextElementSibling.classList.contains('fmt-sep'))c.remove()});
   if(grp.children.length)more.insertBefore(grp,more.firstChild)}
+/* Short names for long tool labels in the left tree (the full name stays as the tooltip and on the tool itself). */
+const CALM_SHORT={'Build my questionnaire and data template':'Questionnaire & data template','Research figures (box plot, error bars, histogram, Q-Q)':'Research figures',
+  'Quick chart (bars, lines, Venn)':'Quick chart','Check the numbers in my document':'Check numbers in my document','My study plan: design, variables, hypotheses':'My study plan',
+  'Ethics Committee package + consent form':'Ethics form & consent','Regulatory-pathway wizard':'Approval route','Protocol / synopsis builder':'Protocol / synopsis',
+  'CTRI registration readiness':'CTRI registration','PI eligibility & training':'PI eligibility','Trial budget estimator':'Trial budget'};
+function calmShort(t){return CALM_SHORT[t]||t}
 /* Version 121, round 3: the open stage's tools appear in the left list as its sub-stages (same buttons, same handlers),
    so the student sees stage and sub-stage together; the tool panel then needs less room and the page gets wider. */
 let calmMirrorSig='';
 function calmMirror(){
   const side=document.getElementById('toolSidebar'),p=document.querySelector('.tool-panel.active'),tab=document.querySelector('.tool-sidebar .tool-tab.active');
   const wide=window.innerWidth>=1100&&side&&getComputedStyle(side).display!=='none'&&!side.classList.contains('collapsed');
+  if(p&&p.dataset.panel==='design'&&typeof designRenderDash==='function'){try{designRenderDash()}catch(e){}}
   const pn0=p&&p.querySelector('.panel');
   const listOnly=!!pn0&&[...pn0.children].every(c=>(c.classList&&c.classList.contains('calm-next'))||c.tagName==='H3'||c.tagName==='INPUT'||c.id==='designDash'||(c.classList&&(c.classList.contains('desc')||c.classList.contains('tl-wrap')))||(c.classList&&c.classList.contains('row')&&c.querySelector(':scope > .tl-main')));
   /* only a panel that is just a list of tools moves left; a panel with its own form stays whole */
@@ -25022,7 +25076,7 @@ function calmMirror(){
   const box=document.createElement('div');box.className='calm-subs'+(only?' calm-subs-top':' calm-subs-nested');box.setAttribute('role','list');
   rows.forEach(b=>{const s=document.createElement('button');s.type='button';s.className='calm-sub'+(b.classList.contains('tl-main')?' calm-sub-main':'');
     s.setAttribute('role','listitem');if(b.getAttribute('data-st'))s.setAttribute('data-st',b.getAttribute('data-st'));
-    s.textContent=b.textContent.trim();s.onclick=()=>b.click();box.appendChild(s)});
+    const full=b.textContent.trim();s.textContent=calmShort(full);if(s.textContent!==full)s.title=full;s.onclick=()=>b.click();box.appendChild(s)});
   tab.insertAdjacentElement('afterend',box);
   if(only)tab.classList.add('calm-hidden-tab');
   p.classList.add('calm-mirrored');
@@ -25087,6 +25141,15 @@ function calmDocBar(){const bar=document.querySelector('#docPane .docbar');if(!b
   const sv=document.getElementById('saveBadge'),st=document.getElementById('stats');if(sv&&st)st.parentNode.insertBefore(sv,st);
   const fb=document.getElementById('focusBtn');if(fb&&!fb.dataset.calm){fb.dataset.calm='1';fb.setAttribute('aria-label','Focus')}}
 /* Sub-stage numbers are written by code, so a hidden item can never leave a gap such as 2.1, 2.2, 2.9. */
+function calmTree(){const a=getActiveProject(),pk=a?STAGES.indexOf(a.stage):-1,hi=getLang()==='hi';
+  document.querySelectorAll('.tool-sidebar .stage-group').forEach(g=>{const i=STAGES.indexOf(g.dataset.stage),cur=!!g.querySelector('.tool-tab.active');
+    g.classList.toggle('calm-cur',cur);g.classList.toggle('calm-done',i>=0&&i<pk);g.classList.toggle('calm-proj',i===pk);
+    let pr=g.querySelector('.calm-prog');const steps=[...g.querySelectorAll('.calm-subs-top .calm-sub')];
+    if(cur&&steps.length&&steps.some(x=>x.hasAttribute('data-st'))){const d=steps.filter(x=>x.getAttribute('data-st')==='done').length,txt=hi?(d+' / '+steps.length+' पूरे'):(d+' of '+steps.length+' done');
+      if(!pr){pr=document.createElement('div');pr.className='calm-prog';g.querySelector('.stage-header').insertAdjacentElement('afterend',pr)}
+      const html='<span>'+txt+'</span><i><b style="width:'+Math.round(100*d/steps.length)+'%"></b></i>';if(pr.innerHTML!==html)pr.innerHTML=html}
+    else if(pr)pr.remove();
+    g.querySelectorAll('.calm-subs-top .calm-sub').forEach((s,k)=>{if(s.getAttribute('data-k')!==String(k+1))s.setAttribute('data-k',String(k+1))})})}
 function calmNumber(){document.querySelectorAll('.tool-sidebar .stage-group').forEach((g,gi)=>{let n=0;
   g.querySelectorAll('.stage-tools > .tool-tab, .stage-tools > .calm-subs-top > .calm-sub').forEach(x=>{const vis=getComputedStyle(x).display!=='none';if(vis){n++;const v=(gi+1)+'.'+n;if(x.getAttribute('data-n')!==v)x.setAttribute('data-n',v)}})})}
 function calmPass(root){
@@ -25101,6 +25164,7 @@ function calmPass(root){
     calmDocBar();
     calmOutline();
     calmNumber();
+    calmTree();
   }catch(e){}
 }
 let calmTimer=0;
