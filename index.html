@@ -15584,6 +15584,71 @@ function statsSplitLine(l,delim){
 const STATS_NA_RE=/^(na|n\/a|#n\/a|nan|null|none|missing|-|--|\.|\?)$/i;
 const STATS_NUM_RE=/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 function statsNumNorm(v){return String(v).replace(/^[−–]/,'-')}
+/* Numeric missing-value codes (Version 131). Files from SPSS, paper forms and survey tools often mark
+   "no answer" with a number such as 99 or -9. Counted as a real value it enters every mean and test.
+   The student declares codes per column; the app also points out values that look like such a code.
+   Stored per project; every decision goes to the cleaning log. Code only, no AI. */
+const MC_CAND=[99,999,9999,-9,-99,-999,98,88,77,9,8];
+function mcLoad(){try{return JSON.parse(LS.get(pkey('appu_misscodes'))||'{}')||{}}catch(e){return{}}}
+function mcSave(o){try{LS.set(pkey('appu_misscodes'),JSON.stringify(o))}catch(e){}}
+function mcKey(name){return String(name||'').trim().toLowerCase()}
+function mcCodesFor(name){const e=mcLoad()[mcKey(name)];return e&&Array.isArray(e.codes)?e.codes.map(String):[]}
+/* A value looks like a missing code when it is one of the usual codes and sits apart from every other value:
+   more than twice the largest other value, negative when all others are zero or more, or 8/9 on a short
+   whole-number scale that otherwise stops at least two below it. Needs five other values to judge. */
+function mcSuspects(nums){
+  const out=[];
+  for(const c of MC_CAND){
+    const k=nums.filter(v=>v===c).length;if(!k)continue;
+    const rest=nums.filter(v=>v!==c);if(rest.length<5||k>rest.length)continue;
+    const mx=Math.max(...rest),mn=Math.min(...rest),absMax=Math.max(...rest.map(Math.abs));
+    let hit=false;
+    if(c>=77)hit=c>2*absMax;
+    else if(c<0)hit=mn>=0;
+    else{const ints=rest.every(v=>Number.isInteger(v));hit=ints&&mn>=0&&mx<=c-2&&new Set(rest).size>=3}
+    if(hit)out.push({code:String(c),n:k,lo:mn,hi:mx});
+  }
+  return out;
+}
+function mcDecide(col,code,how){
+  const o=mcLoad(),k=mcKey(col);o[k]=o[k]||{codes:[],keep:[]};o[k].codes=o[k].codes||[];o[k].keep=o[k].keep||[];
+  const hi=getLang()==='hi';let n=0;
+  try{const d=window._statsData,c=d&&d.cols.find(x=>mcKey(x.name)===k);if(c)n=(d.mcRaw&&d.mcRaw[c.name]&&d.mcRaw[c.name][code])||0}catch(e){}
+  if(how==='missing'){if(!o[k].codes.includes(code))o[k].codes.push(code);o[k].keep=o[k].keep.filter(x=>x!==code);
+    dcLog('Missing data',col+': '+code+' treated as missing',n,'Declared as a "no answer" code')}
+  else if(how==='keep'){if(!o[k].keep.includes(code))o[k].keep.push(code);o[k].codes=o[k].codes.filter(x=>x!==code);
+    dcLog('Missing data',col+': '+code+' kept as a real value',n,'Checked by the student: a real answer, not a code')}
+  else if(how==='remove'){o[k].codes=o[k].codes.filter(x=>x!==code);
+    dcLog('Missing data',col+': '+code+' no longer treated as missing',0,'Code removed by the student')}
+  mcSave(o);
+  try{statsParse()}catch(e){}
+  showToast(hi?(how==='missing'?code+' अब '+col+' में खाली (उत्तर नहीं) माना जाएगा।':how==='keep'?code+' को '+col+' में असली मान रखा गया।':'कोड हटाया गया।'):(how==='missing'?code+' in '+col+' is now treated as missing.':how==='keep'?code+' in '+col+' is kept as a real value.':'Code removed.'));
+}
+function mcAdd(){
+  const c=document.getElementById('mcCol'),v=document.getElementById('mcVal');if(!c||!v)return;
+  const code=statsNumNorm(String(v.value||'').trim());
+  if(!STATS_NUM_RE.test(code)){showToast(getLang()==='hi'?'कोड एक संख्या होना चाहिए, जैसे 99 या -9':'The code must be a number, such as 99 or -9');return}
+  mcDecide(c.value,String(Number(code)),'missing');
+}
+function mcPanel(d){
+  const hi=getLang()==='hi',n=d.notes||{},sus=n.suspect||{},o=mcLoad();
+  const numCols=d.cols.filter(c=>c.type==='numeric');
+  let h='';
+  Object.keys(sus).forEach(col=>sus[col].forEach(x=>{
+    const a=JSON.stringify(col).replace(/"/g,'&quot;'),code=escHTML(x.code);
+    h+='<div class="mc-sus" style="border-left:3px solid var(--warn,#b45309);padding:6px 10px;margin:6px 0;background:var(--panel2,#fff8eb)"><b>'+
+      (hi?'कॉलम '+escHTML(col)+' में '+x.n+' बार '+code+' है, जबकि बाकी सभी मान '+x.lo+' से '+x.hi+' के बीच हैं।':'Column '+escHTML(col)+' has '+code+' in '+x.n+' cell'+(x.n===1?'':'s')+', while every other value lies between '+x.lo+' and '+x.hi+'.')+
+      '</b> '+(hi?'कई फ़ाइलों में '+code+' का अर्थ "उत्तर नहीं दिया" होता है। अगर ऐसा है और इसे संख्या मान लिया गया, तो यह माध्य और हर परीक्षण को बिगाड़ देगा।':'Many files use '+code+' for "no answer". If that is what it means here and it stays a number, it distorts the mean and every test.')+
+      '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn btn-purple" onclick="mcDecide('+a+',\''+code+'\',\'missing\')">'+(hi?code+' को खाली (उत्तर नहीं) मानें':'Treat '+code+' as missing')+'</button><button class="btn btn-ghost" onclick="mcDecide('+a+',\''+code+'\',\'keep\')">'+(hi?'यह असली मान है':'It is a real value')+'</button></div></div>';
+  }));
+  const decl=[];Object.keys(o).forEach(k=>{(o[k].codes||[]).forEach(c=>{const col=(d.cols.find(x=>mcKey(x.name)===k)||{}).name||k;decl.push({col,code:c,n:(d.mcRaw&&d.mcRaw[col]&&d.mcRaw[col][c])||0})})});
+  if(numCols.length){
+    h+='<details class="mc-box" style="margin:6px 0"'+(decl.length?' open':'')+'><summary>'+(hi?'संख्या वाले "उत्तर नहीं" कोड':'Missing-value codes (numbers such as 99 or -9)')+(decl.length?' · '+decl.length:'')+'</summary>'+
+      (decl.length?'<ul style="margin:4px 0">'+decl.map(x=>'<li>'+escHTML(x.col)+': <b>'+escHTML(x.code)+'</b> '+(hi?'खाली माना जाता है':'treated as missing')+' ('+x.n+') <button class="btn btn-ghost" style="padding:0 8px" onclick="mcDecide('+JSON.stringify(x.col).replace(/"/g,'&quot;')+',\''+escHTML(x.code)+'\',\'remove\')">'+(hi?'हटाएँ':'Remove')+'</button></li>').join('')+'</ul>':'<p class="desc" style="margin:4px 0">'+(hi?'अभी कोई कोड तय नहीं है।':'No codes set yet.')+'</p>')+
+      '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><select id="mcCol" aria-label="'+(hi?'कॉलम':'Column')+'">'+numCols.map(c=>'<option>'+escHTML(c.name)+'</option>').join('')+'</select><input id="mcVal" inputmode="numeric" placeholder="99" style="width:6em" aria-label="'+(hi?'कोड':'Code')+'"><button class="btn btn-ghost" onclick="mcAdd()">'+(hi?'कोड जोड़ें':'Add code')+'</button></div></details>';
+  }
+  return h;
+}
 function statsParseText(text){
   const lines=text.split(/\r\n|\r|\n/).filter(l=>l.trim().length);
   if(!lines.length)return null;
@@ -15605,25 +15670,33 @@ function statsParseText(text){
     const real=vals.filter(v=>!STATS_NA_RE.test(v)).map(statsNumNorm);
     const numeric=real.length>0&&real.every(v=>STATS_NUM_RE.test(v));
     if(numeric){
-      let miss=0;
-      rows.forEach(r=>{const v=r[i];if(v===undefined||v==='')return;if(STATS_NA_RE.test(v)){r[i]='';miss++}else r[i]=statsNumNorm(v)});
+      let miss=0,codeMiss=0;const codes=mcCodesFor(name).map(Number),cnt={};
+      rows.forEach(r=>{const v=r[i];if(v===undefined||v==='')return;if(STATS_NA_RE.test(v)){r[i]='';miss++;return}
+        const nv=statsNumNorm(v);if(codes.length&&codes.includes(Number(nv))){cnt[String(Number(nv))]=(cnt[String(Number(nv))]||0)+1;r[i]='';codeMiss++}else r[i]=nv});
       if(miss)notes.missing[name]=miss;
-      return{name,index:i,type:'numeric',n:real.length};
+      if(codeMiss){notes.coded=notes.coded||{};notes.coded[name]=cnt}
+      notes.mcRaw=notes.mcRaw||{};notes.mcRaw[name]=cnt;
+      const nums=rows.map(r=>r[i]).filter(v=>v!==undefined&&v!=='').map(Number);
+      const keep=((mcLoad()[mcKey(name)]||{}).keep||[]).map(String);
+      const sus=mcSuspects(nums).filter(x=>!keep.includes(x.code));
+      if(sus.length){notes.suspect=notes.suspect||{};notes.suspect[name]=sus}
+      return{name,index:i,type:'numeric',n:nums.length};
     }
     {const bad=[];rows.forEach((r,k)=>{const v=r[i];if(v===undefined||v===''||STATS_NA_RE.test(v))return;if(!STATS_NUM_RE.test(statsNumNorm(v))&&bad.length<6)bad.push([k+2,v])});
      const nBad=real.filter(v=>!STATS_NUM_RE.test(v)).length;if(real.length>=4&&nBad<=Math.max(2,real.length*0.1)){notes.mixed=notes.mixed||{};notes.mixed[name]={n:nBad,ex:bad}}}
     return{name,index:i,type:'categorical',n:vals.length};
   });
-  return{headers,rows,cols,notes};
+  return{headers,rows,cols,notes,mcRaw:notes.mcRaw||{}};
 }
 function statsParseNote(d){
   if(!d||!d.notes)return'';
   const n=d.notes,bits=[],mk=Object.keys(n.missing);
   if(n.mixed)Object.keys(n.mixed).forEach(k=>{const m=n.mixed[k];bits.push('<b>Column '+escHTML(k)+' looks like numbers, but '+m.n+' cell'+(m.n===1?' is':'s are')+' not a number: '+m.ex.map(x=>'\u201c'+escHTML(x[1])+'\u201d (line '+x[0]+')').join(', ')+'.</b> Nothing was removed. Number tests cannot use this column until you correct '+(m.n===1?'that cell':'those cells')+' in your file (or blank '+(m.n===1?'it':'them')+' if the answer is truly missing) and paste the data again.')});
   if(mk.length)bits.push('Treated as missing: '+mk.map(k=>escHTML(k)+' ('+n.missing[k]+')').join(', ')+'. These cells held a code such as NA, N/A or a full stop.');
+  if(n.coded){const hi=getLang()==='hi';bits.push((hi?'आपके तय किए कोड खाली माने गए: ':'Treated as missing by your codes: ')+Object.keys(n.coded).map(k=>escHTML(k)+' ('+Object.keys(n.coded[k]).map(c=>escHTML(c)+' × '+n.coded[k][c]).join(', ')+')').join('; ')+'.')}
   if(n.padded)bits.push(n.padded+' row'+(n.padded===1?' was':'s were')+' shorter than the header row; the missing cells at the end were left empty.');
   if(n.dropped)bits.push('<b>'+n.dropped+' row'+(n.dropped===1?' has':'s have')+' more cells than the header row and '+(n.dropped===1?'was':'were')+' left out.</b> A comma inside a value usually causes this; put such values in double quotes.');
-  return bits.length?'<p class="desc" style="margin:4px 0">'+bits.join(' ')+'</p>':'';
+  return (bits.length?'<p class="desc" style="margin:4px 0">'+bits.join(' ')+'</p>':'')+mcPanel(d);
 }
 function rtHash(data){
   var str=data.cols.map(function(c){return c.name+'\u0002'+c.type}).join('\u0001')+'\u0003'+data.rows.map(function(r){return r.join('\u0001')}).join('\u0004');
