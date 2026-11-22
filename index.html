@@ -1116,6 +1116,23 @@ body.at-home .project-bar .btn-new{display:none}
   body.calm-wide-page #popBtn::before{content:"⧉";font-size:15px}}
 /* a roomier page */
 #editor{font-size:17px;line-height:1.75}
+
+/* round 4: the stage bar folds; the tool column header is one clean line */
+.stagebar .st-fold{flex:none;width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--chipline);background:var(--card);color:var(--muted);border-radius:9px;padding:0;min-height:0}
+body.st-folded .stagebar{padding-top:6px;padding-bottom:6px}
+body.st-folded .st-lbl{display:none}
+body.st-folded .st-step.on .st-lbl{display:block;position:static}
+body.st-folded .stagebar .st-step{flex-direction:row;gap:8px}
+body.st-folded .st-dot{width:24px;height:24px;font-size:12px}
+body.st-folded .st-steps li+li::before{top:11px;left:calc(-50% + 14px);right:calc(50% + 14px)}
+body.st-folded .stagebar .st-home{min-height:32px}
+body.st-folded .st-fold svg{transform:rotate(180deg)}
+.stagebar .st-step{position:relative;z-index:1}
+body.st-folded .stagebar .st-step.on{background:var(--card);padding:0 10px;border-radius:0}
+@media(min-width:1100px){
+  .stage-guide>span:first-child,.stage-guide>.back-btn:not(#subBtn),.stage-guide>.next-btn{display:none!important}
+  .stage-guide{padding:8px 2px 4px}
+}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer{color:var(--muted)}
 @media (max-width:600px){
@@ -18596,8 +18613,12 @@ function apStageBarRender(){
   el.innerHTML='<button type="button" class="st-home'+(home?' on':'')+'" onclick="apHomeShow()" '+(home?'aria-current="page"':'')+'>'+escHTML(ht('home'))+'</button>'
    +'<ol class="st-steps">'+STAGES.map((s,i)=>{const on=cur===s,done=i<pk;
      return'<li class="'+(done?'done':'')+(on?' cur':'')+'"><button type="button" class="st-step'+(on?' on':'')+(ps===s?' proj':'')+(done?' done':'')+'" onclick="apGoStage(\''+s+'\')" '+(on?'aria-current="page"':'')+'>'
-      +'<span class="st-dot" aria-hidden="true">'+(done?'✓':(i+1))+'</span><span class="st-lbl">'+escHTML(ht('s_'+s))+'</span></button></li>'}).join('')+'</ol>';
+      +'<span class="st-dot" aria-hidden="true">'+(done?'✓':(i+1))+'</span><span class="st-lbl">'+escHTML(ht('s_'+s))+'</span></button></li>'}).join('')+'</ol>'
+   +'<button type="button" class="st-fold" onclick="stFold()" aria-expanded="'+(document.body.classList.contains('st-folded')?'false':'true')+'" title="'+(getLang()==='hi'?'चरण पट्टी छोटी/बड़ी करें':'Make the stage bar smaller or larger')+'" aria-label="'+(getLang()==='hi'?'चरण पट्टी छोटी/बड़ी करें':'Fold the stage bar')+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>';
 }
+/* Version 121: the stage bar folds to a slim line of numbered dots; the choice is remembered on this device. */
+function stFold(){const on=!document.body.classList.contains('st-folded');document.body.classList.toggle('st-folded',on);LS.set('appu_st_folded',on?'1':'');try{apStageBarRender()}catch(e){}}
+try{if(LS.get('appu_st_folded'))document.body.classList.add('st-folded')}catch(e){}
 /* The left tree shows the tools of the stage the student is in; the other stages stay folded until opened by hand. */
 function treeFocusStage(cur){if(!cur)return;STAGES.forEach(st=>{const g=document.querySelector('.stage-group[data-stage="'+st+'"]');if(g)g.classList.toggle('collapsed',st!==cur)})}
 function apHomeHide(){document.body.classList.remove('at-home');try{apStageBarRender()}catch(e){}try{dockLayout()}catch(e){}}
