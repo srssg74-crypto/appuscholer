@@ -1092,6 +1092,30 @@ body.at-home .project-bar .btn-new{display:none}
 #editor{box-shadow:none!important;margin-left:0!important;margin-right:0!important}
 .doc-pane .toolbar .btn-purple{background:var(--card);color:var(--ink);border:1px solid var(--chipline)}
 .doc-pane .toolbar .btn-purple kbd{background:var(--chip);color:var(--muted)}
+
+/* round 3: stage and its sub-stages read as one tree: a line from the stage circle, a node on the line for each part */
+.tool-sidebar .stage-tools{margin:4px 0 10px 11px;padding-left:20px;border-left:2px solid var(--line)}
+.tool-sidebar .tool-tab,.tool-sidebar .calm-sub{position:relative}
+.tool-sidebar .tool-tab::after,.tool-sidebar .calm-sub::after{content:"";position:absolute;left:-27px;top:14px;width:12px;height:12px;border-radius:50%;box-sizing:border-box;border:2px solid var(--ctl-line);background:var(--bg)}
+.tool-sidebar .stage-group.stage-group-current .tool-tab::after{border-color:var(--accent-ink)}
+.tool-sidebar .tool-tab.active::after,.tool-sidebar .calm-sub[data-st="done"]::after{background:var(--accent-ink);border-color:var(--accent-ink)}
+.tool-sidebar .tool-tab.calm-hidden-tab{display:none}
+.calm-subs{display:flex;flex-direction:column;gap:1px}
+.calm-subs-nested{margin:2px 0 6px 18px;padding-left:12px;border-left:1px dashed var(--ctl-line)}
+.calm-subs-nested .calm-sub::after{left:-19px;width:8px;height:8px;top:13px}
+.tool-sidebar .calm-sub{counter-increment:sub;display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:7px 10px;color:var(--ink);font:500 14px/1.35 var(--font-ui);cursor:pointer}
+.calm-subs-top .calm-sub::before{content:counter(stg) "." counter(sub);flex:none;font:600 12px var(--font-ui);color:var(--muted);min-width:24px}
+.tool-sidebar .calm-sub:hover{background:var(--soft)}
+.tool-sidebar .calm-sub-main{color:var(--accent-ink);font-weight:600}
+/* the panel no longer repeats what the left list shows */
+.tool-panel.calm-mirrored .panel>.row.tl-wrap,.tool-panel.calm-mirrored .panel>.row:has(>.tl-main){display:none}
+@media(min-width:1100px){body.calm-wide-page main{grid-template-columns:auto minmax(0,1fr) 330px!important}main .tool-sidebar{width:250px}
+  body.calm-wide-page .dock-tabs .dock-tab{font-size:13.5px;padding:10px 8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body.calm-wide-page #dockTabAi{flex:none}
+  body.calm-wide-page #popBtn{font-size:0;width:34px;padding:0}
+  body.calm-wide-page #popBtn::before{content:"⧉";font-size:15px}}
+/* a roomier page */
+#editor{font-size:17px;line-height:1.75}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer{color:var(--muted)}
 @media (max-width:600px){
@@ -3467,6 +3491,7 @@ function showTool(name){
      caught and silently skipped that one time. The Projects section re-renders the guide once it's
      actually defined, so nothing is lost. */
   try{renderStageGuide(name)}catch(e){}
+  try{setTimeout(()=>{if(window.calmPass)calmPass(document)},0)}catch(e){}
   try{setTimeout(whyRender,0)}catch(e){}
   /* Re-scan the documents for citations each time the Citation Manager opens, so the
      "cited in" lines never lag behind what was just written. */
@@ -24853,7 +24878,7 @@ const CALM_EMOJI=/^(?:[\p{Extended_Pictographic}☀-➿⬀-⯿️‍⃣]|\s)+/u;
 const CALM_SCOPE=['header button','.stagebar button','.project-bar button','.project-bar summary','.tool-sidebar a',
   '.tool-sidebar button','.tree-item','.tool-tab','.dock-tabs button','.tool-panel h3','.tool-panel h4','.tool-panel button',
   '.tool-panel summary','.doc-pane button','.doc-pane summary','.doc-pane label','.doc-pane h2','.doc-pane h3',
-  '.subbar button','.ai-pane button','.ai-pane h3','#apHome button','#apHome h3','#apHome b','dialog h2','dialog h3','dialog .btn','dialog summary'].join(',');
+  '.subbar button','.ai-pane button','.ai-pane h3','.stage-guide button','#apHome button','#apHome h3','#apHome b','dialog h2','dialog h3','dialog .btn','dialog summary'].join(',');
 function calmStrip(el){
   if(!el||el.closest('[contenteditable="true"],#editor,.st-steps'))return;
   const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.data.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP});
@@ -24889,6 +24914,34 @@ function calmFmtBar(){const bar=document.getElementById('fmtBar'),more=document.
   [cap,find,document.getElementById('dictBtn'),document.getElementById('dictLang'),document.getElementById('dictStatus')].forEach(x=>{if(x&&x.parentElement===bar)grp.appendChild(x)});
   [...bar.children].forEach(c=>{if(c.classList.contains('fmt-sep')&&c.nextElementSibling&&c.nextElementSibling.classList.contains('fmt-sep'))c.remove()});
   if(grp.children.length)more.insertBefore(grp,more.firstChild)}
+/* Version 121, round 3: the open stage's tools appear in the left list as its sub-stages (same buttons, same handlers),
+   so the student sees stage and sub-stage together; the tool panel then needs less room and the page gets wider. */
+let calmMirrorSig='';
+function calmMirror(){
+  const side=document.getElementById('toolSidebar'),p=document.querySelector('.tool-panel.active'),tab=document.querySelector('.tool-sidebar .tool-tab.active');
+  const wide=window.innerWidth>=1100&&side&&getComputedStyle(side).display!=='none'&&!side.classList.contains('collapsed');
+  const rows=p&&wide?[...p.querySelectorAll('.panel > .row > .tl-main, .panel > .row.tl-wrap > .tl-row')]:[];
+  const sig=(p?p.dataset.panel:'')+'|'+rows.map(b=>b.textContent.trim()+':'+(b.getAttribute('data-st')||'')).join('|')+'|'+wide;
+  if(sig===calmMirrorSig)return;calmMirrorSig=sig;
+  document.querySelectorAll('.calm-subs').forEach(x=>x.remove());
+  document.querySelectorAll('.tool-tab.calm-hidden-tab').forEach(x=>x.classList.remove('calm-hidden-tab'));
+  document.querySelectorAll('.tool-panel.calm-mirrored').forEach(x=>x.classList.remove('calm-mirrored'));
+  document.body.classList.remove('calm-wide-page');
+  if(!rows.length||!tab)return;
+  const grp=tab.closest('.stage-tools'),tabs=grp?[...grp.querySelectorAll('.tool-tab')].filter(t=>getComputedStyle(t).display!=='none'):[];
+  const only=tabs.length===1;
+  const box=document.createElement('div');box.className='calm-subs'+(only?' calm-subs-top':' calm-subs-nested');box.setAttribute('role','list');
+  rows.forEach(b=>{const s=document.createElement('button');s.type='button';s.className='calm-sub'+(b.classList.contains('tl-main')?' calm-sub-main':'');
+    s.setAttribute('role','listitem');if(b.getAttribute('data-st'))s.setAttribute('data-st',b.getAttribute('data-st'));
+    s.textContent=b.textContent.trim();s.onclick=()=>b.click();box.appendChild(s)});
+  tab.insertAdjacentElement('afterend',box);
+  if(only)tab.classList.add('calm-hidden-tab');
+  p.classList.add('calm-mirrored');
+  const pn=p.querySelector('.panel');
+  const listOnly=pn&&[...pn.children].every(c=>c.tagName==='H3'||c.tagName==='INPUT'||c.id==='designDash'||(c.classList&&(c.classList.contains('desc')||c.classList.contains('tl-wrap')))||(c.classList&&c.classList.contains('row')&&c.querySelector(':scope > .tl-main')));
+  if(listOnly)document.body.classList.add('calm-wide-page');
+}
+window.addEventListener('resize',()=>{clearTimeout(calmTimer);calmTimer=setTimeout(()=>calmPass(document),120)});
 function calmPass(root){
   try{
     const r=root&&root.querySelectorAll?root:document;
@@ -24896,6 +24949,7 @@ function calmPass(root){
     r.querySelectorAll(CALM_SCOPE).forEach(calmStrip);
     calmPanels();
     calmFmtBar();
+    calmMirror();
   }catch(e){}
 }
 let calmTimer=0;

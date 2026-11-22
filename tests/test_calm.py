@@ -43,6 +43,13 @@ with sync_playwright() as p:
     tops = pg.evaluate("[...document.getElementById('fmtBar').children].filter(c=>c.offsetParent&&!c.classList.contains('fmt-more')).map(c=>Math.round(c.getBoundingClientRect().top))")
     ok(max(tops) - min(tops) < 12, 'formatting tools fit on one row: %s' % sorted(set(tops)))
     ok(pg.evaluate("getComputedStyle(document.getElementById('docPane')).backgroundColor") == 'rgb(255, 255, 255)' and pg.evaluate("getComputedStyle(document.getElementById('editor')).boxShadow") == 'none', 'no grey frame around the page')
+    # the stage's tools as sub-stages in the left list; the panel gives the page more room
+    subs = pg.evaluate("[...document.querySelectorAll('.stage-group[data-stage=design] .calm-sub')].map(x=>x.textContent)")
+    ok(len(subs) >= 7 and subs[0].startswith('My study plan'), 'design tools listed under stage 3 in the left list: %d' % len(subs))
+    ok(pg.evaluate("document.body.classList.contains('calm-wide-page')") and not pg.is_visible('.tool-panel[data-panel=design] .tl-row'), 'panel no longer repeats the list, and the page widens')
+    pg.evaluate("document.querySelectorAll('.stage-group[data-stage=design] .calm-sub')[1].click()"); pg.wait_for_timeout(300)
+    ok(pg.evaluate("document.getElementById('regDlg').open"), 'a sub-stage in the left list opens its tool')
+    pg.evaluate("document.getElementById('regDlg').close()")
     # editor text is never changed by the emoji pass
     pg.evaluate("document.getElementById('editor').innerHTML='<p>✅ my own text</p>'"); pg.wait_for_timeout(300)
     ok('✅ my own text' in pg.inner_text('#editor'), 'student text keeps its symbols')

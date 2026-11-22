@@ -13,7 +13,8 @@ with sync_playwright() as p:
     J("openSaveAsProject();document.getElementById('sapName').value='L';saveAsProject();try{document.getElementById('stageIntroDlg').close()}catch(e){}")
     W=lambda s:(J("apGoStage('%s')"%s),pg.wait_for_timeout(500),J("document.querySelector('.tool-main').getBoundingClientRect().width"))[2]
     wi,wl,wd,wc,ww,wr=[W(s) for s in ['idea','lit','design','collect','writing','review']]
-    ok(min(wi,wl,wd,wc)>max(ww,wr)+40,'tool column is wider in stages 1-4 (%d,%d,%d,%d vs %d,%d)'%(wi,wl,wd,wc,ww,wr))
+    # Version 121: when a stage's tools are only a list, the list moves to the left tree and the tool column narrows on purpose.
+    ok(min(wi,wl)>max(ww,wr)+40 and min(wd,wc)>=320,'tool column is wider in stages 1-2, and at least 320 px where the list moved left (%d,%d,%d,%d vs %d,%d)'%(wi,wl,wd,wc,ww,wr))
     ok(J("document.getElementById('docPane').getBoundingClientRect().width")>=560,'draft stays wide in writing')
     W('idea'); ok(J("document.getElementById('docPane').getBoundingClientRect().width")>=420,'draft stays usable in stage 1')
     J("LS.set('appu_dock_w_tool','350')"); W('lit'); ok(abs(J("document.querySelector('.tool-main').getBoundingClientRect().width")-350)<12,'a dragged width wins for stages 1-4')
