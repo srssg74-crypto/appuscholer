@@ -1339,6 +1339,14 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent-ink)!important}
 .sl-aim.on{border-color:var(--accent-ink);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
 .sl-why{margin:0 0 12px;font-size:13px;line-height:1.5;color:var(--muted)}
 .sl-why a{color:var(--accent-ink);font-weight:600;white-space:nowrap}
+
+/* ===== Version 128: Writing and Review panels ===== */
+.tool-panel input[type=checkbox],.tool-panel input[type=radio],dialog input[type=checkbox],dialog input[type=radio]{width:auto!important;flex:none!important;min-width:0}
+.tool-panel .row:has(> input[type=text]){flex-wrap:wrap}
+.tool-panel .row > input[type=text]{flex:1 1 180px!important;min-width:150px}
+.tool-panel .panel > div:not(.row):not(.fld):not(.calm-next):has(> h4),.tool-panel .panel > section{border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:none}
+.tool-panel h4{font:600 15px var(--font-ui);color:var(--ink);margin:0 0 6px}
+.tool-panel .ap-box{border:1px solid var(--line)!important;background:var(--soft2)!important;border-radius:12px!important}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:600px){
@@ -19869,7 +19877,9 @@ function bbOutlineToggle(){const d=document.getElementById('bbOutline');if(!d)re
 function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!box||box.style.display==='none')return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),book=bbBookId();
   if(!book){const cur=docCurrentId(),hasSec=!!editor.querySelector('[data-sec]');
     const all0=[...editor.querySelectorAll('h1,h2,h3')],hs0=all0.filter(h=>h.textContent.trim());
-    const own='<b>📑 '+L('This document','यह document')+'</b>'+(hs0.length?'<div style="margin:4px 0">'+hs0.map((h,i)=>{const lv=+h.tagName[1],w=bbOwn(h).reduce((a,x)=>a+lsWords(x.textContent||''),0);
+    const own='<b>📑 '+L('This document','यह document')+'</b>'+(hs0.length?'<div style="margin:4px 0">'+hs0.map((h,i)=>{const lv=+h.tagName[1],ow=x=>bbOwn(x).reduce((a,y)=>a+lsWords(y.textContent||''),0);let w=ow(h);
+      /* Version 128: a heading with nothing of its own (a title over chapters) shows the words of everything under it */
+      if(!w){for(let j=i+1;j<hs0.length&&+hs0[j].tagName[1]>lv;j++)w+=ow(hs0[j])}
       return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\'\','+all0.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+' <span class="desc">'+w+' '+L('words','शब्द')+'</span></a>'}).join('')+'</div>':'<p class="desc" style="margin:4px 0">'+L('No headings yet. Make a line a heading and it appears here, and a tap takes you to it.','अभी कोई heading नहीं। किसी line को heading बनाएँ, वह यहाँ दिखेगी और tap से वहाँ पहुँचेंगे।')+'</p>')+'<hr style="border:none;border-top:1px solid var(--line);margin:8px 0">';
     box.innerHTML=own+'<b>📖 '+L('The book','किताब')+'</b><p class="desc" style="margin:4px 0">'+L('This study has no book yet. The book is one document with every chapter of your plan.','इस study की अभी कोई किताब नहीं। किताब एक document है जिसमें आपकी योजना का हर chapter है।')+'</p><div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="bpInsertOutline()">'+L('Make the book','किताब बनाएँ')+'</button>'+(hasSec&&cur?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbUseCurrent()">'+L('Use this document as the book','यही document किताब बनाएँ')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="bpOpen()">'+L('See the plan','योजना देखें')+'</button></div>';return}
   const isB=bbIsBook();let div=editor;if(!isB){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}
@@ -20273,8 +20283,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=127;
-const APP_BUILD='2026.11.22g';
+const APP_VERSION=128;
+const APP_BUILD='2026.11.22h';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
