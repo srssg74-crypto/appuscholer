@@ -1,0 +1,50 @@
+name: Accessibility check (axe-core)
+
+# Runs Deque's free open-source axe-core on the test copy of the app (sample data only)
+# and posts the report on the pull request. No account or key is needed.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install axe-core and Playwright
+        run: |
+          npm install --no-save axe-core@4.10.2
+          pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+      - name: Serve the test copy
+        run: |
+          python -m http.server 8765 >/dev/null 2>&1 &
+          sleep 2
+      - name: Run the check
+        env:
+          AXE_JS: node_modules/axe-core/axe.min.js
+        run: |
+          python tests/a11y_axe.py > a11y-report.md
+          cat a11y-report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Post the report on the pull request
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file a11y-report.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: |
+            a11y-report.md
+            a11y.json
