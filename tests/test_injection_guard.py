@@ -129,7 +129,7 @@ with sync_playwright() as p:
     J("window.__toasts=[];0")
     R('The sample was 120 nursing students; sleep was poor.','x')
     ok(not J("window.__toasts"),'ordinary reply passes without a warning')
-    ok(J("APP_VERSION")==120,'version 120')
+    ok(J("APP_VERSION")>=120,'version 120 or later')
     ok(not errors,'no page errors %s'%errors)
     b.close()
 print('failures:',len(fails)); sys.exit(1 if fails else 0)

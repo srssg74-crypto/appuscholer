@@ -6,12 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Appuscholar</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#4c1d95">
-<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#2E5B8A">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
 <style>
   :root{
     --purple-900:#3b0764; --purple-800:#4c1d95; --purple-700:#5b21b6;
@@ -930,23 +931,129 @@ function cfRe(){const d=document.getElementById('comfortDlg');if(d)cfDraw(d)}
 document.addEventListener('keydown',e=>{if(e.altKey&&!e.ctrlKey&&!e.metaKey&&(e.key==='l'||e.key==='L')&&cfGet().audio){e.preventDefault();cfListenToggle()}});
 window.addEventListener('DOMContentLoaded',()=>{try{cfListenBtn()}catch(e){}});
 </script>
+<style id="calm-2026-11-22">
+/* ===== Calm look (Version 121, approved 22 Nov 2026): warm-white page, one blue accent, flat controls,
+   tools as quiet lists, no emoji in the interface. Last style layer: it wins over the earlier ones. ===== */
+:root{
+  --bg:#FAF8F4;--card:#FFFFFF;--ink:#1E2226;--muted:#5F6368;--line:#E8E4DC;--soft:#F4F1EB;--soft2:#F7F5F0;
+  --chip:#F1EEE7;--chipline:#E3DED4;--ctl-line:#CFC9BE;--head-title:#1E2226;--accent-ink:#2E5B8A;--dashed:#CFC9BE;
+  --purple-900:#1F3F61;--purple-800:#24496F;--purple-700:#284F7A;--purple-600:#2E5B8A;--purple-500:#3A6A9C;--purple-100:#EAF0F7;
+  --gold:#2E5B8A;--gold-bright:#F0A33C;--accent:#2E5B8A;--accent-soft:#EAF0F7;--saffron:#F0A33C;
+  --blob-a:transparent;--blob-b:transparent;--dot:transparent;--shadow-ink:30,34,38;
+  --font-ui:"Inter","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-display:"Inter","Noto Sans Devanagari",system-ui,sans-serif;
+  --sh-1:none;--sh-2:0 1px 2px rgba(30,34,38,.06),0 6px 18px -10px rgba(30,34,38,.18);
+  --r-card:16px;--r-ctl:10px
+}
+:root[data-theme="dark"]{
+  --bg:#15181C;--card:#1E2227;--ink:#ECEEF0;--muted:#A9AFB6;--line:#2E343B;--soft:#23282E;--soft2:#20252A;
+  --chip:#262B31;--chipline:#363C44;--ctl-line:#4A515A;--head-title:#ECEEF0;--accent-ink:#8DB4E0;--dashed:#4A515A;
+  --purple-900:#0F2236;--purple-800:#1A3350;--purple-700:#24496F;--purple-600:#3A6A9C;--purple-500:#4C7DB0;--purple-100:#1D2A38;
+  --accent:#8DB4E0;--accent-soft:#1D2A38;--blob-a:transparent;--blob-b:transparent;--dot:transparent;--shadow-ink:0,0,0
+}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink)}
+body::before{display:none}
+h1,h2,h3,h4,.brand h1{font-family:var(--font-ui)}
+
+/* header: white bar, ink text, logo and name */
+header{background:var(--card);color:var(--ink);border-bottom:1px solid var(--line);box-shadow:none}
+header .logo{width:36px;height:36px;flex:0 0 36px}
+.brand{display:flex;flex-direction:column;justify-content:center}
+.brand h1{font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1.15}
+.brand .brand-hi{font-size:12px;font-weight:500;color:var(--muted);line-height:1.2}
+#verBadge{color:var(--muted);border-color:var(--line)!important;opacity:1!important}
+header .btn,header .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--chipline);box-shadow:none}
+header .btn:hover{background:var(--soft)}
+header .btn-gold,#licenseBadge{background:var(--soft)!important;color:var(--muted)!important;border-color:var(--line)!important}
+
+/* stage path: quiet text tabs, current stage in the accent */
+.stagebar{background:var(--bg);border-bottom:1px solid var(--line)}
+.stagebar button{background:transparent;color:var(--muted);border:0;font:500 14px var(--font-ui);border-radius:8px}
+.stagebar button:hover{background:var(--soft);color:var(--ink)}
+.stagebar button.on{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.stagebar button.proj::after,.stagebar button.on.proj::after{color:var(--saffron)}
+.stagebar .sb-sep{color:var(--ctl-line)}
+
+/* buttons: flat; one main colour */
+.btn{font-weight:600;box-shadow:none}
+.btn-purple,.btn-gold,.btn-new{background:var(--purple-600);color:#fff;border:1px solid transparent;box-shadow:none}
+.btn-purple:hover,.btn-gold:hover{background:var(--purple-800);transform:none;box-shadow:none}
+:root[data-theme="dark"] .btn-purple,:root[data-theme="dark"] .btn-gold{color:#fff}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--chipline)}
+.btn-ghost:hover{background:var(--soft)}
+.fmt-btn{border:1px solid transparent;background:transparent}
+.fmt-btn:hover{background:var(--soft);border-color:var(--line)}
+:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+
+/* cards: thin line, no lift */
+.card,.hm-card,.rn-card{box-shadow:none;border:1px solid var(--line);border-radius:var(--r-card)}
+.hm-card:hover,.rn-card:hover{box-shadow:var(--sh-2);transform:none}
+.doc-pane,.ai-pane,.card{animation:none}
+.tool-tab.active{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}
+
+/* tools inside a stage: one main action, the rest as a quiet list */
+.tool-panel .panel>h3{font-size:19px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.tool-panel .desc{color:var(--muted)}
+.tool-panel .row.tl-wrap{margin:0}
+.tool-panel .btn.tl-row{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;flex:1;text-align:left;
+  background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;
+  padding:13px 4px;min-height:50px;font-size:15px;font-weight:500;box-shadow:none}
+.tool-panel .btn.tl-row::after{content:"";margin-left:auto;flex:0 0 16px;width:16px;height:16px;background:var(--muted);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6l6 6-6 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6l6 6-6 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.tool-panel .btn.tl-row:hover{background:var(--soft)}
+.tool-panel .btn.tl-row:hover::after{background:var(--accent-ink)}
+.tool-panel .btn.tl-main{width:100%;min-height:48px;border-radius:12px;margin:4px 0 10px;font-size:15px}
+.tool-panel h3.tl-sub{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:22px 0 4px}
+html[data-contrast="high"] .tool-panel .btn.tl-row{border-bottom:2px solid var(--line)}
+
+/* the writing page reads like paper */
+#editor,.editor{font-family:"Noto Serif","Noto Serif Devanagari",Georgia,serif}
+header .dev-chip{border:1px solid var(--line);background:var(--soft);color:var(--muted)}
+/* status circle on a tool row: empty, half, done */
+.tool-panel .btn.tl-row[data-st]::before{content:"";flex:0 0 20px;width:20px;height:20px;border-radius:50%;box-sizing:border-box;border:1.6px solid var(--ctl-line)}
+.tool-panel .btn.tl-row[data-st="done"]::before{border-color:var(--accent-ink);background:var(--accent-ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
+.tl-progress{display:flex;flex-direction:column;gap:6px;margin:2px 0 6px}
+.tl-progress .bar{height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
+.tl-progress .bar i{display:block;height:100%;background:var(--accent-ink);border-radius:3px}
+body.no-ai-key #provTabs{animation:none;box-shadow:0 0 0 2px var(--saffron)}
+/* home */
+.hm-hero{margin:0 0 26px}
+.hm-greet{margin:0;font-size:14px;color:var(--muted)}
+.hm-hero h2{margin:4px 0 14px;font-size:26px;font-weight:600;letter-spacing:-.015em}
+.hm-hcard{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;max-width:640px}
+.hm-hk{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hm-ht{font-size:18px;font-weight:600;line-height:1.35}
+.hm-hd{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
+.hm-bar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.hm-bar i{height:6px;border-radius:3px;background:var(--chip)}.hm-bar i.d{background:var(--accent-ink)}.hm-bar i.n{background:#8FB0D3}
+.hm-go{align-self:flex-start;min-height:48px;padding:0 22px;border:0;border-radius:12px;background:var(--purple-600);color:#fff;font:600 15px var(--font-ui);cursor:pointer}
+.hm-go:hover{background:var(--purple-800)}
+.hm-alt{align-self:flex-start;border:0;background:none;color:var(--accent-ink);font:600 14px var(--font-ui);cursor:pointer;padding:4px 0}
+.hm-av{background:var(--accent-soft)!important;color:var(--accent-ink)!important}
+.hm-tile.cur{border-color:var(--accent-ink);box-shadow:0 0 0 2px var(--accent-soft)}
+.hm-learn .hm-ic{background:var(--chip)}.hm-learn .hm-ic svg{stroke:var(--accent-ink)}
+.hm-foot button{border-radius:10px}
+body.at-home .project-bar .btn-new{display:none}
+@media (max-width:1000px){body.at-home .hm-me{order:2}body.at-home .hm-main{order:1}}
+@media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
+footer{color:var(--muted)}
+@media (max-width:600px){
+  header{gap:6px;padding:8px 12px}
+  header .btn,header .btn-ghost{min-height:40px;padding:0 10px}
+  #cmdBtn span,#cmdBtn kbd{display:none}
+}
+</style>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
 
 <header>
-  <!-- Appuscholar logo: graduation cap over open book in purple/gold -->
-  <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="Appuscholar logo" role="img">
-    <circle cx="32" cy="32" r="30" fill="white" opacity="0.14"/>
-    <circle cx="32" cy="32" r="29" stroke="#fbbf24" stroke-width="2" fill="rgba(255,255,255,0.06)"/>
-    <path d="M12 40c6-3.5 13-5 20-5s14 1.5 20 5v-9c-6-3.5-13-5-20-5s-14 1.5-20 5v9z" fill="#fbbf24"/>
-    <path d="M12 31c6-3.5 13-5 20-5s14 1.5 20 5l-20 9-20-9z" fill="#ffffff"/>
-    <rect x="30.8" y="18" width="2.4" height="12" rx="1.2" fill="#fbbf24"/>
-    <circle cx="32" cy="33" r="2.6" fill="#fbbf24"/>
-    <path d="M20 44c4 2.4 8 3.6 12 3.6s8-1.2 12-3.6" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
-  </svg>
+  <!-- Appuscholar logo (22 Nov 2026): an A hanging from an open book, the book as the headline -->
+  <svg class="logo" viewBox="0 0 100 100" aria-label="Appuscholar logo" role="img"><rect width="100" height="100" rx="24" fill="#2E5B8A"/><path d="M18 37 Q34 31 50 38 Q66 31 82 37 L82 40 Q66 34 50 41 Q34 34 18 40 Z" fill="#24496F"/><path d="M45 32 L29 82" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><path d="M55 32 L71 82" fill="none" stroke="#C9D8EA" stroke-width="9" stroke-linecap="round"/><path d="M14 21 Q32 14 49 21 L49 31 Q32 24 14 31 Z" fill="#FFFFFF"/><path d="M86 21 Q68 14 51 21 L51 31 Q68 24 86 31 Z" fill="#C9D8EA"/><path d="M14 31 Q32 24 49 31 L49 35 Q32 28 14 35 Z" fill="#9DB6D3"/><path d="M86 31 Q68 24 51 31 L51 35 Q68 28 86 35 Z" fill="#9DB6D3"/><path d="M37 62 H63" fill="none" stroke="#F0A33C" stroke-width="7" stroke-linecap="round"/></svg>
+
   <div class="brand">
-    <h1>Appu<span>scholar</span></h1>
+    <h1>Appuscholar</h1><span class="brand-hi" aria-hidden="true">अप्पूस्कॉलर</span>
     <span id="verBadge" title="Version of this upload" style="font-size:11px;font-weight:700;opacity:.85;border:1px solid currentColor;border-radius:10px;padding:1px 7px;margin-left:8px;white-space:nowrap"></span>
   </div>
   <div class="spacer"></div>
@@ -2536,7 +2643,7 @@ window.addEventListener('DOMContentLoaded',()=>{try{cfListenBtn()}catch(e){}});
 
 <div class="toast" id="toast" role="status" aria-live="polite" popover="manual"></div>
 <div id="offlineBar" role="status" style="display:none;position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:50;max-width:92vw;background:#3b0764;color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.3)">You are offline. Writing, citations, statistics and your shelf still work. AI, paper search and new downloads need a connection.</div>
-<footer>APPUSCHOLAR · WRITE BRIGHTER IN PURPLE · MADE WITH 💜<br><span style="font-size:11px;letter-spacing:0;text-transform:none;opacity:.8">© 2026 Dr. Shiv Raj Sharma. All rights reserved.</span></footer>
+<footer>APPUSCHOLAR · अप्पूस्कॉलर<br><span style="font-size:11px;letter-spacing:0;text-transform:none;opacity:.8">© 2026 Dr. Shiv Raj Sharma. All rights reserved.</span></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -10609,17 +10716,17 @@ const DESIGN_ITEMS=[
 ];
 function designOpen(key){const it=DESIGN_ITEMS.find(x=>x.key===key);if(it)it.open()}
 function designRenderDash(){
+  /* Version 121: one list, not two. The count and a thin bar sit here; each tool row below carries its own status. */
   const el=document.getElementById('designDash');if(!el)return;
   const done=DESIGN_ITEMS.filter(i=>designGet(i.key).done).length;
-  let html='<div class="desc" style="margin-bottom:6px"><b>'+done+' of '+DESIGN_ITEMS.length+'</b> ready</div>';
-  html+='<div style="display:flex;flex-direction:column;gap:2px">';
-  DESIGN_ITEMS.forEach(i=>{
-    const d=designGet(i.key).done;
-    html+='<button type="button" onclick="designOpen(\''+i.key+'\')" style="display:flex;align-items:center;gap:8px;background:none;border:none;padding:4px 2px;cursor:pointer;text-align:left;font-size:13.5px;color:var(--ink)">'
-      +'<span style="width:18px">'+(d?'✅':'⬜')+'</span><span>'+escHTML(i.label)+'</span></button>';
+  const hi=typeof getLang==='function'&&getLang()==='hi';
+  el.innerHTML='<div class="tl-progress"><span class="desc"><b>'+done+(hi?' / ':' of ')+DESIGN_ITEMS.length+'</b> '+(hi?'तैयार':'ready')+'</span>'
+    +'<div class="bar"><i style="width:'+Math.round(100*done/DESIGN_ITEMS.length)+'%"></i></div></div>';
+  const panel=el.closest('.panel');
+  if(panel)DESIGN_ITEMS.forEach(i=>{
+    const b=[...panel.querySelectorAll('button')].find(x=>(x.getAttribute('onclick')||'').indexOf("'"+i.key+"Dlg'")>=0);
+    if(b)b.setAttribute('data-st',designGet(i.key).done?'done':'todo');
   });
-  html+='</div>';
-  el.innerHTML=html;
 }
 
 function regRender(){
@@ -19638,18 +19745,35 @@ function apHomeRender(){
   const lk=LS.get('appu_lastlec');
   if(lk&&typeof AP_LIBMAP!=='undefined'&&AP_LIBMAP[lk]){const m=AP_LIBMAP[lk],pos=(apLectPos()[lk]||0)+1;
     cards+='<div class="hm-resume"><b>'+escHTML(ht('resume'))+'</b>'+escHTML(ht('lecture'))+': '+escHTML(lang==='hi'?(m.titleH||m.title):m.title)+', '+escHTML(ht('slide'))+' '+pos+'<br><button type="button" onclick="apHomeResume(\''+lk+'\')">'+escHTML(ht('cont'))+'</button></div>'}
-  if(!cards)cards='<div class="hm-resume"><b>'+escHTML(ht('startb'))+'</b>'+escHTML(ht('startt'))+'<br><button type="button" onclick="apGoStage(\'idea\')">'+escHTML(ht('go'))+'</button></div>';
+  /* Version 121: the "Start here" card moved into the hero at the top of the page. */
+  const hero=apHomeHero(active,lang);
   const tile=(s,i)=>'<button type="button" class="hm-tile'+(stNow===s?' cur':'')+'" onclick="apGoStage(\''+s+'\')"><span class="hm-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+AP_HI[s]+'</svg></span><span><span class="hm-n">'+escHTML(ht('step'))+' '+(i+1)+'</span><b>'+escHTML(ht('t_'+s))+'</b><small>'+escHTML(ht('d_'+s))+'</small></span></button>';
   const lt=(ic,tt,dd,fn)=>'<button type="button" class="hm-tile hm-learn" onclick="'+fn+'"><span class="hm-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+AP_HI[ic]+'</svg></span><span><b>'+escHTML(ht(tt))+'</b><small>'+escHTML(ht(dd))+'</small></span></button>';
   el.innerHTML='<div class="hm-me"><div class="hm-av" aria-hidden="true">'+escHTML(ini)+'</div><h2>'+escHTML(nm)+'</h2><div class="hm-sub">'+escHTML(pk)+'</div><div class="hm-pos">'+escHTML(me.pos||ht('yourpos'))+'</div>'
    +'<button type="button" class="hm-edit" onclick="apMeEdit()">'+escHTML(ht('edit'))+'</button>'
    +'<div class="hm-kv"><span>'+escHTML(ht('working'))+'</span><div>'+escHTML(active?active.name:ht('noproj'))+'</div><span>'+escHTML(ht('stage'))+'</span><div>'+escHTML(stNow?((STAGES.indexOf(stNow)+1)+' · '+stageLabel(stNow)):'-')+'</div>'
    +'<span>'+escHTML(ht('docs'))+'</span><div>'+docs+' &nbsp;·&nbsp; '+escHTML(ht('sources'))+' '+src+'</div><span>'+escHTML(ht('lang'))+'</span><div><a onclick="toggleLang()">'+(lang==='hi'?'हिंदी · English':'English · हिंदी')+'</a></div></div>'+cards+'</div>'
-   +'<div class="hm-main">'+(active?(function(){try{return hlHTML()}catch(e){return''}})():'')+apHomeTrain()+fdHomeHTML()+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
+   +'<div class="hm-main">'+hero+(active?(function(){try{return hlHTML()}catch(e){return''}})():'')+'<h3>'+escHTML(ht('h_steps'))+'</h3><p class="hm-hint">'+escHTML(ht('p_steps'))+'</p><div class="hm-grid">'+STAGES.map(tile).join('')+'</div>'
    +'<h3>'+escHTML(ht('h_learn'))+'</h3><p class="hm-hint">'+escHTML(ht('p_learn'))+'</p><div class="hm-grid">'+lt('lec','lectures','lectures_d','apHomeLectures()')+lt('paper','paper','paper_d',"apGoTool('analyse')")+lt('words','words','words_d',"apGoTool('words')")+'</div>'
+   +apHomeTrain()+fdHomeHTML()
    +'<div class="hm-foot"><button type="button" onclick="apGoTool(\'chat\')">'+escHTML(ht('ask'))+'</button>'+(apIsTrainee()?'':'<button type="button" id="hmTrecBtn" onclick="trOpen()">'+escHTML(ht('trec'))+'</button>')+'<button type="button" onclick="openProjectsDlg()">'+escHTML(ht('projects'))+'</button><button type="button" onclick="backupExport()">'+escHTML(ht('backup'))+'</button><button type="button" onclick="openSettings()">'+escHTML(ht('settings'))+'</button><button type="button" onclick="openHelp()">'+escHTML(ht('help'))+'</button></div></div>';
   try{apStageBarRender()}catch(e){}
 }
+/* Version 121 home hero: a greeting, the open project with its six-part progress bar, and one main button. */
+function apHomeHero(active,lang){
+  const hi=lang==='hi',L=(en,x)=>hi?x:en,hr=new Date().getHours();
+  const greet=hr<12?L('Good morning','सुप्रभात'):hr<17?L('Good afternoon','नमस्ते'):L('Good evening','शुभ संध्या');
+  if(!active)return'<section class="hm-hero"><p class="hm-greet">'+escHTML(greet)+'</p><h2>'+escHTML(L('Start your research','अपना शोध शुरू करें'))+'</h2>'
+    +'<div class="hm-hcard"><span class="hm-hk">'+escHTML(L('No project yet','अभी कोई प्रोजेक्ट नहीं'))+'</span>'
+    +'<p class="hm-hd">'+escHTML(L('A project keeps your idea, papers, plan, data and chapters together, on this device.','प्रोजेक्ट आपके विचार, पेपर, योजना, डेटा और अध्यायों को इसी डिवाइस पर एक साथ रखता है।'))+'</p>'
+    +'<button type="button" class="hm-go" onclick="openNewProjectDirect()">'+escHTML(L('Start a project','प्रोजेक्ट शुरू करें'))+'</button>'
+    +'<button type="button" class="hm-alt" onclick="apGoStage(\'idea\')">'+escHTML(L('Or begin with Step 1: Idea','या चरण 1 से शुरू करें: विचार'))+'</button></div></section>';
+  const k=Math.max(0,STAGES.indexOf(active.stage));
+  const bar=STAGES.map((s,i)=>'<i class="'+(i<k?'d':i===k?'n':'')+'"></i>').join('');
+  return'<section class="hm-hero"><p class="hm-greet">'+escHTML(greet)+'</p><h2>'+escHTML(L('Pick up where you left off','जहाँ छोड़ा था, वहीं से शुरू करें'))+'</h2>'
+    +'<div class="hm-hcard"><span class="hm-hk">'+escHTML(L('Your project','आपका प्रोजेक्ट'))+'</span><b class="hm-ht">'+escHTML(active.name)+'</b>'
+    +'<div class="hm-bar" aria-hidden="true">'+bar+'</div><span class="hm-hd">'+escHTML(L('Stage ','चरण ')+(k+1)+' / '+STAGES.length+' · '+stageLabel(active.stage))+'</span>'
+    +'<button type="button" class="hm-go" onclick="apGoStage(\''+active.stage+'\')">'+escHTML(L('Continue: ','जारी रखें: ')+stageLabel(active.stage))+'</button></div></section>'}
 /* Home card for the synopsis: make it once the design is under way, then open it and show the gaps left. */
 function apSynCard(){const o=studyGet(),g=synGaps(o),hi=getLang()==='hi',L=(en,x)=>hi?x:en;
   const di=(o.design&&Object.keys(o.design).length)||(o.idea&&o.idea.title);if(g<0&&!di)return'';
@@ -19825,8 +19949,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=120;
-const APP_BUILD='2026.11.21a';
+const APP_VERSION=121;
+const APP_BUILD='2026.11.22a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -24660,6 +24784,62 @@ function rlRelabel(){try{rlRender();rlHeaderLabel();devChip()}catch(e){}}
 (function(){const sb=window.apStageBarRender;if(typeof sb==='function'&&!sb._rl){const w=function(){const r=sb.apply(this,arguments);try{rlMark()}catch(e){}return r};w._rl=1;window.apStageBarRender=w;try{apStageBarRender=w}catch(e){}}
  const tl=window.toggleLang;if(typeof tl==='function'&&!tl._rl){const w=function(){const r=tl.apply(this,arguments);rlRelabel();return r};w._rl=1;window.toggleLang=w;try{toggleLang=w}catch(e){}}})();
 rlInit();
+
+/* ============ Calm look (Version 121, 22 Nov 2026) ============
+   Approved design: no emoji in the interface, and each stage's tools shown as one quiet list with a single
+   main action. Done as a pass over the existing markup, so every tool keeps its handlers, labels and tests.
+   Text the student writes (the editor and anything contenteditable) is never touched. */
+const CALM_EMOJI=/^(?:[\p{Extended_Pictographic}☀-➿⬀-⯿️‍⃣]|\s)+/u;
+const CALM_SCOPE=['header button','.stagebar button','.project-bar button','.project-bar summary','.tool-sidebar a',
+  '.tool-sidebar button','.tree-item','.tool-tab','.dock-tabs button','.tool-panel h3','.tool-panel h4','.tool-panel button',
+  '.tool-panel summary','.doc-pane button','.doc-pane summary','.doc-pane label','.doc-pane h2','.doc-pane h3',
+  '.subbar button','.ai-pane button','.ai-pane h3','#apHome button','#apHome h3','#apHome b','dialog h2','dialog h3','dialog .btn','dialog summary'].join(',');
+function calmStrip(el){
+  if(!el||el.closest('[contenteditable="true"],#editor'))return;
+  const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.data.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP});
+  const n=w.nextNode();if(!n)return;
+  const m=n.data.match(CALM_EMOJI);if(!m||!m[0].trim())return;
+  const rest=n.data.slice(m[0].length);
+  const others=(el.textContent||'').replace(n.data,'').trim();
+  if(!rest.trim()&&!others)return;           /* an icon-only control keeps its symbol */
+  if((rest+others).replace(/\s/g,'').length<3)return;   /* short marks such as list buttons stay as they are */
+  n.data=rest;
+}
+function calmPanels(){
+  document.querySelectorAll('.tool-panel .panel').forEach(p=>{
+    let mainDone=!!p.querySelector('.tl-main');
+    [...p.children].forEach((ch,i)=>{
+      if(ch.tagName==='H3'&&i>0)ch.classList.add('tl-sub');
+      if(!ch.classList||!ch.classList.contains('row'))return;
+      const kids=[...ch.children];
+      if(kids.length!==1)return;
+      const b=kids[0];
+      if(!b.classList.contains('btn'))return;
+      if(b.classList.contains('tl-row')||b.classList.contains('tl-main'))return;
+      if(!mainDone&&b.classList.contains('btn-gold')){b.classList.add('tl-main');mainDone=true;return}
+      b.classList.add('tl-row');ch.classList.add('tl-wrap');
+    });
+  });
+}
+function calmPass(root){
+  try{
+    const r=root&&root.querySelectorAll?root:document;
+    if(r.matches&&r.matches(CALM_SCOPE))calmStrip(r);
+    r.querySelectorAll(CALM_SCOPE).forEach(calmStrip);
+    calmPanels();
+  }catch(e){}
+}
+let calmTimer=0;
+function calmInit(){
+  calmPass(document);
+  const mo=new MutationObserver(ms=>{
+    if(ms.every(m=>m.target.closest&&m.target.closest('#editor,[contenteditable="true"]')))return;
+    clearTimeout(calmTimer);calmTimer=setTimeout(()=>calmPass(document),60);
+  });
+  mo.observe(document.body,{childList:true,subtree:true});
+  window.calmPass=calmPass;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',calmInit);else setTimeout(calmInit,0);
 
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
