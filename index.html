@@ -1321,6 +1321,24 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent-ink)!important}
 .fs-saved.on{height:18px;margin-top:4px;opacity:1}
 .fs-msg{font-weight:500;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.fs-saved{transition:none}}
+
+/* ===== Version 127: Statistics Lab ===== */
+#statsDlg .stats-intro{font-size:13px;color:var(--muted);background:transparent;border:0;padding:0;margin:4px 0 10px}
+#statsDlg .stats-intro>span:first-child{display:none}
+#studyStatsHint{font-size:13px;background:var(--soft2);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+#statsDlg .warn{background:transparent;border:0;color:var(--muted);font-size:12.5px;padding:0}
+#statsDlg .stats-left,#statsDlg .stats-right{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:none}
+#statsDlg .stats-step span{background:var(--accent-ink);color:#fff}
+#statsDlg #tgBtn{flex:none!important;background:transparent;border:0;color:var(--accent-ink);font:600 14px var(--font-ui);padding:6px 2px;min-height:34px}
+#statsDlg #tgBtn:hover{text-decoration:underline;background:transparent}
+#statsDlg .row:has(#tgBtn){justify-content:flex-start}
+.sl-q{margin:2px 0 8px;font:600 15px var(--font-ui);color:var(--ink)}
+.sl-aims{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.sl-aim{min-height:52px;padding:10px 12px;text-align:left;border:1.5px solid var(--chipline);background:var(--card);border-radius:12px;font:500 14px/1.3 var(--font-ui);color:var(--ink);cursor:pointer}
+.sl-aim:hover{border-color:var(--accent-ink)}
+.sl-aim.on{border-color:var(--accent-ink);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.sl-why{margin:0 0 12px;font-size:13px;line-height:1.5;color:var(--muted)}
+.sl-why a{color:var(--accent-ink);font-weight:600;white-space:nowrap}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:600px){
@@ -15587,6 +15605,7 @@ function statsParse(){
     data.cols.map(c=>'<span class="stats-chip '+(c.type==='numeric'?'num':'cat')+'"><b>'+escHTML(c.name)+'</b> · '+c.type+' · n='+c.n+'</span>').join('')+
     statsParseNote(data);
   document.getElementById('statsTestArea').style.display='block';
+  try{slAimsRender()}catch(e){}
   statsFieldsRender();
   try{studyStatsHint()}catch(e){}
   showToast('Data parsed ✓');
@@ -20254,8 +20273,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=126;
-const APP_BUILD='2026.11.22f';
+const APP_VERSION=127;
+const APP_BUILD='2026.11.22g';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -25245,6 +25264,29 @@ function calmTree(){const a=getActiveProject(),pk=a?STAGES.indexOf(a.stage):-1,h
     g.querySelectorAll('.calm-subs-top .calm-sub').forEach((s,k)=>{if(s.getAttribute('data-k')!==String(k+1))s.setAttribute('data-k',String(k+1))})})}
 function calmNumber(){document.querySelectorAll('.tool-sidebar .stage-group').forEach((g,gi)=>{let n=0;
   g.querySelectorAll('.stage-tools > .tool-tab, .stage-tools > .calm-subs-top > .calm-sub').forEach(x=>{const vis=getComputedStyle(x).display!=='none';if(vis){n++;const v=(gi+1)+'.'+n;if(x.getAttribute('data-n')!==v)x.setAttribute('data-n',v)}})})}
+/* Version 127: the Statistics Lab starts from the student's question. Six aims sit above the test list; picking
+   one narrows the list to the tests that answer it, chooses the usual first choice and says why in one line.
+   "All tests" brings the full list back. The test list, its fields and the run button are unchanged. */
+const SL_AIMS=[
+ {k:'desc',en:'Describe my data',hi:'डेटा का वर्णन',tests:['desc'],why:['Means, SDs, ranges and counts for each variable. Start here before any test.','हर चर के माध्य, SD, रेंज और गिनती। किसी भी टेस्ट से पहले यहीं से शुरू करें।']},
+ {k:'cmp',en:'Compare groups',hi:'समूहों की तुलना',tests:['ttestInd','welchAnova','anova1','tukey','anova2','mannwhitney','kruskal','ttest1'],why:['Different people in each group. Welch t-test for two groups, Welch ANOVA for three or more; the rank-based tests if scores are badly skewed.','हर समूह में अलग लोग। दो समूहों के लिए Welch t-test, तीन या अधिक के लिए Welch ANOVA; स्कोर बहुत तिरछे हों तो रैंक वाले टेस्ट।']},
+ {k:'rep',en:'Same people, measured again',hi:'वही लोग, दोबारा मापे गए',tests:['ttestPaired','wilcoxon','rmanova','friedman','mixed','mcnemar','cochran'],why:['Before and after, or several times. Paired t-test for two times, repeated-measures ANOVA for three or more; Wilcoxon or Friedman if scores are skewed.','पहले और बाद में, या कई बार। दो बार के लिए paired t-test, तीन या अधिक के लिए repeated-measures ANOVA; स्कोर तिरछे हों तो Wilcoxon या Friedman।']},
+ {k:'rel',en:'Are two things related?',hi:'क्या दो चीज़ें जुड़ी हैं?',tests:['pearson','spearman','chisq','gof'],why:['Two number variables: Pearson, or Spearman for ranks or skewed scores. Two category variables: chi-square.','दो संख्यात्मक चर: Pearson, या रैंक/तिरछे स्कोर के लिए Spearman। दो श्रेणी वाले चर: chi-square।']},
+ {k:'pred',en:'Predict or explain an outcome',hi:'परिणाम का पूर्वानुमान या व्याख्या',tests:['regression','mregress','logistic','moderate','mediate'],why:['One predictor: simple regression. Several: multiple regression. A yes/no outcome: logistic regression. Moderation and mediation for "when" and "how" questions.','एक भविष्यवक्ता: simple regression। कई: multiple regression। हाँ/ना परिणाम: logistic regression। "कब" और "कैसे" वाले प्रश्नों के लिए moderation और mediation।']},
+ {k:'rel2',en:'Check a scale',hi:'स्केल की जाँच',tests:['alpha'],why:['Internal consistency of a scale: Cronbach\'s alpha with McDonald\'s omega.','स्केल की आंतरिक संगति: Cronbach\'s alpha और McDonald\'s omega।']}];
+let slAim='';
+function slAimsRender(){const sel=document.getElementById('statsTest');if(!sel)return;const fld=sel.closest('.fld');if(!fld)return;
+  const hi=getLang()==='hi';let box=document.getElementById('slAims');
+  if(!box){box=document.createElement('div');box.id='slAims';fld.parentNode.insertBefore(box,fld)}
+  const cur=SL_AIMS.find(a=>a.k===slAim);
+  box.innerHTML='<p class="sl-q">'+(hi?'आप क्या जानना चाहते हैं?':'What do you want to find out?')+'</p><div class="sl-aims">'
+    +SL_AIMS.map(a=>'<button type="button" class="sl-aim'+(a.k===slAim?' on':'')+'" aria-pressed="'+(a.k===slAim)+'" onclick="slAimPick(\''+a.k+'\')">'+escHTML(hi?a.hi:a.en)+'</button>').join('')+'</div>'
+    +(cur?'<p class="sl-why">'+escHTML(cur.why[hi?1:0])+' <a href="#" onclick="slAimPick(\'\');return false">'+(hi?'सभी टेस्ट दिखाएँ':'Show all tests')+'</a></p>':'')}
+function slAimPick(k){slAim=k;const sel=document.getElementById('statsTest');if(!sel)return;const a=SL_AIMS.find(x=>x.k===k);
+  [...sel.options].forEach(o=>{o.hidden=!!a&&a.tests.indexOf(o.value)<0;o.disabled=o.hidden});
+  [...sel.querySelectorAll('optgroup')].forEach(g=>{g.hidden=!!a&&![...g.children].some(o=>!o.hidden)});
+  if(a&&a.tests.indexOf(sel.value)<0){sel.value=a.tests[0];try{statsFieldsRender()}catch(e){}}
+  slAimsRender()}
 /* Version 124: a real phone layout. Below 760 px the app shows one view at a time, chosen from a bottom bar:
    Home, Steps (the open stage and its tools), Write (the page alone) and AI help. Same elements, same handlers;
    the bar only switches which part of the page is shown. */
@@ -25284,6 +25326,7 @@ function calmPass(root){
     calmNumber();
     calmTree();
     calmPh();
+    if(document.getElementById('statsDlg')&&document.getElementById('statsDlg').open&&!document.getElementById('slAims'))slAimsRender();
   }catch(e){}
 }
 let calmTimer=0;
