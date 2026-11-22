@@ -50,6 +50,10 @@ with sync_playwright() as p:
     pg.evaluate("document.querySelectorAll('.stage-group[data-stage=design] .calm-sub')[1].click()"); pg.wait_for_timeout(300)
     ok(pg.evaluate("document.getElementById('regDlg').open"), 'a sub-stage in the left list opens its tool')
     pg.evaluate("document.getElementById('regDlg').close()")
+    # round 7: the empty right column shows the next step, and the outline moves there
+    ok(pg.evaluate("!!document.querySelector('.tool-panel.active .calm-next .calm-next-go')"), 'next-step card with an Open button in the right column')
+    pg.evaluate("LS.set('appu_bb_out','1');try{bbOutlineToggle();bbOutlineToggle()}catch(e){}"); pg.wait_for_timeout(300)
+    ok(pg.evaluate("!document.getElementById('bbOutline')||document.getElementById('bbOutline').closest('.tool-panel')!==null"), 'outline sits in the right column, not above the page')
     # editor text is never changed by the emoji pass
     pg.evaluate("document.getElementById('editor').innerHTML='<p>✅ my own text</p>'"); pg.wait_for_timeout(300)
     ok('✅ my own text' in pg.inner_text('#editor'), 'student text keeps its symbols')

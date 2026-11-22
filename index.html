@@ -1104,13 +1104,13 @@ body.at-home .project-bar .btn-new{display:none}
 .calm-subs-nested .calm-sub{counter-increment:none}
 .calm-subs-nested{margin:2px 0 6px 18px;padding-left:12px;border-left:1px dashed var(--ctl-line)}
 .calm-subs-nested .calm-sub::after{left:-19px;width:8px;height:8px;top:13px}
-.tool-sidebar .calm-sub{counter-increment:sub;display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:7px 10px;color:var(--ink);font:500 14px/1.35 var(--font-ui);cursor:pointer}
+.tool-sidebar .calm-sub{counter-increment:sub;display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:6px 8px;color:var(--ink);font:500 13.5px/1.3 var(--font-ui);cursor:pointer}
 .calm-subs-top .calm-sub::before{content:counter(stg) "." counter(sub);flex:none;font:600 12px var(--font-ui);color:var(--muted);min-width:24px}
 .tool-sidebar .calm-sub:hover{background:var(--soft)}
 .tool-sidebar .calm-sub-main{color:var(--accent-ink);font-weight:600}
 /* the panel no longer repeats what the left list shows */
 .tool-panel.calm-mirrored .panel>.row.tl-wrap,.tool-panel.calm-mirrored .panel>.row:has(>.tl-main){display:none}
-@media(min-width:1100px){body.calm-wide-page main{grid-template-columns:auto minmax(0,1fr) 330px!important}main .tool-sidebar{width:250px}
+@media(min-width:1100px){body.calm-wide-page main{grid-template-columns:auto minmax(0,1fr) 330px!important}main .tool-sidebar{width:222px}
   body.calm-wide-page .dock-tabs .dock-tab{font-size:13.5px;padding:10px 8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   body.calm-wide-page #dockTabAi{flex:none}
   body.calm-wide-page #tbBtn{display:none}
@@ -1155,6 +1155,7 @@ body.calm-onebar header .st-steps li{flex:1 1 0;min-width:0}
 body.calm-onebar header .st-steps li.cur{flex:0 0 auto}
 body.calm-onebar header .st-step.on .st-lbl{max-width:170px}
 body.calm-onebar header #projMenu summary{display:block!important;line-height:34px;max-width:190px}
+@media(max-width:1440px){body.calm-onebar header #cmdBtn span{display:none}body.calm-onebar header #projMenu summary{max-width:150px}body.calm-onebar .brand h1{font-size:17px}}
 body.calm-onebar header #provTabs{box-shadow:none!important}
 #docPane .card-head{flex-wrap:nowrap}
 #docPane .docbar{flex-wrap:nowrap;min-width:0}
@@ -1184,6 +1185,19 @@ body.calm-onebar #licenseBadge{display:none!important}
 body.calm-onebar.focus-write header{display:none}
 @media (max-height:760px){body.calm-onebar header .btn,body.calm-onebar header #projMenu summary{min-height:34px;height:34px;line-height:32px;padding-top:0;padding-bottom:0}body.calm-onebar header{padding-top:5px;padding-bottom:5px}body.calm-onebar .brand-hi,body.calm-onebar #verBadge{display:none}body.calm-onebar header .logo{width:32px;height:32px;flex-basis:32px}}
 @media(min-width:1100px){.fmtbar{flex-wrap:wrap}.fmtbar .fmt-more-btn{flex:none}}
+
+/* round 7: next step and outline in the right column */
+.tool-panel.calm-mirrored .panel>h3.tl-sub,.tool-panel.calm-mirrored .panel>h3.tl-sub+.desc{display:none}
+.calm-next{display:flex;flex-direction:column;gap:6px;margin:14px 0 4px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--soft2)}
+.calm-next-k{font-size:12.5px;font-weight:600;color:var(--muted)}
+.calm-next b{font-size:15px;line-height:1.35}
+.calm-next p{margin:0;font-size:13px;line-height:1.45;color:var(--muted)}
+.calm-next .calm-next-go{align-self:flex-start;min-height:38px;padding:0 18px;margin-top:4px}
+.bb-outline.calm-ol-side{margin-top:16px;max-height:none!important;overflow:visible!important;position:static!important;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card)}
+.tool-sidebar .stage-tools{margin-left:10px;padding-left:16px}
+.tool-sidebar .tool-tab::after,.tool-sidebar .calm-sub::after{left:-23px}
+.calm-subs-nested{margin-left:12px;padding-left:10px}
+.calm-subs-nested .calm-sub::after{left:-15px}
 @media (max-width:600px){#licenseBadge,#themeBtn{display:none!important}.hm-hero h2{font-size:23px}.hm-go{align-self:stretch}}
 footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:600px){
@@ -20106,8 +20120,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=121;
-const APP_BUILD='2026.11.22a';
+const APP_VERSION=122;
+const APP_BUILD='2026.11.22b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -24993,12 +25007,12 @@ function calmMirror(){
   const side=document.getElementById('toolSidebar'),p=document.querySelector('.tool-panel.active'),tab=document.querySelector('.tool-sidebar .tool-tab.active');
   const wide=window.innerWidth>=1100&&side&&getComputedStyle(side).display!=='none'&&!side.classList.contains('collapsed');
   const pn0=p&&p.querySelector('.panel');
-  const listOnly=!!pn0&&[...pn0.children].every(c=>c.tagName==='H3'||c.tagName==='INPUT'||c.id==='designDash'||(c.classList&&(c.classList.contains('desc')||c.classList.contains('tl-wrap')))||(c.classList&&c.classList.contains('row')&&c.querySelector(':scope > .tl-main')));
+  const listOnly=!!pn0&&[...pn0.children].every(c=>(c.classList&&c.classList.contains('calm-next'))||c.tagName==='H3'||c.tagName==='INPUT'||c.id==='designDash'||(c.classList&&(c.classList.contains('desc')||c.classList.contains('tl-wrap')))||(c.classList&&c.classList.contains('row')&&c.querySelector(':scope > .tl-main')));
   /* only a panel that is just a list of tools moves left; a panel with its own form stays whole */
   const rows=p&&wide&&listOnly?[...p.querySelectorAll('.panel > .row > .tl-main, .panel > .row.tl-wrap > .tl-row')]:[];
   const sig=(p?p.dataset.panel:'')+'|'+rows.map(b=>b.textContent.trim()+':'+(b.getAttribute('data-st')||'')).join('|')+'|'+wide;
   if(sig===calmMirrorSig)return;calmMirrorSig=sig;
-  document.querySelectorAll('.calm-subs').forEach(x=>x.remove());
+  document.querySelectorAll('.calm-subs,.calm-next').forEach(x=>x.remove());
   document.querySelectorAll('.tool-tab.calm-hidden-tab').forEach(x=>x.classList.remove('calm-hidden-tab'));
   document.querySelectorAll('.tool-panel.calm-mirrored').forEach(x=>x.classList.remove('calm-mirrored'));
   document.body.classList.remove('calm-wide-page');
@@ -25012,8 +25026,23 @@ function calmMirror(){
   tab.insertAdjacentElement('afterend',box);
   if(only)tab.classList.add('calm-hidden-tab');
   p.classList.add('calm-mirrored');
+  /* the right column, now short, shows the next unfinished step with an Open button */
+  const hi=getLang()==='hi',nx=rows.find(b=>b.getAttribute('data-st')&&b.getAttribute('data-st')!=='done')||rows[0];
+  if(nx&&pn0){const c=document.createElement('div');c.className='calm-next';
+    const why=(nx.getAttribute('title')||'').trim();
+    c.innerHTML='<span class="calm-next-k">'+(hi?'अगला कदम':'Do this next')+'</span><b>'+escHTML(nx.textContent.trim())+'</b>'+(why?'<p>'+escHTML(why)+'</p>':'');
+    const ob=document.createElement('button');ob.type='button';ob.className='btn btn-purple calm-next-go';ob.textContent=hi?'खोलें':'Open';ob.onclick=()=>nx.click();c.appendChild(ob);
+    const dd=pn0.querySelector('#designDash');(dd||pn0.querySelector('.desc')||pn0.firstChild).insertAdjacentElement('afterend',c)}
   document.body.classList.add('calm-wide-page');
 }
+/* The document outline uses the empty right column on wide screens instead of squeezing the page; it goes back above
+   the page everywhere else. Same element, same toggle. */
+function calmOutline(){const ol=document.getElementById('bbOutline');if(!ol)return;
+  let a=document.getElementById('calmOlAnchor');if(!a){a=document.createElement('span');a.id='calmOlAnchor';a.hidden=true;ol.parentNode.insertBefore(a,ol)}
+  const host=document.querySelector('.tool-main .tool-panel.active');
+  const side=document.body.classList.contains('calm-wide-page')&&host&&!document.body.classList.contains('focus-write');
+  if(side){if(ol.parentNode!==host)host.appendChild(ol);ol.classList.add('calm-ol-side')}
+  else{if(ol.parentNode!==a.parentNode)a.parentNode.insertBefore(ol,a.nextSibling);ol.classList.remove('calm-ol-side')}}
 window.addEventListener('resize',()=>{clearTimeout(calmTimer);calmTimer=setTimeout(()=>calmPass(document),120)});
 /* Version 121, round 6 (laptop revamp): one top bar instead of three. On wide screens the stage stepper and the
    project menu move into the header (same elements, same handlers) and the project bar row is hidden.
@@ -25070,6 +25099,7 @@ function calmPass(root){
     calmMirror();
     calmLayout();
     calmDocBar();
+    calmOutline();
     calmNumber();
   }catch(e){}
 }
