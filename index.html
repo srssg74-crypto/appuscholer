@@ -9537,7 +9537,13 @@ async function keyWizSave(){const hi=studyHi(),k=(document.getElementById('kwIn'
     LS.rm('appu_enc_'+p);LS.set('appu_key_'+p,k);LS.rm('appu_kw_out');LS.set('appu_provider',p);try{refreshProvUI()}catch(e){}
     out.style.color='#15803d';out.textContent=hi?'✓ AI चालू है ('+PROVIDERS[p].short+')।':'✓ AI is on ('+PROVIDERS[p].short+').';
     showToast(hi?'AI चालू ✓':'AI is on ✓');setTimeout(()=>{try{document.getElementById('keyWizDlg').close()}catch(e){}},1200)}
-  catch(e){window._aiOv=null;go.disabled=false;out.style.color='#b91c1c';const m=String((e&&e.message)||'')+' '+apiMsg(e);out.textContent='✗ '+(/ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(m)?(hi?'Key सही है, पर Google ने इसे अभी Gemini के लिए चालू नहीं किया। यह Google की तरफ़ की जानी-पहचानी दिक़्क़त है। AI Studio में एक नई key बनाकर देखें, या अभी के लिए Groq की मुफ़्त key लें।':'The key is right, but Google has not switched it on for Gemini yet. This is a known problem on Google\'s side. Make a fresh key in AI Studio, or use a free Groq key for now.'):/\b(400|401|403)\b|API key|PERMISSION|INVALID/i.test(m)?(hi?'Google ने यह key नहीं मानी। AI Studio से पूरी key फिर से copy करें।':'Google did not accept this key. Copy the whole key again from AI Studio.'):/fetch|network|Failed/i.test(m)?(hi?'Internet नहीं मिला। Connection देखकर फिर दबाएँ।':'No internet connection. Check it and press again.'):apiMsg(e))}}
+  catch(e){window._aiOv=null;go.disabled=false;const m0=String((e&&e.message)||'')+' '+apiMsg(e);
+    /* A busy answer (503, high demand) means the key got past Google's check. The test model is only overloaded, so the key is saved and the student is told to try again later. */
+    if(/\b503\b|high demand|UNAVAILABLE|overloaded/i.test(m0)&&!/\b(400|401|403)\b|API key|PERMISSION|INVALID/i.test(m0)){
+      LS.rm('appu_enc_'+p);LS.set('appu_key_'+p,k);LS.rm('appu_kw_out');LS.set('appu_provider',p);try{refreshProvUI()}catch(e2){}
+      out.style.color='#15803d';out.textContent=hi?'✓ Key सहेज ली गई ('+PROVIDERS[p].short+')। Google अभी व्यस्त है, इसलिए test नहीं हो सका। कुछ मिनट बाद AI बटन दबाकर देखें।':'✓ Key saved ('+PROVIDERS[p].short+'). Google is busy right now, so the test could not finish. Try an AI button again in a few minutes.';
+      showToast(hi?'Key सहेजी ✓':'Key saved ✓');setTimeout(()=>{try{document.getElementById('keyWizDlg').close()}catch(e2){}},2500);return}
+    out.style.color='#b91c1c';const m=m0;out.textContent='✗ '+(/ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(m)?(hi?'Key सही है, पर Google ने इसे अभी Gemini के लिए चालू नहीं किया। यह Google की तरफ़ की जानी-पहचानी दिक़्क़त है। AI Studio में एक नई key बनाकर देखें, या अभी के लिए Groq की मुफ़्त key लें।':'The key is right, but Google has not switched it on for Gemini yet. This is a known problem on Google\'s side. Make a fresh key in AI Studio, or use a free Groq key for now.'):/\b(400|401|403)\b|API key|PERMISSION|INVALID/i.test(m)?(hi?'Google ने यह key नहीं मानी। AI Studio से पूरी key फिर से copy करें।':'Google did not accept this key. Copy the whole key again from AI Studio.'):/fetch|network|Failed/i.test(m)?(hi?'Internet नहीं मिला। Connection देखकर फिर दबाएँ।':'No internet connection. Check it and press again.'):apiMsg(e))}}
 /* Any AI button pressed without a key opens the short wizard, unless a provider other than Gemini was chosen. */
 function keyNeeded(){const p=getProv();if(p==='gemini'||!p)keyWizOpen();else openSettings()}
 async function unlockKeyBlob(blob,pass){
@@ -20427,7 +20433,7 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=137;
+const APP_VERSION=138;
 const APP_BUILD='2026.11.23d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
