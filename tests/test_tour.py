@@ -14,7 +14,7 @@ with sync_playwright() as p:
     J=lambda js: pg.evaluate(js)
     pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)
     J("showTool('idea');document.getElementById('ideaTopic').value='My own real question';ideaSave()")
-    J("localStorage.removeItem('appu_demo');tourAfterWelcome();document.getElementById('welcomeDlg').showModal()")
+    J("localStorage.setItem('appu_key_gemini','AIza'+'x'.repeat(35));localStorage.removeItem('appu_demo');tourAfterWelcome();document.getElementById('welcomeDlg').showModal()")
     ok(J("!!document.getElementById('welcomeDemoBtn')"),'welcome has a demo button')
     J("document.getElementById('welcomeDlg').close()"); pg.wait_for_timeout(600)
     ok(J("document.getElementById('tourOv')&&document.getElementById('tourOv').style.display")=='block','demo starts by itself after the welcome closes')
