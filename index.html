@@ -3699,6 +3699,8 @@ const PROV_ORDER=['gemini','groq','deepseek','openrouter','openai','claude'];
    leave it blank and only offline expiry-based access control applies. */
 const LICENSE_PUBLIC_KEY_JWK={"key_ops":["verify"],"ext":true,"kty":"EC","x":"dqG1F0P1r8byG7peCXrbuAR5SPJqq-W8vFyVL-P7x5s","y":"GxXzmCZZ9bO5fBtJ8KARYyOWIy4YS0gdRY73saW0nEQ","crv":"P-256"};
 const REVOKE_LIST_URL='';
+/* Student testing: the kit's link (?kit=1) lets testers in without a code until this date. After it, the normal gate returns. */
+const KIT_PASS_END='2026-12-31';
 
 /* ============ Support contact — a dedicated address, never the owner's personal inbox ============
    Set this to a free email made just for Appuscholar support (not Dr. Sharma's own) — the Help panel's
@@ -20324,8 +20326,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=130;
-const APP_BUILD='2026.11.22j';
+const APP_VERSION=131;
+const APP_BUILD='2026.11.23a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -24411,7 +24413,13 @@ function acctClose(){const d=document.getElementById('acctDlg');if(d&&d.open)d.c
 let acctGateResolve=null;
 window.appuAccountReady=async function(){const st=await acctSession(8000);if(!st||st.state!=='ready'){showToast('Your account is not active yet.');return}
   acctClose();const l=document.getElementById('loginDlg');if(l&&l.open)l.close();acctShowStatus(st.profile);if(acctGateResolve){const r=acctGateResolve;acctGateResolve=null;r(true)}};
+function kitPassOn(){try{if(new Date()>new Date(KIT_PASS_END+'T23:59:59')){LS.rm('appu_kitpass');return false}
+  if(/[?&]kit=1\b/.test(location.search)){LS.set('appu_kitpass','1');try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}}
+  return LS.get('appu_kitpass')==='1'}catch(e){return false}}
+function kitPassShow(){const el=document.getElementById('licenseBadge');if(!el)return;const hi=getLang()==='hi';
+  el.style.display='inline-block';el.textContent=hi?'परीक्षण संस्करण':'Test version';el.title=hi?'छात्र परीक्षण के लिए खुला, '+KIT_PASS_END+' तक':'Open for student testing until '+KIT_PASS_END}
 async function licenseGate(){
+  if(!licenseGet()&&kitPassOn()){kitPassShow();return true}
   const stored=licenseGet();
   if(!stored){const st=await acctSession(6000);if(st&&st.state==='ready'){acctShowStatus(st.profile);return true}}
   if(stored){
