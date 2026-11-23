@@ -18,8 +18,6 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: What unpkg really serves (diagnostic)
-        run: curl -sIL https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js | grep -i "^HTTP\|^location\|content-type\|content-length" || true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

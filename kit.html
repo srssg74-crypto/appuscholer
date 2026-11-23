@@ -290,7 +290,7 @@ function resultsRun(){const all=parseAll(document.getElementById('rIn').value),o
    +'<button type="button" class="ghost" onclick="resultsCsv()">'+T('Download as CSV','CSV के रूप में download करें')+'</button>';
   window._kitAll=all}
 /* A cell that begins with = + - @ or a tab/return is read as a formula by Excel and Sheets, so it gets a leading apostrophe. Plain numbers stay as they are. */
-function csvCell(v){let x=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(x)&&!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(x))x="'"+x;return'"'+x.replace(/"/g,'""')+'"'}
+function csvCell(v){let x=String(v==null?'':v);const t=x.replace(/^[\s\u200b-\u200d\u2060\ufeff]+/,'');if((/^[=+\-@\uff1d\uff0b\uff0d\uff20|]/.test(t)||/^[\t\r\n]/.test(x))&&!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(x))x="'"+x;return'"'+x.replace(/"/g,'""')+'"'}
 function resultsCsv(){const all=window._kitAll||[],q=csvCell;
   const head=['code','round','sus_language','subject','level','device','college','sus_score'].concat(TASKS.flatMap((_,i)=>['task'+(i+1)+'_result','task'+(i+1)+'_seconds','task'+(i+1)+'_note'])).concat(SUS.map((_,k)=>'sus'+(k+1))).concat(['hard','use','change','most','lost']);
   const rows=all.map(o=>[o.c,o.r,o.l,o.i.s,o.i.v,o.i.d,o.i.g,susScore(o.u)].concat(o.t.flat()).concat(o.u).concat(['hard','use','change','most','lost'].map(k=>(o.o||{})[k]||'')));

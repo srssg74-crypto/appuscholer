@@ -38,7 +38,7 @@ with sync_playwright() as p:
             ok('Hello Appuscholar' in txt,'a real PDF opens and its text is read: '+txt)
             pl=pg.evaluate("async()=>{try{const P=await plibLoad();return !!(P&&P.PDFDocument)}catch(e){return String(e)}}")
             ok(pl is True,'pdf-lib loads on demand with its hash ('+str(pl)+')')
-            for u in ['https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js','https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js']:
+            for u in ['https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js','https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js']:
                 r=pg.evaluate("""u=>new Promise(res=>{const s=document.createElement('script');s.integrity=APPU_SRI[u];s.crossOrigin='anonymous';s.src=u;s.onload=()=>res(true);s.onerror=()=>res(false);document.head.appendChild(s)})""",u)
                 ok(r,'spare copy loads with its hash: '+u)
             v=pg.evaluate('window.__v'); ok(not v,'still nothing blocked after the PDF and the spare copies '+str(v[:4]))

