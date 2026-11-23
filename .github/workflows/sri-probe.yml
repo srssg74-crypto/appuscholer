@@ -9,19 +9,14 @@ jobs:
       - name: Integrity hashes of the exact CDN files the app loads
         run: |
           for u in \
-            https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js \
-            https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js \
-            https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js \
-            https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js \
-            https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js \
-            https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js \
-            https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js \
-            https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js \
-            https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js ; do
+            https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js \
+            https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js \
+            https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js ; do
             for i in 1 2; do
-              h=$(curl -sL "$u" | openssl dgst -sha384 -binary | openssl base64 -A)
-              echo "SRI $i $u sha384-$h"
+              code=$(curl -sL -o f.js -w "%{http_code}" "$u"); h=$(openssl dgst -sha384 -binary f.js | openssl base64 -A)
+              echo "SRI $i $code $(wc -c < f.js) $u sha384-$h"; head -c 120 f.js; echo
             done
           done
+          npm pack -s chart.js@4.4.4 && tar xzf chart.js-4.4.4.tgz && ls package/dist | tr '\n' ' ' && echo && echo "NPM sha384-$(openssl dgst -sha384 -binary package/dist/chart.umd.js | openssl base64 -A)"
           for u in https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js; do
             echo "HDR $u"; curl -sI "$u" | grep -i "access-control-allow-origin\|content-type" ; done
