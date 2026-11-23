@@ -39,10 +39,23 @@ def route_cdn(route):
     # every other outside host: fail like an offline network
     return route.abort()
 
+# The pages pin each CDN library with an integrity hash (Version 140). The stubs above cannot match those
+# hashes, so for tests only the integrity attributes are taken out of the served page. The production files
+# are not changed; test_security_v140 checks the hashes in the real files.
+import re as _re
+def _strip_sri(route):
+    resp = route.fetch()
+    body = _re.sub(r'\s(?:integrity="sha384-[^"]*"|crossorigin="anonymous")', '', resp.text())
+    return route.fulfill(response=resp, body=body)
+
+def prepare(ctx):
+    ctx.route(lambda url: not url.startswith('http://localhost'), route_cdn)
+    ctx.route(lambda url: url.startswith('http://localhost') and url.split('?')[0].split('#')[0].endswith('.html'), _strip_sri)
+
 def new_page(p, errors, viewport=None):
     b = p.chromium.launch()
     ctx = b.new_context(viewport=viewport or {'width': 1366, 'height': 900}, service_workers='block')
-    ctx.route(lambda url: not url.startswith('http://localhost'), route_cdn)
+    prepare(ctx)
     ctx.add_init_script(GATE_BYPASS)
     pg = ctx.new_page()
     pg.on('pageerror', lambda e: errors.append(('pageerror', str(e)[:400])))

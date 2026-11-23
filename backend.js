@@ -4,7 +4,8 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/11.10
 import {
   getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword,
   signOut as firebaseSignOut, onAuthStateChanged, reload, getIdToken,
-  EmailAuthProvider, reauthenticateWithCredential, deleteUser, sendPasswordResetEmail
+  EmailAuthProvider, reauthenticateWithCredential, deleteUser, sendPasswordResetEmail,
+  setPersistence, browserSessionPersistence
 } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, getDocs, collection, query, where, orderBy, limit,
@@ -44,9 +45,13 @@ function generateCode() { const bytes = new Uint8Array(10); crypto.getRandomValu
 async function adminUser() { requireInit(); const u=auth.currentUser; if(!u) throw fail('NOT_SIGNED_IN'); const a=await getDoc(doc(db,'admins',u.uid)); if(!a.exists()) throw fail('ADMIN_ONLY'); return u; }
 
 export const appuBackend = {
-  init(firebaseConfig) {
+  init(firebaseConfig, opts) {
     if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) throw fail('BAD_CONFIG');
-    config = firebaseConfig; app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig); auth=getAuth(app); db=getFirestore(app); return Promise.resolve();
+    config = firebaseConfig; app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig); auth=getAuth(app); db=getFirestore(app);
+    // The admin page asks for a sign-in that lives only in its own tab and ends when the tab closes,
+    // so an admin session is never left sitting in the browser storage the student app shares.
+    if (opts && opts.sessionOnly) return setPersistence(auth, browserSessionPersistence).then(()=>undefined);
+    return Promise.resolve();
   },
   signUp({email,password,displayName,institution='',course='',inviteCode,consentVersion}) {
     return (async()=>{ try { requireInit(); if(!email||!password||password.length<10) throw fail('INVALID_INPUT'); if(!String(displayName||'').trim()||String(displayName).trim().length>80||String(institution).length>120||String(course).length>80) throw fail('INVALID_INPUT'); if(!validCode(inviteCode)) throw fail('INVALID_CODE'); Object.assign(pendingSignup,{email,displayName:String(displayName).trim(),institution,course,inviteCode:normalizeCode(inviteCode),consentVersion,ageConfirmed18:true}); const cred=await createUserWithEmailAndPassword(auth,email,password); /* No name in Firebase Auth: Auth data is processed in the US; the name lives only in Firestore (Mumbai). */ await sendEmailVerification(cred.user); return {uid:cred.user.uid,verificationSent:true}; } catch(e){throw wrapError(e);} })();

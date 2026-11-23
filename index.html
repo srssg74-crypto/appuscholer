@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Version 140 (security): this rule tells the browser which outside addresses this page may load code from and
+     send data to. If someone ever slipped code into the page, it still could not post a student's work to a server
+     of its own. 'unsafe-inline' stays because the page uses inline handlers; 'unsafe-eval' stays until the libraries
+     are self-hosted and tested for real, because some of them probe for it. A new outside service must be added here. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://www.gstatic.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' data: blob: https://api.openalex.org https://api.crossref.org https://eutils.ncbi.nlm.nih.gov https://doi.org https://openlibrary.org https://www.googleapis.com https://api.dictionaryapi.dev https://en.wiktionary.org https://generativelanguage.googleapis.com https://api.openai.com https://api.groq.com https://api.anthropic.com https://openrouter.ai https://api.deepseek.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; frame-src 'self' blob: data: https://appuscholar.firebaseapp.com; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <!-- Appuscholar. Copyright (c) 2026 Dr. Shiv Raj Sharma. All rights reserved. See the LICENSE file. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Appuscholar</title>
@@ -3011,10 +3016,10 @@ footer,footer span{color:var(--muted);opacity:1!important}
 <div id="offlineBar" role="status" style="display:none;position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:50;max-width:92vw;background:#3b0764;color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.3)">You are offline. Writing, citations, statistics and your shelf still work. AI, paper search and new downloads need a connection.</div>
 <footer>APPUSCHOLAR · अप्पूस्कॉलर<br><span style="font-size:11px;letter-spacing:0;text-transform:none;opacity:.8">© 2026 Dr. Shiv Raj Sharma. All rights reserved.</span></footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" integrity="sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" integrity="sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ" crossorigin="anonymous"></script>
 <script>
 /* Chart.js and PptxGenJS come from a CDN. Some networks block one CDN or another (jsDelivr has been
    blocked by Indian mobile networks before), so each library has spare copies on other hosts.
@@ -3023,6 +3028,18 @@ const APPU_LIB_SRC={
   Chart:['https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js','https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'],
   PptxGenJS:['https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js','https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js']
 };
+/* Version 140 (security): each copy is pinned to the exact file that was checked. If a CDN ever served
+   something else, the browser refuses to run it and the next copy is tried. Hashes were taken twice from a
+   clean GitHub runner on 23 Nov 2026 and agree with the npm package where one was available. */
+const APPU_SRI={
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js':'sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt',
+  'https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js':'sha384-tWyrH06ER1Zxkfw4Kk+ikZ0Y5niWvrSKGe07jvXfJdd7Xc/nbjN//CJlxsBDqbGA',
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js':'sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD',
+  'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js':'sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ',
+  'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js':'sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js':'sha384-SnzOobpRMLXZ52iJvZm/C0fYw0OQemTXzTjIsdsfMcrCtCEe9qgzxTd3RSklO5x2',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js':'sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI'
+};
 const _appuLibP={};
 function appuLib(name){
   if(typeof window[name]!=='undefined')return Promise.resolve(true);
@@ -3030,7 +3047,7 @@ function appuLib(name){
   const list=(APPU_LIB_SRC[name]||[]).slice(1);
   return _appuLibP[name]=(async()=>{
     for(const u of list){
-      const ok=await new Promise(res=>{const sc=document.createElement('script');sc.src=u;sc.async=true;sc.onload=()=>res(true);sc.onerror=()=>{sc.remove();res(false)};document.head.appendChild(sc)});
+      const ok=await new Promise(res=>{const sc=document.createElement('script');if(!APPU_SRI[u])return res(false);sc.integrity=APPU_SRI[u];sc.crossOrigin='anonymous';sc.src=u;sc.async=true;sc.onload=()=>res(true);sc.onerror=()=>{sc.remove();res(false)};document.head.appendChild(sc)});
       if(ok&&typeof window[name]!=='undefined')return true;
     }
     _appuLibP[name]=null;return typeof window[name]!=='undefined';
@@ -4297,7 +4314,7 @@ function logDef(key){for(const id in SUB_LOGS)for(const d of SUB_LOGS[id])if(d.k
 function logFromLibrary(key){const o=studyGet(),rows=logRows(o,key).slice(),have=new Set(rows.map(r=>r.cid).filter(Boolean));let n=0;
   citGetLib().forEach(d=>{if(d.cid&&have.has(d.cid))return;if(key==='effects'&&!(d.scr&&d.scr.st==='included'))return;rows.push({cid:d.cid,paper:(citLastName(d.author)||'?')+(String(d.author||'').indexOf(',')>=0&&/;|&| and /.test(d.author)?' et al.':'')+' ('+(d.year||'n.d.')+'). '+String(d.title||'').slice(0,90)});n++});
   logSaveRows(key,rows);logRefresh();showToast(studyHi()?n+' papers library से जोड़े':n+' papers added from the library')}
-function logCsv(key){const d=logDef(key),rows=logRows(studyGet(),key),q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+function logCsv(key){const d=logDef(key),rows=logRows(studyGet(),key),q=v=>'"'+csvNoFormula(v).replace(/"/g,'""')+'"';
   const csv=[d.cols.map(c=>q(c[1])).join(',')].concat(rows.map(r=>d.cols.map(c=>q(r[c[0]])).join(','))).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='appuscholar-'+key+'-log.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 function logTableHTML(d,o){if(d.only&&((wGet(o).B1||{}).type)!==d.only)return'';const hi=studyHi(),rows=logRows(o,d.key),L=a=>hi?a[1]:a[0];
@@ -5062,14 +5079,14 @@ function lsWords(t){return(String(t||'').match(/[\p{L}\p{N}]+/gu)||[]).length}
 /* E2–E7 read their chapter from the book by section id when the study has a book, so a renamed heading is still found. */
 const LS_SECID={E2:'intro',E3:'lit',E4:'method',E5:'results',E6:'disc',E7:'front.abstract'};
 function lsSecFor(id){const sec=LS_SECID[id],book=(typeof bbBookId==='function')?bbBookId():'';
-  if(sec&&book){let div;try{if(bbIsBook())div=editor;else{div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}}catch(e){div=null}
+  if(sec&&book){let div;try{if(bbIsBook())div=editor;else{div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=safeStoredHTML((d&&d.body)||'')}}catch(e){div=null}
     const h=div&&div.querySelector('[data-sec="'+sec+'"]');
     if(h){const r=bbRange(h),txt=r.map(x=>x.textContent||'').join(' '),html=r.map(x=>x.outerHTML).join('');let cites=r.reduce((a,x)=>a+(x.querySelectorAll?x.querySelectorAll('span.cit').length:0),0);cites+=(txt.match(/\([A-Z][^()]{1,60},\s(19|20)\d{2}[a-z]?\)/g)||[]).length;
       const d=docsGet().find(x=>x.id===book);return{doc:d?d.title:'',text:txt.trim(),words:lsWords(txt),cites:cites,html:html}}}
   return lsSection(LS_SEC[id])}
 function lsSection(re){let best=null;
   let cur='',curHTML='';try{cur=docCurrentId();curHTML=getEditorHTML()}catch(e){}
-  (typeof docsStudy==='function'?docsStudy():[]).forEach(d=>{if(best)return;const div=document.createElement('div');div.innerHTML=(d.id===cur?curHTML:d.body)||'';
+  (typeof docsStudy==='function'?docsStudy():[]).forEach(d=>{if(best)return;const div=document.createElement('div');div.innerHTML=safeStoredHTML((d.id===cur?curHTML:d.body)||'');
     const hs=[...div.querySelectorAll('h1,h2,h3,h4')];const h=hs.find(x=>re.test(x.textContent||''));if(!h)return;
     const lv=+h.tagName[1];let n=h.nextElementSibling,txt='',html='',cites=0;
     while(n&&!(/^H[1-4]$/.test(n.tagName)&&+n.tagName[1]<=lv)){txt+=' '+(n.textContent||'');html+=n.outerHTML;cites+=n.querySelectorAll?n.querySelectorAll('span.cit').length:0;n=n.nextElementSibling}
@@ -5653,7 +5670,11 @@ async function qnWord(){const hi=studyHi();try{const holder=document.createEleme
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='questionnaire.docx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   showToast(hi?'Questionnaire Word file में download हुई ✓':'Questionnaire downloaded as a Word file ✓')}catch(e){showToast((hi?'Word file नहीं बन पाई: ':'Could not make the Word file: ')+(e&&e.message||e))}}
 function qnDownload(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
-function qnCsvCell(v){v=String(v==null?'':v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+/* Version 140 (security): a survey answer or a paper title that begins with = + - @ or a tab/return would be run as a
+   formula when the CSV is opened in Excel or Sheets. Such a cell gets a leading apostrophe. Plain numbers such as -3 or
+   +2.5 are left exactly as they are, so the data still analyses. */
+function csvNoFormula(v){v=String(v==null?'':v);return(/^[=+\-@\t\r]/.test(v)&&!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(v))?"'"+v:v}
+function qnCsvCell(v){v=csvNoFormula(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function qnCsv(){const items=qnItems(),cols=['participant_id'].concat(items.map(i=>i.col));
   qnDownload('data-template.csv','﻿'+cols.map(qnCsvCell).join(',')+'\n'+['P001'].concat(items.map(()=>'')).map(qnCsvCell).join(',')+'\n');
   showToast(studyHi()?'Template download हुआ। हर participant की एक पंक्ति भरिए, फिर Statistics Lab में डालिए।':'Template downloaded. Fill one row per participant, then load it into the Statistics Lab.')}
@@ -6720,8 +6741,30 @@ function repairEscapedImages(s){
 function bodyToHTML(body){
   if(!body)return'';
   body=repairEscapedImages(body);
-  if(looksLikeStoredHTML(body))return body;
+  if(looksLikeStoredHTML(body))return safeStoredHTML(body);
   return escHTML(body).replace(/\n/g,'<br>');
+}
+/* Version 140 (security): a document body can arrive from a backup file, a vault or a shared link, so it is
+   never trusted to be inert. It is parsed in a page that runs nothing, anything that could run code is taken
+   out, and the original string comes back untouched when there was nothing to take out. */
+function safeStoredHTML(html){
+  html=String(html||'');
+  if(typeof DOMParser==='undefined')return escHTML(html);
+  let doc;try{doc=new DOMParser().parseFromString(html,'text/html')}catch(e){return escHTML(html)}
+  const body=doc.body;if(!body)return escHTML(html);
+  let cut=0;
+  body.querySelectorAll('script,iframe,frame,frameset,object,embed,applet,link,meta,base,form,set,animate,animateTransform,animateMotion,foreignObject,portal').forEach(n=>{n.remove();cut++});
+  body.querySelectorAll('*').forEach(el=>{
+    for(const a of Array.from(el.attributes)){
+      const nm=a.name.toLowerCase(),v=String(a.value||'').replace(/[\x00-\x20\x7f]+/g,'');
+      if(nm.startsWith('on')||nm==='formaction'||nm==='srcdoc'){el.removeAttribute(a.name);cut++;continue}
+      if(/^(href|src|xlink:href|action|background|poster|data|lowsrc|dynsrc|cite|ping)$/.test(nm)&&/^(javascript|vbscript|data:text\/html|data:image\/svg|data:application)/i.test(v)){el.removeAttribute(a.name);cut++}
+    }
+  });
+  return cut?body.innerHTML:html;
+}
+function htmlPlainText(html){
+  try{const d=new DOMParser().parseFromString(String(html||''),'text/html');return(d.body&&d.body.textContent)||''}catch(e){return''}
 }
 function getEditorHTML(){return editor.innerHTML.replace(/ data-tsel="1"/g,'').replace(/ data-selecting="1"/g,'')}
 function setEditorHTML(body){editor.innerHTML=bodyToHTML(body)}
@@ -6839,7 +6882,7 @@ function pdfReflowHTML(pages){
 async function pdfExtractImages(file,maxN){
   const out=[],seen={};
   try{
-    const buf=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:buf}).promise,OPS=pdfjsLib.OPS,n=Math.min(pdf.numPages,40);
+    const buf=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({isEvalSupported:false,data:buf}).promise,OPS=pdfjsLib.OPS,n=Math.min(pdf.numPages,40);
     for(let k=1;k<=n&&out.length<maxN;k++){
       const pg=await pdf.getPage(k),ops=await pg.getOperatorList(),names={};
       for(let i=0;i<ops.fnArray.length&&out.length<maxN;i++){
@@ -7823,9 +7866,15 @@ function backupDocsInfo(data){
   let n=0,w=0;
   try{
     const docs=JSON.parse((data&&data.appu_docs)||'[]');
-    if(Array.isArray(docs)){n=docs.length;docs.forEach(d=>{const div=document.createElement('div');div.innerHTML=bodyToHTML(d.body||'');const tx=(div.textContent||'').trim();if(tx)w+=tx.split(/\s+/).length})}
+    if(Array.isArray(docs)){n=docs.length;docs.forEach(d=>{const tx=htmlPlainText(bodyToHTML(d.body||'')).trim();if(tx)w+=tx.split(/\s+/).length})}
   }catch(e){}
   return{n,w};
+}
+/* Version 140: a backup file can come from anyone, so every document body in it goes through the same
+   cleaner before it is written. A file whose document list cannot be read is not restored at all. */
+function backupCleanDocs(json){
+  const docs=JSON.parse(json);if(!Array.isArray(docs))throw new Error('docs');
+  return JSON.stringify(docs.map(d=>(d&&typeof d.body==='string'&&looksLikeStoredHTML(d.body))?Object.assign({},d,{body:safeStoredHTML(d.body)}):d));
 }
 function backupStamp(ms){return new Date(ms).toISOString().slice(0,10)}
 async function backupExport(){
@@ -7941,6 +7990,7 @@ async function backupRestoreFile(input){
   const msg=t('restore_confirm').replace('{n}',info.n).replace('{d}',(b.exported||'').slice(0,10)||'?');
   if(!confirm(msg)){input.value='';return}
   window._bkRestoring=true;try{clearTimeout(saveT)}catch(e){}
+  try{if(clean.appu_docs)clean.appu_docs=backupCleanDocs(clean.appu_docs)}catch(e){delete clean.appu_docs}
   try{if(clean.appu_docs)clean.appu_docs=await imgExternalizeJson(clean.appu_docs)}catch(e){}
   /* Every key is written and read back. If the browser refuses any of them (usually because the
      backup is larger than the free storage), the old data goes back exactly as it was, nothing is
@@ -11585,7 +11635,7 @@ function qualFindPassages(codeId){
   docSaveBody(getEditorHTML()); // make sure the open document's latest text is in docsGet() before scanning
   const docs=docsStudy(),out=[];
   docs.forEach(d=>{
-    const div=document.createElement('div');div.innerHTML=d.body||'';
+    const div=document.createElement('div');div.innerHTML=safeStoredHTML(d.body||'');
     const groups=new Map();
     const blk=el=>el.closest('p,li,h1,h2,h3,h4,h5,h6,td,blockquote,div')||div;
     div.querySelectorAll('.qual-tag[data-qcode="'+codeId+'"]').forEach((span,i)=>{
@@ -11665,9 +11715,12 @@ function scafInsert(i){const names=Object.keys(SCAFFOLDS),s=SCAFFOLDS[names[i]];
 (function(){
   if(typeof pdfjsLib==='undefined')return;
   const w='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  fetch(w).then(r=>r.ok?r.text()/*gate:net PDF worker script from the CDN*/:Promise.reject())
+  /* Version 140: the worker is fetched with its integrity hash, so a changed file is refused. There is no
+     unchecked fallback any more: if the checked copy cannot be had, PDFs fail with a clear message instead. */
+  const get=()=>fetch(w,{integrity:APPU_SRI[w],mode:'cors'}).then(r=>r.ok?r.text()/*gate:net PDF worker script from the CDN*/:Promise.reject());
+  get().catch(()=>new Promise(r=>setTimeout(r,2500)).then(get))
    .then(t=>{pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:'text/javascript'}))})
-   .catch(()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc=w}catch(e){}});
+   .catch(()=>{});
 })();
 
 /* ============ Writing style training ============ */
@@ -12349,7 +12402,7 @@ function readFileText(f){
       r.onload=async()=>{try{
         if(typeof pdfjsLib==='undefined')return rej(new Error('PDF reader needs internet once to load'));
         const fp=await AppuGate.fingerprint(r.result);
-        const pdf=await pdfjsLib.getDocument({data:r.result}).promise;
+        const pdf=await pdfjsLib.getDocument({isEvalSupported:false,data:r.result}).promise;
         let out='';const n=Math.min(pdf.numPages,80);
         const hdn=[];for(let p=1;p<=n;p++){const page=await pdf.getPage(p);const tc=await page.getTextContent();let its=tc.items;try{const hd=await AppuGate.pdfPage(page,its,fp,p,f.name);if(hd.hid.size){its.forEach((it,i)=>{if(hd.hid.has(i)&&String(it.str||'').trim())hdn.push({page:p,text:it.str,why:hd.why[i]})});its=its.filter((_,i)=>!hd.hid.has(i))}}catch(e){}out+=its.map(it=>it.str).join(' ')+'\n'}
         if(hdn.length)ijShowHidden(hdn,f.name);
@@ -15837,7 +15890,7 @@ function pdScan(data){
   });
   return{found:out,freeText};
 }
-function pdCsvCell(v){v=String(v==null?'':v);return /[",\r\n\t]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function pdCsvCell(v){v=csvNoFormula(v);return /[",\r\n\t]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function pdCsv(headers,rows){return[headers].concat(rows).map(r=>r.map(pdCsvCell).join(',')).join('\n')}
 /* choices: {colIndex:'keep'|'remove'|'code'}. Pure function, no page access. */
 function pdTransform(data,choices){
@@ -19853,7 +19906,7 @@ function bbPut(html,sec,key,label){const book=bbBookId();if(!book||!sec)return f
   bbPlaceInfo();if(!d.open)d.showModal();return true}
 function bbSlotIn(sec,key){if(!key)return null;const h=editor.querySelector('[data-sec="'+sec+'"]');if(!h)return null;return bbRange(h).find(x=>x.getAttribute&&x.getAttribute('data-slot')===key)||null}
 function bbPlaceInfo(){const sel=document.getElementById('bbPlaceSel'),box=document.getElementById('bbPlaceInfo');if(!sel||!box)return;const hi=studyHi(),L=(en,x)=>hi?x:en,n=bpNode(sel.value),m=BP_MODES[n.m]||BP_MODES.front,p=window._bbPend||{};
-  let has=false;if(bbIsBook())has=!!bbSlotIn(sel.value,p.key);else{const d=docsGet().find(x=>x.id===bbBookId());if(d&&p.key){const div=document.createElement('div');div.innerHTML=d.body||'';const h=div.querySelector('[data-sec="'+sel.value+'"]');has=!!(h&&bbRange(h).some(x=>x.getAttribute&&x.getAttribute('data-slot')===p.key))}}
+  let has=false;if(bbIsBook())has=!!bbSlotIn(sel.value,p.key);else{const d=docsGet().find(x=>x.id===bbBookId());if(d&&p.key){const div=document.createElement('div');div.innerHTML=safeStoredHTML(d.body||'');const h=div.querySelector('[data-sec="'+sel.value+'"]');has=!!(h&&bbRange(h).some(x=>x.getAttribute&&x.getAttribute('data-slot')===p.key))}}
   box.innerHTML='<div style="border-left:4px solid '+m.bd+';background:'+m.bg+';padding:6px 8px;border-radius:6px">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'+
    (has?'<label style="display:block;margin-top:6px"><input type="radio" name="bbRep" value="rep" checked> '+L('Replace the earlier draft from this step','इस कदम का पिछला draft बदल दें')+'</label><label style="display:block"><input type="radio" name="bbRep" value="keep"> '+L('Keep both','दोनों रखें')+'</label>':'')}
 function bbPlaceCursor(){const p=window._bbPend;try{document.getElementById('bbPlaceDlg').close()}catch(e){}if(p)insertHTMLBlockIntoEditor(p.html);showToast(studyHi()?'Cursor पर डाला ✓':'Put at your cursor ✓')}
@@ -19992,7 +20045,7 @@ function prPrint(){const h=prFileHTML();if(!h)return;const w=window.open('','_bl
    here, plus three that guard against this app's own weak points: work kept only in this browser
    (backup age), a step marked done that the app's own check disagrees with, and no AI key.
    Housekeeping that cannot hurt runs by itself: opening the book refreshes untouched drafts. */
-function hlBookDiv(o){const book=bbBookId(o);if(!book)return null;const div=document.createElement('div');const d=bbIsBook()?{body:getEditorHTML()}:docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||'';return div}
+function hlBookDiv(o){const book=bbBookId(o);if(!book)return null;const div=document.createElement('div');const d=bbIsBook()?{body:getEditorHTML()}:docsGet().find(x=>x.id===book);div.innerHTML=safeStoredHTML((d&&d.body)||'');return div}
 function hlItems(o){o=o||studyGet();const hi=studyHi(),L=(en,x)=>hi?x:en,out=[],add=(sev,msg,lab,act)=>out.push({sev:sev,msg:msg,lab:lab,act:act});
   if(!getActiveProjectId())return out;
   /* 1 work kept only here */
@@ -20036,7 +20089,7 @@ function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!bo
       if(!w){for(let j=i+1;j<hs0.length&&+hs0[j].tagName[1]>lv;j++)w+=ow(hs0[j])}
       return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\'\','+all0.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+' <span class="desc">'+w+' '+L('words','शब्द')+'</span></a>'}).join('')+'</div>':'<p class="desc" style="margin:4px 0">'+L('No headings yet. Make a line a heading and it appears here, and a tap takes you to it.','अभी कोई heading नहीं। किसी line को heading बनाएँ, वह यहाँ दिखेगी और tap से वहाँ पहुँचेंगे।')+'</p>')+'<hr style="border:none;border-top:1px solid var(--line);margin:8px 0">';
     box.innerHTML=own+'<b>📖 '+L('The book','किताब')+'</b><p class="desc" style="margin:4px 0">'+L('This study has no book yet. The book is one document with every chapter of your plan.','इस study की अभी कोई किताब नहीं। किताब एक document है जिसमें आपकी योजना का हर chapter है।')+'</p><div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="bpInsertOutline()">'+L('Make the book','किताब बनाएँ')+'</button>'+(hasSec&&cur?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbUseCurrent()">'+L('Use this document as the book','यही document किताब बनाएँ')+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="bpOpen()">'+L('See the plan','योजना देखें')+'</button></div>';return}
-  const isB=bbIsBook();let div=editor;if(!isB){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}
+  const isB=bbIsBook();let div=editor;if(!isB){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=safeStoredHTML((d&&d.body)||'')}
   const hs=[...div.querySelectorAll('h1,h2,h3')],num=bpNumbers(bpTree(o,'thesis')),present={};
   const rows=hs.map(h=>{const sec=h.getAttribute('data-sec')||'';if(sec)present[sec]=1;const own=bbOwn(h),words=own.reduce((a,x)=>a+lsWords(x.textContent||''),0),lv=+h.tagName[1];
     return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\''+escAttr(sec)+'\','+hs.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+(lv>1||!(bpNode(sec)&&bpNode(sec).k)?'<span class="bb-w'+(words?'':' bb-empty')+'">'+(words?words:L('empty','खाली'))+'</span>':'')+'</a>'}).join('');
@@ -20118,7 +20171,7 @@ function insertHTMLAtCursorSafe(html){editor.focus();if(savedRange)restoreEditor
   const r=getSelection().getRangeAt(0);r.deleteContents();const f=r.createContextualFragment(html+'​');const last=f.lastChild;r.insertNode(f);if(last){r.setStartAfter(last);r.collapse(true);const s2=getSelection();s2.removeAllRanges();s2.addRange(r)}try{docSaveBody(getEditorHTML());upd()}catch(e){}}
 /* ---- the book check ---- */
 function bbCheck(){const o=studyGet(),hi=studyHi(),L=(en,x)=>hi?x:en,out=[],book=bbBookId();if(!book)return[{sev:'stop',msg:L('This study has no book yet.','इस study की अभी कोई किताब नहीं।')}];
-  let div=editor;if(!bbIsBook()){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}
+  let div=editor;if(!bbIsBook()){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=safeStoredHTML((d&&d.body)||'')}
   const num=bpNumbers(bpTree(o,'thesis')),T=id=>{const n=bpNode(id);return(num[id]?num[id]+' ':'')+(n?bpTitle(n):id)},present={};
   div.querySelectorAll('[data-sec]').forEach(h=>present[h.getAttribute('data-sec')]=h);
   /* 1 sections of the plan missing, 2 sections still empty */
@@ -20195,7 +20248,7 @@ setTimeout(()=>{try{
   let tm=0;editor.addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(()=>{try{if(editor.querySelector('span.xr,p[data-cap]')){const before=getEditorHTML();renumberCaptions();if(getEditorHTML()!==before){docSaveBody(getEditorHTML())}}}catch(e){}},500)});
 }catch(e){}},0);
 /* ---- Next for you ---- */
-function nfyPick(o){o=o||studyGet();const book=bbBookId(o);let div=null;if(book){div=document.createElement('div');const d=bbIsBook()?{body:getEditorHTML()}:docsGet().find(x=>x.id===book);div.innerHTML=(d&&d.body)||''}
+function nfyPick(o){o=o||studyGet();const book=bbBookId(o);let div=null;if(book){div=document.createElement('div');const d=bbIsBook()?{body:getEditorHTML()}:docsGet().find(x=>x.id===book);div.innerHTML=safeStoredHTML((d&&d.body)||'')}
   const present={};if(div)div.querySelectorAll('[data-sec]').forEach(h=>present[h.getAttribute('data-sec')]=h);
   const flat=bbFlat(o).filter(x=>x.n.ed!=='syn'&&!(x.n.k&&x.n.k.length)&&!/^front\.(title|contents)$/.test(x.n.id));
   const feeds=id=>flat.filter(x=>(x.n.s||[]).indexOf(id)>=0).map(x=>x.n);
@@ -20438,7 +20491,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=139;
-const APP_BUILD='2026.11.23d';
+const APP_BUILD='2026.11.24a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -21248,7 +21301,7 @@ function splitLabel(str){const m=/^(.*[A-Za-z)])\s+(\d+(?:\.\d+)?\s*(?:\(.*\))?)
 async function shExtractPdf(file,opts){
   if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader needs the internet once to load. Try again when you are online.');
   const buf=await file.arrayBuffer();const fp=await AppuGate.fingerprint(buf);
-  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  const pdf=await pdfjsLib.getDocument({isEvalSupported:false,data:buf}).promise;
   const n=Math.min(pdf.numPages,200);let pages=[],reordered=0;const rawItems=[],edges=[],hdn=[];
   for(let k=1;k<=n;k++){
     const pg=await pdf.getPage(k),tc=await pg.getTextContent();
@@ -22021,7 +22074,7 @@ async function shFindSections(){
   const p=SH.cur;if(!p)return;const m=document.getElementById('shSecMsg');if(m)m.textContent='Reading the headings…';
   try{
     const buf=await shFileGet(p.id);if(!buf){if(m)m.textContent='The PDF file is not kept for this paper, so its headings cannot be read again. Add the PDF again.';return}
-    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice?buf.slice(0):buf)}).promise;
+    const pdf=await pdfjsLib.getDocument({isEvalSupported:false,data:new Uint8Array(buf.slice?buf.slice(0):buf)}).promise;
     const raw=[];for(let k=1;k<=Math.min(pdf.numPages,200);k++){const pg=await pdf.getPage(k);raw.push(await AppuGate.pdfVisible(pg,(await pg.getTextContent()).items,p.gfp||'',k))}
     p.sections=shSectionsOf(raw);const tb=shTablesOf(raw);p.tables=tb.list;p.tableHits=tb.hits;SH.stats=null;await shPut(p);shRender();
   }catch(e){if(m)m.textContent='Could not read the headings: '+(e&&e.message?e.message:'error')}
@@ -22120,7 +22173,7 @@ function shInResHTML(p){if(!SH.inq)return'';if(SH.inres===null)return'<p style="
 function shZoom(d){SH.zoom=Math.max(0.75,Math.min(3,Math.round((SH.zoom+d)*4)/4));try{LS.set('appu_sh_zoom',String(SH.zoom))}catch(e){}shRender()}
 /* The PDF for a paper that was added before pictures were kept: attach it again without reading the text again. */
 async function shAttach(input){const f=input.files&&input.files[0];input.value='';const p=SH.cur;if(!f||!p)return;
-  try{const buf=await f.arrayBuffer();if(typeof pdfjsLib!=='undefined'){const pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise;if(pdf.numPages<p.pages.length){showToast('That file has fewer pages ('+pdf.numPages+') than this paper ('+p.pages.length+'). It looks like a different file.');return}}
+  try{const buf=await f.arrayBuffer();if(typeof pdfjsLib!=='undefined'){const pdf=await pdfjsLib.getDocument({isEvalSupported:false,data:buf.slice(0)}).promise;if(pdf.numPages<p.pages.length){showToast('That file has fewer pages ('+pdf.numPages+') than this paper ('+p.pages.length+'). It looks like a different file.');return}}
     await shFilePut(p.id,buf);try{p.gfp=await AppuGate.fingerprint(buf);await shPut(p)}catch(e){}showToast('PDF attached. The page picture is ready.');SH.img=true;shRender()}catch(e){showToast('Could not keep that file: '+((e&&e.message)||'error'))}}
 /* Where a highlight sits on the page picture: find the quote in the page's own text items and draw a box over each. */
 function shQuoteBoxes(items,quote,tf){
@@ -22203,7 +22256,7 @@ function shBlocksHTML(blocks){
    Needs the stored PDF for tables and figures; without it only the page text is used. */
 async function shWord(){
   const p=SH.cur;if(!p)return;const hi=false;
-  let pdf=null;try{const buf=await shFileGet(p.id);if(buf&&typeof pdfjsLib!=='undefined')pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise}catch(e){}
+  let pdf=null;try{const buf=await shFileGet(p.id);if(buf&&typeof pdfjsLib!=='undefined')pdf=await pdfjsLib.getDocument({isEvalSupported:false,data:buf.slice(0)}).promise}catch(e){}
   if(!pdf&&SH.wordAsked!==p.id){SH.wordAsked=p.id;SH.img=true;shRender();showToast('This paper has no PDF kept. Attach it below for tables and figures, then tap Save as Word again. Tap Save as Word without attaching to get the text only.');return}
   showToast(pdf?'Making the Word file. Long papers take a minute.':'Making the Word file from the stored text. Tables and figures need the PDF attached.');
   let html='<h1>'+escHTML(p.title||'Paper')+'</h1><p><i>Converted from the PDF. Check tables and numbers against the original. Page marks show where each page began.</i></p>',pics=0,tbls=0;
@@ -22228,7 +22281,7 @@ async function shWord(){
   }catch(e){showToast('Could not make the Word file: '+((e&&e.message)||'error'))}}
 /* PDF tools (build 2026.11.09e): pdf-lib is loaded the first time it is needed. */
 function plibLoad(){return new Promise(function(res,rej){if(window.PDFLib)return res(window.PDFLib);
-  const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+  const s=document.createElement('script');s.integrity=APPU_SRI['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'];s.crossOrigin='anonymous';s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'))};s.onerror=function(){rej(new Error('The PDF tool needs the internet once to load'))};document.head.appendChild(s)})}
 /* "1-3, 5" to [1,2,3,5]; null when it does not fit the page count. */
 function ptRange(str,max){const out=[];const parts=String(str||'').split(/[,;\s]+/).filter(Boolean);if(!parts.length)return null;
@@ -22242,7 +22295,7 @@ async function shHlPdf(){
   const p=SH.cur;if(!p)return;
   try{const buf=await shFileGet(p.id);if(!buf){showToast('This paper has no PDF kept. Attach it first (Show page picture, then Attach the PDF).');return}
     if(typeof pdfjsLib==='undefined'){showToast('The PDF viewer needs the internet once to load.');return}
-    const PL=await plibLoad(),doc=await PL.PDFDocument.load(buf.slice(0)),pj=await pdfjsLib.getDocument({data:buf.slice(0)}).promise,font=await doc.embedFont(PL.StandardFonts.Helvetica);
+    const PL=await plibLoad(),doc=await PL.PDFDocument.load(buf.slice(0)),pj=await pdfjsLib.getDocument({isEvalSupported:false,data:buf.slice(0)}).promise,font=await doc.embedFont(PL.StandardFonts.Helvetica);
     const hex=h=>{const n=parseInt(h.slice(1),16);return PL.rgb(((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255)};
     let drawn=0,missed=0;const flip=t=>[t[0],t[1],t[2],-t[3],t[4],-t[5]];
     for(const n of p.notes.filter(x=>x.quote)){
@@ -22294,7 +22347,7 @@ async function shDrawImg(){const box=document.getElementById('shImg'),p=SH.cur;i
   try{const buf=await shFileGet(p.id);
     if(!buf){box.innerHTML='<span style="font-size:13px">The page picture is not kept for this paper (it was added before pictures were kept). Attach its PDF once: <label class="btn btn-ghost" style="cursor:pointer;display:inline-block">Attach the PDF<input type="file" accept=".pdf,application/pdf" style="display:none" onchange="shAttach(this)"></label> The text and highlights are not read again.</span>';return}
     if(typeof pdfjsLib==='undefined'){box.innerHTML='<span style="font-size:13px">The PDF viewer needs the internet once to load.</span>';return}
-    const pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise,pg=await pdf.getPage(SH.page),w=Math.max(280,Math.min(900,box.clientWidth-14))*SH.zoom,v0=pg.getViewport({scale:1}),sc=(w/(v0.width||w))*(window.devicePixelRatio||1),v=pg.getViewport({scale:sc}),cv=document.createElement('canvas');
+    const pdf=await pdfjsLib.getDocument({isEvalSupported:false,data:buf.slice(0)}).promise,pg=await pdf.getPage(SH.page),w=Math.max(280,Math.min(900,box.clientWidth-14))*SH.zoom,v0=pg.getViewport({scale:1}),sc=(w/(v0.width||w))*(window.devicePixelRatio||1),v=pg.getViewport({scale:sc}),cv=document.createElement('canvas');
     cv.width=Math.floor(v.width);cv.height=Math.floor(v.height);cv.style.width=w+'px';cv.style.display='block';cv.setAttribute('role','img');cv.setAttribute('aria-label','Page '+SH.page+' of '+p.title);
     await pg.render({canvasContext:cv.getContext('2d'),viewport:v}).promise;
     let boxes=[];try{const tc=await pg.getTextContent()/*gate:viewer highlight boxes only*/,dpr=(window.devicePixelRatio||1),cssv=pg.getViewport({scale:sc/dpr}),tf=t=>pdfjsLib.Util.transform(cssv.transform,t);

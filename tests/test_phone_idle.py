@@ -13,7 +13,7 @@ ROOT = harness.BASE.rsplit('/', 1)[0] + '/'
 with sync_playwright() as p:
     dev = dict(p.devices['iPhone 13']); dev.pop('default_browser_type', None); dev['viewport'] = {'width': 390, 'height': 664}
     b = p.chromium.launch(); ctx = b.new_context(**dev, service_workers='block')
-    ctx.route(lambda u: not u.startswith('http://localhost'), harness.route_cdn)
+    harness.prepare(ctx)
     pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
     pg.goto(ROOT + 'index.html?kit=1'); pg.wait_for_timeout(3000)
     pg.evaluate("window.__mut=0;new MutationObserver(m=>window.__mut+=m.length).observe(document.body,{subtree:true,childList:true})")

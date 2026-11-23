@@ -1,0 +1,33 @@
+name: Real libraries under the security policy
+
+# The local test suite replaces the CDN libraries with stubs. This job loads the real ones, exactly as a
+# student's browser would, and checks that the integrity hashes match, that the content security policy
+# blocks nothing the app needs, and that a real PDF opens with script evaluation off.
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [sec-hardening]
+
+permissions:
+  contents: read
+
+jobs:
+  real-libs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright
+        run: |
+          pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+      - name: Serve the app
+        run: |
+          python -m http.server 8765 >/dev/null 2>&1 &
+          sleep 2
+      - name: Run the check
+        run: python tests/ci_real_libs.py | tee -a "$GITHUB_STEP_SUMMARY"
