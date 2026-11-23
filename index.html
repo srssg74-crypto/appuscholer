@@ -1396,6 +1396,16 @@ footer,footer span{color:var(--muted);opacity:1!important}
   #cmdBtn span,#cmdBtn kbd{display:none}
 }
 </style>
+<style id="v133-consent">
+/* Version 133: consent screen on phones. Big tick boxes and full-width tap rows (Apple asks for 44 px targets);
+   on a phone the window scrolls as one piece instead of a scroll box inside a scrolling window. */
+#termsChecks label{min-height:44px;align-items:center!important;padding:6px 4px;margin:2px 0!important;border-radius:8px;-webkit-tap-highlight-color:rgba(46,91,138,.12);touch-action:manipulation}
+#termsChecks input[type=checkbox]{width:22px!important;height:22px!important;min-width:22px;flex:0 0 22px;margin:0!important;accent-color:#2E5B8A}
+#termsDlg button{touch-action:manipulation;min-height:44px}
+@media (max-width:759px){#termsDlg .dlg-body>div:first-of-type{max-height:none!important;overflow:visible!important}
+  #termsDlg{max-height:calc(100dvh - 24px);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  #termsRowGate{position:sticky;bottom:-1px;background:var(--card,#fff);padding:10px 0 6px;margin-bottom:-6px;box-shadow:0 -8px 12px -10px rgba(0,0,0,.25)}}
+</style>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
@@ -20399,8 +20409,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=132;
-const APP_BUILD='2026.11.23b';
+const APP_VERSION=133;
+const APP_BUILD='2026.11.23c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -25434,10 +25444,10 @@ function calmPhApply(){const ph=window.innerWidth<760&&!document.body.classList.
   if(!ph){if(nav)nav.hidden=true;return}
   const hi=getLang()==='hi',L={home:hi?'होम':'Home',stage:hi?'चरण':'Steps',write:hi?'लिखें':'Write',ai:hi?'AI सहायता':'AI help'};
   if(!nav){nav=document.createElement('nav');nav.id='phNav';nav.className='ph-nav';document.body.appendChild(nav)}
-  nav.hidden=false;nav.setAttribute('aria-label',hi?'मुख्य':'Main');
+  if(nav.hidden)nav.hidden=false;if(nav.getAttribute('aria-label')!==(hi?'मुख्य':'Main'))nav.setAttribute('aria-label',hi?'मुख्य':'Main');
   const cur=apHomeIs()?'home':calmPhView;
   const html=['home','stage','write','ai'].map(k=>'<button type="button" class="'+(k===cur?'on':'')+'" '+(k===cur?'aria-current="page"':'')+' onclick="calmPhGo(\''+k+'\')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+CALM_PH_IC[k]+'"/></svg><span>'+L[k]+'</span></button>').join('');
-  if(nav.innerHTML!==html)nav.innerHTML=html;
+  if(nav._h!==html){nav._h=html;nav.innerHTML=html}   /* compare with what we wrote: the browser's own innerHTML never matches it, which rebuilt the bar 16 times a second */
   /* in Steps, the tree shows only the open stage's parts, and only when it has more than one */
   const g=document.querySelector('.tool-sidebar .stage-group.calm-cur');
   b.classList.toggle('ph-one-part',!!g&&g.querySelectorAll('.stage-tools > .tool-tab').length<2)}
@@ -25472,7 +25482,7 @@ let calmTimer=0;
 function calmInit(){
   calmPass(document);
   const mo=new MutationObserver(ms=>{
-    if(ms.every(m=>m.target.closest&&m.target.closest('#editor,[contenteditable="true"]')))return;
+    if(ms.every(m=>m.target.closest&&m.target.closest('#editor,[contenteditable="true"],#phNav')))return;
     clearTimeout(calmTimer);calmTimer=setTimeout(()=>calmPass(document),60);
   });
   mo.observe(document.body,{childList:true,subtree:true});
