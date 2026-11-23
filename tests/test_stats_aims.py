@@ -17,7 +17,7 @@ with sync_playwright() as p:
     ok(pg.evaluate("document.querySelectorAll('#slAims .sl-aim').length") == 6, 'six aims shown above the test list')
     pg.click('.sl-aim:nth-child(4)'); pg.wait_for_timeout(300)
     vis = pg.evaluate("[...document.getElementById('statsTest').options].filter(o=>!o.hidden).map(o=>o.value)")
-    ok(set(vis) == {'pearson', 'spearman', 'chisq', 'gof'} and pg.evaluate("document.getElementById('statsTest').value") == 'pearson', 'Related? narrows to correlation and chi-square, Pearson chosen: %s' % vis)
+    ok(set(vis) == {'pearson', 'spearman', 'pointbis', 'chisq', 'gof', 'binom'} and pg.evaluate("document.getElementById('statsTest').value") == 'pearson', 'Related? narrows to correlation and chi-square, Pearson chosen: %s' % vis)
     ok('Pearson' in pg.inner_text('.sl-why'), 'the reason is shown in one line')
     pg.click('.sl-why a'); pg.wait_for_timeout(300)
     ok(pg.evaluate("[...document.getElementById('statsTest').options].every(o=>!o.hidden)"), 'Show all tests brings the full list back')
