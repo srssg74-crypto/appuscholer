@@ -35,13 +35,13 @@ with sync_playwright() as p:
     ok('h 42' in t and 'DOAJ' in t,'journal badge shows h-index and DOAJ from OpenAlex')
     ok(J("!!rsJCache().S11"),'journal data is cached')
     # Find papers from a sentence with a citation
-    J("setEditorHTML('<p id=\"s1\">Shorter sleep goes with more exam anxiety (Sharma, 2021).</p>');const r=document.createRange();r.selectNodeContents(document.getElementById('s1'));const s=getSelection();s.removeAllRanges();s.addRange(r)")
+    J("setEditorHTML('<p id=\"s1\">Shorter sleep goes with more exam anxiety (Sharma, 2021).</p>');const r=document.createRange();r.selectNodeContents(editor.querySelector('p'));const s=getSelection();s.removeAllRanges();s.addRange(r)")
     calls.clear(); J("selFind()"); pg.wait_for_timeout(1500)
     ok(any('publication_year:2021' in c and 'Sharma' in c for c in calls),'the cited author and year are looked up')
     ok('cited in your sentence' in J("document.getElementById('rsStatus').textContent"),'the cited paper is shown first')
     ok('(Sharma' not in J("document.getElementById('rsTopic').value"),'the search box keeps the claim without the citation')
     # a sentence without a citation is cut to key words
-    J("setEditorHTML('<p id=\"s2\">It is well known that hostel students sleep less during the examination period.</p>');const r=document.createRange();r.selectNodeContents(document.getElementById('s2'));const s=getSelection();s.removeAllRanges();s.addRange(r)")
+    J("setEditorHTML('<p id=\"s2\">It is well known that hostel students sleep less during the examination period.</p>');const r=document.createRange();r.selectNodeContents(editor.querySelector('p'));const s=getSelection();s.removeAllRanges();s.addRange(r)")
     J("selFind()"); pg.wait_for_timeout(800)
     v=J("document.getElementById('rsTopic').value")
     ok('well known' not in v and 'hostel' in v and 'sleep' in v,'plain sentences become key words: %s'%v)
