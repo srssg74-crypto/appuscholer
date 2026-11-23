@@ -2619,6 +2619,7 @@ footer,footer span{color:var(--muted);opacity:1!important}
           <option value="anova2">Two-way ANOVA (two grouping variables)</option>
           <option value="mregress">Multiple linear regression</option>
           <option value="logistic">Logistic regression (yes/no outcome)</option>
+          <option value="poisson">Poisson regression (count outcome)</option>
           <option value="moderate">Moderation (does W change the effect of X on Y?)</option>
           <option value="mediate">Mediation (does M carry the effect of X on Y?)</option>
           <option value="rmanova">Repeated-measures ANOVA (same people, 3+ times)</option>
@@ -2628,6 +2629,7 @@ footer,footer span{color:var(--muted);opacity:1!important}
         <optgroup label="Compare — non-parametric">
           <option value="mannwhitney">Mann-Whitney U</option>
           <option value="wilcoxon">Wilcoxon signed-rank</option>
+          <option value="wilcox1">One-sample Wilcoxon signed-rank (ratings against a known value)</option>
           <option value="kruskal">Kruskal-Wallis (3+ groups, with Dunn post-hoc)</option>
         </optgroup>
         <optgroup label="Relationships">
@@ -2636,6 +2638,8 @@ footer,footer span{color:var(--muted);opacity:1!important}
           <option value="regression">Simple linear regression</option>
           <option value="chisq">Chi-square test of independence (Fisher's exact for small 2x2 tables)</option>
           <option value="gof">Chi-square goodness-of-fit</option>
+          <option value="binom">Proportion against a target (exact binomial test)</option>
+          <option value="pointbis">Point-biserial correlation (number against a two-group variable)</option>
           <option value="mcnemar">McNemar test (same people, yes/no, two times)</option>
           <option value="cochran">Cochran's Q (same people, yes/no, 3+ times)</option>
         </optgroup>
@@ -20418,7 +20422,7 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=134;
+const APP_VERSION=135;
 const APP_BUILD='2026.11.23d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
@@ -22526,6 +22530,10 @@ const STAT_TESTS={
   anova2:{label:'Two-way ANOVA (two grouping variables)',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Factor A (grouping variable)',type:'categorical'},{id:'iv2',label:'Factor B (grouping variable)',type:'categorical'}]},
   welchAnova:{label:"One-way ANOVA, Welch (recommended)",fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
   gof:{label:'Chi-square goodness-of-fit',fields:[{id:'v1',label:'Categorical variable',type:'categorical'}],extra:[{id:'exp',label:'Expected shares (optional)',placeholder:'e.g. A:50, B:30, C:20. Empty means equal shares'}]},
+  wilcox1:{label:'One-sample Wilcoxon signed-rank (ratings or ranks against a known value)',fields:[{id:'dv',label:'Variable',type:'numeric'}],extra:[{id:'mu',label:'Test value (median to compare with)',placeholder:'0'}]},
+  binom:{label:'Proportion against a target (exact binomial test)',fields:[{id:'v1',label:'A column with exactly two different answers (such as yes/no)',type:'binary'}],extra:[{id:'pos',label:'Which answer counts as a success? (optional)',placeholder:'e.g. yes. Empty means 1, yes, true, or the later answer'},{id:'p0',label:'Target proportion (between 0 and 1)',placeholder:'0.5'}]},
+  pointbis:{label:'Point-biserial correlation (a number against a two-group variable)',fields:[{id:'v1',label:'Numeric variable',type:'numeric'},{id:'v2',label:'Two-group variable (a column with exactly two different answers)',type:'binary'}]},
+  poisson:{label:'Poisson regression (a count outcome predicted from other variables)',fields:[{id:'dv',label:'Outcome (a column of counts: 0, 1, 2, 3 …)',type:'numeric'},{id:'preds',label:'Numeric predictors (tick any; a 0/1 column can go here too)',type:'numeric',multi:true,unchecked:true},{id:'cats',label:'Categorical predictors (tick any; each becomes 0/1 columns)',type:'categorical',multi:true,unchecked:true}],extra:[{id:'ref',label:'Reference level for a categorical predictor (optional)',placeholder:'e.g. gender=Male, group=Control. Empty means the largest group'}]},
   kruskal:{label:'Kruskal-Wallis',fields:[{id:'dv',label:'Dependent variable',type:'numeric'},{id:'iv',label:'Grouping variable (3+ groups)',type:'categorical'}]},
   spearman:{label:'Spearman correlation',fields:[{id:'v1',label:'Variable 1',type:'numeric'},{id:'v2',label:'Variable 2',type:'numeric'}]},
   alpha:{label:"Cronbach's alpha and McDonald's omega",fields:[{id:'items',label:'Items of ONE scale (tick each item)',type:'numeric',multi:true}],extra:[{id:'rev',label:'Reverse-score these items (names, comma separated)',placeholder:'e.g. Q3, Q7'},{id:'rrange',label:'Lowest and highest answer (needed to reverse)',placeholder:'e.g. 1-5'}]}
@@ -22557,6 +22565,58 @@ function stkBinData(idxs,posTxt){
   const neg=lv.filter(k=>k!==pos)[0],M=[];let skipped=0;
   d.rows.forEach(r=>{let ok=true;const row=idxs.map(i=>{const v=r[i];if(v===undefined||v===''){ok=false;return 0}return String(v).trim()===pos?1:0});if(ok)M.push(row);else skipped++});
   return{M:M,pos:pos,neg:neg,skipped:skipped};
+}
+/* Exact two-sided binomial test against any target p0 (R's binom.test rule: add every outcome no more likely than the one seen). */
+function stkBinomP(k,n,p0){
+  if(n<=0)return 1;
+  const lf=[0];for(let i=1;i<=n;i++)lf.push(lf[i-1]+Math.log(i));
+  const lp=i=>lf[n]-lf[i]-lf[n-i]+(i>0?i*Math.log(p0):0)+(n-i>0?(n-i)*Math.log(1-p0):0);
+  if(p0<=0)return k===0?1:0;if(p0>=1)return k===n?1:0;
+  const ref=lp(k);let tot=0;
+  for(let i=0;i<=n;i++){const v=lp(i);if(v<=ref+1e-7)tot+=Math.exp(v)}
+  return Math.min(1,tot);
+}
+/* Wilson score interval for a proportion. */
+function stkWilson(k,n){
+  const z=1.959963984540054,ph=k/n,den=1+z*z/n,c=(ph+z*z/(2*n))/den,h=z*Math.sqrt(ph*(1-ph)/n+z*z/(4*n*n))/den;
+  return[Math.max(0,c-h),Math.min(1,c+h)];
+}
+/* Poisson regression, log link, maximum likelihood by Newton-Raphson with step halving. xs: predictor columns, y: counts. */
+function stkPoisson(xs,y){
+  var n=y.length,k=xs.length,p=k+1,cols=[],i,j,r,c,it,one=new Array(n).fill(1);
+  cols.push(one);xs.forEach(function(x){cols.push(x)});
+  var sy=0;y.forEach(function(v){sy+=v});if(sy===0)return null;
+  var lg=[0];var mx=0;y.forEach(function(v){if(v>mx)mx=v});for(i=1;i<=mx;i++)lg.push(lg[i-1]+Math.log(i));
+  var b=new Array(p).fill(0);b[0]=Math.log(sy/n);
+  function ll(bb){var t=0;for(r=0;r<n;r++){var z=0;for(j=0;j<p;j++)z+=bb[j]*cols[j][r];t+=y[r]*z-Math.exp(z)-lg[y[r]]}return t}
+  function inv(H){
+    var M=[];for(i=0;i<p;i++){M.push(new Array(2*p));for(j=0;j<p;j++){M[i][j]=H[i][j];M[i][p+j]=i===j?1:0}}
+    var sc=M.map(function(row,ix){return Math.abs(row[ix])||1});
+    for(i=0;i<p;i++){var piv=i;for(r=i+1;r<p;r++)if(Math.abs(M[r][i])>Math.abs(M[piv][i]))piv=r;
+      if(Math.abs(M[piv][i])<1e-11*sc[i])return null;
+      var tmp=M[i];M[i]=M[piv];M[piv]=tmp;var ts=sc[i];sc[i]=sc[piv];sc[piv]=ts;
+      var d=M[i][i];for(c=0;c<2*p;c++)M[i][c]/=d;
+      for(r=0;r<p;r++)if(r!==i){var f=M[r][i];if(f!==0)for(c=0;c<2*p;c++)M[r][c]-=f*M[i][c]}}
+    return M.map(function(row){return row.slice(p)});
+  }
+  var cur=ll(b),conv=false,Hinv=null,mu=new Array(n);
+  for(it=0;it<100;it++){
+    var g=new Array(p).fill(0),H=[];for(i=0;i<p;i++)H.push(new Array(p).fill(0));
+    for(r=0;r<n;r++){var z=0;for(j=0;j<p;j++)z+=b[j]*cols[j][r];var m=Math.exp(Math.min(z,50));mu[r]=m;var e=y[r]-m;
+      for(i=0;i<p;i++){g[i]+=cols[i][r]*e;for(j=0;j<=i;j++)H[i][j]+=cols[i][r]*cols[j][r]*m}}
+    for(i=0;i<p;i++)for(j=i+1;j<p;j++)H[i][j]=H[j][i];
+    var Hn=inv(H);if(!Hn){if(it===0)return{singular:true};return{sep:true}}Hinv=Hn;
+    var step=Hinv.map(function(row){var t=0;for(j=0;j<p;j++)t+=row[j]*g[j];return t});
+    var s2=1,nb,nl;
+    for(var h=0;h<30;h++){nb=b.map(function(v,q){return v+s2*step[q]});nl=ll(nb);if(isFinite(nl)&&nl>=cur-1e-12)break;s2/=2}
+    var dl=Math.abs(nl-cur);b=nb;cur=nl;
+    if(dl<1e-11*(1+Math.abs(cur))&&Math.max.apply(null,step.map(Math.abs))*s2<1e-8){conv=true;break}
+  }
+  var pear=0,dev=0;
+  for(r=0;r<n;r++){var z2=0;for(j=0;j<p;j++)z2+=b[j]*cols[j][r];mu[r]=Math.exp(z2);pear+=(y[r]-mu[r])*(y[r]-mu[r])/mu[r];dev+=2*((y[r]>0?y[r]*Math.log(y[r]/mu[r]):0)-(y[r]-mu[r]))}
+  var se=Hinv.map(function(row,ix){return Math.sqrt(row[ix])});
+  var ll0=0,ybar=sy/n;for(r=0;r<n;r++)ll0+=y[r]*Math.log(ybar)-ybar-lg[y[r]];
+  return{beta:b,se:se,inv:Hinv,ll:cur,ll0:ll0,mu:mu,conv:conv,pearson:pear,deviance:dev,df:n-p,sep:!conv||se.some(function(v){return !isFinite(v)||v>500})};
 }
 /* Two-sided exact binomial test with p = .5 (b out of nd). */
 function stkBinom5(b,nd){
@@ -22876,25 +22936,26 @@ const TG_Q={
   cmpOut:{q:'What kind of score are you comparing?',o:[['scale','A number such as a total or mean score (for example a 0 to 40 anxiety total)'],['ordinal','A single rating item or ranks (for example one question answered 1 to 5)']]},
   cmpDes:{q:'How many groups or conditions?',o:[['one','One group, compared with a known value'],['two','Two groups or two conditions'],['three','Three or more groups or conditions'],['factors','Two things varied at once (two factors, for example gender and treatment)']]},
   smp:{q:'Are they different people in each group, or the same people measured more than once (or matched pairs)?',o:[['ind','Different people in each group'],['rel','The same people repeatedly, or matched pairs']]},
-  relOut:{q:'What kind of scores are the two variables?',o:[['scale','Both are numbers (totals, means, ages)'],['ordinal','At least one is a single rating item or a ranking']]},
-  prdOut:{q:'What are you predicting?',o:[['scale','A number (a total or mean score)'],['binary','A yes/no outcome']]},
+  relOut:{q:'What kind of scores are the two variables?',o:[['scale','Both are numbers (totals, means, ages)'],['ordinal','At least one is a single rating item or a ranking'],['binary','One is a number and the other has two groups (yes/no, male/female)']]},
+  prdOut:{q:'What are you predicting?',o:[['scale','A number (a total or mean score)'],['binary','A yes/no outcome'],['count','A count of events (visits, symptoms, missed classes)']]},
   prdN:{q:'How many predictors?',o:[['one','One'],['many','Two or more']]},
-  cntDes:{q:'What is your design?',o:[['gof','One variable, against counts you expected'],['ind','Two categorical variables, different people'],['rel2','Same people twice, a yes/no answer each time'],['rel3','Same people three or more times, a yes/no answer each time']]}
+  cntDes:{q:'What is your design?',o:[['gof','One variable, against counts you expected'],['ind','Two categorical variables, different people'],['rel2','Same people twice, a yes/no answer each time'],['rel3','Same people three or more times, a yes/no answer each time'],['prop','One yes/no variable, against a target proportion (for example a published rate)']]}
 };
 function tgNext(a){
   const g=a.goal;
   if(!g)return{ask:'goal'};
   if(g==='reliab')return{res:tgRes('alpha',a)};
-  if(g==='relate'){if(!a.relOut)return{ask:'relOut'};return{res:tgRes(a.relOut==='scale'?'pearson':'spearman',a)}}
+  if(g==='relate'){if(!a.relOut)return{ask:'relOut'};return{res:tgRes({scale:'pearson',ordinal:'spearman',binary:'pointbis'}[a.relOut],a)}}
   if(g==='predict'){
     if(!a.prdOut)return{ask:'prdOut'};
     if(a.prdOut==='binary')return{res:tgRes('logistic',a)};
+    if(a.prdOut==='count')return{res:tgRes('poisson',a)};
     if(!a.prdN)return{ask:'prdN'};
     return{res:tgRes(a.prdN==='one'?'regression':'multreg',a)};
   }
   if(g==='counts'){
     if(!a.cntDes)return{ask:'cntDes'};
-    return{res:tgRes({gof:'gof',ind:'chisq',rel2:'mcnemar',rel3:'cochran'}[a.cntDes],a)};
+    return{res:tgRes({gof:'gof',ind:'chisq',rel2:'mcnemar',rel3:'cochran',prop:'binom'}[a.cntDes],a)};
   }
   if(!a.cmpOut)return{ask:'cmpOut'};
   if(!a.cmpDes)return{ask:'cmpDes'};
@@ -22921,16 +22982,19 @@ const TG_RES={
   mcnemar:{name:'McNemar test',keys:['mcnemar'],why:'Same people, a yes/no answer at two times.',alt:[]},
   cochran:{name:"Cochran's Q",keys:['cochran'],why:'Same people, a yes/no answer at three or more times.',alt:[]},
   ttest1:{name:'One-sample t-test',keys:['ttest1'],why:'One group compared with a fixed value.',alt:[]},
-  wilcox1:{name:'One-sample Wilcoxon signed-rank',keys:[],why:'One group of ratings or ranks compared with a fixed value.',alt:[]},
+  wilcox1:{name:'One-sample Wilcoxon signed-rank',keys:['wilcox1'],why:'One group of ratings or ranks compared with a fixed value.',alt:[]},
   ttestInd:{name:"Welch's independent-samples t-test",keys:['ttestInd'],why:'Different people in two groups. Welch\'s version does not need equal spread in the two groups and loses almost nothing when the spread is equal, so there is no need to test for equal variances first.',alt:[['mannwhitney','Mann-Whitney U, if the groups are small and the scores skewed or have extreme values']]},
   mannwhitney:{name:'Mann-Whitney U',keys:['mannwhitney'],why:'Different people in two groups, with ratings or ranks. It shows whether one group tends to score higher.',alt:[]},
   ttestPaired:{name:'Paired-samples t-test',keys:['ttestPaired'],why:'The same people twice, or matched pairs. Each person is their own control.',alt:[['wilcoxon','Wilcoxon signed-rank, if the differences are skewed or have extreme values']]},
   wilcoxon:{name:'Wilcoxon signed-rank',keys:['wilcoxon'],why:'The same people twice with ratings or ranks.',alt:[]},
   anova1:{name:"Welch's one-way ANOVA with Games-Howell follow-up",keys:['welchAnova'],why:'Three or more separate groups and a numeric score. Welch\'s version does not need equal spread, and Games-Howell shows which pairs differ without the same assumption.',alt:[['kruskal','Kruskal-Wallis, if the groups are small and the scores skewed or have extreme values'],['anova1','One-way ANOVA, classic version, if you must match a course or journal that expects it']]},
   kruskal:{name:'Kruskal-Wallis with Dunn follow-up',keys:['kruskal'],why:'Three or more separate groups with ratings or ranks.',alt:[]},
-  rmanova:{name:'Repeated-measures ANOVA',keys:[],why:'The same people measured three or more times. Apply the Greenhouse-Geisser correction.',alt:[]},
+  rmanova:{name:'Repeated-measures ANOVA',keys:['rmanova'],why:'The same people measured three or more times. Apply the Greenhouse-Geisser correction.',alt:[]},
   mixed:{name:'Mixed ANOVA',keys:['mixed'],why:'Separate groups, each measured two or more times: it tests the group difference, the change over time, and whether groups change differently.',alt:[]},
-  friedman:{name:'Friedman test',keys:[],why:'The same people three or more times with ratings or ranks.',alt:[]},
+  friedman:{name:'Friedman test',keys:['friedman'],why:'The same people three or more times with ratings or ranks.',alt:[]},
+  pointbis:{name:'Point-biserial correlation',keys:['pointbis'],why:'One numeric score and one variable with two groups. It is a Pearson correlation with the groups coded 0 and 1.',alt:[['ttestInd','Independent t-test (Welch), if you want the size of the difference between the groups rather than a correlation'],['mannwhitney','Mann-Whitney U, if the scores are ratings or strongly skewed']]},
+  poisson:{name:'Poisson regression',keys:['poisson'],why:'The outcome is a count: whole numbers of 0 or more. The app checks for counts that vary too much and says so.',alt:[['multreg','Multiple regression, only if the counts are large (roughly 20 or more) and look symmetric']]},
+  binom:{name:'Exact binomial test',keys:['binom'],why:'One yes/no variable compared with a target proportion. It is exact, so it also suits small samples.',alt:[]},
   twoway:{name:'Two-way ANOVA or a mixed design',keys:[],why:'Two factors at once. Which version applies depends on whether either factor is repeated on the same people.',alt:[]}
 };
 /* ---- Citation cross-check (item 48, 2026-10-07): in-text citations against the reference list. No AI. ---- */
@@ -23240,12 +23304,16 @@ const TG_IMP={
   cmpOut:{scale:`A numeric total or mean can be averaged, so tests on means are possible.`,ordinal:`A single rating item has an order but unequal steps (the gap from 1 to 2 may not equal the gap from 4 to 5), so rank-based tests are the safer match.`},
   cmpDes:{one:`With one group the only comparison available is against a known value.`,two:`Two groups means one comparison.`,three:`Three or more groups are compared all at once first, and only then pair by pair. Running many t-tests instead would inflate the chance of a false positive.`,factors:`Two things varied at once means each factor, and how they combine, has to be examined together.`},
   smp:{ind:`Different people in each group means each score is independent of the others.`,rel:`The same people measured again means each person's scores belong together as pairs. Ignoring that throws information away.`},
-  relOut:{scale:`Both variables are numbers, so the strength of a straight-line link can be measured.`,ordinal:`A rating item or ranking is involved, so a rank-based link (Spearman) fits.`},
-  prdOut:{scale:`A numeric outcome can be predicted with a line.`,binary:`A yes/no outcome needs a model for probabilities, not a straight line.`},
+  relOut:{binary:`One variable has only two groups, so it is coded 0 and 1 and correlated with the number.`,scale:`Both variables are numbers, so the strength of a straight-line link can be measured.`,ordinal:`A rating item or ranking is involved, so a rank-based link (Spearman) fits.`},
+  prdOut:{count:`Counts cannot be negative and are whole numbers, so a straight line fits badly. A model built for counts fits.`,scale:`A numeric outcome can be predicted with a line.`,binary:`A yes/no outcome needs a model for probabilities, not a straight line.`},
   prdN:{one:`One predictor means a simple line.`,many:`Several predictors have to be estimated together.`},
-  cntDes:{gof:`One variable against expected counts asks whether the pattern departs from what you expected.`,ind:`Two categorical variables ask whether the categories go together more than chance would produce.`,rel2:`The same people answering yes or no twice need a test that respects the pairing.`,rel3:`The same people answering yes or no three or more times need a test that respects the repeated measures.`}
+  cntDes:{prop:`One yes/no variable asks what share said yes, and whether that share differs from a target set outside your data.`,gof:`One variable against expected counts asks whether the pattern departs from what you expected.`,ind:`Two categorical variables ask whether the categories go together more than chance would produce.`,rel2:`The same people answering yes or no twice need a test that respects the pairing.`,rel3:`The same people answering yes or no three or more times need a test that respects the repeated measures.`}
 };
 const TG_EXTRA={
+  wilcox1:{assume:`The scores are independent and the differences from the test value can be put in order. It does not need a normal curve.`,watch:`Many values equal to the test value (they drop out), or very few values.`},
+  binom:{assume:`Each person is counted once and the target was set before looking at your data.`,watch:`A target chosen after seeing the data, or the same person counted more than once.`},
+  pointbis:{assume:`Each person has one number and belongs to one of two groups. The number is roughly symmetric within each group.`,watch:`Strong skew, extreme values, or a variable that was split into two groups from a number (the split throws information away).`},
+  poisson:{assume:`Each count comes from a different person, events happen independently, and the average count equals its spread.`,watch:`Counts that vary much more than their average (the app reports a dispersion value), many extra zeros, or counts over different lengths of time without allowing for it.`},
   ttest1:{assume:`The scores are independent and not wildly skewed. With very small samples, extreme values distort the mean.`,watch:`Many tied or ordinal scores, or a handful of extreme values in a small group.`},
   ttestInd:{assume:`Each person appears in one group only and the scores are independent. Welch's version does not need equal spread, and it copes with groups of different sizes.`,watch:`Groups under about 20 with strong skew or extreme values (use Mann-Whitney), or the same people in both groups (use the paired test).`},
   mannwhitney:{assume:`Each person appears in one group only. The test compares ranks, so it does not care about the exact size of the gaps between scores.`,watch:`The same people in both groups, or many ties in a tiny sample.`},
@@ -23281,6 +23349,9 @@ const TG_DEMO={
   regression:{title:`Predict one number from another`,note:`The same 14 students: predict exam marks from weekly study hours.`,test:`regression`,csv:`hours,marks\n2,45\n3,50\n4,52\n5,58\n6,60\n7,66\n8,70\n1,40\n9,74\n10,80\n3,48\n6,63\n5,55\n8,72`,sel:{iv:`hours`,dv:`marks`},read:`The slope says how many marks each extra hour is worth on average. R-squared says how much of the spread in marks the line accounts for.`},
   chisq:{title:`Two categories against each other`,note:`Thirty students who used the counselling service and thirty who did not, and whether each passed.`,test:`chisq`,csv:`counselling,passed\n`+Array(18).fill(`yes,yes`).concat(Array(12).fill(`yes,no`),Array(15).fill(`no,yes`),Array(15).fill(`no,no`)).join(`\n`),sel:{v1:`counselling`,v2:`passed`},read:`Pass rates of 60% and 50% look different, but with 30 people per group the test cannot tell that gap from chance. A non-significant result here means the evidence is too thin, not that counselling does nothing.`},
   gof:{title:`One category against what you expected`,note:`Sixty students picked their favourite study method. If there were no preference, each method would get 20.`,test:`gof`,csv:`method\n`+Array(18).fill(`Notes`).concat(Array(30).fill(`Flashcards`),Array(12).fill(`Rereading`)).join(`\n`),sel:{v1:`method`},read:`Compare the observed and expected columns. A standardised residual beyond plus or minus 2 marks the category that departs from equal shares, here flashcards.`},
+  wilcox1:{title:`Ratings against a known value`,note:`A 1 to 7 wellbeing rating from 14 students. The published median is 4.`,test:`wilcox1`,csv:`rating\n5\n6\n5\n4\n6\n5\n7\n5\n6\n4\n5\n6\n5\n6`,sel:{dv:`rating`},extra:{mu:`4`},read:`Values equal to 4 drop out, and the rest are ranked by how far they sit from 4. Most ratings lie above it, so the test finds the median higher than 4.`},
+  binom:{title:`A rate against a published rate`,note:`Forty students were asked whether they slept 7 hours or more. A national survey reports 50%.`,test:`binom`,csv:`slept7\n`+Array(28).fill(`yes`).concat(Array(12).fill(`no`)).join(`\n`),sel:{v1:`slept7`},extra:{pos:`yes`,p0:`0.5`},read:`28 of 40 is 70%. The exact test asks how unusual that is if the true rate were 50%, and the interval shows the range of rates the data fit.`},
+  pointbis:{title:`A number against two groups`,note:`Exam marks of 12 students, with whether each attended the revision class (0 or 1).`,test:`pointbis`,csv:`marks,attended\n45,0\n52,0\n48,0\n55,0\n50,0\n47,0\n62,1\n68,1\n59,1\n71,1\n65,1\n60,1`,sel:{v1:`marks`,v2:`attended`},read:`r is positive because the group coded 1 scores higher. It is the same information as a t-test, expressed as a correlation.`},
   alpha:{title:`Do the items of a scale hang together?`,note:`Fifteen people answered a six-item scale. Item q6 is worded in the opposite direction, so it is reversed here (1 to 5). Run it again without reversing and watch the alpha fall.`,test:`alpha`,csv:`q1,q2,q3,q4,q5,q6\n2,3,2,1,2,4\n3,3,4,4,5,3\n3,5,3,2,2,3\n3,3,3,4,4,3\n2,1,2,1,2,4\n5,3,4,2,3,3\n3,3,2,3,2,4\n3,3,3,2,3,3\n5,4,3,5,4,3\n3,3,3,3,3,3\n2,3,3,3,3,4\n4,4,5,3,3,4\n4,4,2,5,4,3\n4,3,3,4,4,3\n4,3,4,4,3,2`,sel:{},tick:[`q1`,`q2`,`q3`,`q4`,`q5`,`q6`],rev:`q6`,rrange:`1-5`,read:`Alpha and omega are reported with their intervals, not against a pass mark. The item table shows which item pulls the scale down (a low corrected item-total r).`}
 };
 function tgWhyHTML(a,r){
@@ -23874,6 +23945,84 @@ function statsRunNow(){
         '<p class="desc">An odds ratio is the factor by which the odds of the event are multiplied for one more unit of a numeric predictor, or for the level against the reference level, with the other predictors held constant. Above 1 raises the odds, below 1 lowers them. The p-values are Wald tests; the likelihood-ratio test above is the one for the model as a whole. The intervals are Wald intervals. The Hosmer-Lemeshow test is not shown, because programs form its groups differently and report different values.'+notes+'</p>';
       const bits=names.map((nm,j)=>nm+' (OR = '+coef[j+1].or.toFixed(2)+', 95% CI ['+coef[j+1].lo.toFixed(2)+', '+coef[j+1].hi.toFixed(2)+'], '+fmtP(coef[j+1].p)+')');
       const apa='A logistic regression with '+names.join(', ')+' as predictors of '+dvName+' ('+m.posL+' versus '+m.negL+') '+(pLR<0.05?'was significant':'was not significant')+', χ²('+k+', N = '+n+') = '+lr.toFixed(2)+', '+fmtP(pLR)+', Nagelkerke R² = '+f3(nag)+'. The model classified '+(acc*100).toFixed(1)+'% of cases correctly (AUC = '+f2(auc)+'). Odds ratios: '+bits.join('; ')+'.';
+      statsResultsShow(html,apa);
+
+    }else if(key==='wilcox1'){
+      const idx=parseInt(gv('dv'),10),name=d.cols[idx].name,mu=parseFloat(gv('mu'))||0;
+      const vals=statsColVals(idx,true),diffs=vals.map(v=>v-mu).filter(x=>x!==0),nZero=vals.length-diffs.length,n=diffs.length;
+      if(n<2){showToast('Need at least 2 values that differ from the test value');return}
+      const absd=diffs.map(Math.abs),r=ranks(absd);let wPlus=0,wMinus=0;
+      diffs.forEach((x,i)=>{if(x>0)wPlus+=r[i];else wMinus+=r[i]});
+      const W=Math.min(wPlus,wMinus),meanW=n*(n+1)/4,tieS=stkTieTerm(absd),exactOK=(tieS===0&&nZero===0&&n<50);
+      const sdW=Math.sqrt(Math.max(1e-12,n*(n+1)*(2*n+1)/24-tieS/48));
+      const z=Math.min(0,W-meanW+0.5)/sdW,p=exactOK?stkExactSR(n,W):pFromZ(z),rbc=(wPlus-wMinus)/(n*(n+1)/2),md=smedian(vals);
+      const html='<table class="stats-table"><tr><th>N (values that differ)</th><th>Median</th><th>Test value</th><th>W</th><th>z</th><th>p</th></tr><tr><td>'+n+'</td><td>'+md.toFixed(2)+'</td><td>'+mu+'</td><td>'+W.toFixed(1)+'</td><td>'+(exactOK?'—':z.toFixed(2))+'</td><td>'+pCell(p)+'</td></tr></table>'+
+        '<p class="desc">'+(nZero?nZero+' value'+(nZero===1?' equals':'s equal')+' the test value and drop out. ':'')+(exactOK?'Exact p-value, because no values are tied and none equals the test value.':'Normal approximation with continuity and tie corrections.')+' Matched-pairs rank-biserial r = '+noLead(rbc.toFixed(2))+' (positive: values tend to lie above the test value).</p>';
+      const apa='A one-sample Wilcoxon signed-rank test showed that '+name+' (Mdn = '+md.toFixed(2)+') was '+(sig(p)?'significantly '+(md>mu?'higher':'lower')+' than':'not significantly different from')+' the test value of '+mu+(exactOK?', '+fmtP(p)+' (exact)':', z = '+z.toFixed(2)+', '+fmtP(p))+', rank-biserial r = '+noLead(rbc.toFixed(2))+'.';
+      statsResultsShow(html,apa);statsChartHistogram(vals,'Distribution of '+name+' (test value = '+mu+')');
+
+    }else if(key==='binom'){
+      const i1=parseInt(gv('v1'),10),nm=d.cols[i1].name,p0=parseFloat(gv('p0')===''?'0.5':gv('p0'));
+      if(!(p0>0&&p0<1)){showToast('The target proportion must be a number between 0 and 1, such as 0.5');return}
+      const raw=d.rows.map(r=>r[i1]).filter(v=>v!==undefined&&v!=='').map(v=>String(v).trim()),lv=[...new Set(raw)];
+      if(lv.length!==2){showToast(lv.length<2?'The column has only one answer, so there is nothing to test.':'The column has '+lv.length+' different answers. It must have exactly two.');return}
+      const want=(gv('pos')||'').trim().toLowerCase();let pos=null;
+      if(want){lv.forEach(x=>{if(x.toLowerCase()===want)pos=x});if(pos===null){showToast('“'+gv('pos').trim()+'” is not one of the two answers ('+lv.join(', ')+').');return}}
+      else{lv.forEach(x=>{if(['1','yes','true','y','present','agree'].indexOf(x.toLowerCase())>=0)pos=x});if(pos===null){const sr=lv.slice().sort((a,b)=>{const u=parseFloat(a),w=parseFloat(b);return isFinite(u)&&isFinite(w)?u-w:(a<b?-1:a>b?1:0)});pos=sr[1]}}
+      const n=raw.length,k=raw.filter(x=>x===pos).length,ph=k/n,pB=stkBinomP(k,n,p0),ci=stkWilson(k,n),h=2*Math.asin(Math.sqrt(ph))-2*Math.asin(Math.sqrt(p0));
+      const html='<table class="stats-table"><tr><th>Success</th><th>N</th><th>Successes</th><th>Observed</th><th>Target</th><th>95% CI (Wilson)</th><th>p (exact)</th></tr><tr><td>'+escHTML(pos)+'</td><td>'+n+'</td><td>'+k+'</td><td>'+noLead(ph.toFixed(3))+'</td><td>'+noLead(p0.toFixed(3))+'</td><td>['+noLead(ci[0].toFixed(3))+', '+noLead(ci[1].toFixed(3))+']</td><td>'+pCell(pB)+'</td></tr></table>'+
+        '<p class="desc">The exact test adds the probability of every count no more likely than the one observed, so it needs no large-sample approximation and suits small samples. Cohen\'s h = '+h.toFixed(2)+' (0.2 small, 0.5 medium, 0.8 large). The target should come from outside your data, for example a published rate.</p>';
+      const apa='An exact binomial test showed that the proportion of '+nm+' = '+pos+' ('+noLead(ph.toFixed(2))+', 95% CI ['+noLead(ci[0].toFixed(2))+', '+noLead(ci[1].toFixed(2))+']) was '+(sig(pB)?'significantly different from':'not significantly different from')+' the target of '+noLead(p0.toFixed(2))+', '+fmtP(pB)+', Cohen\'s h = '+h.toFixed(2)+'.';
+      statsResultsShow(html,apa);statsChartBarMeans(['Observed','Target'],[ph,p0],null,'Proportion of '+nm+' = '+pos,'Proportion');
+
+    }else if(key==='pointbis'){
+      const i1=parseInt(gv('v1'),10),i2=parseInt(gv('v2'),10),n1=d.cols[i1].name,n2=d.cols[i2].name;
+      const rows=d.rows.filter(r=>r[i1]!==undefined&&r[i1]!==''&&r[i2]!==undefined&&r[i2]!=='').map(r=>[statsNum(r[i1]),String(r[i2]).trim()]).filter(q=>isFinite(q[0]));
+      const lv=[...new Set(rows.map(q=>q[1]))];
+      if(lv.length!==2){showToast(lv.length<2?'The two-group variable has only one answer.':'The two-group variable has '+lv.length+' different answers. It must have exactly two.');return}
+      lv.sort((a,b)=>{const u=parseFloat(a),w=parseFloat(b);return isFinite(u)&&isFinite(w)?u-w:(a<b?-1:a>b?1:0)});
+      const n=rows.length;if(n<4){showToast('Need at least 4 complete rows');return}
+      const xs=rows.map(q=>q[0]),ys=rows.map(q=>q[1]===lv[1]?1:0),mx=smean(xs),my=smean(ys);
+      let sxy=0,sxx=0,syy=0;for(let i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx);syy+=(ys[i]-my)*(ys[i]-my)}
+      if(!(sxx>0)||!(syy>0)){showToast('One variable has no spread, so a correlation cannot be calculated.');return}
+      const r=sxy/Math.sqrt(sxx*syy),df=n-2,t=r*Math.sqrt(df/(1-r*r)),p=pFromT(t,df);
+      const zf=0.5*Math.log((1+r)/(1-r)),se=1/Math.sqrt(Math.max(1,n-3)),lo=Math.tanh(zf-1.959963984540054*se),hi=Math.tanh(zf+1.959963984540054*se);
+      const g0=xs.filter((v,i)=>!ys[i]),g1=xs.filter((v,i)=>ys[i]);
+      const html='<table class="stats-table"><tr><th>Group</th><th>N</th><th>Mean</th><th>SD</th></tr><tr><td>'+escHTML(lv[0])+'</td><td>'+g0.length+'</td><td>'+smean(g0).toFixed(2)+'</td><td>'+(g0.length>1?ssd(g0).toFixed(2):'–')+'</td></tr><tr><td>'+escHTML(lv[1])+'</td><td>'+g1.length+'</td><td>'+smean(g1).toFixed(2)+'</td><td>'+(g1.length>1?ssd(g1).toFixed(2):'–')+'</td></tr></table>'+
+        '<p class="desc">r<sub>pb</sub>('+df+') = '+noLead(r.toFixed(2))+', 95% CI ['+noLead(lo.toFixed(2))+', '+noLead(hi.toFixed(2))+'], '+fmtP(p)+'. The sign says which group scores higher: positive means '+escHTML(lv[1])+' scores higher than '+escHTML(lv[0])+'. Its p-value equals that of the pooled-variance t-test on the same data. If you only want the difference between the groups, the independent-samples t-test (Welch) or Mann-Whitney U also answers that.</p>';
+      const apa='A point-biserial correlation showed '+(sig(p)?'a significant':'no significant')+' relationship between '+n1+' and '+n2+' ('+lv[1]+' coded 1, '+lv[0]+' coded 0), r_pb('+df+') = '+noLead(r.toFixed(2))+', 95% CI ['+noLead(lo.toFixed(2))+', '+noLead(hi.toFixed(2))+'], '+fmtP(p)+'.';
+      statsResultsShow(html,apa);statsChartBarMeans([lv[0],lv[1]],[smean(g0),smean(g1)],null,n1+' by '+n2,n1);
+
+    }else if(key==='poisson'){
+      const m=stkMRData(false),dvName=d.cols[m.dvI].name;
+      if(m.err){showToast(m.err);return}
+      const k=m.xs.length,n=m.y.length;
+      if(k<1){showToast('Tick at least 1 predictor column.');return}
+      if(k>12){showToast('This test handles up to 12 predictor columns after categorical predictors are expanded');return}
+      if(m.y.some(v=>v<0||Math.floor(v)!==v)){showToast('The outcome must be counts: whole numbers of 0 or more. Use multiple regression for a score such as a total.');return}
+      if(n<k+10){showToast('Too few rows for this model: '+n+'. Need at least '+(k+10)+'.');return}
+      const o=stkPoisson(m.xs,m.y);
+      if(!o){showToast('Every count is 0, so there is nothing to predict.');return}
+      if(o.singular){showToast('Two or more predictors carry the same information (one is a copy or an exact combination of others, or has no variation), so the model cannot be calculated. Remove one.');return}
+      if(o.sep){showToast('The model could not be fitted. A predictor may separate the counts perfectly, or the numbers are on very different scales. Remove a predictor or rescale it.');return}
+      const lr=2*(o.ll-o.ll0),pLR=pFromChi(Math.max(0,lr),k),disp=o.pearson/o.df,names=m.labels,f3=x=>noLead(x.toFixed(3));
+      let rows='';const coef=[];
+      for(let j=0;j<=k;j++){const b=o.beta[j],se=o.se[j],z=b/se,pj=pFromZ(z),irr=Math.exp(b),lo=Math.exp(b-1.959963984540054*se),hi=Math.exp(b+1.959963984540054*se);
+        coef.push({b:b,se:se,z:z,p:pj,irr:irr,lo:lo,hi:hi});
+        rows+='<tr><td>'+(j===0?'Intercept':escHTML(names[j-1]))+'</td><td>'+b.toFixed(3)+'</td><td>'+se.toFixed(3)+'</td><td>'+z.toFixed(2)+'</td><td>'+pCell(pj)+'</td><td>'+(j===0?'':irr.toFixed(3))+'</td><td>'+(j===0?'':'['+lo.toFixed(3)+', '+hi.toFixed(3)+']')+'</td></tr>'}
+      const zeros=m.y.filter(v=>v===0).length,expZ=o.mu.reduce((a,mu)=>a+Math.exp(-mu),0);
+      let notes='';
+      if(disp>1.5)notes+=' The counts vary more than a Poisson model allows (dispersion '+disp.toFixed(2)+'; it should be close to 1). The standard errors above are then too small and the p-values too optimistic. Treat this result as provisional and ask a statistician about a negative binomial or quasi-Poisson model.';
+      else if(disp<0.67)notes+=' The counts vary less than a Poisson model expects (dispersion '+disp.toFixed(2)+'), so the standard errors are somewhat too large.';
+      if(zeros>1.5*expZ&&zeros-expZ>5)notes+=' There are '+zeros+' zeros where the model expects about '+Math.round(expZ)+'. Many extra zeros point to a zero-inflated model, which is a case for a statistician.';
+      if(m.refs.length)notes+=' Each categorical predictor is turned into 0/1 columns, one per level except the reference level. Reference levels: '+m.refs.map(r=>r.name+' = '+r.level+(r.auto?' (the largest group)':'')).join('; ')+'.';
+      if(m.dropped)notes+=' '+m.dropped+' row'+(m.dropped===1?' was':'s were')+' left out because a value was missing.';
+      const html='<p class="desc">Model: the log of the expected count of '+escHTML(dvName)+' predicted from '+names.map(escHTML).join(', ')+'. N = '+n+'.</p>'+
+        '<table class="stats-table"><tr><th>Likelihood-ratio χ²</th><th>df</th><th>p</th><th>Deviance</th><th>Dispersion</th></tr><tr><td>'+lr.toFixed(2)+'</td><td>'+k+'</td><td>'+pCell(pLR)+'</td><td>'+o.deviance.toFixed(2)+'</td><td>'+disp.toFixed(2)+'</td></tr></table>'+
+        '<table class="stats-table" style="margin-top:10px"><tr><th>Predictor</th><th>b (log count)</th><th>SE</th><th>Wald z</th><th>p</th><th>Rate ratio</th><th>95% CI for the rate ratio</th></tr>'+rows+'</table>'+
+        '<p class="desc">A rate ratio is the factor by which the expected count is multiplied for one more unit of a numeric predictor, or for the level against the reference level, with the others held constant. Above 1 raises the count, below 1 lowers it. Dispersion is Pearson χ² divided by its df.'+notes+'</p>';
+      const bits=names.map((nm,j)=>nm+' (RR = '+coef[j+1].irr.toFixed(2)+', 95% CI ['+coef[j+1].lo.toFixed(2)+', '+coef[j+1].hi.toFixed(2)+'], '+fmtP(coef[j+1].p)+')');
+      const apa='A Poisson regression with '+names.join(', ')+' as predictors of '+dvName+' '+(pLR<0.05?'was significant':'was not significant')+', χ²('+k+', N = '+n+') = '+lr.toFixed(2)+', '+fmtP(pLR)+'. '+bits.join('; ')+'. Dispersion = '+disp.toFixed(2)+'.';
       statsResultsShow(html,apa);
 
     }else if(key==='moderate'){
@@ -25420,10 +25569,10 @@ function calmNumber(){document.querySelectorAll('.tool-sidebar .stage-group').fo
    "All tests" brings the full list back. The test list, its fields and the run button are unchanged. */
 const SL_AIMS=[
  {k:'desc',en:'Describe my data',hi:'डेटा का वर्णन',tests:['desc'],why:['Means, SDs, ranges and counts for each variable. Start here before any test.','हर चर के माध्य, SD, रेंज और गिनती। किसी भी टेस्ट से पहले यहीं से शुरू करें।']},
- {k:'cmp',en:'Compare groups',hi:'समूहों की तुलना',tests:['ttestInd','welchAnova','anova1','tukey','anova2','mannwhitney','kruskal','ttest1'],why:['Different people in each group. Welch t-test for two groups, Welch ANOVA for three or more; the rank-based tests if scores are badly skewed.','हर समूह में अलग लोग। दो समूहों के लिए Welch t-test, तीन या अधिक के लिए Welch ANOVA; स्कोर बहुत तिरछे हों तो रैंक वाले टेस्ट।']},
+ {k:'cmp',en:'Compare groups',hi:'समूहों की तुलना',tests:['ttestInd','welchAnova','anova1','tukey','anova2','mannwhitney','kruskal','ttest1','wilcox1'],why:['Different people in each group. Welch t-test for two groups, Welch ANOVA for three or more; the rank-based tests if scores are badly skewed.','हर समूह में अलग लोग। दो समूहों के लिए Welch t-test, तीन या अधिक के लिए Welch ANOVA; स्कोर बहुत तिरछे हों तो रैंक वाले टेस्ट।']},
  {k:'rep',en:'Same people, measured again',hi:'वही लोग, दोबारा मापे गए',tests:['ttestPaired','wilcoxon','rmanova','friedman','mixed','mcnemar','cochran'],why:['Before and after, or several times. Paired t-test for two times, repeated-measures ANOVA for three or more; Wilcoxon or Friedman if scores are skewed.','पहले और बाद में, या कई बार। दो बार के लिए paired t-test, तीन या अधिक के लिए repeated-measures ANOVA; स्कोर तिरछे हों तो Wilcoxon या Friedman।']},
- {k:'rel',en:'Are two things related?',hi:'क्या दो चीज़ें जुड़ी हैं?',tests:['pearson','spearman','chisq','gof'],why:['Two number variables: Pearson, or Spearman for ranks or skewed scores. Two category variables: chi-square.','दो संख्यात्मक चर: Pearson, या रैंक/तिरछे स्कोर के लिए Spearman। दो श्रेणी वाले चर: chi-square।']},
- {k:'pred',en:'Predict or explain an outcome',hi:'परिणाम का पूर्वानुमान या व्याख्या',tests:['regression','mregress','logistic','moderate','mediate'],why:['One predictor: simple regression. Several: multiple regression. A yes/no outcome: logistic regression. Moderation and mediation for "when" and "how" questions.','एक भविष्यवक्ता: simple regression। कई: multiple regression। हाँ/ना परिणाम: logistic regression। "कब" और "कैसे" वाले प्रश्नों के लिए moderation और mediation।']},
+ {k:'rel',en:'Are two things related?',hi:'क्या दो चीज़ें जुड़ी हैं?',tests:['pearson','spearman','pointbis','chisq','gof','binom'],why:['Two number variables: Pearson, or Spearman for ranks or skewed scores. Two category variables: chi-square.','दो संख्यात्मक चर: Pearson, या रैंक/तिरछे स्कोर के लिए Spearman। दो श्रेणी वाले चर: chi-square।']},
+ {k:'pred',en:'Predict or explain an outcome',hi:'परिणाम का पूर्वानुमान या व्याख्या',tests:['regression','mregress','logistic','poisson','moderate','mediate'],why:['One predictor: simple regression. Several: multiple regression. A yes/no outcome: logistic regression. Moderation and mediation for "when" and "how" questions.','एक भविष्यवक्ता: simple regression। कई: multiple regression। हाँ/ना परिणाम: logistic regression। "कब" और "कैसे" वाले प्रश्नों के लिए moderation और mediation।']},
  {k:'rel2',en:'Check a scale',hi:'स्केल की जाँच',tests:['alpha'],why:['Internal consistency of a scale: Cronbach\'s alpha with McDonald\'s omega.','स्केल की आंतरिक संगति: Cronbach\'s alpha और McDonald\'s omega।']}];
 let slAim='';
 function slAimsRender(){const sel=document.getElementById('statsTest');if(!sel)return;const fld=sel.closest('.fld');if(!fld)return;
