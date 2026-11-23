@@ -3772,6 +3772,9 @@ const editor=document.getElementById('editor'),aiOut=document.getElementById('ai
 
 /* ============ FIX 1: one escaper, used everywhere ============ */
 const escHTML=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Version 140 (security): a value placed inside onclick="fn('...')" must be escaped for the JS string and then for the
+   HTML attribute, in that order. An id or name from a backup file can then never close the string or the attribute. */
+const jsq=s=>escHTML(String(s==null?'':s).replace(/[\\'"]/g,'\\$&').replace(/[\n\r\u2028\u2029]/g,' '));
 let toastT=null;
 /* Hindi for the fixed English toast messages; a message not in the table shows as written. */
 const TOAST_HI_RE=[["^Captured \\\"(.+)\\\" into your citation library ✓$", "“$1” आपके उद्धरण संग्रह में जोड़ा गया ✓"], ["^Code added: (.+)$", "Code जोड़ा गया: $1"], ["^Could not read enough text\\. (?:Skipped: (.+))?$", "पर्याप्त पाठ नहीं पढ़ा जा सका। $1"], ["^Exported (\\d+) passages ✓ Opens in Excel$", "$1 अंश निकाले गए ✓ Excel में खुलते हैं"], ["^Importing (\\d+) files — each becomes its own document…$", "$1 फ़ाइलें लाई जा रही हैं — हर एक अपना अलग दस्तावेज़ बनेगी…"], ["^Not found among the ticked items: (.+)$", "चुने गए items में नहीं मिला: $1"], ["^Now using (.+?) ✓ Your next AI request goes to (.+)\\.$", "अब $1 इस्तेमाल हो रहा है ✓ आपका अगला एआई अनुरोध $2 को जाएगा।"], ["^Pack set: (.+)$", "Pack तय हुआ: $1"], ["^Paste your (.+) key to enable it$", "इसे चालू करने के लिए अपनी $1 key चिपकाएँ"], ["^Quick read (\\d+) of (\\d+)…$", "Quick read: $2 में से $1…"], ["^Quick read done for (\\d+) of (\\d+)( \\(the first 10 ticked\\))?$", "$2 में से $1 का Quick read हो गया$3"], ["^Tagged as \\\"(.+?)\\\" ✓(?: \\((\\d+) pieces joined as one passage\\))?$", "“$1” के रूप में tag किया गया ✓"], ["^The log shows (\\d+) requests? in these dates\\. Tick them, or change the dates, before you say that no AI was used\\.$", "इन तारीख़ों में लॉग $1 अनुरोध दिखाता है। यह कहने से पहले कि एआई का उपयोग नहीं हुआ, उन पर निशान लगाएँ या तारीख़ें बदलें।"], ["^This grouping variable needs exactly 2 groups — it has (\\d+)$", "इस grouping variable के ठीक 2 groups होने चाहिए — इसमें $1 हैं"], ["^Your access expires in (\\d+) days? — ask for a renewal code soon$", "आपकी पहुँच $1 दिन में समाप्त होगी — जल्द नवीनीकरण code माँगें"], ["^Your field: (.+)$", "आपका विषय: $1"], ["^💜 Studying (.+) words of your writing…$", "💜 आपके लेखन के $1 शब्द पढ़े जा रहे हैं…"], ["^(.+) did not answer, so this request used (.+) instead\\.$", "$1 ने जवाब नहीं दिया, इसलिए इस अनुरोध के लिए $2 इस्तेमाल हुआ।"], ["^(\\d+) sources merged into your library ✓$", "$1 स्रोत आपके संग्रह में मिलाए गए ✓"], ["^(\\d+) classic psychology sources added ✓$", "$1 प्रसिद्ध मनोविज्ञान स्रोत जोड़े गए ✓"], ["^Could not import (.+)$", "$1 लाई नहीं जा सकी"], ["^Imported \\\"(.+)\\\" ✓ — check formatting before you keep going$", "“$1” लाया गया ✓ — आगे बढ़ने से पहले प्रारूप जाँचें"], ["^This grouping variable needs exactly 2 groups — it has (\\d+)$", "इस grouping variable के ठीक 2 groups होने चाहिए — इसमें $1 हैं"], ["^List every category once, like A:50, B:30, C:20\\. Categories found: (.+)$", "हर category एक बार लिखें, जैसे A:50, B:30, C:20। मिली categories: $1"], ["^Need more people than conditions \\((\\d+) conditions, (\\d+) people with complete scores\\)\\. Sphericity cannot be checked otherwise\\.$", "conditions से ज़्यादा लोग चाहिए ($1 conditions, पूरे scores वाले $2 लोग)। वरना sphericity नहीं जाँची जा सकती।"], ["^Too few rows for this model: (\\d+) complete rows with (\\d+) events and (\\d+) non-events\\. Need at least (\\d+) rows and 3 of each outcome\\.$", "इस model के लिए पंक्तियाँ बहुत कम हैं: $1 पूरी पंक्तियाँ, $2 events और $3 non-events। कम से कम $4 पंक्तियाँ और हर परिणाम के 3 चाहिए।"], ["^Every group needs at least 2 people with a score in every ticked column\\. Group \\\"(.+)\\\" has fewer\\.$", "हर group में कम से कम 2 ऐसे लोग चाहिए जिनका हर चुने column में score हो। Group “$1” में कम हैं।"], ["^(.+) Using the device voice until you pick Natural voice again\\.$", "$1 जब तक आप फिर से Natural voice नहीं चुनते, device की आवाज़ इस्तेमाल होगी।"]].map(x=>[new RegExp(x[0]),x[1]]);
@@ -4107,7 +4110,7 @@ function subCount(stage,o){o=o||studyGet();const list=SUBSTAGES.filter(x=>x[1]==
   return{done:list.filter(x=>['dn','na','ap'].includes(subState(x[0],o).s)).length,total:list.length}}
 function subSet(id,patch){const o=studyGet();o.sub=o.sub||{};o.sub[id]=Object.assign({},o.sub[id]||{},patch,{at:Date.now()});studySet(o);subRender()}
 function subStageBtn(stage){if(!SUB_STAGE_LETTER[stage])return'';const c=subCount(stage),hi=studyHi();
-  return'<button type="button" class="back-btn" id="subBtn" onclick="subOpen(\''+stage+'\')" title="'+(hi?'इस stage के छोटे कदम, कैसे भरें, और status':'The steps inside this stage, how to fill them, and their status')+'">🧭 '+(hi?'इस stage के कदम':'Steps in this stage')+' '+c.done+'/'+c.total+'</button>'}
+  return'<button type="button" class="back-btn" id="subBtn" onclick="subOpen(\''+jsq(stage)+'\')" title="'+(hi?'इस stage के छोटे कदम, कैसे भरें, और status':'The steps inside this stage, how to fill them, and their status')+'">🧭 '+(hi?'इस stage के कदम':'Steps in this stage')+' '+c.done+'/'+c.total+'</button>'}
 let SUB_CUR={stage:'idea',id:''};
 function subOpen(stage,id){stage=stage||'idea';const list=SUBSTAGES.filter(x=>x[1]===stage);
   SUB_CUR={stage:stage,id:id||(list.find(x=>!['dn','na','ap'].includes(subState(x[0]).s))||list[0])[0]};
@@ -4117,7 +4120,7 @@ function subOpen(stage,id){stage=stage||'idea';const list=SUBSTAGES.filter(x=>x[
   subBackPill(false);subRender();if(!d.open)d.showModal()}
 function subRender(){const d=document.getElementById('subDlg');if(!d||!d.open&&!d.innerHTML&&!SUB_CUR.stage)return;if(!d)return;const hi=studyHi(),o=studyGet(),stage=SUB_CUR.stage;
   if(SUB_DOCK_ON){d.innerHTML=subTaskbarHTML(o);return}
-  const tabs=STAGES.map(s=>{const c=subCount(s,o);return'<button type="button" class="sub-tab'+(s===stage?' on':'')+'" onclick="subOpen(\''+s+'\')"><span class="sub-tn">'+(STAGES.indexOf(s)+1)+'</span>'+escHTML(stageLabel(s))+' <span class="sub-tc">'+c.done+'/'+c.total+'</span></button>'}).join('');
+  const tabs=STAGES.map(s=>{const c=subCount(s,o);return'<button type="button" class="sub-tab'+(s===stage?' on':'')+'" onclick="subOpen(\''+jsq(s)+'\')"><span class="sub-tn">'+(STAGES.indexOf(s)+1)+'</span>'+escHTML(stageLabel(s))+' <span class="sub-tc">'+c.done+'/'+c.total+'</span></button>'}).join('');
   const list=SUBSTAGES.filter(x=>x[1]===stage).map(x=>{const st=subState(x[0],o);return'<button type="button" class="sub-item'+(x[0]===SUB_CUR.id?' on':'')+'" onclick="SUB_CUR.id=\''+x[0]+'\';subRender()">'+SUB_ICON[st.s]+' <b>'+x[0]+'</b> '+escHTML(subL(x[2]))+'</button>'}).join('');
   d.innerHTML='<div class="sub-wrap"><div class="sub-dockbar"><b>'+escHTML(SUB_CUR.id+' · '+((SUBSTAGES.find(y=>y[0]===SUB_CUR.id)||[0,0,['','']])[2][hi?1:0]))+'</b><button type="button" class="btn btn-ghost btn-sm" onclick="subUndock()">↔ '+(hi?'सभी steps':'All steps')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕</button></div><div class="sub-head"><b style="margin-right:6px">🧭 '+(hi?'Research के कदम':'Research steps')+'</b>'+tabs+'<span style="flex:1"></span><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()">✕ '+(hi?'बंद करें':'Close')+'</button></div>'+s1HeaderHTML()+'<div class="sub-body s1-body"><div class="sub-list">'+list+'</div><div class="sub-main" id="subMain">'+subDetailHTML(SUB_CUR.id,o)+'</div></div></div>'}
 /* When each step's source was last checked against the original (register v6, TST-018). Review every 12 months. */
@@ -4129,7 +4132,7 @@ const SUB_STEP_BTN={A1:['Ask AI to check my topic','AI से मेरा व�
 function subToolLabel(k,id){if(id&&SUB_STEP_BTN[id]&&k==='idea')return SUB_STEP_BTN[id];return SUB_TOOL_LABEL[k]||['Open the tool for this step','इस step का tool खोलें']}
 /* A page-panel tool opens beside the step: the step stays on the left (instructions and what is still needed), the tool on the right. On a phone the tool takes the screen and a pill brings the step back. */
 function tbFlowHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,sid=SUB_CUR.stage,F=STAGE_FLOW[sid];if(!F)return'';const cur=SUB_CUR.id,dec=((wGet(o).A4)||{}).dec,c=a4Counts(o);
-  const nodes=F.g.map((g,i)=>{const n=sfNodeHTML(sid,g,i,o),here=g[1].includes(cur);return'<button type="button" class="tb-n'+n.cls+'" onclick="tbGo(\''+(here?cur:n.first)+'\')"><span class="tb-c">'+n.c+'</span><span class="tb-nl">'+escHTML(n.l)+'</span></button>'}).join('');
+  const nodes=F.g.map((g,i)=>{const n=sfNodeHTML(sid,g,i,o),here=g[1].includes(cur);return'<button type="button" class="tb-n'+n.cls+'" onclick="tbGo(\''+jsq((here?cur:n.first))+'\')"><span class="tb-c">'+n.c+'</span><span class="tb-nl">'+escHTML(n.l)+'</span></button>'}).join('');
   if(!F.dec)return nodes;
   const lbl=dec?({go:L('Go ahead','आगे बढ़ें'),revise:L('Revise','बदलें'),new:L('New topic','नया विषय'),stop:L('Stop','रुकें')})[dec]:L('Decision','फ़ैसला');
   return nodes+'<span class="tb-n tb-d'+(dec?' set':(c.left===0?' ready':''))+'"><span class="tb-c">⚑</span><span class="tb-nl">'+escHTML(lbl)+'</span></span>'}
@@ -4138,7 +4141,7 @@ function tbFlowRefresh(){const f=document.getElementById('tbFlow');if(!f)return;
 /* Task bar (build 2026.11.02s): while a tool is open the step shrinks to one bar at the bottom, so the tool gets the whole width. */
 function subTaskbarHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,id=SUB_CUR.id,x=SUBSTAGES.find(y=>y[0]===id)||[id,'',['',''],['',''],['',''],'',''],isLs=LS_IDS.includes(id),is=isLs?lsIssues(id,o):[],st=subState(id,o).s,done=['dn','na','ap'].includes(st);
   const chips=isLs?(done||!is.length?'<span class="tb-chip ok">✓ '+L('Done','पूरा')+'</span>':is.slice(0,2).map(t=>'<span class="tb-chip no">'+escHTML(t.length>44?t.slice(0,42)+'…':t)+'</span>').join('')+(is.length>2?'<span class="tb-chip">+'+(is.length-2)+' '+L('more','और')+'</span>':'')):(done?'<span class="tb-chip ok">✓ '+L('Done','पूरा')+'</span>':'');
-  const mark=!isLs&&!done?'<button type="button" class="btn btn-purple btn-sm" onclick="subStatusPick(\''+id+'\',\'dn\')">'+L('Mark done','पूरा हुआ')+'</button>':'';
+  const mark=!isLs&&!done?'<button type="button" class="btn btn-purple btn-sm" onclick="subStatusPick(\''+jsq(id)+'\',\'dn\')">'+L('Mark done','पूरा हुआ')+'</button>':'';
   const flow=STAGE_FLOW[SUB_CUR.stage]?'<div class="tb-flow" id="tbFlow">'+tbFlowHTML(o)+'</div>':'';
   return'<div class="sub-taskbar"><div id="tbHow" class="tb-how" hidden><b>'+escHTML(id+' · '+subL(x[2]))+'</b><p>'+escHTML(subL(x[3]))+'</p></div>'+flow+'<div class="tb-row"><div class="tb-title"><span class="tb-k">'+L('Your step','आपका step')+'</span><b>'+escHTML(id+' · '+subL(x[2]))+'</b></div><div class="tb-chips" id="tbChips">'+chips+'</div><div class="tb-act"><button type="button" class="btn btn-ghost btn-sm" onclick="var h=document.getElementById(\'tbHow\');h.hidden=!h.hidden">ⓘ '+L('How to fill','कैसे भरें')+'</button>'+mark+'<button type="button" class="btn btn-ghost btn-sm" onclick="subUndock()">↔ '+L('All steps','सभी steps')+'</button><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'subDlg\').close()" aria-label="Close">✕</button></div></div></div>'}
 let SUB_DOCK_ON=false;
@@ -4163,9 +4166,9 @@ function subDetailHTML(id,o){const hi=studyHi(),x=SUBSTAGES.find(y=>y[0]===id);i
   try{h+=subExtraHTML(id,o)}catch(e){}
   if(x[6]){const dock=x[6].charAt(0)!=='@',act=dock?"showTool('"+x[6]+"')":x[6].slice(1),lab=subToolLabel(x[6],id);h+='<div class="row" style="margin:6px 0"><button type="button" class="btn btn-purple" onclick="'+(dock?'subDock(\''+x[6]+'\')':"document.getElementById('subDlg').close();"+escAttr(act))+'">'+escHTML(hi?lab[1]:lab[0])+' →</button></div>'}
   h+='<div class="sub-box"><b>'+(hi?'Status':'Status')+'</b>'+(st.auto?'<p class="desc" style="margin:4px 0">'+(hi?'App को आपकी study में यह भरा मिला, इसलिए "पूरा" दिखा रहा है। आप बदल सकते हैं।':'The app found this filled in your study, so it shows Done. You can change it.')+'</p>':'')+
-   '<select id="subSel" onchange="subStatusPick(\''+id+'\',this.value)">'+SUB_STATUS.filter(s=>s[0]!=='ap').map(s=>'<option value="'+s[0]+'"'+(s[0]===st.s?' selected':'')+'>'+SUB_ICON[s[0]]+' '+(hi?s[2]:s[1])+'</option>').join('')+'</select>'+
-   '<div id="subWhyBox" style="margin-top:8px;'+(st.s==='na'?'':'display:none')+'"><label class="desc">'+(hi?'यह कदम लागू क्यों नहीं? (ज़रूरी, supervisor देख सकेंगे)':'Why does this step not apply? (required; your supervisor can see it)')+'</label><textarea id="subWhy" rows="2" onchange="subSet(\''+id+'\',{why:this.value})">'+escHTML(rec.why||'')+'</textarea></div>'+
-   '<label class="desc" style="display:block;margin-top:8px"><b>'+(hi?'मेरी research डायरी: करना है / जाँचना है':'My research diary: To do / To check')+'</b></label><textarea id="subNote" rows="2" placeholder="'+escAttr(hi?'जैसे: दूसरी hypothesis के बारे में supervisor से पूछना है':'e.g. Ask my supervisor about the second hypothesis')+'" onchange="subSet(\''+id+'\',{note:this.value})">'+escHTML(rec.note||'')+'</textarea></div>';
+   '<select id="subSel" onchange="subStatusPick(\''+jsq(id)+'\',this.value)">'+SUB_STATUS.filter(s=>s[0]!=='ap').map(s=>'<option value="'+s[0]+'"'+(s[0]===st.s?' selected':'')+'>'+SUB_ICON[s[0]]+' '+(hi?s[2]:s[1])+'</option>').join('')+'</select>'+
+   '<div id="subWhyBox" style="margin-top:8px;'+(st.s==='na'?'':'display:none')+'"><label class="desc">'+(hi?'यह कदम लागू क्यों नहीं? (ज़रूरी, supervisor देख सकेंगे)':'Why does this step not apply? (required; your supervisor can see it)')+'</label><textarea id="subWhy" rows="2" onchange="subSet(\''+jsq(id)+'\',{why:this.value})">'+escHTML(rec.why||'')+'</textarea></div>'+
+   '<label class="desc" style="display:block;margin-top:8px"><b>'+(hi?'मेरी research डायरी: करना है / जाँचना है':'My research diary: To do / To check')+'</b></label><textarea id="subNote" rows="2" placeholder="'+escAttr(hi?'जैसे: दूसरी hypothesis के बारे में supervisor से पूछना है':'e.g. Ask my supervisor about the second hypothesis')+'" onchange="subSet(\''+jsq(id)+'\',{note:this.value})">'+escHTML(rec.note||'')+'</textarea></div>';
   return h}
 function subStatusPick(id,v){const hi=studyHi();if(v==='na'){const box=document.getElementById('subWhyBox');if(box)box.style.display='';const w=(document.getElementById('subWhy')||{}).value||'';
     if(String(w).trim().length<5){showToast(hi?'"लागू नहीं" चुनने के लिए कारण लिखें':'Write the reason to mark this Not applicable');const o=studyGet();o.sub=o.sub||{};o.sub[id]=Object.assign({},o.sub[id]||{},{pendingNa:true});LS.set(studyKey(),JSON.stringify(o));setTimeout(()=>{const t=document.getElementById('subWhy');if(t){t.focus();t.onchange=function(){if(this.value.trim().length>=5)subSet(id,{why:this.value,s:'na',pendingNa:false});else subSet(id,{why:this.value})}}},50);return}
@@ -4205,8 +4208,8 @@ function ethicsSet(path,val){const o=studyGet();const e=ethicsGet(o);const k=pat
   if(path==='route'||path.indexOf('risk.')===0){if(e.und)e.und.changed=false}
   o.ethics=e;studySet(o);const m=document.getElementById('subMain');if(m&&SUB_CUR.id==='C9')m.innerHTML=subDetailHTML('C9',studyGet());try{subRender()}catch(x){}}
 function ethicsFormHTML(o){const hi=studyHi(),L=(en,h)=>hi?h:en,e=ethicsGet(o),s=ethicsState(o),bar=ethicsBarred(o);
-  const inp=(path,val,label,type,req)=>'<label class="desc" style="display:block;margin-top:6px">'+label+(req?' *':'')+'</label><input type="'+(type||'text')+'" value="'+escAttr(val||'')+'" onchange="ethicsSet(\''+path+'\','+(type==='checkbox'?'this.checked':'this.value')+')">';
-  const chk=(path,val,label,dis)=>'<label style="display:block;margin:4px 0;font-size:14px"><input type="checkbox"'+(val?' checked':'')+(dis?' disabled':'')+' onchange="ethicsSet(\''+path+'\',this.checked)"> '+label+'</label>';
+  const inp=(path,val,label,type,req)=>'<label class="desc" style="display:block;margin-top:6px">'+label+(req?' *':'')+'</label><input type="'+(type||'text')+'" value="'+escAttr(val||'')+'" onchange="ethicsSet(\''+jsq(path)+'\','+(type==='checkbox'?'this.checked':'this.value')+')">';
+  const chk=(path,val,label,dis)=>'<label style="display:block;margin:4px 0;font-size:14px"><input type="checkbox"'+(val?' checked':'')+(dis?' disabled':'')+' onchange="ethicsSet(\''+jsq(path)+'\',this.checked)"> '+label+'</label>';
   let h='<div class="sub-box" style="border-color:'+(s.open?'#16a34a':'#b45309')+'"><b>'+(s.open?'🔓 ':'🔒 ')+(s.open?(s.route==='und'?L('Data collection open: researcher\'s declaration (closer monitoring)','Data collection खुला: researcher का घोषणा-पत्र (कड़ी निगरानी)'):L('Data collection open: '+(s.route==='exe'?'exempted by ethics committee':'approved by ethics committee'),'Data collection खुला: '+(s.route==='exe'?'ethics committee से exempt':'ethics committee से स्वीकृत'))):L('Data collection is locked','Data collection बंद है'))+'</b>'+
    (s.open?'':'<p style="margin:6px 0 0">'+L('This study involves people, so it needs ethics approval. Please provide the approval document. Still missing: ','इस study में लोग शामिल हैं, इसलिए ethics approval चाहिए। कृपया approval का document दें। अभी बाकी: ')+escHTML(s.missing.join(', '))+'</p>')+'</div>';
   if(s.none)h='<div class="sub-box"><b>➖ '+L('No human participants','कोई human participant नहीं')+'</b><p style="margin:6px 0 0">'+L('This step does not apply and the secure form stays off. If you will collect data from people, choose another route.','यह कदम लागू नहीं, और secure form बंद रहेगा। अगर लोगों से data लेना है, तो दूसरा रास्ता चुनें।')+'</p></div>';
@@ -4244,7 +4247,7 @@ function ethicsGate(){const s=ethicsState();if(s.open)return true;const hi=study
   subOpen('design','C9');return false}
 /* Route 3 monitoring: at each new stage, ask whether the study changed. */
 function ethicsWatchHTML(stage){const o=studyGet(),e=ethicsGet(o),s=ethicsState(o);if(e.route!=='und'||!s.open)return'';const und=e.und||{};if(und.lastStage===stage)return'';const hi=studyHi();
-  return'<span class="study-strip" style="flex-basis:100%;font-size:13px;border:1px solid #b45309;border-radius:8px;padding:6px 8px">⚠️ '+(hi?'आपने ethics review ज़रूरी नहीं बताया है। इस stage में आने पर: क्या study बदली (participants, सवाल, जोखिम)?':'You declared that ethics review is not needed. On entering this stage: has the study changed (participants, questions, risk)?')+' <button type="button" class="back-btn" onclick="ethicsConfirm(\''+stage+'\',false)">'+(hi?'नहीं बदली':'No change')+'</button> <button type="button" class="back-btn" onclick="ethicsConfirm(\''+stage+'\',true)">'+(hi?'हाँ, बदली है':'Yes, it changed')+'</button></span>'}
+  return'<span class="study-strip" style="flex-basis:100%;font-size:13px;border:1px solid #b45309;border-radius:8px;padding:6px 8px">⚠️ '+(hi?'आपने ethics review ज़रूरी नहीं बताया है। इस stage में आने पर: क्या study बदली (participants, सवाल, जोखिम)?':'You declared that ethics review is not needed. On entering this stage: has the study changed (participants, questions, risk)?')+' <button type="button" class="back-btn" onclick="ethicsConfirm(\''+jsq(stage)+'\',false)">'+(hi?'नहीं बदली':'No change')+'</button> <button type="button" class="back-btn" onclick="ethicsConfirm(\''+jsq(stage)+'\',true)">'+(hi?'हाँ, बदली है':'Yes, it changed')+'</button></span>'}
 function ethicsConfirm(stage,changed){const o=studyGet(),e=ethicsGet(o);e.und.lastStage=stage;e.checks=(e.checks||[]).concat([{stage:stage,changed:!!changed,at:Date.now()}]).slice(-50);if(changed)e.und.changed=true;o.ethics=e;studySet(o);
   if(changed){showToast(studyHi()?'Data collection रोका गया। जोखिम फिर से देखें और रास्ता चुनें।':'Data collection paused. Review the risks and choose the route again.');subOpen('design','C9')}}
 
@@ -4322,14 +4325,14 @@ function logCsv(key){const d=logDef(key),rows=logRows(studyGet(),key),q=v=>'"'+c
   const csv=[d.cols.map(c=>q(c[1])).join(',')].concat(rows.map(r=>d.cols.map(c=>q(r[c[0]])).join(','))).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='appuscholar-'+key+'-log.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 function logTableHTML(d,o){if(d.only&&((wGet(o).B1||{}).type)!==d.only)return'';const hi=studyHi(),rows=logRows(o,d.key),L=a=>hi?a[1]:a[0];
-  const cell=(c,r,i)=>{const v=r[c[0]]==null?'':r[c[0]],on='onchange="logCell(\''+d.key+'\','+i+',\''+c[0]+'\',this.value)"';
+  const cell=(c,r,i)=>{const v=r[c[0]]==null?'':r[c[0]],on='onchange="logCell(\''+jsq(d.key)+'\','+i+',\''+c[0]+'\',this.value)"';
     if(c[3]==='sel')return'<select '+on+'><option value=""></option>'+c[4].map(x=>'<option'+(x===v?' selected':'')+'>'+escHTML(x)+'</option>').join('')+'</select>';
     if(c[3]==='text'&&/paper|finding|limit|^c$|reply|why|what|^q$|^h$|^res$|^mean$|^lim$|^str$|^weak$|^dv$|^quote$|^def$|^codes$/.test(c[0]))return'<textarea rows="2" '+on+'>'+escHTML(v)+'</textarea>';
     return'<input type="'+(c[3]==='num'||c[3]==='dec'?'number':c[3]==='date'?'date':'text')+'"'+(c[3]==='num'?' min="0"':c[3]==='dec'?' step="any"':'')+' value="'+escAttr(v)+'" '+on+'>'};
   let h='<div class="sub-box"><b>'+escHTML(L(d.t))+'</b> <span class="desc">('+rows.length+')</span><p class="desc" style="margin:4px 0">'+escHTML(L(d.note))+'</p>'+
    '<div style="overflow-x:auto"><table class="log-tbl" style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px"><thead><tr>'+d.cols.map(c=>'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--line,#ddd)">'+escHTML(hi?c[2]:c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>'+
-   rows.map((r,i)=>'<tr>'+d.cols.map(c=>'<td style="padding:3px;vertical-align:top">'+cell(c,r,i)+'</td>').join('')+'<td><button type="button" class="btn btn-ghost btn-sm" title="'+(hi?'हटाएँ':'Remove')+'" onclick="logDel(\''+d.key+'\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>'+
-   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="logAdd(\''+d.key+'\')">+ '+(hi?'पंक्ति जोड़ें':'Add a row')+'</button>'+(d.lib?'<button type="button" class="btn btn-ghost btn-sm" onclick="logFromLibrary(\''+d.key+'\')">📚 '+(d.key==='effects'?(hi?'शामिल papers की पंक्तियाँ जोड़ें':'Add a row for each included paper'):(hi?'Library के हर paper की पंक्ति जोड़ें':'Add a row for each library paper'))+'</button>':'')+(rows.length?'<button type="button" class="btn btn-ghost btn-sm" onclick="logCsv(\''+d.key+'\')">⬇ CSV</button>':'')+'</div>';
+   rows.map((r,i)=>'<tr>'+d.cols.map(c=>'<td style="padding:3px;vertical-align:top">'+cell(c,r,i)+'</td>').join('')+'<td><button type="button" class="btn btn-ghost btn-sm" title="'+(hi?'हटाएँ':'Remove')+'" onclick="logDel(\''+jsq(d.key)+'\','+i+')">✕</button></td></tr>').join('')+'</tbody></table></div>'+
+   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn btn-purple btn-sm" onclick="logAdd(\''+jsq(d.key)+'\')">+ '+(hi?'पंक्ति जोड़ें':'Add a row')+'</button>'+(d.lib?'<button type="button" class="btn btn-ghost btn-sm" onclick="logFromLibrary(\''+jsq(d.key)+'\')">📚 '+(d.key==='effects'?(hi?'शामिल papers की पंक्तियाँ जोड़ें':'Add a row for each included paper'):(hi?'Library के हर paper की पंक्ति जोड़ें':'Add a row for each library paper'))+'</button>':'')+(rows.length?'<button type="button" class="btn btn-ghost btn-sm" onclick="logCsv(\''+jsq(d.key)+'\')">⬇ CSV</button>':'')+'</div>';
   if(d.key==='search'&&rows.some(r=>Array.isArray(r.keys))){const m=b2Summary(o);h+='<p class="desc" style="margin:6px 0 0">'+(hi?m.searches+' searches में '+m.read+' records पढ़े गए, '+m.unique+' अलग-अलग, '+m.dup+' duplicate।':m.searches+' searches read '+m.read+' records: '+m.unique+' different papers, '+m.dup+' duplicates.')+' <button type="button" class="btn btn-ghost btn-sm" onclick="b2UsePrisma()">'+(hi?'PRISMA flow में डालें':'Put into the PRISMA flow')+'</button></p>'}
   if(d.key==='effects'&&rows.length){const m=new Set(rows.map(r=>r.measure).filter(Boolean)),bad=rows.filter(r=>r.es===''||r.es==null||r.lo===''||r.lo==null||r.hi===''||r.hi==null||(+r.lo>+r.es)||(+r.hi<+r.es)).length;
     h+='<p class="desc" style="margin:6px 0 0;'+(m.size>1||bad?'color:#b45309':'')+'">'+(m.size>1?(hi?'अलग-अलग माप मिले हैं ('+[...m].join(', ')+')। उन्हें सीधे जोड़ा नहीं जा सकता।':'Different measures are mixed ('+[...m].join(', ')+'). They cannot be pooled as they are. ')+' ':'')+(bad?(hi?bad+' पंक्तियों में संख्या अधूरी है, या interval effect size को घेरता नहीं।':bad+' row(s) have a missing number, or an interval that does not contain the effect size.'):(hi?'सभी पंक्तियाँ पूरी हैं।':'All rows are complete.'))+'</p>'}
@@ -4970,7 +4973,7 @@ function dgPlanSet(s,k,v){const o=studyGet();o.write=o.write||{};const c=o.write
 function dgGanttInsert(){const d=dgGantt(studyGet());if(!d){showToast(studyHi()?'कम से कम दो stages के महीने भरें':'Fill the months for at least two stages');return}dgInsert(d,'Figure. Work plan of the study (months from registration).','Work plan chart','syn.timeline','gantt')}
 function dgPlanHTML(o){const hi=studyHi(),L=(en,x)=>hi?x:en,p=((wGet(o).C8||{}).plan)||{},d=dgGantt(o);
   return'<p style="margin:12px 0 2px"><b>'+L('Work plan (time chart)','काम की योजना (समय-सारणी)')+'</b> <span class="desc">'+L('Month 1 is the month you register.','Month 1 = registration का महीना।')+'</span></p><table style="font-size:13px;border-collapse:collapse"><tr><th style="text-align:left;padding:3px">'+L('Stage','Stage')+'</th><th style="padding:3px">'+L('Starts in month','किस महीने से')+'</th><th style="padding:3px">'+L('Lasts (months)','कितने महीने')+'</th></tr>'+
-   STAGES.map(s=>'<tr><td style="padding:3px">'+escHTML(stageLabel(s))+'</td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).a||'')+'" onchange="dgPlanSet(\''+s+'\',\'a\',this.value)"></td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).d||'')+'" onchange="dgPlanSet(\''+s+'\',\'d\',this.value)"></td></tr>').join('')+'</table>'+
+   STAGES.map(s=>'<tr><td style="padding:3px">'+escHTML(stageLabel(s))+'</td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).a||'')+'" onchange="dgPlanSet(\''+jsq(s)+'\',\'a\',this.value)"></td><td style="padding:3px"><input type="number" min="1" max="60" style="width:70px" value="'+escAttr((p[s]||{}).d||'')+'" onchange="dgPlanSet(\''+jsq(s)+'\',\'d\',this.value)"></td></tr>').join('')+'</table>'+
    (d?'<div style="margin-top:8px;border:1px solid var(--line,#ddd);border-radius:8px;padding:6px;background:#fff;overflow-x:auto">'+d.svg+'</div><div class="row" style="margin-top:6px"><button type="button" class="btn btn-ghost btn-sm" onclick="dgGanttInsert()">📊 '+L('Put the time chart in my document','समय-सारणी document में डालें')+'</button></div>':'')}
 
 /* ============ Plan → test → meaning → Results (build 2026.10.28f) ============
@@ -5196,10 +5199,10 @@ function sfNodeHTML(sid,g,i,o,onclickFn){const hi=studyHi(),L=(en,x)=>hi?x:en,cu
   return{cls:(st.done?' done':'')+(isCur?' cur':''),c:st.done?'✓':(i+1),l:g[0][hi?1:0],a:isCur&&!ans?L('You are here','आप यहाँ हैं'):ans||L('not started','शुरू नहीं'),first:(g[1].find(x=>!['dn','na','ap'].includes(subState(x,o).s))||g[1][0])}}
 function sfGo(id){SUB_CUR.id=id;subRender();if(SUB_DOCK_ON)subWorkAdd()}
 function s1HeaderHTML(){const sid=SUB_CUR.stage,F=STAGE_FLOW[sid];if(!F)return'';const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),cur=SUB_CUR.id,dec=((wGet(o).A4)||{}).dec,c=a4Counts(o);
-  const nodes=F.g.map((g,i)=>{const n=sfNodeHTML(sid,g,i,o);const here=g[1].includes(cur);return'<button type="button" class="s1-node'+n.cls+'" onclick="sfGo(\''+(here?cur:n.first)+'\')"'+(here?' aria-current="step"':'')+'><span class="s1-c">'+n.c+'</span><span class="s1-l">'+escHTML(n.l)+'</span><span class="s1-a">'+escHTML(n.a)+'</span></button>'}).join('');
+  const nodes=F.g.map((g,i)=>{const n=sfNodeHTML(sid,g,i,o);const here=g[1].includes(cur);return'<button type="button" class="s1-node'+n.cls+'" onclick="sfGo(\''+jsq((here?cur:n.first))+'\')"'+(here?' aria-current="step"':'')+'><span class="s1-c">'+n.c+'</span><span class="s1-l">'+escHTML(n.l)+'</span><span class="s1-a">'+escHTML(n.a)+'</span></button>'}).join('');
   let decNode='';if(F.dec){const ready=c.left===0&&!dec,decLbl=dec?({go:L('Go ahead','आगे बढ़ें'),revise:L('Revise','बदलें'),new:L('New topic','नया विषय'),stop:L('Stop','रुकें')})[dec]:(ready?L('Choose below','नीचे चुनें'):L('Opens after step 4','Step 4 के बाद'));
     decNode='<div class="s1-dec'+(dec?' set':ready?' ready':'')+'"><span class="s1-c s1-dc">'+L('Decision','फ़ैसला')+'</span><span class="s1-l">'+escHTML(decLbl)+'</span><span class="s1-a">'+L('Go · Revise · New topic · Stop','आगे · बदलें · नया विषय · रुकें')+'</span></div>'}
-  const grp=F.g.find(g=>g[1].includes(cur)),subRow=grp&&grp[1].length>1?'<div class="s1-sub" id="s1Sub">'+grp[1].map(id=>{const x=SUBSTAGES.find(y=>y[0]===id),st=subState(id,o).s;return'<button type="button" class="s1-sp'+(id===cur?' on':'')+'" onclick="sfGo(\''+id+'\')">'+SUB_ICON[st]+' <b>'+id+'</b> '+escHTML(subL(x[2]))+'</button>'}).join('')+'</div>':'';
+  const grp=F.g.find(g=>g[1].includes(cur)),subRow=grp&&grp[1].length>1?'<div class="s1-sub" id="s1Sub">'+grp[1].map(id=>{const x=SUBSTAGES.find(y=>y[0]===id),st=subState(id,o).s;return'<button type="button" class="s1-sp'+(id===cur?' on':'')+'" onclick="sfGo(\''+jsq(id)+'\')">'+SUB_ICON[st]+' <b>'+id+'</b> '+escHTML(subL(x[2]))+'</button>'}).join('')+'</div>':'';
   const total=F.g.reduce((a,g)=>a+g[1].length,0);
   return'<div class="s1-top"><div class="s1-intro"><div class="s1-k">'+F.n[hi?1:0]+'</div><h1>'+F.t[hi?1:0]+'</h1><p>'+F.p[hi?1:0]+'</p><p class="s1-why"><b>'+L('Why it comes here: ','यह यहाँ क्यों: ')+'</b>'+F.w[hi?1:0]+'</p><div class="s1-meta">'+(F.time?'<span>⏱ '+F.time[hi?1:0]+'</span>':'')+'<span>'+total+' '+L('steps','steps')+(F.dec?L(' and one decision',' और एक फ़ैसला'):'')+'</span></div></div>'+
    '<div class="s1-vid"><span class="s1-pl">▶</span><b>'+L('How this stage works','यह stage कैसे चलता है')+'</b><small>'+L('video coming soon','video जल्द आ रहा है')+'</small></div></div>'+
@@ -5208,7 +5211,7 @@ function s1HeaderHTML(){const sid=SUB_CUR.stage,F=STAGE_FLOW[sid];if(!F)return''
 function s1Refresh(){tbFlowRefresh();const f=document.getElementById('s1Flow');if(!f)return;const t=document.createElement('div');t.innerHTML=s1HeaderHTML();const n=t.querySelector('#s1Flow');if(!n||n.children.length!==f.children.length){if(n)f.innerHTML=n.innerHTML;return}
   [...f.children].forEach((el,i)=>{const nw=n.children[i];el.className=nw.className;const ac=nw.getAttribute('aria-current');ac?el.setAttribute('aria-current',ac):el.removeAttribute('aria-current');[...el.children].forEach((c,j)=>{const x=nw.children[j];if(x&&c.textContent!==x.textContent)c.textContent=x.textContent})});
   const sb=document.getElementById('s1Sub'),nb=t.querySelector('#s1Sub');if(sb&&nb&&sb.children.length===nb.children.length)[...sb.children].forEach((el,i)=>{el.className=nb.children[i].className;if(el.innerHTML!==nb.children[i].innerHTML)el.innerHTML=nb.children[i].innerHTML})}
-function lsHTML(id,o,work){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues(id,o),a=w[id]||{},ta=(k,lab,ph)=>'<label class="desc" style="display:block;margin-top:6px">'+lab+'</label><textarea rows="2"'+(ph?' placeholder="'+escAttr(ph)+'"':'')+' onchange="lsSet(\''+id+'\',\''+k+'\',this.value)">'+escHTML(a[k]||'')+'</textarea>';
+function lsHTML(id,o,work){const hi=studyHi(),L=(en,x)=>hi?x:en,w=wGet(o),is=lsIssues(id,o),a=w[id]||{},ta=(k,lab,ph)=>'<label class="desc" style="display:block;margin-top:6px">'+lab+'</label><textarea rows="2"'+(ph?' placeholder="'+escAttr(ph)+'"':'')+' onchange="lsSet(\''+jsq(id)+'\',\''+k+'\',this.value)">'+escHTML(a[k]||'')+'</textarea>';
   let body='';
   if(id==='A1')body=a1HTML(a);
   if(id==='A3')body=ta('aim',L('Aim (one sentence)','Aim (एक वाक्य)'),L('e.g. To find out whether sleep hours relate to exam anxiety.','जैसे: यह जानना कि नींद के घंटे परीक्षा की चिंता से जुड़े हैं या नहीं।'))+ta('q',L('Research question (ends with ?)','Research question (अंत में ?)'),L('e.g. Do fewer sleep hours go with more exam anxiety in first-year nursing students?','जैसे: क्या कम नींद के घंटे प्रथम वर्ष नर्सिंग छात्रों में परीक्षा की ज़्यादा चिंता से जुड़े हैं?'))+'<label style="display:block;margin:6px 0;font-size:14px"><input type="checkbox"'+(a.noHyp?' checked':'')+' onchange="lsSet(\'A3\',\'noHyp\',this.checked)"> '+L('This study is exploratory or qualitative, so it has no hypotheses','यह study exploratory या qualitative है, इसलिए hypotheses नहीं')+'</label>';
@@ -5274,8 +5277,8 @@ function packDel(id){const l=packsCustom().filter(x=>x.id!==id);LS.set('appu_pac
 function packOpen(){let d=document.getElementById('packDlg');if(!d){d=document.createElement('dialog');d.id='packDlg';d.className='dlg-wide';document.body.appendChild(d)}packRender();if(!d.open)d.showModal()}
 function packRender(){const d=document.getElementById('packDlg');if(!d)return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),cur=packGet(o);
   const row=p=>'<div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:8px 10px;margin:6px 0'+(cur&&cur.id===p.id?';border-color:#16a34a':'')+'"><b>'+escHTML(p.name)+'</b> '+(p.verified?'<span class="desc">✓ '+L('checked ','जाँचा: ')+escHTML(p.checked)+'</span>':'<span style="color:#b45309;font-size:12px">⚠ '+L('not checked by Appuscholar','Appuscholar से जाँचा नहीं गया')+'</span>')+
-    '<br><span class="desc">'+L('Source: ','स्रोत: ')+escHTML(p.src)+(p.note?'. '+escHTML(p.note):'')+'</span><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">'+(cur&&cur.id===p.id?'<button type="button" class="btn btn-ghost btn-sm" onclick="packUse(\'\')">'+L('Stop using','हटाएँ')+'</button>':'<button type="button" class="btn btn-purple btn-sm" onclick="packUse(\''+p.id+'\')">'+L('Use for this study','इस study पर लागू करें')+'</button>')+
-    '<button type="button" class="btn btn-ghost btn-sm" onclick="packExport(\''+p.id+'\')">⬆ '+L('Share as a file','File के रूप में दें')+'</button>'+(p.verified?'':'<button type="button" class="btn btn-ghost btn-sm" onclick="packDel(\''+p.id+'\')">✕</button>')+'</div></div>';
+    '<br><span class="desc">'+L('Source: ','स्रोत: ')+escHTML(p.src)+(p.note?'. '+escHTML(p.note):'')+'</span><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">'+(cur&&cur.id===p.id?'<button type="button" class="btn btn-ghost btn-sm" onclick="packUse(\'\')">'+L('Stop using','हटाएँ')+'</button>':'<button type="button" class="btn btn-purple btn-sm" onclick="packUse(\''+jsq(p.id)+'\')">'+L('Use for this study','इस study पर लागू करें')+'</button>')+
+    '<button type="button" class="btn btn-ghost btn-sm" onclick="packExport(\''+jsq(p.id)+'\')">⬆ '+L('Share as a file','File के रूप में दें')+'</button>'+(p.verified?'':'<button type="button" class="btn btn-ghost btn-sm" onclick="packDel(\''+jsq(p.id)+'\')">✕</button>')+'</div></div>';
   d.innerHTML='<div class="dlg-body"><h2>📦 '+L('Rule packs','नियमों के पैकेट')+'</h2><p class="desc">'+L('A pack sets the citation style, the synopsis sections, the thesis chapters, the abstract limit and the documents to submit for this study. The steps then check your work against it.','पैकेट इस study के लिए citation style, synopsis के sections, thesis के chapters, abstract की सीमा और जमा करने वाले documents तय करता है। फिर कदम आपके काम को उसी से जाँचते हैं।')+'</p>'+
    packsAll().map(row).join('')+
    '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">'+L('Make a pack from your university\'s ordinance','अपनी university के ordinance से पैकेट बनाएँ')+'</summary>'+
@@ -5720,7 +5723,7 @@ function studyStatsHint(){const dlg=document.getElementById('statsDlg');if(!dlg)
   const data=window._statsData;let scl=[];try{scl=SCALES}catch(e){}
   if(data&&data.headers){scl.forEach(x=>{const nm=slVarNames(x).map(z=>z.toLowerCase());const have=data.headers.filter(hh=>nm.indexOf(String(hh).toLowerCase().replace(/[^a-z0-9_]/g,''))>=0).length;
     if(have>=Math.ceil(x.items.length/2)&&data.headers.some(hh=>String(hh).toLowerCase()===(x.id+'_total').toLowerCase()))h+='<br>✅ '+(hi?x.short+' का total score data में है ('+x.id+'_total)।':x.short+' is scored ('+x.id+'_total is in your data).');
-    else if(have>=Math.ceil(x.items.length/2))h+='<br>🧮 '+(hi?'आपके data में '+x.short+' के column मिले। ':'Your data has the '+x.short+' columns. ')+'<button type="button" class="btn btn-ghost btn-sm" onclick="slScoreOpen(\''+x.id+'\')">'+(hi?'पहले '+x.short+' का कुल score बनाएँ':'Score the '+x.short+' first')+'</button>'})}
+    else if(have>=Math.ceil(x.items.length/2))h+='<br>🧮 '+(hi?'आपके data में '+x.short+' के column मिले। ':'Your data has the '+x.short+' columns. ')+'<button type="button" class="btn btn-ghost btn-sm" onclick="slScoreOpen(\''+jsq(x.id)+'\')">'+(hi?'पहले '+x.short+' का कुल score बनाएँ':'Score the '+x.short+' first')+'</button>'})}
   try{h+=planRunHTML()}catch(e){}
   box.innerHTML=h}
 /* One button per main hypothesis in the analysis plan (C7): picks the planned test and the columns,
@@ -6161,9 +6164,12 @@ function shareClose(){const d=document.getElementById('shareDlg');if(d)d.close()
 async function shareDocx(){const hi=studyHi();const docs=docsGet(),cur=docs.find(x=>x.id===docCurrentId());const title=(cur&&cur.title)||'paper';const safe=title.replace(/[^\w\- ]+/g,'').trim()||'paper';
   try{const holder=document.createElement('div');holder.innerHTML=getEditorHTML().replace(/​/g,'');const blob=await dxBuild(holder,title);
     await shareBlob(blob,safe+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document')}catch(e){showToast(hi?'Word file नहीं बनी। Download Word वाला button आज़माएँ।':'Could not make the Word file. Try the Download Word button.')}}
+/* Version 140: the print copy is made by removing attributes from parsed elements, never by editing the HTML text with a
+   pattern (a pattern can cut a stored string in a way that turns text into live markup). */
+function printableEditorHTML(){const d=inertDiv(safeStoredHTML(getEditorHTML().replace(/\u200b/g,'')));d.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));return d.innerHTML}
 function sharePdf(){const hi=studyHi(),w=window.open('','_blank');if(!w){showToast(hi?'Popup रुका हुआ है। इस site के लिए popup चालू करें।':'Pop-up blocked. Allow pop-ups for this site.');return}
   const docs=docsGet(),cur=docs.find(x=>x.id===docCurrentId());const title=(cur&&cur.title)||'Paper';
-  w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+escHTML(title)+'</title><style>@page{size:A4;margin:22mm 20mm 20mm}body{font-family:"Times New Roman",Georgia,serif;font-size:12pt;line-height:1.6;color:#111}img{max-width:100%}h1{font-size:17pt}h2{font-size:14pt}h3{font-size:12pt}.draft-ph{background:#fff4c2}.foot{position:fixed;bottom:6mm;right:0;font:9pt Arial;color:#999}</style></head><body>'+getEditorHTML().replace(/​/g,'').replace(/contenteditable="[^"]*"/g,'')+'<div class="foot">Draft · Appuscholar</div><script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script></body></html>');w.document.close()}
+  w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+escHTML(title)+'</title><style>@page{size:A4;margin:22mm 20mm 20mm}body{font-family:"Times New Roman",Georgia,serif;font-size:12pt;line-height:1.6;color:#111}img{max-width:100%}h1{font-size:17pt}h2{font-size:14pt}h3{font-size:12pt}.draft-ph{background:#fff4c2}.foot{position:fixed;bottom:6mm;right:0;font:9pt Arial;color:#999}</style></head><body>'+printableEditorHTML()+'<div class="foot">Draft · Appuscholar</div><script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script></body></html>');w.document.close()}
 /* Idea inbox: a sudden idea or question, saved to the open project in one step. */
 function ideasGet(){const o=studyGet();return Array.isArray(o.inbox)?o.inbox:[]}
 function ideaInboxOpen(){const hi=studyHi();let d=document.getElementById('inboxDlg');
@@ -6287,9 +6293,9 @@ function renderStageGuide(tool){
   const idx=STAGES.indexOf(stage);
   const nxt=nextStageTool(idx),prv=prevStageTool(idx);
   let html='<span>'+t('stage_guide_fmt').replace('{n}',idx+1).replace('{total}',STAGES.length)+' · <b>'+escHTML(stageLabel(stage))+'</b></span>';
-  if(prv)html+='<button type="button" class="back-btn" onclick="showTool(\''+prv.tool+'\')">← '+escHTML(t('stage_guide_back'))+' '+escHTML(stageLabel(prv.stage))+'</button>';
+  if(prv)html+='<button type="button" class="back-btn" onclick="showTool(\''+jsq(prv.tool)+'\')">← '+escHTML(t('stage_guide_back'))+' '+escHTML(stageLabel(prv.stage))+'</button>';
   html+=nxt
-    ? '<button type="button" class="next-btn" onclick="showTool(\''+nxt.tool+'\')">'+escHTML(t('stage_guide_next'))+' '+escHTML(stageLabel(nxt.stage))+' →</button>'
+    ? '<button type="button" class="next-btn" onclick="showTool(\''+jsq(nxt.tool)+'\')">'+escHTML(t('stage_guide_next'))+' '+escHTML(stageLabel(nxt.stage))+' →</button>'
     : '<span class="next-btn" style="border:none;cursor:default">'+escHTML(t('stage_guide_final'))+'</span>';
   el.style.display='flex';
   try{html+=subStageBtn(stage)}catch(e){}
@@ -6458,10 +6464,10 @@ function openProjectsDlg(){
         +(p.status==='complete'?'<span class="badge" style="background:#16a34a;color:#fff">'+escHTML(t('project_complete_badge'))+'</span>':'<span class="badge">'+escHTML(stageLabel(p.stage))+'</span>')+'</div>'
         +'<div class="row" style="margin-top:8px">'
         +(active?'<span class="desc" style="align-self:center">'+escHTML(t('project_currently_open'))+'</span>'
-                :'<button type="button" class="btn btn-ghost btn-sm" onclick="setActiveProject(\''+p.id+'\');document.getElementById(\'projectsDlg\').close()">'+escHTML(t('project_open_btn'))+'</button>')
+                :'<button type="button" class="btn btn-ghost btn-sm" onclick="setActiveProject(\''+jsq(p.id)+'\');document.getElementById(\'projectsDlg\').close()">'+escHTML(t('project_open_btn'))+'</button>')
         +(p.status==='complete'
-            ?'<button type="button" class="btn btn-ghost btn-sm" onclick="reopenProject(\''+p.id+'\')">'+escHTML(t('project_reopen_btn'))+'</button>'
-            :'<button type="button" class="btn btn-ghost btn-sm" onclick="completeProject(\''+p.id+'\')">'+escHTML(t('project_complete_btn'))+'</button>')
+            ?'<button type="button" class="btn btn-ghost btn-sm" onclick="reopenProject(\''+jsq(p.id)+'\')">'+escHTML(t('project_reopen_btn'))+'</button>'
+            :'<button type="button" class="btn btn-ghost btn-sm" onclick="completeProject(\''+jsq(p.id)+'\')">'+escHTML(t('project_complete_btn'))+'</button>')
         +'</div></div>';
     }).join('');
   }
@@ -6759,7 +6765,7 @@ function bodyToHTML(body){
    code is taken out, and element ids and names are dropped so stored text cannot overwrite the app's own
    variables or controls. The result is cleaned a second time; if the two passes disagree the markup is
    unstable (the mark of a mutation attack) and the body is shown as plain text instead. */
-const SAFE_DROP='script,iframe,frame,frameset,object,embed,applet,link,meta,base,form,noscript,noembed,noframes,xmp,plaintext,template,portal,set,animate,animateTransform,animateMotion,foreignObject,math';
+const SAFE_DROP='style,script,iframe,frame,frameset,object,embed,applet,link,meta,base,form,noscript,noembed,noframes,xmp,plaintext,template,portal,set,animate,animateTransform,animateMotion,foreignObject,math';
 function safeStoredPass(html){
   const t=document.createElement('template');t.innerHTML=html;const root=t.content;
   root.querySelectorAll(SAFE_DROP).forEach(n=>n.remove());
@@ -6767,16 +6773,27 @@ function safeStoredPass(html){
     for(const a of Array.from(el.attributes)){
       const nm=a.name.toLowerCase(),v=String(a.value||'').replace(/[\x00-\x20\x7f]+/g,'');
       if(nm.startsWith('on')||nm==='formaction'||nm==='srcdoc'||nm==='id'||nm==='name'||nm==='form'||nm==='is'){el.removeAttribute(a.name);continue}
+      if(nm.startsWith('data-')&&nm!=='data-orig'&&/[<>"'`\\]/.test(a.value)){el.removeAttribute(a.name);continue}
+      if(nm==='style'&&/url\s*\(|expression|behavior|-moz-binding|position\s*:\s*(fixed|sticky)|@import/i.test(a.value)){el.removeAttribute(a.name);continue}
+      if(nm==='popovertarget'||nm==='for'||nm==='commandfor'||nm==='aria-controls'){el.removeAttribute(a.name);continue}
       if(/(^|:)(href|src|action|background|poster|data|lowsrc|dynsrc|cite|ping|srcset)$/.test(nm)&&/(^|,)\s*(javascript|vbscript|data:text\/html|data:image\/svg|data:application)/i.test(v)){el.removeAttribute(a.name)}
     }
   });
   const d=document.createElement('div');d.appendChild(root.cloneNode(true));return d.innerHTML;
 }
+/* Cleaning a large book takes a moment, and some screens ask for the same body many times in a row, so the last
+   few results are kept in memory (never saved). */
+const SAFE_CACHE=new Map();
 function safeStoredHTML(html){
   html=String(html||'');
   if(!html||!/[<&]/.test(html))return html;
-  try{const one=safeStoredPass(html),two=safeStoredPass(one);return one===two?one:escHTML(htmlPlainText(html))}
-  catch(e){return escHTML(html)}
+  const hit=SAFE_CACHE.get(html);if(hit!==undefined)return hit;
+  let out;
+  try{const one=safeStoredPass(html),two=safeStoredPass(one);out=one===two?one:escHTML(htmlPlainText(html))}
+  catch(e){out=escHTML(html)}
+  SAFE_CACHE.set(html,out);SAFE_CACHE.set(out,out);
+  while(SAFE_CACHE.size>24)SAFE_CACHE.delete(SAFE_CACHE.keys().next().value);
+  return out;
 }
 /* An element that nothing can run in: for counting words or reading text out of stored HTML. */
 function inertDiv(html){
@@ -7890,6 +7907,23 @@ function backupDocsInfo(data){
 }
 /* Version 140: a backup file can come from anyone, so every document body in it goes through the same
    cleaner before it is written. A file whose document list cannot be read is not restored at all. */
+/* Version 140: ids, keys and colours in a restored file are used to build buttons and links all over the app. Any id that
+   carries a quote, angle bracket, backtick, backslash, ampersand or control character is rewritten the same way
+   everywhere in that key (so links between records still match); keys with such characters are dropped; colours
+   must look like colours. Normal ids, including spaces and Hindi, are left exactly as they are. */
+const BK_BAD=/[<>"'`\\&\u0000-\u001f]/;
+function backupCleanIds(raw){
+  if(typeof raw!=='string'||!/^[\[{]/.test(raw.trim()))return raw;
+  let v;try{v=JSON.parse(raw)}catch(e){return raw}
+  const bad=new Set();
+  (function scan(o){if(Array.isArray(o))o.forEach(scan);else if(o&&typeof o==='object')Object.keys(o).forEach(k=>{const x=o[k];if(typeof x==='string'&&/(^|_)(id|cid|pid|did|sid|book|doc|key)$/i.test(k)&&BK_BAD.test(x))bad.add(x);scan(x)})})(v);
+  const fix=x=>x.replace(new RegExp(BK_BAD.source,'g'),'_');
+  let changed=bad.size>0;
+  const walk=o=>{if(Array.isArray(o))return o.map(walk);if(o&&typeof o==='object'){const n={};Object.keys(o).forEach(k=>{if(BK_BAD.test(k)){changed=true;return}let x=o[k];
+      if(/^colou?r$/i.test(k)&&typeof x==='string'&&cssColor(x)!==x.trim()){changed=true;x='#888'}n[k]=walk(x)});return n}
+    if(typeof o==='string'&&bad.has(o))return fix(o);return o};
+  const out=walk(v);return changed?JSON.stringify(out):raw;
+}
 function backupCleanDocs(json){
   const docs=JSON.parse(json);if(!Array.isArray(docs))throw new Error('docs');
   return JSON.stringify(docs.map(d=>(d&&typeof d.body==='string'&&looksLikeStoredHTML(d.body))?Object.assign({},d,{body:safeStoredHTML(d.body)}):d));
@@ -8009,6 +8043,7 @@ async function backupRestoreFile(input){
   if(!confirm(msg)){input.value='';return}
   window._bkRestoring=true;try{clearTimeout(saveT)}catch(e){}
   try{if(clean.appu_docs)clean.appu_docs=backupCleanDocs(clean.appu_docs)}catch(e){delete clean.appu_docs}
+  Object.keys(clean).forEach(k=>{try{clean[k]=backupCleanIds(clean[k])}catch(e){}});
   try{if(clean.appu_docs)clean.appu_docs=await imgExternalizeJson(clean.appu_docs)}catch(e){}
   /* Every key is written and read back. If the browser refuses any of them (usually because the
      backup is larger than the free storage), the old data goes back exactly as it was, nothing is
@@ -11621,6 +11656,7 @@ function qualToggleColors(){
   editor.classList.toggle('qual-hide',!on);
   LS.set('appu_qual_showcolors',on?'1':'0');
 }
+function cssColor(c){c=String(c||'').trim();return /^#[0-9a-fA-F]{3,8}$|^[a-zA-Z]{1,24}$|^(rgb|hsl)a?\([\d\s.,%]{1,40}\)$/.test(c)?c:'#888'}
 function qualRenderTree(){
   const el=document.getElementById('qualTree');if(!el)return;
   const codes=qualCodesGet();
@@ -11631,12 +11667,12 @@ function qualRenderTree(){
     return codes.filter(c=>c.parentId===parentId).map(c=>{
       const kids=renderLevel(c.id,depth+1);
       return '<div class="qual-code-row" style="padding-left:'+(depth*18)+'px">'+
-        '<span class="qual-code-swatch" style="background:'+c.color+'" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+c.id+'\')"></span>'+
-        '<span class="qual-code-name" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+c.id+'\')">'+escHTML(c.name)+' <span style="font-weight:400;color:var(--muted);font-size:12px" title="Passages tagged">('+(cnt[c.id]||0)+')</span></span>'+
-        '<button type="button" onclick="qualAddCode(\''+c.id+'\')" title="Add a sub-code">+</button>'+
-        '<button type="button" onclick="qualOpenPassages(\''+c.id+'\')" title="View tagged passages">👁</button>'+
-        '<button type="button" onclick="qualRenameCode(\''+c.id+'\')" title="Rename">✎</button>'+
-        '<button type="button" onclick="qualDeleteCode(\''+c.id+'\')" title="Delete">🗑</button>'+
+        '<span class="qual-code-swatch" style="background:'+cssColor(c.color)+'" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+jsq(c.id)+'\')"></span>'+
+        '<span class="qual-code-name" title="Tap to tag the selected passage" onclick="qualTagSelection(\''+jsq(c.id)+'\')">'+escHTML(c.name)+' <span style="font-weight:400;color:var(--muted);font-size:12px" title="Passages tagged">('+(cnt[c.id]||0)+')</span></span>'+
+        '<button type="button" onclick="qualAddCode(\''+jsq(c.id)+'\')" title="Add a sub-code">+</button>'+
+        '<button type="button" onclick="qualOpenPassages(\''+jsq(c.id)+'\')" title="View tagged passages">👁</button>'+
+        '<button type="button" onclick="qualRenameCode(\''+jsq(c.id)+'\')" title="Rename">✎</button>'+
+        '<button type="button" onclick="qualDeleteCode(\''+jsq(c.id)+'\')" title="Delete">🗑</button>'+
       '</div>'+kids;
     }).join('');
   }
@@ -11944,7 +11980,7 @@ function styleSamplesRender(){
   const d=document.getElementById('styDecl');if(d)d.checked=!!m.decl;
   const W=a.reduce((s,x)=>s+x.n,0);
   let h='<div style="font-size:13px;margin:6px 0"><b>'+(a.length===1?t('sty_count1'):styX('sty_count',{n:a.length}))+'</b>, '+styX('sty_words',{n:W.toLocaleString('en-IN')})+(m.decl?escHTML(styX('sty_declon',{d:m.decl})):t('sty_decloff'))+'</div>';
-  if(a.length)h+='<div style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:6px">'+a.map(x=>'<div style="display:flex;gap:6px;align-items:center;padding:4px 8px;font-size:12.5px;border-bottom:1px solid var(--line)"><span style="flex:1">'+escHTML(x.name)+' <span style="color:var(--muted)">· '+styX('sty_words',{n:x.n.toLocaleString('en-IN')})+'</span>'+(out[x.id]?' <span style="color:#b45309">'+t('sty_odd')+'</span>':'')+'</span><button type="button" class="btn btn-ghost" style="padding:2px 8px;font-size:11.5px" onclick="styleSampleRemove(\''+x.id+'\')">'+t('sty_remove')+'</button></div>').join('')+'</div>';
+  if(a.length)h+='<div style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:6px">'+a.map(x=>'<div style="display:flex;gap:6px;align-items:center;padding:4px 8px;font-size:12.5px;border-bottom:1px solid var(--line)"><span style="flex:1">'+escHTML(x.name)+' <span style="color:var(--muted)">· '+styX('sty_words',{n:x.n.toLocaleString('en-IN')})+'</span>'+(out[x.id]?' <span style="color:#b45309">'+t('sty_odd')+'</span>':'')+'</span><button type="button" class="btn btn-ghost" style="padding:2px 8px;font-size:11.5px" onclick="styleSampleRemove(\''+jsq(x.id)+'\')">'+t('sty_remove')+'</button></div>').join('')+'</div>';
   if(Object.keys(out).length)h+='<div style="font-size:12px;color:#b45309;margin-top:4px">'+t('sty_flag')+'</div>';
   box.innerHTML=h;
   const pe=document.getElementById('styLivePassage');if(pe)pe.textContent=STY_PASSAGES[styleLivePassage()];
@@ -12023,7 +12059,7 @@ async function dictGo(word){
 function dictRender(){
   const box=document.getElementById('dictOut'),r=DICT.cur;if(!box||!r)return;
   let h='<div style="font-size:16px"><b>'+escHTML(r.word)+'</b>'+(r.phon?' <span style="color:var(--muted)">'+escHTML(r.phon)+'</span>':'')+'</div>';
-  h+=r.meanings.map(m=>'<div style="margin-top:6px"><i>'+escHTML(m.pos)+'</i>'+m.defs.map((d,i)=>'<div style="margin-left:8px">'+(i+1)+'. '+escHTML(d.d)+(d.x?'<div style="color:var(--muted);font-size:12.5px">'+t('wd_example')+' '+escHTML(d.x)+'</div>':'')+'</div>').join('')+(m.syn.length?'<div style="margin-left:8px;font-size:12.5px">'+t('wd_similar')+' '+m.syn.map(s=>'<a href="#" onclick="dictGo(\''+escAttr(s).replace(/'/g,'')+'\');return false">'+escHTML(s)+'</a>').join(', ')+'</div>':'')+'</div>').join('');
+  h+=r.meanings.map(m=>'<div style="margin-top:6px"><i>'+escHTML(m.pos)+'</i>'+m.defs.map((d,i)=>'<div style="margin-left:8px">'+(i+1)+'. '+escHTML(d.d)+(d.x?'<div style="color:var(--muted);font-size:12.5px">'+t('wd_example')+' '+escHTML(d.x)+'</div>':'')+'</div>').join('')+(m.syn.length?'<div style="margin-left:8px;font-size:12.5px">'+t('wd_similar')+' '+m.syn.map(s=>'<a href="#" onclick="dictGo(\''+jsq(String(s).replace(/'/g,''))+'\');return false">'+escHTML(s)+'</a>').join(', ')+'</div>':'')+'</div>').join('');
   const a=DICT.ai;
   h+='<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:6px">';
   if(a&&!a.err)h+='<div><b>'+t('wd_simple')+'</b> '+escHTML(a.simple)+'</div>'+(a.hindi?'<div><b>'+t('wd_hindi')+'</b> '+escHTML(a.hindi)+'</div>':'')+(a.example?'<div><b>'+t('wd_example')+'</b> '+escHTML(a.example)+'</div>':'')+'<div style="font-size:11.5px;color:var(--muted)">'+t('wd_aiwarn')+'</div>';
@@ -12067,7 +12103,7 @@ function bankCsv(){const a=bankGet();if(!a.length){showToast(t('wd_bankempty'));
 function bankRender(){
   const box=document.getElementById('bankOut');if(!box)return;
   const a=bankGet();
-  box.innerHTML=a.length?a.slice(0,60).map(x=>'<div style="display:flex;gap:6px;align-items:baseline;border-bottom:1px solid var(--line);padding:3px 0;font-size:13px"><span style="flex:1"><a href="#" onclick="dictGo(\''+escAttr(x.w).replace(/'/g,'')+'\');return false"><b>'+escHTML(x.w)+'</b></a> <span style="color:var(--muted)">'+escHTML(x.pos)+(x.h?' · '+escHTML(x.h):'')+'</span><br><span style="font-size:12px">'+escHTML(x.m)+'</span></span><button type="button" class="btn btn-ghost" style="padding:1px 8px;font-size:11.5px" onclick="bankRemove(\''+escAttr(x.w).replace(/'/g,'')+'\')">'+t('wd_remove')+'</button></div>').join(''):'<span style="color:var(--muted);font-size:13px">No saved words yet.</span>';
+  box.innerHTML=a.length?a.slice(0,60).map(x=>'<div style="display:flex;gap:6px;align-items:baseline;border-bottom:1px solid var(--line);padding:3px 0;font-size:13px"><span style="flex:1"><a href="#" onclick="dictGo(\''+jsq(String(x.w).replace(/'/g,''))+'\');return false"><b>'+escHTML(x.w)+'</b></a> <span style="color:var(--muted)">'+escHTML(x.pos)+(x.h?' · '+escHTML(x.h):'')+'</span><br><span style="font-size:12px">'+escHTML(x.m)+'</span></span><button type="button" class="btn btn-ghost" style="padding:1px 8px;font-size:11.5px" onclick="bankRemove(\''+jsq(String(x.w).replace(/'/g,''))+'\')">'+t('wd_remove')+'</button></div>').join(''):'<span style="color:var(--muted);font-size:13px">No saved words yet.</span>';
 }
 /* ---- grammar, layer one: local rules ---- */
 const GR_NOUNS={informations:'information',equipments:'equipment',advices:'advice',furnitures:'furniture',luggages:'luggage',baggages:'baggage',feedbacks:'feedback',knowledges:'knowledge',evidences:'evidence',staffs:'staff',stationeries:'stationery'};
@@ -14169,7 +14205,7 @@ function rsMapRender(tops){
   const max=tops[0].count||1;
   map.innerHTML='<div style="font-size:12.5px;margin-bottom:6px">'+t('nr_map')+'</div><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center">'+
     tops.map((g,i)=>{const d=Math.round(78+70*Math.sqrt((g.count||0)/max));const id=String(g.key).split('/').pop();
-      return'<button type="button" class="btn btn-ghost" title="'+escAttr(g.key_display_name)+': '+(g.count||0).toLocaleString()+' '+t('nr_papers')+'" onclick="rsPickFocus(\''+escAttr(id)+'\','+i+')" style="width:'+d+'px;height:'+d+'px;border-radius:50%;padding:6px;font-size:10.5px;line-height:1.15;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;border-width:2px"><span style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-word">'+escHTML(g.key_display_name)+'</span><b>'+(g.count||0).toLocaleString()+'</b></button>'}).join('')+'</div>';
+      return'<button type="button" class="btn btn-ghost" title="'+escAttr(g.key_display_name)+': '+(g.count||0).toLocaleString()+' '+t('nr_papers')+'" onclick="rsPickFocus(\''+jsq(id)+'\','+i+')" style="width:'+d+'px;height:'+d+'px;border-radius:50%;padding:6px;font-size:10.5px;line-height:1.15;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;border-width:2px"><span style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-word">'+escHTML(g.key_display_name)+'</span><b>'+(g.count||0).toLocaleString()+'</b></button>'}).join('')+'</div>';
   RS_NARROW.tops=tops;
 }
 function rsPickFocus(id,i){
@@ -14312,7 +14348,7 @@ function b3TableHTML(o,L,hi){const lib=citGetLib();if(!lib.length)return'';
       if(k==='why')inner='<textarea rows="2" style="width:100%" onchange="b3Cell('+i+',\'why\',this.value)">'+escHTML(sc.why||'')+'</textarea>';
       else if(k==='dir')inner='<select onchange="b3Cell('+i+',\'dir\',this.value)"><option value=""></option>'+B3_DIR.map(x=>'<option value="'+x[0]+'"'+(d.dir===x[0]?' selected':'')+'>'+escHTML(hi?x[2]:x[1])+'</option>').join('')+'</select>';
       else if(k==='yj')inner='<div style="font-size:13px">'+escHTML([d.year,d.source].filter(Boolean).join(' · ')||'—')+'</div>';
-      else{const c=(d.cells||{})[k];inner=tag(c&&c.by)+(c&&c.by==='hl'&&c.pid?' <button type="button" class="btn btn-ghost btn-sm" onclick="shOpenAt(\''+c.pid+'\','+(c.page||1)+')">↗ '+L('page ','पृष्ठ ')+(c.page||1)+'</button>':'')+'<textarea rows="3" style="width:100%;margin-top:3px" onchange="b3Cell('+i+',\''+k+'\',this.value)">'+escHTML(c?c.t:'')+'</textarea>'}
+      else{const c=(d.cells||{})[k];inner=tag(c&&c.by)+(c&&c.by==='hl'&&c.pid?' <button type="button" class="btn btn-ghost btn-sm" onclick="shOpenAt(\''+jsq(c.pid)+'\','+(c.page||1)+')">↗ '+L('page ','पृष्ठ ')+(c.page||1)+'</button>':'')+'<textarea rows="3" style="width:100%;margin-top:3px" onchange="b3Cell('+i+',\''+k+'\',this.value)">'+escHTML(c?c.t:'')+'</textarea>'}
       const nm=k==='why'||k==='dir'||k==='yj'?(hi?B3_EXTRA.find(x=>x[0]===k)[2]:B3_EXTRA.find(x=>x[0]===k)[1]):stageName(k);
       return'<div><div style="font-size:12px;font-weight:700;color:#2e1065;margin-bottom:2px">'+escHTML(nm)+'</div>'+inner+'</div>'}).join('');
     return'<div style="border:1px solid var(--line,#ddd);border-radius:10px;padding:8px 10px;margin:8px 0;background:'+(ex?'#fdf5f5':'#fff')+'"><div style="font-size:14px;font-weight:600">'+escHTML(d.title||'')+' <span class="desc">'+escHTML(d.year||'')+(d.shelf?' · 📖':'')+'</span></div>'+
@@ -14601,7 +14637,7 @@ function rsRenderResults(){
       '<div class="row">'+
         '<button type="button" class="btn btn-purple" onclick="rsInsertCitation('+i+')">'+escHTML(t('rs_insert_cite'))+'</button>'+
         '<button type="button" class="btn btn-ghost" onclick="rsAddToLibrary('+i+')">+ Citation library</button>'+
-        (p.url?'<button type="button" class="btn btn-ghost" onclick="window.open(\''+escAttr(p.url)+'\',\'_blank\')">Open source</button>':'')+
+        (p.url?'<button type="button" class="btn btn-ghost" onclick="window.open(\''+jsq(p.url)+'\',\'_blank\')">Open source</button>':'')+
         (p.oaUrl?'<button type="button" class="btn btn-ghost" onclick="rsOpenOa('+i+')">📄 '+escHTML(t('oa_free_btn'))+'</button>':'')+
         (p.oaId?'<button type="button" class="btn btn-ghost" onclick="rsConnected('+i+')">🔗 Connected papers</button>':'')+
         '<button type="button" class="btn btn-ghost rsQuick" onclick="rsQuick('+i+')" title="One-line summary, kind of study and sample size, read from the abstract">⚡ Quick read</button>'+
@@ -16290,7 +16326,7 @@ async function appuAsk(){
   if(!q)return;
   const hits=appuRank(q);
   box.style.display='block';
-  const links=hits.map(r=>'<a href="#" onclick="appuShow(\''+r.x.id+'\');return false">'+r.x.t.replace(/&/g,'&amp;')+'</a>').join(', ');
+  const links=hits.map(r=>'<a href="#" onclick="appuShow(\''+jsq(r.x.id)+'\');return false">'+r.x.t.replace(/&/g,'&amp;')+'</a>').join(', ');
   if(!hits.length){box.innerHTML='The guide has nothing on that. Try other words in the search box below, or press Report a problem in Help if something is broken.';return}
   let key='';try{key=getKey()}catch(e){}
   if(!key){
@@ -17714,7 +17750,7 @@ function apLibRender(){
   AP_LIBGROUPS.forEach(g=>{const L=AP_LIBLIST.filter(m=>m.group===g.g);if(!L.length)return;
     h+='<h3 style="margin:12px 0 4px;font-size:15px">'+escHTML(hi?g.tH:g.t)+'</h3><div class="libList" data-group="'+g.g+'">';
     L.forEach(m=>{const n=(apLecFor(m.k)||[]).length,q=AP_QUIZ[m.k],sel=q?apQuizSel(m.k):[],done=q&&sel.length&&sel.filter(x=>Number.isInteger(x)&&x>=0).length===q.length;
-      h+='<div><button type="button" class="btn btn-ghost libItem" style="text-align:left;justify-content:flex-start;white-space:normal;width:100%;margin:2px 0" data-k="'+escAttr(m.k)+'" onclick="apLibPick(\''+escAttr(m.k)+'\')">'+(seen[m.k]?'✓ ':'')+escHTML(apLibTitle(m))+' <span style="font-size:11px;color:var(--muted)">· '+n+(hi?' slides':' slides')+(done?(hi?' · quiz हो गई':' · quiz done'):'')+'</span></button></div>'});
+      h+='<div><button type="button" class="btn btn-ghost libItem" style="text-align:left;justify-content:flex-start;white-space:normal;width:100%;margin:2px 0" data-k="'+escAttr(m.k)+'" onclick="apLibPick(\''+jsq(m.k)+'\')">'+(seen[m.k]?'✓ ':'')+escHTML(apLibTitle(m))+' <span style="font-size:11px;color:var(--muted)">· '+n+(hi?' slides':' slides')+(done?(hi?' · quiz हो गई':' · quiz done'):'')+'</span></button></div>'});
     h+='</div>'});
   b.innerHTML=h}
 function apLibLecture(b){
@@ -17723,7 +17759,7 @@ function apLibLecture(b){
   h+='<h2 id="libTitle" style="margin:8px 0 2px">'+escHTML(apLibTitle(m))+'</h2><div class="desc" id="libFieldLine" style="margin:0 0 6px">'+escHTML(apLibFieldLine(m))+'</div>'+apLibFieldBar();
   h+=apLesStageHTML();
   h+=apQuizHTML(m.k);
-  h+='<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" id="libPrev" '+(prev?'onclick="apLibPick(\''+escAttr(prev.k)+'\')"':'disabled')+'>◀ '+(hi?'पिछला':'Previous lecture')+'</button><button type="button" class="btn btn-purple" id="libNext" '+(next?'onclick="apLibPick(\''+escAttr(next.k)+'\')"':'disabled')+'>'+(hi?'अगला':'Next lecture')+' ▶</button></div>';
+  h+='<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" id="libPrev" '+(prev?'onclick="apLibPick(\''+jsq(prev.k)+'\')"':'disabled')+'>◀ '+(hi?'पिछला':'Previous lecture')+'</button><button type="button" class="btn btn-purple" id="libNext" '+(next?'onclick="apLibPick(\''+jsq(next.k)+'\')"':'disabled')+'>'+(hi?'अगला':'Next lecture')+' ▶</button></div>';
   h+='<p style="font-size:11px;color:var(--muted)">'+(m.fromPaper?(hi?'यह lecture practice paper वाली walk-through का हिस्सा भी है।':'This lecture is also part of the practice-paper walk-through.'):'')+'</p>';
   b.innerHTML=h;apLibMark(m.k);setTimeout(apLesStageStart,0)}
 function apLibPick(k){if(!AP_LIBMAP[k])return;clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();AP.les.lib=k;AP.les.sc=0;AP.les.ask=null;AP.les.cpos=null;apLibRender();const d=document.getElementById('libDlg');if(d){const t=d.querySelector('#libTitle');if(t&&t.scrollIntoView)try{t.scrollIntoView({block:'start'})}catch(e){}}AP.thFromLib=1;apThOpen()}
@@ -18249,7 +18285,7 @@ function apThTab(t){AP.th.tab=t;if(t==='quiz'){const th=AP.th;th.play=false;th.s
 function apThQ(d){const th=AP.th,k=apLesCur().k,n=(AP_QUIZ[k]||[]).length;if(!th.qz||!n)return;th.qz.qi=Math.max(0,Math.min(n-1,th.qz.qi+d));thCueDraw();thDrawer()}
 function apThQuizRefresh(){if(AP.th&&AP.th.open&&AP.th.qz){thCueDraw();thDrawer()}}
 function thDrawer(){const d=document.getElementById('thDr');if(!d)return;const th=AP.th,hi=thHi(),L=apLesScenes(),k=AP.les.sc||0,key=apLesCur().k,tab=th.tab||'slides';
-  let h='<div class="th-tabs">'+[['slides',hi?'Slides':'Slides'],['quiz',hi?'सवाल':'Quiz'],['voice',hi?'सेटिंग':'Settings']].map(t=>'<button type="button" class="'+(tab===t[0]?'on':'')+'" onclick="apThTab(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>';
+  let h='<div class="th-tabs">'+[['slides',hi?'Slides':'Slides'],['quiz',hi?'सवाल':'Quiz'],['voice',hi?'सेटिंग':'Settings']].map(t=>'<button type="button" class="'+(tab===t[0]?'on':'')+'" onclick="apThTab(\''+jsq(t[0])+'\')">'+t[1]+'</button>').join('')+'</div>';
   if(tab==='slides'&&L.some(x=>x.ex))h+='<button type="button" class="th-sl" style="font-weight:700;color:#f2b63c" onclick="apThSimple()">💡 '+(hi?'और आसान बताओ':'Explain it more simply')+'</button>';
   if(tab==='slides')h+=L.map((x,j)=>(x.part?'<p style="margin:8px 0 2px;font-weight:700;color:#f2b63c">'+thEsc(x.part)+'</p>':'')+'<button type="button" class="th-sl'+(j===k?' on':'')+'" onclick="apThGo('+j+',false)">'+(j+1)+'. '+thEsc(x.title||'')+'</button>').join('');
   else if(tab==='quiz'){const Q=AP_QUIZ[key];if(!Q)h+='<p>'+(hi?'इस lecture के सवाल नहीं हैं।':'No questions for this lecture.')+'</p>';else h+='<div class="row" style="display:flex;gap:6px;margin-bottom:6px"><button type="button" onclick="apThQ(-1)">◀</button><button type="button" onclick="apThQ(1)">▶</button><span style="align-self:center">'+((th.qz?th.qz.qi:0)+1)+'/'+Q.length+'</span></div>'+apQuizBody(key)}
@@ -18359,16 +18395,16 @@ function apQuizBody(k){
   Q.forEach((q,qi)=>{const c=sel[qi],has=Number.isInteger(c)&&c>=0,cf=Number.isInteger(cfs[qi])?cfs[qi]:1,pend=!has&&pd&&pd.k===k&&pd.qi===qi?pd.oi:-1;if(has){done++;if(c===q.a)score++;else if(cf===2)sureWrong++}
     h+='<fieldset class="apq" style="border:1px solid var(--border);border-radius:8px;margin:6px 0;padding:8px 10px"><legend style="font-size:13px;font-weight:700;padding:0 4px">'+(qi+1)+'. '+escHTML(hi?q.qH:q.q)+'</legend>';
     (hi?q.oH:q.o).forEach((o,oi)=>{const mark=has?(oi===q.a?'✓ ':(oi===c?'✗ ':'')):(oi===pend?'● ':'');
-      h+='<div><button type="button" class="btn '+((has&&oi===q.a)||oi===pend?'btn-purple':'btn-ghost')+'" style="text-align:left;white-space:normal;margin:2px 0;width:100%" data-q="'+qi+'" data-o="'+oi+'" '+(has?'disabled ':'')+'onclick="apQuizPick(\''+k+'\','+qi+','+oi+')">'+mark+escHTML(o)+'</button></div>'});
-    if(pend>=0)h+='<div class="apq-conf" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:12px"><span>'+(hi?'उत्तर देखने से पहले: आप कितने पक्के हैं?':'Before you see the answer: how sure are you?')+'</span>'+[[2,hi?'पक्का':'Sure'],[1,hi?'काफ़ी हद तक':'Fairly sure'],[0,hi?'अंदाज़ा':'Guessing']].map(x=>'<button type="button" class="btn btn-ghost" data-cf="'+x[0]+'" onclick="apQuizConf(\''+k+'\','+qi+','+x[0]+')">'+x[1]+'</button>').join('')+'</div>';
+      h+='<div><button type="button" class="btn '+((has&&oi===q.a)||oi===pend?'btn-purple':'btn-ghost')+'" style="text-align:left;white-space:normal;margin:2px 0;width:100%" data-q="'+qi+'" data-o="'+oi+'" '+(has?'disabled ':'')+'onclick="apQuizPick(\''+jsq(k)+'\','+qi+','+oi+')">'+mark+escHTML(o)+'</button></div>'});
+    if(pend>=0)h+='<div class="apq-conf" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:12px"><span>'+(hi?'उत्तर देखने से पहले: आप कितने पक्के हैं?':'Before you see the answer: how sure are you?')+'</span>'+[[2,hi?'पक्का':'Sure'],[1,hi?'काफ़ी हद तक':'Fairly sure'],[0,hi?'अंदाज़ा':'Guessing']].map(x=>'<button type="button" class="btn btn-ghost" data-cf="'+x[0]+'" onclick="apQuizConf(\''+jsq(k)+'\','+qi+','+x[0]+')">'+x[1]+'</button>').join('')+'</div>';
     if(has)h+='<div class="apq-why" style="font-size:12px;margin-top:4px">'+apQzWhy(q,c,cf,hi)+'</div>';
     h+='</fieldset>'});
-  if(done===Q.length){h+='<div class="row" style="gap:8px;align-items:center;margin-top:4px"><b id="apQuizScore">'+(hi?'आपका score: ':'Your score: ')+score+(hi?' / ':' of ')+Q.length+'</b><button type="button" class="btn btn-ghost" id="apQuizAgain" onclick="apQuizAgain(\''+k+'\')">'+(hi?'फिर से कोशिश करो':'Try again')+'</button></div>';
+  if(done===Q.length){h+='<div class="row" style="gap:8px;align-items:center;margin-top:4px"><b id="apQuizScore">'+(hi?'आपका score: ':'Your score: ')+score+(hi?' / ':' of ')+Q.length+'</b><button type="button" class="btn btn-ghost" id="apQuizAgain" onclick="apQuizAgain(\''+jsq(k)+'\')">'+(hi?'फिर से कोशिश करो':'Try again')+'</button></div>';
     if(sureWrong)h+='<p id="apQuizSure" style="font-size:12px;margin:4px 0 0">'+(hi?'आप '+sureWrong+' सवालों में पक्के थे पर उत्तर गलत था। इन्हें पहले दोबारा पढ़िए: यहीं गलत धारणा छिपी होती है।':'You felt sure on '+sureWrong+(sureWrong===1?' question':' questions')+' and got '+(sureWrong===1?'it':'them')+' wrong. Read '+(sureWrong===1?'it':'those')+' again first: that is where a misconception hides.')+'</p>'}
   h+='<p style="font-size:11px;color:var(--muted);margin:6px 0 0">'+(hi?'AI ने लिखे practice सवाल, किसी इंसान ने नहीं पढ़े। जवाब सिर्फ़ इसी device पर रहते हैं।':'Practice questions written by AI, not read by a person. Your answers stay on this device.')+'</p>';
   return h}
 function apQuizHTML(k){const Q=AP_QUIZ[k];if(!Q)return'';const hi=apLectLang()==='hi',open=!!(AP.les.qzOpen&&AP.les.qzOpen[k]);
-  return'<details class="ap-box" id="apQuiz"'+(open?' open':'')+' ontoggle="apQuizToggle(\''+k+'\',this.open)"><summary id="apQuizSum" style="cursor:pointer;font-weight:700">'+(hi?'खुद जाँचो: ':'Check yourself: ')+Q.length+(hi?' सवाल':' questions')+'</summary><div id="apQuizBody">'+apQuizBody(k)+'</div></details>'}
+  return'<details class="ap-box" id="apQuiz"'+(open?' open':'')+' ontoggle="apQuizToggle(\''+jsq(k)+'\',this.open)"><summary id="apQuizSum" style="cursor:pointer;font-weight:700">'+(hi?'खुद जाँचो: ':'Check yourself: ')+Q.length+(hi?' सवाल':' questions')+'</summary><div id="apQuizBody">'+apQuizBody(k)+'</div></details>'}
 function apQuizToggle(k,o){AP.les.qzOpen=AP.les.qzOpen||{};AP.les.qzOpen[k]=!!o}
 function apQuizDraw(){try{apThQuizRefresh()}catch(e){}const s=apLesCur(),b=document.getElementById('apQuizBody');if(!s||!b)return;b.innerHTML=apQuizBody(s.k);const u=document.getElementById('apQuizSum'),Q=AP_QUIZ[s.k],hi=apLectLang()==='hi';if(u&&Q)u.textContent=(hi?'खुद जाँचो: ':'Check yourself: ')+Q.length+(hi?' सवाल':' questions')}
 function apQuizPick(k,qi,oi){const Q=AP_QUIZ[k];if(!Q||!Q[qi]||!(Number.isInteger(oi)&&oi>=0&&oi<Q[qi].o.length))return;const sel=apQuizSel(k);if(Number.isInteger(sel[qi])&&sel[qi]>=0)return;window._qzPend={k,qi,oi};apQuizDraw()}
@@ -18444,17 +18480,17 @@ function apLessonHTML(){
     setTimeout(apLesStageStart,0);
     h+=apQuizHTML(s.k);
     h+='<div class="ap-box"><b>'+t('ap_try')+'</b> '+escHTML(st?apStAsk(st):'')+'</div>';
-    h+='<div class="fld"><textarea id="apLesTry" rows="3" oninput="apLesTry(\''+s.k+'\',this.value)" placeholder="'+escAttr(t('ap_tryph'))+'">'+escHTML(AP.tryDraft[s.k]||'')+'</textarea></div>';
-    if(!shown)h+='<div class="row"><button type="button" class="btn btn-purple" id="apLesShowBtn" onclick="apLesShow(\''+s.k+'\')">'+t('ap_show')+'</button></div>';
+    h+='<div class="fld"><textarea id="apLesTry" rows="3" oninput="apLesTry(\''+jsq(s.k)+'\',this.value)" placeholder="'+escAttr(t('ap_tryph'))+'">'+escHTML(AP.tryDraft[s.k]||'')+'</textarea></div>';
+    if(!shown)h+='<div class="row"><button type="button" class="btn btn-purple" id="apLesShowBtn" onclick="apLesShow(\''+jsq(s.k)+'\')">'+t('ap_show')+'</button></div>';
     else{
       h+='<div class="ap-box"><b>'+t('ap_says')+'</b><br>'+escHTML(apLesT(s,'said'))+apQuotesHTML(s.q.map(apCheckQuote))+'</div>';
       h+='<div class="ap-box">'+t('les_spot')+'</div>';
-      if(!look)h+='<div class="row"><button type="button" class="btn btn-ghost" id="apLesLookBtn" onclick="apLesLook(\''+s.k+'\')">'+t('les_showflaw')+'</button></div>';
+      if(!look)h+='<div class="row"><button type="button" class="btn btn-ghost" id="apLesLookBtn" onclick="apLesLook(\''+jsq(s.k)+'\')">'+t('les_showflaw')+'</button></div>';
       else{
         h+='<div class="ap-box"><b>'+t('les_flaw')+'</b><br>'+escHTML(apLesT(s,'flaw'))+apQuotesHTML(s.fq.map(apCheckQuote))+'</div>';
         const f=apLesFbGet(s.k);
-        h+='<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12px">'+t('les_was')+'</span>'+[['clear',t('les_clear')],['confusing',t('les_conf')],['wrong',t('les_wrong')]].map(r=>'<button type="button" class="btn '+(f.r===r[0]?'btn-purple':'btn-ghost')+'" style="padding:3px 8px;font-size:12px" onclick="apLesReact(\''+s.k+'\',\''+r[0]+'\')">'+r[1]+'</button>').join('')+'</div>';
-        h+='<div class="fld"><input type="text" id="apLesFbT" maxlength="300" placeholder="'+escAttr(t('les_fixph'))+'" value="'+escAttr(f.t||'')+'" oninput="apLesNote(\''+s.k+'\',this.value)"></div>';
+        h+='<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12px">'+t('les_was')+'</span>'+[['clear',t('les_clear')],['confusing',t('les_conf')],['wrong',t('les_wrong')]].map(r=>'<button type="button" class="btn '+(f.r===r[0]?'btn-purple':'btn-ghost')+'" style="padding:3px 8px;font-size:12px" onclick="apLesReact(\''+jsq(s.k)+'\',\''+r[0]+'\')">'+r[1]+'</button>').join('')+'</div>';
+        h+='<div class="fld"><input type="text" id="apLesFbT" maxlength="300" placeholder="'+escAttr(t('les_fixph'))+'" value="'+escAttr(f.t||'')+'" oninput="apLesNote(\''+jsq(s.k)+'\',this.value)"></div>';
       }
     }
   }
@@ -18688,14 +18724,14 @@ function trTab(t){if(t!=='dl'&&t!=='custom'&&TR&&!trSecs().includes(t))t='cover'
 function trSetTpl(v){if(!TR_TPL[v]||v===TR.tpl)return;if(!confirm(trT('confirm_tpl'))){trRender();return}TR.tpl=v;trTplInit(TR);if(!TR.cover.title)TR.cover.title=trB(TR_TPL[v].title);trSaveNow();trRender()}
 function trF(path,v){const p=path.split('.');let o=TR;for(let i=0;i<p.length-1;i++){if(o[p[i]]==null)o[p[i]]={};o=o[p[i]]}o[p[p.length-1]]=v;trSave();if(TR_TAB==='cover'&&path.indexOf('cover.')===0){const pv=document.querySelector('#trBody .trcp');if(pv)pv.parentNode.outerHTML=trCoverPrev()}}
 function trIn(path,label,type,ph){const p=path.split('.');let v=TR;p.forEach(k=>{v=v==null?'':v[k]});v=v==null?'':v;const id='tr_'+path.replace(/\./g,'_');
-  if(type==='area')return'<div class="fld"><label for="'+id+'">'+escHTML(label)+'</label><textarea id="'+id+'" rows="3" oninput="trF(\''+path+'\',this.value)">'+escHTML(v)+'</textarea></div>';
-  return'<div class="fld"><label for="'+id+'">'+escHTML(label)+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v)+'"'+(ph?' placeholder="'+escHTML(ph)+'"':'')+' oninput="trF(\''+path+'\',this.value)"></div>'}
+  if(type==='area')return'<div class="fld"><label for="'+id+'">'+escHTML(label)+'</label><textarea id="'+id+'" rows="3" oninput="trF(\''+jsq(path)+'\',this.value)">'+escHTML(v)+'</textarea></div>';
+  return'<div class="fld"><label for="'+id+'">'+escHTML(label)+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+escHTML(v)+'"'+(ph?' placeholder="'+escHTML(ph)+'"':'')+' oninput="trF(\''+jsq(path)+'\',this.value)"></div>'}
 function trRender(){
   const b=document.getElementById('trBody');if(!b||!TR)return;
   const t=TR_TPL[TR.tpl],secs=trSecs().concat(['custom','dl']);
   document.getElementById('trH').textContent=trT('title');document.getElementById('trDesc').textContent=trT('desc');
   let h='<div class="fld"><label for="trTpl">'+escHTML(trT('tpl'))+'</label><select id="trTpl" onchange="trSetTpl(this.value)">'+Object.keys(TR_TPL).map(k=>'<option value="'+k+'"'+(k===TR.tpl?' selected':'')+'>'+escHTML(trB(TR_TPL[k].n))+'</option>').join('')+'</select></div>';
-  h+='<div class="tr-tabs" role="tablist">'+secs.map((s,i)=>'<button type="button" role="tab" class="'+(TR_TAB===s?'on':'')+'" onclick="trTab(\''+s+'\')">'+(s==='dl'||s==='custom'?'':(i+1)+'. ')+escHTML(s==='dl'?trT('s_dl'):s==='custom'?'⚙ '+trT('s_custom'):trSecName(s))+'</button>').join('')+'</div>';
+  h+='<div class="tr-tabs" role="tablist">'+secs.map((s,i)=>'<button type="button" role="tab" class="'+(TR_TAB===s?'on':'')+'" onclick="trTab(\''+jsq(s)+'\')">'+(s==='dl'||s==='custom'?'':(i+1)+'. ')+escHTML(s==='dl'?trT('s_dl'):s==='custom'?'⚙ '+trT('s_custom'):trSecName(s))+'</button>').join('')+'</div>';
   if(TR_TAB!=='ethics'&&!trEthDone())h+='<p class="tr-warn">'+escHTML(trT('eth_rem'))+' <a href="#" onclick="trTab(\'ethics\');return false">'+escHTML(trT('s_ethics'))+' →</a></p>';
   h+='<div class="tr-sec">'+(TR_TAB.indexOf('x:')===0?trSec_x(TR_TAB.slice(2)):(window['trSec_'+TR_TAB]||trSec_cover)())+'</div>';
   b.innerHTML=h;
@@ -18765,7 +18801,7 @@ function trBar(n,of){const p=of?Math.min(100,Math.round(100*n/of)):0;return'<spa
 function trSec_summary(){const t=TR_TPL[TR.tpl];let h='';
   const tg=trTargets();
   if(tg.length||t.recTargets){h+='<h4>'+escHTML(trT('progress'))+'</h4>';
-    tg.forEach(([id,n])=>{const k=trCount(id);h+='<div class="tr-prog">'+escHTML(trActName(id))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+' <button type="button" class="btn btn-ghost" onclick="trEditTarget(\''+id+'\','+n+')">'+escHTML(trT('edit_target'))+'</button></div>'});
+    tg.forEach(([id,n])=>{const k=trCount(id);h+='<div class="tr-prog">'+escHTML(trActName(id))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+' <button type="button" class="btn btn-ghost" onclick="trEditTarget(\''+jsq(id)+'\','+n+')">'+escHTML(trT('edit_target'))+'</button></div>'});
     (t.recTargets||[]).forEach(([rk,n])=>{const k=TR.cases.filter(c=>c.rec===rk).length;h+='<div class="tr-prog">'+escHTML(trB((trRec(rk)||{n:rk}).n))+': <b>'+k+'</b> '+escHTML(trT('of'))+' '+n+' '+trBar(k,n)+'</div>'});
     if(t.tsrc)h+='<p class="desc">'+escHTML(trB(t.tsrc))+'</p>'}
   if(t.note)h+='<p class="desc">'+escHTML(trT(t.note))+'</p>';
@@ -18804,9 +18840,9 @@ function trRecKeys(){const t=TR_TPL[TR.tpl],c=trCust();return t.recs.concat(c.ne
 function trRec(k){const c=trCust();const nr=c.newRecs.find(r=>r.k===k);if(nr)return{n:nr.n||'—',h:nr.h||[]};const b=TR_REC[k];if(!b)return null;const o=c.recs[k];return{n:(o&&o.n)||b.n,h:(o&&Array.isArray(o.h)&&o.h.length)?o.h:b.h}}
 function trSec_x(id){const c=trCust(),x=c.extra.find(e=>e.id===id);if(!x)return'';
   if(x.kind==='table'){const cols=x.cols&&x.cols.length?x.cols:['—'];x.rows=x.rows||[];let h='<div class="tr-tw"><table class="tr-tbl"><thead><tr>'+cols.map(cn=>'<th>'+escHTML(cn)+'</th>').join('')+'<th></th></tr></thead><tbody>';
-    x.rows.forEach((r,i)=>{h+='<tr>'+cols.map((cn,j)=>'<td><input style="width:100%;min-width:80px" value="'+escHTML(r[j]||'')+'" oninput="trXCell(\''+id+'\','+i+','+j+',this.value)"></td>').join('')+'<td><button type="button" class="btn btn-ghost" onclick="trXDelRow(\''+id+'\','+i+')">✕</button></td></tr>'});
-    return h+'</tbody></table></div><button type="button" class="btn btn-purple" onclick="trXAddRow(\''+id+'\')">+ '+escHTML(trT('add'))+'</button>'}
-  return'<div class="fld"><textarea rows="10" style="width:100%" oninput="trXText(\''+id+'\',this.value)">'+escHTML(x.text||'')+'</textarea></div>'+trPdHTML(x.text||'','trXMask(\''+id+'\')')}
+    x.rows.forEach((r,i)=>{h+='<tr>'+cols.map((cn,j)=>'<td><input style="width:100%;min-width:80px" value="'+escHTML(r[j]||'')+'" oninput="trXCell(\''+jsq(id)+'\','+i+','+j+',this.value)"></td>').join('')+'<td><button type="button" class="btn btn-ghost" onclick="trXDelRow(\''+jsq(id)+'\','+i+')">✕</button></td></tr>'});
+    return h+'</tbody></table></div><button type="button" class="btn btn-purple" onclick="trXAddRow(\''+jsq(id)+'\')">+ '+escHTML(trT('add'))+'</button>'}
+  return'<div class="fld"><textarea rows="10" style="width:100%" oninput="trXText(\''+jsq(id)+'\',this.value)">'+escHTML(x.text||'')+'</textarea></div>'+trPdHTML(x.text||'','trXMask(\''+id+'\')')}
 function trXGet(id){return trCust().extra.find(e=>e.id===id)}
 function trXCell(id,i,j,v){const x=trXGet(id);if(!x)return;x.rows[i]=x.rows[i]||[];x.rows[i][j]=v;trSave()}
 function trXAddRow(id){const x=trXGet(id);if(!x)return;x.rows=x.rows||[];x.rows.push([]);trSaveNow();trRender()}
@@ -18816,12 +18852,12 @@ function trXMask(id){const x=trXGet(id);if(!x)return;x.text=pdMask(x.text||'');t
 function trSec_custom(){const c=trCust(),E=escHTML,all=trSecs(true);
   let h='<p class="tr-warn">'+E(trT('rep_note'))+'</p><h4>'+E(trT('cu_secs'))+'</h4><div class="tr-tw"><table class="tr-tbl tr-t-cu"><thead><tr><th>#</th><th>'+E(trT('cu_name'))+'</th><th>'+E(trT('cu_show'))+'</th><th>'+E(trT('cu_move'))+'</th><th></th></tr></thead><tbody>';
   all.forEach((k,i)=>{const fixed=k==='cover',isX=k.indexOf('x:')===0;
-    h+='<tr><td>'+(i+1)+'</td><td><input style="width:100%" value="'+E(trSecName(k))+'" '+(fixed?'disabled':'')+' onchange="trCuName(\''+k+'\',this.value)"></td><td style="text-align:center"><input type="checkbox" '+(c.hide[k]?'':'checked ')+(fixed?'disabled':'')+' onchange="trCuHide(\''+k+'\',!this.checked)"></td><td>'+(fixed?'':'<button type="button" class="btn btn-ghost" '+(i<=1?'disabled':'')+' onclick="trCuMove(\''+k+'\',-1)">↑</button><button type="button" class="btn btn-ghost" '+(i===all.length-1?'disabled':'')+' onclick="trCuMove(\''+k+'\',1)">↓</button>')+'</td><td>'+(isX?'<button type="button" class="btn btn-ghost" onclick="trCuDelX(\''+k.slice(2)+'\')">✕</button>':'')+'</td></tr>'});
+    h+='<tr><td>'+(i+1)+'</td><td><input style="width:100%" value="'+E(trSecName(k))+'" '+(fixed?'disabled':'')+' onchange="trCuName(\''+jsq(k)+'\',this.value)"></td><td style="text-align:center"><input type="checkbox" '+(c.hide[k]?'':'checked ')+(fixed?'disabled':'')+' onchange="trCuHide(\''+jsq(k)+'\',!this.checked)"></td><td>'+(fixed?'':'<button type="button" class="btn btn-ghost" '+(i<=1?'disabled':'')+' onclick="trCuMove(\''+jsq(k)+'\',-1)">↑</button><button type="button" class="btn btn-ghost" '+(i===all.length-1?'disabled':'')+' onclick="trCuMove(\''+jsq(k)+'\',1)">↓</button>')+'</td><td>'+(isX?'<button type="button" class="btn btn-ghost" onclick="trCuDelX(\''+jsq(k.slice(2))+'\')">✕</button>':'')+'</td></tr>'});
   h+='</tbody></table></div>';
   h+='<details class="tr-card"><summary>+ '+E(trT('cu_addsec'))+'</summary><div class="fld"><label for="trCuT">'+E(trT('cu_title'))+'</label><input id="trCuT" maxlength="80"></div><div class="fld"><label for="trCuK">'+E(trT('cu_kind'))+'</label><select id="trCuK" onchange="document.getElementById(\'trCuColsF\').style.display=this.value===\'table\'?\'\':\'none\'"><option value="text">'+E(trT('cu_text'))+'</option><option value="table">'+E(trT('cu_table'))+'</option></select></div><div class="fld" id="trCuColsF" style="display:none"><label for="trCuCols">'+E(trT('cu_cols'))+'</label><input id="trCuCols" placeholder="Date, Activity, Remarks"></div><button type="button" class="btn btn-purple" onclick="trCuAddSec()">'+E(trT('add'))+'</button></details>';
   h+='<h4>'+E(trT('cu_recs'))+'</h4>';
   trRecKeys().forEach(k=>{const r=trRec(k),isNew=c.newRecs.some(x=>x.k===k);
-    h+='<details class="tr-card"><summary>'+E(trB(r.n))+' · '+r.h.length+' '+E(trT('cu_heads'))+'</summary><div class="fld"><label>'+E(trT('cu_name'))+'</label><input value="'+E(trB(r.n))+'" onchange="trCuRec(\''+k+'\',\'n\',this.value)"></div><div class="fld"><label>'+E(trT('cu_headlines'))+'</label><textarea rows="'+Math.min(14,r.h.length+2)+'" style="width:100%" onchange="trCuRec(\''+k+'\',\'h\',this.value)">'+E(r.h.map(x=>trB(x)).join('\n'))+'</textarea></div>'+(isNew?'<button type="button" class="btn btn-ghost" onclick="trCuDelRec(\''+k+'\')">'+E(trT('del'))+'</button>':'<button type="button" class="btn btn-ghost" onclick="delete trCust().recs[\''+k+'\'];trSaveNow();trRender()">'+E(trT('cu_reset'))+'</button>')+'</details>'});
+    h+='<details class="tr-card"><summary>'+E(trB(r.n))+' · '+r.h.length+' '+E(trT('cu_heads'))+'</summary><div class="fld"><label>'+E(trT('cu_name'))+'</label><input value="'+E(trB(r.n))+'" onchange="trCuRec(\''+jsq(k)+'\',\'n\',this.value)"></div><div class="fld"><label>'+E(trT('cu_headlines'))+'</label><textarea rows="'+Math.min(14,r.h.length+2)+'" style="width:100%" onchange="trCuRec(\''+jsq(k)+'\',\'h\',this.value)">'+E(r.h.map(x=>trB(x)).join('\n'))+'</textarea></div>'+(isNew?'<button type="button" class="btn btn-ghost" onclick="trCuDelRec(\''+jsq(k)+'\')">'+E(trT('del'))+'</button>':'<button type="button" class="btn btn-ghost" onclick="delete trCust().recs[\''+k+'\'];trSaveNow();trRender()">'+E(trT('cu_reset'))+'</button>')+'</details>'});
   h+='<details class="tr-card"><summary>+ '+E(trT('cu_addrec'))+'</summary><div class="fld"><label for="trCuRn">'+E(trT('cu_name'))+'</label><input id="trCuRn" maxlength="80"></div><div class="fld"><label for="trCuRh">'+E(trT('cu_headlines'))+'</label><textarea id="trCuRh" rows="6" style="width:100%"></textarea></div><button type="button" class="btn btn-purple" onclick="trCuAddRec()">'+E(trT('add'))+'</button></details>';
   h+='<h4>'+E(trT('up_h'))+'</h4><p class="desc">'+E(trT('up_desc'))+'</p><div class="fld"><input type="file" id="trUp" accept=".docx,.pdf,.txt,.md" onchange="trUpload(this.files[0]);this.value=\'\'"></div><div id="trUpOut"></div>';
   h+='<h4>'+E(trT('fmt_h'))+'</h4><p class="desc">'+E(trT('fmt_desc'))+'</p><div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" onclick="trFmtExport()">💾 '+E(trT('fmt_save'))+'</button><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'trFmtIn\').click()">📂 '+E(trT('fmt_load'))+'</button><input type="file" id="trFmtIn" accept=".json" style="display:none" onchange="trFmtImport(this.files[0]);this.value=\'\'"></div>';
@@ -19063,7 +19099,7 @@ function apStageBarRender(){
   const pk=ps?STAGES.indexOf(ps):-1;
   el.innerHTML='<button type="button" class="st-home'+(home?' on':'')+'" onclick="apHomeShow()" '+(home?'aria-current="page"':'')+'>'+escHTML(ht('home'))+'</button>'
    +'<ol class="st-steps">'+STAGES.map((s,i)=>{const on=cur===s,done=i<pk;
-     return'<li class="'+(done?'done':'')+(on?' cur':'')+'"><button type="button" aria-label="'+escAttr((i+1)+'. '+ht('s_'+s)+(done?(getLang()==='hi'?' (पूरा)':' (done)'):''))+'" class="st-step'+(on?' on':'')+(ps===s?' proj':'')+(done?' done':'')+'" onclick="apGoStage(\''+s+'\')" '+(on?'aria-current="page"':'')+'>'
+     return'<li class="'+(done?'done':'')+(on?' cur':'')+'"><button type="button" aria-label="'+escAttr((i+1)+'. '+ht('s_'+s)+(done?(getLang()==='hi'?' (पूरा)':' (done)'):''))+'" class="st-step'+(on?' on':'')+(ps===s?' proj':'')+(done?' done':'')+'" onclick="apGoStage(\''+jsq(s)+'\')" '+(on?'aria-current="page"':'')+'>'
       +'<span class="st-dot" aria-hidden="true">'+(done?'✓':(i+1))+'</span><span class="st-lbl">'+escHTML(ht('s_'+s))+'</span></button></li>'}).join('')+'</ol>'
    +'<button type="button" class="st-fold" onclick="stFold()" aria-expanded="'+(document.body.classList.contains('st-folded')?'false':'true')+'" title="'+(getLang()==='hi'?'चरण पट्टी छोटी/बड़ी करें':'Make the stage bar smaller or larger')+'" aria-label="'+(getLang()==='hi'?'चरण पट्टी छोटी/बड़ी करें':'Fold the stage bar')+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>';
 }
@@ -19163,7 +19199,7 @@ function fdFlt(f){window._fdF=f;window._fdOpen=-1;fdRender()}
 function fdToggle(i){window._fdOpen=window._fdOpen===i?-1:i;fdRender()}
 function fdTxt(){const hi=studyHi(),L=(en,x)=>hi?x:en;return{L,hi,tag:{retr:L('Retracted, in your library','Retract हुआ, आपकी library में'),cites:L('Cites your sources','आपके sources को cite करता है'),new:L('New on your topic','आपके विषय पर नया')}}}
 function fdActs(x,i){const {L}=fdTxt();return'<div class="rn-acts">'+(x.doi?'<a class="btn btn-ghost btn-sm" href="https://doi.org/'+escAttr(x.doi)+'" target="_blank" rel="noopener">'+L('Open','खोलें')+'</a>':'')+
-  (x.kind!=='retr'?'<button type="button" class="btn btn-ghost btn-sm" onclick="fdAdd('+i+',this)">+ Library</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="fdHide(\''+escAttr(fdKey(x))+'\')">'+L('Hide','छिपाएँ')+'</button></div>'}
+  (x.kind!=='retr'?'<button type="button" class="btn btn-ghost btn-sm" onclick="fdAdd('+i+',this)">+ Library</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="fdHide(\''+jsq(fdKey(x))+'\')">'+L('Hide','छिपाएँ')+'</button></div>'}
 function fdChips(x){const {L,tag}=fdTxt();return'<div class="rn-tags"><span class="rn-k rn-k-'+x.kind+'">'+escHTML(tag[x.kind])+'</span>'+(x.oa?'<span class="rn-k rn-k-oa">'+L('Open access','Open access')+'</span>':'')+'</div>'}
 function fdMeta(x){return'<div class="rn-meta">'+escHTML([x.who,x.date||x.year,x.src].filter(Boolean).join(' · '))+'</div>'}
 function fdVars(x){const {L}=fdTxt();return(x.vars&&x.vars.length)?'<div class="rn-vars">'+L('Matches your','आपके इनसे मेल खाता है:')+' '+x.vars.map(v=>'<span>'+escHTML(v)+'</span>').join('')+'</div>':''}
@@ -19183,7 +19219,7 @@ function fdHTML(){const st=fdStore(),{L}=fdTxt(),o=studyGet(),words=fdWords(o);
   if(!st)return fdScopeHTML()+'<p class="hm-hint">'+L('Not checked yet.','अभी जाँचा नहीं।')+'</p>';
   const hid=new Set(st.hidden||[]),all=st.items.map((x,i)=>[x,i]).filter(([x])=>!hid.has(fdKey(x)));
   const f=window._fdF||'all',retr=all.filter(([x])=>x.kind==='retr'),rest=all.filter(([x])=>x.kind!=='retr'&&(f==='all'||(f==='oa'?x.oa:x.kind===f)));
-  const chip=(k,t)=>'<button type="button" class="rn-f'+(f===k?' on':'')+'" aria-pressed="'+(f===k)+'" onclick="fdFlt(\''+k+'\')">'+t+'</button>';
+  const chip=(k,t)=>'<button type="button" class="rn-f'+(f===k?' on':'')+'" aria-pressed="'+(f===k)+'" onclick="fdFlt(\''+jsq(k)+'\')">'+t+'</button>';
   let h=fdScopeHTML()+'<div class="rn-fs">'+chip('all',L('All','सभी'))+chip('new',L('Your topic','आपका विषय'))+chip('cites',L('Citing your sources','आपके sources को cite करने वाले'))+chip('oa','Open access')+'</div>';
   h+=retr.map(([x,i])=>'<div class="rn-retr"><b>⚠ '+escHTML(fdTxt().tag.retr)+'</b> '+escHTML(x.title)+fdActs(x,i)+'</div>').join('');
   if(!rest.length)h+='<p class="hm-hint">'+L('Nothing new this week.','इस हफ़्ते कुछ नया नहीं।')+'</p>';
@@ -19387,7 +19423,7 @@ function bpStepBookHTML(id,o){const hi=studyHi(),L=(en,x)=>hi?x:en;
   const tree=bpTree(o,'thesis'),num=bpNumbers(tree),inTree={};bpWalk(n=>{if(!(n.k&&n.k.length))inTree[n.id]=1},tree);const ids=bpStepNodes(id).filter(x=>inTree[x]);
   if(!ids.length)return'';
   return'<div class="sub-box bp-step"><b>📖 '+L('Goes into the book at','किताब में यहाँ जाता है')+'</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+ids.map(x=>{const n=bpNode(x),m=BP_MODES[n.m]||BP_MODES.front;
-    return'<a href="#" class="bp-loc" onclick="bpOpen(\''+x+'\');return false" style="border-left:4px solid '+m.bd+';background:'+m.bg+'">'+(num[x]?escHTML(num[x])+' ':'')+escHTML(bpTitle(n))+'</a>'}).join('')+'</div></div>'}
+    return'<a href="#" class="bp-loc" onclick="bpOpen(\''+jsq(x)+'\');return false" style="border-left:4px solid '+m.bd+';background:'+m.bg+'">'+(num[x]?escHTML(num[x])+' ':'')+escHTML(bpTitle(n))+'</a>'}).join('')+'</div></div>'}
 function bpOpen(focus){let d=document.getElementById('bpDlg');if(!d){d=document.createElement('dialog');d.id='bpDlg';d.className='dlg-wide';document.body.appendChild(d)}
   window._bpFocus=focus||'';bpRender();if(!d.open)d.showModal();
   if(focus)setTimeout(()=>{const el=d.querySelector('[data-bp="'+focus+'"]');if(el){el.scrollIntoView({block:'center'});el.classList.add('just-inserted');setTimeout(()=>el.classList.remove('just-inserted'),2500)}},60)}
@@ -19844,7 +19880,7 @@ function bpGoStep(step){try{document.getElementById('bpDlg').close()}catch(e){}c
 function bpRowHTML(n,num,depth){const hi=studyHi(),m=BP_MODES[n.m]||BP_MODES.front,steps=(n.s||[]);
   return'<div class="bp-row" data-bp="'+n.id+'" style="margin-left:'+(depth*18)+'px;border-left:4px solid '+m.bd+';background:'+m.bg+'">'+
    '<div class="bp-head"><b>'+(num?escHTML(num)+' ':'')+escHTML(bpTitle(n))+'</b>'+bpModeChip(n.m)+
-   (steps.length?'<span class="bp-steps">'+steps.map(s=>'<a href="#" onclick="bpGoStep(\''+s+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div>'+
+   (steps.length?'<span class="bp-steps">'+steps.map(s=>'<a href="#" onclick="bpGoStep(\''+jsq(s)+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div>'+
    (n.g?'<div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>':'')+'</div>'}
 function bpRender(){const d=document.getElementById('bpDlg');if(!d)return;const hi=studyHi(),L=(en,x)=>hi?x:en,o=studyGet(),pid=bpPlanId(o),plan=BP_PLANS.find(p=>p.id===pid)||BP_PLANS[0];
   const ds=(o.design||{}).type||'',tags=bpTags(o),ed=plan.edition||'thesis',tree=bpTree(o,ed),num=bpNumbers(tree);
@@ -20110,16 +20146,16 @@ function bbOutlineRender(){const box=document.getElementById('bbOutline');if(!bo
   const isB=bbIsBook();let div=editor;if(!isB){div=document.createElement('div');const d=docsGet().find(x=>x.id===book);div.innerHTML=safeStoredHTML((d&&d.body)||'')}
   const hs=[...div.querySelectorAll('h1,h2,h3')],num=bpNumbers(bpTree(o,'thesis')),present={};
   const rows=hs.map(h=>{const sec=h.getAttribute('data-sec')||'';if(sec)present[sec]=1;const own=bbOwn(h),words=own.reduce((a,x)=>a+lsWords(x.textContent||''),0),lv=+h.tagName[1];
-    return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\''+escAttr(sec)+'\','+hs.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+(lv>1||!(bpNode(sec)&&bpNode(sec).k)?'<span class="bb-w'+(words?'':' bb-empty')+'">'+(words?words:L('empty','खाली'))+'</span>':'')+'</a>'}).join('');
+    return'<a href="#" class="bb-row" style="padding-left:'+(4+(lv-1)*14)+'px'+(lv===1?';font-weight:600':'')+'" onclick="bbGo(\''+jsq(sec)+'\','+hs.indexOf(h)+');return false">'+escHTML(h.textContent.trim().slice(0,70))+(lv>1||!(bpNode(sec)&&bpNode(sec).k)?'<span class="bb-w'+(words?'':' bb-empty')+'">'+(words?words:L('empty','खाली'))+'</span>':'')+'</a>'}).join('');
   const missing=bbFlat(o).filter(x=>!present[x.n.id]&&!(x.n.ed==='syn')&&!/^front\.(title|contents)$/.test(x.n.id)&&x.n.id!=='front'&&x.n.id!=='back');
   const flds=isB?BB_FIELDS.filter(f=>bbFieldVal(f[0],o)):[];
   box.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b>📖 '+L('The book','किताब')+'</b><span><a href="#" class="desc" onclick="bbFillFromSteps();return false">↧ '+L('Fill from my steps','मेरे steps से भरें')+'</a> · <a href="#" class="desc" onclick="prOpen();return false">🧾 '+L('Process receipt','काम की रसीद')+'</a> · <a href="#" class="desc" onclick="bbCheckOpen();return false">✓ '+L('Check the book','किताब जाँचें')+'</a> · <a href="#" class="desc" onclick="bpOpen();return false">'+L('Plan','योजना')+'</a></span></div>'+
-   (flds.length?'<div class="desc" style="margin:4px 0">'+L('Linked number at the cursor:','Cursor पर जुड़ी हुई संख्या:')+' '+flds.map(f=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(hi?f[1][1]:f[1][0])+'" onmousedown="event.preventDefault()" onclick="bbFieldInsert(\''+f[0]+'\')">'+escHTML((hi?f[1][1]:f[1][0]).split(' (')[0])+' = '+escHTML(bbFieldVal(f[0],o))+'</button>').join(' ')+'</div>':'')+
-   (isB&&xrCaps().length?'<div class="desc" style="margin:4px 0">'+L('Refer to a table or figure at the cursor:','Cursor पर table या figure का हवाला:')+' '+xrCaps().map(c=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(xrTitle(c))+'" onmousedown="event.preventDefault()" onclick="xrInsert(\''+c.getAttribute('data-capid')+'\')">'+escHTML(xrLabel(c))+'</button>').join(' ')+'</div>':'')+
+   (flds.length?'<div class="desc" style="margin:4px 0">'+L('Linked number at the cursor:','Cursor पर जुड़ी हुई संख्या:')+' '+flds.map(f=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(hi?f[1][1]:f[1][0])+'" onmousedown="event.preventDefault()" onclick="bbFieldInsert(\''+jsq(f[0])+'\')">'+escHTML((hi?f[1][1]:f[1][0]).split(' (')[0])+' = '+escHTML(bbFieldVal(f[0],o))+'</button>').join(' ')+'</div>':'')+
+   (isB&&xrCaps().length?'<div class="desc" style="margin:4px 0">'+L('Refer to a table or figure at the cursor:','Cursor पर table या figure का हवाला:')+' '+xrCaps().map(c=>'<button type="button" class="btn btn-ghost btn-sm" title="'+escAttr(xrTitle(c))+'" onmousedown="event.preventDefault()" onclick="xrInsert(\''+jsq(c.getAttribute('data-capid'))+'\')">'+escHTML(xrLabel(c))+'</button>').join(' ')+'</div>':'')+
    hlHTML(o)+nfyHTML(o)+
-   (isB?'':'<button type="button" class="btn btn-purple btn-sm" style="margin:6px 0" onclick="docSwitch(\''+book+'\');bbOutlineRender()">'+L('Open the book','किताब खोलें')+'</button>')+
+   (isB?'':'<button type="button" class="btn btn-purple btn-sm" style="margin:6px 0" onclick="docSwitch(\''+jsq(book)+'\');bbOutlineRender()">'+L('Open the book','किताब खोलें')+'</button>')+
    '<div class="bb-list">'+rows+'</div>'+
-   (missing.length?'<p class="desc" style="margin:8px 0 2px;color:#b45309">'+L('In your plan but not in the book:','योजना में है, किताब में नहीं:')+'</p>'+missing.slice(0,12).map(x=>'<div class="row" style="gap:6px;align-items:center;font-size:13px"><span>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</span>'+(isB?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbAddMissing(\''+x.n.id+'\')">+ '+L('Add','जोड़ें')+'</button>':'')+'</div>').join('')+(missing.length>12?'<p class="desc">+'+(missing.length-12)+'</p>':''):'')}
+   (missing.length?'<p class="desc" style="margin:8px 0 2px;color:#b45309">'+L('In your plan but not in the book:','योजना में है, किताब में नहीं:')+'</p>'+missing.slice(0,12).map(x=>'<div class="row" style="gap:6px;align-items:center;font-size:13px"><span>'+escHTML((num[x.n.id]?num[x.n.id]+' ':'')+bpTitle(x.n))+'</span>'+(isB?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbAddMissing(\''+jsq(x.n.id)+'\')">+ '+L('Add','जोड़ें')+'</button>':'')+'</div>').join('')+(missing.length>12?'<p class="desc">+'+(missing.length-12)+'</p>':''):'')}
 function bbAddMissing(id){if(!bbIsBook())return;const h=bbAddSection(id);bbRenumber();try{docSaveBody(getEditorHTML());upd()}catch(e){}if(h)try{h.scrollIntoView({block:'center'})}catch(e){}bbOutlineRender()}
 function bbUseCurrent(){const o=studyGet();o.bookDoc=docCurrentId();studySet(o);showToast(studyHi()?'यही document अब इस study की किताब है ✓':'This document is now the book of this study ✓');bbOutlineRender();bbGuideUpdate()}
 function bbGo(sec,idx){const book=bbBookId();if(book&&docCurrentId()!==book)docSwitch(book);
@@ -20141,7 +20177,7 @@ function bbGuideUpdate(){const g=document.getElementById('bbGuide');if(!g)return
   const sec=bbCaretSection(),n=sec&&bpNode(sec);if(!n||!n.g){g.style.display='none';return}
   const hi=studyHi(),m=BP_MODES[n.m]||BP_MODES.front,num=bpNumbers(bpTree(studyGet(),'thesis'));
   g.style.display='block';g.style.borderLeftColor=m.bd;g.style.background=m.bg;
-  g.innerHTML='<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap"><b>'+escHTML((num[sec]?num[sec]+' ':'')+bpTitle(n))+'</b>'+bpModeChip(n.m)+((n.s||[]).length?'<span class="bp-steps">'+n.s.map(s=>'<a href="#" onclick="bpGoStep(\''+s+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div><div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'+bbBalanceHTML(sec,n)}
+  g.innerHTML='<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap"><b>'+escHTML((num[sec]?num[sec]+' ':'')+bpTitle(n))+'</b>'+bpModeChip(n.m)+((n.s||[]).length?'<span class="bp-steps">'+n.s.map(s=>'<a href="#" onclick="bpGoStep(\''+jsq(s)+'\');return false">'+s+'</a>').join(' ')+'</span>':'')+'</div><div class="bp-guide">'+escHTML(hi?n.g[1]:n.g[0])+'</div>'+bbBalanceHTML(sec,n)}
 function bbBalanceHTML(sec,n){if(!/^(disc\.|lit\.(themes|synthesis|gap)|results\.mixed|concl\.)/.test(sec))return'';const c=bbBalance(sec);if(!c)return'';const tot=c.report+c.interpret+c.compare+c.caution;if(!tot)return'';const hi=studyHi(),L=(en,x)=>hi?x:en,M=k=>(hi?BP_MODES[k].t[1]:BP_MODES[k].t[0]);
   let tip='';if(c.report>=2&&c.interpret+c.compare===0)tip=L('Mostly reporting. After each finding, say what it means for your question.','ज़्यादातर रिपोर्ट। हर finding के बाद बताइए कि आपके सवाल के लिए उसका क्या अर्थ है।');
   else if(c.interpret>=2&&c.report===0&&/^disc\./.test(sec))tip=L('Meaning without the finding it rests on. State the finding first.','अर्थ तो है पर वह finding नहीं जिस पर वह टिका है। पहले finding बताइए।');
@@ -20278,13 +20314,13 @@ function nfyPick(o){o=o||studyGet();const book=bbBookId(o);let div=null;if(book)
   return{kind:'done'}}
 function nfyHTML(o){o=o||studyGet();const hi=studyHi(),L=(en,x)=>hi?x:en,p=nfyPick(o),num=bpNumbers(bpTree(o,'thesis')),book=bbBookId(o);
   const T=n=>(num[n.id]?num[n.id]+' ':'')+bpTitle(n),S=x=>x[0]+' '+subL(x[2]);
-  const bStep=x=>'<button type="button" class="btn btn-ghost btn-sm" onclick="subOpen(\''+x[1]+'\',\''+x[0]+'\')">'+L('Open step ','कदम खोलें: ')+x[0]+'</button>';
-  const bSec=n=>book&&n?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbGo(\''+n.id+'\')">'+L('Go to ','जाएँ: ')+escHTML(num[n.id]||bpTitle(n))+'</button>':'';
+  const bStep=x=>'<button type="button" class="btn btn-ghost btn-sm" onclick="subOpen(\''+jsq(x[1])+'\',\''+x[0]+'\')">'+L('Open step ','कदम खोलें: ')+x[0]+'</button>';
+  const bSec=n=>book&&n?'<button type="button" class="btn btn-ghost btn-sm" onclick="bbGo(\''+jsq(n.id)+'\')">'+L('Go to ','जाएँ: ')+escHTML(num[n.id]||bpTitle(n))+'</button>':'';
   let txt='',btn='';
   if(p.kind==='fill'){txt=L('Step '+S(p.step)+' is done, but its place in the book, '+T(p.sec)+', is still empty. Put the step\'s draft there.','कदम '+S(p.step)+' पूरा है, पर किताब में उसकी जगह, '+T(p.sec)+', अभी खाली है। कदम का draft वहाँ डालें।');btn=bSec(p.sec)+bStep(p.step)}
   else if(p.kind==='step'){txt=L((p.st==='ip'?'Carry on with ':'Next: ')+S(p.step)+'.'+(p.sec?' It feeds '+T(p.sec)+' in your book.':''),(p.st==='ip'?'जारी रखें: ':'अगला: ')+S(p.step)+'।'+(p.sec?' यह आपकी किताब में '+T(p.sec)+' भरता है।':''));btn=bStep(p.step)+bSec(p.sec)}
   else if(p.kind==='wait'){txt=L('Every open step is waiting on someone. The first: '+S(p.step)+'.','हर खुला कदम किसी और के इंतज़ार में है। पहला: '+S(p.step)+'।');btn=bStep(p.step)}
-  else{txt=L('Every step is done or marked as not needed. Run the book check before you submit.','हर कदम पूरा है या "लागू नहीं" लिखा है। जमा करने से पहले किताब की जाँच चलाएँ।');btn=book?'<button type="button" class="btn btn-ghost btn-sm" onclick="docSwitch(\''+book+'\');bbCheckOpen()">✓ '+L('Check the book','किताब जाँचें')+'</button>':''}
+  else{txt=L('Every step is done or marked as not needed. Run the book check before you submit.','हर कदम पूरा है या "लागू नहीं" लिखा है। जमा करने से पहले किताब की जाँच चलाएँ।');btn=book?'<button type="button" class="btn btn-ghost btn-sm" onclick="docSwitch(\''+jsq(book)+'\');bbCheckOpen()">✓ '+L('Check the book','किताब जाँचें')+'</button>':''}
   if(!book&&p.kind!=='done')btn+='<button type="button" class="btn btn-ghost btn-sm" onclick="bpInsertOutline()">📖 '+L('Make the book','किताब बनाएँ')+'</button>';
   return'<div class="nfy"><b>'+L('Next for you','आपके लिए अगला')+'</b><p>'+escHTML(txt)+'</p><div class="nfy-b">'+btn+'</div></div>'}
 
@@ -20298,15 +20334,15 @@ function apHomeRender(){
   let docs=0,src=0;try{docs=docsGetRaw().length}catch(e){}try{src=citGetLib().length}catch(e){}
   const stNow=active?active.stage:null,pk=(function(){try{return PACKS[getPack()].label}catch(e){return ''}})();
   let cards='';
-  if(false&&active)cards+='<div class="hm-resume"><b>'+escHTML(ht('projcont'))+'</b>'+escHTML(active.name)+' · '+escHTML(stageLabel(active.stage))+'<br><button type="button" onclick="apGoStage(\''+active.stage+'\')">'+escHTML(ht('go'))+'</button></div>';
+  if(false&&active)cards+='<div class="hm-resume"><b>'+escHTML(ht('projcont'))+'</b>'+escHTML(active.name)+' · '+escHTML(stageLabel(active.stage))+'<br><button type="button" onclick="apGoStage(\''+jsq(active.stage)+'\')">'+escHTML(ht('go'))+'</button></div>';
   if(active)try{cards+=nfyHTML()}catch(e){}
   if(active)try{cards+=apSynCard()}catch(e){}
   const lk=LS.get('appu_lastlec');
   if(lk&&typeof AP_LIBMAP!=='undefined'&&AP_LIBMAP[lk]){const m=AP_LIBMAP[lk],pos=(apLectPos()[lk]||0)+1;
-    cards+='<div class="hm-resume"><b>'+escHTML(ht('resume'))+'</b>'+escHTML(ht('lecture'))+': '+escHTML(lang==='hi'?(m.titleH||m.title):m.title)+', '+escHTML(ht('slide'))+' '+pos+'<br><button type="button" onclick="apHomeResume(\''+lk+'\')">'+escHTML(ht('cont'))+'</button></div>'}
+    cards+='<div class="hm-resume"><b>'+escHTML(ht('resume'))+'</b>'+escHTML(ht('lecture'))+': '+escHTML(lang==='hi'?(m.titleH||m.title):m.title)+', '+escHTML(ht('slide'))+' '+pos+'<br><button type="button" onclick="apHomeResume(\''+jsq(lk)+'\')">'+escHTML(ht('cont'))+'</button></div>'}
   /* Version 121: the "Start here" card moved into the hero at the top of the page. */
   const hero=apHomeHero(active,lang);
-  const tile=(s,i)=>'<button type="button" class="hm-tile'+(stNow===s?' cur':'')+'" onclick="apGoStage(\''+s+'\')"><span class="hm-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+AP_HI[s]+'</svg></span><span><span class="hm-n">'+escHTML(ht('step'))+' '+(i+1)+'</span><b>'+escHTML(ht('t_'+s))+'</b><small>'+escHTML(ht('d_'+s))+'</small></span></button>';
+  const tile=(s,i)=>'<button type="button" class="hm-tile'+(stNow===s?' cur':'')+'" onclick="apGoStage(\''+jsq(s)+'\')"><span class="hm-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+AP_HI[s]+'</svg></span><span><span class="hm-n">'+escHTML(ht('step'))+' '+(i+1)+'</span><b>'+escHTML(ht('t_'+s))+'</b><small>'+escHTML(ht('d_'+s))+'</small></span></button>';
   const lt=(ic,tt,dd,fn)=>'<button type="button" class="hm-tile hm-learn" onclick="'+fn+'"><span class="hm-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+AP_HI[ic]+'</svg></span><span><b>'+escHTML(ht(tt))+'</b><small>'+escHTML(ht(dd))+'</small></span></button>';
   el.innerHTML='<div class="hm-me"><div class="hm-av" aria-hidden="true">'+escHTML(ini)+'</div><h2>'+escHTML(nm)+'</h2><div class="hm-sub">'+escHTML(pk)+'</div><div class="hm-pos">'+escHTML(me.pos||ht('yourpos'))+'</div>'
    +'<button type="button" class="hm-edit" onclick="apMeEdit()">'+escHTML(ht('edit'))+'</button>'
@@ -20332,7 +20368,7 @@ function apHomeHero(active,lang){
   return'<section class="hm-hero"><p class="hm-greet">'+escHTML(greet)+'</p><h2>'+escHTML(L('Pick up where you left off','जहाँ छोड़ा था, वहीं से शुरू करें'))+'</h2>'
     +'<div class="hm-hcard"><span class="hm-hk">'+escHTML(L('Your project','आपका प्रोजेक्ट'))+'</span><b class="hm-ht">'+escHTML(active.name)+'</b>'
     +'<div class="hm-bar" aria-hidden="true">'+bar+'</div><span class="hm-hd">'+escHTML(L('Stage ','चरण ')+(k+1)+' / '+STAGES.length+' · '+stageLabel(active.stage))+'</span>'
-    +'<button type="button" class="hm-go" onclick="apGoStage(\''+active.stage+'\')">'+escHTML(L('Continue: ','जारी रखें: ')+stageLabel(active.stage))+'</button></div></section>'}
+    +'<button type="button" class="hm-go" onclick="apGoStage(\''+jsq(active.stage)+'\')">'+escHTML(L('Continue: ','जारी रखें: ')+stageLabel(active.stage))+'</button></div></section>'}
 /* Home card for the synopsis: make it once the design is under way, then open it and show the gaps left. */
 function apSynCard(){const o=studyGet(),g=synGaps(o),hi=getLang()==='hi',L=(en,x)=>hi?x:en;
   const di=(o.design&&Object.keys(o.design).length)||(o.idea&&o.idea.title);if(g<0&&!di)return'';
@@ -20482,7 +20518,7 @@ function pgKeyHTML(g){
   h+='<div class="pg-cmp" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">';
   h+='<div><b>'+L('What you wrote','आपने जो लिखा')+'</b><div style="white-space:pre-wrap;margin-top:6px">'+escHTML(s.q||'')+'\n\n'+escHTML(s.claim||'')+'</div></div>';
   h+='<div><b>'+L('Answer key','उत्तर-कुंजी')+'</b><ul style="padding-left:18px;margin:6px 0">';
-  P.forEach(p=>{const m=self[p.id];h+='<li style="margin-bottom:10px">'+escHTML(p.h)+'<div style="display:flex;gap:6px;margin-top:4px"><button type="button" class="btn btn-sm'+(m==='got'?' primary':'')+'" data-pg="'+p.id+'" data-v="got" onclick="pgMark(\''+p.id+'\',\'got\')">'+L('I caught this','मैंने पकड़ा')+'</button><button type="button" class="btn btn-sm'+(m==='missed'?' primary':'')+'" data-pg="'+p.id+'" data-v="missed" onclick="pgMark(\''+p.id+'\',\'missed\')">'+L('I missed this','मुझसे छूटा')+'</button></div></li>'});
+  P.forEach(p=>{const m=self[p.id];h+='<li style="margin-bottom:10px">'+escHTML(p.h)+'<div style="display:flex;gap:6px;margin-top:4px"><button type="button" class="btn btn-sm'+(m==='got'?' primary':'')+'" data-pg="'+p.id+'" data-v="got" onclick="pgMark(\''+jsq(p.id)+'\',\'got\')">'+L('I caught this','मैंने पकड़ा')+'</button><button type="button" class="btn btn-sm'+(m==='missed'?' primary':'')+'" data-pg="'+p.id+'" data-v="missed" onclick="pgMark(\''+jsq(p.id)+'\',\'missed\')">'+L('I missed this','मुझसे छूटा')+'</button></div></li>'});
   h+='</ul></div></div>';
   h+='<div style="margin:8px 0"><button type="button" class="btn" id="pgPort" onclick="pgPortfolio()">'+L('Download my practice portfolio (Word)','मेरा अभ्यास पोर्टफ़ोलियो डाउनलोड करें (Word)')+'</button></div>';
   h+='<p id="pgTally"><b>'+L('You marked '+done+' of '+P.length+'. Caught: '+got+'.','आपने '+P.length+' में से '+done+' पर निशान लगाया। पकड़े: '+got+'।')+'</b> '+(done===P.length?L('The points you missed are the ones to look for next time. This is your own tally, not a grade.','जो बिंदु छूटे, अगली बार उन्हें खोजिए। यह आपकी अपनी गिनती है, अंक नहीं।'):'')+'</p>';
@@ -20648,7 +20684,7 @@ function slMail(i){const hi=studyHi(),x=SCALE_LINKS[i]||slById(i);const me=(type
 function slOpen(){
   document.getElementById('slView').innerHTML='';
   const hi=studyHi(),acc=k=>(SL_ACCESS[k]||['',''])[hi?1:0];
-  document.getElementById('slList').innerHTML=SCALES.map(x=>'<button class="btn btn-ghost" style="margin:3px 6px 3px 0" onclick="slPick(\''+x.id+'\')"><b>'+x.short+'</b> · '+x.construct+' <span style="font-size:11px">'+acc(x.licence.access)+'</span></button>').join('')+
+  document.getElementById('slList').innerHTML=SCALES.map(x=>'<button class="btn btn-ghost" style="margin:3px 6px 3px 0" onclick="slPick(\''+jsq(x.id)+'\')"><b>'+x.short+'</b> · '+x.construct+' <span style="font-size:11px">'+acc(x.licence.access)+'</span></button>').join('')+
    '<p style="font-size:13px;margin:12px 0 4px"><b>'+(hi?'और scales (मालिक के page का link)':'More scales (link to the owner\'s page)')+'</b></p><p class="desc" style="margin:0 0 6px">'+(hi?'नियम: मुफ़्त scale पूरा हवाले के साथ; सीमित या पैसे वाला scale सिर्फ़ link से; जहाँ अनुमति चाहिए, वहाँ तैयार email।':'Rule: free scales in full with the reference; restricted or paid scales by link only; where permission is needed, a ready email.')+'</p>'+
    '<div style="font-size:13px">'+SCALE_LINKS.map((x,i)=>'<div style="border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:4px 0"><b>'+escHTML(x.short)+'</b> · '+escHTML(x.name)+' · '+escHTML(x.construct)+' <span>'+acc(x.access)+'</span><br><span style="color:var(--muted)">'+escHTML(x.note)+'</span><br><a href="'+escAttr(x.url)+'" target="_blank" rel="noopener">'+(hi?'मालिक का page खोलें':'Open the owner\'s page')+'</a>'+((x.access==='request'||x.access==='unknown')?' · <a href="#" onclick="slMail('+i+');return false">✉️ '+(hi?'अनुमति का email बनाएँ':'Draft a permission email')+'</a>':'')+'</div>').join('')+'</div>';
   const d=document.getElementById('scaleDlg');if(!d.open)d.showModal();
@@ -20667,11 +20703,11 @@ function slPick(id){
    '<h3 style="margin:0 0 6px">'+e(x.name)+' ('+x.short+')</h3>'+
    '<p style="font-size:13.5px;margin:0 0 6px">'+e(x.stem)+'</p>'+
    '<p style="font-size:13px;color:var(--muted);margin:0 0 6px">Response options: '+x.labels.map(e).join(' | ')+'</p>'+
-   (x.hidden?'<div style="border:2px solid #f2a900;border-radius:8px;padding:8px;margin:6px 0;font-size:13px">🔗 '+(studyHi()?'इस scale का इस्तेमाल सीमित है (सिर्फ़ non-commercial), इसलिए Appuscholar इसके शब्द साथ नहीं रखता। ':'Use of this scale is restricted (non-commercial only), so Appuscholar does not carry its wording. ')+'<a href="'+e(lc.url)+'" target="_blank" rel="noopener">'+(studyHi()?'मालिक का page खोलें':'Open the owner\'s page')+'</a>'+(studyHi()?', वहाँ से '+x.items.length+' statements copy करके यहाँ paste करें (हर line में एक)। ये सिर्फ़ आपके device पर रहेंगे।':', copy the '+x.items.length+' statements and paste them here, one per line. They stay on your device only.')+'<textarea id="slPasteTxt" rows="'+x.items.length+'" style="width:100%;margin-top:6px">'+e((slUserItems(x.id)||[]).join('\n'))+'</textarea><button class="btn btn-ghost btn-sm" onclick="slSaveText(\''+x.id+'\')">'+(studyHi()?'सहेजें':'Save')+'</button></div>':'')+
+   (x.hidden?'<div style="border:2px solid #f2a900;border-radius:8px;padding:8px;margin:6px 0;font-size:13px">🔗 '+(studyHi()?'इस scale का इस्तेमाल सीमित है (सिर्फ़ non-commercial), इसलिए Appuscholar इसके शब्द साथ नहीं रखता। ':'Use of this scale is restricted (non-commercial only), so Appuscholar does not carry its wording. ')+'<a href="'+e(lc.url)+'" target="_blank" rel="noopener">'+(studyHi()?'मालिक का page खोलें':'Open the owner\'s page')+'</a>'+(studyHi()?', वहाँ से '+x.items.length+' statements copy करके यहाँ paste करें (हर line में एक)। ये सिर्फ़ आपके device पर रहेंगे।':', copy the '+x.items.length+' statements and paste them here, one per line. They stay on your device only.')+'<textarea id="slPasteTxt" rows="'+x.items.length+'" style="width:100%;margin-top:6px">'+e((slUserItems(x.id)||[]).join('\n'))+'</textarea><button class="btn btn-ghost btn-sm" onclick="slSaveText(\''+jsq(x.id)+'\')">'+(studyHi()?'सहेजें':'Save')+'</button></div>':'')+
    '<ol style="font-size:13.5px;line-height:1.6;margin:0 0 8px 18px">'+slItems(x).map((t,i)=>'<li>'+e(t)+(x.reverse.indexOf(i+1)>=0?' <span style="color:var(--muted);font-size:12px">(reverse-scored)</span>':'')+'</li>').join('')+'</ol>'+
    '<p style="font-size:13px"><b>Scoring.</b> '+e(x.scoring)+'</p>'+
    '<div style="font-size:12.5px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0"><b>Licence record.</b> '+e(lc.status)+'. Commercial use: '+(lc.commercial?'allowed':'not allowed')+'. Checked '+e(lc.checked)+'.<br>'+e(lc.note)+'<br>Credit line to print with the scale: '+e(lc.attribution)+'<br>Source: <a href="'+e(lc.source)+'" target="_blank" rel="noopener">'+e(lc.source)+'</a><br><i>'+e(lc.verified)+'</i></div>'+
-   '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="slCopy(\''+x.id+'\')">Copy the questionnaire text</button><button class="btn btn-ghost" onclick="slCodebook(\''+x.id+'\')">Download the item list (CSV)</button><button class="btn btn-ghost" onclick="slScoreOpen(\''+x.id+'\')">Score this scale in my data</button></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="slCopy(\''+jsq(x.id)+'\')">Copy the questionnaire text</button><button class="btn btn-ghost" onclick="slCodebook(\''+jsq(x.id)+'\')">Download the item list (CSV)</button><button class="btn btn-ghost" onclick="slScoreOpen(\''+jsq(x.id)+'\')">Score this scale in my data</button></div>'+
    '</div>';
 }
 function slCopy(id){
@@ -21416,7 +21452,7 @@ async function shOpen(){
 function shTab(t){SH.tab=t;SH.cur=null;shRender()}
 function shRender(){
   const tabs=[['papers','Papers'],['search','Search'],['find','Find passages for a sentence'],['matrix','Matrix']];
-  document.getElementById('shTabs').innerHTML=tabs.map(x=>'<button class="btn '+(SH.tab===x[0]&&!SH.cur?'btn-purple':'btn-ghost')+'" onclick="shTab(\''+x[0]+'\')">'+x[1]+'</button>').join('');
+  document.getElementById('shTabs').innerHTML=tabs.map(x=>'<button class="btn '+(SH.tab===x[0]&&!SH.cur?'btn-purple':'btn-ghost')+'" onclick="shTab(\''+jsq(x[0])+'\')">'+x[1]+'</button>').join('');
   const b=document.getElementById('shBody');
   if(SH.cur){shReaderRender(b);if(SH.img)shDrawImg();return}
   ({papers:shPapersRender,search:shSearchRender,find:shFindRender,matrix:shMatrixRender})[SH.tab](b);
@@ -21424,7 +21460,7 @@ function shRender(){
 function shStatusHTML(){return SH.status?'<p style="font-size:13px;margin:6px 0" role="status">'+escHTML(SH.status)+'</p>':''}
 async function shUsage(){try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();return Math.round((e.usage||0)/1048576)+' MB used of about '+Math.round((e.quota||0)/1048576)+' MB'}}catch(e){}return''}
 function shPapersRender(b){
-  const L=SH.papers.map(p=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><input type="text" value="'+escHTML(p.title)+'" style="width:100%;font-weight:700" onchange="shRename(\''+p.id+'\',this.value)" aria-label="Title">'+shLibLine(p)+'<div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+escHTML(p.file)+' · '+p.pages.length+' pages · '+p.notes.length+' highlights</div><div class="row" style="gap:6px"><button class="btn btn-purple" onclick="shRead(\''+p.id+'\',1)">Read</button><button class="btn btn-ghost" id="shDel_'+p.id+'" onclick="shAskDel(\''+p.id+'\')">Remove from shelf</button></div></div>').join('');
+  const L=SH.papers.map(p=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><input type="text" value="'+escHTML(p.title)+'" style="width:100%;font-weight:700" onchange="shRename(\''+jsq(p.id)+'\',this.value)" aria-label="Title">'+shLibLine(p)+'<div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+escHTML(p.file)+' · '+p.pages.length+' pages · '+p.notes.length+' highlights</div><div class="row" style="gap:6px"><button class="btn btn-purple" onclick="shRead(\''+jsq(p.id)+'\',1)">Read</button><button class="btn btn-ghost" id="shDel_'+p.id+'" onclick="shAskDel(\''+jsq(p.id)+'\')">Remove from shelf</button></div></div>').join('');
   b.innerHTML='<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-purple" onclick="document.getElementById(\'shFile\').click()">➕ Add PDFs or Markdown</button><input type="file" id="shFile" accept=".pdf,application/pdf,.md,.markdown,.txt,text/markdown,text/plain" multiple style="display:none" onchange="shAddFiles(this)"><button class="btn btn-ghost" onclick="shPdfToolsOpen()">PDF tools</button><button class="btn btn-ghost" onclick="shBackup()">Back up the shelf</button><button class="btn btn-ghost" onclick="document.getElementById(\'shRest\').click()">Restore a shelf backup</button><input type="file" id="shRest" accept=".json" style="display:none" onchange="shRestore(this)"></div>'+shStatusHTML()+(SH.papers.length?L:'<p style="font-size:13.5px">The shelf is empty. Add a PDF to start.</p>')+'<p style="font-size:12.5px;color:var(--muted)" id="shUse"></p><p style="font-size:12.5px;color:var(--muted)">The shelf is kept apart from the normal backup. Press <b>Back up the shelf</b> now and then. Clearing your browser data erases the shelf.</p>';
   shUsage().then(u=>{const e=document.getElementById('shUse');if(e&&u)e.textContent='Browser storage: '+u+'.'});
 }
@@ -21440,7 +21476,7 @@ async function shLink(id,cid){const p=SH.papers.find(x=>x.id===id);if(!p)return;
 function shLibLine(p){const hi=getLang()==='hi',lib=citGetLib(),m=p.lib?lib.find(d=>d.cid===p.lib):shLibMatch(p.title),CIT=Object.fromEntries(CIT_ST.map(x=>[x[0],hi?x[2]:x[1]]));
   const opts='<option value="">'+(hi?'Library के paper से जोड़ें…':'Link to a library paper…')+'</option>'+lib.map(d=>'<option value="'+escAttr(d.cid)+'"'+(m&&m.cid===d.cid?' selected':'')+'>'+escHTML(String(d.title||'').slice(0,70))+'</option>').join('');
   return'<div style="font-size:12.5px;margin:3px 0">'+(m?'📚 '+(hi?'Library में: ':'In your library: ')+'<b>'+escHTML(CIT[(m.scr&&m.scr.st)||'toread'])+'</b>'+(m.scr&&m.scr.why?' · '+escHTML(m.scr.why):''):'<span style="color:var(--muted)">'+(hi?'Library में नहीं मिला':'Not found in your library')+'</span>')+
-   ' <select style="max-width:240px;font-size:12px" aria-label="'+(hi?'Library से जोड़ें':'Link to library')+'" onchange="shLink(\''+p.id+'\',this.value)">'+opts+'</select></div>'}
+   ' <select style="max-width:240px;font-size:12px" aria-label="'+(hi?'Library से जोड़ें':'Link to library')+'" onchange="shLink(\''+jsq(p.id)+'\',this.value)">'+opts+'</select></div>'}
 async function shRename(id,v){const p=SH.papers.find(x=>x.id===id);if(!p)return;p.title=String(v).trim()||p.file;await shPut(p)}
 async function shAskDel(id){
   const btn=document.getElementById('shDel_'+id);
@@ -21451,7 +21487,7 @@ function shSearchRender(b){
   b.innerHTML='<div class="row" style="gap:8px"><input type="text" id="shQ" style="flex:1" placeholder="Words to look for, for example: sleep memory adolescents" onkeydown="if(event.key===\'Enter\')shSearchRun()"><button class="btn btn-purple" onclick="shSearchRun()">Search</button></div><div id="shRes" style="margin-top:8px"></div>'+(SH.papers.length?'':'<p style="font-size:13.5px">The shelf is empty.</p>');
 }
 function shResHTML(r,extra){
-  return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><div style="font-weight:700;font-size:13.5px">'+escHTML(r.p.title)+' <span style="font-weight:400;color:var(--muted)">· page '+r.page+'</span></div><div style="font-size:13px;line-height:1.55;margin:4px 0">'+(extra||shSnippet(r.text,r.terms,220))+'</div><button class="btn btn-ghost" onclick="shRead(\''+r.p.id+'\','+r.page+')">Open this page</button></div>';
+  return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0"><div style="font-weight:700;font-size:13.5px">'+escHTML(r.p.title)+' <span style="font-weight:400;color:var(--muted)">· page '+r.page+'</span></div><div style="font-size:13px;line-height:1.55;margin:4px 0">'+(extra||shSnippet(r.text,r.terms,220))+'</div><button class="btn btn-ghost" onclick="shRead(\''+jsq(r.p.id)+'\','+r.page+')">Open this page</button></div>';
 }
 function shSearchRun(){
   const q=document.getElementById('shQ').value,box=document.getElementById('shRes');
@@ -22067,7 +22103,7 @@ function shStatsHTML(p){
   const sum=AppuStats.summarise(hits),kinds=Object.keys(SH_STAT_NAME).filter(k=>sum[k]),k=kinds.indexOf(SH.statKind)>=0?SH.statKind:'';
   const list=hits.filter(h=>!k||h.stat===k),show=list.slice(0,60);
   return'<details style="margin:6px 0"><summary style="cursor:pointer;font-size:13px"><b>Statistics in this paper</b> ('+hits.length+')</summary><div style="margin-top:4px">'+
-    '<div class="row" style="gap:4px;flex-wrap:wrap;margin-bottom:4px">'+kinds.map(x=>'<button class="btn '+(k===x?'btn-purple':'btn-ghost')+'" style="padding:2px 8px;font-size:12px" aria-pressed="'+(k===x)+'" onclick="shStatKind(\''+x+'\')">'+escHTML(SH_STAT_NAME[x])+' '+sum[x]+'</button>').join('')+'</div>'+
+    '<div class="row" style="gap:4px;flex-wrap:wrap;margin-bottom:4px">'+kinds.map(x=>'<button class="btn '+(k===x?'btn-purple':'btn-ghost')+'" style="padding:2px 8px;font-size:12px" aria-pressed="'+(k===x)+'" onclick="shStatKind(\''+jsq(x)+'\')">'+escHTML(SH_STAT_NAME[x])+' '+sum[x]+'</button>').join('')+'</div>'+
     '<div style="max-height:220px;overflow:auto">'+show.map(h=>'<div style="margin:2px 0;font-size:13px"><button class="btn btn-ghost" style="padding:1px 8px;font-size:12px" title="Go to page '+h.page+'" onclick="shGo('+h.page+')">p. '+h.page+'</button> <code>'+escHTML(h.text)+'</code></div>').join('')+(list.length>show.length?'<div style="font-size:12px;color:var(--muted)">… and '+(list.length-show.length)+' more. Pick a kind above to narrow the list.</div>':'')+'</div>'+
     '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Found by text patterns. Each line is what the paper prints; it does not mean the result is right. Lines that start with Table come from the table\u2019s own columns; tables set as pictures are not read.</p></div></details>'}
 /* Sections of the open paper, found from the PDF's own type sizes and fonts (no AI, nothing leaves the device). Each chip jumps to its page. */
@@ -22168,13 +22204,13 @@ function shReaderRender(b){
      '<input type="search" id="shInQ" value="'+escAttr(SH.inq||'')+'" placeholder="Search in this paper" style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')shInSearch(this.value)" aria-label="Search in this paper"><button class="btn btn-ghost" onclick="shInSearch(document.getElementById(\'shInQ\').value)">Find</button></div>'+shInResHTML(p)+(SH.img?'<div id="shImg" style="border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;text-align:center;overflow:auto"><span style="font-size:13px">Loading the page…</span></div>':'')+
    '<div id="shText" style="white-space:pre-wrap;font-size:14px;line-height:1.65;border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;user-select:text">'+shMarkTerms(shMarked(p,SH.page))+'</div>'+
    '<p style="font-size:12.5px;color:var(--muted);margin:0 0 6px">This is the text extracted from the PDF. Tables and columns may run together, so check the original for exact figures. Select a passage above to highlight it.</p>'+
-   '<textarea id="shNote" rows="2" style="width:100%" placeholder="Your note on the selected passage (optional)"></textarea><div class="row" style="margin:8px 0 2px;gap:6px;flex-wrap:wrap;align-items:center"><button class="btn btn-purple" style="min-height:40px" onclick="shQuoteToDraft()">Put the selection in my draft as a quote</button><span style="font-size:12.5px;color:var(--muted)">Or copy it here and paste it in the draft: it arrives as a quote with its citation.</span></div><p style="font-size:12.5px;margin:6px 0 2px">Select a passage, then press the colour that says what it is:</p><div class="row" style="margin-top:2px;gap:6px;flex-wrap:wrap">'+SH_COLS.map(c=>'<button class="btn" style="background:'+c[2]+';color:#111;border:1px solid #888;min-height:40px" onclick="shSaveHL(\''+c[0]+'\')">'+c[1]+'</button>').join('')+'</div>'+
-   '<h3 style="margin:12px 0 4px;font-size:14px">Highlights</h3>'+(hl.length?hl.map(x=>'<div style="border-left:5px solid '+shColOf(x)+';padding:2px 8px;margin:6px 0;font-size:13px"><b>p. '+x.page+'</b> “'+escHTML(x.quote.slice(0,300))+'”'+(x.note?'<br><i>'+escHTML(x.note)+'</i>':'')+'<br>'+shCardTapsHTML(x)+'<button class="btn btn-ghost" onclick="shRead(\''+p.id+'\','+x.page+')">Go to page</button> <button class="btn btn-ghost" onclick="shDelHL(\''+x.id+'\')">Delete</button>'+(SH.thought===x.id?'<br><textarea id="shTh" rows="2" style="width:100%;margin-top:4px" placeholder="Your own thought on this passage">'+escHTML(x.note||'')+'</textarea><button class="btn btn-purple" onclick="shThoughtSave(\''+x.id+'\')">Save my thought</button>':'')+'</div>').join(''):'<p style="font-size:13px">None yet.</p>')+
+   '<textarea id="shNote" rows="2" style="width:100%" placeholder="Your note on the selected passage (optional)"></textarea><div class="row" style="margin:8px 0 2px;gap:6px;flex-wrap:wrap;align-items:center"><button class="btn btn-purple" style="min-height:40px" onclick="shQuoteToDraft()">Put the selection in my draft as a quote</button><span style="font-size:12.5px;color:var(--muted)">Or copy it here and paste it in the draft: it arrives as a quote with its citation.</span></div><p style="font-size:12.5px;margin:6px 0 2px">Select a passage, then press the colour that says what it is:</p><div class="row" style="margin-top:2px;gap:6px;flex-wrap:wrap">'+SH_COLS.map(c=>'<button class="btn" style="background:'+c[2]+';color:#111;border:1px solid #888;min-height:40px" onclick="shSaveHL(\''+jsq(c[0])+'\')">'+c[1]+'</button>').join('')+'</div>'+
+   '<h3 style="margin:12px 0 4px;font-size:14px">Highlights</h3>'+(hl.length?hl.map(x=>'<div style="border-left:5px solid '+shColOf(x)+';padding:2px 8px;margin:6px 0;font-size:13px"><b>p. '+x.page+'</b> “'+escHTML(x.quote.slice(0,300))+'”'+(x.note?'<br><i>'+escHTML(x.note)+'</i>':'')+'<br>'+shCardTapsHTML(x)+'<button class="btn btn-ghost" onclick="shRead(\''+jsq(p.id)+'\','+x.page+')">Go to page</button> <button class="btn btn-ghost" onclick="shDelHL(\''+jsq(x.id)+'\')">Delete</button>'+(SH.thought===x.id?'<br><textarea id="shTh" rows="2" style="width:100%;margin-top:4px" placeholder="Your own thought on this passage">'+escHTML(x.note||'')+'</textarea><button class="btn btn-purple" onclick="shThoughtSave(\''+jsq(x.id)+'\')">Save my thought</button>':'')+'</div>').join(''):'<p style="font-size:13px">None yet.</p>')+
    '<h3 style="margin:12px 0 4px;font-size:14px">Summary, after you think first</h3><p style="font-size:13px;margin:0 0 4px">In your own words, in at least two lines: what do you think this paper says? The AI summary unlocks after that.</p><textarea id="shMine" rows="3" style="width:100%" oninput="shMineCheck()"></textarea><div class="row" style="margin-top:6px"><button class="btn btn-ghost" id="shAiBtn" onclick="shSummarise()" disabled>Summarise with AI</button></div><div id="shAi" style="margin-top:8px;font-size:13.5px;line-height:1.6;white-space:pre-wrap" aria-live="polite"></div>';
 }
 /* Taps on a highlight card: I agree, I doubt, and my own thought. The counts go to the linked library paper, where B5 reads them. */
-function shCardTapsHTML(x){const on=(s,c)=>'class="btn '+(x.stance===s?'btn-purple':'btn-ghost')+'" '+(x.stance===s?'style="background:'+c+';color:#fff" ':'')+'aria-pressed="'+(x.stance===s)+'" onclick="shStance(\''+x.id+'\',\''+s+'\')"';
-  return'<button '+on('agree','#15803d')+'>I agree</button> <button '+on('doubt','#b45309')+'>I doubt</button> <button class="btn btn-ghost" onclick="shThought(\''+x.id+'\')">My thought</button> '}
+function shCardTapsHTML(x){const on=(s,c)=>'class="btn '+(x.stance===s?'btn-purple':'btn-ghost')+'" '+(x.stance===s?'style="background:'+c+';color:#fff" ':'')+'aria-pressed="'+(x.stance===s)+'" onclick="shStance(\''+jsq(x.id)+'\',\''+s+'\')"';
+  return'<button '+on('agree','#15803d')+'>I agree</button> <button '+on('doubt','#b45309')+'>I doubt</button> <button class="btn btn-ghost" onclick="shThought(\''+jsq(x.id)+'\')">My thought</button> '}
 function shReadCounts(p){const n=p.notes||[];return{agree:n.filter(x=>x.stance==='agree').length,doubt:n.filter(x=>x.stance==='doubt').length}}
 async function shStance(id,s){const p=SH.cur;if(!p)return;const n=p.notes.find(x=>x.id===id);if(!n)return;n.stance=(n.stance===s)?'':s;
   try{const m=p.lib?citGetLib().find(d=>d.cid===p.lib):shLibMatch(p.title);if(m){const l=citGetLib(),i=l.findIndex(d=>d.cid===m.cid);l[i].reads=shReadCounts(p);citSaveLib(l)}}catch(e){}
@@ -22539,11 +22575,11 @@ function shStatSuggest(p,c){const kinds=shColKinds(c);if(!kinds.length)return[];
 async function shStatTake(id,i,j){const p=SH.papers.find(x=>x.id===id);if(!p)return;const c=shCols()[i],h=shStatSuggest(p,c)[j];if(!h)return;
   p.cells=p.cells||{};const add=h.text+' (p. '+h.page+')',cur=String(p.cells[c]||'').trim();if(cur.indexOf(add)>=0)return;p.cells[c]=cur?cur+'; '+add:add;await shPut(p);shRender()}
 function shStatChips(p,c,i){const s=shStatSuggest(p,c);if(!s.length)return'';
-  return'<div style="margin-top:3px;font-size:12px;color:var(--muted)">The paper prints:</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;max-width:260px">'+s.slice(0,5).map((h,j)=>'<button class="btn btn-ghost" style="padding:1px 6px;font-size:12px" title="Add to the cell: '+escAttr(h.text)+' (page '+h.page+')" onclick="shStatTake(\''+p.id+'\','+i+','+j+')">'+escHTML(h.text.length>34?h.text.slice(0,32)+'\u2026':h.text)+' <span style="color:var(--muted)">p.'+h.page+'</span></button>').join('')+(s.length>5?'<span style="font-size:12px;color:var(--muted)">+'+(s.length-5)+' more in the reader</span>':'')+'</div>'}
+  return'<div style="margin-top:3px;font-size:12px;color:var(--muted)">The paper prints:</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;max-width:260px">'+s.slice(0,5).map((h,j)=>'<button class="btn btn-ghost" style="padding:1px 6px;font-size:12px" title="Add to the cell: '+escAttr(h.text)+' (page '+h.page+')" onclick="shStatTake(\''+jsq(p.id)+'\','+i+','+j+')">'+escHTML(h.text.length>34?h.text.slice(0,32)+'\u2026':h.text)+' <span style="color:var(--muted)">p.'+h.page+'</span></button>').join('')+(s.length>5?'<span style="font-size:12px;color:var(--muted)">+'+(s.length-5)+' more in the reader</span>':'')+'</div>'}
 function shMatrixRender(b){
   const cols=shCols();
   const head='<tr><th style="text-align:left;padding:4px">Paper</th>'+cols.map((c,i)=>'<th style="text-align:left;padding:4px">'+escHTML(c)+' <button class="btn btn-ghost" style="padding:0 6px" title="Remove column" onclick="shColDel('+i+')">×</button></th>').join('')+'</tr>';
-  const rows=SH.papers.map(p=>'<tr><td style="vertical-align:top;padding:4px;font-weight:700;min-width:140px">'+escHTML(p.title)+'</td>'+cols.map((c,i)=>'<td style="vertical-align:top;padding:4px"><textarea rows="3" style="width:100%;min-width:130px" onchange="shCell(\''+p.id+'\','+i+',this.value)">'+escHTML((p.cells||{})[c]||'')+'</textarea>'+shStatChips(p,c,i)+'</td>').join('')+'</tr>').join('');
+  const rows=SH.papers.map(p=>'<tr><td style="vertical-align:top;padding:4px;font-weight:700;min-width:140px">'+escHTML(p.title)+'</td>'+cols.map((c,i)=>'<td style="vertical-align:top;padding:4px"><textarea rows="3" style="width:100%;min-width:130px" onchange="shCell(\''+jsq(p.id)+'\','+i+',this.value)">'+escHTML((p.cells||{})[c]||'')+'</textarea>'+shStatChips(p,c,i)+'</td>').join('')+'</tr>').join('');
   b.innerHTML='<p style="font-size:13.5px;margin:0 0 6px">One row per paper, one column per thing you compare. Fill it in from your reading. The cells are yours, not the AI\'s.</p><div class="row" style="gap:8px;flex-wrap:wrap"><input type="text" id="shCol" placeholder="New column, for example: Sample size" style="flex:1"><button class="btn btn-ghost" onclick="shColAdd()">Add column</button><button class="btn btn-purple" onclick="shMatrixCsv()">Download as CSV</button></div>'+(SH.papers.length?'<div style="overflow:auto;margin-top:8px"><table style="border-collapse:collapse;font-size:13px;width:100%">'+head+rows+'</table></div>':'<p style="font-size:13.5px">The shelf is empty.</p>');
 }
 function shColAdd(){const v=(document.getElementById('shCol').value||'').trim();if(!v)return;const c=shCols();if(c.indexOf(v)<0)c.push(v);LS.set('appu_shelf_cols',JSON.stringify(c));shRender()}
@@ -23455,7 +23491,7 @@ function tgDemoHTML(r){
     '<div style="font-size:13px;margin:6px 0 2px"><b>Predict first.</b> Before you run it, what do you expect?</div>'+
     '<label style="display:block;font-size:13px;cursor:pointer"><input type="radio" name="tgPred" value="yes"> A clear result (statistically significant)</label>'+
     '<label style="display:block;font-size:13px;cursor:pointer"><input type="radio" name="tgPred" value="no"> No clear result</label>'+
-    '<div class="row" style="margin-top:8px"><button class="btn btn-purple" style="flex:1" onclick="tgDemo(\''+r.id+'\')">Run the demo in the Stats Lab</button></div>'+
+    '<div class="row" style="margin-top:8px"><button class="btn btn-purple" style="flex:1" onclick="tgDemo(\''+jsq(r.id)+'\')">Run the demo in the Stats Lab</button></div>'+
     '<div id="tgDemoOut" style="margin-top:8px;font-size:13px"></div></div>';
 }
 function tgBackToMine(){
@@ -23511,13 +23547,13 @@ function tgRender(){
   const back=Object.keys(a).length?'<button class="btn btn-ghost" style="margin-top:8px" onclick="tgBack()">← Back</button> <button class="btn btn-ghost" style="margin-top:8px" onclick="window._tg={};tgRender()">Start again</button>':'';
   if(n.ask){
     const Q=TG_Q[n.ask];
-    h+='<div style="font-size:13px;margin-bottom:6px">'+escHTML(Q.q)+'</div>'+Q.o.map(o=>'<button class="btn btn-ghost" style="display:block;width:100%;text-align:left;margin:4px 0" onclick="tgAnswer(\''+n.ask+'\',\''+o[0]+'\')">'+escHTML(o[1])+'</button>').join('')+back;
+    h+='<div style="font-size:13px;margin-bottom:6px">'+escHTML(Q.q)+'</div>'+Q.o.map(o=>'<button class="btn btn-ghost" style="display:block;width:100%;text-align:left;margin:4px 0" onclick="tgAnswer(\''+jsq(n.ask)+'\',\''+o[0]+'\')">'+escHTML(o[1])+'</button>').join('')+back;
   }else{
     const r=n.res;
     h+='<div style="background:rgba(109,40,217,.08);border-radius:8px;padding:10px"><div style="font-size:12px;color:var(--muted)">Best fit</div><div style="font-weight:700;font-size:15px">'+escHTML(r.name)+'</div><div style="font-size:13px;margin-top:4px">'+escHTML(r.why)+'</div></div>';
     if(r.note)h+='<div style="font-size:13px;margin-top:8px">'+escHTML(r.note)+'</div>';
     if(r.alt&&r.alt.length)h+='<div style="font-size:13px;margin-top:8px"><b>Other options</b><ul style="margin:4px 0 0 18px">'+r.alt.map(x=>'<li>'+escHTML(tgL(TG_RES[x[0]]?TG_RES[x[0]].name:(STAT_TESTS[x[0]]?STAT_TESTS[x[0]].label:x[0])))+', '+escHTML(tgL(x[1]).replace(/^[^,]*, /,''))+'</li>').join('')+'</ul></div>';
-    if(r.built)h+='<div class="row" style="margin-top:10px"><button class="btn btn-purple" style="flex:1" onclick="tgUse(\''+r.keys[0]+'\')">Use this test</button></div>';
+    if(r.built)h+='<div class="row" style="margin-top:10px"><button class="btn btn-purple" style="flex:1" onclick="tgUse(\''+jsq(r.keys[0])+'\')">Use this test</button></div>';
     else h+='<div style="font-size:13px;margin-top:10px;padding:8px;border:1px dashed var(--line);border-radius:8px">The app does not run this test yet. This is a case for a human or a statistician to confirm, and the app will hand it over once the full workflow is built. Until then, run it in jamovi or JASP (both free) and bring the numbers back here to write up.</div>';
     h+=tgWhyHTML(a,r)+tgDemoHTML(r)+tgCheckHTML()+back;
   }
@@ -23607,7 +23643,7 @@ function genReveal(){
   else if(D.alt.includes(key)){head=name+' is a valid choice for this design, usually as the fallback when the usual assumptions fail.';cls='good'}
   else{head='The usual test for this design is '+firstName+', not '+name+'.';cls='warn'}
   box.innerHTML='<p style="margin:8px 0;font-weight:700">'+escHTML(head)+'</p><p class="desc">'+escHTML(D.why)+'</p>'+
-    '<div class="row">'+(cls==='warn'?'<button class="btn btn-ghost" style="flex:1" onclick="genSwitch(\''+first+'\')">Switch to '+escHTML(firstName)+'</button>':'')+
+    '<div class="row">'+(cls==='warn'?'<button class="btn btn-ghost" style="flex:1" onclick="genSwitch(\''+jsq(first)+'\')">Switch to '+escHTML(firstName)+'</button>':'')+
     '<button class="btn btn-purple" style="flex:1" onclick="genRunMine()">Run '+escHTML(name)+'</button></div>';
 }
 function genSwitch(k){document.getElementById('statsTest').value=k;statsFieldsRender();genGateHide();genGateShow();showToast('Switched. Choose your columns, then check again.')}
@@ -24827,9 +24863,9 @@ function dupOpen(){
     h+='<div class="dup-pair" style="border-top:1px solid var(--line);padding:10px 0"><b style="font-size:13px">'+escHTML(why[w]||'')+'</b>'+(wn?'<p class="desc" style="color:#b45309;margin:4px 0">⚠ '+escHTML(warn[wn])+'</p>':'')+
       '<div class="row" style="gap:8px;align-items:stretch;flex-wrap:wrap;margin-top:6px">'+card(A,a)+card(B,b)+'</div>'+
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">'+
-      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+escAttr(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Keep the first','पहली रखें')+(fa.length?' (+'+escHTML(fa.join(', '))+')':'')+'</button>'+
-      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+escAttr(B.cid)+'\',\''+escAttr(A.cid)+'\')">'+L('Keep the second','दूसरी रखें')+(fb.length?' (+'+escHTML(fb.join(', '))+')':'')+'</button>'+
-      '<button type="button" class="btn btn-ghost btn-sm" onclick="dupNotSame(\''+escAttr(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Not the same','एक नहीं हैं')+'</button></div></div>'});
+      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+jsq(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Keep the first','पहली रखें')+(fa.length?' (+'+escHTML(fa.join(', '))+')':'')+'</button>'+
+      '<button type="button" class="btn btn-purple btn-sm" onclick="dupMerge(\''+jsq(B.cid)+'\',\''+escAttr(A.cid)+'\')">'+L('Keep the second','दूसरी रखें')+(fb.length?' (+'+escHTML(fb.join(', '))+')':'')+'</button>'+
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="dupNotSame(\''+jsq(A.cid)+'\',\''+escAttr(B.cid)+'\')">'+L('Not the same','एक नहीं हैं')+'</button></div></div>'});
   if(pairs.length>60)h+='<p class="desc">'+L('Showing the first 60. Resolve these and open the check again for the rest.','पहले 60 दिखाए गए हैं। इन्हें निपटाकर बाकी के लिए फिर खोलें।')+'</p>';
   h+='<div class="row" style="margin-top:12px"><button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById(\'dupDlg\').close()">'+L('Close','बंद करें')+'</button></div></div>';
   dlg.innerHTML=h;if(!dlg.open)dlg.showModal()}
@@ -25667,7 +25703,7 @@ function slAimsRender(){const sel=document.getElementById('statsTest');if(!sel)r
   if(!box){box=document.createElement('div');box.id='slAims';fld.parentNode.insertBefore(box,fld)}
   const cur=SL_AIMS.find(a=>a.k===slAim);
   box.innerHTML='<p class="sl-q">'+(hi?'आप क्या जानना चाहते हैं?':'What do you want to find out?')+'</p><div class="sl-aims">'
-    +SL_AIMS.map(a=>'<button type="button" class="sl-aim'+(a.k===slAim?' on':'')+'" aria-pressed="'+(a.k===slAim)+'" onclick="slAimPick(\''+a.k+'\')">'+escHTML(hi?a.hi:a.en)+'</button>').join('')+'</div>'
+    +SL_AIMS.map(a=>'<button type="button" class="sl-aim'+(a.k===slAim?' on':'')+'" aria-pressed="'+(a.k===slAim)+'" onclick="slAimPick(\''+jsq(a.k)+'\')">'+escHTML(hi?a.hi:a.en)+'</button>').join('')+'</div>'
     +(cur?'<p class="sl-why">'+escHTML(cur.why[hi?1:0])+' <a href="#" onclick="slAimPick(\'\');return false">'+(hi?'सभी टेस्ट दिखाएँ':'Show all tests')+'</a></p>':'')}
 function slAimPick(k){slAim=k;const sel=document.getElementById('statsTest');if(!sel)return;const a=SL_AIMS.find(x=>x.k===k);
   [...sel.options].forEach(o=>{o.hidden=!!a&&a.tests.indexOf(o.value)<0;o.disabled=o.hidden});
@@ -25691,7 +25727,7 @@ function calmPhApply(){const ph=window.innerWidth<760&&!document.body.classList.
   if(!nav){nav=document.createElement('nav');nav.id='phNav';nav.className='ph-nav';document.body.appendChild(nav)}
   if(nav.hidden)nav.hidden=false;if(nav.getAttribute('aria-label')!==(hi?'मुख्य':'Main'))nav.setAttribute('aria-label',hi?'मुख्य':'Main');
   const cur=apHomeIs()?'home':calmPhView;
-  const html=['home','stage','write','ai'].map(k=>'<button type="button" class="'+(k===cur?'on':'')+'" '+(k===cur?'aria-current="page"':'')+' onclick="calmPhGo(\''+k+'\')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+CALM_PH_IC[k]+'"/></svg><span>'+L[k]+'</span></button>').join('');
+  const html=['home','stage','write','ai'].map(k=>'<button type="button" class="'+(k===cur?'on':'')+'" '+(k===cur?'aria-current="page"':'')+' onclick="calmPhGo(\''+jsq(k)+'\')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+CALM_PH_IC[k]+'"/></svg><span>'+L[k]+'</span></button>').join('');
   if(nav._h!==html){nav._h=html;nav.innerHTML=html}   /* compare with what we wrote: the browser's own innerHTML never matches it, which rebuilt the bar 16 times a second */
   /* in Steps, the tree shows only the open stage's parts, and only when it has more than one */
   const g=document.querySelector('.tool-sidebar .stage-group.calm-cur');
