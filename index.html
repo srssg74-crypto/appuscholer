@@ -8088,7 +8088,8 @@ function vaultCollect(){const o={};
   try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(backupOk(k))o[k]=localStorage.getItem(k)}}catch(e){}
   try{Object.keys(sessionKeys).forEach(k=>{if(backupOk(k))o[k]=sessionKeys[k]})}catch(e){}
   return o}
-function vaultHash(o){let h=0;const s=Object.keys(o).sort().map(k=>k+'='+o[k]).join('\n');for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length}
+/* A time stamp of the last activity is not work: it must not make an unchanged backup look changed. */
+function vaultHash(o){let h=0;const s=Object.keys(o).filter(k=>k!=='appu_last_active').sort().map(k=>k+'='+o[k]).join('\n');for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length}
 function vaultInfo(o){const i=backupDocsInfo(o);return{n:i.n,w:i.w}}
 let _vaultLast=null,_vaultT=0,_vaultBusy=false;
 let _vaultPending=null,_vaultBooted=false;
