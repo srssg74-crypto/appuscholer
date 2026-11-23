@@ -5434,6 +5434,10 @@ function tourEnd(){clearTimeout(TOUR_T);clearInterval(TOUR_TYPE);const ov=docume
 (function(){try{const f=spOpen;spOpen=function(){const r=f.apply(this,arguments);setTimeout(whyRender,60);return r}}catch(e){}})();
 function tourAfterWelcome(){const d=document.getElementById('welcomeDlg');if(!d||d._tour)return;d._tour=1;
   d.addEventListener('close',()=>{if(LS.get('appu_demo'))return;setTimeout(()=>{const st=document.getElementById('settingsDlg');
+    /* Version 139: the key window comes first on a first visit, before the tour and before any page is filled. The tour waits until it closes. */
+    let kd=document.getElementById('keyWizDlg');
+    if(!(kd&&kd.open)&&!LS.get('appu_kw_first')&&!PROV_ORDER.some(provHasKey)){LS.set('appu_kw_first','1');try{keyWizOpen();kd=document.getElementById('keyWizDlg')}catch(e){kd=null}}
+    if(kd&&kd.open){kd.addEventListener('close',()=>{if(!LS.get('appu_demo'))setTimeout(tourStart,350)},{once:true});return}
     if(st&&st.open){if(!st._tour){st._tour=1;st.addEventListener('close',()=>{if(!LS.get('appu_demo'))setTimeout(tourStart,350)},{once:true})}}else tourStart()},350)})}
 
 /* B2 to B7: what this very step asks of the chosen review type, taken from the same table as the B1 steps panel. */
@@ -20433,7 +20437,7 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=138;
+const APP_VERSION=139;
 const APP_BUILD='2026.11.23d';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
