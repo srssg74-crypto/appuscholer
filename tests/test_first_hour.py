@@ -65,8 +65,8 @@ with sync_playwright() as p:
     # phone with touch
     b=p.chromium.launch()
     ctx=b.new_context(viewport={'width':390,'height':800},has_touch=True,is_mobile=True,service_workers='block')
-    from harness import route_cdn, GATE_BYPASS
-    ctx.route(lambda url: not url.startswith('http://localhost'), route_cdn); ctx.add_init_script(GATE_BYPASS)
+    from harness import prepare, GATE_BYPASS
+    prepare(ctx); ctx.add_init_script(GATE_BYPASS)
     pg=ctx.new_page(); errs2=[]; pg.on('pageerror',lambda e: errs2.append(str(e)))
     J=lambda js: pg.evaluate(js)
     pg.goto('http://localhost:8765/index.html'); pg.wait_for_timeout(1500)

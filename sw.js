@@ -2,13 +2,13 @@
    Same-origin files: network first, so a new upload reaches online students at once; the saved copy
    is used only when the network fails. Library and font files: saved copy first.
    AI providers, paper search and every other site are never touched. */
-const VER = 'appu-v258-2026.11.23i';
+const VER = 'appu-v259-2026.11.24a';
 const SHELL = ['./', './index.html', './form.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './favicon-32.png', './logo.svg'];
 const LIBS = [
   'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js',
   'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
 ];
 const ASSETS = ["./assets/bg_class.webp", "./assets/face_raj_m0.webp", "./assets/face_raj_m1.webp", "./assets/face_raj_m2.webp", "./assets/face_raj_m3.webp", "./assets/face_raj_m4.webp", "./assets/face_raj_m5.webp", "./assets/face_raj_m6.webp", "./assets/ch_appu_explain.webp", "./assets/ch_appu_point.webp", "./assets/ch_appu_stand.webp", "./assets/ch_appu_talk.webp", "./assets/ch_appu_warn.webp", "./assets/ch_meera_explain.webp", "./assets/ch_meera_happy.webp", "./assets/ch_meera_point.webp", "./assets/ch_meera_stand.webp", "./assets/ch_meera_talk.webp", "./assets/ch_meera_think.webp", "./assets/ch_meera_warn.webp", "./assets/ch_raj_explain.webp", "./assets/ch_raj_happy.webp", "./assets/ch_raj_point.webp", "./assets/ch_raj_stand.webp", "./assets/ch_raj_talk.webp", "./assets/ch_raj_think.webp", "./assets/ch_raj_warn.webp", "./assets/ch_raj_write.webp", "./assets/face_appu_c.webp", "./assets/face_appu_o.webp", "./assets/face_meera_c.webp", "./assets/face_meera_o.webp", "./assets/face_raj_c.webp", "./assets/face_raj_o.webp", "./assets/pt_einstein.webp", "./assets/pt_kalam.webp", "./assets/pt_raman.webp"];
@@ -51,7 +51,9 @@ self.addEventListener('fetch', e => {
   if (LIB_HOSTS.indexOf(url.hostname) >= 0) {
     e.respondWith((async () => {
       const hit = await caches.match(req);
-      if (hit) return hit;
+      // Version 140: library files are now fetched with integrity checks, which need a CORS copy.
+      // An opaque copy saved by an older version would be refused, so it is fetched afresh instead.
+      if (hit && !(hit.type === 'opaque' && req.mode === 'cors')) return hit;
       const res = await fetch(req);
       if (res && (res.ok || res.type === 'opaque')) { const c = await caches.open(VER); c.put(req, res.clone()).catch(() => {}); }
       return res;

@@ -39,14 +39,32 @@ def route_cdn(route):
     # every other outside host: fail like an offline network
     return route.abort()
 
+# The pages pin each CDN library with an integrity hash (Version 140). The stubs above cannot match those
+# hashes, so for tests only the integrity attributes are taken out of the served page. The production files
+# are not changed; test_security_v140 checks the hashes in the real files.
+import re as _re
+def _strip_sri(route):
+    resp = route.fetch()
+    body = _re.sub(r'\s(?:integrity="sha384-[^"]*"|crossorigin="anonymous")', '', resp.text())
+    return route.fulfill(response=resp, body=body)
+
+def _sri_noise(t):
+    return ('integrity' in t and ('cdnjs.cloudflare.com' in t or 'cdn.jsdelivr.net' in t or 'unpkg.com' in t))
+
+def prepare(ctx):
+    ctx.route(lambda url: not url.startswith('http://localhost'), route_cdn)
+    ctx.route(lambda url: url.startswith('http://localhost') and url.split('?')[0].split('#')[0].endswith('.html'), _strip_sri)
+
 def new_page(p, errors, viewport=None):
     b = p.chromium.launch()
     ctx = b.new_context(viewport=viewport or {'width': 1366, 'height': 900}, service_workers='block')
-    ctx.route(lambda url: not url.startswith('http://localhost'), route_cdn)
+    prepare(ctx)
     ctx.add_init_script(GATE_BYPASS)
     pg = ctx.new_page()
     pg.on('pageerror', lambda e: errors.append(('pageerror', str(e)[:400])))
-    pg.on('console', lambda m: errors.append(('console.' + m.type, m.text[:400])) if m.type == 'error' else None)
+    # The stubs cannot match the integrity hashes, so the browser's own "integrity check failed" messages for the
+    # stubbed CDN files are expected here and left out. The real hashes are checked by tests/ci_real_libs.py in CI.
+    pg.on('console', lambda m: errors.append(('console.' + m.type, m.text[:400])) if m.type == 'error' and not _sri_noise(m.text) else None)
     pg.on('dialog', lambda d: (errors.append(('dialog', d.message[:300])) if d.type=='alert' else None, d.dismiss()))
     return b, pg
 

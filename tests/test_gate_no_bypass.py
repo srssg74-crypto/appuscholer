@@ -55,6 +55,8 @@ def body(name):
     m=re.search(r'async function '+name+r'\([\s\S]*?\n}\n',src); return m.group(0) if m else ''
 rest=src
 for nm in ['callAIRaw','apTtsMake']: rest=rest.replace(body(nm),'')
+# the content security policy names the providers it allows; that is a permission, not a call
+rest=re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*>','',rest)
 found=[h for h in hosts if h in rest and re.search(re.escape(h),'\n'.join(l for l in rest.split('\n') if re.search(r'fetch\(|XMLHttpRequest|sendBeacon|url\s*=|https://',l)))]
 ok(not found,'AI provider addresses appear only inside callAIRaw and the speech maker '+str(found))
 ok(all(src.count(m)==len(re.findall(re.escape(m)+r' [^*]{3,}\*/',src)) for m in ['/*gate:data','/*gate:viewer','/*gate:tts','/*gate:net','/*gate:doi','/*gate:key']),'every exemption marker gives a reason')

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Try Appuscholar · student test</title>
@@ -288,7 +289,9 @@ function resultsRun(){const all=parseAll(document.getElementById('rIn').value),o
      +o.t.map((t,i)=>t[2]?'<div><b>'+(i+1)+':</b> '+esc(t[2])+'</div>':'').join('')+Object.keys(o.o||{}).map(k=>o.o[k]?'<div><b>'+esc(k)+':</b> '+esc(o.o[k])+'</div>':'').join('')+'</td></tr>').join('')+'</table></div>'
    +'<button type="button" class="ghost" onclick="resultsCsv()">'+T('Download as CSV','CSV के रूप में download करें')+'</button>';
   window._kitAll=all}
-function resultsCsv(){const all=window._kitAll||[],q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+/* A cell that begins with = + - @ or a tab/return is read as a formula by Excel and Sheets, so it gets a leading apostrophe. Plain numbers stay as they are. */
+function csvCell(v){let x=String(v==null?'':v);const t=x.replace(/^[\s\u200b-\u200d\u2060\ufeff]+/,'');if((/^[=+\-@\uff1d\uff0b\uff0d\uff20|]/.test(t)||/^[\t\r\n]/.test(x))&&!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(x))x="'"+x;return'"'+x.replace(/"/g,'""')+'"'}
+function resultsCsv(){const all=window._kitAll||[],q=csvCell;
   const head=['code','round','sus_language','subject','level','device','college','sus_score'].concat(TASKS.flatMap((_,i)=>['task'+(i+1)+'_result','task'+(i+1)+'_seconds','task'+(i+1)+'_note'])).concat(SUS.map((_,k)=>'sus'+(k+1))).concat(['hard','use','change','most','lost']);
   const rows=all.map(o=>[o.c,o.r,o.l,o.i.s,o.i.v,o.i.d,o.i.g,susScore(o.u)].concat(o.t.flat()).concat(o.u).concat(['hard','use','change','most','lost'].map(k=>(o.o||{})[k]||'')));
   const csv='﻿'+[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n');

@@ -16,7 +16,7 @@ LATE = "(()=>{const D=Date,t=new D('2027-01-02T10:00:00').getTime();window.Date=
 def fresh(p, late=False):
     b = p.chromium.launch()
     ctx = b.new_context(viewport={'width': 390, 'height': 844}, service_workers='block')
-    ctx.route(lambda url: not url.startswith('http://localhost'), harness.route_cdn)
+    harness.prepare(ctx)
     if late: ctx.add_init_script(LATE)
     pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)[:300]))
