@@ -52,7 +52,9 @@ with sync_playwright() as p:
     ok('Fill included and excluded from my library' in J("document.getElementById('subMain').innerText"),'button shown in the PRISMA part of B1')
     J("b1FillFromLibrary()")
     n=json.loads(J("JSON.stringify((wGet(studyGet()).B1||{}).n||{})"))
-    ok(n.get('inc')=='1' and n.get('exF')=='2' and n.get('exT') is None,'PRISMA boxes filled from the library (exT left empty because none) %s'%n)
+    # Version 142: once every paper has a decision, a zero is a real count and is written, so the flow check can add up.
+    ok(n.get('inc')=='1' and n.get('exF')=='2' and n.get('exT')=='0' and n.get('scr')=='3' and n.get('ft')=='3','PRISMA boxes filled from the library, zero exclusions at title stage written as 0 %s'%n)
+    ok(json.loads(J("JSON.stringify(b1FlowIssues(studyGet()))"))==[],'the filled PRISMA numbers add up')
     ok('opulation: 2' in J("wGet(studyGet()).B1.exWhy"),'reason list filled')
     J("wNest('B1','n','inc','7')"); J("b1FillFromLibrary()")
     ok(J("wGet(studyGet()).B1.n.inc")=='7','a box the student filled is never overwritten')

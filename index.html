@@ -2519,7 +2519,7 @@ html #apTh .th-top{font-size:calc(1em * var(--cfz,1))}
   <h2 data-i18n="welcome_h2">💜 Welcome to Appuscholar</h2>
   <p style="font-size:14px;line-height:1.7;color:var(--ink)" data-i18n="welcome_intro">A writing and research assistant, with psychology research support built in. Everything you write stays on this computer.</p>
   <ol>
-    <li data-i18n="welcome_step1">Click <b>⚙ AI Provider / Key</b> at the top right.</li>
+    <li data-i18n="welcome_step1">Click <b>the AI button</b> at the top right (it shows the name of your AI, such as Gemini).</li>
     <li data-i18n="welcome_step2">Pick <b>Google Gemini</b> or <b>Groq</b> — both have a free tier.</li>
     <li data-i18n="welcome_step3">Follow the link, create a key, paste it in, press <b>Save Key</b>.</li>
     <li data-i18n="welcome_step4">Start writing. Press <kbd>Tab</kbd> to accept a suggestion.</li>
@@ -2552,7 +2552,7 @@ html #apTh .th-top{font-size:calc(1em * var(--cfz,1))}
   </details>
   <details style="margin-top:10px">
     <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_key">🔌 My AI key stopped working, or I lost it</summary>
-    <p style="font-size:13px;color:var(--ink);line-height:1.7;margin:8px 0 0" data-i18n="faq_a_key">Open <b>⚙ AI Provider / Key</b> at the top right, pick your provider again, and follow the link to generate a new one — it's free and takes under a minute. Your key lives only in this browser; nothing to recover from a server.</p>
+    <p style="font-size:13px;color:var(--ink);line-height:1.7;margin:8px 0 0" data-i18n="faq_a_key">Open <b>the AI button</b> at the top right (it shows the name of your AI, such as Gemini), pick your provider again, and follow the link to generate a new one — it's free and takes under a minute. Your key lives only in this browser; nothing to recover from a server.</p>
   </details>
   <details style="margin-top:10px">
     <summary style="cursor:pointer;font-weight:700;color:var(--head-title);font-size:13.5px" data-i18n="faq_q_lost">💾 My work disappeared after closing the tab or clearing my browser</summary>
@@ -3333,7 +3333,7 @@ const I18N={
     faq_q_code:"🔑 My access code won't work",
     faq_a_code:"Paste the whole code, including the dot in the middle, with no extra spaces or line breaks — copying from some apps adds a stray character at the start or end. Codes also expire; if the date has passed, you'll need a fresh one from whoever gave you Appuscholar.",
     faq_q_key:'🔌 My AI key stopped working, or I lost it',
-    faq_a_key:"Open <b>⚙ AI Provider / Key</b> at the top right, pick your provider again, and follow the link to generate a new one — it's free and takes under a minute. Your key lives only in this browser; nothing to recover from a server.",
+    faq_a_key:"Open <b>the AI button</b> at the top right (it shows the name of your AI, such as Gemini), pick your provider again, and follow the link to generate a new one — it's free and takes under a minute. Your key lives only in this browser; nothing to recover from a server.",
     faq_q_lost:'💾 My work disappeared after closing the tab or clearing my browser',
     faq_a_lost:'Everything is saved only in this browser, on this computer — never on a server. Clearing site data, switching browsers, or moving to a new computer wipes it with no way back. Use <b>⬇ Download</b> in the document toolbar regularly to keep a copy outside the browser.',
     faq_q_broken:"🖥 The page looks broken, or won't load properly",
@@ -3578,7 +3578,7 @@ const I18N={
     faq_q_code:'🔑 मेरा एक्सेस कोड काम नहीं कर रहा',
     faq_a_code:'पूरा कोड पेस्ट करें, बीच वाले डॉट सहित, बिना किसी अतिरिक्त स्पेस या लाइन-ब्रेक के — कुछ ऐप्स से कॉपी करने पर शुरू या अंत में एक अतिरिक्त अक्षर जुड़ जाता है। कोड की समय-सीमा भी होती है; यदि तारीख निकल चुकी है, तो Appuscholar देने वाले से नया कोड लें।',
     faq_q_key:'🔌 मेरी AI कुंजी काम करना बंद कर दी, या खो गई',
-    faq_a_key:'ऊपर दाईं ओर <b>⚙ AI प्रदाता / कुंजी</b> खोलें, अपना प्रदाता फिर चुनें, और लिंक से एक नई कुंजी बनाएं — यह मुफ़्त है और एक मिनट से भी कम समय लेता है। आपकी कुंजी केवल इसी ब्राउज़र में रहती है; किसी सर्वर से कुछ भी वापस नहीं मिलता।',
+    faq_a_key:'ऊपर दाईं ओर <b>AI वाला बटन</b> (उस पर आपके AI का नाम लिखा है, जैसे Gemini) खोलें, अपना प्रदाता फिर चुनें, और लिंक से एक नई कुंजी बनाएं — यह मुफ़्त है और एक मिनट से भी कम समय लेता है। आपकी कुंजी केवल इसी ब्राउज़र में रहती है; किसी सर्वर से कुछ भी वापस नहीं मिलता।',
     faq_q_lost:'💾 टैब बंद करने या ब्राउज़र साफ़ करने के बाद मेरा काम गायब हो गया',
     faq_a_lost:'सब कुछ केवल इसी ब्राउज़र में, इसी कंप्यूटर पर सहेजा जाता है — किसी सर्वर पर कभी नहीं। साइट डेटा साफ़ करने, ब्राउज़र बदलने, या नए कंप्यूटर पर जाने से यह बिना वापसी के मिट जाता है। दस्तावेज़ टूलबार में <b>⬇ डाउनलोड</b> का नियमित उपयोग करके ब्राउज़र के बाहर एक प्रति रखें।',
     faq_q_broken:'🖥 पेज खराब दिख रहा है, या सही से लोड नहीं हो रहा',
@@ -4085,8 +4085,8 @@ function subPosterSaved(){try{const p=getActiveProjectId()||'';return !!LS.get('
 /* What the app can already see in the study record. A hint only: the student's own status wins. */
 function subAuto(id,o){const d=o.idea||{},g=o.gap||{},ds=o.design||{},v=ds.vars||[];
   try{if(LS_IDS.indexOf(id)>=0)return lsOk(id,o);switch(id){
-    case'B2':return !!String(o.search||'').trim()||logsDone('B2',o);
-    case'B3':return logsDone('B3',o)||citGetLib().length>0;
+    case'B2':return logsDone('B2',o);
+    case'B3':return logsDone('B3',o)||b3AllDecided(o);
     case'D2':return logsDone('D2',o);
     case'D3':return logsDone('D3',o);
     case'F3':return logsDone('F3',o);
@@ -5604,7 +5604,14 @@ function spOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{},d0=o.idea||{};
    '<div id="spPrev"></div>'+
    '<label style="margin-top:12px;display:block"><b>Hypotheses</b> <span class="desc">'+(hi?'(हर पंक्ति में एक)':'(one per line)')+'</span></label><textarea id="spHyp" rows="3" style="width:100%" placeholder="'+escAttr(hi?'जैसे: H1: exam के हफ़्ते में कम सोने वाले students का anxiety score ज़्यादा होगा।':'e.g. H1: Students who sleep less in exam week will have higher anxiety scores.')+'">'+escHTML(ds.hyp||'')+'</textarea>'+
    '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button type="button" class="btn btn-ghost" onclick="document.getElementById(\'spDlg\').close()">'+(hi?'रद्द करें':'Cancel')+'</button><button type="button" class="btn btn-purple" onclick="spSave()">'+(hi?'सहेजें':'Save')+'</button></div>';
-  d._opt=opt;d._scales=scales;if(!d.open)d.showModal();d.oninput=d.onchange=()=>{clearTimeout(d._pt);d._pt=setTimeout(spPreview,250)};spPreview()}
+  d._opt=opt;d._scales=scales;if(!d.open)d.showModal();d.oninput=d.onchange=()=>{spRevToggle();clearTimeout(d._pt);d._pt=setTimeout(spPreview,250)};spRevToggle();spPreview()}
+/* Version 142: a review has no participants, sample size or variables. When "review" is chosen, those
+   fields step aside and the plan can be saved with the review question and hypotheses alone. */
+function spRevToggle(){const d=document.getElementById('spDlg');if(!d)return;const t=document.getElementById('spType'),rev=t&&t.value==='review',hi=studyHi();
+  ['spN','spPop','spSampling'].forEach(id=>{const e=document.getElementById(id);if(!e)return;const box=id==='spN'?e.parentNode:id==='spSampling'?e:e.parentNode.parentNode;if(id==='spSampling'){e.style.display=rev?'none':'';const lb=e.previousElementSibling;if(lb)lb.style.display=rev?'none':''}else if(box)box.style.display=rev?'none':''});
+  const tb=document.getElementById('spVars');if(tb){tb.style.display=rev?'none':'';const lb=tb.previousElementSibling;if(lb)lb.style.display=rev?'none':'';const ad=tb.nextElementSibling;if(ad&&ad.tagName==='BUTTON')ad.style.display=rev?'none':''}
+  let n=document.getElementById('spRevNote');if(rev&&!n){n=document.createElement('p');n.id='spRevNote';n.className='desc';n.style.margin='10px 0';t.insertAdjacentElement('afterend',n)}
+  if(n){n.style.display=rev?'':'none';n.textContent=hi?'Review में participants, sample size या variables नहीं होते। Review का प्रकार Stage 2 (B1) में चुनें; पात्रता के नियम, search और screening वहीं से outline में आएँगे।':'A review has no participants, sample size or variables, so those fields are hidden. Choose the review type in Stage 2 (B1); the eligibility rules, search log and screening counts go into the outline from there.'}}
 function spPreview(){const el=document.getElementById('spPrev');if(!el)return;const hi=studyHi(),g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
   const vars=[...document.querySelectorAll('#spVars tbody tr')].map(tr=>({name:tr.querySelector('.spName').value.trim(),role:tr.querySelector('.spRole').value,type:tr.querySelector('.spTypeV').value,levels:tr.querySelector('.spLevels').value.trim()})).filter(v=>v.name);
   const ty=g('spType');if(!ty){el.innerHTML='';return}
@@ -5619,7 +5626,7 @@ function spSave(){const hi=studyHi(),o0=studyGet();const vars=[...document.query
   const ds={type:document.getElementById('spType').value,pop:document.getElementById('spPop').value.trim(),n:document.getElementById('spN').value.trim(),sampling:document.getElementById('spSampling').value.trim(),vars:vars,hyp:document.getElementById('spHyp').value.trim()};try{ds.ss=ssReadBasis(o0.design)}catch(e){}
   try{const od=o0.design||{};if(od.flowPrev)ds.flowPrev=od.flowPrev;if(od.type&&ds.type&&od.type!==ds.type&&!od.flowPrev){const pc=dgDesignCells(o0);if(pc)ds.flowPrev={type:od.type,cells:pc}}}catch(e){}
   if(!ds.type){showToast(hi?'पहले study design चुनिए':'Choose a study design first');return}
-  if(!vars.some(v=>v.role==='outcome')){showToast(hi?'कम से कम एक outcome (DV) variable लिखिए':'Add at least one outcome (DV) variable');return}
+  if(ds.type!=='review'&&!vars.some(v=>v.role==='outcome')){showToast(hi?'कम से कम एक outcome (DV) variable लिखिए':'Add at least one outcome (DV) variable');return}
   studyPatch('design',ds);document.getElementById('spDlg').close();try{designRender&&designRender()}catch(e){}
   showToast(hi?'Study की योजना सहेजी गई ✓':'Study plan saved ✓')}
 
@@ -5657,7 +5664,8 @@ function qnOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{};let d=document
    (m.bg.filter(x=>x.v).length?'<p class="desc" style="margin:4px 0">'+(hi?'आपकी योजना से: ':'From your plan: ')+m.bg.filter(x=>x.v).map(x=>escHTML(x.v.name)+(x.v.levels?' ('+escHTML(x.v.levels)+')':'')).join(', ')+'</p>':'')+
    '<p style="margin:10px 0 4px"><b>'+(hi?'Scales (Scale library से, लेखक के शब्दों में)':'Scales (from the Scale library, in the owner\'s words)')+'</b></p>'+
    (scl.length?scl.map(x=>'<label style="display:block;font-size:13px"><input type="checkbox" class="qnScale" value="'+x.id+'"'+(m.scales.indexOf(x.id)>=0?' checked':'')+'> <b>'+escHTML(x.short)+'</b> · '+escHTML(x.name)+' <span class="desc">('+escHTML(x.licence&&x.licence.status||'')+')</span></label>').join(''):'')+
-   (m.own.length?'<p style="margin:10px 0 4px"><b>'+(hi?'आपके अपने सवाल':'Your own questions')+'</b></p>'+m.own.map((v,i)=>'<label style="display:block;font-size:13px">'+escHTML(v.name)+' <span class="desc">'+(hi?'(हर पंक्ति में एक सवाल; ख़ाली छोड़ें तो एक ही सवाल बनेगा)':'(one question per line; leave empty for a single question)')+'</span></label><textarea class="qnOwn" data-name="'+escAttr(v.name)+'" rows="2" style="width:100%">'+escHTML((q.own&&q.own[v.name])||'')+'</textarea>').join(''):'')+
+   (m.own.length?'<p style="margin:10px 0 4px"><b>'+(hi?'आपके अपने सवाल':'Your own questions')+'</b></p>'+m.own.map((v,i)=>'<label style="display:block;font-size:13px">'+escHTML(v.name)+' <span class="desc">'+(hi?'(हर पंक्ति में एक सवाल; ख़ाली छोड़ें तो एक ही सवाल बनेगा)':'(one question per line; leave empty for a single question)')+'</span></label><textarea class="qnOwn" data-name="'+escAttr(v.name)+'" rows="2" style="width:100%">'+escHTML((q.own&&q.own[v.name])||'')+'</textarea>'+
+     '<div class="row" style="gap:6px;align-items:center;margin:2px 0 8px;font-size:13px"><label>'+(hi?'जवाब के विकल्प:':'Answers:')+'</label><select class="qnOwnResp" data-name="'+escAttr(v.name)+'">'+Object.keys(QN_OWN_RESP).map(k=>'<option value="'+k+'"'+(qnOwnResp(q,v.name)===k?' selected':'')+'>'+escHTML(hi?QN_OWN_RESP[k].hi:QN_OWN_RESP[k].en)+'</option>').join('')+'</select><span class="desc">'+(hi?'उल्टे शब्दों वाले सवाल के अंत में (R) लिखें।':'End a reverse-worded line with (R).')+'</span></div>').join(''):'')+
    '<div class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" class="btn btn-purple" onclick="qnSave();qnWord()">⬇ '+(hi?'Word file':'Word file')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnCsv()">⬇ '+(hi?'Data भरने का template (Excel/CSV)':'Data template (Excel/CSV)')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnCodebook()">⬇ Codebook</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnForms()">🌐 '+(hi?'Google Form की विधि':'Google Form steps')+'</button><button type="button" class="btn btn-purple" onclick="sfOpen()">🔐 '+(hi?'सुरक्षित form (Google के बिना)':'Secure form (no Google)')+'</button><button type="button" class="btn btn-ghost" onclick="qnSave();qnInsert()">'+(hi?'Document में डालें':'Put in my document')+'</button></div>'+
    '<div id="qnFormsOut" style="display:none;margin-top:10px"></div>'+
    '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button type="button" class="btn btn-ghost" onclick="qnSave();document.getElementById(\'qnDlg\').close()">'+(hi?'सहेजकर बंद करें':'Save and close')+'</button></div>';
@@ -5669,14 +5677,29 @@ function qnSave(){const o=studyGet(),q=o.qn||{};
   const chosen=[...document.querySelectorAll('.qnScale')].filter(x=>x.checked).map(x=>x.value);
   q.extraScales=chosen.filter(s=>planScales.indexOf(s)<0);q.dropScales=planScales.filter(s=>chosen.indexOf(s)<0);
   q.own={};document.querySelectorAll('.qnOwn').forEach(t=>{q.own[t.dataset.name]=t.value});
+  /* Version 142 (review fix): changing the answer type after data exist would score the old numbers on the new
+     range without a word. Ask first; on Cancel the old type stays. */
+  const oldR=Object.assign({},q.ownResp||{}),D=window._statsData,H=D&&D.headers?D.headers.map(h=>String(h).toLowerCase()):[],formOn=!!(typeof sfKey==='function'&&sfKey());
+  q.ownResp={};document.querySelectorAll('.qnOwnResp').forEach(t=>{const nm=t.dataset.name,was=oldR[nm]||'agree5',now=t.value;
+    const hasData=formOn||H.indexOf((qnSlug(nm)+'_01').toLowerCase())>=0;
+    if(was!==now&&hasData&&!confirm(studyHi()?'"'+nm+'" के जवाब बदल रहे हैं, पर data पहले से है। पुराने अंक नए पैमाने पर गलत गिने जाएँगे। फिर भी बदलें?':'You are changing the answers for "'+nm+'", but data already exist. Numbers collected on the old answers would be scored wrongly on the new ones. Change anyway?')){q.ownResp[nm]=was;t.value=was}else q.ownResp[nm]=now});
   q.built=true;q.ts=Date.now();o.qn=q;studySet(o)}
 /* One list of every question and its data column, used by the Word file, the template and the codebook. */
+/* Version 142: the answer choices for the student's own questions. The Word file, the online form, the
+   codebook and the data all use the same list, coded 1 upwards. A line ending in (R) is reverse-worded. */
+const QN_OWN_RESP={agree5:{en:'Strongly disagree … Strongly agree (5 points)',hi:'बिल्कुल असहमत … पूरी तरह सहमत (5 अंक)',l:['Strongly disagree','Disagree','Neutral','Agree','Strongly agree']},
+ freq5:{en:'Never … Always (5 points)',hi:'कभी नहीं … हमेशा (5 अंक)',l:['Never','Rarely','Sometimes','Often','Always']},
+ true4:{en:'Not at all true … Exactly true (4 points)',hi:'बिल्कुल सच नहीं … पूरी तरह सच (4 अंक)',l:['Not at all true','Hardly true','Moderately true','Exactly true']},
+ num:{en:'A number (hours, minutes, times)',hi:'एक संख्या (घंटे, मिनट, बार)',l:null},
+ text:{en:'Written answer',hi:'लिखा हुआ जवाब',l:null}};
+function qnOwnResp(q,name){const k=(q.ownResp&&q.ownResp[name])||'agree5';return QN_OWN_RESP[k]?k:'agree5'}
 function qnItems(){const m=qnModel(),q=m.q,drop=q.dropScales||[],out=[];
   (q.demo||[]).forEach(k=>{const d=QN_DEMO[k];if(d)out.push({sec:'Background',col:qnSlug(k),text:d[0],resp:d[2].indexOf('choice:')===0?d[2].slice(7).split('|'):d[2]})});
   m.bg.filter(x=>x.v).forEach(x=>{const v=x.v;out.push({sec:x.instr?'Measurements (filled in by the researcher)':'Background',col:qnSlug(v.name),text:v.name+(x.instr?' (reading from the instrument or laboratory report)':''),resp:v.type==='yesno'?['Yes','No']:(v.type==='score'?'number':(v.levels?v.levels.split(',').map(s=>s.trim()).filter(Boolean):'text'))})});
   m.own.forEach(v=>{const lines=String((q.own&&q.own[v.name])||'').split('\n').map(s=>s.trim()).filter(Boolean);
     if(!lines.length)out.push({sec:v.name,col:qnSlug(v.name),text:v.name+(v.type==='score'?' (write a number)':''),resp:v.type==='score'?'number':'text'});
-    else lines.forEach((l,i)=>out.push({sec:v.name,col:qnSlug(v.name)+'_'+String(i+1).padStart(2,'0'),text:l,resp:'scale'}))});
+    else{const rk=qnOwnResp(q,v.name),R=QN_OWN_RESP[rk];lines.forEach((l,i)=>{const rev=/\(\s*R\s*\)\s*$/i.test(l),t=l.replace(/\s*\(\s*R\s*\)\s*$/i,'');
+      out.push({sec:v.name,col:qnSlug(v.name)+'_'+String(i+1).padStart(2,'0'),text:t,resp:R.l?R.l.slice():rk==='num'?'number':'text',own:v.name,rev:rev&&!!R.l})})}});
   let scl=[];try{scl=SCALES}catch(e){}
   m.scales.filter(id=>drop.indexOf(id)<0).forEach(id=>{const x=scl.find(s=>s.id===id);if(!x)return;const names=slVarNames(x);
     slItems(x).forEach((t,i)=>out.push({sec:x.name+' ('+x.short+')',stem:x.stem,col:names[i],text:t,resp:x.labels,credit:x.licence&&x.licence.attribution,scale:x}))});
@@ -5689,7 +5712,8 @@ function qnHTML(){const m=qnModel(),q=m.q,items=qnItems();let h='<h1>'+escHTML(q
   const credits=[...new Set(items.map(i=>i.credit).filter(Boolean))];
   if(credits.length)h+='<p><small>Scales used: '+credits.map(escHTML).join(' · ')+'</small></p>';
   h+='<p><b>Thank you for taking part.</b></p>';return h}
-async function qnWord(){const hi=studyHi();try{const holder=document.createElement('div');holder.innerHTML=qnHTML();const blob=await dxBuild(holder,'Questionnaire');
+function qnNameGap(){const q=(studyGet().qn)||{},m=qnModel();return /\[your name\]/i.test(q.intro||'')||(!q.intro&&!m.me.name)}
+async function qnWord(){const hi=studyHi();if(qnNameGap()&&!confirm(hi?'Consent वाले हिस्से में अभी "[your name]" लिखा है। Home पर अपना नाम भरें या intro में बदलें। फिर भी download करें?':'The consent text still says "[your name]". Add your name on Home or edit the introduction. Download anyway?'))return;try{const holder=document.createElement('div');holder.innerHTML=qnHTML();const blob=await dxBuild(holder,'Questionnaire');
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='questionnaire.docx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   showToast(hi?'Questionnaire Word file में download हुई ✓':'Questionnaire downloaded as a Word file ✓')}catch(e){showToast((hi?'Word file नहीं बन पाई: ':'Could not make the Word file: ')+(e&&e.message||e))}}
 function qnDownload(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
@@ -5704,8 +5728,12 @@ function qnCsv(){const items=qnItems(),cols=['participant_id'].concat(items.map(
   qnDownload('data-template.csv','﻿'+cols.map(qnCsvCell).join(',')+'\n'+['P001'].concat(items.map(()=>'')).map(qnCsvCell).join(',')+'\n');
   showToast(studyHi()?'Template download हुआ। हर participant की एक पंक्ति भरिए, फिर Statistics Lab में डालिए।':'Template downloaded. Fill one row per participant, then load it into the Statistics Lab.')}
 /* The number to type for each answer: scale items start at the owner's lowest code (0 for the GAD-7), other choices at 1. */
-function qnCodes(i){if(!Array.isArray(i.resp))return null;const mn=i.scale&&i.scale.codings&&i.scale.codings[0]?+i.scale.codings[0].min:1;return i.resp.map((x,k)=>[mn+k,x])}
-function qnCodebook(){const items=qnItems();const rows=[['column','section','question','answers and codes']].concat(items.map(i=>[i.col,i.sec,i.text,Array.isArray(i.resp)?qnCodes(i).map(c=>c[0]+' = '+c[1]).join('; ')+(i.scale?' (type the number; then score it in the Statistics Lab with "Score the '+i.scale.short+'")':''):(i.resp==='number'?'a number':(i.resp==='scale'?'1 = Strongly disagree … 5 = Strongly agree':'free text'))]));
+function qnCodes(i){if(!Array.isArray(i.resp))return null;const c=i.scale&&i.scale.codings&&i.scale.codings[0];
+  /* Version 142 (review fix): same rule as slLabelCode, so the codebook, the form data and the scorer agree.
+     A scale listed agree-first but coded agree-high (the RSES) counts down from its top code. */
+  if(c){const mn=+c.min,mx=+c.max,down=/^strongly agree/i.test(String(i.resp[0]||''))===(c.dir==='agree-high')&&mx-mn+1===i.resp.length;return i.resp.map((x,k)=>[down?mx-k:mn+k,x])}
+  return i.resp.map((x,k)=>[1+k,x])}
+function qnCodebook(){const items=qnItems();const rows=[['column','section','question','answers and codes']].concat(items.map(i=>[i.col,i.sec,i.text,Array.isArray(i.resp)?qnCodes(i).map(c=>c[0]+' = '+c[1]).join('; ')+(i.rev?' (reverse-worded: score it reversed)':'')+(i.own&&!i.scale?' (make the total in the Statistics Lab with "Score my own questions")':'')+(i.scale?' (type the number; then score it in the Statistics Lab with "Score the '+i.scale.short+'")':''):(i.resp==='number'?'a number':(i.resp==='scale'?'1 = Strongly disagree … 5 = Strongly agree':'free text'))]));
   qnDownload('codebook.csv','﻿'+rows.map(r=>r.map(qnCsvCell).join(',')).join('\n')+'\n');showToast(studyHi()?'Codebook download हुई ✓':'Codebook downloaded ✓')}
 function qnForms(){const hi=studyHi(),items=qnItems(),q=qnModel().q,box=document.getElementById('qnFormsOut');if(!box)return;
   const plain=[q.title||'Research questionnaire','',q.intro||'','','Consent: I have read the above and I agree to take part. I am 18 years old or older. (Yes / No)',''].concat(items.map((it,i)=>(i+1)+'. '+it.text+'  ['+(Array.isArray(it.resp)?it.resp.join(' / '):it.resp)+']   (column '+it.col+')')).join('\n');
@@ -5740,6 +5768,9 @@ function studyStatsHint(){const dlg=document.getElementById('statsDlg');if(!dlg)
   if(data&&data.headers){scl.forEach(x=>{const nm=slVarNames(x).map(z=>z.toLowerCase());const have=data.headers.filter(hh=>nm.indexOf(String(hh).toLowerCase().replace(/[^a-z0-9_]/g,''))>=0).length;
     if(have>=Math.ceil(x.items.length/2)&&data.headers.some(hh=>String(hh).toLowerCase()===(x.id+'_total').toLowerCase()))h+='<br>✅ '+(hi?x.short+' का total score data में है ('+x.id+'_total)।':x.short+' is scored ('+x.id+'_total is in your data).');
     else if(have>=Math.ceil(x.items.length/2))h+='<br>🧮 '+(hi?'आपके data में '+x.short+' के column मिले। ':'Your data has the '+x.short+' columns. ')+'<button type="button" class="btn btn-ghost btn-sm" onclick="slScoreOpen(\''+jsq(x.id)+'\')">'+(hi?'पहले '+x.short+' का कुल score बनाएँ':'Score the '+x.short+' first')+'</button>'})}
+  if(data&&data.headers){qnOwnScales().forEach((x,i)=>{const H=data.headers.map(hh=>String(hh).toLowerCase()),nm=slVarNames(x).map(z=>z.toLowerCase()),have=nm.filter(z=>H.indexOf(z)>=0).length;if(have<2)return;
+    if(H.indexOf((x.id+'_total').toLowerCase())>=0)h+='<br>✅ '+(hi?escHTML(x.short)+' का total score data में है ('+escHTML(x.id)+'_total)।':escHTML(x.short)+' is scored ('+escHTML(x.id)+'_total is in your data).');
+    else h+='<br>🧮 '+(hi?'आपके अपने सवाल: '+escHTML(x.short)+' ('+x.items.length+' items)। ':'Your own questions: '+escHTML(x.short)+' ('+x.items.length+' items). ')+'<button type="button" class="btn btn-ghost btn-sm" onclick="slScoreOwn('+i+')">'+(hi?'इनका कुल score बनाएँ':'Score my own questions')+'</button>'})}
   try{h+=planRunHTML()}catch(e){}
   box.innerHTML=h}
 /* One button per main hypothesis in the analysis plan (C7): picks the planned test and the columns,
@@ -5750,6 +5781,7 @@ function planVarsFor(o,h){const vars=((o.design||{}).vars||[]).filter(v=>v.name)
   const x=vars.filter(v=>v!==y).find(hit)||vars.find(v=>v!==y&&v.role==='predictor')||vars.find(v=>v!==y&&v.role==='group');return{y:y,x:x}}
 function planColFor(v){const d=window._statsData;if(!v||!d)return -1;const norm=z=>String(z||'').toLowerCase().replace(/[^a-z0-9]/g,''),H=d.headers;
   if(v.scale&&v.scale!=='own'&&v.scale!=='instr'){const t=H.findIndex(h=>norm(h)===norm(v.scale+'_total'));if(t>=0)return t}
+  if(!v.scale||v.scale==='own'){const t=H.findIndex(h=>norm(h)===norm(qnSlug(v.name)+'_total'));if(t>=0)return t}
   let k=H.findIndex(h=>norm(h)===norm(v.name)||norm(h)===norm(qnSlug(v.name)));if(k<0)k=H.findIndex(h=>norm(h).indexOf(norm(qnSlug(v.name)))===0||norm(qnSlug(v.name)).indexOf(norm(h))===0&&norm(h).length>=6);return k}
 const PLAN_TEST_KEY={'Welch t-test (two groups)':'ttestInd','Paired t-test':'ttestPaired','Welch ANOVA (3+ groups)':'welchAnova','Repeated-measures ANOVA':'rmanova','Mann-Whitney U':'mannwhitney','Wilcoxon signed-rank':'wilcoxon','Kruskal-Wallis':'kruskal','Chi-square':'chisq','Pearson r':'pearson','Spearman rho':'spearman','Linear regression':'regression','Logistic regression':'logistic'};
 function planRunHTML(){const o=studyGet(),plan=logRows(o,'aplan'),hi=studyHi();if(!window._statsData)return'';
@@ -5796,8 +5828,58 @@ function studyCiteSpans(cids){cids=(cids||[]).filter(Boolean);return cids.length
 function studyCiteEnd(text,cids){const sp=studyCiteSpans(cids);text=String(text||'').trim();if(!sp)return escHTML(text);const m=text.match(/^([\s\S]*?)([.!?]+)$/);return m?escHTML(m[1])+' '+sp+escHTML(m[2]):escHTML(text)+' '+sp+'.'}
 function studyNum(n){const x=String(n||'').replace(/,/g,'');return /^\d+$/.test(x)?(+x).toLocaleString('en-US'):String(n||'')}
 function studyLow(t){t=String(t||'');return /^[A-Z][a-z]/.test(t)?t[0].toLowerCase()+t.slice(1):t}
+/* Version 142: the outline for a study that is itself a review (narrative, scoping or systematic, no
+   meta-analysis). It uses the review type from B1, the eligibility rules, the search log from B2 and the
+   screening counts from the library, and leaves a marked gap wherever the student still has to write. */
+function draftBuildReview(o,b1){const hi=studyHi(),d=o.idea||{},g=o.gap||{},ds=o.design||{},w=wGet(o),me=(typeof apMe==='function')?apMe():{name:''};
+  if(editor.querySelector('[data-draft]')&&!confirm(hi?'इस document में ढाँचा पहले से है। नीचे एक और जोड़ें?':'This document already has an outline. Add another below?'))return;
+  const ph=t=>'<span class="draft-ph" style="background:#fff4c2">['+escHTML(t)+']</span>';
+  const ty=b1||'narr',sys=ty==='sys',scop=ty==='scop',narr=ty==='narr'||!/^(sys|scop)$/.test(ty);
+  const kind=sys?'systematic review':scop?'scoping review':'narrative review',guide=sys?'PRISMA 2020':scop?'PRISMA-ScR':'';
+  const rows=logRows(o,'search').filter(r=>r.db||String(r.q||'').trim());
+  const lib=(function(){try{return citGetLib()}catch(e){return[]}})(),cnt=k=>lib.filter(x=>((x.scr||{}).st||'toread')===k).length;
+  const inc=cnt('included'),exc=cnt('excluded'),tot=lib.length,why={};lib.forEach(x=>{const s=x.scr||{};if(s.st==='excluded'){const r=String(s.why||'').trim()||'no reason recorded';why[r]=(why[r]||0)+1}});
+  const B=w.B1||{},elig=B.crit||(w.C2||{}).incl||'',regL=(function(){try{const r=B1_REG.find(x=>x[0]===B.reg);return r?(hi?r[2]:r[1]).replace(/\s*\(.*\)$/,''):''}catch(e){return''}})();
+  const dbs=[...new Set(rows.map(r=>r.db).filter(Boolean))];
+  const h=[];
+  h.push('<h1 data-draft="1">'+escHTML(d.topic.replace(/\?$/,''))+(sys||scop?': a '+kind:'')+'</h1>');
+  h.push('<p>'+escHTML(me.name||'')+(me.pos?', '+escHTML(me.pos):'')+'</p>');
+  h.push('<h2>Abstract</h2><p><b>Background.</b> '+(g.text?escHTML(g.text):ph('the gap this study fills, in one or two sentences'))+' <b>Objective.</b> '+escHTML(d.topic)+' <b>Methods.</b> A '+kind+(guide?' reported following '+guide:'')+'. '+(dbs.length?'Sources searched: '+escHTML(dbs.join(', '))+'.':ph('databases searched and the dates'))+' <b>Results.</b> '+(tot?escHTML(String(tot))+' records were screened and '+escHTML(String(inc))+' studies were included. ':'')+ph('the main pattern across the studies')+' <b>Conclusion.</b> '+ph('one sentence')+'</p>');
+  h.push('<h2>1. Introduction</h2><p>'+ph('why the topic matters, with sources')+'</p>');
+  if(g.text)h.push('<p>'+studyCiteEnd(g.text,g.cids)+'</p>');
+  h.push('<p>This review asked: '+escHTML(d.topic)+'</p>');
+  const hyp=String(ds.hyp||'').split('\n').map(x=>x.trim()).filter(Boolean);if(hyp.length)h.push('<p>'+hyp.map(escHTML).join('<br>')+'</p>');
+  h.push('<h2>2. Methods</h2>');
+  let n=1;const sec=t=>'<h3>2.'+(n++)+' '+t+'</h3>';
+  if(sys||scop)h.push(sec('Protocol and registration')+'<p>'+(B.reg==='none'?'The protocol was not registered. '+ph('say why, and where the protocol can be read'):B.reg&&regL?'The protocol was registered with '+escHTML(regL)+(B.regId?' ('+escHTML(B.regId)+')':' '+ph('registration number'))+'.':ph(sys?'where the protocol was registered (for example PROSPERO) and its number, or say it was not registered':'whether a protocol was written and where it can be read'))+'</p>');
+  h.push(sec('Eligibility criteria')+'<p>'+(elig?escHTML(elig):ph('which studies counted: population, exposure or topic, outcome, study design, years, language'))+'</p>');
+  h.push(sec('Information sources and search')+(rows.length?'<p>'+rows.map(r=>escHTML((r.db||'Source')+(r.date?' (searched '+r.date+')':'')+': '+(r.q||'')+(r.lim?'; limits: '+r.lim:'')+(r.hits?'; '+r.hits+' results':''))).join('<br>')+'</p>':'<p>'+ph('each database, the search words, limits, the date and the number of results; the full strings can go in an appendix')+'</p>')+((w.B2||{}).closed?'<p>The last search was run on '+escHTML(w.B2.closed)+'.</p>':''));
+  if(!narr)h.push(sec('Selection of studies')+'<p>'+ph('who screened titles and abstracts, then full texts; how disagreements were settled')+'</p>');
+  h.push(sec(narr?'Reading and organising the studies':'Data charting and extraction')+'<p>'+ph('what was recorded from each study: authors, year, country, sample, design, measures, main finding')+'</p>');
+  if(sys)h.push(sec('Risk of bias')+'<p>'+ph('the appraisal tool used (for example JBI or the Newcastle-Ottawa scale) and who rated each study')+'</p>');
+  h.push(sec('Synthesis')+'<p>'+(narr?'The studies were synthesised narratively. ':sys?'The findings were synthesised narratively, without meta-analysis. ':'The findings were charted and summarised. ')+ph('how the studies were grouped and compared')+'</p>');
+  h.push('<h2>3. Results</h2>');
+  if(!narr){h.push('<h3>3.1 Study selection</h3><p>'+(tot?escHTML(String(tot))+' records were screened. '+escHTML(String(exc))+' were excluded'+(Object.keys(why).length?' ('+Object.keys(why).map(k=>escHTML(k)+', n = '+why[k]).join('; ')+')':'')+' and '+escHTML(String(inc))+' studies were included. ':ph('records found, screened, excluded with reasons, and included'))+ph('Figure 1: PRISMA flow diagram, inserted from B1')+'</p>')}
+  const r0=narr?1:2;
+  h.push('<h3>3.'+r0+' Characteristics of the studies</h3><p>'+ph('Table 1: one row per included study')+'</p>');
+  if(sys)h.push('<h3>3.'+(r0+1)+' Risk of bias</h3><p>'+ph('the ratings, study by study')+'</p>');
+  const r1=r0+(sys?2:1);
+  h.push('<h3>3.'+r1+' Where the studies agree</h3><p>'+ph('findings most studies share, with citations')+'</p>');
+  h.push('<h3>3.'+(r1+1)+' Where they disagree</h3><p>'+ph('conflicting findings and possible reasons: samples, measures, designs')+'</p>');
+  h.push('<h3>3.'+(r1+2)+' What is still unknown</h3><p>'+ph('questions no included study answered')+'</p>');
+  h.push('<h2>4. Discussion</h2><p>'+ph('main finding in plain words; strengths and limitations of the evidence and of this review; what it means for practice and research')+'</p>');
+  h.push('<h2>5. Conclusion</h2><p>'+ph('two or three sentences')+'</p>');
+  h.push('<p><br></p>');
+  placeCaretAtEnd();savedRange=null;
+  insertHTMLBlockIntoEditor(h.join(''));
+  try{const meta=CIT_STYLES[document.getElementById('citStyle').value]||CIT_STYLES.apa;if(!editor.querySelector('[data-bib]')){placeCaretAtEnd();insertHTMLBlockIntoEditor(citBibHTML([],meta,document.getElementById('citStyle').value))}}catch(e){}
+  try{citRefreshDoc()}catch(e){}
+  try{const o2=studyGet();o2.draft={built:true,ts:Date.now(),review:ty};studySet(o2)}catch(e){}
+  showToast((hi?'Review का ढाँचा बन गया। पीले [ ] वाले हिस्से भरिए।':'Review outline added. Fill the yellow [ ] parts.')+(b1?'':(hi?' B1 में review का प्रकार नहीं चुना था, इसलिए narrative review का ढाँचा बना।':' No review type was chosen in B1, so this is a narrative review outline.')))}
 function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},ds=o.design||{},vars=(ds.vars||[]).filter(v=>v.name),me=(typeof apMe==='function')?apMe():{name:''};
-  if(!d.topic||!ds.type){showToast(hi?'पहले Stage 1 का सवाल और Stage 3 की योजना भरिए':'Fill the Stage 1 question and the Stage 3 plan first');return}
+  const b1=(wGet(o).B1||{}).type||'';
+  if(d.topic&&ds.type==='review'){if(b1==='meta'){showToast(hi?'Meta-analysis इस beta में नहीं है। Review का प्रकार B1 में बदलें।':'Meta-analysis is not part of the beta yet. Change the review type in B1.');return}return draftBuildReview(o,b1)}
+  if(!d.topic||!ds.type){showToast((hi?'पहले Stage 1 का सवाल और Stage 3 की योजना भरिए':'Fill the Stage 1 question and the Stage 3 plan first')+(d.topic&&/^(sys|scop|narr)$/.test(b1)?(hi?'। अगर पूरी study ही review है, तो Stage 3 में design "Systematic या scoping review" चुनें।':'. If the whole study is a review, choose "Systematic or scoping review" as the design in Stage 3.'):''));return}
   if(editor.querySelector('[data-draft]')&&!confirm(hi?'इस document में ढाँचा पहले से है। नीचे एक और जोड़ें?':'This document already has an outline. Add another below?'))return;
   const ph=t=>'<span class="draft-ph" style="background:#fff4c2">['+escHTML(t)+']</span>';
   const st=studySuggestTest()||{};let scl=[];try{scl=SCALES}catch(e){}
@@ -5807,14 +5889,14 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
   const h=[];
   h.push('<h1 data-draft="1">'+escHTML(d.topic.replace(/\?$/,''))+'</h1>');
   h.push('<p>'+escHTML(me.name||'')+(me.pos?', '+escHTML(me.pos):'')+'</p>');
-  h.push('<h2>Abstract</h2><p><b>Background.</b> '+escHTML(g.text||'')+' <b>Aim.</b> '+escHTML(d.topic)+' <b>Methods.</b> '+escHTML(studyDesignShort(ds.type,true))+(ds.n?' of '+escHTML(studyNum(ds.n))+' participants':'')+(ds.pop?': '+escHTML(studyLow(ds.pop)):'')+'. <b>Results.</b> '+ph('main result with the test, its value, p and effect size')+' <b>Conclusion.</b> '+ph('one sentence')+'</p>');
+  h.push('<h2>Abstract</h2><p><b>Background.</b> '+(g.text?escHTML(g.text):ph('the gap this study fills, in one or two sentences'))+' <b>Aim.</b> '+escHTML(d.topic)+' <b>Methods.</b> '+escHTML(studyDesignShort(ds.type,true))+(ds.n?' of '+escHTML(studyNum(ds.n))+' participants':'')+(ds.pop?': '+escHTML(studyLow(ds.pop)):'')+'. <b>Results.</b> '+ph('main result with the test, its value, p and effect size')+' <b>Conclusion.</b> '+ph('one sentence')+'</p>');
   h.push('<h2>1. Introduction</h2><p>'+ph('why the topic matters, with sources')+'</p>');
   h.push('<p>'+studyCiteEnd(g.text||'',g.cids)+'</p>');
   h.push('<p>The present study asked: '+escHTML(d.topic)+'</p>');
   if(hyp.length)h.push('<p>'+hyp.map(escHTML).join('<br>')+'</p>');
   const instr=vars.filter(v=>v.scale==='instr');const sn=instr.length?1:0;
   h.push('<h2>2. '+(instr.length?'Materials and Methods':'Methods')+'</h2><h3>2.1 Design</h3><p>This was '+escHTML(studyDesignShort(ds.type))+'.</p>');
-  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(studyLow(ds.sampling)):'')+(ds.n?'. The planned sample size was '+escHTML(studyNum(ds.n))+'. '+(ssComplete(ds)?escHTML(ssDraftText(ds)):ph('how this sample size was decided: the power-analysis inputs, or the reason for this number')):'.')+' '+ph('how the sample size was decided, inclusion and exclusion criteria')+'</p>');
+  h.push('<h3>2.2 Participants</h3><p>'+escHTML(ds.pop||'')+(ds.sampling?'. Sampling: '+escHTML(studyLow(ds.sampling)):'')+(ds.n?'. The planned sample size was '+escHTML(studyNum(ds.n))+'. '+(ssComplete(ds)?escHTML(ssDraftText(ds)):ph('how this sample size was decided: the power-analysis inputs, or the reason for this number')):'.')+' '+ph(ds.n?'inclusion and exclusion criteria':'how the sample size was decided, inclusion and exclusion criteria')+'</p>');
   h.push('<h3>2.3 Measures</h3>'+(measures||'<p>'+ph('measures')+'</p>'));
   if(instr.length)h.push('<h3>2.4 Instruments and laboratory methods</h3>'+instr.map(v=>'<p><b>'+escHTML(v.name)+'.</b> '+ph('instrument or analyser with make and model, method, unit, how and how often it was calibrated, quality control, who took the reading')+'</p>').join(''));
   h.push('<h3>2.'+(4+sn)+' Procedure and ethics</h3><p>'+(function(){let t='';try{t=ethicsDraftSentence()}catch(e){}return t?escHTML(t)+' '+ph('how consent was taken, where and when data were collected'):ph('ethics committee name and approval number, how consent was taken, where and when data were collected')})()+'</p>');
@@ -5829,6 +5911,12 @@ function draftBuild(){const hi=studyHi(),o=studyGet(),d=o.idea||{},g=o.gap||{},d
   insertHTMLBlockIntoEditor(h.join(''));
   try{const meta=CIT_STYLES[document.getElementById('citStyle').value]||CIT_STYLES.apa;if(!editor.querySelector('[data-bib]')){placeCaretAtEnd();insertHTMLBlockIntoEditor(citBibHTML([],meta,document.getElementById('citStyle').value))}}catch(e){}
   citRefreshDoc();
+  /* Version 142: results inserted from the Statistics Lab before the outline existed move into its Results section. */
+  try{const h1=[...editor.querySelectorAll('h1[data-draft]')].pop();if(h1){let res=null;for(let n=h1;n;n=n.nextElementSibling){if(n.tagName==='H2'&&/^3\.\s*Results/.test(n.textContent)){res=n;break}}
+    const prevH=[...editor.querySelectorAll('h1[data-draft]')].filter(x=>x!==h1).pop();
+    const early=[...editor.querySelectorAll('.stat-tag[data-run]')].filter(t=>(h1.compareDocumentPosition(t)&Node.DOCUMENT_POSITION_PRECEDING)&&!prevH);
+    if(res&&early.length){const ph1=res.nextElementSibling;let at=res;early.forEach(t=>{let b=t;while(b.parentNode&&b.parentNode!==editor)b=b.parentNode;if(b===editor||!b.parentNode)return;at.insertAdjacentElement('afterend',b);at=b});
+      if(ph1&&ph1.querySelector('.draft-ph')&&/Statistics Lab/.test(ph1.textContent))ph1.remove();upd()}}}catch(e){}
   o.draft={built:true,ts:Date.now()};studySet(o);
   showToast(hi?'Paper का ढाँचा आपकी study से बना ✓ पीले [ ] वाले हिस्से भरने हैं।':'Paper outline built from your study ✓ Fill the yellow [ ] parts.')}
 /* ---- Stage 6: does the paper match the plan? Fixed rules, no AI. ---- */
@@ -6233,7 +6321,7 @@ function sfDef(){const m=qnModel(),q=m.q,hi=studyHi(),k=sfKey(),items=qnItems();
   return{v:1,sid:k.sid,pk:k.pub,lang:hi?'hi':'en',t:q.title||(m.o.idea&&m.o.idea.topic?'Study: '+m.o.idea.topic:'Research form'),n:q.intro||'',
     q:items.map(it=>({c:it.col,s:it.sec,st:it.stem||undefined,q:it.text,r:it.resp}))}}
 function sfMissingText(){try{return qnItems().filter(it=>it.scale&&it.scale.hidden&&!slHasText(it.scale)).map(it=>it.scale.short).filter((v,i,a)=>a.indexOf(v)===i)}catch(e){return[]}}
-async function sfLink(kiosk){const miss=sfMissingText();if(miss.length){const hi=studyHi();showToast(hi?miss.join(', ')+' के statements पहले Scale library में paste करें (मालिक के page से)':'First paste the '+miss.join(', ')+' statements in the Scale library (from the owner\'s page)');return null}const json=new TextEncoder().encode(JSON.stringify(sfDef()));let bytes;
+async function sfLink(kiosk){if(qnNameGap()){showToast(studyHi()?'Participants को "[your name]" न दिखे: पहले Home पर अपना नाम भरें या questionnaire का intro बदलें।':'Participants would see "[your name]". Add your name on Home or edit the questionnaire introduction first.');return null}const miss=sfMissingText();if(miss.length){const hi=studyHi();showToast(hi?miss.join(', ')+' के statements पहले Scale library में paste करें (मालिक के page से)':'First paste the '+miss.join(', ')+' statements in the Scale library (from the owner\'s page)');return null}const json=new TextEncoder().encode(JSON.stringify(sfDef()));let bytes;
   try{const cs=new CompressionStream('deflate-raw');const z=new Uint8Array(await new Response(new Blob([json]).stream().pipeThrough(cs)).arrayBuffer());bytes=new Uint8Array(z.length+1);bytes[0]=0x7a;bytes.set(z,1)}
   catch(e){bytes=new Uint8Array(json.length+1);bytes[0]=0x6a;bytes.set(json,1)}
   const base=location.href.split('#')[0].split('?')[0].replace(/[^/]*$/,'');return base+'form.html#f='+_sfB64u(bytes)+(kiosk?'&k=1':'')}
@@ -6260,8 +6348,12 @@ async function sfOpenPkg(pkg){const j=JSON.parse(new TextDecoder().decode(_sfUnb
 async function sfDecrypt(){const hi=studyHi(),k=sfKey();if(!SF_PRIV&&!(await sfUnlock()))return null;
   const recs=await sfAll(k.sid);const rows=[];let bad=0;for(const r of recs){try{rows.push(await sfOpenPkg(r.pkg))}catch(e){bad++}}
   rows.sort((a,b)=>String(a.ts).localeCompare(String(b.ts)));SF_ROWS=rows;if(bad)showToast(hi?bad+' जवाब खुल नहीं सके (शायद किसी और चाबी के)':bad+' answer sets could not be opened (another key?)');return rows}
-function sfCsvText(rows){const cols=qnItems().map(i=>i.col);const ids=new Set();
-  const lines=[['participant_id'].concat(cols)].concat(rows.map((r,i)=>{let id=(r.pc||'').trim()||('R'+String(i+1).padStart(3,'0'));if(ids.has(id))id+='_'+(i+1);ids.add(id);return[id].concat(cols.map(c=>r.a&&r.a[c]!=null?r.a[c]:''))}));
+function sfCsvText(rows){const items=qnItems(),cols=items.map(i=>i.col);const ids=new Set();
+  /* Version 142: the form stores the words the participant tapped ("Woman", "Agree"). The data template and the
+     codebook use numbers, so each word becomes its code here. A word that is not on the list is kept as it is. */
+  const code=items.map(it=>{const c=qnCodes(it);if(!c)return null;const m={};c.forEach(x=>{m[String(x[1]).trim().toLowerCase()]=String(x[0])});return m});
+  const val=(k,v)=>{if(v==null)return'';const m=code[k];if(!m)return v;const w=String(v).trim().toLowerCase();return m[w]!=null?m[w]:v};
+  const lines=[['participant_id'].concat(cols)].concat(rows.map((r,i)=>{let id=(r.pc||'').trim()||('R'+String(i+1).padStart(3,'0'));if(ids.has(id))id+='_'+(i+1);ids.add(id);return[id].concat(cols.map((c,k)=>r.a&&r.a[c]!=null?val(k,r.a[c]):''))}));
   return lines.map(l=>l.map(qnCsvCell).join(',')).join('\n')}
 async function sfPreview(){const hi=studyHi(),rows=await sfDecrypt();if(!rows)return;const box=document.getElementById('sfPrev');if(!box)return;
   const cols=qnItems().map(i=>i.col).slice(0,6);
@@ -6269,6 +6361,8 @@ async function sfPreview(){const hi=studyHi(),rows=await sfDecrypt();if(!rows)re
    '<div style="overflow:auto;max-height:200px"><table style="font-size:12px;border-collapse:collapse"><tr><th>participant</th><th>time</th>'+cols.map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>'+
    rows.slice(0,30).map((r,i)=>'<tr><td>'+escHTML(r.pc||('R'+(i+1)))+'</td><td>'+escHTML(String(r.ts).slice(0,16))+'</td>'+cols.map(c=>'<td>'+escHTML(r.a[c]==null?'':r.a[c])+'</td>').join('')+'</tr>').join('')+'</table></div>'}
 async function sfToStats(){const hi=studyHi(),rows=SF_ROWS||await sfDecrypt();if(!rows)return;if(!rows.length){showToast(hi?'अभी कोई जवाब नहीं':'No answers yet');return}
+  const cur=window._statsData,curN=cur&&cur.rows?cur.rows.length:0,ta0=document.getElementById('statsPaste');
+  if((curN||(ta0&&ta0.value.trim()))&&!confirm(hi?'Statistics Lab में पहले से '+(curN||'कुछ')+' पंक्तियों का data है। उसे हटाकर form के '+rows.length+' जवाब रखें? पुराना data रखना हो तो पहले Cancel दबाकर उसे dataset के रूप में सहेजें या CSV में download करें।':'The Statistics Lab already holds '+(curN?curN+' rows of data':'some data')+'. Replace it with the '+rows.length+' answers from the form? To keep the current data, press Cancel and save or download it first.'))return;
   document.getElementById('sfDlg').close();showTool('stats');setTimeout(()=>{const ta=document.getElementById('statsPaste');ta.value=sfCsvText(rows);window._sfLoading=true;try{statsParse()}catch(e){}finally{window._sfLoading=false}
     showToast(hi?rows.length+' participants का data Statistics Lab में आ गया ✓':rows.length+" participants' data loaded into the Statistics Lab ✓")},250)}
 async function sfBackup(){const k=sfKey(),recs=await sfAll(k.sid);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([recs.map(r=>r.pkg).join('\n')],{type:'text/plain'}));
@@ -9509,7 +9603,7 @@ function tkModel(o,mins){o=o||studyGet();const w=wGet(o),d=o.idea||{},ds=o.desig
   /* 3 the question on its own slide */
   S.push({title:tkShort(String((w.A3||{}).q||d.topic||'').trim(),120)||'Research question',bullets:hyp.map(h=>tkShort(h,90)),role:'question'});
   /* 4 method */
-  const vars=(ds.vars||[]).filter(v=>v.name),meas=vars.map(v=>{const x=v.scale&&scl.find(z=>z.id===v.scale);return x?v.name+': '+x.short:null}).filter(Boolean);
+  const vars=(ds.vars||[]).filter(v=>v.name),meas=vars.map(v=>{const x=v.scale&&scl.find(z=>z.id===v.scale);if(x)return v.name+': '+x.short;if((!v.scale||v.scale==='own')&&v.type==='score'){const n=String(((o.qn||{}).own||{})[v.name]||'').split('\n').filter(l=>l.trim()).length;return v.name+': own questions'+(n>1?' ('+n+' items)':'')}return null}).filter(Boolean);
   const rc=logRows(o,'recruit'),done=rc.reduce((a,r)=>a+(+r.done||0),0);
   S.push({title:tkShort((ds.type?studyDesignShort(ds.type,true):'A study')+' of '+(done||ds.n||'[n]')+' '+(ds.pop?ds.pop.replace(/^./,c=>c.toLowerCase()):'participants'),120),bullets:[ds.sampling?tkShort('Sampling: '+ds.sampling,90):'',meas.length?'Measures: '+meas.join('; '):'',(logRows(o,'aplan').filter(r=>r.kind==='Main'&&r.test).map(r=>String(r.h).replace(/:.*/,'').slice(0,6)+': '+r.test).join('; '))].filter(Boolean),role:'method'});
   /* 5 one slide per recorded main result */
@@ -9518,6 +9612,11 @@ function tkModel(o,mins){o=o||studyGet();const w=wGet(o),d=o.idea||{},ds=o.desig
     const t=pv&&pv.sig?strip(h):'No clear support for '+lab+': '+strip(h).replace(/^./,c=>c.toLowerCase());
     findings.push({lab:lab,sig:!!(pv&&pv.sig),text:t});
     S.push({title:tkShort(t,110),big:(eff.split(',')[0]||'').trim(),bullets:[tkShort(r.apa,190)].concat(r.kind==='dev'?['Changed from the plan: '+tkShort(r.why,80)]:[]),role:'result'})});
+  if(!findings.length){const extra=resList(o).filter(r=>r.apa).map(r=>({apa:r.apa,test:r.ranLabel||''})),ins=((o.analysis||{}).inserted||[]),seen=new Set();
+    let docTxt='';try{docTxt=String(editor.innerText||'').replace(/\s+/g,' ')}catch(e){}
+    extra.concat(ins.filter(x=>!docTxt||docTxt.indexOf(String(x.apa).replace(/\s+/g,' ').slice(0,60))>=0)).forEach((r,i)=>{const k=String(r.apa).slice(0,80);if(seen.has(k)||seen.size>=4)return;seen.add(k);
+      const pv=tkP(r.apa),eff=resEffect(r.apa)||'',lab='Result '+(seen.size),t=(r.test?r.test.replace(/\s*\(.*$/,''):'The test')+(pv?(pv.sig?' shows a clear result':' shows no clear result'):'');
+      findings.push({lab:lab,sig:!!(pv&&pv.sig),text:t});S.push({title:tkShort(t,110),big:(eff.split(',')[0]||'').trim(),bullets:[tkShort(r.apa,190)],role:'result'})})}
   /* 6 what it means, with the main limitation */
   const ip=logRows(o,'interp').filter(x=>String(x.mean||'').trim());
   if(ip.length)S.push({title:tkShort(tkFirstSentence(ip[0].mean),110),bullets:ip.slice(1).map(x=>tkShort(x.mean,90)).concat(ip.filter(x=>String(x.lim||'').trim()).slice(0,2).map(x=>'Limitation: '+tkShort(x.lim,80))),role:'meaning'});
@@ -9527,6 +9626,9 @@ function tkModel(o,mins){o=o||studyGet();const w=wGet(o),d=o.idea||{},ds=o.desig
   S.push({title:ctitle,bullets:findings.map(x=>tkShort(x.lab+': '+x.text.replace(/^No clear support for [^:]+: /,'not supported, '),90)).concat(['Questions and feedback welcome'+(me.name?', '+me.name:'')]),role:'conclusion'});
   /* 8 references */
   let lib=[];try{lib=citGetLib()}catch(e){}
+  /* Version 142: only sources the document cites, as in the paper's own reference list. */
+  let cited=new Set();try{editor.querySelectorAll('.cit[data-cid]').forEach(c=>String(c.getAttribute('data-cid')||'').split(',').forEach(x=>{if(x)cited.add(x)}))}catch(e){}
+  lib=lib.filter(x=>cited.has(String(x.cid)));const noCite=!lib.length;
   if(lib.length){const it=lib.map((x,i)=>({d:x,n:i+1})).sort((a,b)=>citLastName(a.d.author).localeCompare(citLastName(b.d.author)));S.push({title:'References',refs:it.slice(0,10).map(x=>{const t=document.createElement('div');t.innerHTML=citFmt(x.d,0,'apa').refHTML;return t.textContent}),role:'refs'})}
   /* 9 appendix: questions an examiner is likely to ask, answered from the record */
   const app=[],ss=ds.ss||{};
@@ -9536,6 +9638,8 @@ function tkModel(o,mins){o=o||studyGet();const w=wGet(o),d=o.idea||{},ds=o.desig
   app.forEach(a=>{a.role='appendix';S.push(a)});
   /* time budget: about one slide a minute for the main part */
   const main=S.filter(x=>x.role!=='appendix'&&x.role!=='refs'&&!x.cover).length,warn=[];
+  if(noCite)warn.push('Your document cites no sources yet, so there is no References slide. Cite your sources in the document, then make the slides again.');
+  if(!findings.length)warn.push('No results yet: run a test in the Statistics Lab and press Insert or Record, then make the slides again. The conclusions slide is empty until then.');
   if(mins&&main>mins)warn.push('About '+main+' main slides for '+mins+' minutes: move one result to the appendix or speak to the key one.');
   S.forEach((x,i)=>{const wds=(x.bullets||[]).join(' ').split(/\s+/).filter(Boolean).length;if(x.role!=='refs'&&x.role!=='appendix'&&wds>40)warn.push('Slide '+(i+1)+' has '+wds+' words of text; aim for 40 or fewer.')});
   return{slides:S,warn:warn}}
@@ -9874,17 +9978,19 @@ function showRateLimitAlert(){
   const cur=getProv(),curName=PROVIDERS[cur]?PROVIDERS[cur].name:cur;
   document.getElementById('rateLimitMsg').textContent=
     cur==='groq'
-      ? 'You have hit the free request limit for '+curName+' for right now. Wait a minute and try again, or switch to a different provider using the tabs in ⚙ AI Provider / Key.'
+      ? 'You have hit the free request limit for '+curName+' for right now. Wait a minute and try again, or switch to a different provider from the AI button at the top right.'
       : 'You have hit the free request limit for '+curName+' for right now. This is common with free API keys during active use — wait a minute, or switch to Groq, which usually allows more requests per minute.';
   dlg.querySelector('button.btn-purple').style.display=cur==='groq'?'none':'';
   dlg.showModal();
 }
 function apiMsg(e){
   const m=String(e&&e.message||'');
-  if(m==='key')return'Add your API key first — click ⚙ at the top right.';
+  if(m==='key'){let has=false;try{has=PROV_ORDER.some(provHasKey)}catch(e){}
+    if(has)return'Your AI key is saved but still locked. Use any AI button again and type your passphrase, or open the AI button at the top right and choose Key and settings.';
+    /* Version 142: open the key window instead of pointing to an icon. */setTimeout(()=>{try{if(!document.querySelector('dialog[open]'))keyWizOpen()}catch(e){}},50);return'Add your free AI key first. The key window is opening now. You can also open it from the AI button at the top right.'}
   if(/^BLOCKED:/.test(m))return m.slice(8).trim();
   if(/^BADPASS:/.test(m))return m.slice(8).trim();
-  if(/\b401\b|\b403\b/.test(m))return'Your API key was rejected. Open ⚙ and paste it again.';
+  if(/\b401\b|\b403\b/.test(m))return'Your AI key was rejected. Open the AI button at the top right (it shows the name of your AI), choose Key and settings, and paste it again.';
   if(/\b404\b/.test(m))return'That AI model is no longer available. Try a different provider using the tabs at the top.';
   if(/\b429\b/.test(m)){showRateLimitAlert();return'Free limit reached for now. Wait a minute, or switch provider using the tabs at the top.'}
   if(/\b5\d\d\b/.test(m))return'The AI service is having problems (already retried a couple of times). Try again in a few minutes, or switch provider using the tabs at the top. Detail: '+m.replace(/^HTTP \d+:\s*/,'').slice(0,180);
@@ -11057,6 +11163,9 @@ async function downloadDoc(){
   const docs=docsGet(),cur=docs.find(d=>d.id===docCurrentId());
   const title=(cur&&cur.title)||'appuscholar-document';
   const safe=title.replace(/[^\w\- ]+/g,'').trim()||'appuscholar-document';
+  /* Version 142: say so before a paper with unfilled [ ] gaps leaves the app. */
+  try{const hi=studyHi(),n=editor.querySelectorAll('.draft-ph').length+((editor.innerText||'').match(/\[your name\]/gi)||[]).length;
+    if(n&&!confirm(hi?'इस document में अभी '+n+' पीली [ ] जगहें भरनी बाक़ी हैं। फिर भी download करें?':'This document still has '+n+' unfilled [ ] gap'+(n===1?'':'s')+' (highlighted in yellow). Download it anyway?'))return}catch(e){}
   showToast('Preparing the Word file…');
   try{
     const holder=document.createElement('div');holder.innerHTML=getEditorHTML().replace(/\u200b/g,'');
@@ -13561,6 +13670,11 @@ function citInsertBib(){
   citLinkPlain(true);
   const old=editor.querySelector('[data-bib]');
   if(old){citRefreshDoc();try{old.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}showToast(getLang()==='hi'?'Reference list पहले से है, उसे update कर दिया ✓':'The reference list is already in the document; it has been updated ✓');return}
+  /* Version 142: the list goes after the paragraph the cursor is in, never inside it (it used to land before
+     the sentence's full stop). With no cursor in the document it goes at the end. */
+  try{let n=savedRange&&editor.contains(savedRange.startContainer)?savedRange.startContainer:null;
+    if(n){while(n&&n.parentNode!==editor)n=n.parentNode}
+    if(n&&n!==editor){const r=document.createRange();r.setStartAfter(n);r.collapse(true);savedRange=r}else{placeCaretAtEnd()}}catch(e){placeCaretAtEnd()}
   insertHTMLBlockIntoEditor('<p><br></p>'+citBibHTML(items.map(x=>({d:x.d,n:x.i+1})),meta,st)+'<p><br></p>');
   citRefreshDoc();
   showToast(numbered?t('cite_bib_fmt_num'):t('cite_bib_fmt'));
@@ -14384,9 +14498,14 @@ function b3QueueList(o){const q=String(((wGet(o).A3||{}).q)||(o.design||{}).topi
   try{const rc=retrCacheGet();pool.forEach(p=>{const d=lib[idx[p.id]],k=retrNormDoi(d.doi);if(k&&rc[k]&&rc[k].r)p.retracted=true})}catch(e){}
   return{q:q,idx:idx,all:apQueue(pool,q,[],pool.length),pool:pool}}
 function b3QueueMore(d){const o=studyGet(),w=(wGet(o).B3||{}),off=d===0?0:(w.qoff||0)+d;wPatch('B3','qoff',Math.max(0,off));wRedraw();logRefresh()}
+/* Version 142: B3 counts as done when every library paper has a decision and, in a scoping or systematic
+   review, every excluded paper has its reason. Having papers in the library is not enough. */
+function b3NoReason(o){const t=(wGet(o).B1||{}).type;if(!/^(sys|scop|meta)$/.test(t||''))return 0;return citGetLib().filter(d=>d.scr&&d.scr.st==='excluded'&&!String(d.scr.why||'').trim()).length}
+function b3AllDecided(o){const l=citGetLib();return l.length>0&&l.every(d=>d.scr&&(d.scr.st==='included'||d.scr.st==='excluded'))&&!b3NoReason(o)}
 function b3QueueHTML(o,L,hi){const lib=citGetLib();if(!lib.length)return'';
   const Q=b3QueueList(o),off=Math.min((wGet(o).B3||{}).qoff||0,Math.max(0,Q.all.length-1)),batch=Q.all.slice(off,off+10);
-  if(!Q.all.length)return'<div class="sub-box"><b>'+L('Read in batches of ten','दस-दस के batch में पढ़ें')+'</b><p class="desc" style="margin:4px 0">'+L('Every paper in your library has a decision. Nothing is waiting.','Library के हर paper पर फ़ैसला हो चुका है। कुछ बाकी नहीं।')+'</p></div>';
+  const nr=b3NoReason(o);
+  if(!Q.all.length)return'<div class="sub-box"><b>'+L('Read in batches of ten','दस-दस के batch में पढ़ें')+'</b><p class="desc" style="margin:4px 0">'+L('Every paper in your library has a decision.','Library के हर paper पर फ़ैसला हो चुका है।')+' '+(nr?'<b style="color:#b45309">'+L(nr+' excluded paper'+(nr===1?' has':'s have')+' no reason yet. A '+((wGet(o).B1||{}).type==='scop'?'scoping':'systematic')+' review reports a reason for every exclusion (PRISMA item 16). Add them in the table below.',nr+' बाहर किए papers का कारण अभी नहीं लिखा। इस review में हर बाहर किए paper का कारण बताना होता है (PRISMA item 16)। नीचे की table में लिखें।')+'</b>':L('Nothing is waiting.','कुछ बाकी नहीं।'))+'</p></div>';
   return'<div class="sub-box"><b>'+L('Read in batches of ten','दस-दस के batch में पढ़ें')+'</b> <span class="desc">'+L(Q.all.length+' waiting · showing '+(off+1)+'–'+(off+batch.length),Q.all.length+' बाकी · '+(off+1)+'–'+(off+batch.length)+' दिख रहे')+'</span>'+
    '<p class="desc" style="margin:4px 0">'+L('Ordered by how closely the title and abstract match your question, then newer and better cited papers. Decide these ten. If the work is done, stop; if not, ask for the next ten. Retracted papers are never offered.','आपके सवाल से title और abstract का मेल, फिर नए और ज़्यादा cite हुए papers। ये दस तय करें। काम पूरा हो गया हो तो रुकें, नहीं तो अगले दस माँगें। Retracted papers कभी नहीं दिखते।')+'</p>'+
    batch.map((p,k)=>{const i=Q.idx[p.id],d=lib[i];return'<div style="border-top:1px solid var(--line,#ddd);padding:6px 0"><div style="font-size:13.5px"><b>'+(off+k+1)+'.</b> '+escHTML(d.title||'')+' <span class="desc">'+escHTML(d.year||'')+(d.abs?'':' · '+L('title only','सिर्फ़ title'))+'</span></div>'+citScrHTML(d,i)+'</div>'}).join('')+
@@ -14466,10 +14585,17 @@ function b1LibCounts(){const l=citGetLib(),ex=l.filter(d=>d.scr&&d.scr.st==='exc
   return{inc:inc,exT:r1,exF:r2.length,noStep:noStep,why:why,noWhy:ex.filter(d=>!String(d.scr.why||'').trim()).length}}
 function b1FillFromLibrary(){const o=studyGet(),b=wGet(o).B1||{},n=b.n||{},c=b1LibCounts(),hi=studyHi(),put=[];
   const em=k=>n[k]===''||n[k]==null;
-  [['inc',c.inc],['exT',c.exT],['exF',c.exF]].forEach(x=>{if(em(x[0])&&x[1]>0){wNest('B1','n',x[0],String(x[1]));put.push(x[0])}});
+  /* Version 142: screened, assessed and the search totals too, not only the included count. Exclusions with no
+     step recorded count as title-and-abstract exclusions, and the toast says so. */
+  const lib=citGetLib(),exT=c.exT+c.noStep,scr=lib.length,sm=(function(){try{return b2Summary(o)}catch(e){return null}})();
+  if(!lib.length){showToast(hi?'Library ख़ाली है: पहले papers जोड़ें और उन पर फ़ैसला करें':'Your library is empty: add papers and decide on them first');return}
+  const und=lib.filter(d=>!(d.scr&&(d.scr.st==='included'||d.scr.st==='excluded'))).length;
+  if(und){showToast(hi?und+' papers पर अभी फ़ैसला नहीं हुआ (B3)। सब पर फ़ैसला होने के बाद ही PRISMA की संख्याएँ भरी जाती हैं, ताकि वे आपस में मेल खाएँ।':und+' paper'+(und===1?' is':'s are')+' still undecided in B3. The PRISMA boxes are filled once every paper has a decision, so the numbers add up.');return}
+  const ft=scr-exT,hand=['reg','auto','oth'].some(k=>!em(k)&&+n[k]>0),logOk=!hand&&sm&&sm.searches&&sm.read-sm.dup===scr;
+  [['id',logOk?sm.read:-1],['dup',logOk?sm.dup:-1],['scr',scr],['exT',exT],['sought',ft],['ft',ft],['exF',c.exF],['inc',c.inc]].forEach(x=>{if(em(x[0])&&x[1]>=0){wNest('B1','n',x[0],String(x[1]));put.push(x[0])}});
   if(!String(b.exWhy||'').trim()&&c.why.length){wPatch('B1','exWhy',c.why.join('\n'));put.push('exWhy')}
   wRedraw();
-  showToast(put.length?(hi?'Library से भर दिया (सिर्फ़ खाली खाने)':'Filled from your library (only the empty boxes)')+(c.noStep||c.noWhy?(hi?' · कुछ बाहर किए papers में चरण या कारण नहीं है':' · some excluded papers have no step or reason'):''):(hi?'भरने को कुछ नहीं मिला: library में status डालें, या खाने पहले से भरे हैं':'Nothing to fill: set statuses in the library, or the boxes already have numbers'))}
+  showToast(put.length?(hi?'Library से भर दिया (सिर्फ़ खाली खाने)':'Filled from your library (only the empty boxes)')+(c.noStep?(hi?' · '+c.noStep+' बाहर किए papers का चरण नहीं लिखा था, उन्हें title/abstract पर बाहर गिना':' · '+c.noStep+' excluded paper'+(c.noStep===1?'':'s')+' had no step, counted as excluded at title and abstract'):'')+(c.noWhy?(hi?' · कुछ बाहर किए papers का कारण नहीं है':' · some excluded papers have no reason'):''):(hi?'भरने को कुछ नहीं मिला: library में status डालें, या खाने पहले से भरे हैं':'Nothing to fill: set statuses in the library, or the boxes already have numbers'))}
 function b2UsePrisma(){const o=studyGet(),m=b2Summary(o),b=(wGet(o).B1||{}),n=b.n||{},hi=studyHi();
   if(!m.read){showToast(hi?'अभी कोई search दर्ज नहीं':'No searches logged yet');return}
   let set=[];
@@ -15993,7 +16119,7 @@ function pdTransform(data,choices){
    6.5 (beyond 3 × IQR from the quartiles, Tukey 1977), and missing answers per column. Nothing changes
    until the student presses a button; each change becomes a row in the D3 cleaning log. */
 function dcItemFor(name){try{const it=qnItems(),n=String(name).toLowerCase();return it.find(i=>String(i.col).toLowerCase()===n)||null}catch(e){return null}}
-function dcScan(data){const H=data.headers,R=data.rows,out={dup:[],dupId:[],idCol:-1,range:[],far:[],miss:[],labels:[]};
+function dcScan(data){const H=data.headers,R=data.rows,out={dup:[],dupId:[],idCol:-1,range:[],far:[],miss:[],labels:[],minor:[]};
   const key=r=>H.map((_,i)=>String(r[i]==null?'':r[i]).trim()).join('\u0001'),seen={};
   R.forEach((r,k)=>{const kk=key(r);if(kk.replace(/\u0001/g,'')==='')return;if(kk in seen)out.dup.push(k);else seen[kk]=k});
   out.idCol=H.findIndex(h=>/(^|_)(id|participant|respondent|code|roll)(_|$|id)/i.test(String(h)));
@@ -16003,11 +16129,13 @@ function dcScan(data){const H=data.headers,R=data.rows,out={dup:[],dupId:[],idCo
     if(i===out.idCol)return;const it=dcItemFor(H[i]);
     if(it&&Array.isArray(it.resp)){const codes=qnCodes(it).map(x=>x[0]),labs=it.resp.map(x=>String(x).toLowerCase()),bad=[];
       R.forEach((r,k)=>{const v=String(r[i]==null?'':r[i]).trim();if(!v)return;if(/^-?\d+(\.\d+)?$/.test(v)){if(codes.indexOf(+v)<0)bad.push(k)}else if(labs.indexOf(v.toLowerCase())<0)bad.push(k)});
-      if(bad.length)out.range.push({col:H[i],rows:bad,allowed:codes[0]+'–'+codes[codes.length-1]});
-      if(!it.scale&&c.type==='numeric'&&codes.length>=2)out.labels.push({col:H[i],map:qnCodes(it)});
+      if(bad.length)out.range.push({col:H[i],rows:bad,allowed:Math.min.apply(null,codes)+'–'+Math.max.apply(null,codes)});
+      if(!it.scale&&!it.own&&c.type==='numeric'&&codes.length>=2)out.labels.push({col:H[i],map:qnCodes(it)});
       return}
     if(c.type!=='numeric')return;
-    if(/^age$/i.test(H[i])){const bad=[];R.forEach((r,k)=>{const v=r[i];if(v===undefined||v==='')return;if(+v<10||+v>100)bad.push(k)});if(bad.length)out.range.push({col:H[i],rows:bad,allowed:'10–100'});return}
+    if(/^age$/i.test(H[i])){const bad=[];R.forEach((r,k)=>{const v=r[i];if(v===undefined||v==='')return;if(+v<10||+v>100)bad.push(k)});if(bad.length)out.range.push({col:H[i],rows:bad,allowed:'10–100'});
+      /* Version 142: the questionnaire's consent is for adults. Under-18 rows are flagged, never removed by the app. */
+      const mi=[];R.forEach((r,k)=>{const v=r[i];if(v===undefined||v==='')return;if(+v>=10&&+v<18)mi.push(k)});if(mi.length)out.minor.push({col:H[i],rows:mi});return}
     const xs=R.map(r=>r[i]).filter(v=>v!==undefined&&v!=='').map(Number).filter(isFinite).sort((a,b)=>a-b);if(xs.length<8)return;
     const q=f=>{const p=(xs.length-1)*f,lo=Math.floor(p),hi=Math.ceil(p);return xs[lo]+(xs[hi]-xs[lo])*(p-lo)},q1=q(.25),q3=q(.75),iq=q3-q1;if(!(iq>0))return;
     const bad=[];R.forEach((r,k)=>{const v=r[i];if(v===undefined||v==='')return;if(+v<q1-3*iq||+v>q3+3*iq)bad.push(k)});
@@ -16023,6 +16151,7 @@ function dcRender(data){const pd=document.getElementById('pdBox');if(!pd)return;
   sc.dupId.forEach(x=>{n++;h+='<p style="margin:6px 0">⚠️ '+L('ID '+E(x.id)+' appears in '+x.rows.length+' different rows ('+x.rows.map(k=>'row '+(k+2)).join(', ')+'). Check the paper forms; give one of them a new ID.','ID '+E(x.id)+' '+x.rows.length+' अलग पंक्तियों में है ('+x.rows.map(k=>'row '+(k+2)).join(', ')+')। Paper forms देखें; एक को नया ID दें।')+'</p>'});
   sc.range.forEach(x=>{n++;h+='<p style="margin:6px 0">⚠️ <b>'+E(x.col)+'</b>: '+L(x.rows.length+' answer'+(x.rows.length>1?'s are':' is')+' outside the allowed codes '+x.allowed+'. ',x.rows.length+' जवाब तय codes '+x.allowed+' से बाहर हैं। ')+list(x.col,x.rows)+'. '+L('Check the form; if it cannot be fixed, make it missing.','Form देखें; ठीक न हो सके तो missing कर दें।')+' <button type="button" class="btn btn-ghost btn-sm" onclick="dcFix(\'range\',\''+E(x.col).replace(/'/g,'')+'\')">'+L('Make these missing','इन्हें missing करें')+'</button></p>'});
   sc.far.forEach(x=>{n++;h+='<p style="margin:6px 0">⚠️ <b>'+E(x.col)+'</b>: '+L('far from the rest (beyond '+(+x.lo.toFixed(2))+' to '+(+x.hi.toFixed(2))+'): ','बाकी से बहुत दूर ('+(+x.lo.toFixed(2))+' से '+(+x.hi.toFixed(2))+' के बाहर): ')+list(x.col,x.rows)+'. '+L('Often a typing slip (65 for 6.5). Correct it from the form in your file and load it again; make it missing only if the form cannot tell you.','अक्सर टाइपिंग की चूक (6.5 की जगह 65)। Form से अपनी file में सही करके दोबारा load करें; form से पता न चले तभी missing करें।')+' <button type="button" class="btn btn-ghost btn-sm" onclick="dcFix(\'far\',\''+E(x.col).replace(/'/g,'')+'\')">'+L('Make these missing','इन्हें missing करें')+'</button></p>'});
+  sc.minor.forEach(x=>{n++;h+='<p style="margin:6px 0">⛔ <b>'+E(x.col)+'</b>: '+L(x.rows.length+' participant'+(x.rows.length>1?'s are':' is')+' under 18 ('+list(x.col,x.rows)+'). Your consent text is for people aged 18 or older. A minor needs a parent or guardian\'s consent and their own assent. Do not analyse these rows until your supervisor and ethics committee have decided; the app does not remove them for you.',x.rows.length+' participant 18 साल से कम के हैं ('+list(x.col,x.rows)+')। आपकी consent 18 या उससे ज़्यादा उम्र के लिए है। नाबालिग के लिए माता-पिता या अभिभावक की सहमति और उसकी अपनी assent चाहिए। Supervisor और ethics committee के फ़ैसले तक इन पंक्तियों का analysis न करें; app इन्हें अपने आप नहीं हटाता।')+'</p>'});
   if(sc.labels.length){h+='<p style="margin:6px 0">🏷 '+L('Coded answers in ','Codes वाले जवाब: ')+sc.labels.map(x=>'<b>'+E(x.col)+'</b> ('+x.map.map(m=>m[0]+' = '+E(m[1])).join(', ')+')').join('; ')+'. '+L('Results read better with the words.','नतीजों में शब्द ज़्यादा साफ़ पढ़े जाते हैं।')+' <button type="button" class="btn btn-ghost btn-sm" onclick="dcFix(\'labels\')">'+L('Use the codebook words','Codebook के शब्द लगाएँ')+'</button></p>'}
   const ms=sc.miss.filter(x=>x.n>0);if(ms.length)h+='<p class="desc" style="margin:6px 0">'+L('Missing answers: ','ख़ाली जवाब: ')+ms.map(x=>E(x.col)+' '+x.n).join(', ')+'. '+L('Describe these in your Results.','Results में इनका ज़िक्र करें।')+'</p>';
   if(!n)h+='<p style="margin:6px 0">✅ '+L('No repeated rows, repeated IDs, out-of-range codes or far-off values found.','कोई दोहराई पंक्ति, दोहराया ID, गलत code या बहुत दूर की value नहीं मिली।')+'</p>';
@@ -16115,7 +16244,7 @@ const GUIDE=[
 {id:'start',g:'Begin',t:'Your first ten minutes',k:'start begin first key provider setup sample project',h:`
 <p>You need about ten minutes and a free AI key. Statistics, charts and citations work without a key, so you can try those first.</p>
 <ol>
-<li>Press <b>⚙ AI Provider / Key</b> at the top right. Pick Gemini or Groq, follow the link, copy the key, paste it in and press <b>Test</b>. The message under the button tells you whether it worked. The key stays in this browser.</li>
+<li>Press <b>the AI button</b> at the top right (it shows the name of your AI, such as Gemini). Pick Gemini or Groq, follow the link, copy the key, paste it in and press <b>Test</b>. The message under the button tells you whether it worked. The key stays in this browser.</li>
 <li>Press <b>New Research Project</b> in the left menu and give it a name. Everything you do afterwards is saved under that project.</li>
 <li>Open <b>Idea &amp; Feasibility</b>. Type one research question and what you really have: how many people you can reach, how many months, which software. Press <b>Assess feasibility</b>. Expect a frank read, and expect to disagree with part of it.</li>
 <li>Open <b>Research</b> and search your topic. Tick the papers that look relevant. The abstracts you ticked are all the AI sees when it drafts a review.</li>
@@ -16288,7 +16417,7 @@ B,8</pre>Then press <b>Which test fits my data?</b> and read why it picks what i
 <li>It does not guarantee that a result, a citation or an AI answer is correct.</li>
 </ul>`},
 {id:'faq',g:'Help',t:'Questions people ask',k:'faq problem error key stopped lost work backup hindi english slow quota rate limit',h:`
-<p><strong>The AI says my key failed.</strong> Open <b>⚙ AI Provider / Key</b>, press Test, and read the message under the button. Free keys run out of quota. If you saved a second key for another provider, Appuscholar tries it automatically.</p>
+<p><strong>The AI says my key failed.</strong> Open <b>the AI button</b> at the top right, choose <b>Key and settings</b>, press Test, and read the message under the button. Free keys run out of quota. If you saved a second key for another provider, Appuscholar tries it automatically.</p>
 <p><strong>My work vanished.</strong> Everything lives in this browser. Clearing site data, switching browsers or moving to another computer removes it. Use <b>Backup</b> every week and keep the file somewhere safe. Papers on the Reading shelf have their own backup button inside the shelf.</p>
 <p><strong>Which test do I use?</strong> Open the Statistics Lab and press <b>Which test fits my data?</b></p>
 <p><strong>The p-value looks different from SPSS.</strong> Check whether SPSS ran a Student or a Welch t-test and whether it reports a one- or two-tailed p. Appuscholar reports two-tailed p and uses Welch by default.</p>
@@ -18313,7 +18442,7 @@ function thDrawer(){const d=document.getElementById('thDr');if(!d)return;const t
     h+='<label>'+(hi?'रफ़्तार':'Speed')+'</label><select onchange="apThRate(this.value)">'+[[0.8,hi?'धीमी':'Slow'],[0.9,hi?'सामान्य':'Normal'],[1,hi?'थोड़ी तेज़':'Brisk'],[1.15,hi?'तेज़':'Fast']].map(x=>'<option value="'+x[0]+'"'+(apVoiceRate()===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>';
     if(any)h+='<label>'+(hi?'आवाज़ की क़िस्म':'Voice type')+'</label><select onchange="apThMode(this.value)"><option value="device"'+(mode==='device'?' selected':'')+'>'+(hi?'Device की आवाज़':'Device voice')+'</option>'+['gemini','openai'].map(p=>'<option value="'+p+'"'+(mode===p?' selected':'')+(apTtsHas(p)?'':' disabled')+'>Natural ('+AP_TTS[p].name+')</option>').join('')+'</select>';
     h+='<label>'+(hi?'Board का रंग':'Board tone')+'</label><select onchange="apThTone(this.value)">'+[['auto',hi?'slide के साथ बदले':'Changes with the slide'],['light',hi?'हमेशा हल्का':'Always light'],['dark',hi?'हमेशा गहरा':'Always dark'],['deep',hi?'हमेशा बहुत गहरा':'Always deep dark']].map(x=>'<option value="'+x[0]+'"'+(tn===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>';
-    h+='<p>'+(hi?'आवाज़ बंद हो तो हर वाक्य तय समय तक दिखता है। असली जैसी आवाज़ के लिए lecture बंद करके app में ऊपर दाईं ओर ⚙ AI प्रदाता / कुंजी में Gemini या ChatGPT की key डालें।':'With the voice off, each sentence stays on screen for a set time. For a natural voice, close the lecture and add a Gemini or ChatGPT key under ⚙ AI Provider / Key at the top right of the app.')+' '+(apVoiceList(thHi()?'hi':'en').some(v=>/^(en|hi)-?_?in/i.test(v.lang||''))?'':(hi?'इस device पर भारतीय आवाज़ नहीं मिली; Text-to-speech settings में English (India) voice जोड़ें।':'No Indian voice found on this device. Add English (India) in its text-to-speech settings.'))+'</p>'}
+    h+='<p>'+(hi?'आवाज़ बंद हो तो हर वाक्य तय समय तक दिखता है। असली जैसी आवाज़ के लिए lecture बंद करके app में ऊपर दाईं ओर AI वाले बटन में Gemini या ChatGPT की key डालें।':'With the voice off, each sentence stays on screen for a set time. For a natural voice, close the lecture and add a Gemini or ChatGPT key from the AI button at the top right of the app.')+' '+(apVoiceList(thHi()?'hi':'en').some(v=>/^(en|hi)-?_?in/i.test(v.lang||''))?'':(hi?'इस device पर भारतीय आवाज़ नहीं मिली; Text-to-speech settings में English (India) voice जोड़ें।':'No Indian voice found on this device. Add English (India) in its text-to-speech settings.'))+'</p>'}
   d.innerHTML=h}
 function thHTML(){const hi=thHi();return'<div class="th-top"><b id="thTitle"></b><button type="button" id="thLangEn" onclick="apThLang(\'en\')">English</button><button type="button" id="thLangHi" onclick="apThLang(\'hi\')">हिंदी</button><button type="button" id="thDrBtn" class="th-lbl" onclick="apThPanel(\'slides\')" aria-label="Slides and quiz">☰ <span id="thDrLbl">Slides</span></button><button type="button" id="thSetBtn" class="th-lbl th-set" onclick="apThPanel(\'voice\')" aria-label="Settings">⚙ <span id="thSetLbl">Settings</span></button><button type="button" id="thFs" onclick="apThFs()" aria-label="Full screen">⛶</button><button type="button" onclick="apThClose()" aria-label="Close theatre">✕</button></div>'+
   '<div class="th-main"><div class="th-box" id="thBox"><div class="th-cv" id="thCv"></div></div><aside class="th-dr" id="thDr" aria-label="Slides, quiz and voice"></aside></div><div class="th-sub" id="thSub" aria-live="polite"></div>'+
@@ -20349,7 +20478,7 @@ function apHomeRender(){
   const me=apMe(),nm=me.name||ht('yourname'),ini=(me.name||'').trim().split(/\s+/).filter(w=>!/^(dr|prof|mr|mrs|ms)\.?$/i.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'A';
   const p=getActiveProject(),active=p&&p.status!=='complete'?p:null,lang=getLang();
   let docs=0,src=0;try{docs=docsGetRaw().length}catch(e){}try{src=citGetLib().length}catch(e){}
-  const stNow=active?active.stage:null,pk=(function(){try{return PACKS[getPack()].label}catch(e){return ''}})();
+  const stNow=active?apEffStage(active):null,pk=(function(){try{return PACKS[getPack()].label}catch(e){return ''}})();
   let cards='';
   if(false&&active)cards+='<div class="hm-resume"><b>'+escHTML(ht('projcont'))+'</b>'+escHTML(active.name)+' · '+escHTML(stageLabel(active.stage))+'<br><button type="button" onclick="apGoStage(\''+jsq(active.stage)+'\')">'+escHTML(ht('go'))+'</button></div>';
   if(active)try{cards+=nfyHTML()}catch(e){}
@@ -20380,12 +20509,17 @@ function apHomeHero(active,lang){
     +'<p class="hm-hd">'+escHTML(L('A project keeps your idea, papers, plan, data and chapters together, on this device.','प्रोजेक्ट आपके विचार, पेपर, योजना, डेटा और अध्यायों को इसी डिवाइस पर एक साथ रखता है।'))+'</p>'
     +'<button type="button" class="hm-go" onclick="openNewProjectDirect()">'+escHTML(L('Start a project','प्रोजेक्ट शुरू करें'))+'</button>'
     +'<button type="button" class="hm-alt" onclick="apGoStage(\'idea\')">'+escHTML(L('Or begin with Step 1: Idea','या चरण 1 से शुरू करें: विचार'))+'</button></div></section>';
-  const k=Math.max(0,STAGES.indexOf(active.stage));
+  const st=apEffStage(active),k=Math.max(0,STAGES.indexOf(st));
   const bar=STAGES.map((s,i)=>'<i class="'+(i<k?'d':i===k?'n':'')+'"></i>').join('');
   return'<section class="hm-hero"><p class="hm-greet">'+escHTML(greet)+'</p><h2>'+escHTML(L('Pick up where you left off','जहाँ छोड़ा था, वहीं से शुरू करें'))+'</h2>'
     +'<div class="hm-hcard"><span class="hm-hk">'+escHTML(L('Your project','आपका प्रोजेक्ट'))+'</span><b class="hm-ht">'+escHTML(active.name)+'</b>'
-    +'<div class="hm-bar" aria-hidden="true">'+bar+'</div><span class="hm-hd">'+escHTML(L('Stage ','चरण ')+(k+1)+' / '+STAGES.length+' · '+stageLabel(active.stage))+'</span>'
-    +'<button type="button" class="hm-go" onclick="apGoStage(\''+jsq(active.stage)+'\')">'+escHTML(L('Continue: ','जारी रखें: ')+stageLabel(active.stage))+'</button></div></section>'}
+    +'<div class="hm-bar" aria-hidden="true">'+bar+'</div><span class="hm-hd">'+escHTML(L('Stage ','चरण ')+(k+1)+' / '+STAGES.length+' · '+stageLabel(st))+'</span>'
+    +'<button type="button" class="hm-go" onclick="apGoStage(\''+jsq(st)+'\')">'+escHTML(L('Continue: ','जारी रखें: ')+stageLabel(st))+'</button></div></section>'}
+/* Version 142: Home shows the furthest stage with finished work, not only the stage the project was filed under. */
+function apEffStage(p){let k=Math.max(0,STAGES.indexOf(p&&p.stage));try{const o=studyGet(),ds=o.design||{},up=st=>{const j=STAGES.indexOf(st);if(j>k)k=j};
+    /* Version 142 (review fix): only work the student has done moves Home on; automatic ticks do not. */
+    SUBSTAGES.forEach(r=>{const x=subState(r[0],o);if(!x.auto&&['dn','ap'].indexOf(x.s)>=0)up(r[1])});
+    if(ds.type&&ds.type!=='review')up('design');if(ds.type!=='review'&&o.analysis&&o.analysis.ran)up('collect')}catch(e){}return STAGES[k]}
 /* Home card for the synopsis: make it once the design is under way, then open it and show the gaps left. */
 function apSynCard(){const o=studyGet(),g=synGaps(o),hi=getLang()==='hi',L=(en,x)=>hi?x:en;
   const di=(o.design&&Object.keys(o.design).length)||(o.idea&&o.idea.title);if(g<0&&!di)return'';
@@ -20562,7 +20696,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=141;
-const APP_BUILD='2026.11.28a';
+const APP_BUILD='2026.11.28b';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -20761,8 +20895,16 @@ function slLabelCode(x,coding,v){
   return agreeFirst===(coding.dir==='agree-high')?coding.max-i:coding.min+i;
 }
 function slBand(x,t){if(t==null||!x.bands)return '';for(const b of x.bands)if(t<=b.max)return b.label;return x.bands[x.bands.length-1].label}
+/* Version 142: the student's own multi-item questions, shaped like a library scale so the same scorer, reverse
+   scoring and alpha apply. Codes run 1 upwards, as in the codebook. */
+function qnOwnScales(){let items=[];try{items=qnItems()}catch(e){return[]}const by={};
+  items.filter(i=>i.own&&Array.isArray(i.resp)).forEach(i=>{(by[i.own]=by[i.own]||[]).push(i)});
+  return Object.keys(by).filter(k=>by[k].length>=2).map(k=>{const its=by[k],L=its[0].resp,id=qnSlug(k);
+    return{id:id,short:k,name:k,own:true,items:its.map(i=>i.text),reverse:its.map((i,j)=>i.rev?j+1:0).filter(Boolean),labels:L,
+      codings:[{min:1,max:L.length,dir:'agree-high',label:'1 = '+L[0]+' … '+L.length+' = '+L[L.length-1]}],bands:null}})}
+function slScoreOwn(i){const x=qnOwnScales()[i];if(x)slScoreOpen(x)}
 function slScoreOpen(id){
-  const x=slById(id),data=window._statsData;
+  const x=typeof id==='object'&&id?id:slById(id),data=window._statsData;
   if(!x)return;
   if(!data){showToast('Parse your data in the Statistics Lab first');return}
   window._slCur=x;
@@ -22764,6 +22906,11 @@ function stkBinom5(b,nd){
   let tail=0;for(let i=0;i<=lo;i++)tail+=Math.exp(lf[nd]-lf[i]-lf[nd-i]-nd*Math.LN2);
   return Math.min(1,2*tail);
 }
+/* Version 142: item columns of one scale share a name with a number at the end (GAD7_1 … GAD7_7, Sleep_01 …).
+   Totals, bands and background columns are never part of a group. */
+function statsItemGroups(cols){const g={};(cols||[]).forEach(c=>{const n=String(c.name||'');if(/_(total|band|mean|score)$/i.test(n))return;const m=n.match(/^(.*?[A-Za-z][A-Za-z0-9]*?)[_\-. ]?(\d{1,3})$/);if(!m)return;const k=m[1].replace(/[_\-. ]+$/,'');(g[k]=g[k]||[]).push(c.index)});
+  return Object.keys(g).filter(k=>g[k].length>=2).map(k=>({p:k,idx:g[k]})).sort((a,b)=>b.idx.length-a.idx.length)}
+function statsTickGroup(i){const g=(window._alphaGroups||[])[i];if(!g)return;document.querySelectorAll('.sfm_items').forEach(c=>{c.checked=g.idx.indexOf(parseInt(c.value,10))>=0});try{const own=qnOwnScales().find(z=>z.id.toLowerCase()===g.p.toLowerCase()),rv=document.getElementById('sf_rev'),rr=document.getElementById('sf_rrange');if(rv)rv.value=own?own.reverse.map(j=>slVarNames(own)[j-1]).join(', '):'';if(rr)rr.value=own&&own.reverse.length?'1-'+own.labels.length:''}catch(e){}}
 function statsFieldsRender(){
   try{genGateHide()}catch(e){}
   const key=document.getElementById('statsTest').value,cfg=STAT_TESTS[key];
@@ -22774,7 +22921,10 @@ function statsFieldsRender(){
     const cols=(window._statsData&&window._statsData.cols||[]).filter(c=>f.type==='binary'?stkIsBinaryCol(c.index):(c.type===f.type||(f.type==='categorical'&&stkFewCodes(c.index))));
     if(f.multi){
       html+='<div class="fld" style="flex-basis:100%"><label>'+escHTML(f.label)+'</label><div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px">'+
-        cols.map(c=>'<label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" class="sfm_'+f.id+'" value="'+c.index+'"'+(f.unchecked?'':' checked')+'> '+escHTML(c.name)+'</label>').join('')+'</div></div>';
+        (key==='alpha'?(function(){const G=statsItemGroups(cols);window._alphaGroups=G;const one=G.length===1?G[0].idx:[];
+          return cols.map(c=>'<label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" class="sfm_'+f.id+'" value="'+c.index+'"'+(one.indexOf(c.index)>=0?' checked':'')+'> '+escHTML(c.name)+'</label>').join('')+'</div>'+
+           (G.length?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+G.map((g,i)=>'<button type="button" class="btn btn-ghost btn-sm" onclick="statsTickGroup('+i+')">'+(studyHi()?'सिर्फ़ '+escHTML(g.p)+' के items ('+g.idx.length+')':'Tick only the '+escHTML(g.p)+' items ('+g.idx.length+')')+'</button>').join('')+'</div>':'<p class="desc" style="margin:4px 0 0">'+(studyHi()?'एक ही scale के items टिक करें। Age, gender या total score न टिकें।':'Tick the items of one scale only. Leave out age, gender and total scores.')+'</p>')+'</div>'})():
+        cols.map(c=>'<label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" class="sfm_'+f.id+'" value="'+c.index+'"'+(f.unchecked?'':' checked')+'> '+escHTML(c.name)+'</label>').join('')+'</div></div>');
       return;
     }
     used[f.type]=used[f.type]||0;
@@ -23030,7 +23180,9 @@ function statsInsert(){
   }catch(e){rid=''}
   /* At the cursor when the student had one in the document, else at the end (as before). */
   insertIntoEditor(t,!!(savedRange&&editor.contains(savedRange.startContainer)),false,rid);showToast('Inserted ✓ — Ctrl+Z to undo');
-  try{const o=studyGet(),a=o.analysis||{tests:[]},sel=document.getElementById('statsTest'),nm=sel&&sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:'';a.ran=true;if(nm&&a.tests.indexOf(nm)<0)a.tests.push(nm);o.analysis=a;studySet(o)}catch(e){}
+  try{const o=studyGet(),a=o.analysis||{tests:[]},sel=document.getElementById('statsTest'),nm=sel&&sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:'';a.ran=true;if(nm&&a.tests.indexOf(nm)<0)a.tests.push(nm);
+    /* Version 142: the talk deck can use results that were inserted but never recorded against a hypothesis. */
+    a.inserted=(a.inserted||[]).filter(x=>x.apa!==t).concat([{apa:t,test:nm,at:new Date().toISOString()}]).slice(-20);o.analysis=a;studySet(o)}catch(e){}
 }
 /* Plain-language note without AI: p-value and effect size read from the APA sentence, with the usual rules of thumb. No claim about design or cause. */
 function statsPlain(apa){
@@ -24758,13 +24910,21 @@ function licensePromptLoop(reason){
     btn.onclick=async()=>{
       const code=input.value.trim();
       if(!code){msg.textContent='Paste your access code first.';return}
+      /* Version 142: a student's invite code (10 letters and digits, often written XXXXX-XXXXX) belongs in the
+         account sign-up, not here. Take the student there with the code already filled in. */
+      const inv=code.toUpperCase().replace(/[\s-]/g,'');
+      if(code.indexOf('.')<0&&/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{10}$/.test(inv)){
+        try{sessionStorage.setItem('appuInviteHint',inv)}catch(e){}
+        msg.style.color='var(--muted)';msg.textContent='This is a student invite code. Opening account sign-up with your code filled in. / यह student invite code है। आपका code भरकर account बनाने का पेज खुल रहा है।';
+        acctOpen(true);return;
+      }
       btn.disabled=true;msg.style.color='var(--muted)';msg.textContent='Checking…';
       const res=await licenseVerify(code);
       if(!res.valid){
         btn.disabled=false;msg.style.color='#dc2626';
         msg.textContent=res.reason==='expired'?'That code has expired — ask for a new one.'
           :res.reason==='nocrypto'?'This browser cannot verify access codes.'
-          :'That code was not recognized — check you copied the whole thing.';
+          :'That code was not recognized. Check you copied the whole thing. A student invite code (like ABCDE-FGH23) goes in the account button below. / Student invite code नीचे वाले account बटन में डालें।';
         return;
       }
       const revoked=await licenseCheckRevoked(res.payload.id);
@@ -24789,7 +24949,7 @@ function acctFillMe(p){try{if(!p)return;LS.set('appu_acct_seen','1');const me=ap
 function acctShowStatus(p){const el=document.getElementById('licenseBadge');if(!el||!p)return;acctFillMe(p);const exp=p.accessExpiresAt&&p.accessExpiresAt.toDate?p.accessExpiresAt.toDate():null,days=exp?Math.ceil((exp-new Date())/86400000):null;
   el.style.display='inline-block';el.style.cursor='pointer';el.textContent=(p.displayName?p.displayName+' · ':'')+(days!=null?days+'d left':'account');el.title='Account and profile';el.onclick=()=>acctOpen();
   if(days!=null&&days<=14&&days>=0)showToast('Your access ends in '+days+' day'+(days===1?'':'s'))}
-function acctOpen(){const d=document.getElementById('acctDlg'),f=document.getElementById('acctFrame');if(!d||!f)return;if(!f.getAttribute('src'))f.src='auth.html';if(!d.open)d.showModal()}
+function acctOpen(reload){const d=document.getElementById('acctDlg'),f=document.getElementById('acctFrame');if(!d||!f)return;if(reload||!f.getAttribute('src'))f.src='auth.html';if(!d.open)d.showModal()}
 function acctClose(){const d=document.getElementById('acctDlg');if(d&&d.open)d.close()}
 let acctGateResolve=null;
 window.appuAccountReady=async function(){const st=await acctSession(8000);if(!st||st.state!=='ready'){showToast('Your account is not active yet.');return}
