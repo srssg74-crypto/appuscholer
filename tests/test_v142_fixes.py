@@ -96,6 +96,27 @@ with sync_playwright() as p:
     r = pg.evaluate("""(()=>{const o=studyGet();o.design={type:'review'};o.write={};o.qn={};o.analysis={};studySet(o);return apEffStage({stage:'lit'})})()""")
     ok(r == 'lit', 'a review plan does not jump Home past Stage 2: ' + r)
 
+    # rehearsal 2: name filled into an introduction saved earlier; test chooser uses totals; Insert lands in Results
+    r = pg.evaluate("""(()=>{localStorage.setItem('appu_me',JSON.stringify({name:''}));const o=studyGet();o.qn=Object.assign({},o.qn||{},{intro:'A study by [your name]. Voluntary.'});studySet(o);
+      const before=qnNameGap();localStorage.setItem('appu_me',JSON.stringify({name:'Priya Meena'}));return [before,qnNameGap(),qnModel().q.intro]})()""")
+    ok(r[0] and not r[1] and 'Priya Meena' in r[2], 'a saved "[your name]" is filled once the name is on Home: ' + str(r))
+    r = pg.evaluate("""(()=>{const o=studyGet();o.design={type:'correlational',vars:[{name:'Sleep quality',role:'predictor',type:'score',scale:'own'},{name:'Exam anxiety',role:'outcome',type:'score',scale:'GAD7'}]};studySet(o);
+      const ta=document.getElementById('statsPaste');ta.value='id,age,Sleep_quality_01,Sleep_quality_02,GAD7_01,GAD7_total,Sleep_quality_total\\n'+[1,2,3,4,5,6].map(i=>i+',20,'+(i%5+1)+','+(i%4+1)+',1,'+(i*2)+','+(10-i)).join('\\n');statsParse();
+      studyUseTest();return [...document.querySelectorAll('#statsFields select')].map(s=>s.options[s.selectedIndex].text)})()""")
+    ok('Sleep_quality_total' in r and 'GAD7_total' in r, 'Use this test picks the total scores, not the first item: ' + str(r))
+    r = pg.evaluate("""(()=>{editor.innerHTML='<h1 data-draft="1">T</h1><h2>3. Results</h2><p>x</p><h2>4. Discussion</h2><p>y</p><div data-bib="1"><h2>References</h2><p>R</p></div><p>end</p>';
+      const r=document.createRange();r.selectNodeContents(editor);r.collapse(false);savedRange=r;window._statsAPA='RESULT SENTENCE r(4) = .50.';window._statsRun=null;statsInsert();
+      const t=editor.innerText;return [t.indexOf('RESULT SENTENCE')<t.indexOf('4. Discussion'),t.indexOf('RESULT SENTENCE')>t.indexOf('3. Results')]})()""")
+    ok(r[0] and r[1], 'Insert from the Lab with the cursor below the references goes into Results')
+
+    # review round 3: a score with items but no total is not matched to a short column; two outlines take the newest
+    r = pg.evaluate("""(()=>{const ta=document.getElementById('statsPaste');ta.value='id,gender,Gender_role_attitudes_01,Gender_role_attitudes_02\\n1,1,2,3\\n2,2,3,4\\n3,1,4,5';statsParse();
+      return [planColFor({name:'Gender role attitudes',type:'score',scale:'own'}),planColFor({name:'Gender',type:'category'})]})()""")
+    ok(r[0] == -1 and r[1] == 1, 'an unscored own scale is not matched to gender: ' + str(r))
+    r = pg.evaluate("""(()=>{editor.innerHTML='<h1 data-draft="1">A</h1><h2>3. Results</h2><p>a</p><h2>4. Discussion</h2><h1 data-draft="1">B</h1><h2>3. Results</h2><p>b</p><h2>4. Discussion</h2>';savedRange=null;
+      window._statsAPA='NEWEST r(4) = .50.';window._statsRun=null;statsInsert();const t=editor.innerText;return t.indexOf('NEWEST')>t.lastIndexOf('3. Results')})()""")
+    ok(r, 'with two outlines the result goes into the newest one')
+
     real = [e for e in errs if e[0] == 'pageerror']
     ok(not real, 'no page errors: ' + str(real[:3]))
     b.close()

@@ -5637,7 +5637,7 @@ function spSave(){const hi=studyHi(),o0=studyGet();const vars=[...document.query
    match the Scale library's names (RSES_01 …), so scoring in the Statistics Lab finds them by itself. */
 function qnSlug(s){let t=String(s||'').trim().replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');if(t.length>24){t=t.slice(0,25);const k=t.lastIndexOf('_');t=k>=8?t.slice(0,k):t.slice(0,24)}return t||'var'}
 function qnModel(){const o=studyGet(),ds=o.design||{},vars=(ds.vars||[]).filter(v=>v.name),me=(typeof apMe==='function')?apMe():{name:'',pos:''};
-  const q=o.qn||{};const extraScales=q.extraScales||[];
+  let q=o.qn||{};const extraScales=q.extraScales||[];
   const bg=[];const own=[];const scales=[];
   (q.demo||['age','gender','course']).forEach(k=>bg.push({k:k}));
   vars.forEach(v=>{
@@ -5646,6 +5646,9 @@ function qnModel(){const o=studyGet(),ds=o.design||{},vars=(ds.vars||[]).filter(
     if(v.type==='category'||v.type==='yesno'||v.role==='group'||v.role==='covariate')bg.push({v:v});
     else own.push(v)});
   extraScales.forEach(id=>{if(scales.indexOf(id)<0)scales.push(id)});
+  /* Version 142 (rehearsal 2): an introduction saved before the student's name was known keeps "[your name]".
+     Once the name is on Home it is filled in; the student's own edits stay as written. */
+  if(me.name&&q.intro&&/\[your name\]/i.test(q.intro))q=Object.assign({},q,{intro:q.intro.replace(/\[your name\]/gi,()=>me.name)});
   return{o:o,ds:ds,vars:vars,me:me,bg:bg,own:own,scales:scales,q:q}}
 const QN_DEMO={age:['Age (in completed years)','आयु (पूरे वर्ष)','number'],gender:['Gender','Gender','choice:Woman|Man|Another gender|Prefer not to say'],course:['Course and year','Course और वर्ष','text'],college:['College or institution','College या संस्थान','text'],residence:['Where do you live during term?','Term के दौरान आप कहाँ रहते हैं?','choice:Hostel|Home with family|Rented room|Other']};
 function qnOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{};let d=document.getElementById('qnDlg');
@@ -5672,7 +5675,7 @@ function qnOpen(){const hi=studyHi(),o=studyGet(),ds=o.design||{};let d=document
   if(!d.open)d.showModal()}
 function qnSave(){const o=studyGet(),q=o.qn||{};
   const g=id=>{const e=document.getElementById(id);return e?e.value:''};
-  q.title=g('qnTitle');q.intro=g('qnIntro');q.demo=[...document.querySelectorAll('.qnDemo')].filter(x=>x.checked).map(x=>x.value);
+  q.title=g('qnTitle');q.intro=g('qnIntro');try{const me=apMe();if(me.name)q.intro=q.intro.replace(/\[your name\]/gi,()=>me.name)}catch(e){}q.demo=[...document.querySelectorAll('.qnDemo')].filter(x=>x.checked).map(x=>x.value);
   const planScales=((o.design&&o.design.vars)||[]).map(v=>v.scale).filter(s=>s&&s!=='own'&&s!=='instr');
   const chosen=[...document.querySelectorAll('.qnScale')].filter(x=>x.checked).map(x=>x.value);
   q.extraScales=chosen.filter(s=>planScales.indexOf(s)<0);q.dropScales=planScales.filter(s=>chosen.indexOf(s)<0);
@@ -5712,7 +5715,7 @@ function qnHTML(){const m=qnModel(),q=m.q,items=qnItems();let h='<h1>'+escHTML(q
   const credits=[...new Set(items.map(i=>i.credit).filter(Boolean))];
   if(credits.length)h+='<p><small>Scales used: '+credits.map(escHTML).join(' · ')+'</small></p>';
   h+='<p><b>Thank you for taking part.</b></p>';return h}
-function qnNameGap(){const q=(studyGet().qn)||{},m=qnModel();return /\[your name\]/i.test(q.intro||'')||(!q.intro&&!m.me.name)}
+function qnNameGap(){const m=qnModel(),q=m.q;return /\[your name\]/i.test(q.intro||'')||(!q.intro&&!m.me.name)}
 async function qnWord(){const hi=studyHi();if(qnNameGap()&&!confirm(hi?'Consent वाले हिस्से में अभी "[your name]" लिखा है। Home पर अपना नाम भरें या intro में बदलें। फिर भी download करें?':'The consent text still says "[your name]". Add your name on Home or edit the introduction. Download anyway?'))return;try{const holder=document.createElement('div');holder.innerHTML=qnHTML();const blob=await dxBuild(holder,'Questionnaire');
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='questionnaire.docx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   showToast(hi?'Questionnaire Word file में download हुई ✓':'Questionnaire downloaded as a Word file ✓')}catch(e){showToast((hi?'Word file नहीं बन पाई: ':'Could not make the Word file: ')+(e&&e.message||e))}}
@@ -5782,6 +5785,9 @@ function planVarsFor(o,h){const vars=((o.design||{}).vars||[]).filter(v=>v.name)
 function planColFor(v){const d=window._statsData;if(!v||!d)return -1;const norm=z=>String(z||'').toLowerCase().replace(/[^a-z0-9]/g,''),H=d.headers;
   if(v.scale&&v.scale!=='own'&&v.scale!=='instr'){const t=H.findIndex(h=>norm(h)===norm(v.scale+'_total'));if(t>=0)return t}
   if(!v.scale||v.scale==='own'){const t=H.findIndex(h=>norm(h)===norm(qnSlug(v.name)+'_total'));if(t>=0)return t}
+  /* Version 142 (review): a scale or own-question score with no _total column yet is not stood in for by its first item
+     or by a short column such as "gender"; the student scores it first. */
+  if(v.type==='score'&&(v.scale==='own'||(v.scale&&v.scale!=='instr'))&&H.some(h=>norm(h).indexOf(norm(v.scale==='own'?qnSlug(v.name):v.scale))===0&&/\d+$/.test(h)))return -1;
   let k=H.findIndex(h=>norm(h)===norm(v.name)||norm(h)===norm(qnSlug(v.name)));if(k<0)k=H.findIndex(h=>norm(h).indexOf(norm(qnSlug(v.name)))===0||norm(qnSlug(v.name)).indexOf(norm(h))===0&&norm(h).length>=6);return k}
 const PLAN_TEST_KEY={'Welch t-test (two groups)':'ttestInd','Paired t-test':'ttestPaired','Welch ANOVA (3+ groups)':'welchAnova','Repeated-measures ANOVA':'rmanova','Mann-Whitney U':'mannwhitney','Wilcoxon signed-rank':'wilcoxon','Kruskal-Wallis':'kruskal','Chi-square':'chisq','Pearson r':'pearson','Spearman rho':'spearman','Linear regression':'regression','Logistic regression':'logistic'};
 function planRunHTML(){const o=studyGet(),plan=logRows(o,'aplan'),hi=studyHi();if(!window._statsData)return'';
@@ -5800,7 +5806,8 @@ function planRun(i){const o=studyGet(),r=logRows(o,'aplan')[i],hi=studyHi();if(!
 function studyUseTest(){const s=studySuggestTest();if(!s||!s.k)return;const sel=document.getElementById('statsTest');if(!sel)return;sel.value=s.k;try{statsFieldsRender()}catch(e){}
   /* Pick the columns whose names match the planned variables. */
   const data=window._statsData;if(!data)return;const norm=z=>String(z||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const find=v=>v?data.headers.findIndex(h=>norm(h)===norm(v.name)||norm(h)===norm(qnSlug(v.name))||norm(h).indexOf(norm(v.name))===0):-1;
+  /* Version 142 (rehearsal 2): a scale variable is its _total column (GAD7_total, Sleep_quality_total), never its first item. */
+  const find=v=>v?planColFor(v):-1;
   const yi=find(s.y),xi=find(s.x),mi=find(s.m),wi=find(s.w);
   document.querySelectorAll('#statsFields select').forEach(se=>{const lab=(se.closest('.fld')&&se.closest('.fld').innerText||'').toLowerCase();
     const want=/mediator/.test(lab)?mi:/moderator/.test(lab)?wi:/group|factor|predictor|\bx\b|first|variable 1|independent/.test(lab)?xi:(/outcome|score|\by\b|second|variable 2|dependent/.test(lab)?yi:-1);
@@ -6362,7 +6369,7 @@ async function sfPreview(){const hi=studyHi(),rows=await sfDecrypt();if(!rows)re
    rows.slice(0,30).map((r,i)=>'<tr><td>'+escHTML(r.pc||('R'+(i+1)))+'</td><td>'+escHTML(String(r.ts).slice(0,16))+'</td>'+cols.map(c=>'<td>'+escHTML(r.a[c]==null?'':r.a[c])+'</td>').join('')+'</tr>').join('')+'</table></div>'}
 async function sfToStats(){const hi=studyHi(),rows=SF_ROWS||await sfDecrypt();if(!rows)return;if(!rows.length){showToast(hi?'अभी कोई जवाब नहीं':'No answers yet');return}
   const cur=window._statsData,curN=cur&&cur.rows?cur.rows.length:0,ta0=document.getElementById('statsPaste');
-  if((curN||(ta0&&ta0.value.trim()))&&!confirm(hi?'Statistics Lab में पहले से '+(curN||'कुछ')+' पंक्तियों का data है। उसे हटाकर form के '+rows.length+' जवाब रखें? पुराना data रखना हो तो पहले Cancel दबाकर उसे dataset के रूप में सहेजें या CSV में download करें।':'The Statistics Lab already holds '+(curN?curN+' rows of data':'some data')+'. Replace it with the '+rows.length+' answers from the form? To keep the current data, press Cancel and save or download it first.'))return;
+  if((curN||(ta0&&ta0.value.trim()))&&!confirm(hi?'Statistics Lab में पहले से '+(curN||'कुछ')+' पंक्तियों का data है। उसे हटाकर form के '+rows.length+' जवाब रखें? पुराना data रखना हो तो पहले Cancel दबाकर उसे dataset के रूप में सहेजें या CSV में download करें।':'The Statistics Lab already holds '+(curN?curN+' rows of data':'some data')+'. Replace it with the '+rows.length+' answer set'+(rows.length===1?'':'s')+' from the form? To keep the current data, press Cancel and save or download it first.'))return;
   document.getElementById('sfDlg').close();showTool('stats');setTimeout(()=>{const ta=document.getElementById('statsPaste');ta.value=sfCsvText(rows);window._sfLoading=true;try{statsParse()}catch(e){}finally{window._sfLoading=false}
     showToast(hi?rows.length+' participants का data Statistics Lab में आ गया ✓':rows.length+" participants' data loaded into the Statistics Lab ✓")},250)}
 async function sfBackup(){const k=sfKey(),recs=await sfAll(k.sid);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([recs.map(r=>r.pkg).join('\n')],{type:'text/plain'}));
@@ -9612,9 +9619,10 @@ function tkModel(o,mins){o=o||studyGet();const w=wGet(o),d=o.idea||{},ds=o.desig
     const t=pv&&pv.sig?strip(h):'No clear support for '+lab+': '+strip(h).replace(/^./,c=>c.toLowerCase());
     findings.push({lab:lab,sig:!!(pv&&pv.sig),text:t});
     S.push({title:tkShort(t,110),big:(eff.split(',')[0]||'').trim(),bullets:[tkShort(r.apa,190)].concat(r.kind==='dev'?['Changed from the plan: '+tkShort(r.why,80)]:[]),role:'result'})});
-  if(!findings.length){const extra=resList(o).filter(r=>r.apa).map(r=>({apa:r.apa,test:r.ranLabel||''})),ins=((o.analysis||{}).inserted||[]),seen=new Set();
+  let fb=false;
+  if(!findings.length){fb=true;const extra=resList(o).filter(r=>r.apa).map(r=>({apa:r.apa,test:r.ranLabel||''})),ins=((o.analysis||{}).inserted||[]),seen=new Set();
     let docTxt='';try{docTxt=String(editor.innerText||'').replace(/\s+/g,' ')}catch(e){}
-    extra.concat(ins.filter(x=>!docTxt||docTxt.indexOf(String(x.apa).replace(/\s+/g,' ').slice(0,60))>=0)).forEach((r,i)=>{const k=String(r.apa).slice(0,80);if(seen.has(k)||seen.size>=4)return;seen.add(k);
+    extra.concat(ins.filter(x=>!docTxt||docTxt.indexOf(String(x.apa).replace(/\s+/g,' ').slice(0,60))>=0)).forEach((r,i)=>{/* Version 142 (rehearsal 2): the same result recorded and inserted is one result. */const k=(String(r.apa).match(/[A-Za-zχ²ρτ]+\s*\(\s*\d[^)]*\)\s*=\s*[−-]?[\d.]+/)||[String(r.apa).slice(0,80)])[0];if(seen.has(k)||seen.size>=4)return;seen.add(k);
       const pv=tkP(r.apa),eff=resEffect(r.apa)||'',lab='Result '+(seen.size),t=(r.test?r.test.replace(/\s*\(.*$/,''):'The test')+(pv?(pv.sig?' shows a clear result':' shows no clear result'):'');
       findings.push({lab:lab,sig:!!(pv&&pv.sig),text:t});S.push({title:tkShort(t,110),big:(eff.split(',')[0]||'').trim(),bullets:[tkShort(r.apa,190)],role:'result'})})}
   /* 6 what it means, with the main limitation */
@@ -9622,7 +9630,7 @@ function tkModel(o,mins){o=o||studyGet();const w=wGet(o),d=o.idea||{},ds=o.desig
   if(ip.length)S.push({title:tkShort(tkFirstSentence(ip[0].mean),110),bullets:ip.slice(1).map(x=>tkShort(x.mean,90)).concat(ip.filter(x=>String(x.lim||'').trim()).slice(0,2).map(x=>'Limitation: '+tkShort(x.lim,80))),role:'meaning'});
   /* 7 conclusions: the last main slide, stays up during questions */
   const yes=findings.filter(x=>x.sig).map(x=>x.lab),no=findings.filter(x=>!x.sig).map(x=>x.lab);
-  const ctitle=!findings.length?'What this study shows':!no.length?(findings.length===1?'The finding supports '+yes[0]:findings.length===2?'Both findings support the hypotheses':'All '+findings.length+' findings support the hypotheses'):!yes.length?'The data do not support the hypotheses':'The data support '+yes.join(' and ')+', not '+no.join(' or ');
+  const ctitle=!findings.length||fb?'What this study shows':!no.length?(findings.length===1?'The finding supports '+yes[0]:findings.length===2?'Both findings support the hypotheses':'All '+findings.length+' findings support the hypotheses'):!yes.length?'The data do not support the hypotheses':'The data support '+yes.join(' and ')+', not '+no.join(' or ');
   S.push({title:ctitle,bullets:findings.map(x=>tkShort(x.lab+': '+x.text.replace(/^No clear support for [^:]+: /,'not supported, '),90)).concat(['Questions and feedback welcome'+(me.name?', '+me.name:'')]),role:'conclusion'});
   /* 8 references */
   let lib=[];try{lib=citGetLib()}catch(e){}
@@ -14592,7 +14600,7 @@ function b1FillFromLibrary(){const o=studyGet(),b=wGet(o).B1||{},n=b.n||{},c=b1L
   const und=lib.filter(d=>!(d.scr&&(d.scr.st==='included'||d.scr.st==='excluded'))).length;
   if(und){showToast(hi?und+' papers पर अभी फ़ैसला नहीं हुआ (B3)। सब पर फ़ैसला होने के बाद ही PRISMA की संख्याएँ भरी जाती हैं, ताकि वे आपस में मेल खाएँ।':und+' paper'+(und===1?' is':'s are')+' still undecided in B3. The PRISMA boxes are filled once every paper has a decision, so the numbers add up.');return}
   const ft=scr-exT,hand=['reg','auto','oth'].some(k=>!em(k)&&+n[k]>0),logOk=!hand&&sm&&sm.searches&&sm.read-sm.dup===scr;
-  [['id',logOk?sm.read:-1],['dup',logOk?sm.dup:-1],['scr',scr],['exT',exT],['sought',ft],['ft',ft],['exF',c.exF],['inc',c.inc]].forEach(x=>{if(em(x[0])&&x[1]>=0){wNest('B1','n',x[0],String(x[1]));put.push(x[0])}});
+  [['id',logOk?sm.read:-1],['dup',logOk?sm.dup:-1],['scr',scr],['exT',exT],['sought',ft],['ft',ft],['exF',c.exF],['inc',c.inc],['repInc',em('inc')?c.inc:Math.max(c.inc,+n.inc||0)]].forEach(x=>{if(em(x[0])&&x[1]>=0){wNest('B1','n',x[0],String(x[1]));put.push(x[0])}});
   if(!String(b.exWhy||'').trim()&&c.why.length){wPatch('B1','exWhy',c.why.join('\n'));put.push('exWhy')}
   wRedraw();
   showToast(put.length?(hi?'Library से भर दिया (सिर्फ़ खाली खाने)':'Filled from your library (only the empty boxes)')+(c.noStep?(hi?' · '+c.noStep+' बाहर किए papers का चरण नहीं लिखा था, उन्हें title/abstract पर बाहर गिना':' · '+c.noStep+' excluded paper'+(c.noStep===1?'':'s')+' had no step, counted as excluded at title and abstract'):'')+(c.noWhy?(hi?' · कुछ बाहर किए papers का कारण नहीं है':' · some excluded papers have no reason'):''):(hi?'भरने को कुछ नहीं मिला: library में status डालें, या खाने पहले से भरे हैं':'Nothing to fill: set statuses in the library, or the boxes already have numbers'))}
@@ -20696,7 +20704,7 @@ function pgRender(){
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
 const APP_VERSION=141;
-const APP_BUILD='2026.11.28b';
+const APP_BUILD='2026.11.28c';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -23179,7 +23187,16 @@ function statsInsert(){
     }
   }catch(e){rid=''}
   /* At the cursor when the student had one in the document, else at the end (as before). */
-  insertIntoEditor(t,!!(savedRange&&editor.contains(savedRange.startContainer)),false,rid);showToast('Inserted ✓ — Ctrl+Z to undo');
+  /* Version 142 (rehearsal 2): with no cursor in the paper, or a cursor below the reference list, a result goes to
+     the end of the outline's Results section instead of after the references. */
+  let inRes=false;
+  try{const has=savedRange&&editor.contains(savedRange.startContainer),bib=editor.querySelector('[data-bib]'),
+      after=has&&bib&&(function(){const br=document.createRange();br.setStartBefore(bib);br.collapse(true);return savedRange.compareBoundaryPoints(Range.START_TO_START,br)>=0})();
+    const lastH1=[...editor.querySelectorAll('h1[data-draft]')].pop(),resH=[...editor.querySelectorAll('h2')].filter(h=>/^\s*3\.\s*Results/i.test(h.textContent)&&(!lastH1||(lastH1.compareDocumentPosition(h)&Node.DOCUMENT_POSITION_FOLLOWING))).pop();
+    if(resH&&(!has||after)){let n=resH.nextElementSibling;while(n&&n.tagName!=='H2'&&!(n.hasAttribute&&n.hasAttribute('data-bib')))n=n.nextElementSibling;
+      const p=document.createElement('p');if(n)n.parentNode.insertBefore(p,n);else editor.appendChild(p);
+      const r=document.createRange();r.selectNodeContents(p);r.collapse(true);savedRange=r;inRes=true}}catch(e){}
+  insertIntoEditor(t,inRes||!!(savedRange&&editor.contains(savedRange.startContainer)),false,rid);showToast(inRes?'Inserted in Results ✓ — Ctrl+Z to undo':'Inserted ✓ — Ctrl+Z to undo');
   try{const o=studyGet(),a=o.analysis||{tests:[]},sel=document.getElementById('statsTest'),nm=sel&&sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:'';a.ran=true;if(nm&&a.tests.indexOf(nm)<0)a.tests.push(nm);
     /* Version 142: the talk deck can use results that were inserted but never recorded against a hypothesis. */
     a.inserted=(a.inserted||[]).filter(x=>x.apa!==t).concat([{apa:t,test:nm,at:new Date().toISOString()}]).slice(-20);o.analysis=a;studySet(o)}catch(e){}
