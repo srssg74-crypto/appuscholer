@@ -859,6 +859,8 @@ html[data-calm="1"] *,html[data-calm="1"] *::before,html[data-calm="1"] *::after
 #comfortDlg .cf-prev{margin-top:14px;padding:14px 16px;border:2px dashed var(--dashed);border-radius:14px;font-size:16px}
 #comfortDlg .cf-foot{display:flex;gap:10px;justify-content:space-between;margin-top:18px}
 #comfortBtn{font-weight:700}
+#listenBtn.in-hdr{position:static;min-height:40px;padding:0 14px;font-size:15px;border-width:0;box-shadow:none;border-radius:20px;margin-left:auto;z-index:auto}
+@media (max-width:759px){#listenBtn{bottom:calc(var(--phnav-h,62px) + 12px)!important;left:12px!important;min-height:46px!important;font-size:16px!important}body.has-listen{padding-bottom:calc(var(--phnav-h,62px) + 76px)}}
 #listenBtn{position:fixed;left:16px;bottom:16px;z-index:1500;min-height:52px;padding:0 20px;border-radius:26px;border:2px solid #fff;background:var(--purple-700);color:#fff;font:700 17px inherit;font-family:inherit;box-shadow:0 10px 28px rgba(0,0,0,.35);cursor:pointer}
 </style>
 <script>/* Polite use of the free scholarly services (build 2026.11.17a). Every request to Crossref and OpenAlex carries a contact
@@ -883,10 +885,15 @@ function cfSave(c){try{localStorage.setItem('appu_comfort',JSON.stringify(c))}ca
 function cfApply(c){const d=document.documentElement,set=(k,v)=>v?d.setAttribute(k,v):d.removeAttribute(k);
  set('data-size',c.size||'');set('data-contrast',c.contrast==='high'?'high':'');set('data-bold',c.bold?'1':'');set('data-roomy',c.roomy?'1':'');set('data-calm',c.calm?'1':'');
  cfListenBtn(c)}
+/* Version 141: Listen never floats over content. Laptop: in the top bar. Phone: above the bottom bar, with room left at the page foot. */
+function cfListenPlace(b){try{const ph=window.innerWidth<760,hdr=document.querySelector('header');
+  if(!ph&&hdr){if(b.parentNode!==hdr){const cmd=document.getElementById('cmdBtn');if(cmd&&cmd.parentNode===hdr)hdr.insertBefore(b,cmd);else hdr.appendChild(b)}b.classList.add('in-hdr');document.body.classList.remove('has-listen')}
+  else{if(b.parentNode!==document.body)document.body.appendChild(b);b.classList.remove('in-hdr');document.body.classList.add('has-listen')}}catch(e){}}
+window.addEventListener('resize',()=>{const b=document.getElementById('listenBtn');if(b)cfListenPlace(b)});
 function cfListenBtn(c){c=c||cfGet();let b=document.getElementById('listenBtn');
- if(!c.audio){if(b)b.remove();try{cfStop()}catch(e){}return}
+ if(!c.audio){if(b)b.remove();document.body.classList.remove('has-listen');try{cfStop()}catch(e){}return}
  const T=cfT();
- if(!b){b=document.createElement('button');b.id='listenBtn';b.type='button';b.onclick=cfListenToggle;document.body.appendChild(b)}
+ if(!b){b=document.createElement('button');b.id='listenBtn';b.type='button';b.onclick=cfListenToggle}cfListenPlace(b)
  b.textContent='🔊 '+(CF_SPEAKING?T.stop:T.listen);b.setAttribute('aria-label',CF_SPEAKING?T.stop:T.listen)}
 let CF_SPEAKING=false,CF_RUN=0;
 function cfStop(){CF_RUN++;CF_SPEAKING=false;try{speechSynthesis.cancel()}catch(e){}cfListenBtn()}
@@ -1412,6 +1419,15 @@ footer,footer span{color:var(--muted);opacity:1!important}
 @media (max-width:759px){#termsDlg .dlg-body>div:first-of-type{max-height:none!important;overflow:visible!important}
   #termsDlg{max-height:calc(100dvh - 24px);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   #termsRowGate{position:sticky;bottom:-1px;background:var(--card,#fff);padding:10px 0 6px;margin-bottom:-6px;box-shadow:0 -8px 12px -10px rgba(0,0,0,.25)}}
+</style>
+<style id="v141-theatre-fit">
+/* Version 141: the theatre fits the window at every comfort text size. The page zoom is cancelled inside it,
+   and only the theatre's own text is enlarged, by the same factor. */
+html[data-size="1"] #apTh{zoom:.8696;--cfz:1.15}
+html[data-size="2"] #apTh{zoom:.7692;--cfz:1.3}
+html[data-size="3"] #apTh{zoom:.6667;--cfz:1.5}
+html #apTh .th-sub{font-size:calc(clamp(18px,2.6vw,32px) * var(--cfz,1))}
+html #apTh .th-top{font-size:calc(1em * var(--cfz,1))}
 </style>
 </head>
 <body>
@@ -18313,8 +18329,8 @@ function thPreload(){const files=['bg_class'];['m0','m1','m2','m3','m4','m5','m6
   const first=ld('bg_class');files.slice(1).forEach(f=>{ld(f)});return first}
 async function apThOpen(){
   const s=apLesCur();if(!s||!apLesScenes().length)return;
-  const ok=await Promise.race([thPreload(),new Promise(r=>setTimeout(()=>r(false),25000))]);
-  if(!ok){showToast('The theatre pictures are not here yet (the assets folder, starting with assets/bg_class.webp). Using the classic stage.');return}
+  /* Version 141: open at once; the pictures arrive while the lecture runs. Only a missing background sends the student back to the classic stage. */
+  thPreload().then(ok=>{if(!ok&&AP.th&&AP.th.open){try{apThClose()}catch(e){}showToast(thHi()?'Theatre की तस्वीरें नहीं मिलीं, इसलिए साधारण मंच पर lecture चल रहा है।':'The theatre pictures could not be loaded, so the lecture continues on the classic stage.')}});
   thCss();let d=document.getElementById('apTh');if(!d){d=document.createElement('dialog');d.id='apTh';d.addEventListener('cancel',e=>{e.preventDefault();apThClose()});document.body.appendChild(d)}
   clearTimeout(AP.les.timer);AP.les.play=false;apVoiceStop();
   AP.th={open:1,tok:0,si:0,play:false,speaking:false,tab:'slides',qz:null,tm:0};
@@ -20545,8 +20561,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=139;
-const APP_BUILD='2026.11.24a';
+const APP_VERSION=141;
+const APP_BUILD='2026.11.28a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -24767,7 +24783,7 @@ let acctMod=null;
 async function acctBackend(){if(!window.APPUSCHOLAR_FIREBASE_CONFIG)return null;if(!acctMod){acctMod=await import('./backend.js');await acctMod.appuBackend.init(window.APPUSCHOLAR_FIREBASE_CONFIG)}return acctMod.appuBackend}
 async function acctSession(waitMs){try{const b=await Promise.race([acctBackend(),new Promise(r=>setTimeout(()=>r(null),waitMs||6000))]);if(!b)return null;
   return await new Promise(res=>{let done=false;const t=setTimeout(()=>{if(!done){done=true;res(null)}},waitMs||6000);Promise.resolve(b.onSessionChange(st=>{if(done)return;done=true;clearTimeout(t);res(st)})).catch(()=>{if(!done){done=true;clearTimeout(t);res(null)}})})}catch(e){return null}}
-function acctFillMe(p){try{if(!p)return;const me=apMe(),nm=String(p.displayName||'').trim().slice(0,80),ins=String(p.institution||'').trim().slice(0,120);let ch=false;
+function acctFillMe(p){try{if(!p)return;LS.set('appu_acct_seen','1');const me=apMe(),nm=String(p.displayName||'').trim().slice(0,80),ins=String(p.institution||'').trim().slice(0,120);let ch=false;
   if(!me.name&&nm){me.name=nm;ch=true}if(!me.pos&&ins){me.pos=ins;ch=true}
   if(ch){LS.set('appu_me',JSON.stringify(me));if(typeof apHomeRender==='function')apHomeRender()}}catch(e){}}
 function acctShowStatus(p){const el=document.getElementById('licenseBadge');if(!el||!p)return;acctFillMe(p);const exp=p.accessExpiresAt&&p.accessExpiresAt.toDate?p.accessExpiresAt.toDate():null,days=exp?Math.ceil((exp-new Date())/86400000):null;
@@ -25725,7 +25741,7 @@ function calmPhApply(){const ph=window.innerWidth<760&&!document.body.classList.
   let nav=document.getElementById('phNav');
   if(!ph){if(nav)nav.hidden=true;return}
   const hi=getLang()==='hi',L={home:hi?'होम':'Home',stage:hi?'चरण':'Steps',write:hi?'लिखें':'Write',ai:hi?'AI सहायता':'AI help'};
-  if(!nav){nav=document.createElement('nav');nav.id='phNav';nav.className='ph-nav';document.body.appendChild(nav)}
+  if(!nav){nav=document.createElement('nav');nav.id='phNav';nav.className='ph-nav';document.body.appendChild(nav)}try{const hh=nav.offsetHeight;if(hh&&nav._hh!==hh){nav._hh=hh;document.documentElement.style.setProperty('--phnav-h',hh+'px')}}catch(e){}
   if(nav.hidden)nav.hidden=false;if(nav.getAttribute('aria-label')!==(hi?'मुख्य':'Main'))nav.setAttribute('aria-label',hi?'मुख्य':'Main');
   const cur=apHomeIs()?'home':calmPhView;
   const html=['home','stage','write','ai'].map(k=>'<button type="button" class="'+(k===cur?'on':'')+'" '+(k===cur?'aria-current="page"':'')+' onclick="calmPhGo(\''+jsq(k)+'\')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+CALM_PH_IC[k]+'"/></svg><span>'+L[k]+'</span></button>').join('');
@@ -25772,6 +25788,11 @@ function calmInit(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',calmInit);else setTimeout(calmInit,0);
 
+/* Version 141: fill the home profile card from the account even when a stored access code skips the sign-in check.
+   Runs in the background, only on devices where an account has been used (or when arriving from the account page). */
+(function acctBgFill(){try{const sp=new URLSearchParams(location.search);if(sp.get('acct')==='1'){LS.set('appu_acct_seen','1');sp.delete('acct');try{history.replaceState(null,'',location.pathname+(sp.toString()?'?'+sp:'')+location.hash)}catch(e){}}
+  if(LS.get('appu_acct_seen')!=='1'||!window.APPUSCHOLAR_FIREBASE_CONFIG)return;
+  setTimeout(async()=>{try{const st=await acctSession(8000);if(st&&st.profile)acctFillMe(st.profile)}catch(e){}},4000)}catch(e){}})();
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
    A bookmarklet reads the citation_* meta tags most journals, PubMed and

@@ -24,7 +24,7 @@ const errorMap = {
 };
 let app, auth, db, config, sessionUnsubscribe = null;
 const pendingSignup = { email: '', displayName: '', institution: '', course: '', inviteCode: '', consentVersion: '', ageConfirmed18: false };
-function fail(code='UNKNOWN') { const e = new Error(code); e.code = code; return e; }
+function fail(code='UNKNOWN', detail) { const e = new Error(code); e.code = code; if (detail !== undefined) e.detail = detail; return e; }
 function wrapError(e) { if (e?.code && /^[A-Z_]+$/.test(e.code)) return e; const code = errorMap[e?.code] || (e?.code?.startsWith('auth/') ? 'AUTH_ERROR' : 'OPERATION_FAILED'); return fail(code); }
 function requireInit() { if (!auth || !db) throw fail('NOT_INITIALIZED'); }
 function normalizeCode(value) { return String(value || '').toUpperCase().replace(/[\s-]/g, ''); }
@@ -70,14 +70,19 @@ export const appuBackend = {
       else { d={displayName:pendingSignup.displayName,institution:pendingSignup.institution,course:pendingSignup.course,consentVersion:pendingSignup.consentVersion,ageConfirmed18:pendingSignup.ageConfirmed18}; }
       if(!d.displayName||d.displayName.length>80||d.institution.length>120||d.course.length>80||!d.consentVersion||!d.ageConfirmed18)throw fail('INVALID_INPUT');
       const inviteRef=doc(db,'invites',code), userRef=doc(db,'users',user.uid), redemptionRef=doc(db,'invites',code,'redemptions',user.uid);
-      const invSnap=await getDoc(inviteRef); if(!invSnap.exists())throw fail('INVALID_CODE'); const inv=invSnap.data();
+      let invSnap; try { invSnap=await getDoc(inviteRef); } catch(e) { if(e?.code==='permission-denied') { const me=await getDoc(userRef).catch(()=>null); if(me&&me.exists()) throw fail('ALREADY_REDEEMED'); throw fail('NOT_ALLOWED'); } throw e; }
+      if(!invSnap.exists())throw fail('INVALID_CODE'); const inv=invSnap.data();
+      /* Version 141: say exactly why a code cannot be used. */
+      if(inv.active===false)throw fail('INVITE_INACTIVE');
+      const rb=inv.redeemBy&&inv.redeemBy.toDate?inv.redeemBy.toDate():null; if(rb&&rb.getTime()<=Date.now())throw fail('INVITE_EXPIRED',rb.toISOString());
+      if(Number.isInteger(inv.maxUses)&&Number(inv.usedCount||0)>=inv.maxUses)throw fail('INVITE_USED_UP',inv.maxUses);
       const existing=await getDoc(userRef); if(existing.exists()) { if(existing.data().status==='deleting')throw fail('DELETION_PENDING'); throw fail('ALREADY_REDEEMED'); }
       /* One hour short of the full period, so a device clock running fast cannot push the date past what the rules allow. */ const expiresAt=Timestamp.fromMillis(Date.now()+Number(inv.accessDays)*86400000-3600000);
       const batch=writeBatch(db);
       batch.set(userRef,{displayName:d.displayName,email:user.email,institution:d.institution,course:d.course,plan:'free',status:'active',inviteCode:code,accessExpiresAt:expiresAt,consent:{version:d.consentVersion,acceptedAt:serverTimestamp(),ageConfirmed18:true},createdAt:serverTimestamp(),schemaVersion:1});
       batch.set(redemptionRef,{uid:user.uid,redeemedAt:serverTimestamp()}); batch.update(inviteRef,{usedCount:increment(1)});
       await batch.commit(); Object.assign(pendingSignup,{email:'',displayName:'',institution:'',course:'',inviteCode:'',consentVersion:'',ageConfirmed18:false}); return await this.getMyProfile();
-    } catch(e) { if(['INVALID_CODE','permission-denied','failed-precondition','ALREADY_REDEEMED'].includes(e?.code)) throw fail('INVALID_CODE'); throw wrapError(e); }
+    } catch(e) { if(['permission-denied','failed-precondition'].includes(e?.code)) throw fail('NOT_ALLOWED'); throw wrapError(e); }
   },
   getMyProfile() { return (async()=>{try{requireInit();const u=auth.currentUser;if(!u)throw fail('NOT_SIGNED_IN');const p=await currentProfile(u);return safeProfile(p);}catch(e){throw wrapError(e);}})(); },
   updateMyProfile({displayName,institution='',course=''}) { return (async()=>{try{requireInit();const u=auth.currentUser;if(!u)throw fail('NOT_SIGNED_IN');if(!String(displayName||'').trim()||String(displayName).trim().length>80||String(institution).length>120||String(course).length>80)throw fail('INVALID_INPUT');const ref=doc(db,'users',u.uid);await (await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')).updateDoc(ref,{displayName:String(displayName).trim(),institution,course});return await this.getMyProfile();}catch(e){throw wrapError(e);}})(); },
@@ -86,6 +91,7 @@ export const appuBackend = {
   finishDeletion(password) { return (async()=>{try{requireInit();const u=auth.currentUser;if(!u||!u.email)throw fail('NOT_SIGNED_IN');await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,password));const snap=await getDoc(doc(db,'users',u.uid));if(!snap.exists()||snap.data().status!=='deleting')throw fail('NO_PENDING_DELETION');await deleteUser(u);return true;}catch(e){throw wrapError(e);}})(); },
   async onSessionChange(callback) { requireInit(); if(sessionUnsubscribe)sessionUnsubscribe(); sessionUnsubscribe=onAuthStateChanged(auth,u=>{void emitSession(callback,u);});return ()=>{if(sessionUnsubscribe)sessionUnsubscribe();sessionUnsubscribe=null;}; },
   createInvite({label,redeemBy,accessDays=180,maxUses}) { return (async()=>{try{const u=await adminUser();if(!String(label||'').trim()||String(label).length>120||!Number.isInteger(accessDays)||accessDays<1||accessDays>366||!Number.isInteger(maxUses)||maxUses<1)throw fail('INVALID_INPUT');const date=redeemBy instanceof Date?redeemBy:new Date(redeemBy);if(!Number.isFinite(date.getTime())||date.getTime()<=Date.now())throw fail('INVALID_INPUT');let code,ref;for(let i=0;i<5;i++){code=generateCode();ref=doc(db,'invites',code);if(!(await getDoc(ref)).exists())break;code=null;}if(!code)throw fail('TRY_AGAIN');await (await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')).setDoc(ref,{label:String(label).trim(),createdBy:u.uid,createdAt:serverTimestamp(),redeemBy:Timestamp.fromDate(date),accessDays,maxUses,usedCount:0,active:true});return code.match(/.{5}/g).join('-');}catch(e){throw wrapError(e);}})(); },
+  isAdmin() { return (async()=>{try{await adminUser();return true;}catch(e){if(e?.code==='ADMIN_ONLY')return false;throw wrapError(e);}})(); },
   listInvites() { return (async()=>{try{await adminUser();const s=await getDocs(collection(db,'invites'));return s.docs.map(x=>({code:x.id.match(/.{5}/g).join('-'),...x.data()}));}catch(e){throw wrapError(e);}})(); },
   setInviteActive(code,active) { return (async()=>{try{await adminUser();const c=normalizeCode(code);if(!validCode(c)||typeof active!=='boolean')throw fail('INVALID_INPUT');await (await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')).updateDoc(doc(db,'invites',c),{active});}catch(e){throw wrapError(e);}})(); },
   setUserStatus(uid,status) { return (async()=>{try{await adminUser();if(!['active','suspended'].includes(status))throw fail('INVALID_INPUT');await (await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')).updateDoc(doc(db,'users',uid),{status});}catch(e){throw wrapError(e);}})(); },
