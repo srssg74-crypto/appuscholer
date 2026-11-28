@@ -1429,6 +1429,36 @@ html[data-size="3"] #apTh{zoom:.6667;--cfz:1.5}
 html #apTh .th-sub{font-size:calc(clamp(18px,2.6vw,32px) * var(--cfz,1))}
 html #apTh .th-top{font-size:calc(1em * var(--cfz,1))}
 </style>
+<style id="v142-outline">
+/* Version 142: outline controls and chapter colours (screen only) */
+.bb-rw{display:flex;align-items:center;gap:2px;border-radius:6px}
+.bb-rw>a.bb-row{flex:1 1 auto;min-width:0}
+.bb-rw.ol-c1{border-left:3px solid rgb(var(--olc));background:rgba(var(--olc),.08)}
+.bb-rw.ol-c2{border-left:3px solid rgba(var(--olc),.35)}
+.ol-fold,.ol-more{border:0;background:none;cursor:pointer;color:#5E5873;min-width:28px;min-height:28px;border-radius:6px;font-size:14px;line-height:1}
+.ol-fold:hover,.ol-more:hover{background:rgba(46,91,138,.1)}
+.ol-more{opacity:.55}.bb-rw:hover .ol-more,.ol-more:focus{opacity:1}
+.ol-bar{font-size:12px;color:#5E5873;margin:4px 0 6px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.ol-bar label{display:inline-flex;align-items:center;gap:4px}
+.ol-menu{display:flex;flex-direction:column;gap:2px;margin:2px 0 6px 28px;padding:6px;border:1px solid #E5E1D8;border-radius:8px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.ol-mi{text-align:left;border:0;background:none;padding:7px 8px;border-radius:6px;cursor:pointer;font:inherit;font-size:13px;min-height:32px}
+.ol-mi:hover,.ol-mi:focus{background:#EDF2F8}.ol-danger{color:#A3485A}
+.ol-ren{width:100%;font:inherit;font-size:13px;padding:5px 6px;border:1px solid #2E5B8A;border-radius:6px}
+body.ol-tint-on #editor h1[data-tint],body.ol-tint-on #editor h2[data-tint],body.ol-tint-on #editor h3[data-tint]{border-radius:6px;padding:4px 10px}
+body.ol-tint-on #editor h1[data-tint="0"]{background:rgba(46,91,138,.12);box-shadow:inset 4px 0 0 rgb(46,91,138)}
+body.ol-tint-on #editor h2[data-tint="0"],body.ol-tint-on #editor h3[data-tint="0"]{background:rgba(46,91,138,.06)}
+body.ol-tint-on #editor h1[data-tint="1"]{background:rgba(47,125,79,.12);box-shadow:inset 4px 0 0 rgb(47,125,79)}
+body.ol-tint-on #editor h2[data-tint="1"],body.ol-tint-on #editor h3[data-tint="1"]{background:rgba(47,125,79,.06)}
+body.ol-tint-on #editor h1[data-tint="2"]{background:rgba(163,72,90,.12);box-shadow:inset 4px 0 0 rgb(163,72,90)}
+body.ol-tint-on #editor h2[data-tint="2"],body.ol-tint-on #editor h3[data-tint="2"]{background:rgba(163,72,90,.06)}
+body.ol-tint-on #editor h1[data-tint="3"]{background:rgba(176,122,18,.12);box-shadow:inset 4px 0 0 rgb(176,122,18)}
+body.ol-tint-on #editor h2[data-tint="3"],body.ol-tint-on #editor h3[data-tint="3"]{background:rgba(176,122,18,.06)}
+body.ol-tint-on #editor h1[data-tint="4"]{background:rgba(91,79,160,.12);box-shadow:inset 4px 0 0 rgb(91,79,160)}
+body.ol-tint-on #editor h2[data-tint="4"],body.ol-tint-on #editor h3[data-tint="4"]{background:rgba(91,79,160,.06)}
+body.ol-tint-on #editor h1[data-tint="5"]{background:rgba(42,124,124,.12);box-shadow:inset 4px 0 0 rgb(42,124,124)}
+body.ol-tint-on #editor h2[data-tint="5"],body.ol-tint-on #editor h3[data-tint="5"]{background:rgba(42,124,124,.06)}
+@media print{#editor [data-tint]{background:none!important;box-shadow:none!important;padding:0!important}}
+</style>
 </head>
 <body>
 <script>(function(){try{var f=localStorage.getItem("appu_home_force")==="1",wd=navigator.webdriver&&!f;if(!wd&&localStorage.getItem("appu_home")!=="off"){document.body.classList.add("at-home");window._apHomeLock=1}}catch(e){}})();</script>
@@ -6818,7 +6848,7 @@ function inertDiv(html){
 function htmlPlainText(html){
   try{return inertDiv(html).textContent||''}catch(e){return''}
 }
-function getEditorHTML(){return editor.innerHTML.replace(/ data-tsel="1"/g,'').replace(/ data-selecting="1"/g,'')}
+function getEditorHTML(){return editor.innerHTML.replace(/ data-tsel="1"/g,'').replace(/ data-selecting="1"/g,'').replace(/ data-tint="\d"/g,'')}
 function setEditorHTML(body){editor.innerHTML=bodyToHTML(body)}
 function getEditorText(){return editor.innerText||editor.textContent||''}
 function docIsSource(id){const d=docsGet().find(x=>x.id===(id||docCurrentId()));return !!(d&&d.origin==='source')}
@@ -20561,8 +20591,8 @@ function pgRender(){
   pgGateRender()}
 (function(){const al=window.applyLang;if(typeof al==='function'){window.applyLang=function(){al.apply(this,arguments);try{pgRender()}catch(e){}}}})();
 
-const APP_VERSION=141;
-const APP_BUILD='2026.11.28a';
+const APP_VERSION=142;
+const APP_BUILD='2026.11.29a';
 (function(){const e=document.getElementById('buildLine');if(e)e.textContent='Appuscholar version '+APP_VERSION+' (build '+APP_BUILD+')';const v=document.getElementById('verBadge');if(v)v.textContent='Version '+APP_VERSION})();
 const _errLog=[];
 function repTool(){try{const a=document.querySelector('.tool-tab.active');return a?a.getAttribute('data-tool'):'none'}catch(e){return'none'}}
@@ -25793,6 +25823,72 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function acctBgFill(){try{const sp=new URLSearchParams(location.search);if(sp.get('acct')==='1'){LS.set('appu_acct_seen','1');sp.delete('acct');try{history.replaceState(null,'',location.pathname+(sp.toString()?'?'+sp:'')+location.hash)}catch(e){}}
   if(LS.get('appu_acct_seen')!=='1'||!window.APPUSCHOLAR_FIREBASE_CONFIG)return;
   setTimeout(async()=>{try{const st=await acctSession(8000);if(st&&st.profile)acctFillMe(st.profile)}catch(e){}},4000)}catch(e){}})();
+
+/* ============ Version 142: outline you can fold, rename, add to, reorder and delete from; chapter colours ============
+   The document stays the only home of the structure: every action edits the headings in the editor itself. */
+const OL_TINTS=['46,91,138','47,125,79','163,72,90','176,122,18','91,79,160','42,124,124'];
+function olOn(){return LS.get('appu_ol_tint')!=='0'}
+function olHs(){return[...editor.querySelectorAll('h1,h2,h3')]}
+function olLv(h){return+h.tagName[1]}
+function olSection(h){const lv=olLv(h),out=[h];let n=h.nextElementSibling;while(n&&!(/^H[1-3]$/.test(n.tagName)&&olLv(n)<=lv)){out.push(n);n=n.nextElementSibling}return out}
+function olWords(nodes){return nodes.slice(1).reduce((a,x)=>a+lsWords(x.textContent||''),0)}
+function olEditable(){try{const b=bbBookId();return!b||bbIsBook()}catch(e){return true}}
+function olFoldGet(){try{return JSON.parse(LS.get('appu_ol_fold')||'{}')}catch(e){return{}}}
+function olFoldKey(){try{return docCurrentId()||'doc'}catch(e){return'doc'}}
+let OL_UNDO=[];
+function olSnap(label){OL_UNDO.push({html:editor.innerHTML,label});if(OL_UNDO.length>10)OL_UNDO.shift()}
+function olCommit(msg){try{if(typeof bbRenumber==='function'&&bbIsBook())bbRenumber()}catch(e){}try{docSaveBody(getEditorHTML());upd()}catch(e){}OL_LAST=msg||'';bbOutlineRender()}
+let OL_LAST='';
+function olUndo(){const s=OL_UNDO.pop();if(!s)return;editor.innerHTML=s.html;OL_LAST='';try{docSaveBody(getEditorHTML());upd()}catch(e){}bbOutlineRender();showToast(studyHi()?'पहले जैसा कर दिया ✓':'Undone ✓')}
+function olTint(){const on=olOn();document.body.classList.toggle('ol-tint-on',on);let c=-1;
+  olHs().forEach(h=>{if(olLv(h)===1)c++;const v=c<0?'':String(c%6);if(!on||c<0){if(h.hasAttribute('data-tint'))h.removeAttribute('data-tint');return}if(h.getAttribute('data-tint')!==v)h.setAttribute('data-tint',v)})}
+function olMove(i,dir){const hs=olHs(),h=hs[i];if(!h)return;const lv=olLv(h),sec=olSection(h);
+  if(dir<0){let p=h.previousElementSibling,tgt=null;while(p){if(/^H[1-3]$/.test(p.tagName)){const l=olLv(p);if(l<lv)break;if(l===lv){tgt=p;break}}p=p.previousElementSibling}
+    if(!tgt){showToast(studyHi()?'यह पहले से सबसे ऊपर है।':'This is already the first at its level.');return}olSnap('move');sec.forEach(n=>editor.insertBefore(n,tgt))}
+  else{const last=sec[sec.length-1];let nx=last.nextElementSibling;if(!nx||!/^H[1-3]$/.test(nx.tagName)||olLv(nx)!==lv){showToast(studyHi()?'यह पहले से सबसे नीचे है।':'This is already the last at its level.');return}
+    olSnap('move');const ns=olSection(nx),after=ns[ns.length-1];let ref=after.nextSibling;sec.forEach(n=>editor.insertBefore(n,ref))}
+  olCommit(studyHi()?'खिसका दिया।':'Moved.')}
+function olAdd(i,sub){const hs=olHs(),h=hs[i];if(!h)return;const lv=Math.min(3,olLv(h)+(sub?1:0));olSnap('add');
+  const nh=document.createElement('h'+lv);nh.textContent=studyHi()?'नया शीर्षक':'New heading';const p=document.createElement('p');p.innerHTML='<br>';
+  const ref=sub?(olSection(h).filter(n=>!/^H[1-3]$/.test(n.tagName)||n===h).pop()):olSection(h).pop();ref.after(nh);nh.after(p);
+  olCommit(studyHi()?'नया शीर्षक जोड़ा।':'Heading added.');setTimeout(()=>olRename(olHs().indexOf(nh)),50)}
+function olDel(i,mode){const hs=olHs(),h=hs[i];if(!h)return;olSnap('delete');if(mode==='all')olSection(h).forEach(n=>n.remove());else h.remove();olCommit(studyHi()?'हटा दिया।':'Removed.')}
+function olDelAsk(i){const h=olHs()[i];if(!h)return;const w=olWords(olSection(h)),hi=studyHi(),box=document.getElementById('olMenu');if(!box)return;
+  box.innerHTML='<p class="desc" style="margin:0 0 6px">'+(hi?'क्या हटाएँ?':'What should go?')+'</p>'+
+   '<button type="button" class="ol-mi" onclick="olDel('+i+',\'head\')">'+(hi?'सिर्फ़ शीर्षक (उसका text ऊपर वाले हिस्से में मिल जाएगा)':'Only the heading (its text joins the section above)')+'</button>'+
+   '<button type="button" class="ol-mi ol-danger" onclick="olDel('+i+',\'all\')">'+(hi?'पूरा हिस्सा और उसके '+w+' शब्द':'The whole section and its '+w+' words')+'</button>'+
+   '<button type="button" class="ol-mi" onclick="olMenuClose()">'+(hi?'रहने दें':'Cancel')+'</button>'}
+function olRename(i){const h=olHs()[i],row=document.querySelector('#bbOutline .bb-row[data-oi="'+i+'"]');if(!h||!row)return;olMenuClose();
+  const inp=document.createElement('input');inp.type='text';inp.className='ol-ren';inp.value=h.textContent.trim();inp.setAttribute('aria-label',studyHi()?'नया नाम':'New name');
+  row.replaceWith(inp);inp.focus();inp.select();let done=false;
+  const fin=save=>{if(done)return;done=true;const v=inp.value.trim();if(save&&v&&v!==h.textContent.trim()){olSnap('rename');h.textContent=v;olCommit(studyHi()?'नाम बदल दिया।':'Renamed.')}else bbOutlineRender()};
+  inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();fin(true)}else if(e.key==='Escape'){e.preventDefault();fin(false)}};inp.onblur=()=>fin(true)}
+function olMenuClose(){const m=document.getElementById('olMenu');if(m)m.remove()}
+function olMenu(i,btn){olMenuClose();const hi=studyHi(),m=document.createElement('div');m.id='olMenu';m.className='ol-menu';m.setAttribute('role','menu');
+  const it=(t,f)=>'<button type="button" class="ol-mi" role="menuitem" onclick="'+f+'">'+t+'</button>';
+  m.innerHTML=it(hi?'नाम बदलें':'Rename','olRename('+i+')')+it(hi?'इसी स्तर का नया शीर्षक':'Add heading after','olMenuClose();olAdd('+i+',0)')+(olLv(olHs()[i])<3?it(hi?'इसके अंदर उप-शीर्षक':'Add sub-heading','olMenuClose();olAdd('+i+',1)'):'')+
+    it(hi?'ऊपर खिसकाएँ':'Move up','olMenuClose();olMove('+i+',-1)')+it(hi?'नीचे खिसकाएँ':'Move down','olMenuClose();olMove('+i+',1)')+it(hi?'हटाएँ…':'Delete…','olDelAsk('+i+')');
+  btn.closest('.bb-rw').after(m);const f=m.querySelector('button');if(f)f.focus()}
+function olFold(i){const k=olFoldKey(),f=olFoldGet(),t=(olHs()[i]||{}).textContent||'';const set=new Set(f[k]||[]);set.has(t)?set.delete(t):set.add(t);f[k]=[...set];LS.set('appu_ol_fold',JSON.stringify(f));bbOutlineRender()}
+function olFoldAll(close){const k=olFoldKey(),f=olFoldGet();f[k]=close?olHs().filter(h=>olLv(h)===1).map(h=>h.textContent):[];LS.set('appu_ol_fold',JSON.stringify(f));bbOutlineRender()}
+function olEnhance(){const box=document.getElementById('bbOutline');if(!box||box.style.display==='none')return;olTint();
+  const rows=[...box.querySelectorAll('a.bb-row')];if(!rows.length)return;const ed=olEditable(),hs=olHs(),hi=studyHi(),folded=new Set((olFoldGet()[olFoldKey()])||[]);
+  let chap=-1,hide=false;
+  rows.forEach(a=>{const m=/bbGo\('[^']*',(\d+)\)/.exec(a.getAttribute('onclick')||'');if(!m)return;const i=+m[1],h=hs[i];if(!h)return;const lv=olLv(h);
+    a.setAttribute('data-oi',i);const w=document.createElement('div');w.className='bb-rw';a.before(w);w.appendChild(a);
+    if(lv===1){chap++;hide=folded.has(h.textContent);const has=olSection(h).some(n=>n!==h&&/^H[2-3]$/.test(n.tagName));
+      const c=document.createElement('button');c.type='button';c.className='ol-fold';c.setAttribute('aria-expanded',hide?'false':'true');c.setAttribute('aria-label',(hide?(hi?'खोलें: ':'Open: '):(hi?'समेटें: ':'Fold: '))+h.textContent.trim());c.textContent=hide?'▸':'▾';c.style.visibility=has?'':'hidden';c.onclick=()=>olFold(i);w.prepend(c)}
+    else if(hide)w.hidden=true;
+    if(chap>=0&&olOn())w.style.setProperty('--olc',OL_TINTS[chap%6]),w.classList.add('ol-c'+(lv===1?'1':'2'));
+    if(ed){const b=document.createElement('button');b.type='button';b.className='ol-more';b.textContent='⋯';b.setAttribute('aria-label',(hi?'विकल्प: ':'Options: ')+h.textContent.trim());b.onclick=e=>{e.preventDefault();olMenu(i,b)};w.appendChild(b)}});
+  const list=box.querySelector('.bb-list')||rows[0].parentNode.parentNode;
+  const bar=document.createElement('div');bar.className='ol-bar';
+  bar.innerHTML='<a href="#" onclick="olFoldAll(false);return false">'+(hi?'सब खोलें':'Expand all')+'</a> · <a href="#" onclick="olFoldAll(true);return false">'+(hi?'सब समेटें':'Collapse all')+'</a> · <label><input type="checkbox" '+(olOn()?'checked':'')+' onchange="LS.set(\'appu_ol_tint\',this.checked?\'1\':\'0\');bbOutlineRender()"> '+(hi?'अध्याय के रंग':'Chapter colours')+'</label>'+
+    (OL_UNDO.length?' · <a href="#" class="ol-undo" onclick="olUndo();return false">'+(hi?'पहले जैसा करें':'Undo')+(OL_LAST?' ('+escHTML(OL_LAST)+')':'')+'</a>':'')+
+    (ed?'':'<div class="desc">'+(hi?'नाम बदलने या खिसकाने के लिए किताब खोलें।':'Open the book to rename or move headings.')+'</div>');
+  const first=box.querySelector('.bb-rw');if(first)first.parentNode.insertBefore(bar,first)}
+(function(){const _r=bbOutlineRender;bbOutlineRender=function(){const r=_r.apply(this,arguments);try{olEnhance()}catch(e){console.warn('outline',e)}return r}})();
+
 /* ============ Boot ============ */
 /* ============ One-click citation capture (Zotero-lite) ============
    A bookmarklet reads the citation_* meta tags most journals, PubMed and
